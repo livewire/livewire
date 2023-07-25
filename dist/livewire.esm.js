@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
+    var require_shared_cjs_prod = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = Object.freeze({});
-        var EMPTY_ARR = Object.freeze([]);
+        var EMPTY_OBJ = {};
+        var EMPTY_ARR = [];
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_shared_cjs_prod();
         } else {
-          module2.exports = require_shared_cjs();
+          module2.exports = null;
         }
       }
     });
-    var require_reactivity_cjs = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
+    var require_reactivity_cjs_prod = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("iterate");
-        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
+        var ITERATE_KEY = Symbol("");
+        var MAP_KEY_ITERATE_KEY = Symbol("");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,14 +558,6 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
-            if (activeEffect.options.onTrack) {
-              activeEffect.options.onTrack({
-                effect: activeEffect,
-                target,
-                type,
-                key
-              });
-            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -622,17 +614,6 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
-            if (effect4.options.onTrigger) {
-              effect4.options.onTrigger({
-                effect: effect4,
-                target,
-                key,
-                type,
-                newValue,
-                oldValue,
-                oldTarget
-              });
-            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -726,7 +707,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value);
               }
             }
             return result;
@@ -734,10 +715,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          const oldValue = target[key];
+          target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
@@ -762,15 +743,9 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
-            {
-              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           },
           deleteProperty(target, key) {
-            {
-              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           }
         };
@@ -837,15 +812,13 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value);
           }
           return this;
         }
@@ -856,23 +829,20 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
-          const oldValue = get3 ? get3.call(target, key) : void 0;
+          get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
         function clear2() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
-          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0);
           }
           return result;
         }
@@ -914,10 +884,6 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
-            {
-              const key = args[0] ? `on key "${args[0]}" ` : ``;
-              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
-            }
             return type === "delete" ? false : this;
           };
         }
@@ -1022,13 +988,6 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
-        function checkIdentityKeys(target, has2, key) {
-          const rawKey = toRaw2(key);
-          if (rawKey !== key && has2.call(target, rawKey)) {
-            const type = shared.toRawType(target);
-            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-          }
-        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1067,9 +1026,6 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
-            {
-              console.warn(`value cannot be made reactive: ${String(target)}`);
-            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1143,7 +1099,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", void 0);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1181,9 +1137,6 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
-          if (!isProxy(object)) {
-            console.warn(`toRefs() expects a reactive object but received a plain one.`);
-          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1240,9 +1193,7 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = () => {
-              console.warn("Write operation failed: computed value is readonly");
-            };
+            setter = shared.NOOP;
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1281,10 +1232,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_reactivity_cjs_prod();
         } else {
-          module2.exports = require_reactivity_cjs();
+          module2.exports = null;
         }
       }
     });
@@ -2779,7 +2730,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return obj;
     }
-    var Alpine18 = {
+    var Alpine17 = {
       get reactive() {
         return reactive;
       },
@@ -2841,7 +2792,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       data,
       bind: bind2
     };
-    var alpine_default = Alpine18;
+    var alpine_default = Alpine17;
     var import_reactivity9 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
@@ -3664,8 +3615,8 @@ var require_module_cjs2 = __commonJS({
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine18) {
-      Alpine18.directive("collapse", collapse2);
+    function src_default(Alpine17) {
+      Alpine17.directive("collapse", collapse2);
       collapse2.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
@@ -3685,7 +3636,7 @@ var require_module_cjs2 = __commonJS({
         if (!el._x_isShown)
           el.style.overflow = "hidden";
         let setFunction = (el2, styles) => {
-          let revertFunction = Alpine18.setStyles(el2, styles);
+          let revertFunction = Alpine17.setStyles(el2, styles);
           return styles.height ? () => {
           } : revertFunction;
         };
@@ -3708,7 +3659,7 @@ var require_module_cjs2 = __commonJS({
             if (current === full) {
               current = floor;
             }
-            Alpine18.transition(el, Alpine18.setStyles, {
+            Alpine17.transition(el, Alpine17.setStyles, {
               during: transitionStyles,
               start: { height: current + "px" },
               end: { height: full + "px" }
@@ -3722,7 +3673,7 @@ var require_module_cjs2 = __commonJS({
           }, after = () => {
           }) {
             let full = el.getBoundingClientRect().height;
-            Alpine18.transition(el, setFunction, {
+            Alpine17.transition(el, setFunction, {
               during: transitionStyles,
               start: { height: full + "px" },
               end: { height: floor + "px" }
@@ -4433,14 +4384,14 @@ var require_module_cjs3 = __commonJS({
     });
     var import_focus_trap = __toModule(require_focus_trap());
     var import_tabbable = __toModule(require_dist());
-    function src_default(Alpine18) {
+    function src_default(Alpine17) {
       let lastFocused;
       let currentFocused;
       window.addEventListener("focusin", () => {
         lastFocused = currentFocused;
         currentFocused = document.activeElement;
       });
-      Alpine18.magic("focus", (el) => {
+      Alpine17.magic("focus", (el) => {
         let within = el;
         return {
           __noscroll: false,
@@ -4544,7 +4495,7 @@ var require_module_cjs3 = __commonJS({
           }
         };
       });
-      Alpine18.directive("trap", Alpine18.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+      Alpine17.directive("trap", Alpine17.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
         let evaluator = evaluateLater(expression);
         let oldValue = false;
         let options = {
@@ -4645,15 +4596,15 @@ var require_module_cjs4 = __commonJS({
     __export(exports, {
       default: () => module_default
     });
-    function src_default(Alpine18) {
+    function src_default(Alpine17) {
       let persist2 = () => {
         let alias;
         let storage = localStorage;
-        return Alpine18.interceptor((initialValue, getter, setter, path, key) => {
+        return Alpine17.interceptor((initialValue, getter, setter, path, key) => {
           let lookup = alias || `_x_${path}`;
           let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
           setter(initial);
-          Alpine18.effect(() => {
+          Alpine17.effect(() => {
             let value = getter();
             storageSet(lookup, value, storage);
             setter(value);
@@ -4669,12 +4620,12 @@ var require_module_cjs4 = __commonJS({
           };
         });
       };
-      Object.defineProperty(Alpine18, "$persist", { get: () => persist2() });
-      Alpine18.magic("persist", persist2);
-      Alpine18.persist = (key, { get, set }, storage = localStorage) => {
+      Object.defineProperty(Alpine17, "$persist", { get: () => persist2() });
+      Alpine17.magic("persist", persist2);
+      Alpine17.persist = (key, { get, set }, storage = localStorage) => {
         let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
         set(initial);
-        Alpine18.effect(() => {
+        Alpine17.effect(() => {
           let value = get();
           storageSet(key, value, storage);
           set(value);
@@ -4719,8 +4670,8 @@ var require_module_cjs5 = __commonJS({
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine18) {
-      Alpine18.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+    function src_default(Alpine17) {
+      Alpine17.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -6559,7 +6510,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function data(name, callback) {
       datas[name] = callback;
     }
-    var Alpine18 = {
+    var Alpine17 = {
       get reactive() {
         return reactive;
       },
@@ -6621,7 +6572,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       data,
       bind
     };
-    var alpine_default = Alpine18;
+    var alpine_default = Alpine17;
     var els = {};
     function storePersistantElementsForLater() {
       els = {};
@@ -6635,6 +6586,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function putPersistantElementsBack() {
       document.querySelectorAll("[x-persist]").forEach((i) => {
         let old = els[i.getAttribute("x-persist")];
+        if (!old)
+          return;
         old._x_wasPersisted = true;
         alpine_default.mutateDom(() => {
           i.replaceWith(old);
@@ -6742,8 +6695,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let newDocument = new DOMParser().parseFromString(html, "text/html");
       let newBody = document.adoptNode(newDocument.body);
       let newHead = document.adoptNode(newDocument.head);
+      let oldBodyScriptTagHashes = Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML));
       mergeNewHead(newHead);
-      prepNewScriptTagsToRun(newBody);
+      prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
       transitionOut(document.body);
       let oldBody = document.body;
       document.body.replaceWith(newBody);
@@ -6764,10 +6718,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         body.style.opacity = "1";
       });
     }
-    function prepNewScriptTagsToRun(newBody) {
+    function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
       newBody.querySelectorAll("script").forEach((i) => {
-        if (i.hasAttribute("data-navigate-once"))
-          return;
+        if (i.hasAttribute("data-navigate-once")) {
+          let hash = simpleHash(i.outerHTML);
+          if (oldBodyScriptTagHashes.includes(hash))
+            return;
+        }
         i.replaceWith(cloneScriptTag(i));
       });
     }
@@ -6816,6 +6773,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isScript(el) {
       return el.tagName.toLowerCase() === "script";
+    }
+    function simpleHash(str) {
+      return str.split("").reduce((a, b) => {
+        a = (a << 5) - a + b.charCodeAt(0);
+        return a & a;
+      }, 0);
     }
     function fetchHtml(destination, callback) {
       let uri = destination.pathname + destination.search;
@@ -6946,8 +6909,8 @@ var require_module_cjs7 = __commonJS({
       track: () => track2
     });
     module.exports = __toCommonJS(module_exports);
-    function history3(Alpine18) {
-      Alpine18.magic("queryString", (el, { interceptor }) => {
+    function history3(Alpine17) {
+      Alpine17.magic("queryString", (el, { interceptor }) => {
         let alias;
         let alwaysShow = false;
         let usePush = false;
@@ -6956,9 +6919,9 @@ var require_module_cjs7 = __commonJS({
           let { initial, replace: replace2, push: push2, pop } = track2(queryKey, initialSeedValue, alwaysShow);
           setter(initial);
           if (!usePush) {
-            Alpine18.effect(() => replace2(getter()));
+            Alpine17.effect(() => replace2(getter()));
           } else {
-            Alpine18.effect(() => push2(getter()));
+            Alpine17.effect(() => push2(getter()));
             pop(async (newValue) => {
               setter(newValue);
               let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
@@ -6981,7 +6944,7 @@ var require_module_cjs7 = __commonJS({
           };
         });
       });
-      Alpine18.history = { track: track2 };
+      Alpine17.history = { track: track2 };
     }
     function track2(name, initialSeedValue, alwaysShow = false) {
       let { has, get, set, remove } = queryStringUtils();
@@ -7489,8 +7452,8 @@ var require_module_cjs8 = __commonJS({
         this.setAttributeNode(attr2);
       };
     }
-    function src_default(Alpine18) {
-      Alpine18.morph = morph3;
+    function src_default(Alpine17) {
+      Alpine17.morph = morph3;
     }
     var module_default = src_default;
   }
@@ -7522,8 +7485,8 @@ var require_module_cjs9 = __commonJS({
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine18) {
-      Alpine18.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
+    function src_default(Alpine17) {
+      Alpine17.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -7532,7 +7495,7 @@ var require_module_cjs9 = __commonJS({
             effect(() => {
               templateFn = (input) => {
                 let result;
-                Alpine18.dontAutoEvaluateFunctions(() => {
+                Alpine17.dontAutoEvaluateFunctions(() => {
                   evaluator((value2) => {
                     result = typeof value2 === "function" ? value2(input) : value2;
                   }, { scope: {
@@ -8395,7 +8358,6 @@ var aliases = {
   "get": "$get",
   "set": "$set",
   "call": "$call",
-  "commit": "$commit",
   "watch": "$watch",
   "entangle": "$entangle",
   "dispatch": "$dispatch",
@@ -8806,7 +8768,7 @@ function rescan() {
 }
 
 // js/index.js
-var import_alpinejs16 = __toESM(require_module_cjs());
+var import_alpinejs15 = __toESM(require_module_cjs());
 
 // js/features/supportWireModelingNestedComponents.js
 on("commit.prepare", ({ component }) => {
@@ -8894,26 +8856,27 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs7 = __toESM(require_module_cjs());
 on("effects", (component, effects) => {
   let js = effects.js;
   let xjs = effects.xjs;
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs7.default.evaluate(component.el, body);
+        let func = new Function(["$wire"], body);
+        func.bind(component.$wire)(component.$wire);
       });
     });
   }
   if (xjs) {
     xjs.forEach((expression) => {
-      import_alpinejs7.default.evaluate(component.el, expression);
+      let func = new Function(["$wire"], expression);
+      func.bind(component.$wire)(component.$wire);
     });
   }
 });
 
 // js/features/supportQueryString.js
-var import_alpinejs8 = __toESM(require_module_cjs());
+var import_alpinejs7 = __toESM(require_module_cjs());
 var import_history2 = __toESM(require_module_cjs7());
 on("component.init", ({ component }) => {
   let effects = component.effects;
@@ -8927,7 +8890,7 @@ on("component.init", ({ component }) => {
     let initialValue = dataGet(component.ephemeral, name);
     let { initial, replace, push, pop } = (0, import_history2.track)(as, initialValue, alwaysShow);
     if (use === "replace") {
-      import_alpinejs8.default.effect(() => {
+      import_alpinejs7.default.effect(() => {
         replace(dataGet(component.reactive, name));
       });
     } else if (use === "push") {
@@ -8961,11 +8924,9 @@ function normalizeQueryStringEntry(key, value) {
 
 // js/features/supportNavigate.js
 var isNavigating = false;
-document.addEventListener("alpine:navigated", (e) => {
-  if (e.detail && e.detail.init)
-    return;
+window.addEventListener("alpine:navigated", () => {
   isNavigating = true;
-  document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
+  window.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
 });
 function shouldRedirectUsingNavigateOr(effects, url, or) {
   let forceNavigate = effects.redirectUsingNavigate;
@@ -8987,7 +8948,7 @@ on("effects", (component, effects) => {
 });
 
 // js/morph.js
-var import_alpinejs9 = __toESM(require_module_cjs());
+var import_alpinejs8 = __toESM(require_module_cjs());
 function morph2(component, el, html) {
   let wrapper = document.createElement("div");
   wrapper.innerHTML = html;
@@ -9000,7 +8961,7 @@ function morph2(component, el, html) {
   let to = wrapper.firstElementChild;
   to.__livewire = component;
   trigger("morph", { el, toEl: to, component });
-  import_alpinejs9.default.morph(el, to, {
+  import_alpinejs8.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip) => {
       if (isntElement(el2))
         return;
@@ -9085,14 +9046,14 @@ on("commit.prepare", ({ component }) => {
   });
 });
 
-// js/directives/wire-transition.js
-var import_alpinejs10 = __toESM(require_module_cjs());
+// js/directives/wire:transition.js
+var import_alpinejs9 = __toESM(require_module_cjs());
 on("morph.added", (el) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
-  let visibility = import_alpinejs10.default.reactive({ state: false });
-  import_alpinejs10.default.bind(el, {
+  let visibility = import_alpinejs9.default.reactive({ state: false });
+  import_alpinejs9.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {
       return visibility.state;
@@ -9127,8 +9088,8 @@ function callAndClearComponentDebounces(component, callback) {
   callback();
 }
 
-// js/directives/wire-wildcard.js
-var import_alpinejs11 = __toESM(require_module_cjs());
+// js/directives/wire:wildcard.js
+var import_alpinejs10 = __toESM(require_module_cjs());
 on("element.init", ({ el, component }) => {
   getDirectives(el).all().forEach((directive2) => {
     if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.type))
@@ -9137,25 +9098,25 @@ on("element.init", ({ el, component }) => {
     if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
       attribute = attribute + ".prevent";
     }
-    import_alpinejs11.default.bind(el, {
+    import_alpinejs10.default.bind(el, {
       [attribute](e) {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs11.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+          import_alpinejs10.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
         });
       }
     });
   });
 });
 
-// js/directives/wire-navigate.js
-var import_alpinejs12 = __toESM(require_module_cjs());
-import_alpinejs12.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs12.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs12.default.interceptInit(import_alpinejs12.default.skipDuringClone((el) => {
+// js/directives/wire:navigate.js
+var import_alpinejs11 = __toESM(require_module_cjs());
+import_alpinejs11.default.addInitSelector(() => `[wire\\:navigate]`);
+import_alpinejs11.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+import_alpinejs11.default.interceptInit(import_alpinejs11.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
-    import_alpinejs12.default.bind(el, { ["x-navigate"]: true });
+    import_alpinejs11.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
-    import_alpinejs12.default.bind(el, { ["x-navigate.hover"]: true });
+    import_alpinejs11.default.bind(el, { ["x-navigate.hover"]: true });
   }
 }));
 
@@ -9183,7 +9144,7 @@ function toggleBooleanStateDirective(el, directive2, isTruthy) {
   }
 }
 
-// js/directives/wire-offline.js
+// js/directives/wire:offline.js
 var offlineHandlers = /* @__PURE__ */ new Set();
 var onlineHandlers = /* @__PURE__ */ new Set();
 window.addEventListener("offline", () => offlineHandlers.forEach((i) => i()));
@@ -9199,7 +9160,7 @@ directive("offline", ({ el, directive: directive2, cleanup: cleanup2 }) => {
   });
 });
 
-// js/directives/wire-loading.js
+// js/directives/wire:loading.js
 directive("loading", ({ el, directive: directive2, component }) => {
   let targets = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
@@ -9325,7 +9286,7 @@ function quickHash(subject) {
   return btoa(encodeURIComponent(subject));
 }
 
-// js/directives/wire-stream.js
+// js/directives/wire:stream.js
 directive("stream", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
   let { expression, modifiers } = directive2;
   let off = on("stream", ({ name, content, replace }) => {
@@ -9367,29 +9328,17 @@ async function interceptStreamAndReturnFinalResponse(response, callback) {
     let { done, value: chunk } = await reader.read();
     let decoder = new TextDecoder();
     let output = decoder.decode(chunk);
-    let [streams, remaining] = extractStreamObjects(output);
-    streams.forEach((stream) => {
-      callback(stream);
-    });
-    finalResponse = finalResponse + remaining;
+    if (output && output.startsWith('{"stream":true')) {
+      callback(JSON.parse(output).body);
+    } else {
+      finalResponse = finalResponse + output;
+    }
     if (done)
       return finalResponse;
   }
 }
-function extractStreamObjects(raw) {
-  let regex = /({"stream":true.*?"endStream":true})/g;
-  let matches = raw.match(regex);
-  let parsed = [];
-  if (matches) {
-    for (let i = 0; i < matches.length; i++) {
-      parsed.push(JSON.parse(matches[i]).body);
-    }
-  }
-  let remaining = raw.replace(regex, "");
-  return [parsed, remaining];
-}
 
-// js/directives/wire-ignore.js
+// js/directives/wire:ignore.js
 directive("ignore", ({ el, directive: directive2 }) => {
   if (directive2.modifiers.includes("self")) {
     el.__livewire_ignore_self = true;
@@ -9398,7 +9347,7 @@ directive("ignore", ({ el, directive: directive2 }) => {
   }
 });
 
-// js/directives/wire-dirty.js
+// js/directives/wire:dirty.js
 var refreshDirtyStatesByComponent = new WeakBag();
 on("commit", ({ component, respond }) => {
   respond(() => {
@@ -9446,8 +9395,8 @@ function dirtyTargets(el) {
   return targets;
 }
 
-// js/directives/wire-model.js
-var import_alpinejs13 = __toESM(require_module_cjs());
+// js/directives/wire:model.js
+var import_alpinejs12 = __toESM(require_module_cjs());
 function debounce(func, wait) {
   var timeout;
   return function() {
@@ -9477,7 +9426,7 @@ directive("model", ({ el, directive: directive2, component, cleanup: cleanup2 })
   let isDebounced = modifiers.includes("debounce");
   let update = () => component.$wire.$commit();
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-  import_alpinejs13.default.bind(el, {
+  import_alpinejs12.default.bind(el, {
     ["@change"]() {
       isLazy && update();
     },
@@ -9520,15 +9469,15 @@ function componentIsMissingProperty(component, property) {
   return !Object.keys(component.canonical).includes(baseProperty);
 }
 
-// js/directives/wire-init.js
-var import_alpinejs14 = __toESM(require_module_cjs());
+// js/directives/wire:init.js
+var import_alpinejs13 = __toESM(require_module_cjs());
 directive("init", ({ el, directive: directive2 }) => {
   let fullMethod = directive2.expression ?? "$refresh";
-  import_alpinejs14.default.evaluate(el, `$wire.${fullMethod}`);
+  import_alpinejs13.default.evaluate(el, `$wire.${fullMethod}`);
 });
 
-// js/directives/wire-poll.js
-var import_alpinejs15 = __toESM(require_module_cjs());
+// js/directives/wire:poll.js
+var import_alpinejs14 = __toESM(require_module_cjs());
 directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -9542,7 +9491,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2) {
-  import_alpinejs15.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+  import_alpinejs14.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];
@@ -9651,13 +9600,13 @@ if (window.Livewire)
 if (window.Alpine)
   console.warn("Detected multiple instances of Alpine running");
 window.Livewire = Livewire;
-window.Alpine = import_alpinejs16.default;
+window.Alpine = import_alpinejs15.default;
 if (window.livewireScriptConfig === void 0) {
   document.addEventListener("DOMContentLoaded", () => {
     Livewire.start();
   });
 }
-var export_Alpine = import_alpinejs16.default;
+var export_Alpine = import_alpinejs15.default;
 export {
   export_Alpine as Alpine,
   Livewire

@@ -1994,8 +1994,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2028,8 +2028,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2119,7 +2119,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.options.onTrack) {
+      if (false) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2183,7 +2183,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect32) => {
-      if (effect32.options.onTrigger) {
+      if (false) {
         effect32.options.onTrigger({
           effect: effect32,
           target,
@@ -2320,13 +2320,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2388,7 +2388,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32.call(target, key);
@@ -2407,7 +2407,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32 ? get32.call(target, key) : void 0;
@@ -2420,7 +2420,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2465,7 +2465,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2567,13 +2567,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has2, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has2.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2606,7 +2599,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3702,7 +3695,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "get": "$get",
     "set": "$set",
     "call": "$call",
-    "commit": "$commit",
     "watch": "$watch",
     "entangle": "$entangle",
     "dispatch": "$dispatch",
@@ -6921,6 +6913,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function putPersistantElementsBack() {
     document.querySelectorAll("[x-persist]").forEach((i) => {
       let old = els[i.getAttribute("x-persist")];
+      if (!old)
+        return;
       old._x_wasPersisted = true;
       alpine_default2.mutateDom(() => {
         i.replaceWith(old);
@@ -7028,8 +7022,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let newDocument = new DOMParser().parseFromString(html, "text/html");
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
+    let oldBodyScriptTagHashes = Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML));
     mergeNewHead(newHead);
-    prepNewScriptTagsToRun(newBody);
+    prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
     transitionOut(document.body);
     let oldBody = document.body;
     document.body.replaceWith(newBody);
@@ -7050,10 +7045,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       body.style.opacity = "1";
     });
   }
-  function prepNewScriptTagsToRun(newBody) {
+  function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
     newBody.querySelectorAll("script").forEach((i) => {
-      if (i.hasAttribute("data-navigate-once"))
-        return;
+      if (i.hasAttribute("data-navigate-once")) {
+        let hash = simpleHash(i.outerHTML);
+        if (oldBodyScriptTagHashes.includes(hash))
+          return;
+      }
       i.replaceWith(cloneScriptTag(i));
     });
   }
@@ -7102,6 +7100,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isScript(el) {
     return el.tagName.toLowerCase() === "script";
+  }
+  function simpleHash(str) {
+    return str.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
   }
   function fetchHtml(destination, callback) {
     let uri = destination.pathname + destination.search;
@@ -8008,13 +8012,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          module_default.evaluate(component.el, body);
+          let func = new Function(["$wire"], body);
+          func.bind(component.$wire)(component.$wire);
         });
       });
     }
     if (xjs) {
       xjs.forEach((expression) => {
-        module_default.evaluate(component.el, expression);
+        let func = new Function(["$wire"], expression);
+        func.bind(component.$wire)(component.$wire);
       });
     }
   });
@@ -8066,11 +8072,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   var isNavigating = false;
-  document.addEventListener("alpine:navigated", (e) => {
-    if (e.detail && e.detail.init)
-      return;
+  window.addEventListener("alpine:navigated", () => {
     isNavigating = true;
-    document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
+    window.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
@@ -8189,7 +8193,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/directives/wire-transition.js
+  // js/directives/wire:transition.js
   on("morph.added", (el) => {
     el.__addedByMorph = true;
   });
@@ -8230,7 +8234,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     callback();
   }
 
-  // js/directives/wire-wildcard.js
+  // js/directives/wire:wildcard.js
   on("element.init", ({ el, component }) => {
     getDirectives(el).all().forEach((directive4) => {
       if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive4.type))
@@ -8249,7 +8253,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/directives/wire-navigate.js
+  // js/directives/wire:navigate.js
   module_default.addInitSelector(() => `[wire\\:navigate]`);
   module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
   module_default.interceptInit(module_default.skipDuringClone((el) => {
@@ -8284,7 +8288,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/directives/wire-offline.js
+  // js/directives/wire:offline.js
   var offlineHandlers = /* @__PURE__ */ new Set();
   var onlineHandlers = /* @__PURE__ */ new Set();
   window.addEventListener("offline", () => offlineHandlers.forEach((i) => i()));
@@ -8300,7 +8304,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/directives/wire-loading.js
+  // js/directives/wire:loading.js
   directive2("loading", ({ el, directive: directive4, component }) => {
     let targets = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive4);
@@ -8426,7 +8430,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return btoa(encodeURIComponent(subject));
   }
 
-  // js/directives/wire-stream.js
+  // js/directives/wire:stream.js
   directive2("stream", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
     let { expression, modifiers } = directive4;
     let off = on("stream", ({ name, content, replace: replace2 }) => {
@@ -8468,29 +8472,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let { done, value: chunk } = await reader.read();
       let decoder = new TextDecoder();
       let output = decoder.decode(chunk);
-      let [streams, remaining] = extractStreamObjects(output);
-      streams.forEach((stream) => {
-        callback(stream);
-      });
-      finalResponse = finalResponse + remaining;
+      if (output && output.startsWith('{"stream":true')) {
+        callback(JSON.parse(output).body);
+      } else {
+        finalResponse = finalResponse + output;
+      }
       if (done)
         return finalResponse;
     }
   }
-  function extractStreamObjects(raw3) {
-    let regex = /({"stream":true.*?"endStream":true})/g;
-    let matches2 = raw3.match(regex);
-    let parsed = [];
-    if (matches2) {
-      for (let i = 0; i < matches2.length; i++) {
-        parsed.push(JSON.parse(matches2[i]).body);
-      }
-    }
-    let remaining = raw3.replace(regex, "");
-    return [parsed, remaining];
-  }
 
-  // js/directives/wire-ignore.js
+  // js/directives/wire:ignore.js
   directive2("ignore", ({ el, directive: directive4 }) => {
     if (directive4.modifiers.includes("self")) {
       el.__livewire_ignore_self = true;
@@ -8499,7 +8491,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/directives/wire-dirty.js
+  // js/directives/wire:dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
   on("commit", ({ component, respond }) => {
     respond(() => {
@@ -8547,7 +8539,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return targets;
   }
 
-  // js/directives/wire-model.js
+  // js/directives/wire:model.js
   function debounce3(func, wait) {
     var timeout;
     return function() {
@@ -8620,13 +8612,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return !Object.keys(component.canonical).includes(baseProperty);
   }
 
-  // js/directives/wire-init.js
+  // js/directives/wire:init.js
   directive2("init", ({ el, directive: directive4 }) => {
     let fullMethod = directive4.expression ?? "$refresh";
     module_default.evaluate(el, `$wire.${fullMethod}`);
   });
 
-  // js/directives/wire-poll.js
+  // js/directives/wire:poll.js
   directive2("poll", ({ el, directive: directive4, component }) => {
     let interval = extractDurationFrom(directive4.modifiers, 2e3);
     let { start: start4, pauseWhile, throttleWhile, stopWhen } = poll(() => {
