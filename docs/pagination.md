@@ -144,7 +144,7 @@ class ShowClients extends Component
 As you can see, the above component contains a paginated set of *clients*. If a user were to navigate to page `2` of this result set, the URL might look like the following:
 
 ```
-http://application.test/?page=2`
+http://application.test/?page=2
 ```
 
 Suppose the page also contains a `ShowInvoices` component that also uses pagination. To independently track each paginator's current page, you need to specify a name for the second paginator like so:
