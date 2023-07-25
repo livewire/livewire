@@ -1,5 +1,5 @@
 
-Like many other component-based frameworks, Livewire components are nestable—meaning one component can render multiple components within itself.
+Like many other component-based frameworks, Livewire components are nestable — meaning one component can render multiple components within itself.
 
 However, because Livewire's nesting system is built differently than other frameworks, there are certain implications and constraints that are important to be aware of.
 

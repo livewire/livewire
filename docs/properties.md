@@ -365,7 +365,7 @@ In order to update the property without sending a network request to the server,
 
 While Livewire properties are a powerful feature, there are a few security considerations that you should be aware of before using them.
 
-In short, always treat public properties as user input—as if they were request input from a traditional endpoint. In light of this, it's essential to validate and authorize properties before persisting them to a database—just like you would do when working with request input in a controller.
+In short, always treat public properties as user input — as if they were request input from a traditional endpoint. In light of this, it's essential to validate and authorize properties before persisting them to a database — just like you would do when working with request input in a controller.
 
 ### Don't trust property values
 

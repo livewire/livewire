@@ -63,9 +63,9 @@ class Counter extends Component
 ```
 
 Here's a brief explanation of the code above:
-- `public $count = 1;`—Declares a public property named `$count` with an initial value of `1`.
-- `public function increment()`—Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
-- `public function render()`—Declares a `render()` method that returns a Blade view. This Blade view will contain the HTML template for our component.
+- `public $count = 1;` — Declares a public property named `$count` with an initial value of `1`.
+- `public function increment()` — Declares a public method named `increment()` that increments the `$count` property each time it's called. Public methods like this can be triggered from the browser in a variety of ways, including when a user clicks a button.
+- `public function render()` — Declares a `render()` method that returns a Blade view. This Blade view will contain the HTML template for our component.
 
 ## Writing the view
 
