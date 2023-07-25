@@ -26,7 +26,7 @@ Or, using the `.remove` modifier, you can remove a class when a user loses their
 
 ## Toggling attributes
 
-The `.attr` modifier allows you to add an attribute to an element the user loses their connection. In this example, the "Save" button will be disabled while the user has lost their connection:
+The `.attr` modifier allows you to add an attribute to an element when the user loses their connection. In this example, the "Save" button will be disabled while the user has lost their connection:
 
 ```blade
 <button wire:offline.attr="disabled">Save</button>
