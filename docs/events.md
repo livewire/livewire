@@ -36,6 +36,7 @@ To listen for an event in a Livewire component, add the `#[On]` attribute above 
 
 ```php
 use Livewire\Component;
+use Livewire\Attributes\On; // [tl! highlight]
 
 class Dashboard extends Component
 {
@@ -60,6 +61,7 @@ For example, if you wanted to scope an event listener to a specific Eloquent mod
 ```php
 use Livewire\Component;
 use App\Models\Post;
+use Livewire\Attributes\On; // [tl! highlight]
 
 class ShowPost extends Component
 {
@@ -87,7 +89,7 @@ For example, we may easily listen for the `post-created` event using Alpine:
 <div x-on:post-created="..."></div>
 ```
 
-The above snippet would listen for for the `post-created` event from any Livewire components that are children of the HTML element that the `x-on` directive is assigned to.
+The above snippet would listen for the `post-created` event from any Livewire components that are children of the HTML element that the `x-on` directive is assigned to.
 
 To listen for the event from any Livewire component on the page, you can add `.window` to the listener:
 
@@ -131,6 +133,7 @@ To accomplish this, you may provide the `fromChildren` argument to `#[On]`:
 
 ```php
 use Livewire\Component;
+use Livewire\Attributes\On; // [tl! highlight]
 
 class Dashboard extends Component
 {
@@ -323,7 +326,7 @@ Below is an example of an `OrderTracker` component that is listening for the `Or
 
 namespace App\Livewire;
 
-use Livewire\Attributes\On;
+use Livewire\Attributes\On; // [tl! highlight]
 use Livewire\Component;
 
 class OrderTracker extends Component
@@ -340,14 +343,14 @@ class OrderTracker extends Component
 }
 ```
 
-If you have Echo channels with variables embedded in them (such as a Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
+If you have Echo channels with variables embedded in them (such as an Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
 
 ```php
 <?php
 
 namespace App\Livewire;
 
-use Livewire\Attributes\On;
+use Livewire\Attributes\On; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Order;
 
@@ -386,7 +389,6 @@ You may also listen to events broadcast to private and presence channels:
 
 namespace App\Livewire;
 
-use Livewire\Attributes\On;
 use Livewire\Component;
 
 class OrderTracker extends Component

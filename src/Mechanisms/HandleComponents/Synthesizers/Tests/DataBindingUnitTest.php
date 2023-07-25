@@ -2,10 +2,8 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
-use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\Livewire;
-use stdClass;
 
 class DataBindingUnitTest extends \Tests\TestCase
 {

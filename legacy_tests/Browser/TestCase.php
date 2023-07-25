@@ -11,7 +11,6 @@ use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Livewire\LivewireServiceProvider;
 use Livewire\Livewire;
 use Livewire\Component;
-use LegacyTests\Browser\DuskBrowserMacros;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
@@ -65,7 +64,7 @@ class TestCase extends BaseTestCase
             DuskOptions::withoutUI();
         }
 
-        Browser::mixin(new \Tests\DuskBrowserMacros);
+        Browser::mixin(new \Livewire\Features\SupportTesting\DuskBrowserMacros);
 
         $this->afterApplicationCreated(function () {
             $this->makeACleanSlate();

@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms\FrontendAssets;
 
 use Illuminate\Support\Facades\Route;
-use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase

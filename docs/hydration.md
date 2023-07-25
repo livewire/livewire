@@ -82,7 +82,7 @@ The `memo` portion is used to store the information needed to identify and re-cr
 
 ### Embedding the snapshot in the HTML
 
-When a component is first rendered, Livewire stores the snapshot as JSON inside the an HTML attribute called `wire:snapshot`. This way, Livewire's JavaScript core can extract the JSON and turn it into a run-time object:
+When a component is first rendered, Livewire stores the snapshot as JSON inside an HTML attribute called `wire:snapshot`. This way, Livewire's JavaScript core can extract the JSON and turn it into a run-time object:
 
 ```html
 <div wire:id="..." wire:snapshot="{ state: {...}, memo: {...} }">
@@ -181,7 +181,7 @@ state: {
 
 However, if Livewire were hydrating a component based on this data, it would have no way of knowing it's a collection and not a plain array.
 
-Therefore, Livewire supports an alternate state syntax in the form a tuple (an array of two items):
+Therefore, Livewire supports an alternate state syntax in the form of a tuple (an array of two items):
 
 ```js
 todos: [
@@ -240,5 +240,5 @@ As you can see, the third item in the collection has been dehydrated into a meta
 
 ### Supporting custom property types
 
-Internally, Livewire has hydration support for the most common PHP and Laravel types. However, if you wish to support un-supported types, you can do so using [Synthesizers](/synthesizers)—Laravel's internal mechanism for hydrating/dehydrating non-primitive property types.
+Internally, Livewire has hydration support for the most common PHP and Laravel types. However, if you wish to support un-supported types, you can do so using [Synthesizers](/docs/synthesizers)—Laravel's internal mechanism for hydrating/dehydrating non-primitive property types.
 

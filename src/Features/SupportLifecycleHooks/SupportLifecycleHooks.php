@@ -64,8 +64,6 @@ class SupportLifecycleHooks extends ComponentHook
             ? 'updated'.$name->replace('.', '_')->studly()
             : false;
 
-        $name = $name->__toString();
-
         $this->callHook('updating', [$fullPath, $newValue]);
         $this->callTraitHook('updating', [$fullPath, $newValue]);
 

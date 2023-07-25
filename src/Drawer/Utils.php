@@ -2,7 +2,6 @@
 
 namespace Livewire\Drawer;
 
-use DOMDocument;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
 use function Livewire\invade;
@@ -91,7 +90,7 @@ class Utils extends BaseUtils
 
     static function containsDots($subject)
     {
-        return strpos($subject, '.') !== false;
+        return str_contains($subject, '.');
     }
 
     static function dotSegments($subject)

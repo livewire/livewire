@@ -2,9 +2,6 @@
 
 namespace Livewire;
 
-use function Livewire\trigger;
-use Orchestra\DuskUpdater\UpdateCommand;
-use Livewire\Mechanisms\RenderComponent;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
@@ -15,8 +12,6 @@ use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
-use Livewire\ComponentHookRegistry;
-use Livewire\ComponentHook;
 
 class LivewireManager
 {

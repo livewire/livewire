@@ -3,8 +3,6 @@
 namespace Livewire\Mechanisms\Tests;
 
 use Illuminate\Support\Facades\Artisan;
-use Livewire\Component;
-use Livewire\Livewire;
 
 // TODO - Change this to \Tests\TestCase
 class LivewireDirectiveUnitTest extends \LegacyTests\Unit\TestCase

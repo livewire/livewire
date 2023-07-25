@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
-use Illuminate\Support\Facades\File;
 use Livewire\Features\SupportConsoleCommands\Commands\ComponentParser;
 use Livewire\Features\SupportConsoleCommands\Commands\ComponentParserFromExistingComponent;
 use Livewire\Features\SupportConsoleCommands\Commands\UpgradeCommand;
@@ -23,7 +22,7 @@ class ChangeDefaultNamespace extends UpgradeStep
                 'keep',
             ], 'migrate');
 
-            if($choice == 'keep') {
+            if($choice === 'keep') {
                 $console->line('Keeping the old namespace...');
 
                 $this->publishConfigIfMissing($console);
@@ -37,9 +36,15 @@ class ChangeDefaultNamespace extends UpgradeStep
                 return $next($console);
             }
 
+            $componentNames = [];
+
             $results = collect($this->filesystem()->allFiles('app/Http/Livewire'))->map(function($file) {
                 return str($file)->after('app/Http/Livewire/')->before('.php')->__toString();
-            })->map(function($component) {
+            })->map(function($component) use (&$componentNames) {
+
+                // Track component names to update namespace references later on.
+                $componentNames[] = $component;
+
                 $parser = new ComponentParser(
                     'App\\Http\\Livewire',
                     config('livewire.view_path'),
@@ -55,8 +60,6 @@ class ChangeDefaultNamespace extends UpgradeStep
 
                 if ($this->filesystem()->exists($newParser->relativeClassPath())) {
                     return ['Skipped', $component, 'Already exists'];
-
-                    return false;
                 }
 
                 if($this->filesystem()->directoryMissing(dirname($newParser->relativeClassPath()))) {
@@ -69,12 +72,36 @@ class ChangeDefaultNamespace extends UpgradeStep
                 return ['Migrated', $component];
             });
 
+            foreach($componentNames as $name) {
+                $name = str($name)->replace('/', '\\\\')->toString();
+
+                // Update any namespace references
+                $this->patternReplacement(
+                    pattern: "/App\\\Http\\\Livewire\\\({$name})/",
+                    replacement: 'App\Livewire\\\$1',
+                    directories: [
+                        'app',
+                        'resources/views',
+                        'routes',
+                        'tests',
+                    ]
+                );
+            }
+
+            // Update vite config
+            $this->patternReplacement(
+                pattern: '/App\/Http\/Livewire/',
+                replacement: 'App/Livewire',
+                mode: 'manual',
+                files: 'vite.config.js'
+            );
+
             $console->table(
                 ['Status', 'Component', 'Remark'], $results
             );
-
-            return $next($console);
         }
+
+        return $next($console);
     }
 
     protected function hasOldNamespace()

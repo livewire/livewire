@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportPageComponents;
 
 use Exception;
-use Illuminate\View\ViewException;
 
 class MissingLayoutException extends Exception
 {

@@ -68,6 +68,7 @@ Let's add some basic validation rules to the `$title` and `$content` properties 
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Rule; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Post;
 
@@ -130,6 +131,7 @@ Let's rewrite the `CreatePost` component to use a `PostForm` class:
 
 namespace App\Livewire\Forms;
 
+use Livewire\Attributes\Rule;
 use Livewire\Form;
 
 class PostForm extends Form
@@ -194,6 +196,7 @@ If you'd like, you can also extract the post creation logic into the form object
 
 namespace App\Livewire\Forms;
 
+use Livewire\Attributes\Rule;
 use Livewire\Form;
 use App\Models\Post;
 
@@ -271,6 +274,7 @@ class UpdatePost extends Component
 
 namespace App\Livewire\Forms;
 
+use Livewire\Attributes\Rule;
 use Livewire\Form;
 use App\Models\Post;
 
@@ -347,7 +351,7 @@ Now, as a user types into this field, network requests will be sent to the serve
 
 ## Only updating fields on _blur_
 
-For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be a overly network resource-intensive on text inputs.
+For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be overly network resource-intensive on text inputs.
 
 If instead of sending network requests as a user types, you want to instead only send the request when a user "tabs" out of the text input (also referred to as "blurring" an input), you can use the `.blur` modifier instead:
 
@@ -389,6 +393,7 @@ If you want to automatically save a form as the user fills it out rather than wa
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Rule;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -422,7 +427,7 @@ class UpdatePost extends Component
 ```
 
 ```blade
-<form wire:submit.prevent>
+<form wire:submit>
     <input type="text" wire:model.blur="title">
     <div>
         @error('title') <span class="error">{{ $message }}</span> @enderror

@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Livewire\Mechanisms\DataStore;
-
 use function Livewire\store;
 
 trait HandlesRedirects

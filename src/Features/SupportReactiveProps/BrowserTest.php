@@ -16,6 +16,70 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function inc() { $this->count++; }
 
+                public function dec() { $this->count--; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+
+                        <button wire:click="dec" dusk="parent.dec">dec</button>
+
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+
+                        <livewire:child :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[Reactive]
+                public $count;
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@child.count', 0)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@child.count', 1)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 2)
+            ->assertSeeIn('@child.count', 2)
+
+            ->waitForLivewire()->click('@parent.dec')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@child.count', 1)
+
+            ->waitForLivewire()->click('@parent.dec')
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@child.count', 0)
+
+            ->waitForLivewire()->click('@parent.dec')
+            ->assertSeeIn('@parent.count', -1)
+            ->assertSeeIn('@child.count', -1)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@child.count', 0);
+    }
+
+    /** @test */
+    public function can_throw_exception_cannot_mutate_reactive_prop()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public function inc() { $this->count++; }
+
                 public function render() { return <<<'HTML'
                     <div>
                         <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
@@ -48,9 +112,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@parent.count', 1)
         ->assertSeeIn('@child.count', 1)
         ->waitForLivewire()->click('@child.inc')
+        ->waitFor('#livewire-error')
+        ->click('#livewire-error')
         ->assertSeeIn('@parent.count', 1)
-        ->assertSeeIn('@child.count', 1)
-        ;
+        ->assertSeeIn('@child.count', 1);
     }
 
     /** @test */

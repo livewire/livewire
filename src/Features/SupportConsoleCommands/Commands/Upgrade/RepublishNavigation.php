@@ -24,7 +24,6 @@ class RepublishNavigation extends UpgradeStep
             }
         }
 
-
         return $next($console);
     }
 }

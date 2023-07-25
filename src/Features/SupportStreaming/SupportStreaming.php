@@ -2,10 +2,7 @@
 
 namespace Livewire\Features\SupportStreaming;
 
-use Illuminate\Support\Facades\Artisan;
 use Livewire\ComponentHook;
-use Livewire\Component;
-use Illuminate\Support\Facades\Route;
 
 class SupportStreaming extends ComponentHook
 {

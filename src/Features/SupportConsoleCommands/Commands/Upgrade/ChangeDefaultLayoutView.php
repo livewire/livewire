@@ -2,9 +2,6 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
-use Illuminate\Support\Facades\File;
-use Livewire\Features\SupportConsoleCommands\Commands\ComponentParser;
-use Livewire\Features\SupportConsoleCommands\Commands\ComponentParserFromExistingComponent;
 use Livewire\Features\SupportConsoleCommands\Commands\UpgradeCommand;
 
 class ChangeDefaultLayoutView extends UpgradeStep
@@ -39,6 +36,7 @@ class ChangeDefaultLayoutView extends UpgradeStep
 
             $this->patternReplacement('/layouts\.app/', 'components.layouts.app', 'config');
         }
+
         return $next($console);
     }
 

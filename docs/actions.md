@@ -428,7 +428,7 @@ Alpine knowledge is not required when using Livewire; however, it's an extremely
 
 Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript.
 
-In these cases, rather than writing the actions inside your Blade template or another file, your component action may return the JavaScript function as a string. If the action is marked with the `#[JS]` attribute, it will be callable from your application's frontend:
+In these cases, rather than writing the actions inside your Blade template or another file, your component action may return the JavaScript function as a string. If the action is marked with the `#[Js]` attribute, it will be callable from your application's frontend:
 
 For example:
 
@@ -437,6 +437,7 @@ For example:
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Js;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -444,7 +445,7 @@ class SearchPosts extends Component
 {
     public $query = '';
 
-    #[JS] // [tl! highlight:6]
+    #[Js] // [tl! highlight:6]
     public function reset()
     {
         return <<<'JS'
@@ -479,7 +480,7 @@ In the above example, when the "Reset Search" button is pressed, the text input 
 
 In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions.
 
-This is generally useful for performing some kind of client-side followup after a server-side action is performed.
+This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
 
 For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
 
@@ -664,7 +665,7 @@ class ShowPost extends Component
 
 ## Security concerns
 
-Remember that any public method in your Livewire component can be called from the client-side, Even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
+Remember that any public method in your Livewire component can be called from the client-side, even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
 
 Below are three examples of easy-to-miss vulnerabilities in Livewire components. Each will show the vulnerable component first and the secure component after. As an exercise, try spotting the vulnerabilities in the first example before viewing the solution.
 
@@ -839,6 +840,7 @@ Every public method inside your Livewire component is callable from the client. 
 Consider the `BrowsePosts` example that we previously discussed, where users can view all posts in your application, but only administrators can delete posts. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now imagine we refactor the actual deletion of the post into a dedicated method like you might do in order to simplify your code:
 
 ```php
+// Warning: This snippet demonstrates what NOT to do...
 <?php
 
 namespace App\Livewire;

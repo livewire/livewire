@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportValidation;
 
 use function Livewire\invade;
 use function Livewire\store;
-
 use Illuminate\Contracts\Support\Arrayable;
 use Livewire\Wireable;
 use Livewire\Exceptions\MissingRulesException;
@@ -12,10 +11,7 @@ use Livewire\Drawer\Utils;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Collection;
-
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 trait HandlesValidation
 {
