@@ -381,6 +381,18 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('bob')
             ->assertSee('some-title');
     }
+
+    /** @test */
+    public function can_configure_title_in_render_method_and_layout_using_layout_attribute()
+    {
+        Route::get('/configurable-layout', ComponentWithClassBasedComponentTitleAndLayoutAttribute::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertSee('bob')
+            ->assertSee('some-title');
+    }
 }
 
 class ComponentForConfigurableLayoutTest extends Component
@@ -613,4 +625,16 @@ class ComponentForTitleAttribute extends Component
 class ComponentWithModel extends Component
 {
     public FrameworkModel $framework;
+}
+
+#[Layout('layouts.app-with-title')]
+class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
+{
+    public $name = 'bob';
+
+    public function render()
+    {
+        return view('show-name')
+            ->title('some-title');
+    }
 }
