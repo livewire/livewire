@@ -77,6 +77,78 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_reset_a_form_object()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->form->reset('title', 'content');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some Title')
+        ->set('form.content', 'Some content...')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ;
+    }
+
+    /** @test */
+    function can_reset_all_properties_of_form_object()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->form->reset();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some Title')
+        ->set('form.content', 'Some content...')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ;
+    }
+
+    /** @test */
+    function can_reset_specific_properties_of_form_object()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->form->reset('title');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some Title')
+        ->set('form.content', 'Some content...')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', 'Some content...')
+        ;
+    }
+
+    /** @test */
     function can_validate_a_form_object_using_rule_attributes()
     {
         Livewire::test(new class extends Component {

@@ -49,6 +49,24 @@ class Form implements Arrayable
         return $this->component->validate($filteredRules)[$this->propertyName];
     }
 
+    public function reset(...$properties): void
+    {
+        $properties = array_filter($properties, fn ($property) => array_key_exists($property, $this->all()));
+
+        $reset = [];
+
+        $empty = empty($properties);
+        $properties = $properties ?: $this->all();
+
+        foreach ($properties as $key => $value) {
+            if (str($value)->startsWith($this->propertyName . '.')) continue;
+
+            $reset[] = $this->propertyName .'.'. ($empty ? $key : $value);
+        }
+
+        $this->component->reset(...$reset);
+    }
+
     public function all()
     {
         return $this->toArray();
