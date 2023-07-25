@@ -29,6 +29,11 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Route::get('/query-page', QueryPage::class)->middleware('web');
             Route::get('/first', FirstPage::class)->middleware('web');
+            Route::get('/first-hide-progress', function () {
+                config(['livewire.navigate.show_progress_bar' => false]);
+
+                return (new FirstPage)();
+            })->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
@@ -46,10 +51,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    function can_configure_loading_indicator()
+    function can_configure_progress_bar()
     {
-        config(['livewire.navigate.show_progress_bar' => true]);
-
         $this->browse(function ($browser) {
             $browser
                 ->visit('/first')
@@ -61,11 +64,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForText('Done loading...');
         });
 
-        config(['livewire.navigate.show_progress_bar' => false]);
-
         $this->browse(function ($browser) {
             $browser
-                ->visit('/first')
+                ->visit('/first-hide-progress')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')

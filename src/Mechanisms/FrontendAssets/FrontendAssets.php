@@ -143,7 +143,7 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
-        $progressBar = config('livewire.navigate.show_progress_bar', true) ? 'data-progress-bar' : '';
+        $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
         $updateUri = app('livewire')->getUpdateUri();
 
