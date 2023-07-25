@@ -77,7 +77,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_reset_a_form_object()
+    function can_reset_a_form_object_inside_form_object()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -101,7 +101,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_reset_all_properties_of_form_object()
+    function can_reset_all_properties_of_form_object_inside_form_object()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -125,7 +125,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_reset_specific_properties_of_form_object()
+    function can_reset_specific_properties_of_form_object_inside_form_object()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
