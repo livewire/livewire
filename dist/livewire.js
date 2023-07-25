@@ -3695,6 +3695,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "get": "$get",
     "set": "$set",
     "call": "$call",
+    "commit": "$commit",
     "watch": "$watch",
     "entangle": "$entangle",
     "dispatch": "$dispatch",
@@ -8012,15 +8013,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          let func = new Function(["$wire"], body);
-          func.bind(component.$wire)(component.$wire);
+          module_default.evaluate(component.el, body);
         });
       });
     }
     if (xjs) {
       xjs.forEach((expression) => {
-        let func = new Function(["$wire"], expression);
-        func.bind(component.$wire)(component.$wire);
+        module_default.evaluate(component.el, expression);
       });
     }
   });
@@ -8072,9 +8071,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   var isNavigating = false;
-  window.addEventListener("alpine:navigated", () => {
+  document.addEventListener("alpine:navigated", (e) => {
+    if (e.detail && e.detail.init)
+      return;
     isNavigating = true;
-    window.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
+    document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
@@ -8193,7 +8194,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/directives/wire:transition.js
+  // js/directives/wire-transition.js
   on("morph.added", (el) => {
     el.__addedByMorph = true;
   });
@@ -8234,7 +8235,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     callback();
   }
 
-  // js/directives/wire:wildcard.js
+  // js/directives/wire-wildcard.js
   on("element.init", ({ el, component }) => {
     getDirectives(el).all().forEach((directive4) => {
       if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive4.type))
@@ -8253,7 +8254,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/directives/wire:navigate.js
+  // js/directives/wire-navigate.js
   module_default.addInitSelector(() => `[wire\\:navigate]`);
   module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
   module_default.interceptInit(module_default.skipDuringClone((el) => {
@@ -8288,7 +8289,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/directives/wire:offline.js
+  // js/directives/wire-offline.js
   var offlineHandlers = /* @__PURE__ */ new Set();
   var onlineHandlers = /* @__PURE__ */ new Set();
   window.addEventListener("offline", () => offlineHandlers.forEach((i) => i()));
@@ -8304,7 +8305,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/directives/wire:loading.js
+  // js/directives/wire-loading.js
   directive2("loading", ({ el, directive: directive4, component }) => {
     let targets = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive4);
@@ -8430,7 +8431,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return btoa(encodeURIComponent(subject));
   }
 
-  // js/directives/wire:stream.js
+  // js/directives/wire-stream.js
   directive2("stream", ({ el, directive: directive4, component, cleanup: cleanup3 }) => {
     let { expression, modifiers } = directive4;
     let off = on("stream", ({ name, content, replace: replace2 }) => {
@@ -8472,17 +8473,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let { done, value: chunk } = await reader.read();
       let decoder = new TextDecoder();
       let output = decoder.decode(chunk);
-      if (output && output.startsWith('{"stream":true')) {
-        callback(JSON.parse(output).body);
-      } else {
-        finalResponse = finalResponse + output;
-      }
+      let [streams, remaining] = extractStreamObjects(output);
+      streams.forEach((stream) => {
+        callback(stream);
+      });
+      finalResponse = finalResponse + remaining;
       if (done)
         return finalResponse;
     }
   }
+  function extractStreamObjects(raw3) {
+    let regex = /({"stream":true.*?"endStream":true})/g;
+    let matches2 = raw3.match(regex);
+    let parsed = [];
+    if (matches2) {
+      for (let i = 0; i < matches2.length; i++) {
+        parsed.push(JSON.parse(matches2[i]).body);
+      }
+    }
+    let remaining = raw3.replace(regex, "");
+    return [parsed, remaining];
+  }
 
-  // js/directives/wire:ignore.js
+  // js/directives/wire-ignore.js
   directive2("ignore", ({ el, directive: directive4 }) => {
     if (directive4.modifiers.includes("self")) {
       el.__livewire_ignore_self = true;
@@ -8491,7 +8504,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/directives/wire:dirty.js
+  // js/directives/wire-dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
   on("commit", ({ component, respond }) => {
     respond(() => {
@@ -8539,7 +8552,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return targets;
   }
 
-  // js/directives/wire:model.js
+  // js/directives/wire-model.js
   function debounce3(func, wait) {
     var timeout;
     return function() {
@@ -8612,13 +8625,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return !Object.keys(component.canonical).includes(baseProperty);
   }
 
-  // js/directives/wire:init.js
+  // js/directives/wire-init.js
   directive2("init", ({ el, directive: directive4 }) => {
     let fullMethod = directive4.expression ?? "$refresh";
     module_default.evaluate(el, `$wire.${fullMethod}`);
   });
 
-  // js/directives/wire:poll.js
+  // js/directives/wire-poll.js
   directive2("poll", ({ el, directive: directive4, component }) => {
     let interval = extractDurationFrom(directive4.modifiers, 2e3);
     let { start: start4, pauseWhile, throttleWhile, stopWhen } = poll(() => {
