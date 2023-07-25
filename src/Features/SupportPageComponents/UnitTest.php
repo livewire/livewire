@@ -393,6 +393,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSeeText('No Header')
             ->assertDontSeeText('No Footer')
             ->assertSee('I am a header - foo')
+            ->assertSee('Hello World')
             ->assertSee('I am a footer - foo');
     }
 }
