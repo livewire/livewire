@@ -127,7 +127,7 @@ Livewire.directive('confirm', ({ el, directive, component, cleanup }) => {
 
 ### Controlling Livewire's initialization
 
-In general you shouldn't need to manually start or stop Livewire, however, if you find yourself needing this behavior, Livewire makes it available to you via the following methods:
+In general, you shouldn't need to manually start or stop Livewire, however, if you find yourself needing this behavior, Livewire makes it available to you via the following methods:
 
 ```js
 // Start Livewire on a page that doesn't have Livewire running...
