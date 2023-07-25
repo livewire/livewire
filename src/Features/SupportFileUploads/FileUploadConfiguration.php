@@ -105,4 +105,12 @@ class FileUploadConfiguration
     {
         return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
     }
+
+    public static function maxUploadPartSize()
+    {
+        return config('livewire.temporary_file_upload.max_upload_part_size')
+            ?? static::isUsingS3()
+                ? 5 * 2 ** 30 // 5 Gb, AWS limit
+                : 5 * 2 ** 10; // 5 Mb
+    }
 }
