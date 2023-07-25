@@ -143,6 +143,8 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
+        $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
+
         $updateUri = app('livewire')->getUpdateUri();
 
         $extraAttributes = Utils::stringifyHtmlAttributes(
@@ -150,7 +152,7 @@ class FrontendAssets
         );
 
         return <<<HTML
-        <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
+        <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -160,9 +162,12 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
+        $progressBar = config('livewire.navigate.show_progress_bar', true);
+
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => app('livewire')->getUpdateUri(),
+            'progressBar' => $progressBar,
         ]);
 
         return <<<HTML

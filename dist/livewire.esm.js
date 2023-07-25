@@ -6794,6 +6794,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       Alpine22.navigate = (url) => {
         navigateTo(createUrlObjectFromString(url));
       };
+      Alpine22.navigate.disableProgressBar = () => {
+        showProgressBar = false;
+      };
       Alpine22.addInitSelector(() => `[${prefix("navigate")}]`);
       Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
         let shouldPrefetchOnHover = modifiers.includes("hover");
@@ -8924,6 +8927,7 @@ function normalizeQueryStringEntry(key, value) {
 
 // js/features/supportNavigate.js
 var isNavigating = false;
+shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
 document.addEventListener("alpine:navigated", (e) => {
   if (e.detail && e.detail.init)
     return;
@@ -8937,6 +8941,13 @@ function shouldRedirectUsingNavigateOr(effects, url, or) {
   } else {
     or();
   }
+}
+function shouldHideProgressBar() {
+  if (!!document.querySelector("[data-no-progress-bar]"))
+    return true;
+  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+    return true;
+  return false;
 }
 
 // js/features/supportRedirects.js
