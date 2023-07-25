@@ -302,9 +302,12 @@ Below are all the available methods for manipulating the validation errors in yo
 
 Method | Description
 --- | ---
-`$this->addError([key], [message])` | Manually add a validation message to the error bag (when used in forms, key will be prefixed with 'form.')
+`$this->addError([key], [message])` | Manually add a validation message to the error bag
 `$this->resetValidation([?key])` | Reset the validation errors for the provided key, or reset all errors if no key is supplied
 `$this->getErrorBag()` | Retrieve the underlying Laravel error bag used in the Livewire component
+
+> [!info] Using `$this->addError()` with Form Objects
+> When manually adding errors using `$this->addError` inside of a form object the key will automatically be prefixed with the name of the property the form is assigned to in the parent component. For example, if in your Component you assign the form to a property called `$data`, key will become `data.key`. 
 
 ## Accessing the validator instance
 
