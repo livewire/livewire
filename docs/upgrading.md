@@ -152,7 +152,7 @@ When rendering Livewire components as full pages using a syntax like the followi
 Route::get('/posts', ShowPosts::class);
 ```
 
-The Blade layout file used by Livewire to render the component inside of has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
+The Blade layout file used by Livewire to render the component has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
 
 ```shell
 resources/views/layouts/app.blade.php #[tl! remove]
