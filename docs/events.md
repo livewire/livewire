@@ -343,7 +343,7 @@ class OrderTracker extends Component
 }
 ```
 
-If you have Echo channels with variables embedded in them (such as a Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
+If you have Echo channels with variables embedded in them (such as an Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
 
 ```php
 <?php
