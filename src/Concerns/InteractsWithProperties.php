@@ -55,7 +55,7 @@ trait InteractsWithProperties
         foreach ($properties as $property) {
             $freshInstance = new static;
 
-            $this->{$property} = $freshInstance->{$property};
+            data_set($this, $property, data_get($freshInstance, $property));
         }
     }
 

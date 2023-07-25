@@ -6,7 +6,7 @@
 
 To save you time upgrading, we've included an Artisan command to automate as many parts of the upgrade process as possible.
 
-After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command and you will be receive prompts to upgrade each breaking change automatically:
+After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command and you will receive prompts to upgrade each breaking change automatically:
 
 ```shell
 php artisan livewire:upgrade
@@ -23,7 +23,7 @@ Livewire now requires that your application is running on PHP version 8.1 or gre
 
 ## Update Livewire to version 3
 
-Run the following composer command to upgrade your application's Livewire dependancy from version 2 to 3:
+Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3:
 
 ```shell
 composer require livewire/livewire:3.0.0-beta.1
@@ -95,7 +95,7 @@ Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `Ap
 
 When rendering full-page components in version 2, Livewire would use `resources/views/layouts/app.blade.php` as the default layout Blade component.
 
-Because of an growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
+Because of a growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
 
 ```php
 'layout' => 'layouts.app', // [tl! remove]
@@ -152,7 +152,7 @@ When rendering Livewire components as full pages using a syntax like the followi
 Route::get('/posts', ShowPosts::class);
 ```
 
-The Blade layout file used by Livewire to render the component inside of has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
+The Blade layout file used by Livewire to render the component has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
 
 ```shell
 resources/views/layouts/app.blade.php #[tl! remove]
@@ -624,4 +624,3 @@ Route::group(['prefix' => LaravelLocalization::setLocale()], function ()
 ```
 
 For more information, please consult our documentation on [configuring Livewire's update endpoint](/docs/installation#configuring-livewires-update-endpoint).
-

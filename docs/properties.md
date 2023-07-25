@@ -128,7 +128,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 
-class ManageTodos extends Controller
+class ManageTodos extends Component
 {
     public $todos = [];
 
@@ -159,7 +159,7 @@ Each property in a Livewire component is serialized or "dehydrated" into JSON be
 
 This two-way conversion process has certain limitations, restricting the types of properties Livewire can work with.
 
-### Primitives types
+### Primitive types
 
 Livewire supports primitive types such as strings, integers, etc. These types can be easily converted to and from JSON, making them ideal for use as properties in Livewire components.
 
@@ -350,10 +350,15 @@ After the user clicks "Clear", the input will be reset to an empty string withou
 
 On the subsequent request, the server-side value of `$todo` will be updated and synchronized.
 
-If you prefer, you can also use the more explicit `.set()` method for setting properties client-side. However, you should note that using `.set()` immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API:
+If you prefer, you can also use the more explicit `.set()` method for setting properties client-side. However, you should note that using `.set()` by default immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API:
 
 ```blade
 <button x-on:click="$wire.set('todo', '')">Clear</button>
+```
+
+In order to update the property without sending a network request to the server, you can pass a third bool parameter. This will defer the network request and on a subsequent request will be synchronized on the server-side:
+```blade
+<button x-on:click="$wire.set('todo', '', false)">Clear</button>
 ```
 
 ## Security concerns
