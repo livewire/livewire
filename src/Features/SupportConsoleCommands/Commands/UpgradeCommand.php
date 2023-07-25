@@ -17,6 +17,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifie
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigation;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpdateComputedProperties;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeEmitInstructions;
@@ -47,6 +48,7 @@ class UpgradeCommand extends Command
             ChangeWireLoadDirectiveToWireInit::class,
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
+            UpdateComputedProperties::class,
 
             // Manual steps
             UpgradeConfigInstructions::class,
