@@ -58,7 +58,7 @@ let components = Livewire.all()
 In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you interact with [Livewire's event system](/docs/events) from anywhere in your application:
 
 ```js
-// Dispatch an event to any Livewire component's listening...
+// Dispatch an event to any Livewire components listening...
 Livewire.dispatch('post-created', { postId: 2 })
 
 // Dispatch an event to a given Livewire component by name...
@@ -361,7 +361,7 @@ let component = {
 
 ### The `commit` payload
 
-When an action is performed on a Livewire component in the browser, a network request is triggered. That network request contains one or many component's and various instructions for the server. Internally, these component network payloads are called "commits".
+When an action is performed on a Livewire component in the browser, a network request is triggered. That network request contains one or many components and various instructions for the server. Internally, these component network payloads are called "commits".
 
 The term "commit" was chosen as a helpful way to think about Livewire's relationship between frontend and backend. A component is rendered and manipulated on the frontend until an action is performed that requires it to "commit" its state and updates to the backend.
 
@@ -401,7 +401,7 @@ For more information, please consult the [documentation on the component object]
 
 ### DOM element initialization
 
-In addition to triggering an event when new component's are initialized, Livewire triggers an event for each DOM element within a given Livewire component.
+In addition to triggering an event when new components are initialized, Livewire triggers an event for each DOM element within a given Livewire component.
 
 This can be used to provide custom Livewire HTML attributes within your application:
 
