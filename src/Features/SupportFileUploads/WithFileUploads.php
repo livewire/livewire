@@ -23,6 +23,26 @@ trait WithFileUploads
         $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrl::forLocal())->self();
     }
 
+    public function uploadMultipart($name, $fileHashName, $uploadId, $partNumber, $partsCount)
+    {
+        $this->dispatch(
+            'upload:generatedSignedUrlForS3',
+            name: $name,
+            payload: GenerateSignedUploadUrl::forMultipartUpload(
+                $fileHashName, $uploadId, $partNumber, $partsCount
+            ),
+        )->self();
+    }
+
+    public function completeMultipartUpload($name, $uploadId)
+    {
+        return $this->dispatch(
+            'upload:generatedSignedUrlForS3',
+            name: $name,
+            payload: GenerateSignedUploadUrl::completeMultipartUpload($uploadId),
+        )->self();
+    }
+
     public function finishUpload($name, $tmpPath, $isMultiple)
     {
         $this->cleanupOldUploads();
@@ -113,4 +133,3 @@ trait WithFileUploads
         }
     }
 }
-
