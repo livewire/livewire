@@ -145,6 +145,20 @@ class UploadManager {
         if ('Host' in headers) delete headers.Host
         let url = payload.url
 
+        if (payload.upload_id) {
+            this.makeRequest(name, formData, 'put', url, headers, response => {
+                if (payload.next_part == payload.parts_count) {
+                    return [this.component.$wire.call('completeMultipartUpload', name, payload.upload_id).location];
+                }
+                return undefined;
+            })
+
+            if (payload.next_part < payload.parts_count) {
+                this.component.$wire.call('uploadMultipart', name, payload.upload_id, payload.next_part);
+                return;
+            }
+        }
+
         this.makeRequest(name, formData, 'put', url, headers, response => {
             return [payload.path]
         })
@@ -169,7 +183,9 @@ class UploadManager {
             if ((request.status+'')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-                this.component.$wire.call('finishUpload', name, paths, this.uploadBag.first(name).multiple)
+                if (paths) {
+                    this.component.$wire.call('finishUpload', name, paths, this.uploadBag.first(name).multiple)
+                }
 
                 return
             }
