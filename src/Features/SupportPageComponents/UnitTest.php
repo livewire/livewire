@@ -381,6 +381,20 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('bob')
             ->assertSee('some-title');
     }
+
+    /** @test */
+    public function can_use_layout_slots_in_full_page_components()
+    {
+        Route::get('/configurable-layout', ComponentWithMultipleLayoutSlots::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertDontSeeText('No Header')
+            ->assertDontSeeText('No Footer')
+            ->assertSee('I am a header - foo')
+            ->assertSee('I am a footer - foo');
+    }
 }
 
 class ComponentForConfigurableLayoutTest extends Component
@@ -607,6 +621,16 @@ class ComponentForTitleAttribute extends Component
     public function render()
     {
         return view('show-name');
+    }
+}
+
+class ComponentWithMultipleLayoutSlots extends Component
+{
+    public function render()
+    {
+        return view('show-layout-slots', [
+            'bar' => 'foo',
+        ])->layout('layouts.app-layout-with-slots');
     }
 }
 
