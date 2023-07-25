@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
 use Arr;
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 abstract class UpgradeStep
