@@ -179,7 +179,7 @@ Livewire also provides helpful testing utilities for setting and asserting prope
 
 Component properties are typically updated in your application when users interact with form inputs containing `wire:model`. But, because tests don't typically type into an actual browser, Livewire allows you to set properties directly using the `set()` method.
 
-Below is an example of using `set()` to update the `$title` property of a `CreatePosts` component:
+Below is an example of using `set()` to update the `$title` property of a `CreatePost` component:
 
 ```php
 <?php
@@ -323,7 +323,7 @@ Livewire actions are typically called from the frontend using something like `wi
 
 Because Livewire component tests don't use an actual browser, you can instead trigger actions in your tests using the `call()` method.
 
-Below is an example of a `CreatePosts` component using the `call()` method to trigger the `save()` action:
+Below is an example of a `CreatePost` component using the `call()` method to trigger the `save()` action:
 
 ```php
 <?php
@@ -492,7 +492,7 @@ class CreatePostTest extends TestCase
 }
 ```
 
-It is often helpful to test that two components can communicate with each other by dispatching and listening for events. Using the `dispatch()` method, let's simulate a `CreatePost` component dispatching a `create-post` event. Then, when will assert that a `PostCountBadge` component which listens for that event updates its post count appropriately:
+It is often helpful to test that two components can communicate with each other by dispatching and listening for events. Using the `dispatch()` method, let's simulate a `CreatePost` component dispatching a `create-post` event. Then, we will assert that a `PostCountBadge` component, which listens for that event, updates its post count appropriately:
 
 ```php
 <?php
