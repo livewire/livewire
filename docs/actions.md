@@ -480,7 +480,7 @@ In the above example, when the "Reset Search" button is pressed, the text input 
 
 In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions.
 
-This is generally useful for performing some kind of client-side followup after a server-side action is performed.
+This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
 
 For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
 
@@ -665,7 +665,7 @@ class ShowPost extends Component
 
 ## Security concerns
 
-Remember that any public method in your Livewire component can be called from the client-side, Even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
+Remember that any public method in your Livewire component can be called from the client-side, even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
 
 Below are three examples of easy-to-miss vulnerabilities in Livewire components. Each will show the vulnerable component first and the secure component after. As an exercise, try spotting the vulnerabilities in the first example before viewing the solution.
 
