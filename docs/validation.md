@@ -114,6 +114,40 @@ class CreatePost extends Component
 }
 ```
 
+### Custom attribute name
+
+If you wish to customize the attribute name injected into the validation message, you may do so using the `as: ` parameter:
+
+```php
+use Livewire\Attributes\Rule;
+
+#[Rule('required', as: 'date of birth')]
+public $dob;
+```
+
+When validation fails in the above snippet, Laravel will use "date of birth" instead of "dob" as the name of the field in the validation message. The generated message will be "The date of birth field is required" instead of "The dob field is required".
+
+### Custom validation message
+
+To bypass Laravel's validation message and replace it with your own, you can use the `message: ` parameter in the `#[Rule]` attribute:
+
+```php
+use Livewire\Attributes\Rule;
+
+#[Rule('required', message: 'Please provide a post title')]
+public $title;
+```
+
+Now, when the validation fails for this property, the message will  be "Please provide a post title" instead of "The title field is required".
+
+If you wish to add different messages for different rules, you can simply provide multiple `#[Rule]` attributes:
+
+```php
+#[Rule('required', message: 'Please provide a post title')]
+#[Rule('min:3', message: 'This title is too short')]
+public $title;
+```
+
 ### Custom key
 
 When applying validation rules directly to a property using the `#[Rule]` attribute, Livewire assumes the validation key should be the name of the property itself. However, there are times when you may want to customize the validation key.
@@ -244,12 +278,12 @@ However, you may need to customize the language of these error messages to bette
 
 Sometimes the property you are validating has a name that isn't suited for displaying to users. For example, if you have a database field in your app named `dob` that stands for "Date of birth", you would want to show your users "The date of birth field is required" instead of "The dob field is required".
 
-Livewire allows you to specify an alternative name for a property using the `attribute: ` parameter:
+Livewire allows you to specify an alternative name for a property using the `as: ` parameter:
 
 ```php
 use Livewire\Attributes\Rule;
 
-#[Rule('required', attribute: 'date of birth')]
+#[Rule('required', as: 'date of birth')]
 public $dob = '';
 ```
 

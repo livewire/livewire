@@ -123,30 +123,6 @@ Like Livewire's `dispatch()` method, you can pass additional data along with the
 
 To learn more about dispatching events using Alpine, consult the [Alpine documentation](https://alpinejs.dev/magics/dispatch).
 
-### Listening for events from children only
-
-By default, when you register a Livewire event listener using `#[On]`, it will listen for that event anywhere on the page. Livewire does this by listening for the event on the `window` object.
-
-But, sometimes you may want to scope an event listener to only listen for events from child components rendered within the listening component.
-
-To accomplish this, you may provide the `fromChildren` argument to `#[On]`:
-
-```php
-use Livewire\Component;
-use Livewire\Attributes\On; // [tl! highlight]
-
-class Dashboard extends Component
-{
-	#[On('post-created', fromChildren: true)] // [tl! highlight]
-    public function updatePostCount()
-    {
-		// ...
-    }
-}
-```
-
-Now, the `updatePostCount()` method will only be triggered when a child component dispatches a `post-created` event.
-
 > [!tip] You might not need events
 > If you are using events to call behavior on a parent from a child, you can instead call the action directly from the child using `$parent` in your Blade template. For example:
 >
@@ -343,7 +319,7 @@ class OrderTracker extends Component
 }
 ```
 
-If you have Echo channels with variables embedded in them (such as a Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
+If you have Echo channels with variables embedded in them (such as an Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
 
 ```php
 <?php

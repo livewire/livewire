@@ -17,7 +17,6 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, Component::class)
-                ->tinker()
                 /*
                  * Flashing a message shows up right away, AND
                  * will show up if you redirect to a different

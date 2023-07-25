@@ -68,7 +68,7 @@ public function save()
 
 In addition to allowing you to use Laravel's built-in redirection methods, Livewire also supports Laravel's [session flash data utilities](https://laravel.com/docs/session#flash-data).
 
-To pass flash data along with a redirect, you can use Laravels' `->with()` method like so:
+To pass flash data along with a redirect, you can use Laravel's `->with()` method like so:
 
 ```php
 use Livewire\Component;

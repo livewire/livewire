@@ -524,6 +524,56 @@ class PostCountBadgeTest extends TestCase
 }
 ```
 
+Sometimes it may come in handy to assert that an event was dispatched with one or more parameters. Let's have a look at a component called `ShowPosts` that dispatches an event called `banner-message` with parameters `message` and `style`:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\ShowPosts;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class ShowPostsTest extends TestCase
+{
+    /** @test */
+    public function notification_is_dispatched_when_deleting_a_post()
+    {
+        Livewire::test(ShowPosts::class)
+            ->call('delete', postId: 3)
+            ->assertDispatched('notify',
+                message: 'The post was deleted',
+            );
+    }
+}
+```
+
+If your component dispatches an event of which the parameter values must be asserted conditionally, you can pass in a closure as the second argument to the `assertDispatched` method like below. It receives the event name as the first argument, and an array containing the parameters as the second argument. Make sure the closure returns a boolean.
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\ShowPosts;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class ShowPostsTest extends TestCase
+{
+    /** @test */
+    public function notification_is_dispatched_when_deleting_a_post()
+    {
+        Livewire::test(ShowPosts::class)
+            ->call('delete', postId: 3)
+            ->assertDispatched('notify', function($eventName, $params) {
+                return ($params['message'] ?? '') === 'The post was deleted';
+            })
+    }
+}
+```
+
 ## All available testing utilities
 
 Livewire provides many more testing utilities. Below is a comprehensive list of every testing method available to you, with a short description of how it's intended to be used:

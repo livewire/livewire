@@ -2,13 +2,15 @@ import { on, trigger } from "@/events"
 
 let isNavigating = false
 
-window.addEventListener('alpine:navigated', e => {
+shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
+
+document.addEventListener('alpine:navigated', e => {
     if (e.detail && e.detail.init) return
 
     isNavigating = true
 
     // Forward a "livewire" version of the Alpine event...
-    window.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
+    document.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
 })
 
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
@@ -20,3 +22,12 @@ export function shouldRedirectUsingNavigateOr(effects, url, or) {
         or()
     }
 }
+
+function shouldHideProgressBar() {
+    if (!! document.querySelector('[data-no-progress-bar]')) return true
+
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false) return true
+
+    return false
+}
+
