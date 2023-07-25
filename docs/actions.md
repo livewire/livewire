@@ -248,7 +248,7 @@ class ShowPosts extends Component
     {
         $post = Post::findOrFail($id);
 
-        $this->authorize('update', $post);
+        $this->authorize('delete', $post);
 
         $post->delete();
     }
