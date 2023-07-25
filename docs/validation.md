@@ -119,6 +119,8 @@ class CreatePost extends Component
 If you wish to customize the attribute name injected into the validation message, you may do so using the `as: ` parameter:
 
 ```php
+use Livewire\Attributes\Rule;
+
 #[Rule('required', as: 'date of birth')]
 public $dob;
 ```
@@ -130,6 +132,8 @@ When validation fails in the above snippet, Laravel will use "date of birth" ins
 To bypass Laravel's validation message and replace it with your own, you can use the `message: ` parameter in the `#[Rule]` attribute:
 
 ```php
+use Livewire\Attributes\Rule;
+
 #[Rule('required', message: 'Please provide a post title')]
 public $title;
 ```
