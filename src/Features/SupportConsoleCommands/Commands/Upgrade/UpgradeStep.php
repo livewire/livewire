@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
 use Arr;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 abstract class UpgradeStep
@@ -32,12 +33,12 @@ abstract class UpgradeStep
         return false;
     }
 
-    public function interactiveReplacement($console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'])
+    public function interactiveReplacement($console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'], $subjectName = 'directives')
     {
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> {$title} </>");
         $console->newLine();
 
-        $console->line("This means all <options=underscore>{$before}</> directives must be changed to <options=underscore>{$after}</>.");
+        $console->line("This means all <options=underscore>{$before}</> {$subjectName} must be changed to <options=underscore>{$after}</>.");
 
         $confirm = $console->confirm("Would you like to change all occurrences of {$before} to {$after}?", true);
 
