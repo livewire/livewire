@@ -17,14 +17,33 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function it_will_remove_empty_input()
     {
-        Livewire::withQueryParams(['page' => ''])->visit(TestComponent::class)
+        Livewire::withQueryParams(['page' => ''])->visit(TestComponentWithOutHistory::class)
+            ->assertQueryStringMissing('page');
+        Livewire::withQueryParams(['page' => ''])->visit(TestComponentWithHistory::class)
             ->assertQueryStringMissing('page');
     }
 }
 
-class TestComponent extends Component
+class TestComponentWithOutHistory extends Component
 {
     #[Url(keep: false)]
+    public int $page;
+
+    public function render()
+    {
+        return Blade::render(
+            <<< 'HTML'
+                    <div>
+                        
+                    </div>
+                    HTML
+        );
+    }
+}
+
+class TestComponentWithHistory extends Component
+{
+    #[Url(history: true, keep: false)]
     public int $page;
 
     public function render()
