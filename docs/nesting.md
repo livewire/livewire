@@ -68,7 +68,7 @@ class TodoList extends Component
 </div>
 ```
 
-As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos= "$todos"`.
+As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos="$todos"`.
 
 Now that `$todos` has been passed to the child component, you can receive that data through the child component's `mount()` method:
 
