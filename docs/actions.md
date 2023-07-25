@@ -480,7 +480,7 @@ In the above example, when the "Reset Search" button is pressed, the text input 
 
 In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions.
 
-This is generally useful for performing some kind of client-side followup after a server-side action is performed.
+This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
 
 For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
 
