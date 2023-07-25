@@ -95,7 +95,7 @@ Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `Ap
 
 When rendering full-page components in version 2, Livewire would use `resources/views/layouts/app.blade.php` as the default layout Blade component.
 
-Because of an growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
+Because of a growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
 
 ```php
 'layout' => 'layouts.app', // [tl! remove]
