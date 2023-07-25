@@ -84,7 +84,7 @@ The following configuration items have been updated with new default values:
 
 #### New class namespace
 
-Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `App\Livewire`. You are welcome to keep the old namespace configuration value; however, if you choose to update your configuration to the new namespace, you will have to move your Livewire component's to `app/Livewire`:
+Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `App\Livewire`. You are welcome to keep the old namespace configuration value; however, if you choose to update your configuration to the new namespace, you will have to move your Livewire components to `app/Livewire`:
 
 ```php
 'class_namespace' => 'App\\Http\\Livewire', // [tl! remove]
