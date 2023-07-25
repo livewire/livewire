@@ -524,28 +524,26 @@ class PostCountBadgeTest extends TestCase
 }
 ```
 
-Sometimes it may come in handy to assert that an event was dispatched with one or more parameters. Let's have a look at a component called `PostsTable` that dispatches an event called `banner-message` with parameters `message` and `style`:
+Sometimes it may come in handy to assert that an event was dispatched with one or more parameters. Let's have a look at a component called `ShowPosts` that dispatches an event called `banner-message` with parameters `message` and `style`:
 
 ```php
 <?php
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\PostsTable;
+use App\Livewire\ShowPosts;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class PostsTableTest extends TestCase
+class ShowPostsTest extends TestCase
 {
     /** @test */
-    public function banner_event_is_dispatched_when_deleting_a_post()
+    public function notification_is_dispatched_when_deleting_a_post()
     {
-        Livewire::test(PostsTable::class)
-            ->set('postIndexToDelete', 3)
-            ->call('delete')
-            ->assertDispatched('banner-message',
-                message: __('The post was deleted'),
-                style: BannerStyle::SUCCESS->value
+        Livewire::test(ShowPosts::class)
+            ->call('delete', postId: 3)
+            ->assertDispatched('notify',
+                message: 'The post was deleted',
             );
     }
 }
@@ -558,28 +556,19 @@ If your component dispatches an event of which the parameter values must be asse
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\PostsTable;
+use App\Livewire\ShowPosts;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class PostsTableTest extends TestCase
+class ShowPostsTest extends TestCase
 {
     /** @test */
-    public function banner_event_is_dispatched_when_deleting_a_post()
+    public function notification_is_dispatched_when_deleting_a_post()
     {
-        Livewire::test(PostsTable::class)
-            ->set('postIndexToDelete', 3)
-            ->call('delete')
-            ->assertDispatched('banner-message', function(string $eventName, array $params) {
-                if($params['style'] ?? '' === BannerStyle::SUCCESS->value) {
-                    return $params['message'] ?? '' === __('The post was deleted');
-                }
-
-                if($params['style'] ?? '' === BannerStyle::DANGER->value) {
-                    return $params['message'] ?? '' === __('The post could not be deleted');
-                }
-
-                return false;
+        Livewire::test(ShowPosts::class)
+            ->call('delete', postId: 3)
+            ->assertDispatched('notify', function($eventName, $params) {
+                return ($params['message'] ?? '') === 'The post was deleted';
             })
     }
 }
