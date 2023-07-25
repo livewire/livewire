@@ -51,8 +51,6 @@ class Form implements Arrayable
 
     public function reset(...$properties): void
     {
-        $properties = array_filter($properties, fn ($property) => array_key_exists($property, $this->all()));
-
         $reset = [];
 
         $empty = empty($properties);
