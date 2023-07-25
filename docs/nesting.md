@@ -322,7 +322,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
@@ -361,7 +361,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
