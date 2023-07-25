@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\View\ViewException;
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -65,4 +67,19 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Subsequent request')
         ;
     }
+
+    /** @test */
+    public function components_without_a_render_method_runs_in_testing()
+    {
+        $this->expectException(ViewException::class);
+        $this->expectExceptionMessage(
+            'component-without-render-method.blade.php'
+        );
+
+        Livewire::test(ComponentWithoutRenderMethod::class);
+    }
+}
+
+class ComponentWithoutRenderMethod extends Component
+{
 }
