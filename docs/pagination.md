@@ -263,7 +263,7 @@ For more information on simple pagination, check out [Laravel's "simplePaginator
 
 ## Using cursor pagination
 
-Livewire also supports using Laravel's cursor pagination—a faster pagination method useful in large datasets:
+Livewire also supports using Laravel's cursor pagination — a faster pagination method useful in large datasets:
 
 ```php
 public function render()
