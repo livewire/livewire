@@ -88,7 +88,7 @@ Because the above component specifies a "placeholder" by returning HTML from a `
 
 ## Passing in props
 
-In general, you can treat `lazy` components the same as normal components since you can still pass data into them from outside.
+In general, you can treat `lazy` components the same as normal components, since you can still pass data into them from outside.
 
 For example, here's a scenario where you might pass a time interval into the `Revenue` component from a parent component:
 
