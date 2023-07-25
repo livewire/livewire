@@ -51,11 +51,11 @@ For more information on pagination using Laravel, check out [Laravel's comprehen
 
 ## Resetting the page
 
-When sorting or filtering results, it is common to want to reset the page number back to `1`.
+When sorting or filtering results, it is common that you want to reset the page number back to `1`.
 
 For this reason, Livewire provides the `$this->resetPage()` method, allowing you to reset the page number from anywhere in your component.
 
-The following component demonstrates using this method to reset the page after a search field is updated and submitted:
+The following component demonstrates using this method to reset the page after the search form is submitted:
 
 ```php
 <?php
@@ -219,10 +219,10 @@ class ShowPosts extends Component
 
 The previous hooks only apply to the default paginator. If you are using a named paginator, you must define the methods using the paginator's name.
 
-For example, below is an example of what a hook for a paginator named `invoices-page` would look like:
+For example, below is an example of what a hook for a paginator named `invoice-page` would look like:
 
 ```php
-public function updatingInvoicesPage($page)
+public function updatingInvoicePage($page)
 {
     //
 }

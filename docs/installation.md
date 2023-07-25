@@ -10,7 +10,7 @@ That's it — really. If you want more customization options, keep reading. Othe
 
 ## Publishing the configuration file
 
-Livewire is "zero-config", meaning you can use it by following conventions without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
+Livewire is "zero-config", meaning you can use it by following conventions, without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
 
 ```shell
 php artisan livewire:publish --config
