@@ -166,7 +166,7 @@ Livewire caches persisted values for 3600 seconds (one hour). You can override t
 
 ## Caching across all components
 
-Instead of caching a the value of a computed property for the duration of a single component's lifecycle, you can cache the value of a computed across all components in your application using the `cache: true` parameter provided by the `#[Computed]` attribute:
+Instead of caching the value of a computed property for the duration of a single component's lifecycle, you can cache the value of a computed across all components in your application using the `cache: true` parameter provided by the `#[Computed]` attribute:
 
 ```php
 use Livewire\Attributes\Computed;
