@@ -127,7 +127,7 @@ To address this issue, we need to inform Livewire that we want to use the ESM (E
 
 When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it.
 
-The final step involves importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire and Alpine:
+The final step is importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire and Alpine:
 
 ```js
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';

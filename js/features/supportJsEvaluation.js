@@ -1,5 +1,6 @@
 import { overrideMethod } from '@/$wire'
 import { on } from '@/events'
+import Alpine from 'alpinejs'
 
 on('effects', (component, effects) => {
     let js = effects.js
@@ -8,16 +9,14 @@ on('effects', (component, effects) => {
     if (js) {
         Object.entries(js).forEach(([method, body]) => {
             overrideMethod(component, method, () => {
-                let func = new Function(['$wire'], body)
-                func.bind(component.$wire)(component.$wire)
+                Alpine.evaluate(component.el, body)
             })
         })
     }
 
     if (xjs) {
         xjs.forEach(expression => {
-            let func = new Function(['$wire'], expression)
-            func.bind(component.$wire)(component.$wire)
+            Alpine.evaluate(component.el, expression)
         })
     }
 })

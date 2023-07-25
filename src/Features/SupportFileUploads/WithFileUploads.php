@@ -2,10 +2,7 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Livewire\Features\SupportFileUploads\S3DoesntSupportMultipleFileUploads;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
-use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 

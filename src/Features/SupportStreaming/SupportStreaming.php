@@ -2,10 +2,7 @@
 
 namespace Livewire\Features\SupportStreaming;
 
-use Illuminate\Support\Facades\Artisan;
 use Livewire\ComponentHook;
-use Livewire\Component;
-use Illuminate\Support\Facades\Route;
 
 class SupportStreaming extends ComponentHook
 {
@@ -34,7 +31,7 @@ class SupportStreaming extends ComponentHook
 
     public static function streamContent($body)
     {
-        echo json_encode(['stream' => true, 'body' => $body]);
+        echo json_encode(['stream' => true, 'body' => $body, 'endStream' => true]);
         ob_flush();
         flush();
     }

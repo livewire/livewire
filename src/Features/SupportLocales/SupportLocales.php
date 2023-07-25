@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportLocales;
 
-use function Livewire\on;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
 use Livewire\ComponentHook;
 
 class SupportLocales extends ComponentHook

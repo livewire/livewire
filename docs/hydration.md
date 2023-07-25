@@ -1,13 +1,13 @@
 
 Using Livewire feels like attaching a server-side PHP class directly to a web browser. Things like calling server-side functions directly from button presses support this illusion. But in reality, it is just that: an illusion.
 
-In the background, Livewire actually behaves much more like a standard web application. It renders static HTML to the browser, listens for browser events, then makes AJAX requests to update server-side code.
+In the background, Livewire actually behaves much more like a standard web application. It renders static HTML to the browser, listens for browser events, then makes AJAX requests to invoke server-side code.
 
 Because each AJAX request Livewire makes to the server is "stateless" (meaning there isn't a long running backend process keeping the state of a component alive), Livewire must re-create the last-known state of a component before making any updates.
 
 It does this by taking "snapshots" of the PHP component after each server-side update so that the component can be re-created or _resumed_ on the next request.
 
-You'll hear us refer to the process of taking the snapshot as "dehydration" and the process of re-creating a component from a snapshot as "hydration".
+Throughout this documentation, we will refer to the process of taking the snapshot as "dehydration" and the process of re-creating a component from a snapshot as "hydration".
 
 ## Dehydrating
 
@@ -73,16 +73,16 @@ In order to re-create the `Counter` component on the server during the next requ
 }
 ```
 
-You'll notice two different portions of the snapshot: `memo`, and `state`.
+Notice two different portions of the snapshot: `memo`, and `state`.
 
 The `memo` portion is used to store the information needed to identify and re-create the component, while the `state` portion stores the values of all the component's public properties.
 
 > [!info]
-> The above snapshot is a condensed version of an actual snapshot in Livewire. In live applications, the snapshot contains much more information such as: validation errors, a list of child components, locales, and much more. For a more detailed look at a snapshot object reference the [snapshot schema documentation](/docs/javascript#the-snapshot-object).
+> The above snapshot is a condensed version of an actual snapshot in Livewire. In live applications, the snapshot contains much more information, such as validation errors, a list of child components, locales, and much more. For a more detailed look at a snapshot object you may reference the [snapshot schema documentation](/docs/javascript#the-snapshot-object).
 
 ### Embedding the snapshot in the HTML
 
-It's worth noting that when a component is first rendered, Livewire stores the snapshot as JSON inside the an HTML attribute called `wire:snapshot`. This way, Livewire's JavaScript core can extract the JSON and turn it into a run-time object:
+When a component is first rendered, Livewire stores the snapshot as JSON inside an HTML attribute called `wire:snapshot`. This way, Livewire's JavaScript core can extract the JSON and turn it into a run-time object:
 
 ```html
 <div wire:id="..." wire:snapshot="{ state: {...}, memo: {...} }">
@@ -135,11 +135,11 @@ If you follow the above script, you will see that after creating a `Counter` obj
 
 ## Advanced hydration
 
-The above `Counter` example works well to demonstrate the concept of hydration, however, it only shows how Livewire handles hydrating simple values like integers (`1`).
+The above `Counter` example works well to demonstrate the concept of hydration; however, it only demonstrates how Livewire handles hydrating simple values like integers (`1`).
 
 As you may know, Livewire supports many more sophisticated property types beyond integers.
 
-Let's take a look at a slightly more complex example: a `Todos` component:
+Let's take a look at a slightly more complex example - a `Todos` component:
 
 ```php
 class Todos extends Component
@@ -158,7 +158,7 @@ class Todos extends Component
 
 As you can see, we are setting the `$todos` property to a [Laravel collection](https://laravel.com/docs/collections#main-content) with three strings as its content.
 
-JSON alone has no way of representing Laravel collections, so instead, Livewire has created it's own pattern of associating metadata with pure data inside a snapshot.
+JSON alone has no way of representing Laravel collections, so instead, Livewire has created its own pattern of associating metadata with pure data inside a snapshot.
 
 Here is the snapshot's state object for this `Todos` component:
 
@@ -171,7 +171,7 @@ state: {
 },
 ```
 
-This may be confusing to you because you were likely expecting something more straightforward like:
+This may be confusing to you if you were expecting something more straightforward like:
 
 ```js
 state: {
@@ -181,7 +181,7 @@ state: {
 
 However, if Livewire were hydrating a component based on this data, it would have no way of knowing it's a collection and not a plain array.
 
-Therefore, Livewire supports an alternate state syntax in the form a tuple (an array of two items):
+Therefore, Livewire supports an alternate state syntax in the form of a tuple (an array of two items):
 
 ```js
 todos: [
@@ -204,9 +204,9 @@ As you can see, Livewire uses the metadata associated with the state to derive t
 
 ### Deeply nested tuples
 
-One distinct advantage of an approach like this, is the ability to both dehydrate and hydrate deeply nested properties.
+One distinct advantage of this approach is the ability to dehydrate and hydrate deeply nested properties.
 
-For example, consider the above `Todos` example, except now with a [Laravel Stringable](https://laravel.com/docs/helpers#method-str) instead of a plain string for the third item in the collection:
+For example, consider the above `Todos` example, except now with a [Laravel Stringable](https://laravel.com/docs/helpers#method-str) instead of a plain string as the third item in the collection:
 
 ```php
 class Todos extends Component
@@ -240,5 +240,5 @@ As you can see, the third item in the collection has been dehydrated into a meta
 
 ### Supporting custom property types
 
-Internally, Livewire has hydration support for the most common PHP and Laravel types. However, if you wish to support un-supported types, you can do so using [Synthesizers](/synthesizers)—Laravel's internal mechanism for hydrating/dehydrating non-primitive property types.
+Internally, Livewire has hydration support for the most common PHP and Laravel types. However, if you wish to support un-supported types, you can do so using [Synthesizers](/docs/synthesizers)—Laravel's internal mechanism for hydrating/dehydrating non-primitive property types.
 

@@ -24,6 +24,7 @@ let aliases = {
     'get': '$get',
     'set': '$set',
     'call': '$call',
+    'commit': '$commit',
     'watch': '$watch',
     'entangle': '$entangle',
     'dispatch': '$dispatch',

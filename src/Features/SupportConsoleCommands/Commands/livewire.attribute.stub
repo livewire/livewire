@@ -1,0 +1,11 @@
+<?php
+
+namespace DummyNamespace;
+
+use Livewire\Attribute as LivewireAttribute;
+
+#[\Attribute]
+class DummyClass extends LivewireAttribute
+{
+    //
+}

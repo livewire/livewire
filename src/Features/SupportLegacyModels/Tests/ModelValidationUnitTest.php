@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 use function Livewire\invade;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
-
 use Livewire\Livewire;
 use Sushi\Sushi;
 

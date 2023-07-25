@@ -2,10 +2,8 @@
 
 namespace Livewire\Features\SupportAccessingParent;
 
-use Illuminate\View\ComponentAttributeBag;
 use LegacyTests\Browser\TestCase;
 use Livewire\Component;
-use Livewire\Livewire;
 
 class BrowserTest extends TestCase
 {

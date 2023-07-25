@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportTesting;
 
 use PHPUnit\Framework\ExpectationFailedException;
-use PHPUnit\Framework\AssertionFailedError;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
@@ -352,7 +351,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     function assert_dont_see_multiple()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
-            ->assertDontSee(['no', 'one', 'really']);
+            ->assertDontSee(['nobody', 'really', 'knows']);
     }
 
     /** @test */

@@ -2,13 +2,8 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Synthetic\SyntheticValidation;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Database\ModelIdentifier;
-use Exception;
 
 class FileUploadSynth extends Synth {
     public static $key = 'fil';
@@ -53,7 +48,7 @@ class FileUploadSynth extends Synth {
         }
 
         if ($value instanceof \Livewire\Wireable) {
-            $keys = array_keys((array) get_object_vars($value));
+            $keys = array_keys(get_object_vars($value));
 
             foreach ($keys as $key) {
                 $value->{$key} = $this->dehydratePropertyFromWithFileUploads($value->{$key});

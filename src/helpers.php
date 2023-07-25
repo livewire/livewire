@@ -4,7 +4,6 @@ namespace Livewire;
 
 use ReflectionClass;
 use Illuminate\Support\Str;
-use Livewire\Drawer\ImplicitlyBoundMethod;
 
 function str($string = null)
 {
