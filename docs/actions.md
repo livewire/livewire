@@ -303,7 +303,7 @@ class ShowPosts extends Component
 {
     public function delete(Post $post) // [tl! highlight]
     {
-        $this->authorize('update', $post);
+        $this->authorize('delete', $post);
 
         $post->delete();
     }
@@ -736,7 +736,7 @@ class ShowPosts extends Component
     {
         $post = Post::find($id);
 
-        $this->authorize('update', $post); // [tl! highlight]
+        $this->authorize('delete', $post); // [tl! highlight]
 
         $post->delete();
     }
