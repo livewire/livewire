@@ -351,7 +351,7 @@ Now, as a user types into this field, network requests will be sent to the serve
 
 ## Only updating fields on _blur_
 
-For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be a overly network resource-intensive on text inputs.
+For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be overly network resource-intensive on text inputs.
 
 If instead of sending network requests as a user types, you want to instead only send the request when a user "tabs" out of the text input (also referred to as "blurring" an input), you can use the `.blur` modifier instead:
 
