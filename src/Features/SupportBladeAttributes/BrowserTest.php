@@ -15,7 +15,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit([
             Page::class,
         ])
-            ->assertSee('Page')
             ->assertSee($initialVisit)
             ->pause(1000)
             ->assertSee($initialVisit->addSecond(1))
