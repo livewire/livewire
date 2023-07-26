@@ -126,7 +126,7 @@ Consider the following example where a form input named `username` uses `wire:mo
     @error('username') <span>{{ $message }}</span> @enderror
 
     <div wire:loading wire:target="username"> <!-- [tl! highlight:2] -->
-        Checking avilability of username...
+        Checking availability of username...
     </div>
 
     <!-- ... -->
