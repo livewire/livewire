@@ -16,12 +16,10 @@ trait InteractWithPropertyReset
         $livewireForm = $this instanceof Form;
         $properties = !$livewireForm ? $properties : Reset::getResettableProperties($this, $properties);
 
-        foreach ($properties as $property) {
-            $freshInstance = $livewireForm
-                ? new static($this->getComponent(), $this->getPropertyName())
-                : new static;
+        $freshInstance = $livewireForm
+            ? new static($this->getComponent(), $this->getPropertyName())
+            : new static;
 
-            data_set($this, $property, data_get($freshInstance, $property));
-        }
+        foreach ($properties as $property) data_set($this, $property, data_get($freshInstance, $property));
     }
 }

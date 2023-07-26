@@ -349,6 +349,38 @@ class PostForm extends Form
 }
 ```
 
+Of course, you can also reset specific properties by passing the property names as parameters to the `reset` method:
+
+```php
+<?php
+
+namespace App\Livewire\Forms;
+
+use Livewire\Attributes\Rule;
+use Livewire\Form;
+use App\Models\Post;
+
+class PostForm extends Form
+{
+    public ?Post $post;
+
+    #[Rule('required|min:5')]
+    public $title = '';
+
+    #[Rule('required|min:5')]
+    public $content = '';
+    
+    // ...
+
+    public function store()
+    {
+        Post::create($this->all());
+        
+        $this->reset('title'); // [tl! highlight]
+    }
+}
+```
+
 Additionally, you can indicate which form properties will be reset by using the `#[Reset]` attribute:
 
 ```php
@@ -388,38 +420,6 @@ By default, `reset` will look for any public property on the form that does not 
 
 > [!warning] "Non-resettable properties are protected"
 > When trying to reset a property that uses the `#[Reset]` attribute with the parameter set to `false`, an `ResetPropertyNotAllowed` exception will be thrown.
-
-Of course, you can also reset specific properties by passing the property names as parameters to the `reset` method:
-
-```php
-<?php
-
-namespace App\Livewire\Forms;
-
-use Livewire\Attributes\Rule;
-use Livewire\Form;
-use App\Models\Post;
-
-class PostForm extends Form
-{
-    public ?Post $post;
-
-    #[Rule('required|min:5')]
-    public $title = '';
-
-    #[Rule('required|min:5')]
-    public $content = '';
-    
-    // ...
-
-    public function store()
-    {
-        Post::create($this->all());
-        
-        $this->reset('title'); // [tl! highlight]
-    }
-}
-```
 
 ### Showing a loading indicator
 
