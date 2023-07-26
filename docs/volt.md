@@ -305,7 +305,7 @@ $ensurePostCanBeDeleted = protect(function () {
 Livewire's [forms](/docs/forms) provide a convenient way to deal with form validation and submission within a single class. To use a Livewire form within a Volt component, you may utilize the `form` function:
 
 ```php
-use App\Forms\PostForm;
+use App\Livewire\Forms\PostForm;
 use function Livewire\Volt\{form};
 
 form(PostForm::class);
