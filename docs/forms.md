@@ -337,15 +337,8 @@ class PostForm extends Form
 
     #[Rule('required|min:5')]
     public $content = '';
-
-    public function setPost(Post $post)
-    {
-        $this->post = $post;
-
-        $this->title = $post->title;
-
-        $this->content = $post->content;
-    }
+    
+    // ...
 
     public function store()
     {
@@ -379,12 +372,14 @@ class PostForm extends Form
 
     #[Reset(false)] // [tl! highlight]
     public $active = true;
+    
+    // ...
 
     public function store()
     {
         Post::create($this->all());
         
-        $this->reset();
+        $this->reset(); // [tl! highlight]
     }
 }
 ```

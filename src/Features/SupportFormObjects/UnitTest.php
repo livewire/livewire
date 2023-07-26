@@ -291,7 +291,7 @@ class PostFormStub extends Form
     public $content = '';
 }
 
-class PostFormResetContentWithAttribute extends Form //reset content with attribute
+class PostFormResetContentWithAttribute extends Form
 {
     #[Reset(false)]
     public $title = 'Some title...';
@@ -299,7 +299,7 @@ class PostFormResetContentWithAttribute extends Form //reset content with attrib
     public $content = '';
 }
 
-class PostFormResetTitleWithAttribute extends Form // reset title with attribute
+class PostFormResetTitleWithAttribute extends Form
 {
     public $title = '';
 
@@ -307,7 +307,7 @@ class PostFormResetTitleWithAttribute extends Form // reset title with attribute
     public $content = 'Some content...';
 }
 
-class PostFormResetWithAttribute extends Form // reset both with attribute
+class PostFormResetWithAttribute extends Form
 {
     #[Reset]
     public $title = '';
@@ -316,7 +316,7 @@ class PostFormResetWithAttribute extends Form // reset both with attribute
     public $content = '';
 }
 
-class PostFormDontReset extends Form // reset title with attribute
+class PostFormDontReset extends Form
 {
     #[Reset(false)]
     public $title = 'Some title...';
@@ -324,7 +324,7 @@ class PostFormDontReset extends Form // reset title with attribute
     public $content = '';
 }
 
-class PostFormReset extends Form // reset both without attribute
+class PostFormReset extends Form
 {
     public $title = '';
 
