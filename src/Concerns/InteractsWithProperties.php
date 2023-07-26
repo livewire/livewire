@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 trait InteractsWithProperties
 {
+    use InteractWithPropertyReset {
+        reset as resetProperty;
+    }
+
     public function hasProperty($prop)
     {
         return property_exists($this, Utils::beforeFirstDot($prop));
@@ -40,23 +44,7 @@ trait InteractsWithProperties
 
     public function reset(...$properties)
     {
-        $propertyKeys = array_keys($this->all());
-
-        // Keys to reset from array
-        if (count($properties) && is_array($properties[0])) {
-            $properties = $properties[0];
-        }
-
-        // Reset all
-        if (empty($properties)) {
-            $properties = $propertyKeys;
-        }
-
-        foreach ($properties as $property) {
-            $freshInstance = new static;
-
-            data_set($this, $property, data_get($freshInstance, $property));
-        }
+        $this->resetProperty($properties);
     }
 
     protected function resetExcept(...$properties)
@@ -67,7 +55,7 @@ trait InteractsWithProperties
 
         $keysToReset = array_diff(array_keys($this->all()), $properties);
 
-        $this->reset($keysToReset);
+        $this->resetProperty($keysToReset);
     }
 
     public function only($properties)

@@ -4,10 +4,13 @@ namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Livewire\Component;
+use Livewire\Concerns\InteractWithPropertyReset;
 use Livewire\Drawer\Utils;
 
 class Form implements Arrayable
 {
+    use InteractWithPropertyReset;
+
     function __construct(
         protected Component $component,
         protected $propertyName
