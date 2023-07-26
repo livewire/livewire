@@ -13,7 +13,7 @@ class UpdateComputedProperties extends UpgradeStep
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> Computed properties now have a new syntax </>");
         $console->newLine();
 
-        $console->line("This means all component methods like <options=underscore>getPostProperty</> must be changed to <options=underscore>getPosts</> with an attribute called <options=underscore>computed</> above it.");
+        $console->line("This means all component methods like <options=underscore>getPostProperty</> must be changed to <options=underscore>posts</> with an attribute called <options=underscore>computed</> above it.");
 
         $confirm = $console->confirm("Would you like to change all occurrences of methods like getPostProperty to methods like posts with the special attribute above it?", true);
 
