@@ -49,7 +49,6 @@ abstract class UpgradeStep
         $confirm = $console->confirm("Would you like to apply these changes?", true);
 
         if ($confirm) {
-            $console->line("Changing all occurrences of <options=underscore>{$before}</> to <options=underscore>{$after}</>.");
             $console->newLine();
 
             $replacements = $this->patternReplacement($pattern, $replacement, $directories);
