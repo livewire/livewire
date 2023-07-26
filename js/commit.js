@@ -62,7 +62,7 @@ export async function requestCall(component, method, params) {
  * request, updating the server, and generating a new snapshot.
  * We're "requesting" a new commit rather than executing it
  * immediately, because we might want to batch multiple
- * simultaneus commits from other livewire targets.
+ * simultaneous commits from other livewire targets.
  */
 class Commit {
     constructor(component) {

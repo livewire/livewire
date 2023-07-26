@@ -11,7 +11,8 @@ class Pipe implements \Stringable, \ArrayAccess, \IteratorAggregate
         $this->target = $target;
     }
 
-    function __invoke(...$params) {
+    function __invoke(...$params): static
+    {
         if (empty($params)) return $this->target;
 
         [ $before, $through, $after ] = [ [], null, [] ];

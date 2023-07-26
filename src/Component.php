@@ -43,7 +43,7 @@ abstract class Component
         return $this->getId();
     }
 
-    function setId($id)
+    function setId($id): void
     {
         $this->__id = $id;
     }
@@ -53,7 +53,7 @@ abstract class Component
         return $this->__id;
     }
 
-    function setName($name)
+    function setName($name): void
     {
         $this->__name = $name;
     }
@@ -63,17 +63,17 @@ abstract class Component
         return $this->__name;
     }
 
-    function skipRender($html = null)
+    function skipRender($html = null): void
     {
         store($this)->set('skipRender', $html ?: true);
     }
 
-    function skipMount()
+    function skipMount(): void
     {
         store($this)->set('skipMount', true);
     }
 
-    function skipHydrate()
+    function skipHydrate(): void
     {
         store($this)->set('skipHydrate', true);
     }

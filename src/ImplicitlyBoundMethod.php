@@ -116,7 +116,7 @@ class ImplicitlyBoundMethod extends BoundMethod
         return (! $type->isBuiltin()) ? $type->getName() : null;
     }
 
-    public static function implementsInterface($parameter)
+    public static function implementsInterface($parameter): bool
     {
         return (new ReflectionClass($parameter->getType()->getName()))->implementsInterface(ImplicitlyBindable::class);
     }

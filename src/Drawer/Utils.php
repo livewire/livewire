@@ -8,7 +8,8 @@ use function Livewire\invade;
 
 class Utils extends BaseUtils
 {
-    static function insertAttributesIntoHtmlRoot($html, $attributes) {
+    static function insertAttributesIntoHtmlRoot($html, $attributes): array|string
+    {
         $attributesFormattedForHtmlElement = static::stringifyHtmlAttributes($attributes);
 
         preg_match('/(?:\n\s*|^\s*)<([a-zA-Z0-9\-]+)/', $html, $matches, PREG_OFFSET_CAPTURE);
@@ -40,7 +41,7 @@ class Utils extends BaseUtils
             })->implode(' ');
     }
 
-    static function escapeStringForHtml($subject)
+    static function escapeStringForHtml($subject): string
     {
         if (is_string($subject) || is_numeric($subject)) {
             return htmlspecialchars($subject, ENT_QUOTES|ENT_SUBSTITUTE);
@@ -76,24 +77,24 @@ class Utils extends BaseUtils
         return response()->file($file, $headers);
     }
 
-    static function matchesCache($lastModified)
+    static function matchesCache($lastModified): bool
     {
         $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
 
         return @strtotime($ifModifiedSince) === $lastModified;
     }
 
-    static function httpDate($timestamp)
+    static function httpDate($timestamp): string
     {
         return sprintf('%s GMT', gmdate('D, d M Y H:i:s', $timestamp));
     }
 
-    static function containsDots($subject)
+    static function containsDots($subject): bool
     {
         return str_contains($subject, '.');
     }
 
-    static function dotSegments($subject)
+    static function dotSegments($subject): array
     {
         return explode('.', $subject);
     }
@@ -108,12 +109,12 @@ class Utils extends BaseUtils
         return str($subject)->after('.');
     }
 
-    static public function hasProperty($target, $property)
+    static public function hasProperty($target, $property): bool
     {
         return property_exists($target, static::beforeFirstDot($property));
     }
 
-    static public function shareWithViews($name, $value)
+    static public function shareWithViews($name, $value): \Closure
     {
         $old = app('view')->shared($name, 'notfound');
 

@@ -88,15 +88,18 @@ class UserModel extends Model {
         'privateProperty'
     ];
 
-    public function getPublicPropertyAttribute() {
+    public function getPublicPropertyAttribute(): string
+    {
         return 'Caleb';
     }
 
-    public function getProtectedPropertyAttribute() {
+    public function getProtectedPropertyAttribute(): string
+    {
         return 'protected';
     }
 
-    public function getPrivatePropertyAttribute() {
+    public function getPrivatePropertyAttribute(): string
+    {
         return 'private';
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 trait InteractsWithProperties
 {
-    public function hasProperty($prop)
+    public function hasProperty($prop): bool
     {
         return property_exists($this, Utils::beforeFirstDot($prop));
     }
@@ -23,7 +23,7 @@ trait InteractsWithProperties
         return $value;
     }
 
-    public function fill($values)
+    public function fill($values): void
     {
         $publicProperties = array_keys($this->all());
 
@@ -38,7 +38,7 @@ trait InteractsWithProperties
         }
     }
 
-    public function reset(...$properties)
+    public function reset(...$properties): void
     {
         $propertyKeys = array_keys($this->all());
 
@@ -59,7 +59,7 @@ trait InteractsWithProperties
         }
     }
 
-    protected function resetExcept(...$properties)
+    protected function resetExcept(...$properties): void
     {
         if (count($properties) && is_array($properties[0])) {
             $properties = $properties[0];
@@ -70,7 +70,7 @@ trait InteractsWithProperties
         $this->reset($keysToReset);
     }
 
-    public function only($properties)
+    public function only($properties): array
     {
         $results = [];
 
@@ -81,7 +81,7 @@ trait InteractsWithProperties
         return $results;
     }
 
-    public function except($properties)
+    public function except($properties): array
     {
         return array_diff_key($this->all(), array_flip($properties));
     }

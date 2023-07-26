@@ -17,37 +17,37 @@ class LivewireManager
 {
     protected LivewireServiceProvider $provider;
 
-    function setProvider(LivewireServiceProvider $provider)
+    function setProvider(LivewireServiceProvider $provider): void
     {
         $this->provider = $provider;
     }
 
-    function provide($callback)
+    function provide($callback): void
     {
         \Closure::bind($callback, $this->provider, $this->provider::class)();
     }
 
-    function component($name, $class = null)
+    function component($name, $class = null): void
     {
         app(ComponentRegistry::class)->component($name, $class);
     }
 
-    function componentHook($hook)
+    function componentHook($hook): void
     {
         ComponentHookRegistry::register($hook);
     }
 
-    function propertySynthesizer($synth)
+    function propertySynthesizer($synth): void
     {
         app(HandleComponents::class)->registerPropertySynthesizer($synth);
     }
 
-    function directive($name, $callback)
+    function directive($name, $callback): void
     {
         app(ExtendBlade::class)->livewireOnlyDirective($name, $callback);
     }
 
-    function precompiler($pattern, $callback)
+    function precompiler($pattern, $callback): void
     {
         app(ExtendBlade::class)->livewireOnlyPrecompiler($pattern, $callback);
     }
@@ -103,7 +103,7 @@ class LivewireManager
         return app(HandleRequests::class)->isLivewireRequest();
     }
 
-    function componentHasBeenRendered()
+    function componentHasBeenRendered(): bool
     {
         return SupportAutoInjectedAssets::$hasRenderedAComponentThisRequest;
     }
@@ -128,9 +128,9 @@ class LivewireManager
         return app(FrontendAssets::class)->useScriptTagAttributes($attributes);
     }
 
-    protected $queryParamsForTesting = [];
+    protected array $queryParamsForTesting = [];
 
-    function withQueryParams($params)
+    function withQueryParams($params): static
     {
         $this->queryParamsForTesting = $params;
 
@@ -147,14 +147,14 @@ class LivewireManager
         return DuskTestable::create($name, $params = [], $this->queryParamsForTesting);
     }
 
-    function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
+    function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null): static
     {
          Testable::actingAs($user, $driver);
 
          return $this;
     }
 
-    function isRunningServerless()
+    function isRunningServerless(): bool
     {
         return in_array($_ENV['SERVER_SOFTWARE'] ?? null, [
             'vapor',
@@ -162,12 +162,12 @@ class LivewireManager
         ]);
     }
 
-    function addPersistentMiddleware($middleware)
+    function addPersistentMiddleware($middleware): void
     {
         app(PersistentMiddleware::class)->addPersistentMiddleware($middleware);
     }
 
-    function setPersistentMiddleware($middleware)
+    function setPersistentMiddleware($middleware): void
     {
         app(PersistentMiddleware::class)->setPersistentMiddleware($middleware);
     }
@@ -177,14 +177,14 @@ class LivewireManager
         return app(PersistentMiddleware::class)->getPersistentMiddleware();
     }
 
-    function flushState()
+    function flushState(): void
     {
         trigger('flush-state');
     }
 
-    protected $jsFeatures = [];
+    protected array $jsFeatures = [];
 
-    function enableJsFeature($name)
+    function enableJsFeature($name): void
     {
         $this->jsFeatures[] = $name;
     }
@@ -194,7 +194,7 @@ class LivewireManager
         return $this->jsFeatures;
     }
 
-    function originalUrl()
+    function originalUrl(): string
     {
         if ($this->isLivewireRequest()) {
             return url()->to($this->originalPath());

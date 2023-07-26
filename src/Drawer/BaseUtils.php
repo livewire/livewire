@@ -6,13 +6,15 @@ use ReflectionClass;
 
 class BaseUtils
 {
-    static function isSyntheticTuple($payload) {
+    static function isSyntheticTuple($payload): bool
+    {
         return is_array($payload)
             && count($payload) === 2
             && isset($payload[1]['s']);
     }
 
-    static function isAPrimitive($target) {
+    static function isAPrimitive($target): bool
+    {
         return
             is_numeric($target) ||
             is_string($target) ||
@@ -66,7 +68,8 @@ class BaseUtils
         }, $methods);
     }
 
-    static function hasAttribute($target, $property, $attributeClass) {
+    static function hasAttribute($target, $property, $attributeClass): bool
+    {
         $property = static::getProperty($target, $property);
 
         foreach ($property->getAttributes() as $attribute) {

@@ -6,20 +6,23 @@ abstract class ComponentHook
 {
     protected $component;
 
-    function setComponent($component)
+    function setComponent($component): void
     {
         $this->component = $component;
     }
 
-    function callBoot(...$params) {
+    function callBoot(...$params): void
+    {
         if (method_exists($this, 'boot')) $this->boot(...$params);
     }
 
-    function callMount(...$params) {
+    function callMount(...$params): void
+    {
         if (method_exists($this, 'mount')) $this->mount(...$params);
     }
 
-    function callHydrate(...$params) {
+    function callHydrate(...$params): void
+    {
         if (method_exists($this, 'hydrate')) $this->hydrate(...$params);
     }
 
@@ -59,15 +62,18 @@ abstract class ComponentHook
         };
     }
 
-    function callDehydrate(...$params) {
+    function callDehydrate(...$params): void
+    {
         if (method_exists($this, 'dehydrate')) $this->dehydrate(...$params);
     }
 
-    function callDestroy(...$params) {
+    function callDestroy(...$params): void
+    {
         if (method_exists($this, 'destroy')) $this->destroy(...$params);
     }
 
-    function callException(...$params) {
+    function callException(...$params): void
+    {
         if (method_exists($this, 'exception')) $this->exception(...$params);
     }
 

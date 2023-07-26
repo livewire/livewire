@@ -37,7 +37,8 @@ class EventBus
         return fn() => $this->off($name, $callback);
     }
 
-    function off($name, $callback) {
+    function off($name, $callback): void
+    {
         $index = array_search($callback, $this->listeners[$name] ?? []);
         $indexAfter = array_search($callback, $this->listenersAfter[$name] ?? []);
         $indexBefore = array_search($callback, $this->listenersBefore[$name] ?? []);

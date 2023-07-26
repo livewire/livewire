@@ -23,7 +23,7 @@ class ImplicitRouteBinding
         $this->container = $container;
     }
 
-    public function resolveAllParameters(Route $route, Component $component)
+    public function resolveAllParameters(Route $route, Component $component): array
     {
         $params = $this->resolveMountParameters($route, $component);
         $props = $this->resolveComponentProps($route, $component);

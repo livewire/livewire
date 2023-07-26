@@ -11,7 +11,7 @@ class ComponentHookRegistry
 
     protected static $componentHooks = [];
 
-    static function register($hook)
+    static function register($hook): void
     {
         if (method_exists($hook, 'provide')) $hook::provide();
 
@@ -31,7 +31,7 @@ class ComponentHookRegistry
         }
     }
 
-    static function boot()
+    static function boot(): void
     {
         static::$components = new WeakMap;
 

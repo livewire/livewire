@@ -47,7 +47,7 @@ class WireDirective implements Htmlable, Stringable
         return (new ComponentAttributeBag([$this->directive => $this->value]))->toHtml();
     }
 
-    public function toString()
+    public function toString(): string
     {
         return (string) $this;
     }

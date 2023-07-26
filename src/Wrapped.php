@@ -8,7 +8,7 @@ class Wrapped
 
     function __construct(public $target) {}
 
-    function withFallback($fallback)
+    function withFallback($fallback): static
     {
         $this->fallback = $fallback;
 
