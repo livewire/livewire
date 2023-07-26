@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
 use Arr;
+use Closure;
+use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,17 +34,21 @@ abstract class UpgradeStep
         return false;
     }
 
-    public function interactiveReplacement($console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'])
+    public function interactiveReplacement(Command $console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'])
     {
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> {$title} </>");
         $console->newLine();
+        $console->line('Please review the example below and confirm if you would like to apply this change.');
+        $console->newLine();
 
-        $console->line("This means all <options=underscore>{$before}</> directives must be changed to <options=underscore>{$after}</>.");
+        $console->table(['Before/After Example'], [
+            ["<fg=red>- {$before} </>"],
+            ["<fg=green>+ {$after} </>"],
+        ]);
 
-        $confirm = $console->confirm("Would you like to change all occurrences of {$before} to {$after}?", true);
+        $confirm = $console->confirm("Would you like to apply these changes?", true);
 
         if ($confirm) {
-            $console->line("Changing all occurrences of <options=underscore>{$before}</> to <options=underscore>{$after}</>.");
             $console->newLine();
 
             $replacements = $this->patternReplacement($pattern, $replacement, $directories);
@@ -90,7 +96,7 @@ abstract class UpgradeStep
         }
 
         return $files->map(function($file) use ($pattern, $replacement) {
-            if($replacement instanceof \Closure) {
+            if($replacement instanceof Closure) {
                 $file['content'] = preg_replace_callback($pattern, $replacement, $file['content'], -1, $count);
             } else {
                 $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);

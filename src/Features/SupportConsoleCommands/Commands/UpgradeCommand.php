@@ -25,7 +25,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroductio
 
 class UpgradeCommand extends Command
 {
-    protected $signature = 'livewire:upgrade';
+    protected $signature = 'livewire:upgrade {--run-only=}';
 
     protected $description = 'Interactive upgrade helper to migrate from v2 to v3';
 
@@ -33,7 +33,7 @@ class UpgradeCommand extends Command
 
     public function handle()
     {
-        app(Pipeline::class)->send($this)->through([
+        app(Pipeline::class)->send($this)->through(collect([
             UpgradeIntroduction::class,
 
             // Automated steps
@@ -50,16 +50,19 @@ class UpgradeCommand extends Command
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
 
-            // Third-party steps
-            ... static::$thirdPartyUpgradeSteps,
-
             // Manual steps
             UpgradeConfigInstructions::class,
             UpgradeAlpineInstructions::class,
             UpgradeEmitInstructions::class,
 
+            // Third-party steps
+            ... static::$thirdPartyUpgradeSteps,
+
             ClearViewCache::class,
-        ])->thenReturn();
+        ])->when($this->option('run-only'), function($collection) {
+            return $collection->filter(fn($step) => str($step)->afterLast('\\')->kebab()->is($this->option('run-only')));
+        })->toArray())
+        ->thenReturn();
     }
 
     public static function addThirdPartyUpgradeStep($step)
