@@ -90,7 +90,11 @@ abstract class UpgradeStep
         }
 
         return $files->map(function($file) use ($pattern, $replacement) {
-            $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
+            if($replacement instanceof \Closure) {
+                $file['content'] = preg_replace_callback($pattern, $replacement, $file['content'], -1, $count);
+            } else {
+                $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
+            }
             $file['occurrences'] = $count;
 
             return $count > 0 ? $file : null;
