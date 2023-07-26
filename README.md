@@ -8,7 +8,8 @@
 
 * `git clone`
 * `composer install`
-* `./vendor/bin/dusk-updater update`
+* `./vendor/bin/testbench-dusk dusk:chrome-driver`
+* (`./vendor/bin/dusk-updater update` also sometimes fixes chromedriver issues)
 
 * `npm install`
 * (link all the missing Alpine dependancies)

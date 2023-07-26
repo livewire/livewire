@@ -136,7 +136,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function rule_attributes_can_contain_multiple_rules()
+    public function rule_attributes_can_contain_rules_for_multiple_properties()
     {
         Livewire::test(new class extends TestComponent {
             #[Rule(['foo' => 'required', 'bar' => 'required'])]
@@ -159,6 +159,54 @@ class UnitTest extends \Tests\TestCase
                 'foo' => 'required',
                 'bar' => 'required',
             ]);
+    }
+
+    /** @test */
+    public function rule_attributes_can_contain_multiple_rules()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule(['required', 'min:2', 'max:3'])]
+            public $foo = '';
+        })
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->set('foo', '1')
+            ->assertHasErrors(['foo' => 'min'])
+            ->set('foo', '12345')
+            ->assertHasErrors(['foo' => 'max'])
+            ->set('foo', 'ok')
+            ->assertHasNoErrors()
+        ;
+    }
+
+    /** @test */
+    public function rule_attributes_can_be_repeated()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required')]
+            #[Rule('min:2')]
+            #[Rule('max:3')]
+            public $foo = '';
+
+            #[
+                Rule('sometimes'),
+                Rule('max:1')
+            ]
+            public $bar = '';
+        })
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->set('foo', '1')
+            ->assertHasErrors(['foo' => 'min'])
+            ->set('foo', '12345')
+            ->assertHasErrors(['foo' => 'max'])
+            ->set('foo', 'ok')
+            ->assertHasNoErrors()
+            ->set('bar', '12')
+            ->assertHasErrors(['bar' => 'max'])
+            ->set('bar', '1')
+            ->assertHasNoErrors()
+        ;
     }
 
     /** @test */

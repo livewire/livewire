@@ -95,7 +95,7 @@ Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `Ap
 
 When rendering full-page components in version 2, Livewire would use `resources/views/layouts/app.blade.php` as the default layout Blade component.
 
-Because of an growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
+Because of a growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
 
 ```php
 'layout' => 'layouts.app', // [tl! remove]
@@ -152,7 +152,7 @@ When rendering Livewire components as full pages using a syntax like the followi
 Route::get('/posts', ShowPosts::class);
 ```
 
-The Blade layout file used by Livewire to render the component inside of has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
+The Blade layout file used by Livewire to render the component has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
 
 ```shell
 resources/views/layouts/app.blade.php #[tl! remove]
@@ -258,6 +258,9 @@ Alpine.start()
 ```
 
 You can remove them entirely because Livewire includes Alpine and many popular Alpine plugins by default.
+
+> [!warning] "Livewire V3 (beta) with Laravel Breeze or Laravel Jetstream"
+> If you are trying the Livewire V3 beta with the Laravel Breeze or Laravel JetStream, you will need to unload the Alpine as demonstrated above. Also, you can remove Alpine and any other Alpine plugins from your NPM dependencies as well. The Laravel Breeze and Laravel JetStream are not ready for Livewire V3 yet by default.
 
 #### Accessing Alpine via JS bundle
 

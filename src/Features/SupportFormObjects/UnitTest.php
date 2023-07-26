@@ -28,6 +28,31 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_reset_form_object_property()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            public function resetForm()
+            {
+                $this->reset('form.title', 'form.content');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->call('resetForm')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+        ;
+    }
+
+    /** @test */
     function can_validate_a_form_object()
     {
         Livewire::test(new class extends Component {
@@ -48,6 +73,28 @@ class UnitTest extends \Tests\TestCase
         ->call('save')
         ->assertHasErrors('form.title')
         ->assertHasErrors('form.content')
+        ;
+    }
+
+    function can_manually_add_errors_to_the_error_bag()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->addError('status', 'An error message...');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.status')
         ;
     }
 

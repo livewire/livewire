@@ -5427,17 +5427,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     state.whenFinished();
   }
   function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let path = destination.pathname;
-    if (!prefetches[path])
+    let uri = destination.pathname + destination.search;
+    if (!prefetches[uri])
       return ifNoPrefetchExists();
-    if (prefetches[path].finished) {
-      let html = prefetches[path].html;
-      delete prefetches[path];
+    if (prefetches[uri].finished) {
+      let html = prefetches[uri].html;
+      delete prefetches[uri];
       return receive(html);
     } else {
-      prefetches[path].whenFinished = () => {
-        let html = prefetches[path].html;
-        delete prefetches[path];
+      prefetches[uri].whenFinished = () => {
+        let html = prefetches[uri].html;
+        delete prefetches[uri];
         receive(html);
       };
     }
@@ -6914,6 +6914,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function putPersistantElementsBack() {
     document.querySelectorAll("[x-persist]").forEach((i) => {
       let old = els[i.getAttribute("x-persist")];
+      if (!old)
+        return;
       old._x_wasPersisted = true;
       alpine_default2.mutateDom(() => {
         i.replaceWith(old);
@@ -7021,8 +7023,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let newDocument = new DOMParser().parseFromString(html, "text/html");
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
+    let oldBodyScriptTagHashes = Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML));
     mergeNewHead(newHead);
-    prepNewScriptTagsToRun(newBody);
+    prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
     transitionOut(document.body);
     let oldBody = document.body;
     document.body.replaceWith(newBody);
@@ -7043,10 +7046,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       body.style.opacity = "1";
     });
   }
-  function prepNewScriptTagsToRun(newBody) {
+  function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
     newBody.querySelectorAll("script").forEach((i) => {
-      if (i.hasAttribute("data-navigate-once"))
-        return;
+      if (i.hasAttribute("data-navigate-once")) {
+        let hash = simpleHash(i.outerHTML);
+        if (oldBodyScriptTagHashes.includes(hash))
+          return;
+      }
       i.replaceWith(cloneScriptTag(i));
     });
   }
@@ -7096,8 +7102,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isScript(el) {
     return el.tagName.toLowerCase() === "script";
   }
+  function simpleHash(str) {
+    return str.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+  }
   function fetchHtml(destination, callback) {
-    fetch(destination.pathname).then((i) => i.text()).then((html) => {
+    let uri = destination.pathname + destination.search;
+    fetch(uri).then((i) => i.text()).then((html) => {
       callback(html);
     });
   }
@@ -7108,6 +7121,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function src_default6(Alpine22) {
     Alpine22.navigate = (url) => {
       navigateTo(createUrlObjectFromString(url));
+    };
+    Alpine22.navigate.disableProgressBar = () => {
+      showProgressBar = false;
     };
     Alpine22.addInitSelector(() => `[${prefix2("navigate")}]`);
     Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
@@ -7383,7 +7399,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var dom = {
     replace(children, old, replacement) {
       let index = children.indexOf(old);
-      let replacementIndex = children.indexOf(old);
+      let replacementIndex = children.indexOf(replacement);
       if (index === -1)
         throw "Cant find element in children";
       old.replaceWith(replacement);
@@ -8058,11 +8074,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   var isNavigating = false;
-  window.addEventListener("alpine:navigated", (e) => {
+  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+  document.addEventListener("alpine:navigated", (e) => {
     if (e.detail && e.detail.init)
       return;
     isNavigating = true;
-    window.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
+    document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
@@ -8071,6 +8088,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       or();
     }
+  }
+  function shouldHideProgressBar() {
+    if (!!document.querySelector("[data-no-progress-bar]"))
+      return true;
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+      return true;
+    return false;
   }
 
   // js/features/supportRedirects.js
