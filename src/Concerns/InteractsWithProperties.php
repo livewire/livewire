@@ -44,6 +44,16 @@ trait InteractsWithProperties
 
     public function reset(...$properties)
     {
+        $propertyKeys = array_keys($this->all());
+
+        if (count($properties) && is_array($properties[0])) {
+            $properties = $properties[0];
+        }
+
+        if (empty($properties)) {
+            $properties = $propertyKeys;
+        }
+
         $this->resetProperty($properties);
     }
 

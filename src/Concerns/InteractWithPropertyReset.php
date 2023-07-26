@@ -9,20 +9,15 @@ trait InteractWithPropertyReset
 {
     public function reset(...$properties)
     {
-        if ($this instanceof Form) {
-            $properties = Reset::getResettableProperties($this, $properties);
-        } else {
-            if (count($properties) && is_array($properties[0])) {
-                $properties = $properties[0];
-            }
+        $properties = count($properties) && is_array($properties[0])
+            ? $properties[0]
+            : $properties;
 
-            if (empty($properties)) {
-                $properties = array_keys($this->all());
-            }
-        }
+        $livewireForm = $this instanceof Form;
+        $properties = !$livewireForm ? $properties : Reset::getResettableProperties($this, $properties);
 
         foreach ($properties as $property) {
-            $freshInstance = $this instanceof Form
+            $freshInstance = $livewireForm
                 ? new static($this->getComponent(), $this->getPropertyName())
                 : new static;
 

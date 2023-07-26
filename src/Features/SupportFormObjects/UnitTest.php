@@ -255,9 +255,10 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function cannot_reset_property_marked_as_resettable_false()
+    function cannot_reset_property_with_attribute_as_false()
     {
         $this->expectException(ResetPropertyNotAllowed::class);
+        $this->expectExceptionMessage("Property not allowed to be reset: [title].");
 
         Livewire::test(new class extends Component {
             public PostFormDontReset $form;

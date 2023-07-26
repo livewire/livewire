@@ -8,7 +8,7 @@ use Livewire\Livewire;
 class ResetPropertiesTest extends \Tests\TestCase
 {
     /** @test */
-    public function can_reset_properties()
+    public function can_reset_all_properties()
     {
         Livewire::test(ResetPropertiesComponent::class)
             ->assertSet('foo', 'bar')
@@ -20,42 +20,52 @@ class ResetPropertiesTest extends \Tests\TestCase
             ->assertSet('foo', 'baz')
             ->assertSet('bob', 'law')
             ->assertSet('mwa', 'aha')
-            // Reset all.
             ->call('resetAll')
             ->assertSet('foo', 'bar')
             ->assertSet('bob', 'lob')
+            ->assertSet('mwa', 'hah');
+    }
+
+    /** @test */
+    public function can_reset_foo_and_bob_properties()
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->assertSet('foo', 'bar')
+            ->assertSet('bob', 'lob')
             ->assertSet('mwa', 'hah')
             ->set('foo', 'baz')
             ->set('bob', 'law')
-            ->set('mwa', 'aha')
             ->assertSet('foo', 'baz')
             ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
-            // Reset foo and bob.
+            ->assertSet('mwa', 'hah')
             ->call('resetKeys', ['foo', 'bob'])
             ->assertSet('foo', 'bar')
             ->assertSet('bob', 'lob')
-            ->assertSet('mwa', 'aha')
+            ->assertSet('mwa', 'hah');
+    }
+
+    /** @test */
+    public function can_reset_only_foo_property() // not passing...
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->assertSet('foo', 'bar')
+            ->assertSet('bob', 'lob')
+            ->assertSet('mwa', 'hah')
             ->set('foo', 'baz')
-            ->set('bob', 'law')
-            ->set('mwa', 'aha')
             ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
-            // Reset only foo.
+            ->assertSet('bob', 'lob')
+            ->assertSet('mwa', 'hah')
             ->call('resetKeys', 'foo')
             ->assertSet('foo', 'bar')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
-            ->set('foo', 'baz')
-            ->set('bob', 'law')
-            ->set('mwa', 'aha')
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
-            // Reset all except foo.
-            ->call('resetKeysExcept', 'foo')
-            ->assertSet('foo', 'baz')
+            ->assertSet('bob', 'lob')
+            ->assertSet('mwa', 'hah');
+    }
+
+    /** @test */
+    public function can_reset_all_except_foo_property() // not passing...
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->assertSet('foo', 'bar')
             ->assertSet('bob', 'lob')
             ->assertSet('mwa', 'hah')
             ->set('foo', 'baz')
@@ -64,7 +74,25 @@ class ResetPropertiesTest extends \Tests\TestCase
             ->assertSet('foo', 'baz')
             ->assertSet('bob', 'law')
             ->assertSet('mwa', 'aha')
-            // Reset all except foo and bob.
+            ->call('resetKeysExcept', 'foo')
+            ->assertSet('foo', 'baz')
+            ->assertSet('bob', 'lob')
+            ->assertSet('mwa', 'hah');
+    }
+
+    /** @test */
+    public function can_reset_all_except_foo_and_bob_properties() // not passing
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->assertSet('foo', 'bar')
+            ->assertSet('bob', 'lob')
+            ->assertSet('mwa', 'hah')
+            ->set('foo', 'baz')
+            ->set('bob', 'law')
+            ->set('mwa', 'aha')
+            ->assertSet('foo', 'baz')
+            ->assertSet('bob', 'law')
+            ->assertSet('mwa', 'aha')
             ->call('resetKeysExcept', ['foo', 'bob'])
             ->assertSet('foo', 'baz')
             ->assertSet('bob', 'law')
