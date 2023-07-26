@@ -390,7 +390,6 @@ class UnitTest extends \Tests\TestCase
         $this
             ->withoutExceptionHandling()
             ->get('/configurable-layout')
-            ->assertSee('bob')
             ->assertSee('some-title');
     }
 }
@@ -630,11 +629,9 @@ class ComponentWithModel extends Component
 #[Layout('layouts.app-with-title')]
 class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
 {
-    public $name = 'bob';
-
     public function render()
     {
-        return view('show-name')
+        return view('null-view')
             ->title('some-title');
     }
 }
