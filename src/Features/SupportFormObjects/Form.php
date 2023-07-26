@@ -34,6 +34,11 @@ class Form implements Arrayable
         $this->component->addRulesFromOutside($rulesWithPrefixedKeys);
     }
 
+    public function addError($key, $message)
+    {
+        $this->component->addError($this->propertyName . '.' . $key, $message);
+    }
+
     public function validate()
     {
         $rules = $this->component->getRules();
