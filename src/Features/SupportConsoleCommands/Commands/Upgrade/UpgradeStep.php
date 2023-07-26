@@ -41,7 +41,7 @@ abstract class UpgradeStep
         $console->line('Please review the example below and confirm if you would like to apply this change.');
         $console->newLine();
 
-        $console->table(['Example of the change that will be made:'], [
+        $console->table(['Before/After Example'], [
             ["<fg=red>- {$before} </>"],
             ["<fg=green>+ {$after} </>"],
         ]);
