@@ -2,10 +2,11 @@
 
 namespace Livewire\Attributes\Form;
 
-use Livewire\Features\SupportFormObjects\Reset as BaseDontReset;
+use Attribute;
+use Livewire\Features\SupportFormObjects\Reset as BaseReset;
 
-#[\Attribute]
-class Reset extends BaseDontReset
+#[Attribute(Attribute::IS_REPEATABLE)]
+class Reset extends BaseReset
 {
     public function __construct(
         public $reset = true
