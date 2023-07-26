@@ -12,7 +12,7 @@ By adding `wire:offline` to an element inside a Livewire component, it will be h
 
 ## Toggling classes
 
-Adding the `class` modifier allows you to add a class to an element when the user loses their connection. The class will be removed once again the user is back online:
+Adding the `class` modifier allows you to add a class to an element when the user loses their connection. The class will be removed again, once the user is back online:
 
 ```blade
 <div wire:offline.class="bg-red-300">
