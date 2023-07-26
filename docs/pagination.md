@@ -161,7 +161,7 @@ class ShowInvoices extends Component
     public function render()
     {
         return view('show-invoices', [
-            'invoices' => Invoice::paginate(10, pageName: 'invoice-page'),
+            'invoices' => Invoice::paginate(10, pageName: 'invoices-page'),
         ]);
     }
 }
@@ -170,19 +170,19 @@ class ShowInvoices extends Component
 Now, because of the `pageName` parameter that has been added to the `paginate` method, when a user visits page `2` of the *invoices*, the URL will contain the following:
 
 ```
-https://application.test/customers?page=2&invoice-page=2
+https://application.test/customers?page=2&invoices-page=2
 ```
 
 When using Livewire's page navigation methods on a named paginator, you must provide the page name as an additional parameter:
 
 ```php
-$this->setPage(2, pageName: 'invoice-page');
+$this->setPage(2, pageName: 'invoices-page');
 
-$this->resetPage(pageName: 'invoice-page');
+$this->resetPage(pageName: 'invoices-page');
 
-$this->nextPage(pageName: 'invoice-page');
+$this->nextPage(pageName: 'invoices-page');
 
-$this->previousPage(pageName: 'invoice-page');
+$this->previousPage(pageName: 'invoices-page');
 ```
 
 ## Hooking into page updates
@@ -219,10 +219,10 @@ class ShowPosts extends Component
 
 The previous hooks only apply to the default paginator. If you are using a named paginator, you must define the methods using the paginator's name.
 
-For example, below is an example of what a hook for a paginator named `invoice-page` would look like:
+For example, below is an example of what a hook for a paginator named `invoices-page` would look like:
 
 ```php
-public function updatingInvoicePage($page)
+public function updatingInvoicesPage($page)
 {
     //
 }
