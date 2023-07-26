@@ -6,7 +6,7 @@ Computed properties are particularly useful in combination with component's publ
 
 To create a computed property, you can add the `#[Computed]` attribute above any method in your Livewire component. Once the attribute has been added to the method, you can access it like any other property.
 
-For example, here's a `ShowUser` component that uses a computed property named `user` to access a `User` Eloquent model based on a property named `$userId`:
+For example, here's a `ShowUser` component that uses a computed property named `user()` to access a `User` Eloquent model based on a property named `$userId`:
 
 ```php
 <?php
@@ -72,7 +72,7 @@ Consider the following problematic scenario:
 
 To clear, or "bust", the stored cache, you can use PHP's `unset()` function.
 
-Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale — meaning the computed `posts` property needs to be re-computed to include the newly added post:
+Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale — meaning the computed property `posts()` needs to be re-computed to include the newly added post:
 
 ```php
 <?php
@@ -103,13 +103,13 @@ class ShowPosts extends Component
 }
 ```
 
-In the above component, the computed property is cached before a new post is created because the `createPost` method accesses `$this->posts` before the new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
+In the above component, the computed property is cached before a new post is created because the `createPost()` method accesses `$this->posts` before the new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
 
 ### Caching between requests
 
 Sometimes you would like to cache the value of a computed property for the lifespan of a Livewire component, rather than it being cleared after every request. In these cases, you can use [Laravel's caching utilities](https://laravel.com/docs/cache#retrieve-store).
 
-Below is an example of a computed `user()` property, where instead of executing the Eloquent query directly, we wrap the query in `Cache::remember()` to ensure that any future requests retrieve it from Laravel's cache instead of re-executing the query:
+Below is an example of a computed property named `user()`, where instead of executing the Eloquent query directly, we wrap the query in `Cache::remember()` to ensure that any future requests retrieve it from Laravel's cache instead of re-executing the query:
 
 ```php
 <?php

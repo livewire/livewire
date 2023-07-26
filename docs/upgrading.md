@@ -200,7 +200,7 @@ By setting `legacy_model_binding` to `true`, Livewire will handle Eloquent model
 
 Livewire 3 ships with [AlpineJS](https://alpinejs.dev) by default.
 
-If you manually include Alpine in your Livewire application, you will need to remove it so that Livewire's built-in version doesn't conflict.
+If you manually include Alpine in your Livewire application, you will need to remove it, so that Livewire's built-in version doesn't conflict.
 
 ### Including Alpine via a script tag
 
@@ -240,7 +240,7 @@ If you are currently accessing the `Alpine` global object from a script tag like
 </script>
 ```
 
-You may continue to do so as Livewire internally includes and registers Alpine's global object like before.
+You may continue to do so, as Livewire internally includes and registers Alpine's global object like before.
 
 ### Including via JS bundle
 
@@ -257,7 +257,7 @@ Alpine.plugin(intersect)
 Alpine.start()
 ```
 
-You can remove them entirely because Livewire includes Alpine and many popular Alpine plugins by default.
+You can remove them entirely, because Livewire includes Alpine and many popular Alpine plugins by default.
 
 #### Accessing Alpine via JS bundle
 
@@ -434,7 +434,7 @@ Livewire::test(Component::class)->assertEmittedUp() // [tl! remove]
 
 ### URL query string
 
-In previous Livewire versions, if you bound a property to the URL's query string, the property value would always be present in the query string unless you used the `except` option.
+In previous Livewire versions, if you bound a property to the URL's query string, the property value would always be present in the query string, unless you used the `except` option.
 
 In Livewire 3, all properties bound to the query string will only show up if their value has been changed after the page load. This default removes the need for the `except` option:
 

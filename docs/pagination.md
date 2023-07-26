@@ -51,7 +51,7 @@ For more information on pagination using Laravel, check out [Laravel's comprehen
 
 ## Resetting the page
 
-When sorting or filtering results, it is common that you want to reset the page number back to `1`.
+When sorting or filtering results, it is common want to reset the page number back to `1`.
 
 For this reason, Livewire provides the `$this->resetPage()` method, allowing you to reset the page number from anywhere in your component.
 
