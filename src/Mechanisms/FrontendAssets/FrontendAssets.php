@@ -94,6 +94,10 @@ class FrontendAssets
             [wire\:dirty]:not(textarea):not(input):not(select) {
                 display: none;
             }
+
+            [x-cloak] {
+                display: none;
+            }
         </style>
         HTML;
 

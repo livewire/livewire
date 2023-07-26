@@ -10,7 +10,7 @@ class UpgradeEmitInstructions extends UpgradeStep
     {
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> Manual Upgrade: Event dispatching </>");
         $console->newLine();
-        $console->line('In v2 you could use the emit() and dispatchBrowserEvent() mmethods in PHP.');
+        $console->line('In v2 you could use the emit() and dispatchBrowserEvent() methods in PHP.');
         $console->line('For version 3, Livewire has unified these two methods into a single method: dispatch()');
         $console->line('You must rename all instances of emit() to dispatch() in your components.');
         $console->line('All parameters must be named, for example:');

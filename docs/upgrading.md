@@ -609,6 +609,10 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // 
 
 You may consult the new [JavaScript hook documentation](/docs/javascript) for a more thorough understanding of the new hook system.
 
+### @this.on() deprecated
+
+While in Livewire 2 you could register JavaScript callbacks for component events using `@this.on('event-name', callbackFn)` in your Blade template, in Livewire 3 this has been deprecated. Instead, you should take advantage of Alpine's inclusion, and use the `x-on:event-name="callbackCode"` pattern.
+
 ## Localization
 
 If your application uses a locale prefix in the URI such as `https://example.com/en/...`, Livewire 2 automatically preserved this URL prefix when making component updates via `https://example.com/en/livewire/update`.
