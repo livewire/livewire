@@ -6,7 +6,7 @@ use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function test_dollar_wire_dispatch_works()
+    public function test_bind_x_data_after_livewire_commit()
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, DirectiveComponent::class)
