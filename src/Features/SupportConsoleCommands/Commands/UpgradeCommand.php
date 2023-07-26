@@ -17,6 +17,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifie
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigation;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ThirdPartyUpgradeNotice;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeEmitInstructions;
@@ -28,9 +29,10 @@ class UpgradeCommand extends Command
 
     protected $description = 'Interactive upgrade helper to migrate from v2 to v3';
 
+    protected static $thirdPartyUpgradeSteps = [];
+
     public function handle()
     {
-
         app(Pipeline::class)->send($this)->through([
             UpgradeIntroduction::class,
 
@@ -48,6 +50,9 @@ class UpgradeCommand extends Command
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
 
+            // Third-party steps
+            ... static::$thirdPartyUpgradeSteps,
+
             // Manual steps
             UpgradeConfigInstructions::class,
             UpgradeAlpineInstructions::class,
@@ -55,5 +60,14 @@ class UpgradeCommand extends Command
 
             ClearViewCache::class,
         ])->thenReturn();
+    }
+
+    public static function addThirdPartyUpgradeStep($step)
+    {
+        if(empty(static::$thirdPartyUpgradeSteps)) {
+            static::$thirdPartyUpgradeSteps[] = ThirdPartyUpgradeNotice::class;
+        }
+
+        static::$thirdPartyUpgradeSteps[] = $step;
     }
 }
