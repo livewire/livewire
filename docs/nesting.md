@@ -146,7 +146,7 @@ You can specify the component's key by specifying a `:key` prop on the child com
     <h1>Todos</h1>
 
     @foreach ($todos as $todo)
-        <livewire:todo-item :todo="$todo" :key="$todo->id" />
+        <livewire:todo-item :$todo :key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -584,7 +584,7 @@ For example, consider the following nested `todo-count` component:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" />
+    <livewire:todo-count :$todos />
 </div>
 ```
 
@@ -592,7 +592,7 @@ Livewire internally attaches a random string key to the component like so:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" key="lska" />
+    <livewire:todo-count :$todos key="lska" />
 </div>
 ```
 

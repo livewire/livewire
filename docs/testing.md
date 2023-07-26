@@ -52,7 +52,7 @@ class CreatePostTest extends TestCase
     /** @test */
     public function component_exists_on_the_page()
     {
-        $this->get('/post/create')
+        $this->get('/posts/create')
             ->assertSeeLivewire(CreatePost::class);
     }
 }
