@@ -47,6 +47,43 @@ class ShowPosts extends Component
 
 As you can see, in addition to limiting the number of posts shown via the `Post::paginate()` method, we will also use `$posts->links()` to render page navigation links.
 
+Alternately if you prefer to use inline components you may simply add the render logic directly in the render method.
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Illuminate\Support\Facades\Blade;
+use Livewire\WithPagination;
+use Livewire\Component;
+use App\Models\Post;
+
+class ShowPosts extends Component
+{
+    use WithPagination;
+
+    public function render()
+    {
+        $posts = Post::paginate(10);
+
+        $view = <<<'HTML'
+            <div>
+                <div>
+                    @foreach ($posts as $post)
+                        <!-- ... -->
+                    @endforeach
+                </div>
+            
+                {{ $posts->links() }}
+            </div>
+        HTML;
+
+        return Blade::render($view, $posts);
+    }
+}
+```
+
 For more information on pagination using Laravel, check out [Laravel's comprehensive pagination documentation](https://laravel.com/docs/pagination).
 
 ## Resetting the page
