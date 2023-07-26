@@ -19,10 +19,9 @@ $increment = fn () => $this->count++;
 </div>
 ```
 
-<a name="installation"></a>
 ## Installation
 
-First, install Volt into your project using the Composer package manager:
+To get started, install Volt into your project using the Composer package manager:
 
 ```bash
 composer require livewire/livewire:^3.0@beta # Or ensure Livewire v3.x is installed...
