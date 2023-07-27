@@ -7380,11 +7380,11 @@ var require_module_cjs8 = __commonJS({
             patchChildren(newFromChildren, newToChildren, (node) => appendPoint.before(node));
             continue;
           }
-          if (currentFrom.nodeType === 1 && lookahead) {
+          if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
             let nextToElementSibling = dom.next(toChildren, currentTo);
             let found = false;
             while (!found && nextToElementSibling) {
-              if (currentFrom.isEqualNode(nextToElementSibling)) {
+              if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
                 found = true;
                 [fromChildren, currentFrom] = addNodeBefore(fromChildren, currentTo, currentFrom);
                 fromKey = getKey(currentFrom);
