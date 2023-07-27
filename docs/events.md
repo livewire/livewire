@@ -48,7 +48,7 @@ class Dashboard extends Component
 }
 ```
 
-Now, when the `post-created` event is dispatched from `CreatePost`, a network request will be triggered and the `notifyAboutNewPost()` action will be invoked.
+Now, when the `post-created` event is dispatched from `CreatePost`, a network request will be triggered and the `updatePostList()` action will be invoked.
 
 As you can see, additional data sent with the event will be provided to the action as its first argument.
 
