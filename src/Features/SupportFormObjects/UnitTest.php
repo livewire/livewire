@@ -83,7 +83,7 @@ class UnitTest extends \Tests\TestCase
     function validation_can_show_a_form_object_dynamic_validation_attributes()
     {
         Livewire::test(new class extends Component {
-            public PostFormDynamicValidationAttributeStub $withDynamicAttributesForm;
+            public PostFormDynamicAttributesStub $withDynamicAttributesForm;
 
             function save()
             {
@@ -108,7 +108,7 @@ class UnitTest extends \Tests\TestCase
     function validation_showing_a_form_object_dynamic_messages()
     {
         Livewire::test(new class extends Component {
-            public PostFormDynamicMessageAttributeStub $form;
+            public PostFormDynamicMessagesStub $form;
 
             function save()
             {
@@ -131,8 +131,8 @@ class UnitTest extends \Tests\TestCase
     function multiple_form_objects_in_component_not_interfering_between()
     {
         Livewire::test(new class extends Component {
-            public PostFormDynamicValidationAttributeStub $firstForm;
-            public PostFormDynamicMessageAndValidationAttributeStub $secondForm;
+            public PostFormDynamicAttributesStub $firstForm;
+            public PostFormDynamicMessagesAndAttributesStub $secondForm;
 
             function saveFirstForm()
             {
@@ -199,7 +199,7 @@ class PostFormRuleAttributeStub extends Form
     public $content = '';
 }
 
-class PostFormDynamicValidationAttributeStub extends Form
+class PostFormDynamicAttributesStub extends Form
 {
     #[\Livewire\Attributes\Rule('required')]
     public $title = '';
@@ -207,7 +207,7 @@ class PostFormDynamicValidationAttributeStub extends Form
     #[\Livewire\Attributes\Rule('required')]
     public $content = '';
 
-    public function validationAttributes() {
+    public function attributes() {
         return [
             'title' => 'Custom Title',
             'content' => 'Custom Content',
@@ -215,7 +215,7 @@ class PostFormDynamicValidationAttributeStub extends Form
     }
 }
 
-class PostFormDynamicMessageAttributeStub extends Form
+class PostFormDynamicMessagesStub extends Form
 {
     #[\Livewire\Attributes\Rule('required')]
     public $title = '';
@@ -232,7 +232,7 @@ class PostFormDynamicMessageAttributeStub extends Form
     }
 }
 
-class PostFormDynamicMessageAndValidationAttributeStub extends Form
+class PostFormDynamicMessagesAndAttributesStub extends Form
 {
     #[\Livewire\Attributes\Rule('required')]
     public $title = '';
@@ -240,7 +240,7 @@ class PostFormDynamicMessageAndValidationAttributeStub extends Form
     #[\Livewire\Attributes\Rule('required')]
     public $content = '';
 
-    public function validationAttributes() {
+    public function attributes() {
         return [
             'title' => 'Name',
             'content' => 'Body',
