@@ -22,6 +22,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstr
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroduction;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeForgetComputedToUnset;
 
 class UpgradeCommand extends Command
 {
@@ -49,6 +50,7 @@ class UpgradeCommand extends Command
             ChangeWireLoadDirectiveToWireInit::class,
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
+            ChangeForgetComputedToUnset::class,
 
             // Partially automated steps
             ReplaceEmitWithDispatch::class,
