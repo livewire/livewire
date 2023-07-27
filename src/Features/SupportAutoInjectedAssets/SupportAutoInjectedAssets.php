@@ -6,18 +6,26 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Livewire\ComponentHook;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 
+use function Livewire\on;
+
 class SupportAutoInjectedAssets extends ComponentHook
 {
     static $hasRenderedAComponentThisRequest = false;
+    static $forceScriptInjection = false;
 
     static function provide()
     {
+        on('flush-state', function () {
+            static::$hasRenderedAComponentThisRequest = false;
+            static::$forceScriptInjection = false;
+        });
+
         if (config('livewire.inject_assets', true) === false) return;
 
         app('events')->listen(RequestHandled::class, function ($handled) {
             if (! str($handled->response->headers->get('content-type'))->contains('text/html')) return;
             if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) return;
-            if (! static::$hasRenderedAComponentThisRequest) return;
+            if ((! static::$hasRenderedAComponentThisRequest) && (! static::$forceScriptInjection)) return;
             if (app(FrontendAssets::class)->hasRenderedScripts) return;
 
             $html = $handled->response->getContent();

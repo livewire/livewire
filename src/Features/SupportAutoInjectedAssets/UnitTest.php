@@ -2,8 +2,11 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Tests\TestComponent;
 use Tests\TestCase;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends TestCase
 {
@@ -105,7 +108,31 @@ class UnitTest extends TestCase
     /** @test */
     public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
-        $this->markTestIncomplete();
+        Route::get('/with-livewire', function () {
+            return (new class Extends TestComponent {})();
+        });
+
+        Route::get('/without-livewire', function () {
+            return '<html></html>';
+        });
+
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
+        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.js');
+    }
+
+    /** @test */
+    public function only_auto_injects_when_persist_was_rendered_on_the_page(): void
+    {
+        Route::get('/with-persist', function () {
+            return Blade::render('<html>@persist("foo") ... @endpersist</html>');
+        });
+
+        Route::get('/without-persist', function () {
+            return '<html></html>';
+        });
+
+        $this->get('/with-persist')->assertSee('/livewire/livewire.js');
+        $this->get('/without-persist')->assertDontSee('/livewire/livewire.js');
     }
 
     /** @test */

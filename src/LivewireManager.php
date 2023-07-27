@@ -108,6 +108,11 @@ class LivewireManager
         return SupportAutoInjectedAssets::$hasRenderedAComponentThisRequest;
     }
 
+    function forceScriptInjection()
+    {
+        SupportAutoInjectedAssets::$forceScriptInjection = true;
+    }
+
     function setUpdateRoute($callback)
     {
         return app(HandleRequests::class)->setUpdateRoute($callback);
