@@ -132,7 +132,7 @@ class UnitTest extends \Tests\TestCase
     function can_reset_content_property_using_attribute()
     {
         Livewire::test(new class extends Component {
-            public PostFormResetContentWithAttribute $form;
+            public PostFormResetContentWithAttributeStub $form;
 
             function save()
             {
@@ -156,7 +156,7 @@ class UnitTest extends \Tests\TestCase
     function can_reset_title_property_using_attribute()
     {
         Livewire::test(new class extends Component {
-            public PostFormResetTitleWithAttribute $form;
+            public PostFormResetTitleWithAttributeStub $form;
 
             function save()
             {
@@ -180,7 +180,7 @@ class UnitTest extends \Tests\TestCase
     function can_reset_title_and_content_using_attribute()
     {
         Livewire::test(new class extends Component {
-            public PostFormResetWithAttribute $form;
+            public PostFormResetWithAttributeStub $form;
 
             function save()
             {
@@ -206,7 +206,7 @@ class UnitTest extends \Tests\TestCase
     function can_reset_title_and_content_without_attribute()
     {
         Livewire::test(new class extends Component {
-            public PostFormReset $form;
+            public PostFormResetStub $form;
 
             function save()
             {
@@ -232,7 +232,7 @@ class UnitTest extends \Tests\TestCase
     function can_reset_single_property()
     {
         Livewire::test(new class extends Component {
-            public PostFormReset $form;
+            public PostFormResetStub $form;
 
             function save()
             {
@@ -261,11 +261,37 @@ class UnitTest extends \Tests\TestCase
         $this->expectExceptionMessage("Property not allowed to be reset: [title].");
 
         Livewire::test(new class extends Component {
-            public PostFormDontReset $form;
+            public PostFormDontResetStub $form;
 
             function save()
             {
                 $this->form->reset('title');
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some title...')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ;
+    }
+
+    /** @test */
+    function cannot_reset_any_property_with_attribute_as_false()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormDontResetAllStub $form;
+
+            function save()
+            {
+                $this->form->reset();
             }
 
             function render() {
@@ -291,7 +317,7 @@ class PostFormStub extends Form
     public $content = '';
 }
 
-class PostFormResetContentWithAttribute extends Form
+class PostFormResetContentWithAttributeStub extends Form
 {
     #[Reset(false)]
     public $title = 'Some title...';
@@ -299,7 +325,7 @@ class PostFormResetContentWithAttribute extends Form
     public $content = '';
 }
 
-class PostFormResetTitleWithAttribute extends Form
+class PostFormResetTitleWithAttributeStub extends Form
 {
     public $title = '';
 
@@ -307,7 +333,7 @@ class PostFormResetTitleWithAttribute extends Form
     public $content = 'Some content...';
 }
 
-class PostFormResetWithAttribute extends Form
+class PostFormResetWithAttributeStub extends Form
 {
     #[Reset]
     public $title = '';
@@ -316,7 +342,7 @@ class PostFormResetWithAttribute extends Form
     public $content = '';
 }
 
-class PostFormDontReset extends Form
+class PostFormDontResetStub extends Form
 {
     #[Reset(false)]
     public $title = 'Some title...';
@@ -324,7 +350,16 @@ class PostFormDontReset extends Form
     public $content = '';
 }
 
-class PostFormReset extends Form
+class PostFormDontResetAllStub extends Form
+{
+    #[Reset(false)]
+    public $title = '';
+
+    #[Reset(false)]
+    public $content = '';
+}
+
+class PostFormResetStub extends Form
 {
     public $title = '';
 
