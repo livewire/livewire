@@ -34,17 +34,41 @@ abstract class UpgradeStep
         return false;
     }
 
+    public function manualUpgradeWarning($console, $warning, $before, $after)
+    {
+        $console->newLine();
+        $console->error($warning);
+        $console->newLine();
+
+        $this->beforeAfterView(
+            console: $console,
+            before: $before,
+            after: $after,
+        );
+
+        $console->confirm('Ready to continue?');
+    }
+
+    public function beforeAfterView($console, $before, $after, $title = 'Before/After example')
+    {
+        $console->table(
+            [$title],
+            [
+                array_map(fn($line) => "<fg=red>- {$line}</>", Arr::wrap($before)),
+                array_map(fn($line) => "<fg=green>+ {$line}</>", Arr::wrap($after))
+            ],
+        );
+    }
+
     public function interactiveReplacement(Command $console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'])
     {
+        $console->newLine(4);
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> {$title} </>");
         $console->newLine();
         $console->line('Please review the example below and confirm if you would like to apply this change.');
         $console->newLine();
 
-        $console->table(['Before/After Example'], [
-            ["<fg=red>- {$before} </>"],
-            ["<fg=green>+ {$after} </>"],
-        ]);
+        $this->beforeAfterView($console, $before, $after);
 
         $confirm = $console->confirm("Would you like to apply these changes?", true);
 
@@ -55,7 +79,7 @@ abstract class UpgradeStep
 
             if($replacements->isEmpty())
             {
-                $console->line("No occurrences of <options=underscore>{$before}</> were found.");
+                $console->line("No occurrences of were found.");
             }
 
             if($replacements->isNotEmpty()) {
