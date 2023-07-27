@@ -65,7 +65,7 @@ trait InteractsWithProperties
 
         $keysToReset = array_diff(array_keys($this->all()), $properties);
 
-        $this->resetProperty($keysToReset);
+        $this->reset($keysToReset);
     }
 
     public function only($properties)
