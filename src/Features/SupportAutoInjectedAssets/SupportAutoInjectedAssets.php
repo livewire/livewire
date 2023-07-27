@@ -40,16 +40,16 @@ class SupportAutoInjectedAssets extends ComponentHook
 
         $html = str($html);
 
-        if ($html->test('/<\s*head[^>]*>/') && $html->test('/<\s*body[^>]*>/')) {
+        if ($html->test('/<\s*head(?:\s|\s[^>])*>/i') && $html->test('/<\s*\/\s*body\s*>/i')) {
             return $html
-                ->replaceMatches('/(<\s*head[^>]*>)/', '$1'.$livewireStyles)
-                ->replaceMatches('/(<\s*\/\s*body\s*>)/', $livewireScripts.'$1')
+                ->replaceMatches('/(<\s*head(?:\s|\s[^>])*>)/i', '$1'.$livewireStyles)
+                ->replaceMatches('/(<\s*\/\s*body\s*>)/i', $livewireScripts.'$1')
                 ->toString();
         }
 
         return $html
-            ->replaceMatches('/(<\s*html[^>]*>)/', '$1'.$livewireStyles)
-            ->replaceMatches('/(<\s*\/\s*html\s*>)/', $livewireScripts.'$1')
+            ->replaceMatches('/(<\s*html(?:\s[^>])*>)/i', '$1'.$livewireStyles)
+            ->replaceMatches('/(<\s*\/\s*html\s*>)/i', $livewireScripts.'$1')
             ->toString();
     }
 }
