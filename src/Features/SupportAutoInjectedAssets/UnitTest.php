@@ -94,6 +94,45 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    public function it_injects_livewire_assets_html_with_header(): void
+    {
+        $livewireStyles = FrontendAssets::styles();
+        $livewireScripts = FrontendAssets::scripts();
+
+        $this->compare(<<<'HTML'
+            <!doctype html>
+            <HTML
+                lang="en"
+            >
+                <Head
+                >
+                    <meta charset="utf-8"/>
+                    <title></title>
+                </Head>
+                <bOdY>
+                    <header class=""></header>
+                </bOdY
+                >
+            </HTML>
+        HTML, <<<HTML
+            <!doctype html>
+            <HTML
+                lang="en"
+            >
+                <Head
+                >$livewireStyles
+                    <meta charset="utf-8"/>
+                    <title></title>
+                </Head>
+                <bOdY>
+                    <header class=""></header>
+                $livewireScripts</bOdY
+                >
+            </HTML>
+        HTML);
+    }
+
+    /** @test */
     public function can_disable_auto_injection_using_global_method(): void
     {
         $this->markTestIncomplete();
