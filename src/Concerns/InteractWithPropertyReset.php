@@ -2,7 +2,6 @@
 
 namespace Livewire\Concerns;
 
-use Livewire\Features\SupportFormObjects\Reset;
 use Livewire\Features\SupportFormObjects\Form;
 
 trait InteractWithPropertyReset
@@ -13,10 +12,11 @@ trait InteractWithPropertyReset
             ? $properties[0]
             : $properties;
 
-        $livewireForm = $this instanceof Form;
-        $properties = !$livewireForm ? $properties : Reset::getResettableProperties($this, $properties);
+        $form = $this instanceof Form;
 
-        $freshInstance = $livewireForm
+        if (empty($properties) && $form) $properties = array_keys($this->all());
+
+        $freshInstance = $form
             ? new static($this->getComponent(), $this->getPropertyName())
             : new static;
 

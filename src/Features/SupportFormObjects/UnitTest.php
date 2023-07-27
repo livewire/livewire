@@ -2,10 +2,8 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use Livewire\Attributes\Form\Reset;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
-use Livewire\Exceptions\ResetPropertyNotAllowed;
 use Livewire\Form;
 use Livewire\Livewire;
 
@@ -130,110 +128,10 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_reset_content_property_using_attribute()
+    function can_reset_property()
     {
         Livewire::test(new class extends Component {
-            public PostFormResetContentWithAttributeStub $form;
-
-            function save()
-            {
-                $this->form->reset();
-            }
-
-            function render() {
-                return '<div></div>';
-            }
-        })
-        ->assertSet('form.title', 'Some title...')
-        ->set('form.content', 'Some content...')
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', '')
-        ;
-    }
-
-    /** @test */
-    function can_reset_title_property_using_attribute()
-    {
-        Livewire::test(new class extends Component {
-            public PostFormResetTitleWithAttributeStub $form;
-
-            function save()
-            {
-                $this->form->reset();
-            }
-
-            function render() {
-                return '<div></div>';
-            }
-        })
-        ->set('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', 'Some content...')
-        ;
-    }
-
-    /** @test */
-    function can_reset_title_and_content_using_attribute()
-    {
-        Livewire::test(new class extends Component {
-            public PostFormResetWithAttributeStub $form;
-
-            function save()
-            {
-                $this->form->reset();
-            }
-
-            function render() {
-                return '<div></div>';
-            }
-        })
-        ->set('form.title', 'Some title...')
-        ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
-        ;
-    }
-
-    /** @test */
-    function can_reset_title_and_content_without_attribute()
-    {
-        Livewire::test(new class extends Component {
-            public PostFormResetStub $form;
-
-            function save()
-            {
-                $this->form->reset();
-            }
-
-            function render() {
-                return '<div></div>';
-            }
-        })
-        ->set('form.title', 'Some title...')
-        ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
-        ;
-    }
-
-    /** @test */
-    function can_reset_single_property()
-    {
-        Livewire::test(new class extends Component {
-            public PostFormResetStub $form;
+            public PostFormStub $form;
 
             function save()
             {
@@ -256,39 +154,10 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function cannot_reset_property_with_attribute_as_false()
-    {
-        $this->expectException(ResetPropertyNotAllowed::class);
-        $this->expectExceptionMessage("Property not allowed to be reset: [title].");
-
-        Livewire::test(new class extends Component {
-            public PostFormDontResetStub $form;
-
-            function save()
-            {
-                $this->form->reset('title');
-            }
-
-            function render() {
-                return '<div></div>';
-            }
-        })
-        ->set('form.title', 'Some title...')
-        ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
-        ;
-    }
-
-    /** @test */
-    function cannot_reset_any_property_with_attribute_as_false()
+    function can_reset_all_properties()
     {
         Livewire::test(new class extends Component {
-            public PostFormDontResetAllStub $form;
+            public PostFormStub $form;
 
             function save()
             {
@@ -305,62 +174,13 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.content', 'Some content...')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
         ;
     }
 }
 
 class PostFormStub extends Form
-{
-    public $title = '';
-
-    public $content = '';
-}
-
-class PostFormResetContentWithAttributeStub extends Form
-{
-    #[Reset(false)]
-    public $title = 'Some title...';
-
-    public $content = '';
-}
-
-class PostFormResetTitleWithAttributeStub extends Form
-{
-    public $title = '';
-
-    #[Reset(false)]
-    public $content = 'Some content...';
-}
-
-class PostFormResetWithAttributeStub extends Form
-{
-    #[Reset]
-    public $title = '';
-
-    #[Reset]
-    public $content = '';
-}
-
-class PostFormDontResetStub extends Form
-{
-    #[Reset(false)]
-    public $title = 'Some title...';
-
-    public $content = '';
-}
-
-class PostFormDontResetAllStub extends Form
-{
-    #[Reset(false)]
-    public $title = '';
-
-    #[Reset(false)]
-    public $content = '';
-}
-
-class PostFormResetStub extends Form
 {
     public $title = '';
 

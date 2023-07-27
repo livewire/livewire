@@ -381,46 +381,6 @@ class PostForm extends Form
 }
 ```
 
-Additionally, you can indicate which form properties will be reset by using the `#[Reset]` attribute:
-
-```php
-<?php
-
-namespace App\Livewire\Forms;
-
-use Livewire\Attributes\Rule;
-use Livewire\Attributes\Form\Reset; // [tl! highlight]
-use Livewire\Form;
-use App\Models\Post;
-
-class PostForm extends Form
-{
-    public ?Post $post;
-
-    public $title = '';
-
-    #[Reset] // [tl! highlight]
-    public $content = '';
-
-    #[Reset(false)] // [tl! highlight]
-    public $active = true;
-    
-    // ...
-
-    public function store()
-    {
-        Post::create($this->all());
-        
-        $this->reset(); // [tl! highlight]
-    }
-}
-```
-
-By default, `reset` will look for any public property on the form that does not contain `#[Reset]` or that does but has its parameter set to `true`, indicating that the reset is allowed.
-
-> [!warning] "Non-resettable properties are protected"
-> When trying to reset a property that uses the `#[Reset]` attribute with the parameter set to `false`, an `ResetPropertyNotAllowed` exception will be thrown.
-
 ### Showing a loading indicator
 
 By default, Livewire will automatically disable submit buttons and mark inputs as `readonly` while a form is being submitted, preventing the user from submitting the form again while the first submission is being handled.
