@@ -11,13 +11,13 @@ use function Livewire\on;
 class SupportAutoInjectedAssets extends ComponentHook
 {
     static $hasRenderedAComponentThisRequest = false;
-    static $forceScriptInjection = false;
+    static $forceAssetInjection = false;
 
     static function provide()
     {
         on('flush-state', function () {
             static::$hasRenderedAComponentThisRequest = false;
-            static::$forceScriptInjection = false;
+            static::$forceAssetInjection = false;
         });
 
         if (config('livewire.inject_assets', true) === false) return;
@@ -25,7 +25,7 @@ class SupportAutoInjectedAssets extends ComponentHook
         app('events')->listen(RequestHandled::class, function ($handled) {
             if (! str($handled->response->headers->get('content-type'))->contains('text/html')) return;
             if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) return;
-            if ((! static::$hasRenderedAComponentThisRequest) && (! static::$forceScriptInjection)) return;
+            if ((! static::$hasRenderedAComponentThisRequest) && (! static::$forceAssetInjection)) return;
             if (app(FrontendAssets::class)->hasRenderedScripts) return;
 
             $html = $handled->response->getContent();

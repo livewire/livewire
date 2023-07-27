@@ -48,7 +48,7 @@ Though rarely required, you may disable Livewire's auto-injecting asset behavior
 If you'd rather force Livewire to inject it's assets on a single page or multiple pages, you can call the following global method from the current route or from a service provider.
 
 ```php
-\Livewire\Livewire::forceScriptInjection();
+\Livewire\Livewire::forceAssetInjection();
 ```
 
 ## Configuring Livewire's update endpoint

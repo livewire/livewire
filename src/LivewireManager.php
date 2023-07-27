@@ -108,9 +108,9 @@ class LivewireManager
         return SupportAutoInjectedAssets::$hasRenderedAComponentThisRequest;
     }
 
-    function forceScriptInjection()
+    function forceAssetInjection()
     {
-        SupportAutoInjectedAssets::$forceScriptInjection = true;
+        SupportAutoInjectedAssets::$forceAssetInjection = true;
     }
 
     function setUpdateRoute($callback)
