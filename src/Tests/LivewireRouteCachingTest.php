@@ -43,8 +43,7 @@ class LivewireRouteCachingTest extends TestCase
             $route->prepareForSerialization();
 
             $this->assertStringContainsString($expectedHandle, $route->getAction('uses'));
-        } catch (Error|Exception $e) {
-            dd($e);
+        } catch (Error|Exception) {
             $this->fail($message);
         }
 
