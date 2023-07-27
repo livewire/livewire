@@ -2,13 +2,14 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use Illuminate\Support\Arr;
 use Livewire\Attributes\Form\Reset as ResetAttribute;
 use Livewire\Drawer\Utils;
 use Livewire\Exceptions\ResetPropertyNotAllowed;
 
 class Reset
 {
+    public function __construct(public $reset = true) {}
+
     public static function getResettableProperties($target, ...$properties): array
     {
         $publicProperties = array_keys(Utils::getPublicProperties($target));
