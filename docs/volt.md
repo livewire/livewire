@@ -99,7 +99,7 @@ The `mount` function may be used to define the "mount" [lifecycle hook](/docs/li
 
 ```php
 use App\Services\UserCounter;
-use function Livewire\Volt\{state};
+use function Livewire\Volt\{mount};
 
 mount(function (UserCounter $counter, $users) {
     $counter->store('userCount', count($users));
