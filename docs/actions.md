@@ -391,7 +391,7 @@ Within your component's Blade template, you can invoke this action via Alpine, p
 
 ```blade
 <div x-data="{ todo: '' }">
-    <input type="text" wire:model="todo">
+    <input type="text" x-model="todo">
 
     <button x-on:click="$wire.addTodo(todo)">Add Todo</button>
 </div>

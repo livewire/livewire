@@ -214,12 +214,12 @@ If you include Alpine into your application via a script tag like the following,
 
 Livewire 3 now ships with the following Alpine plugins out-of-the-box:
 
-* [Intersect](https://alpinejs.dev/docs/plugins/intersect)
-* [Collapse](https://alpinejs.dev/docs/plugins/collapse)
-* [Persist](https://alpinejs.dev/docs/plugins/persist)
-* [Morph](https://alpinejs.dev/docs/plugins/morph)
-* [Focus](https://alpinejs.dev/docs/plugins/focus)
-* [Mask](https://alpinejs.dev/docs/plugins/mask)
+* [Collapse](https://alpinejs.dev/plugins/collapse)
+* [Focus](https://alpinejs.dev/plugins/focus)
+* [Intersect](https://alpinejs.dev/plugins/intersect)
+* [Mask](https://alpinejs.dev/plugins/mask)
+* [Morph](https://alpinejs.dev/plugins/morph)
+* [Persist](https://alpinejs.dev/plugins/persist)
 
 If you have already included any of these in your application via `<script>` tags like below, you can remove them along with Alpine's core:
 

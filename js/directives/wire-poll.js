@@ -30,7 +30,7 @@ function poll(callback, interval = 2000) {
 
     return {
         start() {
-            clear = syncronizedInterval(interval, () => {
+            let clear = syncronizedInterval(interval, () => {
                 if (stopConditions.some(i => i())) return clear()
                 if (pauseConditions.some(i => i())) return
                 if (throttleConditions.some(i => i()) && Math.random() < .95) return

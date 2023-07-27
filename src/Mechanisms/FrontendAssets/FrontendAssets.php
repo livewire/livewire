@@ -38,9 +38,7 @@ class FrontendAssets
 
     function setScriptRoute($callback)
     {
-        $route = $callback(function () {
-            return $this->returnJavaScriptAsFile();
-        });
+        $route = $callback([self::class, 'returnJavaScriptAsFile']);
 
         $this->javaScriptRoute = $route;
     }
