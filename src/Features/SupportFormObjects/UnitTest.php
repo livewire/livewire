@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Attributes\Form\Reset;
+use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\Exceptions\ResetPropertyNotAllowed;
 use Livewire\Form;
@@ -380,9 +381,9 @@ class PostFormValidateStub extends Form
 
 class PostFormRuleAttributeStub extends Form
 {
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $title = '';
 
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $content = '';
 }
