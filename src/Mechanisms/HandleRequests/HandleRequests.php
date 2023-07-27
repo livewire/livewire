@@ -17,8 +17,8 @@ class HandleRequests
 
     function boot()
     {
-        app($this::class)->setUpdateRoute(function ($handle) {
-            return Route::post('/livewire/update', $handle)->middleware('web');
+        app($this::class)->setUpdateRoute(function () {
+            return Route::post('/livewire/update', [self::class, 'handleUpdate'])->middleware('web');
         });
 
         $this->skipRequestPayloadTamperingMiddleware();
@@ -42,9 +42,7 @@ class HandleRequests
 
     function setUpdateRoute($callback)
     {
-        $route = $callback(function () {
-            return $this->handleUpdate();
-        });
+        $route = $callback();
 
         // Append `livewire.update` to the existing name, if any.
         $route->name('livewire.update');

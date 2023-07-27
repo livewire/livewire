@@ -22,8 +22,8 @@ class FrontendAssets
 
     public function boot()
     {
-        app($this::class)->setScriptRoute(function ($handle) {
-            return Route::get('/livewire/livewire.js', $handle);
+        app($this::class)->setScriptRoute(function () {
+            return Route::get('/livewire/livewire.js', [self::class, 'returnJavaScriptAsFile']);
         });
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
@@ -38,9 +38,7 @@ class FrontendAssets
 
     function setScriptRoute($callback)
     {
-        $route = $callback(function () {
-            return $this->returnJavaScriptAsFile();
-        });
+        $route = $callback();
 
         $this->javaScriptRoute = $route;
     }
