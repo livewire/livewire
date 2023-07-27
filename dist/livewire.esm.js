@@ -6635,6 +6635,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function putPersistantElementsBack() {
       document.querySelectorAll("[x-persist]").forEach((i) => {
         let old = els[i.getAttribute("x-persist")];
+        if (!old)
+          return;
         old._x_wasPersisted = true;
         alpine_default.mutateDom(() => {
           i.replaceWith(old);
@@ -6742,8 +6744,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let newDocument = new DOMParser().parseFromString(html, "text/html");
       let newBody = document.adoptNode(newDocument.body);
       let newHead = document.adoptNode(newDocument.head);
+      let oldBodyScriptTagHashes = Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML));
       mergeNewHead(newHead);
-      prepNewScriptTagsToRun(newBody);
+      prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
       transitionOut(document.body);
       let oldBody = document.body;
       document.body.replaceWith(newBody);
@@ -6764,10 +6767,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         body.style.opacity = "1";
       });
     }
-    function prepNewScriptTagsToRun(newBody) {
+    function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
       newBody.querySelectorAll("script").forEach((i) => {
-        if (i.hasAttribute("data-navigate-once"))
-          return;
+        if (i.hasAttribute("data-navigate-once")) {
+          let hash = simpleHash(i.outerHTML);
+          if (oldBodyScriptTagHashes.includes(hash))
+            return;
+        }
         i.replaceWith(cloneScriptTag(i));
       });
     }
@@ -6817,6 +6823,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function isScript(el) {
       return el.tagName.toLowerCase() === "script";
     }
+    function simpleHash(str) {
+      return str.split("").reduce((a, b) => {
+        a = (a << 5) - a + b.charCodeAt(0);
+        return a & a;
+      }, 0);
+    }
     function fetchHtml(destination, callback) {
       let uri = destination.pathname + destination.search;
       fetch(uri).then((i) => i.text()).then((html) => {
@@ -6830,6 +6842,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function src_default(Alpine22) {
       Alpine22.navigate = (url) => {
         navigateTo(createUrlObjectFromString(url));
+      };
+      Alpine22.navigate.disableProgressBar = () => {
+        showProgressBar = false;
       };
       Alpine22.addInitSelector(() => `[${prefix("navigate")}]`);
       Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
@@ -6956,6 +6971,7 @@ var require_module_cjs7 = __commonJS({
           let { initial, replace: replace2, push: push2, pop } = track2(queryKey, initialSeedValue, alwaysShow);
           setter(initial);
           if (!usePush) {
+            console.log(getter());
             Alpine18.effect(() => replace2(getter()));
           } else {
             Alpine18.effect(() => push2(getter()));
@@ -7108,6 +7124,8 @@ var require_module_cjs7 = __commonJS({
       let entries = search.split("&").map((i) => i.split("="));
       let data = {};
       entries.forEach(([key, value]) => {
+        if (!value)
+          return;
         value = decodeURIComponent(value.replaceAll("+", "%20"));
         if (!key.includes("[")) {
           data[key] = value;
@@ -7362,11 +7380,11 @@ var require_module_cjs8 = __commonJS({
             patchChildren(newFromChildren, newToChildren, (node) => appendPoint.before(node));
             continue;
           }
-          if (currentFrom.nodeType === 1 && lookahead) {
+          if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
             let nextToElementSibling = dom.next(toChildren, currentTo);
             let found = false;
             while (!found && nextToElementSibling) {
-              if (currentFrom.isEqualNode(nextToElementSibling)) {
+              if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
                 found = true;
                 [fromChildren, currentFrom] = addNodeBefore(fromChildren, currentTo, currentFrom);
                 fromKey = getKey(currentFrom);
