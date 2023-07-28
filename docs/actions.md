@@ -239,6 +239,7 @@ For example, let's imagine you have a `ShowPosts` component that allows users to
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -296,6 +297,7 @@ As an added convenience, you may automatically resolve Eloquent models by a corr
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -326,6 +328,7 @@ You can take advantage of [Laravel's dependency injection](https://laravel.com/d
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Repositories\PostRepository;
 
@@ -684,6 +687,7 @@ Here is a vulnerable version of component:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -727,6 +731,7 @@ To protect against this, we need to authorize that the user owns the post about 
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -845,6 +850,7 @@ Consider the `BrowsePosts` example that we previously discussed, where users can
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -897,6 +903,7 @@ To remedy this, we can mark the method as `protected` or `private`. Once the met
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
