@@ -21,53 +21,55 @@ class SupportPageComponents extends ComponentHook
     static function registerLayoutViewMacros()
     {
         View::macro('layoutData', function ($data = []) {
-            $this->layoutConfig['params'] = $data;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+
+            $this->layoutConfig->mergeParams($data);
 
             return $this;
         });
 
         View::macro('section', function ($section) {
-            $this->layoutConfig['slotOrSection'] = $section;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+
+            $this->layoutConfig->slotOrSection = $section;
 
             return $this;
         });
 
         View::macro('title', function ($title) {
-            if (! isset($this->layoutConfig)) {
-                $this->layoutConfig = [
-                    'params' => [],
-                ];
-            }
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
 
-            $this->layoutConfig['params'] = array_merge($this->layoutConfig['params'], ['title' => $title]);
+            $this->layoutConfig->mergeParams(['title' => $title]);
 
             return $this;
         });
 
         View::macro('slot', function ($slot) {
-            $this->layoutConfig['slotOrSection'] = $slot;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+
+            $this->layoutConfig->slotOrSection = $slot;
 
             return $this;
         });
 
         View::macro('extends', function ($view, $params = []) {
-            $this->layoutConfig = [
-                'type' => 'extends',
-                'slotOrSection' => 'content',
-                'view' => $view,
-                'params' => $params,
-            ];
+            $this->layoutConfig = new LayoutConfig(
+                type: 'extends',
+                slotOrSection: 'content',
+                view: $view,
+                params: $params,
+            );
 
             return $this;
         });
 
         View::macro('layout', function ($view, $params = []) {
-            $this->layoutConfig = [
-                'type' => 'component',
-                'slotOrSection' => 'slot',
-                'view' => $view,
-                'params' => $params,
-            ];
+            $this->layoutConfig = new LayoutConfig(
+                type: 'component',
+                slotOrSection: 'slot',
+                view: $view,
+                params: $params,
+            );
 
             return $this;
         });
@@ -128,55 +130,13 @@ class SupportPageComponents extends ComponentHook
         return $params;
     }
 
-    static function mergeLayoutDefaults($layoutConfig)
-    {
-        $defaultLayoutConfig = [
-            'view' => config('livewire.layout'),
-            'type' => 'component',
-            'params' => [],
-            'slotOrSection' => 'slot',
-        ];
-
-        $layoutConfig = array_merge($defaultLayoutConfig, $layoutConfig ?: []);
-
-        return static::normalizeViewNameAndParamsForBladeComponents($layoutConfig);
-    }
-
-    static function normalizeViewNameAndParamsForBladeComponents($layoutConfig)
-    {
-        // If a user passes the class name of a Blade component to the
-        // layout macro (or uses inside their config), we need to
-        // convert it to it's "view" name so Blade doesn't break.
-        $view = $layoutConfig['view'];
-        $params = $layoutConfig['params'];
-
-        $attributes = $params['attributes'] ?? [];
-        unset($params['attributes']);
-
-        if (is_subclass_of($view, \Illuminate\View\Component::class)) {
-            $layout = app()->makeWith($view, $params);
-            $view = $layout->resolveView()->name();
-        } else {
-            $layout = new AnonymousComponent($view, $params);
-        }
-
-        $layout->withAttributes($attributes);
-
-        $params = array_merge($params, $layout->data());
-
-        $layoutConfig['view'] = $view;
-        $layoutConfig['params'] = $params;
-
-        return $layoutConfig;
-    }
-
     static function renderContentsIntoLayout($content, $layoutConfig)
     {
         try {
-            if ($layoutConfig['type'] === 'component') {
+            if ($layoutConfig->type === 'component') {
                 return Blade::render(<<<'HTML'
-                    @component($layout['view'], $layout['params'])
-                        @slot($layout['slotOrSection'])
+                    @component($layout->view, $layout->params)
+                        @slot($layout->slotOrSection)
                             {!! $content !!}
                         @endslot
                     @endcomponent
@@ -186,9 +146,9 @@ class SupportPageComponents extends ComponentHook
                 ]);
             } else {
                 return Blade::render(<<<'HTML'
-                    @extends($layout['view'], $layout['params'])
+                    @extends($layout->view, $layout->params)
 
-                    @section($layout['slotOrSection'])
+                    @section($layout->slotOrSection)
                         {!! $content !!}
                     @endsection
                 HTML, [
@@ -197,7 +157,7 @@ class SupportPageComponents extends ComponentHook
                 ]);
             }
         } catch (\Illuminate\View\ViewException $e) {
-            $layout = $layoutConfig['view'];
+            $layout = $layoutConfig->view;
 
             if (str($e->getMessage())->startsWith('View ['.$layout.'] not found.')) {
                 throw new MissingLayoutException($layout);
