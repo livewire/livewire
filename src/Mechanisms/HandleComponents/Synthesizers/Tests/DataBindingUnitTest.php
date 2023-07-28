@@ -26,6 +26,8 @@ class DataBindingUnitTest extends \Tests\TestCase
         $component->set('foo.0', 'bar');
         $component->set('foo.bar', 'baz');
 
+        $component->set('bar.nested', 'baz');
+
         $this->assertEquals(['bar', 'bar' => 'baz'], $component->foo);
     }
 }
