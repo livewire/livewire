@@ -124,6 +124,14 @@ If you are working with a large form and prefer to extract all of its properties
 
 Form objects allow you to re-use form logic across components and provide a nice way to keep your component class cleaner by grouping all form-related code into a separate class.
 
+You can either create a form class by hand or use the convenient artisan command:
+
+```shell
+php artisan livewire:form CreatePost
+```
+
+The above command will create a file called `app/Livewire/Forms/CreatePost.php`.
+
 Let's rewrite the `CreatePost` component to use a `PostForm` class:
 
 ```php
