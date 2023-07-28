@@ -3327,7 +3327,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_keyExpression = expression;
     }
     addRootSelector(() => `[${prefix("data")}]`);
-    directive2("data", skipDuringClone((el, { expression }, { cleanup: cleanup2 }) => {
+    directive2("data", (el, { expression }, { cleanup: cleanup2 }) => {
+      if (isCloning && el._x_dataStack)
+        return;
       expression = expression === "" ? "{}" : expression;
       let magicContext = {};
       injectMagics(magicContext, el);
@@ -3345,7 +3347,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         reactiveData["destroy"] && evaluate(el, reactiveData["destroy"]);
         undo();
       });
-    }));
+    });
     directive2("show", (el, { modifiers, expression }, { effect: effect3 }) => {
       let evaluate2 = evaluateLater(el, expression);
       if (!el._x_doHide)
