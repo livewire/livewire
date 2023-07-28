@@ -8420,7 +8420,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return targets.some(({ target, params }) => {
       if (params) {
         return calls.some(({ method, params: methodParams }) => {
-          return target === method && params === quickHash(methodParams.toString());
+          return target === method && params === quickHash(JSON.stringify(methodParams));
         });
       }
       if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
@@ -8436,7 +8436,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let directive4 = directives4.get("target");
       let raw3 = directive4.expression;
       if (raw3.includes("(") && raw3.includes(")")) {
-        targets.push({ target: directive4.method, params: quickHash(directive4.params.toString()) });
+        targets.push({ target: directive4.method, params: quickHash(JSON.stringify(directive4.params)) });
       } else if (raw3.includes(",")) {
         raw3.split(",").map((i) => i.trim()).forEach((target) => {
           targets.push({ target });

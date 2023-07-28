@@ -9319,7 +9319,7 @@ function containsTargets(payload, targets) {
   return targets.some(({ target, params }) => {
     if (params) {
       return calls.some(({ method, params: methodParams }) => {
-        return target === method && params === quickHash(methodParams.toString());
+        return target === method && params === quickHash(JSON.stringify(methodParams));
       });
     }
     if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
@@ -9335,7 +9335,7 @@ function getTargets(el) {
     let directive2 = directives2.get("target");
     let raw = directive2.expression;
     if (raw.includes("(") && raw.includes(")")) {
-      targets.push({ target: directive2.method, params: quickHash(directive2.params.toString()) });
+      targets.push({ target: directive2.method, params: quickHash(JSON.stringify(directive2.params)) });
     } else if (raw.includes(",")) {
       raw.split(",").map((i) => i.trim()).forEach((target) => {
         targets.push({ target });
