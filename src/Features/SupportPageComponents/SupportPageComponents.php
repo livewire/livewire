@@ -54,23 +54,23 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('extends', function ($view, $params = []) {
-            $this->layoutConfig = new LayoutConfig(
-                type: 'extends',
-                slotOrSection: 'content',
-                view: $view,
-                params: $params,
-            );
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+
+            $this->layoutConfig->type = 'extends';
+            $this->layoutConfig->slotOrSection = 'content';
+            $this->layoutConfig->view = $view;
+            $this->layoutConfig->mergeParams($params);
 
             return $this;
         });
 
         View::macro('layout', function ($view, $params = []) {
-            $this->layoutConfig = new LayoutConfig(
-                type: 'component',
-                slotOrSection: 'slot',
-                view: $view,
-                params: $params,
-            );
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+
+            $this->layoutConfig->type = 'component';
+            $this->layoutConfig->slotOrSection = 'slot';
+            $this->layoutConfig->view = $view;
+            $this->layoutConfig->mergeParams($params);
 
             return $this;
         });

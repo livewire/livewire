@@ -396,6 +396,17 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('Hello World')
             ->assertSee('I am a footer - foo');
     }
+
+    /** @test */
+    public function can_configure_title_in_render_method_and_layout_using_layout_attribute()
+    {
+        Route::get('/configurable-layout', ComponentWithClassBasedComponentTitleAndLayoutAttribute::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertSee('some-title');
+    }
 }
 
 class ComponentForConfigurableLayoutTest extends Component
@@ -638,4 +649,14 @@ class ComponentWithMultipleLayoutSlots extends Component
 class ComponentWithModel extends Component
 {
     public FrameworkModel $framework;
+}
+
+#[Layout('layouts.app-with-title')]
+class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
+{
+    public function render()
+    {
+        return view('null-view')
+            ->title('some-title');
+    }
 }
