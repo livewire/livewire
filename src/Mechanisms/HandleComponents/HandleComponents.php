@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Exception;
 use function Livewire\{ store, trigger, wrap };
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -178,7 +179,7 @@ class HandleComponents
     {
         if (Utils::isAPrimitive($target)) return $target;
 
-        $synth = $this->propertySynth($target, $context, $path);
+        $synth = $this->propertySynth($target, $context, $path, $path);
 
         [ $data, $meta ] = $synth->dehydrate($target, function ($name, $child) use ($context, $path) {
             return $this->dehydrate($child, $context, "{$path}.{$name}");
@@ -209,7 +210,7 @@ class HandleComponents
 
         [$value, $meta] = $tuple;
 
-        $synth = $this->propertySynth($meta['s'], $context, $path);
+        $synth = $this->propertySynth($meta['s'], $context, $path, $path);
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
             return $this->hydrate($child, $context, "{$path}.{$name}");
@@ -306,7 +307,7 @@ class HandleComponents
         } else {
             $propertyValue = $component->$property;
 
-            $component->$property = $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context);
+            $component->$property = $this->recursivelySetValue($property, $propertyValue, $value, $segments, $path, 0, $context);
         }
 
         $finish();
@@ -338,7 +339,7 @@ class HandleComponents
         return $meta;
     }
 
-    protected function recursivelySetValue($baseProperty, $target, $leafValue, $segments, $index = 0, $context = null)
+    protected function recursivelySetValue($baseProperty, $target, $leafValue, $segments, $absolutePath, $index = 0, $context = null)
     {
         $isLastSegment = count($segments) === $index + 1;
 
@@ -346,7 +347,7 @@ class HandleComponents
 
         $path = implode('.', array_slice($segments, 0, $index + 1));
 
-        $synth = $this->propertySynth($target, $context, $path);
+        $synth = $this->propertySynth($target, $context, $path, $absolutePath);
 
         if ($isLastSegment) {
             $toSet = $leafValue;
@@ -362,7 +363,7 @@ class HandleComponents
             // to build up that non-existant nesting structure first.
             if ($propertyTarget === null) $propertyTarget = [];
 
-            $toSet = $this->recursivelySetValue($baseProperty, $propertyTarget, $leafValue, $segments, $index + 1, $context);
+            $toSet = $this->recursivelySetValue($baseProperty, $propertyTarget, $leafValue, $segments, $absolutePath, $index + 1, $context);
         }
 
         $method = ($leafValue === '__rm__' && $isLastSegment) ? 'unset' : 'set';
@@ -421,11 +422,11 @@ class HandleComponents
         $context->addEffect('returns', $returns);
     }
 
-    protected function propertySynth($keyOrTarget, $context, $path): Synth
+    protected function propertySynth($keyOrTarget, $context, $path, $absolutePath): Synth
     {
         return is_string($keyOrTarget)
             ? $this->getSynthesizerByKey($keyOrTarget, $context, $path)
-            : $this->getSynthesizerByTarget($keyOrTarget, $context, $path);
+            : $this->getSynthesizerByTarget($keyOrTarget, $context, $path, $absolutePath);
     }
 
     protected function getSynthesizerByKey($key, $context, $path)
@@ -439,7 +440,7 @@ class HandleComponents
         throw new \Exception('No synthesizer found for key: "'.$key.'"');
     }
 
-    protected function getSynthesizerByTarget($target, $context, $path)
+    protected function getSynthesizerByTarget($target, $context, $path, $absolutePath)
     {
         foreach ($this->propertySynthesizers as $synth) {
             if ($synth::match($target)) {
@@ -447,7 +448,9 @@ class HandleComponents
             }
         }
 
-        throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+        $message = 'Property value of "'.json_encode($target).'" for property "'.$absolutePath.'" not supported';
+
+        throw new Exception($message);
     }
 
     protected function pushOntoComponentStack($component)
