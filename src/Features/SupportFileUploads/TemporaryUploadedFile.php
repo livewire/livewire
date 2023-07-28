@@ -74,6 +74,13 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->extractOriginalNameFromFilePath($this->path);
     }
 
+    public function imageSize(): ?array
+    {
+        stream_copy_to_stream($this->storage->readStream($this->path), $tmpFile = tmpfile());
+
+        return @getimagesize(stream_get_meta_data($tmpFile)['uri']);;
+    }
+
     public function temporaryUrl()
     {
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
@@ -144,7 +151,7 @@ class TemporaryUploadedFile extends UploadedFile
     {
         $hash = str()->random(30);
         $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
-        $extension = '.'.$file->guessExtension();
+        $extension = '.'.($file->clientExtension() ?? $file->guessExtension());
 
         return $hash.$meta.$extension;
     }

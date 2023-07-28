@@ -8981,6 +8981,7 @@ function normalizeQueryStringEntry(key, value) {
 
 // js/features/supportNavigate.js
 var isNavigating = false;
+shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
 document.addEventListener("alpine:navigated", (e) => {
   if (e.detail && e.detail.init)
     return;
@@ -8994,6 +8995,13 @@ function shouldRedirectUsingNavigateOr(effects, url, or) {
   } else {
     or();
   }
+}
+function shouldHideProgressBar() {
+  if (!!document.querySelector("[data-no-progress-bar]"))
+    return true;
+  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+    return true;
+  return false;
 }
 
 // js/features/supportRedirects.js
@@ -9570,9 +9578,9 @@ function poll(callback, interval = 2e3) {
   let stopConditions = [];
   return {
     start() {
-      clear = syncronizedInterval(interval, () => {
+      let clear2 = syncronizedInterval(interval, () => {
         if (stopConditions.some((i) => i()))
-          return clear();
+          return clear2();
         if (pauseConditions.some((i) => i()))
           return;
         if (throttleConditions.some((i) => i()) && Math.random() < 0.95)

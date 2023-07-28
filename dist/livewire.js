@@ -8086,6 +8086,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   var isNavigating = false;
+  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
   document.addEventListener("alpine:navigated", (e) => {
     if (e.detail && e.detail.init)
       return;
@@ -8099,6 +8100,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       or();
     }
+  }
+  function shouldHideProgressBar() {
+    if (!!document.querySelector("[data-no-progress-bar]"))
+      return true;
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+      return true;
+    return false;
   }
 
   // js/features/supportRedirects.js
@@ -8668,9 +8676,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let stopConditions = [];
     return {
       start() {
-        clear = syncronizedInterval(interval, () => {
+        let clear3 = syncronizedInterval(interval, () => {
           if (stopConditions.some((i) => i()))
-            return clear();
+            return clear3();
           if (pauseConditions.some((i) => i()))
             return;
           if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
