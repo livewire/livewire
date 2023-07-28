@@ -2,15 +2,11 @@
 
 namespace Livewire\Concerns;
 
-use Livewire\Drawer\Utils;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Drawer\Utils;
 
 trait InteractsWithProperties
 {
-    use InteractWithPropertyReset {
-        reset as resetProperty;
-    }
-
     public function hasProperty($prop)
     {
         return property_exists($this, Utils::beforeFirstDot($prop));
@@ -44,17 +40,15 @@ trait InteractsWithProperties
 
     public function reset(...$properties)
     {
-        $propertyKeys = array_keys($this->all());
+        $properties = count($properties) && is_array($properties[0])
+            ? $properties[0]
+            : $properties;
 
-        if (count($properties) && is_array($properties[0])) {
-            $properties = $properties[0];
+        $freshInstance = new static;
+
+        foreach ($properties as $property) {
+            data_set($this, $property, data_get($freshInstance, $property));
         }
-
-        if (empty($properties)) {
-            $properties = $propertyKeys;
-        }
-
-        $this->resetProperty($properties);
     }
 
     protected function resetExcept(...$properties)

@@ -315,9 +315,9 @@ As you can see, we've added a `setPost` method to the `PostForm` object to optio
 
 Form objects are not required when working with Livewire, but they do offer a nice abstraction for keeping your components free of repetitive boilerplate.
 
-### Resetting form object
+### Resetting form fields
 
-If you are using a form object, you may want to reset the form after it has been submitted. This can be done by calling the `reset()` method on the form object:
+If you are using a form object, you may want to reset the form after it has been submitted. This can be done by calling the `reset()` method:
 
 ```php
 <?php
@@ -325,60 +325,36 @@ If you are using a form object, you may want to reset the form after it has been
 namespace App\Livewire\Forms;
 
 use Livewire\Attributes\Rule;
-use Livewire\Form;
 use App\Models\Post;
+use Livewire\Form;
 
 class PostForm extends Form
 {
-    public ?Post $post;
-
     #[Rule('required|min:5')]
     public $title = '';
 
     #[Rule('required|min:5')]
     public $content = '';
-    
+
     // ...
 
     public function store()
     {
         Post::create($this->all());
-        
+
         $this->reset(); // [tl! highlight]
     }
 }
 ```
 
-Of course, you can also reset specific properties by passing the property names as parameters to the `reset` method:
+You can also reset specific properties by passing the property names into the `reset()` method:
 
 ```php
-<?php
+$this->reset('title');
 
-namespace App\Livewire\Forms;
+// Or multiple at once...
 
-use Livewire\Attributes\Rule;
-use Livewire\Form;
-use App\Models\Post;
-
-class PostForm extends Form
-{
-    public ?Post $post;
-
-    #[Rule('required|min:5')]
-    public $title = '';
-
-    #[Rule('required|min:5')]
-    public $content = '';
-    
-    // ...
-
-    public function store()
-    {
-        Post::create($this->all());
-        
-        $this->reset('title'); // [tl! highlight]
-    }
-}
+$this->reset('title', 'content);
 ```
 
 ### Showing a loading indicator
