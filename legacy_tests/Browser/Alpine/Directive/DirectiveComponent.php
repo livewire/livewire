@@ -23,7 +23,6 @@ class DirectiveComponent extends BaseComponent
         document.addEventListener('alpine:init', () => {
             Alpine.directive('foo', function (el) {
                 Alpine.bind(el, {
-                    'x-modelable': 'value',
                     'x-data'() {
                         return {
                             value: false
