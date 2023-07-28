@@ -11,6 +11,7 @@ Below is an example of a `SubscriberCount` component that shows a user's subscri
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class SubscriberCount extends Component
