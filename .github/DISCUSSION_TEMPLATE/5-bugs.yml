@@ -44,3 +44,14 @@ body:
       label: Additional information
       description: |
         Links? References? Anything that will give us more context about the issue you are encountering! When providing code snippets, please provide the actual code that is easy to replicate and don't use code screenshots.
+
+  - type: checkboxes
+    attributes:
+      label: Please confirm (incomplete submissions will not be addressed)
+      options:
+        - label: I have provided easy and step-by-step instructions to reproduce the bug.
+          required: true
+        - label: I have provided code samples as text and NOT images.
+          required: true
+        - label: I understand my bug report will be removed if I haven't met the criteria above.
+          required: true
