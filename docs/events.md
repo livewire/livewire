@@ -180,11 +180,11 @@ You can dispatch events directly from your Blade templates using the `$dispatch`
 </button>
 ```
 
-In this example, when the button is clicked, the `show-post-modal` event will be emitted with the specified data.
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched with the specified data.
 
 ## Testing dispatched events
 
-To test events emitted by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
+To test events dispatched by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
 
 ```php
 <?php
@@ -213,7 +213,7 @@ In this example, the test ensures that the `post-created` event is dispatched wi
 
 ### Testing Event Listeners
 
-To test event listeners, you can emit events from the test environment and assert that the expected actions are performed in response to the event:
+To test event listeners, you can dispatch events from the test environment and assert that the expected actions are performed in response to the event:
 
 ```php
 <?php

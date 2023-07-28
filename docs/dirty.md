@@ -3,7 +3,7 @@ In a traditional HTML page containing a form, the form is only ever submitted wh
 
 However, Livewire is capable of much more than traditional form submissions. You can validate form inputs in real-time or even save the form as a user types.
 
-In these "real-time" update scenarios, it can be helpful to signal to your users when a form or subset of a form has been changed but hasn't been saved to the database.
+In these "real-time" update scenarios, it can be helpful to signal to your users when a form or subset of a form has been changed, but hasn't been saved to the database.
 
 When a form contains un-saved input, that form is considered "dirty". It only becomes "clean" when a network request has been triggered to synchronize the server state with the client-side state.
 
@@ -13,7 +13,7 @@ Livewire allows you to easily toggle visual elements on the page using the `wire
 
 By adding `wire:dirty` to an element, you are instructing Livewire to only show the element when the client-side state diverges from the server-side state.
 
-To demonstrate, here is an example of an `UpdatePost` form containing an "Unsaved changes..." visual indication that signals to the user that the form contains input that has not been saved:
+To demonstrate, here is an example of an `UpdatePost` form containing a visual "Unsaved changes..." indication that signals to the user that the form contains input that has not been saved:
 
 ```blade
 <form wire:submit="update">
@@ -27,9 +27,9 @@ To demonstrate, here is an example of an `UpdatePost` form containing an "Unsave
 </form>
 ```
 
-Because `wire:dirty` has been added to the "Unsaved changes..." message, the message will be hidden by default. Livewire will automatically display the message only when the user starts modifying the form inputs.
+Because `wire:dirty` has been added to the "Unsaved changes..." message, the message will be hidden by default. Livewire will automatically display the message when the user starts modifying the form inputs.
 
-When the user submits the form, the message will disappear again since the server / client data is back in sync.
+When the user submits the form, the message will disappear again, since the server / client data is back in sync.
 
 ### Removing elements
 

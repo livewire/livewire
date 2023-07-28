@@ -38,7 +38,7 @@ Below is a breakdown of what happens when a `wire:navigate` link is clicked:
 * Instead, Livewire requests the page in the background and shows a loading bar at the top of the page
 * When the HTML for the new page has been received, Livewire replaces the current page's URL, `<title>` tag and `<body>` contents with the elements from the new page
 
-This technique results in much faster page load times—often twice as fast—and makes the application "feel" like a JavaScript powered single page application.
+This technique results in much faster page load times — often twice as fast — and makes the application "feel" like a JavaScript powered single page application.
 
 ## Redirects
 
@@ -88,7 +88,7 @@ Here is an example of an `<audio>` player element being persisted across pages u
 @endpersist
 ```
 
-If the above HTML appears on both pages—the current page, and the next one—the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
+If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
 
 ## Script evaluation

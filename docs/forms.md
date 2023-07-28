@@ -49,7 +49,7 @@ class CreatePost extends Component
 
 As you can see, we are "binding" the public `$title` and `$content` properties in the form above using `wire:model`. This is one of the most commonly used and powerful features of Livewire.
 
-In addition to binding `title` and `content`, we are using `wire:submit` to capture the `submit` event when the "Save" button is clicked and invoking the `save()` action. This action will persist the form input to the database.
+In addition to binding `$title` and `$content`, we are using `wire:submit` to capture the `submit` event when the "Save" button is clicked and invoking the `save()` action. This action will persist the form input to the database.
 
 After the new post is created in the database, we redirect the user to the `ShowPosts` component page and show them a "flash" message that the new post was created.
 
@@ -61,7 +61,7 @@ Livewire makes validating your forms as simple as adding `#[Rule]` attributes ab
 
 Once a property has a `#[Rule]` attribute attached to it, the validation rule will be applied to the property's value any time it's updated server-side.
 
-Let's add some basic validation rules to the `$title` and `$content` properties in our `CreatePosts` component:
+Let's add some basic validation rules to the `$title` and `$content` properties in our `CreatePost` component:
 
 ```php
 <?php
@@ -319,7 +319,7 @@ class PostForm extends Form
 }
 ```
 
-As you can see, we've added a `setPost` method to the `PostForm` object to optionally allow for filling the form with existing data as well as storing the post on the form object for later use. We've also added an `update()` method for updating the existing post.
+As you can see, we've added a `setPost()` method to the `PostForm` object to optionally allow for filling the form with existing data as well as storing the post on the form object for later use. We've also added an `update()` method for updating the existing post.
 
 Form objects are not required when working with Livewire, but they do offer a nice abstraction for keeping your components free of repetitive boilerplate.
 
@@ -490,7 +490,7 @@ class UpdatePost extends Component
 </form>
 ```
 
-In the above example, when a user completes a field (by clicking or tabbing to the next field), a network request is sent to update that property on the component. Immediately after the property is updated on the class, the `updated` hook is called for that specific property name and its new value.
+In the above example, when a user completes a field (by clicking or tabbing to the next field), a network request is sent to update that property on the component. Immediately after the property is updated on the class, the `updated()` hook is called for that specific property name and its new value.
 
 We can use this hook to update only that specific field in the database.
 
@@ -637,7 +637,7 @@ Now, let's imagine we want to extract this component into a Blade component call
 <x-input-counter wire:model="quantity" />
 ```
 
-Creating this component is mostly simple. We take the HTML of the counter and place it inside a Blade component template like `resources/views/components/counter.blade.php`.
+Creating this component is mostly simple. We take the HTML of the counter and place it inside a Blade component template like `resources/views/components/input-counter.blade.php`.
 
 However, making it work with `wire:model="quantity"` so that you can easily bind data from your Livewire component to the "count" inside this Alpine component needs one extra step.
 
@@ -719,7 +719,7 @@ At the end of a signup form, you might have a checkbox allowing the user to opt-
 <input type="checkbox" wire:model="receiveUpdates">
 ```
 
-Now when the `receiveUpdates` value is `false`, the checkbox will be unchecked. Of course, when the value is `true`, the checkbox will be checked.
+Now when the `$receiveUpdates` value is `false`, the checkbox will be unchecked. Of course, when the value is `true`, the checkbox will be checked.
 
 #### Multiple checkboxes
 

@@ -389,7 +389,7 @@ For advanced users, Livewire exposes its internal client-side "hook" system. You
 
 ### Component initialization
 
-Every time a new component is discovered by Livewire—whether on the initial page load or later on—the `component.init` event is triggered. You can hook into `component.init` to intercept or initialize anything related to the new component:
+Every time a new component is discovered by Livewire — whether on the initial page load or later on — the `component.init` event is triggered. You can hook into `component.init` to intercept or initialize anything related to the new component:
 
 ```js
 Livewire.hook('component.init', ({ component }) => {
@@ -413,7 +413,7 @@ Livewire.hook('element.init', ({ component, el }) => {
 
 ### Commit hooks
 
-Because Livewire requests contain multiple components, _request_ is too broad of a term to refer to an individual component's request and response payload. Instead, internally, Livewire refers to component updates as _commits_—in reference to _committing_ component state to the server.
+Because Livewire requests contain multiple components, _request_ is too broad of a term to refer to an individual component's request and response payload. Instead, internally, Livewire refers to component updates as _commits_ — in reference to _committing_ component state to the server.
 
 These hooks expose `commit` objects. You can learn more about their schema by reading [the commit object documentation](#the-commit-payload).
 

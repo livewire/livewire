@@ -6,11 +6,11 @@ To install Livewire, open your terminal and navigate to your Laravel application
 composer require livewire/livewire:^3.0@beta
 ```
 
-That's it—really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
+That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
 ## Publishing the configuration file
 
-Livewire is "zero-config", meaning you can use it by following conventions without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
+Livewire is "zero-config", meaning you can use it by following conventions, without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
 
 ```shell
 php artisan livewire:publish --config

@@ -84,7 +84,7 @@ The following configuration items have been updated with new default values:
 
 #### New class namespace
 
-Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `App\Livewire`. You are welcome to keep the old namespace configuration value; however, if you choose to update your configuration to the new namespace, you will have to move your Livewire component's to `app/Livewire`:
+Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `App\Livewire`. You are welcome to keep the old namespace configuration value; however, if you choose to update your configuration to the new namespace, you will have to move your Livewire components to `app/Livewire`:
 
 ```php
 'class_namespace' => 'App\\Http\\Livewire', // [tl! remove]
@@ -200,7 +200,7 @@ By setting `legacy_model_binding` to `true`, Livewire will handle Eloquent model
 
 Livewire 3 ships with [AlpineJS](https://alpinejs.dev) by default.
 
-If you manually include Alpine in your Livewire application, you will need to remove it so that Livewire's built-in version doesn't conflict.
+If you manually include Alpine in your Livewire application, you will need to remove it, so that Livewire's built-in version doesn't conflict.
 
 ### Including Alpine via a script tag
 
@@ -240,7 +240,7 @@ If you are currently accessing the `Alpine` global object from a script tag like
 </script>
 ```
 
-You may continue to do so as Livewire internally includes and registers Alpine's global object like before.
+You may continue to do so, as Livewire internally includes and registers Alpine's global object like before.
 
 ### Including via JS bundle
 
@@ -257,7 +257,7 @@ Alpine.plugin(intersect)
 Alpine.start()
 ```
 
-You can remove them entirely because Livewire includes Alpine and many popular Alpine plugins by default.
+You can remove them entirely, because Livewire includes Alpine and many popular Alpine plugins by default.
 
 > [!warning] "Livewire V3 (beta) with Laravel Breeze or Laravel Jetstream"
 > If you are trying the Livewire V3 beta with the Laravel Breeze or Laravel JetStream, you will need to unload the Alpine as demonstrated above. Also, you can remove Alpine and any other Alpine plugins from your NPM dependencies as well. The Laravel Breeze and Laravel JetStream are not ready for Livewire V3 yet by default.
@@ -437,7 +437,7 @@ Livewire::test(Component::class)->assertEmittedUp() // [tl! remove]
 
 ### URL query string
 
-In previous Livewire versions, if you bound a property to the URL's query string, the property value would always be present in the query string unless you used the `except` option.
+In previous Livewire versions, if you bound a property to the URL's query string, the property value would always be present in the query string, unless you used the `except` option.
 
 In Livewire 3, all properties bound to the query string will only show up if their value has been changed after the page load. This default removes the need for the `except` option:
 

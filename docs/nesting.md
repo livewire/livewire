@@ -68,7 +68,7 @@ class TodoList extends Component
 </div>
 ```
 
-As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos= "$todos"`.
+As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos="$todos"`.
 
 Now that `$todos` has been passed to the child component, you can receive that data through the child component's `mount()` method:
 
@@ -146,7 +146,7 @@ You can specify the component's key by specifying a `:key` prop on the child com
     <h1>Todos</h1>
 
     @foreach ($todos as $todo)
-        <livewire:todo-item :todo="$todo" :key="$todo->id" />
+        <livewire:todo-item :$todo :key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -322,7 +322,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
@@ -361,7 +361,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
@@ -584,7 +584,7 @@ For example, consider the following nested `todo-count` component:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" />
+    <livewire:todo-count :$todos />
 </div>
 ```
 
@@ -592,7 +592,7 @@ Livewire internally attaches a random string key to the component like so:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" key="lska" />
+    <livewire:todo-count :$todos key="lska" />
 </div>
 ```
 
