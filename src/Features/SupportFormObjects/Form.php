@@ -20,7 +20,7 @@ class Form implements Arrayable
     public function getComponent() { return $this->component; }
     public function getPropertyName() { return $this->propertyName; }
 
-    public function addValidationRulesToComponent()
+    protected function addValidationRulesToComponent()
     {
         $rules = [];
 
@@ -32,7 +32,7 @@ class Form implements Arrayable
         );
     }
 
-    public function addAttributesToComponent()
+    protected function addAttributesToComponent()
     {
         $attributes = [];
 
@@ -44,7 +44,7 @@ class Form implements Arrayable
         );
     }
 
-    public function addMessagesToComponent()
+    protected function addMessagesToComponent()
     {
         $messages = [];
 
