@@ -384,12 +384,12 @@ Now, when you visit the `/posts/create` path in your browser, the `CreatePost` c
 
 ### Layout files
 
-Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layout.blade.php` file.
+Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layouts/app.blade.php` file.
 
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
 ```blade
-<!-- resources/views/components/layout.blade.php -->
+<!-- resources/views/components/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
