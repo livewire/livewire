@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
+use function Livewire\invade;
 use function Livewire\on;
 use function Livewire\off;
 use Livewire\Drawer\ImplicitRouteBinding;
@@ -78,8 +79,9 @@ class SupportPageComponents extends ComponentHook
     static function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
     {
         $layoutConfig = null;
+        $slots = [];
 
-        $handler = function ($target, $view, $data) use (&$layoutConfig) {
+        $handler = function ($target, $view, $data) use (&$layoutConfig, &$slots) {
             $layoutAttr = $target->getAttributes()->whereInstanceOf(Layout::class)->first();
             $titleAttr = $target->getAttributes()->whereInstanceOf(Title::class)->first();
 
@@ -94,7 +96,17 @@ class SupportPageComponents extends ComponentHook
             // Here, ->layoutConfig is set from the layout view macros...
             if (! $view->layoutConfig) return;
 
-             $layoutConfig = $view->layoutConfig;
+            $layoutConfig = $view->layoutConfig;
+
+            return function () use ($view, $layoutConfig) {
+                // Gather up any slots declared in the component template and store them
+                // to be later forwarded into the layout component itself...
+                $data = $view->gatherData();
+                if (! $env = $data['__env'] ?? false) return;
+                if (! is_array($slots = invade($env)->slots)) return;
+                if (! is_array($slots = head($slots))) return;
+                $layoutConfig->slots = $slots;
+            };
         };
 
         on('render', $handler);
@@ -139,6 +151,15 @@ class SupportPageComponents extends ComponentHook
                         @slot($layout->slotOrSection)
                             {!! $content !!}
                         @endslot
+
+                        <?php
+                        // Manually forward slots defined in the Livewire template into the layout component...
+                        foreach ($layout->slots as $name => $slot) {
+                            $__env->slot($name, attributes: $slot->attributes->getAttributes());
+                            echo $slot->toHtml();
+                            $__env->endSlot();
+                        }
+                        ?>
                     @endcomponent
                 HTML, [
                     'content' => $content,

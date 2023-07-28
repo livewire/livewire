@@ -6,6 +6,8 @@ use Illuminate\View\AnonymousComponent;
 
 class LayoutConfig
 {
+    public $slots = [];
+
     function __construct(
         public $type = 'component',
         public $view = '',
@@ -44,6 +46,9 @@ class LayoutConfig
 
         $this->view = $view;
         $this->params = $params;
+
+        // Remove default slot if present...
+        if (isset($this->slots['default'])) unset($this->slots['default']);
 
         return $this;
     }

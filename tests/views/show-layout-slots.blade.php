@@ -1,5 +1,5 @@
 <x-slot name="header">
-    <h2>I am a header  - {{ $bar }}</h2>
+    <h2>I am a header - {{ $bar }}</h2>
 </x-slot>
 
 <div>
