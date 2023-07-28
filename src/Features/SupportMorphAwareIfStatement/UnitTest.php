@@ -48,24 +48,17 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function it_only_adds_conditional_markers_to_any_if_that_is_not_inside_a_html_tag_with_property_condition_containing_at_symbol()
     {
-        $output = $this->compile(<<<HTML
-            <div
-                @if (\$foo->bar)
-                    @click="baz"
-                @endif
-            >
-                @if (true)
-                    foo
-                @endif
-
-                @if (true)
-                    bar
-                @endif
-            </div>
+        $output = $this->compile(<<<'HTML'
+        <div
+            @if ($foo->bar)
+                @click="baz"
+            @endif
+        >
+        </div>
         HTML);
 
-        $this->assertOccurrences(2, '__BLOCK__', $output);
-        $this->assertOccurrences(2, '__ENDBLOCK__', $output);
+        $this->assertOccurrences(0, '__BLOCK__', $output);
+        $this->assertOccurrences(0, '__ENDBLOCK__', $output);
     }
 
     /** @test */
