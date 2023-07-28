@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportNavigate;
 
+use Livewire\Attributes\Url;
 use Livewire\Livewire;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
@@ -15,18 +16,27 @@ class BrowserTest extends \Tests\BrowserTestCase
         return function() {
             View::addNamespace('test-views', __DIR__.'/test-views');
 
+            Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
+            Livewire::component('third-page', ThirdPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
             Livewire::component('third-asset-page', ThirdAssetPage::class);
             Livewire::component('first-tracked-asset-page', FirstTrackedAssetPage::class);
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
 
+            Route::get('/query-page', QueryPage::class)->middleware('web');
             Route::get('/first', FirstPage::class)->middleware('web');
+            Route::get('/first-hide-progress', function () {
+                config(['livewire.navigate.show_progress_bar' => false]);
+
+                return (new FirstPage)();
+            })->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
             Route::get('/second', SecondPage::class)->middleware('web');
+            Route::get('/third', ThirdPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -38,6 +48,33 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return Utils::pretendResponseIsFile(__DIR__.'/test-views/test-navigate-asset.js');
             });
         };
+    }
+
+    /** @test */
+    function can_configure_progress_bar()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.third')
+                ->waitFor('#nprogress')
+                ->waitForText('Done loading...');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-hide-progress')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.third')
+                ->pause(500)
+                ->assertMissing('#nprogress')
+                ->waitForText('Done loading...');
+        });
     }
 
     /** @test */
@@ -165,6 +202,37 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test');
         });
     }
+
+    /** @test */
+    function script_runs_on_initial_page_visit()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('window.foo', 'bar')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    /** @test */
+    function can_navigate_to_component_with_url_attribute_and_update_correctly()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/query-page')
+                ->assertSee('Query: 0')
+                ->click('@link.with.query.1')
+                ->assertSee('Query: 1')
+                ->waitForNavigate()->click('@link.with.query.2')
+                ->assertSee('Query: 2');
+        });
+    }
 }
 
 class FirstPage extends Component
@@ -181,6 +249,7 @@ class FirstPage extends Component
             <div>On first</div>
 
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
+            <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
 
             @persist('foo')
@@ -222,6 +291,25 @@ class SecondPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+
+            <script data-navigate-once>window.foo = 'bar';</script>
+        </div>
+        HTML;
+    }
+}
+
+class ThirdPage extends Component
+{
+    public function mount()
+    {
+        sleep(1);
+    }
+
+    function render()
+    {
+        return <<<'HTML'
+        <div>
+            Done loading...
         </div>
         HTML;
     }
@@ -259,5 +347,22 @@ class SecondTrackedAssetPage extends Component {
     #[\Livewire\Attributes\Layout('test-views::changed-tracked-layout')]
     function render() {
         return '<div>On second asset page</div>';
+    }
+}
+
+class QueryPage extends Component
+{
+    #[Url]
+    public $query = 0;
+
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                <div>Query: {{ $query }}</div>
+                <a href="/query-page?query=1" dusk="link.with.query.1">Link with query 1</a>
+                <a href="/query-page?query=2" wire:navigate dusk="link.with.query.2">Link with query 2</a>
+            </div>
+        HTML;
     }
 }

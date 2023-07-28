@@ -12,7 +12,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::setUpdateRoute(function ($handle) {
             return Route::post('/custom/update', function () use ($handle) {
-                $response = $handle();
+                $response = app(HandleRequests::class)->handleUpdate();
 
                 // Override normal Livewire and force the updated count to be "5" instead of 2...
                 $response['components'][0]['effects']['html'] = (string) str($response['components'][0]['effects']['html'])->replace(

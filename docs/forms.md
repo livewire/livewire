@@ -23,7 +23,7 @@ class CreatePost extends Component
     public function save()
     {
         Post::create(
-            $this->only('title', 'content')
+            $this->only(['title', 'content'])
         );
 
         return $this->redirect('/posts')
@@ -68,6 +68,7 @@ Let's add some basic validation rules to the `$title` and `$content` properties 
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Rule; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Post;
 
@@ -123,6 +124,14 @@ If you are working with a large form and prefer to extract all of its properties
 
 Form objects allow you to re-use form logic across components and provide a nice way to keep your component class cleaner by grouping all form-related code into a separate class.
 
+You can either create a form class by hand or use the convenient artisan command:
+
+```shell
+php artisan livewire:form CreatePost
+```
+
+The above command will create a file called `app/Livewire/Forms/CreatePost.php`.
+
 Let's rewrite the `CreatePost` component to use a `PostForm` class:
 
 ```php
@@ -130,6 +139,7 @@ Let's rewrite the `CreatePost` component to use a `PostForm` class:
 
 namespace App\Livewire\Forms;
 
+use Livewire\Attributes\Rule;
 use Livewire\Form;
 
 class PostForm extends Form
@@ -194,6 +204,7 @@ If you'd like, you can also extract the post creation logic into the form object
 
 namespace App\Livewire\Forms;
 
+use Livewire\Attributes\Rule;
 use Livewire\Form;
 use App\Models\Post;
 
@@ -271,12 +282,13 @@ class UpdatePost extends Component
 
 namespace App\Livewire\Forms;
 
+use Livewire\Attributes\Rule;
 use Livewire\Form;
 use App\Models\Post;
 
 class PostForm extends Form
 {
-    public Post $post;
+    public ?Post $post;
 
     #[Rule('required|min:5')]
     public $title = '';
@@ -310,6 +322,48 @@ class PostForm extends Form
 As you can see, we've added a `setPost` method to the `PostForm` object to optionally allow for filling the form with existing data as well as storing the post on the form object for later use. We've also added an `update()` method for updating the existing post.
 
 Form objects are not required when working with Livewire, but they do offer a nice abstraction for keeping your components free of repetitive boilerplate.
+
+### Resetting form fields
+
+If you are using a form object, you may want to reset the form after it has been submitted. This can be done by calling the `reset()` method:
+
+```php
+<?php
+
+namespace App\Livewire\Forms;
+
+use Livewire\Attributes\Rule;
+use App\Models\Post;
+use Livewire\Form;
+
+class PostForm extends Form
+{
+    #[Rule('required|min:5')]
+    public $title = '';
+
+    #[Rule('required|min:5')]
+    public $content = '';
+
+    // ...
+
+    public function store()
+    {
+        Post::create($this->all());
+
+        $this->reset(); // [tl! highlight]
+    }
+}
+```
+
+You can also reset specific properties by passing the property names into the `reset()` method:
+
+```php
+$this->reset('title');
+
+// Or multiple at once...
+
+$this->reset('title', 'content);
+```
 
 ### Showing a loading indicator
 
@@ -347,7 +401,7 @@ Now, as a user types into this field, network requests will be sent to the serve
 
 ## Only updating fields on _blur_
 
-For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be a overly network resource-intensive on text inputs.
+For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be overly network resource-intensive on text inputs.
 
 If instead of sending network requests as a user types, you want to instead only send the request when a user "tabs" out of the text input (also referred to as "blurring" an input), you can use the `.blur` modifier instead:
 
@@ -389,6 +443,7 @@ If you want to automatically save a form as the user fills it out rather than wa
 
 namespace App\Livewire;
 
+use Livewire\Attributes\Rule;
 use Livewire\Component;
 use App\Models\Post;
 

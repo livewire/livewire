@@ -2,9 +2,10 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use Livewire\Livewire;
-use Livewire\Form;
+use Livewire\Attributes\Rule;
 use Livewire\Component;
+use Livewire\Form;
+use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -24,6 +25,31 @@ class UnitTest extends \Tests\TestCase
         ->set('form.content', 'Some content...')
         ->assertSet('form.title', 'Some Title')
         ->assertSet('form.content', 'Some content...')
+        ;
+    }
+
+    /** @test */
+    function can_reset_form_object_property()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            public function resetForm()
+            {
+                $this->reset('form.title', 'form.content');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->call('resetForm')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
         ;
     }
 
@@ -48,6 +74,28 @@ class UnitTest extends \Tests\TestCase
         ->call('save')
         ->assertHasErrors('form.title')
         ->assertHasErrors('form.content')
+        ;
+    }
+
+    function can_manually_add_errors_to_the_error_bag()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->addError('status', 'An error message...');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.status')
         ;
     }
 
@@ -192,19 +240,19 @@ class PostFormValidateStub extends Form
 
 class PostFormRuleAttributeStub extends Form
 {
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $title = '';
 
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $content = '';
 }
 
 class PostFormDynamicAttributesStub extends Form
 {
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $title = '';
 
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $content = '';
 
     public function attributes() {
@@ -217,10 +265,10 @@ class PostFormDynamicAttributesStub extends Form
 
 class PostFormDynamicMessagesStub extends Form
 {
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $title = '';
 
-    #[\Livewire\Attributes\Rule(['required', 'min:10'])]
+    #[Rule(['required', 'min:10'])]
     public $content = '';
 
     public function messages()
@@ -234,10 +282,10 @@ class PostFormDynamicMessagesStub extends Form
 
 class PostFormDynamicMessagesAndAttributesStub extends Form
 {
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $title = '';
 
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $content = '';
 
     public function attributes() {

@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\View\ViewException;
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -66,3 +68,4 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 }
+

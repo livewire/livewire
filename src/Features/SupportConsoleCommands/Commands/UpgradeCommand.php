@@ -17,21 +17,24 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifie
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigation;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ThirdPartyUpgradeNotice;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
-use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeEmitInstructions;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroduction;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeForgetComputedToUnset;
 
 class UpgradeCommand extends Command
 {
-    protected $signature = 'livewire:upgrade';
+    protected $signature = 'livewire:upgrade {--run-only=}';
 
     protected $description = 'Interactive upgrade helper to migrate from v2 to v3';
 
+    protected static $thirdPartyUpgradeSteps = [];
+
     public function handle()
     {
-
-        app(Pipeline::class)->send($this)->through([
+        app(Pipeline::class)->send($this)->through(collect([
             UpgradeIntroduction::class,
 
             // Automated steps
@@ -47,13 +50,31 @@ class UpgradeCommand extends Command
             ChangeWireLoadDirectiveToWireInit::class,
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
+            ChangeForgetComputedToUnset::class,
+
+            // Partially automated steps
+            ReplaceEmitWithDispatch::class,
 
             // Manual steps
             UpgradeConfigInstructions::class,
             UpgradeAlpineInstructions::class,
-            UpgradeEmitInstructions::class,
+
+            // Third-party steps
+            ... static::$thirdPartyUpgradeSteps,
 
             ClearViewCache::class,
-        ])->thenReturn();
+        ])->when($this->option('run-only'), function($collection) {
+            return $collection->filter(fn($step) => str($step)->afterLast('\\')->kebab()->is($this->option('run-only')));
+        })->toArray())
+        ->thenReturn();
+    }
+
+    public static function addThirdPartyUpgradeStep($step)
+    {
+        if(empty(static::$thirdPartyUpgradeSteps)) {
+            static::$thirdPartyUpgradeSteps[] = ThirdPartyUpgradeNotice::class;
+        }
+
+        static::$thirdPartyUpgradeSteps[] = $step;
     }
 }
