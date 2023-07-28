@@ -316,6 +316,8 @@ $save = function () {
     // ...
 };
 
+?>
+
 <form wire:submit="save">
     <input type="text" wire:model="form.title">
     @error('form.title') <span class="error">{{ $message }}</span> @enderror
