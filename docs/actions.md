@@ -218,7 +218,9 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 
 ```blade
 <form wire:submit="save">
-    <textarea wire:submit="content"></textarea>
+    <input wire:model="title">
+
+    <textarea wire:model="content"></textarea>
 
     <button type="submit">Save</button>
 
