@@ -23,7 +23,7 @@ class CreatePost extends Component
     public function save()
     {
         Post::create(
-            $this->only('title', 'content')
+            $this->only(['title', 'content'])
         );
 
         return $this->redirect('/posts')
