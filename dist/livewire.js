@@ -6921,6 +6921,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function putPersistantElementsBack() {
     document.querySelectorAll("[x-persist]").forEach((i) => {
       let old = els[i.getAttribute("x-persist")];
+      if (!old)
+        return;
       old._x_wasPersisted = true;
       alpine_default2.mutateDom(() => {
         i.replaceWith(old);
@@ -7028,8 +7030,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let newDocument = new DOMParser().parseFromString(html, "text/html");
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
+    let oldBodyScriptTagHashes = Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML));
     mergeNewHead(newHead);
-    prepNewScriptTagsToRun(newBody);
+    prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
     transitionOut(document.body);
     let oldBody = document.body;
     document.body.replaceWith(newBody);
@@ -7050,10 +7053,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       body.style.opacity = "1";
     });
   }
-  function prepNewScriptTagsToRun(newBody) {
+  function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
     newBody.querySelectorAll("script").forEach((i) => {
-      if (i.hasAttribute("data-navigate-once"))
-        return;
+      if (i.hasAttribute("data-navigate-once")) {
+        let hash = simpleHash(i.outerHTML);
+        if (oldBodyScriptTagHashes.includes(hash))
+          return;
+      }
       i.replaceWith(cloneScriptTag(i));
     });
   }
@@ -7103,6 +7109,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isScript(el) {
     return el.tagName.toLowerCase() === "script";
   }
+  function simpleHash(str) {
+    return str.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+  }
   function fetchHtml(destination, callback) {
     let uri = destination.pathname + destination.search;
     fetch(uri).then((i) => i.text()).then((html) => {
@@ -7116,6 +7128,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function src_default6(Alpine22) {
     Alpine22.navigate = (url) => {
       navigateTo(createUrlObjectFromString(url));
+    };
+    Alpine22.navigate.disableProgressBar = () => {
+      showProgressBar = false;
     };
     Alpine22.addInitSelector(() => `[${prefix2("navigate")}]`);
     Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
@@ -7215,6 +7230,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let { initial, replace: replace2, push: push2, pop } = track2(queryKey, initialSeedValue, alwaysShow);
         setter(initial);
         if (!usePush) {
+          console.log(getter());
           Alpine4.effect(() => replace2(getter()));
         } else {
           Alpine4.effect(() => push2(getter()));
@@ -7367,6 +7383,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let entries = search.split("&").map((i) => i.split("="));
     let data3 = {};
     entries.forEach(([key, value]) => {
+      if (!value)
+        return;
       value = decodeURIComponent(value.replaceAll("+", "%20"));
       if (!key.includes("[")) {
         data3[key] = value;
@@ -7594,11 +7612,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           patchChildren(newFromChildren, newToChildren, (node) => appendPoint.before(node));
           continue;
         }
-        if (currentFrom.nodeType === 1 && lookahead) {
+        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = dom.next(toChildren, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
-            if (currentFrom.isEqualNode(nextToElementSibling)) {
+            if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
               [fromChildren, currentFrom] = addNodeBefore(fromChildren, currentTo, currentFrom);
               fromKey = getKey(currentFrom);
@@ -8066,6 +8084,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   var isNavigating = false;
+  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
   document.addEventListener("alpine:navigated", (e) => {
     if (e.detail && e.detail.init)
       return;
@@ -8079,6 +8098,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       or();
     }
+  }
+  function shouldHideProgressBar() {
+    if (!!document.querySelector("[data-no-progress-bar]"))
+      return true;
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+      return true;
+    return false;
   }
 
   // js/features/supportRedirects.js
@@ -8648,9 +8674,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let stopConditions = [];
     return {
       start() {
-        clear = syncronizedInterval(interval, () => {
+        let clear3 = syncronizedInterval(interval, () => {
           if (stopConditions.some((i) => i()))
-            return clear();
+            return clear3();
           if (pauseConditions.some((i) => i()))
             return;
           if (throttleConditions.some((i) => i()) && Math.random() < 0.95)

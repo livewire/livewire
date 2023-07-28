@@ -124,6 +124,14 @@ If you are working with a large form and prefer to extract all of its properties
 
 Form objects allow you to re-use form logic across components and provide a nice way to keep your component class cleaner by grouping all form-related code into a separate class.
 
+You can either create a form class by hand or use the convenient artisan command:
+
+```shell
+php artisan livewire:form CreatePost
+```
+
+The above command will create a file called `app/Livewire/Forms/CreatePost.php`.
+
 Let's rewrite the `CreatePost` component to use a `PostForm` class:
 
 ```php
@@ -280,7 +288,7 @@ use App\Models\Post;
 
 class PostForm extends Form
 {
-    public Post $post;
+    public ?Post $post;
 
     #[Rule('required|min:5')]
     public $title = '';
@@ -351,7 +359,7 @@ Now, as a user types into this field, network requests will be sent to the serve
 
 ## Only updating fields on _blur_
 
-For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be a overly network resource-intensive on text inputs.
+For most cases, `wire:model.live` is fine for real-time form field updating; however, it can be overly network resource-intensive on text inputs.
 
 If instead of sending network requests as a user types, you want to instead only send the request when a user "tabs" out of the text input (also referred to as "blurring" an input), you can use the `.blur` modifier instead:
 

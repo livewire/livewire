@@ -2,6 +2,8 @@ import { on, trigger } from "@/events"
 
 let isNavigating = false
 
+shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
+
 document.addEventListener('alpine:navigated', e => {
     if (e.detail && e.detail.init) return
 
@@ -20,3 +22,12 @@ export function shouldRedirectUsingNavigateOr(effects, url, or) {
         or()
     }
 }
+
+function shouldHideProgressBar() {
+    if (!! document.querySelector('[data-no-progress-bar]')) return true
+
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false) return true
+
+    return false
+}
+
