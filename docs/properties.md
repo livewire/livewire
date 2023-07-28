@@ -113,7 +113,7 @@ class TodoList extends Component
 
 In the above example, the text input's value will synchronize with the `$todo` property on the server when the "Add Todo" button is clicked.
 
-This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/forms).
+This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/docs/forms).
 
 ## Resetting properties
 
