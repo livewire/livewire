@@ -45,6 +45,12 @@ Though rarely required, you may disable Livewire's auto-injecting asset behavior
 'inject_assets' => false,
 ```
 
+If you'd rather force Livewire to inject it's assets on a single page or multiple pages, you can call the following global method from the current route or from a service provider.
+
+```php
+\Livewire\Livewire::forceAssetInjection();
+```
+
 ## Configuring Livewire's update endpoint
 
 Every update in a Livewire component sends a network request to the server at the following endpoint: `https://example.com/livewire/update`

@@ -2,13 +2,13 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
-    function can_add_new_components()
+    public function can_add_new_components()
     {
         Livewire::visit([
             Page::class,
@@ -37,7 +37,55 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSee('First Component Rendered')
             ->assertDontSee('Second Component Rendered')
             ->assertSee('Third Component Rendered')
-            ;
+        ;
+    }
+
+    /** @test */
+    public function nested_components_do_not_error_with_empty_elements_on_page()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div>
+                        </div>
+
+                        <button type="button" wire:click="$refresh" dusk="refresh">
+                            Refresh
+                        </button>
+
+                        <livewire:child />
+
+                        <div>
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child">
+                        Child
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertPresent('@child')
+        ->assertSeeIn('@child', 'Child')
+        ->waitForLivewire()->click('@refresh')
+        ->pause(500)
+        ->assertPresent('@child')
+        ->assertSeeIn('@child', 'Child')
+        ->waitForLivewire()->click('@refresh')
+        ->pause(500)
+        ->assertPresent('@child')
+        ->assertSeeIn('@child', 'Child')
+        ;
     }
 }
 
@@ -57,12 +105,12 @@ class Page extends Component
 
     public function render()
     {
-        return <<<HTML
+        return <<<'HTML'
         <div>
             <div>Page</div>
 
-            @foreach(\$components as \$component => \$params)
-                @livewire(\$component, \$params, key(\$component))
+            @foreach($components as $component => $params)
+                @livewire($component, $params, key($component))
             @endforeach
 
             <div>
@@ -81,20 +129,26 @@ class Page extends Component
     }
 }
 
-class FirstComponent extends Component {
-    function render() {
+class FirstComponent extends Component
+{
+    public function render()
+    {
         return '<div>First Component Rendered</div>';
     }
 }
 
-class SecondComponent extends Component {
-    function render() {
+class SecondComponent extends Component
+{
+    public function render()
+    {
         return '<div>Second Component Rendered</div>';
     }
 }
 
-class ThirdComponent extends Component {
-    function render() {
+class ThirdComponent extends Component
+{
+    public function render()
+    {
         return '<div>Third Component Rendered</div>';
     }
 }

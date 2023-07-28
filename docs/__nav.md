@@ -35,6 +35,8 @@ Concepts:
 Advanced:
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
+Packages:
+    Volt: { uri: /docs/volt, file: /volt.md }
 ---
 
 Concepts:

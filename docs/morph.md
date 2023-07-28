@@ -102,7 +102,7 @@ If a user tries submitting the form, but encounters a validation error, the foll
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/844600840?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="morph_problem"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
 
-As you can see, when Livewire encounters the new `<div>` for the error message, it doesn't know weather to change the existing `<div>` in-place, or insert the new `<div>` in the middle.
+As you can see, when Livewire encounters the new `<div>` for the error message, it doesn't know whether to change the existing `<div>` in-place, or insert the new `<div>` in the middle.
 
 To re-iterate what's happening more explicitly:
 

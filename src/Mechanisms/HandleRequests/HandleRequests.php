@@ -42,9 +42,7 @@ class HandleRequests
 
     function setUpdateRoute($callback)
     {
-        $route = $callback(function () {
-            return $this->handleUpdate();
-        });
+        $route = $callback([self::class, 'handleUpdate']);
 
         // Append `livewire.update` to the existing name, if any.
         $route->name('livewire.update');

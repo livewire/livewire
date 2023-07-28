@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
 use Arr;
+use Closure;
+use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,24 +34,52 @@ abstract class UpgradeStep
         return false;
     }
 
-    public function interactiveReplacement($console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'])
+    public function manualUpgradeWarning($console, $warning, $before, $after)
     {
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> {$title} </>");
+        $console->newLine();
+        $console->error($warning);
         $console->newLine();
 
-        $console->line("This means all <options=underscore>{$before}</> directives must be changed to <options=underscore>{$after}</>.");
+        $this->beforeAfterView(
+            console: $console,
+            before: $before,
+            after: $after,
+        );
 
-        $confirm = $console->confirm("Would you like to change all occurrences of {$before} to {$after}?", true);
+        $console->confirm('Ready to continue?');
+    }
+
+    public function beforeAfterView($console, $before, $after, $title = 'Before/After example')
+    {
+        $console->table(
+            [$title],
+            [
+                array_map(fn($line) => "<fg=red>- {$line}</>", Arr::wrap($before)),
+                array_map(fn($line) => "<fg=green>+ {$line}</>", Arr::wrap($after))
+            ],
+        );
+    }
+
+    public function interactiveReplacement(Command $console, $title, $before, $after, $pattern, $replacement, $directories = ['resources/views'])
+    {
+        $console->newLine(4);
+        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> {$title} </>");
+        $console->newLine();
+        $console->line('Please review the example below and confirm if you would like to apply this change.');
+        $console->newLine();
+
+        $this->beforeAfterView($console, $before, $after);
+
+        $confirm = $console->confirm("Would you like to apply these changes?", true);
 
         if ($confirm) {
-            $console->line("Changing all occurrences of <options=underscore>{$before}</> to <options=underscore>{$after}</>.");
             $console->newLine();
 
             $replacements = $this->patternReplacement($pattern, $replacement, $directories);
 
             if($replacements->isEmpty())
             {
-                $console->line("No occurrences of <options=underscore>{$before}</> were found.");
+                $console->line("No occurrences of were found.");
             }
 
             if($replacements->isNotEmpty()) {
@@ -90,7 +120,11 @@ abstract class UpgradeStep
         }
 
         return $files->map(function($file) use ($pattern, $replacement) {
-            $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
+            if($replacement instanceof Closure) {
+                $file['content'] = preg_replace_callback($pattern, $replacement, $file['content'], -1, $count);
+            } else {
+                $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
+            }
             $file['occurrences'] = $count;
 
             return $count > 0 ? $file : null;
