@@ -811,6 +811,7 @@ To patch this vulnerability, we need to authorize the action on the server like 
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
