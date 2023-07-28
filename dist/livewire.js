@@ -853,8 +853,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dontAutoEvaluateFunctions(callback) {
     let cache = shouldAutoEvaluateFunctions;
     shouldAutoEvaluateFunctions = false;
-    callback();
+    let result = callback();
     shouldAutoEvaluateFunctions = cache;
+    return result;
   }
   function evaluate(el, expression, extras = {}) {
     let result;
@@ -1020,15 +1021,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getDirectiveHandler(el, directive22) {
     let noop = () => {
     };
-    let handler3 = directiveHandlers[directive22.type] || noop;
+    let handler4 = directiveHandlers[directive22.type] || noop;
     let [utilities, cleanup22] = getElementBoundUtilities(el);
     onAttributeRemoved(el, directive22.original, cleanup22);
     let fullHandler = () => {
       if (el._x_ignore || el._x_ignoreSelf)
         return;
-      handler3.inline && handler3.inline(el, directive22, utilities);
-      handler3 = handler3.bind(handler3, el, directive22, utilities);
-      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler3) : handler3();
+      handler4.inline && handler4.inline(el, directive22, utilities);
+      handler4 = handler4.bind(handler4, el, directive22, utilities);
+      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler4) : handler4();
     };
     fullHandler.runCleanups = cleanup22;
     return fullHandler;
@@ -1760,6 +1761,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getBinding(el, name, fallback2) {
     if (el._x_bindings && el._x_bindings[name] !== void 0)
       return el._x_bindings[name];
+    return getAttributeBinding(el, name, fallback2);
+  }
+  function extractProp(el, name, fallback2, extract = true) {
+    if (el._x_bindings && el._x_bindings[name] !== void 0)
+      return el._x_bindings[name];
+    if (el._x_inlineBindings && el._x_inlineBindings[name] !== void 0) {
+      let binding = el._x_inlineBindings[name];
+      binding.extract = extract;
+      return dontAutoEvaluateFunctions(() => {
+        return evaluate(el, binding.expression);
+      });
+    }
+    return getAttributeBinding(el, name, fallback2);
+  }
+  function getAttributeBinding(el, name, fallback2) {
     let attr2 = el.getAttribute(name);
     if (attr2 === null)
       return typeof fallback2 === "function" ? fallback2() : fallback2;
@@ -1918,7 +1934,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.12.2",
+    version: "3.12.3",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -1938,6 +1954,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     interceptInit,
     setEvaluator,
     mergeProxies,
+    extractProp,
     findClosest,
     onElRemoved,
     closestRoot,
@@ -2767,7 +2784,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("effect", (el, { expression }, { effect: effect32 }) => effect32(evaluateLater(el, expression)));
   function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
-    let handler3 = (e) => callback(e);
+    let handler4 = (e) => callback(e);
     let options = {};
     let wrapHandler = (callback2, wrapper) => (e) => wrapper(callback2, e);
     if (modifiers.includes("dot"))
@@ -2785,30 +2802,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (modifiers.includes("debounce")) {
       let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
       let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = debounce(handler3, wait);
+      handler4 = debounce(handler4, wait);
     }
     if (modifiers.includes("throttle")) {
       let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
       let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = throttle(handler3, wait);
+      handler4 = throttle(handler4, wait);
     }
     if (modifiers.includes("prevent"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.preventDefault();
         next(e);
       });
     if (modifiers.includes("stop"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.stopPropagation();
         next(e);
       });
     if (modifiers.includes("self"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.target === el && next(e);
       });
     if (modifiers.includes("away") || modifiers.includes("outside")) {
       listenerTarget = document;
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         if (el.contains(e.target))
           return;
         if (e.target.isConnected === false)
@@ -2821,12 +2838,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     if (modifiers.includes("once")) {
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         next(e);
-        listenerTarget.removeEventListener(event, handler3, options);
+        listenerTarget.removeEventListener(event, handler4, options);
       });
     }
-    handler3 = wrapHandler(handler3, (next, e) => {
+    handler4 = wrapHandler(handler4, (next, e) => {
       if (isKeyEvent(event)) {
         if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
           return;
@@ -2834,9 +2851,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       next(e);
     });
-    listenerTarget.addEventListener(event, handler3, options);
+    listenerTarget.addEventListener(event, handler4, options);
     return () => {
-      listenerTarget.removeEventListener(event, handler3, options);
+      listenerTarget.removeEventListener(event, handler4, options);
     };
   }
   function dotSyntax(subject) {
@@ -2957,8 +2974,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } : on2(el, event, modifiers, (e) => {
       setValue(getInputValue(el, modifiers, e, getValue()));
     });
-    if (modifiers.includes("fill") && [null, ""].includes(getValue())) {
-      el.dispatchEvent(new Event(event, {}));
+    if (modifiers.includes("fill")) {
+      if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
+        el.dispatchEvent(new Event(event, {}));
+      }
     }
     if (!el._x_removeModelListeners)
       el._x_removeModelListeners = {};
@@ -3061,7 +3080,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  directive("bind", (el, { value, modifiers, expression, original }, { effect: effect32 }) => {
+  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect32 }) => {
     if (!value) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3073,6 +3092,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     if (value === "key")
       return storeKeyForXFor(el, expression);
+    if (el._x_inlineBindings && el._x_inlineBindings[value] && el._x_inlineBindings[value].extract) {
+      return;
+    }
     let evaluate22 = evaluateLater(el, expression);
     effect32(() => evaluate22((result) => {
       if (result === void 0 && typeof expression === "string" && expression.match(/\./)) {
@@ -3080,12 +3102,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value, result, modifiers));
     }));
-  });
+  };
+  handler2.inline = (el, { value, modifiers, expression }) => {
+    if (!value)
+      return;
+    if (!el._x_inlineBindings)
+      el._x_inlineBindings = {};
+    el._x_inlineBindings[value] = { expression, extract: false };
+  };
+  directive("bind", handler2);
   function storeKeyForXFor(el, expression) {
     el._x_keyExpression = expression;
   }
   addRootSelector(() => `[${prefix("data")}]`);
-  directive("data", skipDuringClone((el, { expression }, { cleanup: cleanup22 }) => {
+  directive("data", (el, { expression }, { cleanup: cleanup22 }) => {
+    if (isCloning && el._x_dataStack)
+      return;
     expression = expression === "" ? "{}" : expression;
     let magicContext = {};
     injectMagics(magicContext, el);
@@ -3103,7 +3135,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       reactiveData["destroy"] && evaluate(el, reactiveData["destroy"]);
       undo();
     });
-  }));
+  });
   directive("show", (el, { modifiers, expression }, { effect: effect32 }) => {
     let evaluate22 = evaluateLater(el, expression);
     if (!el._x_doHide)
@@ -3319,16 +3351,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isNumeric3(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
   }
-  function handler2() {
+  function handler3() {
   }
-  handler2.inline = (el, { expression }, { cleanup: cleanup22 }) => {
+  handler3.inline = (el, { expression }, { cleanup: cleanup22 }) => {
     let root = closestRoot(el);
     if (!root._x_refs)
       root._x_refs = {};
     root._x_refs[expression] = el;
     cleanup22(() => delete root._x_refs[expression]);
   };
-  directive("ref", handler2);
+  directive("ref", handler3);
   directive("if", (el, { expression }, { effect: effect32, cleanup: cleanup22 }) => {
     let evaluate22 = evaluateLater(el, expression);
     let show = () => {
@@ -5404,17 +5436,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     state.whenFinished();
   }
   function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let path = destination.pathname;
-    if (!prefetches[path])
+    let uri = destination.pathname + destination.search;
+    if (!prefetches[uri])
       return ifNoPrefetchExists();
-    if (prefetches[path].finished) {
-      let html = prefetches[path].html;
-      delete prefetches[path];
+    if (prefetches[uri].finished) {
+      let html = prefetches[uri].html;
+      delete prefetches[uri];
       return receive(html);
     } else {
-      prefetches[path].whenFinished = () => {
-        let html = prefetches[path].html;
-        delete prefetches[path];
+      prefetches[uri].whenFinished = () => {
+        let html = prefetches[uri].html;
+        delete prefetches[uri];
         receive(html);
       };
     }
@@ -5424,12 +5456,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.addEventListener("mousedown", (e) => {
       e.preventDefault();
       callback((whenReleased) => {
-        let handler3 = (e2) => {
+        let handler4 = (e2) => {
           e2.preventDefault();
           whenReleased();
-          el.removeEventListener("mouseup", handler3);
+          el.removeEventListener("mouseup", handler4);
         };
-        el.addEventListener("mouseup", handler3);
+        el.addEventListener("mouseup", handler4);
       });
     });
   }
@@ -5437,11 +5469,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.addEventListener("mouseenter", (e) => {
       let timeout = setTimeout(() => {
       }, ms);
-      let handler3 = () => {
+      let handler4 = () => {
         clear;
-        el.removeEventListener("mouseleave", handler3);
+        el.removeEventListener("mouseleave", handler4);
       };
-      el.addEventListener("mouseleave", handler3);
+      el.addEventListener("mouseleave", handler4);
       callback(e);
     });
   }
@@ -5883,8 +5915,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dontAutoEvaluateFunctions2(callback) {
     let cache = shouldAutoEvaluateFunctions2;
     shouldAutoEvaluateFunctions2 = false;
-    callback();
+    let result = callback();
     shouldAutoEvaluateFunctions2 = cache;
+    return result;
   }
   function evaluate2(el, expression, extras = {}) {
     let result;
@@ -6050,15 +6083,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getDirectiveHandler2(el, directive22) {
     let noop = () => {
     };
-    let handler3 = directiveHandlers2[directive22.type] || noop;
+    let handler4 = directiveHandlers2[directive22.type] || noop;
     let [utilities, cleanup3] = getElementBoundUtilities2(el);
     onAttributeRemoved2(el, directive22.original, cleanup3);
     let fullHandler = () => {
       if (el._x_ignore || el._x_ignoreSelf)
         return;
-      handler3.inline && handler3.inline(el, directive22, utilities);
-      handler3 = handler3.bind(handler3, el, directive22, utilities);
-      isDeferringHandlers2 ? directiveHandlerStacks2.get(currentHandlerStackKey2).push(handler3) : handler3();
+      handler4.inline && handler4.inline(el, directive22, utilities);
+      handler4 = handler4.bind(handler4, el, directive22, utilities);
+      isDeferringHandlers2 ? directiveHandlerStacks2.get(currentHandlerStackKey2).push(handler4) : handler4();
     };
     fullHandler.runCleanups = cleanup3;
     return fullHandler;
@@ -6682,6 +6715,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getBinding2(el, name, fallback2) {
     if (el._x_bindings && el._x_bindings[name] !== void 0)
       return el._x_bindings[name];
+    return getAttributeBinding2(el, name, fallback2);
+  }
+  function extractProp2(el, name, fallback2, extract = true) {
+    if (el._x_bindings && el._x_bindings[name] !== void 0)
+      return el._x_bindings[name];
+    if (el._x_inlineBindings && el._x_inlineBindings[name] !== void 0) {
+      let binding = el._x_inlineBindings[name];
+      binding.extract = extract;
+      return dontAutoEvaluateFunctions2(() => {
+        return evaluate2(el, binding.expression);
+      });
+    }
+    return getAttributeBinding2(el, name, fallback2);
+  }
+  function getAttributeBinding2(el, name, fallback2) {
     let attr2 = el.getAttribute(name);
     if (attr2 === null)
       return typeof fallback2 === "function" ? fallback2() : fallback2;
@@ -6812,7 +6860,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw2;
     },
-    version: "3.12.2",
+    version: "3.12.3",
     flushAndStopDeferringMutations: flushAndStopDeferringMutations2,
     dontAutoEvaluateFunctions: dontAutoEvaluateFunctions2,
     disableEffectScheduling: disableEffectScheduling2,
@@ -6832,6 +6880,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     interceptInit: interceptInit2,
     setEvaluator: setEvaluator2,
     mergeProxies: mergeProxies2,
+    extractProp: extractProp2,
     findClosest: findClosest2,
     onElRemoved: onElRemoved2,
     closestRoot: closestRoot2,
@@ -6874,6 +6923,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function putPersistantElementsBack() {
     document.querySelectorAll("[x-persist]").forEach((i) => {
       let old = els[i.getAttribute("x-persist")];
+      if (!old)
+        return;
       old._x_wasPersisted = true;
       alpine_default2.mutateDom(() => {
         i.replaceWith(old);
@@ -6981,8 +7032,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let newDocument = new DOMParser().parseFromString(html, "text/html");
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
+    let oldBodyScriptTagHashes = Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML));
     mergeNewHead(newHead);
-    prepNewScriptTagsToRun(newBody);
+    prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
     transitionOut(document.body);
     let oldBody = document.body;
     document.body.replaceWith(newBody);
@@ -7003,10 +7055,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       body.style.opacity = "1";
     });
   }
-  function prepNewScriptTagsToRun(newBody) {
+  function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
     newBody.querySelectorAll("script").forEach((i) => {
-      if (i.hasAttribute("data-navigate-once"))
-        return;
+      if (i.hasAttribute("data-navigate-once")) {
+        let hash = simpleHash(i.outerHTML);
+        if (oldBodyScriptTagHashes.includes(hash))
+          return;
+      }
       i.replaceWith(cloneScriptTag(i));
     });
   }
@@ -7056,8 +7111,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isScript(el) {
     return el.tagName.toLowerCase() === "script";
   }
+  function simpleHash(str) {
+    return str.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+  }
   function fetchHtml(destination, callback) {
-    fetch(destination.pathname).then((i) => i.text()).then((html) => {
+    let uri = destination.pathname + destination.search;
+    fetch(uri).then((i) => i.text()).then((html) => {
       callback(html);
     });
   }
@@ -7068,6 +7130,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function src_default6(Alpine22) {
     Alpine22.navigate = (url) => {
       navigateTo(createUrlObjectFromString(url));
+    };
+    Alpine22.navigate.disableProgressBar = () => {
+      showProgressBar = false;
     };
     Alpine22.addInitSelector(() => `[${prefix2("navigate")}]`);
     Alpine22.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater22, cleanup: cleanup3 }) => {
@@ -7125,7 +7190,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     setTimeout(() => {
-      fireEventForOtherLibariesToHookInto();
+      fireEventForOtherLibariesToHookInto(true);
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -7142,8 +7207,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto() {
-    document.dispatchEvent(new CustomEvent("alpine:navigated", { bubbles: true }));
+  function fireEventForOtherLibariesToHookInto(init = false) {
+    document.dispatchEvent(new CustomEvent("alpine:navigated", { bubbles: true, detail: { init } }));
   }
   function nowInitializeAlpineOnTheNewPage(Alpine22) {
     Alpine22.initTree(document.body, void 0, (el, skip) => {
@@ -7167,6 +7232,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let { initial, replace: replace2, push: push2, pop } = track2(queryKey, initialSeedValue, alwaysShow);
         setter(initial);
         if (!usePush) {
+          console.log(getter());
           Alpine4.effect(() => replace2(getter()));
         } else {
           Alpine4.effect(() => push2(getter()));
@@ -7319,6 +7385,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let entries = search.split("&").map((i) => i.split("="));
     let data3 = {};
     entries.forEach(([key, value]) => {
+      if (!value)
+        return;
       value = decodeURIComponent(value.replaceAll("+", "%20"));
       if (!key.includes("[")) {
         data3[key] = value;
@@ -7343,10 +7411,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var dom = {
     replace(children, old, replacement) {
       let index = children.indexOf(old);
+      let replacementIndex = children.indexOf(replacement);
       if (index === -1)
         throw "Cant find element in children";
       old.replaceWith(replacement);
       children[index] = replacement;
+      if (replacementIndex) {
+        children.splice(replacementIndex, 1);
+      }
       return children;
     },
     before(children, reference, subject) {
@@ -7482,7 +7554,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     function patchChildren(fromChildren, toChildren, appendFn) {
-      let fromKeyDomNodeMap = {};
+      let fromKeyDomNodeMap = keyToMap(fromChildren);
       let fromKeyHoldovers = {};
       let currentTo = dom.first(toChildren);
       let currentFrom = dom.first(fromChildren);
@@ -7542,11 +7614,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           patchChildren(newFromChildren, newToChildren, (node) => appendPoint.before(node));
           continue;
         }
-        if (currentFrom.nodeType === 1 && lookahead) {
+        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = dom.next(toChildren, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
-            if (currentFrom.isEqualNode(nextToElementSibling)) {
+            if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
               [fromChildren, currentFrom] = addNodeBefore(fromChildren, currentTo, currentFrom);
               fromKey = getKey(currentFrom);
@@ -8338,7 +8410,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return targets.some(({ target, params }) => {
       if (params) {
         return calls.some(({ method, params: methodParams }) => {
-          return target === method && params === quickHash(methodParams.toString());
+          return target === method && params === quickHash(JSON.stringify(methodParams));
         });
       }
       if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
@@ -8354,7 +8426,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let directive4 = directives4.get("target");
       let raw3 = directive4.expression;
       if (raw3.includes("(") && raw3.includes(")")) {
-        targets.push({ target: directive4.method, params: quickHash(directive4.params.toString()) });
+        targets.push({ target: directive4.method, params: quickHash(JSON.stringify(directive4.params)) });
       } else if (raw3.includes(",")) {
         raw3.split(",").map((i) => i.trim()).forEach((target) => {
           targets.push({ target });
