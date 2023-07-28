@@ -166,6 +166,7 @@ To pass data to the view in the `render()` method, you can use the `with()` meth
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class CreatePost extends Component
