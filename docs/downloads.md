@@ -54,6 +54,8 @@ class ShowInvoice extends Component
 Just like in a Laravel controller, you can also use the `Storage` facade to initiate downloads:
 
 ```php
+use Illuminate\Support\Facades\Storage;
+
 public function download()
 {
     return Storage::disk('invoices')->download('invoice.csv');
@@ -78,6 +80,8 @@ public function download()
 Livewire also provides a `->assertFileDownloaded()` method to easily test that a file was downloaded with a given name:
 
 ```php
+use Livewire\Livewire;
+use App\Livewire\ShowInvoice;
 use App\Models\Invoice;
 
 /** @test */
