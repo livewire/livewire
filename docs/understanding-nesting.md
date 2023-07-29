@@ -53,7 +53,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPosts extends Component
+class ShowPost extends Component
 {
     public Post $post;
 
