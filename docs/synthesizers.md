@@ -152,7 +152,7 @@ Here's the source for the `Address` class:
 ```php
 <?php
 
-namespace App\Dtos\Address;
+namespace App\Dtos;
 
 class Address
 {
@@ -206,6 +206,8 @@ class AddressSynth extends Synth
 To make it available globally in your application, you can use Livewire's `propertySynthesizer` method from any service provider:
 
 ```php
+use Livewire\Livewire;
+
 Livewire::propertySynthesizer(AddressSynth::class);
 ```
 
