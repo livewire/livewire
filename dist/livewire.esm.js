@@ -1816,7 +1816,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     }
-    function directives2(el, attributes, originalAttributeOverride) {
+    function directives(el, attributes, originalAttributeOverride) {
       attributes = Array.from(attributes);
       if (el._x_virtualDirectives) {
         let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
@@ -1833,8 +1833,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         attributes = attributes.concat(vAttributes);
       }
       let transformedAttributeMap = {};
-      let directives22 = attributes.map(toTransformedAttributes((newName, oldName) => transformedAttributeMap[newName] = oldName)).filter(outNonAlpineAttributes).map(toParsedDirectives(transformedAttributeMap, originalAttributeOverride)).sort(byPriority);
-      return directives22.map((directive22) => {
+      let directives2 = attributes.map(toTransformedAttributes((newName, oldName) => transformedAttributeMap[newName] = oldName)).filter(outNonAlpineAttributes).map(toParsedDirectives(transformedAttributeMap, originalAttributeOverride)).sort(byPriority);
+      return directives2.map((directive22) => {
         return getDirectiveHandler(el, directive22);
       });
     }
@@ -1993,7 +1993,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       onElAdded((el) => initTree(el, walk));
       onElRemoved((el) => destroyTree(el));
       onAttributesAdded((el, attrs) => {
-        directives2(el, attrs).forEach((handle) => handle());
+        directives(el, attrs).forEach((handle) => handle());
       });
       let outNestedComponents = (el) => !closestRoot(el.parentElement, true);
       Array.from(document.querySelectorAll(allSelectors())).filter(outNestedComponents).forEach((el) => {
@@ -2046,7 +2046,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         walker(el, (el2, skip) => {
           intercept(el2, skip);
           initInterceptors2.forEach((i) => i(el2, skip));
-          directives2(el2, el2.attributes).forEach((handle) => handle());
+          directives(el2, el2.attributes).forEach((handle) => handle());
           el2._x_ignore && skip();
         });
       });
@@ -2687,7 +2687,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             innerSet(outer);
             inner = outer;
           } else {
-            outerSet(JSON.parse(JSON.stringify(inner)));
+            outerSet(JSON.parse(innerHashLatest != null ? innerHashLatest : null));
             outer = inner;
           }
         }
@@ -2725,10 +2725,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function bind2(name, bindings) {
       let getBindings = typeof bindings !== "function" ? () => bindings : bindings;
       if (name instanceof Element) {
-        applyBindingsObject(name, getBindings());
+        return applyBindingsObject(name, getBindings());
       } else {
         binds[name] = getBindings;
       }
+      return () => {
+      };
     }
     function injectBindingProviders(obj) {
       Object.entries(binds).forEach(([name, callback]) => {
@@ -2757,10 +2759,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         return attribute;
       });
-      directives2(el, attributes, original).map((handle) => {
+      directives(el, attributes, original).map((handle) => {
         cleanupRunners.push(handle.runCleanups);
         handle();
       });
+      return () => {
+        while (cleanupRunners.length)
+          cleanupRunners.pop()();
+      };
     }
     var datas = {};
     function data(name, callback) {
@@ -2800,6 +2806,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       stopObservingMutations,
       setReactivityEngine,
       onAttributeRemoved,
+      onAttributesAdded,
       closestDataStack,
       skipDuringClone,
       onlyDuringClone,
@@ -5734,7 +5741,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     }
-    function directives2(el, attributes, originalAttributeOverride) {
+    function directives(el, attributes, originalAttributeOverride) {
       attributes = Array.from(attributes);
       if (el._x_virtualDirectives) {
         let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
@@ -5751,8 +5758,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         attributes = attributes.concat(vAttributes);
       }
       let transformedAttributeMap = {};
-      let directives22 = attributes.map(toTransformedAttributes((newName, oldName) => transformedAttributeMap[newName] = oldName)).filter(outNonAlpineAttributes).map(toParsedDirectives(transformedAttributeMap, originalAttributeOverride)).sort(byPriority);
-      return directives22.map((directive22) => {
+      let directives2 = attributes.map(toTransformedAttributes((newName, oldName) => transformedAttributeMap[newName] = oldName)).filter(outNonAlpineAttributes).map(toParsedDirectives(transformedAttributeMap, originalAttributeOverride)).sort(byPriority);
+      return directives2.map((directive22) => {
         return getDirectiveHandler(el, directive22);
       });
     }
@@ -5905,7 +5912,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       onElAdded((el) => initTree(el, walk));
       onElRemoved((el) => destroyTree(el));
       onAttributesAdded((el, attrs) => {
-        directives2(el, attrs).forEach((handle) => handle());
+        directives(el, attrs).forEach((handle) => handle());
       });
       let outNestedComponents = (el) => !closestRoot(el.parentElement, true);
       Array.from(document.querySelectorAll(allSelectors())).filter(outNestedComponents).forEach((el) => {
@@ -5958,7 +5965,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         walker(el, (el2, skip) => {
           intercept(el2, skip);
           initInterceptors2.forEach((i) => i(el2, skip));
-          directives2(el2, el2.attributes).forEach((handle) => handle());
+          directives(el2, el2.attributes).forEach((handle) => handle());
           el2._x_ignore && skip();
         });
       });
@@ -6497,7 +6504,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             innerSet(outer);
             inner = outer;
           } else {
-            outerSet(JSON.parse(JSON.stringify(inner)));
+            outerSet(JSON.parse(innerHashLatest != null ? innerHashLatest : null));
             outer = inner;
           }
         }
@@ -6532,10 +6539,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function bind(name, bindings) {
       let getBindings = typeof bindings !== "function" ? () => bindings : bindings;
       if (name instanceof Element) {
-        applyBindingsObject(name, getBindings());
+        return applyBindingsObject(name, getBindings());
       } else {
         binds[name] = getBindings;
       }
+      return () => {
+      };
     }
     function applyBindingsObject(el, obj, original) {
       let cleanupRunners = [];
@@ -6552,10 +6561,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         return attribute;
       });
-      directives2(el, attributes, original).map((handle) => {
+      directives(el, attributes, original).map((handle) => {
         cleanupRunners.push(handle.runCleanups);
         handle();
       });
+      return () => {
+        while (cleanupRunners.length)
+          cleanupRunners.pop()();
+      };
     }
     var datas = {};
     function data(name, callback) {
@@ -6582,6 +6595,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       stopObservingMutations,
       setReactivityEngine,
       onAttributeRemoved,
+      onAttributesAdded,
       closestDataStack,
       skipDuringClone,
       onlyDuringClone,
@@ -7344,8 +7358,8 @@ var require_module_cjs8 = __commonJS({
               continue;
             }
           }
-          let isIf = (node) => node.nodeType === 8 && node.textContent === " __BLOCK__ ";
-          let isEnd = (node) => node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
+          let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
+          let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
           if (isIf(currentTo) && isIf(currentFrom)) {
             let newFromChildren = [];
             let appendPoint;
@@ -8700,23 +8714,23 @@ function on2(eventName, callback) {
 
 // js/directives.js
 var import_alpinejs4 = __toESM(require_module_cjs());
-var directives = {};
-function directive(name, callback) {
-  directives[name] = callback;
+function matchesForLivewireDirective(attributeName) {
+  return attributeName.match(new RegExp("wire:"));
 }
-function initDirectives(el, component) {
-  let elDirectives = getDirectives(el);
-  Object.entries(directives).forEach(([name, callback]) => {
-    elDirectives.directives.filter(({ value }) => value === name).forEach((directive2) => {
+function extractDirective(el, name) {
+  let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
+  return new Directive(value, modifiers, name, el);
+}
+function directive(name, callback) {
+  on("directive.init", ({ el, component, directive: directive2, cleanup: cleanup2 }) => {
+    if (directive2.value === name) {
       callback({
         el,
         directive: directive2,
         component,
-        cleanup: (callback2) => {
-          import_alpinejs4.default.onAttributeRemoved(el, "wire:".directive, callback2);
-        }
+        cleanup: cleanup2
       });
-    });
+    }
   });
 }
 function getDirectives(el) {
@@ -8740,7 +8754,7 @@ var DirectiveManager = class {
     return this.directives.find((directive2) => directive2.value === value);
   }
   extractTypeModifiersAndValue() {
-    return Array.from(this.el.getAttributeNames().filter((name) => name.match(new RegExp("wire:"))).map((name) => {
+    return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => {
       const [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
       return new Directive(value, modifiers, name, this.el);
     }));
@@ -8803,6 +8817,19 @@ function start() {
   import_alpinejs5.default.plugin(import_navigate.default);
   import_alpinejs5.default.plugin(import_mask.default);
   import_alpinejs5.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs5.default.onAttributesAdded((el, attributes) => {
+    let component = closestComponent(el, false);
+    if (!component)
+      return;
+    attributes.forEach((attribute) => {
+      if (!matchesForLivewireDirective(attribute.name))
+        return;
+      let directive2 = extractDirective(el, attribute.name);
+      trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+      } });
+    });
+  });
   import_alpinejs5.default.interceptInit(import_alpinejs5.default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
@@ -8812,8 +8839,13 @@ function start() {
     }
     let component = closestComponent(el, false);
     if (component) {
-      initDirectives(el, component);
       trigger("element.init", { el, component });
+      let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+      directives.forEach((directive2) => {
+        trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+          import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+        } });
+      });
     }
   }));
   import_alpinejs5.default.start();
@@ -8842,8 +8874,8 @@ on("commit.prepare", ({ component }) => {
 var import_alpinejs6 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
 on("element.init", ({ el, component }) => {
-  let directives2 = getDirectives(el);
-  if (directives2.missing("submit"))
+  let directives = getDirectives(el);
+  if (directives.missing("submit"))
     return;
   el.addEventListener("submit", () => {
     cleanupStackByComponentId[component.id] = [];
@@ -8978,6 +9010,56 @@ function normalizeQueryStringEntry(key, value) {
     return { ...fullerDefaults, ...value };
   }
 }
+
+// js/features/supportLaravelEcho.js
+on("effects", (component, effects) => {
+  let listeners2 = effects.listeners || [];
+  listeners2.forEach((event) => {
+    if (event.startsWith("echo")) {
+      if (typeof window.Echo === "undefined") {
+        console.warn("Laravel Echo cannot be found");
+        return;
+      }
+      let event_parts = event.split(/(echo:|echo-)|:|,/);
+      if (event_parts[1] == "echo:") {
+        event_parts.splice(2, 0, "channel", void 0);
+      }
+      if (event_parts[2] == "notification") {
+        event_parts.push(void 0, void 0);
+      }
+      let [
+        s1,
+        signature,
+        channel_type,
+        s2,
+        channel,
+        s3,
+        event_name
+      ] = event_parts;
+      if (["channel", "private", "encryptedPrivate"].includes(channel_type)) {
+        window.Echo[channel_type](channel).listen(event_name, (e) => {
+          dispatchSelf(component, event, e);
+        });
+      } else if (channel_type == "presence") {
+        if (["here", "joining", "leaving"].includes(event_name)) {
+          window.Echo.join(channel)[event_name]((e) => {
+            dispatchSelf(component, event, e);
+          });
+        } else {
+          window.Echo.join(channel).listen(event_name, (e) => {
+            dispatchSelf(component, event, e);
+          });
+        }
+      } else if (channel_type == "notification") {
+        window.Echo.private(channel).notification((notification) => {
+          dispatchSelf(component, event, notification);
+        });
+      } else {
+        console.warn("Echo channel type not yet supported");
+      }
+    }
+  });
+});
 
 // js/features/supportNavigate.js
 var isNavigating = false;
@@ -9157,22 +9239,21 @@ function callAndClearComponentDebounces(component, callback) {
 
 // js/directives/wire-wildcard.js
 var import_alpinejs11 = __toESM(require_module_cjs());
-on("element.init", ({ el, component }) => {
-  getDirectives(el).all().forEach((directive2) => {
-    if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.type))
-      return;
-    let attribute = directive2.rawName.replace("wire:", "x-on:");
-    if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
-      attribute = attribute + ".prevent";
+on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component }) => {
+  if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
+    return;
+  let attribute = directive2.rawName.replace("wire:", "x-on:");
+  if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
+    attribute = attribute + ".prevent";
+  }
+  let cleanupBinding = import_alpinejs11.default.bind(el, {
+    [attribute](e) {
+      callAndClearComponentDebounces(component, () => {
+        import_alpinejs11.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+      });
     }
-    import_alpinejs11.default.bind(el, {
-      [attribute](e) {
-        callAndClearComponentDebounces(component, () => {
-          import_alpinejs11.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
-        });
-      }
-    });
   });
+  cleanup2(cleanupBinding);
 });
 
 // js/directives/wire-navigate.js
@@ -9329,10 +9410,10 @@ function containsTargets(payload, targets) {
   });
 }
 function getTargets(el) {
-  let directives2 = getDirectives(el);
+  let directives = getDirectives(el);
   let targets = [];
-  if (directives2.has("target")) {
-    let directive2 = directives2.get("target");
+  if (directives.has("target")) {
+    let directive2 = directives.get("target");
     let raw = directive2.expression;
     if (raw.includes("(") && raw.includes(")")) {
       targets.push({ target: directive2.method, params: quickHash(JSON.stringify(directive2.params)) });
@@ -9345,7 +9426,7 @@ function getTargets(el) {
     }
   } else {
     let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
-    directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
+    directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
   }
   return targets;
 }
@@ -9463,13 +9544,13 @@ directive("dirty", ({ el, directive: directive2, component }) => {
   });
 });
 function dirtyTargets(el) {
-  let directives2 = getDirectives(el);
+  let directives = getDirectives(el);
   let targets = [];
-  if (directives2.has("model")) {
-    targets.push(directives2.get("model").expression);
+  if (directives.has("model")) {
+    targets.push(directives.get("model").expression);
   }
-  if (directives2.has("target")) {
-    targets = targets.concat(directives2.get("target").expression.split(",").map((s) => s.trim()));
+  if (directives.has("target")) {
+    targets = targets.concat(directives.get("target").expression.split(",").map((s) => s.trim()));
   }
   return targets;
 }

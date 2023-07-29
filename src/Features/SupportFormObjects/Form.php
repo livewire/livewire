@@ -59,6 +59,33 @@ class Form implements Arrayable
         return $this->toArray();
     }
 
+    public function only($properties)
+    {
+        $results = [];
+
+        foreach ($properties as $property) {
+            $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
+        }
+
+        return $results;
+    }
+
+    public function hasProperty($prop)
+    {
+        return property_exists($this, Utils::beforeFirstDot($prop));
+    }
+
+    public function getPropertyValue($name)
+    {
+        $value = $this->{Utils::beforeFirstDot($name)};
+
+        if (Utils::containsDots($name)) {
+            return data_get($value, Utils::afterFirstDot($name));
+        }
+
+        return $value;
+    }
+
     public function reset(...$properties)
     {
         $properties = count($properties) && is_array($properties[0])

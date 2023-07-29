@@ -1829,7 +1829,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           innerSet(outer);
           inner = outer;
         } else {
-          outerSet(JSON.parse(JSON.stringify(inner)));
+          outerSet(JSON.parse(innerHashLatest ?? null));
           outer = inner;
         }
       }
@@ -1867,10 +1867,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function bind2(name, bindings) {
     let getBindings = typeof bindings !== "function" ? () => bindings : bindings;
     if (name instanceof Element) {
-      applyBindingsObject(name, getBindings());
+      return applyBindingsObject(name, getBindings());
     } else {
       binds[name] = getBindings;
     }
+    return () => {
+    };
   }
   function injectBindingProviders(obj) {
     Object.entries(binds).forEach(([name, callback]) => {
@@ -1903,6 +1905,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanupRunners.push(handle.runCleanups);
       handle();
     });
+    return () => {
+      while (cleanupRunners.length)
+        cleanupRunners.pop()();
+    };
   }
   var datas = {};
   function data(name, callback) {
@@ -1942,6 +1948,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     stopObservingMutations,
     setReactivityEngine,
     onAttributeRemoved,
+    onAttributesAdded,
     closestDataStack,
     skipDuringClone,
     onlyDuringClone,
@@ -3987,23 +3994,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
-  var directives2 = {};
-  function directive2(name, callback) {
-    directives2[name] = callback;
+  function matchesForLivewireDirective(attributeName) {
+    return attributeName.match(new RegExp("wire:"));
   }
-  function initDirectives(el, component) {
-    let elDirectives = getDirectives(el);
-    Object.entries(directives2).forEach(([name, callback]) => {
-      elDirectives.directives.filter(({ value }) => value === name).forEach((directive4) => {
+  function extractDirective(el, name) {
+    let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
+    return new Directive(value, modifiers, name, el);
+  }
+  function directive2(name, callback) {
+    on("directive.init", ({ el, component, directive: directive4, cleanup: cleanup3 }) => {
+      if (directive4.value === name) {
         callback({
           el,
           directive: directive4,
           component,
-          cleanup: (callback2) => {
-            module_default.onAttributeRemoved(el, "wire:".directive, callback2);
-          }
+          cleanup: cleanup3
         });
-      });
+      }
     });
   }
   function getDirectives(el) {
@@ -4027,7 +4034,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return this.directives.find((directive4) => directive4.value === value);
     }
     extractTypeModifiersAndValue() {
-      return Array.from(this.el.getAttributeNames().filter((name) => name.match(new RegExp("wire:"))).map((name) => {
+      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => {
         const [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
         return new Directive(value, modifiers, name, this.el);
       }));
@@ -6020,7 +6027,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   }
-  function directives3(el, attributes, originalAttributeOverride) {
+  function directives2(el, attributes, originalAttributeOverride) {
     attributes = Array.from(attributes);
     if (el._x_virtualDirectives) {
       let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
@@ -6191,7 +6198,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onElAdded2((el) => initTree2(el, walk2));
     onElRemoved2((el) => destroyTree2(el));
     onAttributesAdded2((el, attrs) => {
-      directives3(el, attrs).forEach((handle) => handle());
+      directives2(el, attrs).forEach((handle) => handle());
     });
     let outNestedComponents = (el) => !closestRoot2(el.parentElement, true);
     Array.from(document.querySelectorAll(allSelectors2())).filter(outNestedComponents).forEach((el) => {
@@ -6244,7 +6251,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       walker(el, (el2, skip) => {
         intercept(el2, skip);
         initInterceptors22.forEach((i) => i(el2, skip));
-        directives3(el2, el2.attributes).forEach((handle) => handle());
+        directives2(el2, el2.attributes).forEach((handle) => handle());
         el2._x_ignore && skip();
       });
     });
@@ -6783,7 +6790,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           innerSet(outer);
           inner = outer;
         } else {
-          outerSet(JSON.parse(JSON.stringify(inner)));
+          outerSet(JSON.parse(innerHashLatest ?? null));
           outer = inner;
         }
       }
@@ -6818,10 +6825,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function bind3(name, bindings) {
     let getBindings = typeof bindings !== "function" ? () => bindings : bindings;
     if (name instanceof Element) {
-      applyBindingsObject2(name, getBindings());
+      return applyBindingsObject2(name, getBindings());
     } else {
       binds2[name] = getBindings;
     }
+    return () => {
+    };
   }
   function applyBindingsObject2(el, obj, original) {
     let cleanupRunners = [];
@@ -6838,10 +6847,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       return attribute;
     });
-    directives3(el, attributes, original).map((handle) => {
+    directives2(el, attributes, original).map((handle) => {
       cleanupRunners.push(handle.runCleanups);
       handle();
     });
+    return () => {
+      while (cleanupRunners.length)
+        cleanupRunners.pop()();
+    };
   }
   var datas2 = {};
   function data2(name, callback) {
@@ -6868,6 +6881,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     stopObservingMutations: stopObservingMutations2,
     setReactivityEngine: setReactivityEngine2,
     onAttributeRemoved: onAttributeRemoved2,
+    onAttributesAdded: onAttributesAdded2,
     closestDataStack: closestDataStack2,
     skipDuringClone: skipDuringClone2,
     onlyDuringClone: onlyDuringClone2,
@@ -7576,8 +7590,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             continue;
           }
         }
-        let isIf = (node) => node.nodeType === 8 && node.textContent === " __BLOCK__ ";
-        let isEnd = (node) => node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
+        let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
+        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
         if (isIf(currentTo) && isIf(currentFrom)) {
           let newFromChildren = [];
           let appendPoint;
@@ -7915,6 +7929,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.plugin(module_default6);
     module_default.plugin(module_default9);
     module_default.addRootSelector(() => "[wire\\:id]");
+    module_default.onAttributesAdded((el, attributes) => {
+      let component = closestComponent(el, false);
+      if (!component)
+        return;
+      attributes.forEach((attribute) => {
+        if (!matchesForLivewireDirective(attribute.name))
+          return;
+        let directive4 = extractDirective(el, attribute.name);
+        trigger("directive.init", { el, component, directive: directive4, cleanup: (callback) => {
+          module_default.onAttributeRemoved(el, directive4.raw, callback);
+        } });
+      });
+    });
     module_default.interceptInit(module_default.skipDuringClone((el) => {
       if (el.hasAttribute("wire:id")) {
         let component2 = initComponent(el);
@@ -7924,8 +7951,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let component = closestComponent(el, false);
       if (component) {
-        initDirectives(el, component);
         trigger("element.init", { el, component });
+        let directives3 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+        directives3.forEach((directive4) => {
+          trigger("directive.init", { el, component, directive: directive4, cleanup: (callback) => {
+            module_default.onAttributeRemoved(el, directive4.raw, callback);
+          } });
+        });
       }
     }));
     module_default.start();
@@ -7950,8 +7982,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
   on("element.init", ({ el, component }) => {
-    let directives4 = getDirectives(el);
-    if (directives4.missing("submit"))
+    let directives3 = getDirectives(el);
+    if (directives3.missing("submit"))
       return;
     el.addEventListener("submit", () => {
       cleanupStackByComponentId[component.id] = [];
@@ -8083,6 +8115,56 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return { ...fullerDefaults, ...value };
     }
   }
+
+  // js/features/supportLaravelEcho.js
+  on("effects", (component, effects) => {
+    let listeners2 = effects.listeners || [];
+    listeners2.forEach((event) => {
+      if (event.startsWith("echo")) {
+        if (typeof window.Echo === "undefined") {
+          console.warn("Laravel Echo cannot be found");
+          return;
+        }
+        let event_parts = event.split(/(echo:|echo-)|:|,/);
+        if (event_parts[1] == "echo:") {
+          event_parts.splice(2, 0, "channel", void 0);
+        }
+        if (event_parts[2] == "notification") {
+          event_parts.push(void 0, void 0);
+        }
+        let [
+          s1,
+          signature,
+          channel_type,
+          s2,
+          channel,
+          s3,
+          event_name
+        ] = event_parts;
+        if (["channel", "private", "encryptedPrivate"].includes(channel_type)) {
+          window.Echo[channel_type](channel).listen(event_name, (e) => {
+            dispatchSelf(component, event, e);
+          });
+        } else if (channel_type == "presence") {
+          if (["here", "joining", "leaving"].includes(event_name)) {
+            window.Echo.join(channel)[event_name]((e) => {
+              dispatchSelf(component, event, e);
+            });
+          } else {
+            window.Echo.join(channel).listen(event_name, (e) => {
+              dispatchSelf(component, event, e);
+            });
+          }
+        } else if (channel_type == "notification") {
+          window.Echo.private(channel).notification((notification) => {
+            dispatchSelf(component, event, notification);
+          });
+        } else {
+          console.warn("Echo channel type not yet supported");
+        }
+      }
+    });
+  });
 
   // js/features/supportNavigate.js
   var isNavigating = false;
@@ -8259,22 +8341,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-wildcard.js
-  on("element.init", ({ el, component }) => {
-    getDirectives(el).all().forEach((directive4) => {
-      if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive4.type))
-        return;
-      let attribute = directive4.rawName.replace("wire:", "x-on:");
-      if (directive4.value === "submit" && !directive4.modifiers.includes("prevent")) {
-        attribute = attribute + ".prevent";
+  on("directive.init", ({ el, directive: directive4, cleanup: cleanup3, component }) => {
+    if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive4.value))
+      return;
+    let attribute = directive4.rawName.replace("wire:", "x-on:");
+    if (directive4.value === "submit" && !directive4.modifiers.includes("prevent")) {
+      attribute = attribute + ".prevent";
+    }
+    let cleanupBinding = module_default.bind(el, {
+      [attribute](e) {
+        callAndClearComponentDebounces(component, () => {
+          module_default.evaluate(el, "$wire." + directive4.expression, { scope: { $event: e } });
+        });
       }
-      module_default.bind(el, {
-        [attribute](e) {
-          callAndClearComponentDebounces(component, () => {
-            module_default.evaluate(el, "$wire." + directive4.expression, { scope: { $event: e } });
-          });
-        }
-      });
     });
+    cleanup3(cleanupBinding);
   });
 
   // js/directives/wire-navigate.js
@@ -8430,10 +8511,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function getTargets(el) {
-    let directives4 = getDirectives(el);
+    let directives3 = getDirectives(el);
     let targets = [];
-    if (directives4.has("target")) {
-      let directive4 = directives4.get("target");
+    if (directives3.has("target")) {
+      let directive4 = directives3.get("target");
       let raw3 = directive4.expression;
       if (raw3.includes("(") && raw3.includes(")")) {
         targets.push({ target: directive4.method, params: quickHash(JSON.stringify(directive4.params)) });
@@ -8446,7 +8527,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     } else {
       let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
-      directives4.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
+      directives3.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
     return targets;
   }
@@ -8564,13 +8645,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function dirtyTargets(el) {
-    let directives4 = getDirectives(el);
+    let directives3 = getDirectives(el);
     let targets = [];
-    if (directives4.has("model")) {
-      targets.push(directives4.get("model").expression);
+    if (directives3.has("model")) {
+      targets.push(directives3.get("model").expression);
     }
-    if (directives4.has("target")) {
-      targets = targets.concat(directives4.get("target").expression.split(",").map((s) => s.trim()));
+    if (directives3.has("target")) {
+      targets = targets.concat(directives3.get("target").expression.split(",").map((s) => s.trim()));
     }
     return targets;
   }
