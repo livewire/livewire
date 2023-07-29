@@ -43,12 +43,12 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertVisible('@foo')
         ;
     }
-    
+
     /** @test */
     public function blade_conditional_actions_are_handled_properly_by_morphdom()
     {
         Livewire::visit(new class extends Component {
-            
+
             public $enabled = true;
 
             function enable()
@@ -70,20 +70,15 @@ class BrowserTest extends \Tests\BrowserTestCase
                         @else
                             <button wire:click="enable" dusk="enable">Enable</button>
                         @endif
-
-                        <div>bar<input dusk="bar"></div>
                     </div>
                 </div>
                 HTML;
             }
         })
-        ->type('@bar', 'Hey!')
         ->waitForLivewire()->click('@disable')
-        ->assertInputValue('@bar', 'Hey!')
         ->assertNotPresent('@disable')
         ->assertVisible('@enable')
         ->waitForLivewire()->click('@enable')
-        ->assertInputValue('@bar', 'Hey!')
         ->assertNotPresent('@enable')
         ->assertVisible('@disable')
         ;

@@ -1829,7 +1829,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           innerSet(outer);
           inner = outer;
         } else {
-          outerSet(JSON.parse(JSON.stringify(inner)));
+          outerSet(JSON.parse(innerHashLatest ?? null));
           outer = inner;
         }
       }
@@ -1867,10 +1867,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function bind2(name, bindings) {
     let getBindings = typeof bindings !== "function" ? () => bindings : bindings;
     if (name instanceof Element) {
-      applyBindingsObject(name, getBindings());
+      return applyBindingsObject(name, getBindings());
     } else {
       binds[name] = getBindings;
     }
+    return () => {
+    };
   }
   function injectBindingProviders(obj) {
     Object.entries(binds).forEach(([name, callback]) => {
@@ -1903,6 +1905,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanupRunners.push(handle.runCleanups);
       handle();
     });
+    return () => {
+      while (cleanupRunners.length)
+        cleanupRunners.pop()();
+    };
   }
   var datas = {};
   function data(name, callback) {
@@ -1942,6 +1948,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     stopObservingMutations,
     setReactivityEngine,
     onAttributeRemoved,
+    onAttributesAdded,
     closestDataStack,
     skipDuringClone,
     onlyDuringClone,
@@ -1994,8 +2001,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2028,8 +2035,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2119,7 +2126,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.options.onTrack) {
+      if (false) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2183,7 +2190,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect32) => {
-      if (effect32.options.onTrigger) {
+      if (false) {
         effect32.options.onTrigger({
           effect: effect32,
           target,
@@ -2320,13 +2327,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2388,7 +2395,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32.call(target, key);
@@ -2407,7 +2414,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32 ? get32.call(target, key) : void 0;
@@ -2420,7 +2427,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2465,7 +2472,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2567,13 +2574,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has2, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has2.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2606,7 +2606,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3115,7 +3115,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el._x_keyExpression = expression;
   }
   addRootSelector(() => `[${prefix("data")}]`);
-  directive("data", skipDuringClone((el, { expression }, { cleanup: cleanup22 }) => {
+  directive("data", (el, { expression }, { cleanup: cleanup22 }) => {
+    if (isCloning && el._x_dataStack)
+      return;
     expression = expression === "" ? "{}" : expression;
     let magicContext = {};
     injectMagics(magicContext, el);
@@ -3133,7 +3135,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       reactiveData["destroy"] && evaluate(el, reactiveData["destroy"]);
       undo();
     });
-  }));
+  });
   directive("show", (el, { modifiers, expression }, { effect: effect32 }) => {
     let evaluate22 = evaluateLater(el, expression);
     if (!el._x_doHide)
@@ -3399,6 +3401,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   mapAttributes(startingWith("@", into(prefix("on:"))));
   directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
+    console.log("listener", value);
+    cleanup22(() => {
+      console.log("cleanup");
+    });
     let evaluate22 = expression ? evaluateLater(el, expression) : () => {
     };
     if (el.tagName.toLowerCase() === "template") {
@@ -3985,23 +3991,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
-  var directives2 = {};
-  function directive2(name, callback) {
-    directives2[name] = callback;
+  function matchesForLivewireDirective(attributeName) {
+    return attributeName.match(new RegExp("wire:"));
   }
-  function initDirectives(el, component) {
-    let elDirectives = getDirectives(el);
-    Object.entries(directives2).forEach(([name, callback]) => {
-      elDirectives.directives.filter(({ value }) => value === name).forEach((directive4) => {
+  function directive2(name, callback) {
+    on("directive.init", ({ el, component, directive: directive4, cleanup: cleanup3 }) => {
+      if (directive4.value === name) {
         callback({
           el,
           directive: directive4,
           component,
-          cleanup: (callback2) => {
-            module_default.onAttributeRemoved(el, "wire:".directive, callback2);
-          }
+          cleanup: cleanup3
         });
-      });
+      }
     });
   }
   function getDirectives(el) {
@@ -4025,7 +4027,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return this.directives.find((directive4) => directive4.value === value);
     }
     extractTypeModifiersAndValue() {
-      return Array.from(this.el.getAttributeNames().filter((name) => name.match(new RegExp("wire:"))).map((name) => {
+      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => {
         const [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
         return new Directive(value, modifiers, name, this.el);
       }));
@@ -6018,7 +6020,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   }
-  function directives3(el, attributes, originalAttributeOverride) {
+  function directives2(el, attributes, originalAttributeOverride) {
     attributes = Array.from(attributes);
     if (el._x_virtualDirectives) {
       let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
@@ -6189,7 +6191,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onElAdded2((el) => initTree2(el, walk2));
     onElRemoved2((el) => destroyTree2(el));
     onAttributesAdded2((el, attrs) => {
-      directives3(el, attrs).forEach((handle) => handle());
+      directives2(el, attrs).forEach((handle) => handle());
     });
     let outNestedComponents = (el) => !closestRoot2(el.parentElement, true);
     Array.from(document.querySelectorAll(allSelectors2())).filter(outNestedComponents).forEach((el) => {
@@ -6242,7 +6244,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       walker(el, (el2, skip) => {
         intercept(el2, skip);
         initInterceptors22.forEach((i) => i(el2, skip));
-        directives3(el2, el2.attributes).forEach((handle) => handle());
+        directives2(el2, el2.attributes).forEach((handle) => handle());
         el2._x_ignore && skip();
       });
     });
@@ -6781,7 +6783,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           innerSet(outer);
           inner = outer;
         } else {
-          outerSet(JSON.parse(JSON.stringify(inner)));
+          outerSet(JSON.parse(innerHashLatest ?? null));
           outer = inner;
         }
       }
@@ -6816,10 +6818,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function bind3(name, bindings) {
     let getBindings = typeof bindings !== "function" ? () => bindings : bindings;
     if (name instanceof Element) {
-      applyBindingsObject2(name, getBindings());
+      return applyBindingsObject2(name, getBindings());
     } else {
       binds2[name] = getBindings;
     }
+    return () => {
+    };
   }
   function applyBindingsObject2(el, obj, original) {
     let cleanupRunners = [];
@@ -6836,10 +6840,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       return attribute;
     });
-    directives3(el, attributes, original).map((handle) => {
+    directives2(el, attributes, original).map((handle) => {
       cleanupRunners.push(handle.runCleanups);
       handle();
     });
+    return () => {
+      while (cleanupRunners.length)
+        cleanupRunners.pop()();
+    };
   }
   var datas2 = {};
   function data2(name, callback) {
@@ -6866,6 +6874,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     stopObservingMutations: stopObservingMutations2,
     setReactivityEngine: setReactivityEngine2,
     onAttributeRemoved: onAttributeRemoved2,
+    onAttributesAdded: onAttributesAdded2,
     closestDataStack: closestDataStack2,
     skipDuringClone: skipDuringClone2,
     onlyDuringClone: onlyDuringClone2,
@@ -7913,6 +7922,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.plugin(module_default6);
     module_default.plugin(module_default9);
     module_default.addRootSelector(() => "[wire\\:id]");
+    module_default.onAttributesAdded((el, attributes) => {
+      let component = closestComponent(el, false);
+      if (!component)
+        return;
+      attributes.forEach((attribute) => {
+        if (!matchesForLivewireDirective(attribute.name))
+          return;
+        let directive4 = extractDirective(el, attribute.name);
+        trigger("directive.init", { el, component, directive: directive4, cleanup: (callback) => {
+          module_default.onAttributeRemoved(el, directive4.raw, callback);
+        } });
+      });
+    });
     module_default.interceptInit(module_default.skipDuringClone((el) => {
       if (el.hasAttribute("wire:id")) {
         let component2 = initComponent(el);
@@ -7922,8 +7944,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let component = closestComponent(el, false);
       if (component) {
-        initDirectives(el, component);
         trigger("element.init", { el, component });
+        let directives3 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+        directives3.forEach((directive4) => {
+          trigger("directive.init", { el, component, directive: directive4, cleanup: (callback) => {
+            module_default.onAttributeRemoved(el, directive4.raw, callback);
+          } });
+        });
       }
     }));
     module_default.start();
@@ -7948,8 +7975,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
   on("element.init", ({ el, component }) => {
-    let directives4 = getDirectives(el);
-    if (directives4.missing("submit"))
+    let directives3 = getDirectives(el);
+    if (directives3.missing("submit"))
       return;
     el.addEventListener("submit", () => {
       cleanupStackByComponentId[component.id] = [];
@@ -8257,22 +8284,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-wildcard.js
-  on("element.init", ({ el, component }) => {
-    getDirectives(el).all().forEach((directive4) => {
-      if (["model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive4.type))
-        return;
-      let attribute = directive4.rawName.replace("wire:", "x-on:");
-      if (directive4.value === "submit" && !directive4.modifiers.includes("prevent")) {
-        attribute = attribute + ".prevent";
+  on("directive.init", ({ el, directive: directive4, cleanup: cleanup3, component }) => {
+    if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive4.value))
+      return;
+    let attribute = directive4.rawName.replace("wire:", "x-on:");
+    if (directive4.value === "submit" && !directive4.modifiers.includes("prevent")) {
+      attribute = attribute + ".prevent";
+    }
+    let cleanupBinding = module_default.bind(el, {
+      [attribute](e) {
+        callAndClearComponentDebounces(component, () => {
+          module_default.evaluate(el, "$wire." + directive4.expression, { scope: { $event: e } });
+        });
       }
-      module_default.bind(el, {
-        [attribute](e) {
-          callAndClearComponentDebounces(component, () => {
-            module_default.evaluate(el, "$wire." + directive4.expression, { scope: { $event: e } });
-          });
-        }
-      });
     });
+    cleanup3(cleanupBinding);
   });
 
   // js/directives/wire-navigate.js
@@ -8428,10 +8454,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function getTargets(el) {
-    let directives4 = getDirectives(el);
+    let directives3 = getDirectives(el);
     let targets = [];
-    if (directives4.has("target")) {
-      let directive4 = directives4.get("target");
+    if (directives3.has("target")) {
+      let directive4 = directives3.get("target");
       let raw3 = directive4.expression;
       if (raw3.includes("(") && raw3.includes(")")) {
         targets.push({ target: directive4.method, params: quickHash(directive4.params.toString()) });
@@ -8444,7 +8470,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     } else {
       let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
-      directives4.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
+      directives3.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
     return targets;
   }
@@ -8562,13 +8588,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function dirtyTargets(el) {
-    let directives4 = getDirectives(el);
+    let directives3 = getDirectives(el);
     let targets = [];
-    if (directives4.has("model")) {
-      targets.push(directives4.get("model").expression);
+    if (directives3.has("model")) {
+      targets.push(directives3.get("model").expression);
     }
-    if (directives4.has("target")) {
-      targets = targets.concat(directives4.get("target").expression.split(",").map((s) => s.trim()));
+    if (directives3.has("target")) {
+      targets = targets.concat(directives3.get("target").expression.split(",").map((s) => s.trim()));
     }
     return targets;
   }
