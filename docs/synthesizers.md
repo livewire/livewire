@@ -168,6 +168,8 @@ To support properties of type `Address`, we can use the following Synthesizer:
 ```php
 <?php
 
+namespace App\Livewire\Synths;
+
 use App\Dtos\Address;
 
 class AddressSynth extends Synth
@@ -207,6 +209,7 @@ To make it available globally in your application, you can use Livewire's `prope
 
 ```php
 use Livewire\Livewire;
+use App\Livewire\Synths\AddressSynth;
 
 Livewire::propertySynthesizer(AddressSynth::class);
 ```
@@ -217,6 +220,8 @@ Using the `CreateProperty` example from above, it is likely that you would want 
 
 ```php
 <?php
+
+namespace App\Livewire\Synths;
 
 use App\Dtos\Address;
 
