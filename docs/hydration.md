@@ -23,6 +23,12 @@ After a component is mounted or an update has been made, Livewire calls a compon
 Take the following `Counter` component for example:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+
 class Counter extends Component
 {
     public $count = 1;
@@ -142,6 +148,12 @@ As you may know, Livewire supports many more sophisticated property types beyond
 Let's take a look at a slightly more complex example - a `Todos` component:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+
 class Todos extends Component
 {
     public $todos;
@@ -209,6 +221,12 @@ One distinct advantage of this approach is the ability to dehydrate and hydrate 
 For example, consider the above `Todos` example, except now with a [Laravel Stringable](https://laravel.com/docs/helpers#method-str) instead of a plain string as the third item in the collection:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+
 class Todos extends Component
 {
     public $todos;
