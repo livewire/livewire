@@ -60,6 +60,10 @@ If you prefer to co-locate your component's validation rules with the properties
 By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. This frees you from needing to run `$this->validate()` manually:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use App\Models\Post;
@@ -89,6 +93,10 @@ class CreatePost extends Component
 If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use App\Models\Post;
@@ -143,6 +151,8 @@ Now, when the validation fails for this property, the message will  be "Please p
 If you wish to add different messages for different rules, you can simply provide multiple `#[Rule]` attributes:
 
 ```php
+use Livewire\Attributes\Rule;
+
 #[Rule('required', message: 'Please provide a post title')]
 #[Rule('min:3', message: 'This title is too short')]
 public $title;
@@ -155,6 +165,8 @@ When applying validation rules directly to a property using the `#[Rule]` attrib
 For example, you might want to provide separate validation rules for an array property and its children. In this case, instead of passing a validation rule as the first argument to the `#[Rule]` attribute, you can pass an array of key-value pairs instead:
 
 ```php
+use Livewire\Attributes\Rule;
+
 #[Rule([
     'todos' => 'required',
     'todos.*' => [
@@ -350,6 +362,10 @@ Sometimes you may want to access the Validator instance that Livewire uses inter
 Below is an example of intercepting Livewire's internal validator to manually check a condition and add an additional validation message:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use App\Models\Post;
@@ -391,6 +407,10 @@ If you wish to use your own validation system in Livewire, that isn't a problem.
 Below is an example of the `CreatePost` component, but instead of using Livewire's validation features, a completely custom validator is being created and applied to the component properties:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Illuminate\Validation\Validator;
 use Livewire\Component;
 use App\Models\Post;
