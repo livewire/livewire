@@ -56,6 +56,8 @@ Route::get('/posts', ShowPosts::class);
 You can redirect to the component by providing the component name to the `redirect()` method:
 
 ```php
+use App\Livewire\ShowPage;
+
 public function save()
 {
     // ...
@@ -71,6 +73,10 @@ In addition to allowing you to use Laravel's built-in redirection methods, Livew
 To pass flash data along with a redirect, you can use Laravel's `->with()` method like so:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class UpdatePost extends Component
