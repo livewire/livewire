@@ -15,6 +15,12 @@ Before exploring the creation of custom Synthesizers, let's first look at the in
 Suppose your application contained the following `CreatePost` component:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+
 class CreatePost extends Component
 {
     public $title = '';
@@ -30,6 +36,12 @@ state: { title: '' },
 Now, consider a more advanced example where the `$title` property value is a stringable instead of a plain string:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+
 class CreatePost extends Component
 {
     public $title = '';
@@ -54,7 +66,8 @@ Now that you've seen the outside-in effects of Synthesizers, here is the actual 
 ```php
 use Illuminate\Support\Stringable;
 
-class StringableSynth extends Synth {
+class StringableSynth extends Synth
+{
     public static $key = 'str';
 
     public static function match($target)
@@ -116,6 +129,13 @@ public function hydrate($value)
 To demonstrate how you might author your own Synthesizer to support a custom property, we will use the following `UpdateProperty` component as an example:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+use App\Dtos\Address;
+
 class UpdateProperty extends Component
 {
     public Address $address;
@@ -130,6 +150,8 @@ class UpdateProperty extends Component
 Here's the source for the `Address` class:
 
 ```php
+<?php
+
 namespace App\Dtos\Address;
 
 class Address
@@ -144,9 +166,12 @@ class Address
 To support properties of type `Address`, we can use the following Synthesizer:
 
 ```php
+<?php
+
 use App\Dtos\Address;
 
-class AddressSynth extends Synth {
+class AddressSynth extends Synth
+{
     public static $key = 'address';
 
     public static function match($target)
@@ -189,9 +214,12 @@ Livewire::propertySynthesizer(AddressSynth::class);
 Using the `CreateProperty` example from above, it is likely that you would want to support `wire:model` binding directly to properties of the `Address` object. Synthesizers allow you to support this using the `get()` and `set()` methods:
 
 ```php
+<?php
+
 use App\Dtos\Address;
 
-class AddressSynth extends Synth {
+class AddressSynth extends Synth
+{
     public static $key = 'address';
 
     public static function match($target)
