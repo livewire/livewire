@@ -149,6 +149,8 @@ You can either move all of your components to the new location or add the follow
 When rendering Livewire components as full pages using a syntax like the following:
 
 ```php
+use App\Livewire\ShowPosts;
+
 Route::get('/posts', ShowPosts::class);
 ```
 
