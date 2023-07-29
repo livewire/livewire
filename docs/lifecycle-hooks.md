@@ -22,6 +22,10 @@ Livewire components don't use `__construct()` because Livewire components are _r
 Here's an example of using the `mount()` method to initialize the `name` and `email` properties of an `UpdateProfile` component:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -45,6 +49,10 @@ class UpdateProfile extends Component
 As mentioned earlier, the `mount()` method receives data passed into the component as method parameters:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 use App\Models\Post;
 
@@ -83,6 +91,10 @@ For these cases, Livewire provides a `boot()` method where you can write compone
 The `boot()` method can be useful for things like initializing protected properties, which are not persisted between requests. Below is an example of initializing a protected property as an Eloquent model:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use App\Models\Post;
@@ -125,6 +137,10 @@ Below is an example of using `updating` to prevent the modification of the `$pos
 It's worth noting that for this particular example, in an actual application, you should use the [`#[Locked]` attribute](/docs/locked) instead, like in the above example.
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Exception;
 use Livewire\Component;
 
@@ -149,6 +165,10 @@ class ShowPost extends Component
 The above `updating()` method runs before the property is updated, allowing you to catch invalid input and prevent the property from updating. Below is an example of using `updated()` to ensure a property's value stays consistent:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class CreateUser extends Component
@@ -175,6 +195,10 @@ Now, anytime the `$username` property is updated client-side, we will ensure tha
 Because you are often targeting a specific property when using update hooks, Livewire allows you to specify the property name directly as part of the method name. Here's the same example from above but rewritten utilizing this technique:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class CreateUser extends Component
@@ -205,6 +229,10 @@ We often use the terms "hydrate" and "dehydrate" to refer to this process throug
 Let's look at an example that uses both `mount()` , `hydrate()`, and `dehydrate()` all together to support using a custom [data transfer object (DTO)](https://en.wikipedia.org/wiki/Data_transfer_object) instead of an Eloquent model to store the post data in the component:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class ShowPost extends Component
@@ -249,6 +277,10 @@ The above example mainly demonstrates the abilities and nature of the `hydrate()
 If you want to hook into the process of rendering a component's Blade view, you can do so using the `rendering()` and `rendered()` hooks:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 use App\Models\Post;
 
@@ -292,6 +324,10 @@ This way, you can have multiple traits using the same lifecycle hooks and avoid 
 Below is an example of a component referencing a trait called `HasPostForm`:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class CreatePost extends Component
