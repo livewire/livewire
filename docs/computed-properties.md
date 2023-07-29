@@ -11,6 +11,7 @@ For example, here's a `ShowUser` component that uses a computed property named `
 ```php
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
@@ -77,6 +78,7 @@ Below is an example of an action called `createPost()` that, by creating a new p
 ```php
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 

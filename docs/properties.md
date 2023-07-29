@@ -11,6 +11,7 @@ Consider the following example:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class TodoList extends Component
@@ -588,6 +589,7 @@ To demonstrate, consider the following `ShowTodos` component with a `select()` c
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class ShowTodos extends Component
@@ -624,6 +626,7 @@ Here's the above example re-written using a computed property:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -664,6 +667,7 @@ You can also access `$todos` from inside your class. For example, if you had a `
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 

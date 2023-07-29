@@ -13,6 +13,13 @@ In Livewire, every component on a page tracks its state and makes updates indepe
 For example, consider the following `Posts` and nested `ShowPost` components:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+
 class Posts extends Component
 {
     public $postLimit = 2;
@@ -38,6 +45,14 @@ class Posts extends Component
 ```
 
 ```php
+<?php
+
+namespace App\Livewire;
+
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use App\Models\Post;
+
 class ShowPosts extends Component
 {
     public Post $post;

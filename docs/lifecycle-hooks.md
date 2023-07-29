@@ -22,6 +22,7 @@ Livewire components don't use `__construct()` because Livewire components are _r
 Here's an example of using the `mount()` method to initialize the `name` and `email` properties of an `UpdateProfile` component:
 
 ```php
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class UpdateProfile extends Component

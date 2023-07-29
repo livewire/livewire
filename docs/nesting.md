@@ -47,6 +47,7 @@ For example, let's check out a `TodoList` component that passes a collection of 
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class TodoList extends Component
@@ -226,6 +227,7 @@ Below is an example of a parent `TodoList` component that contains a `$todo` pro
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -313,6 +315,7 @@ Consider a `TodoList` component with functionality to show and remove todos:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -351,6 +354,7 @@ To call `remove()` from inside the child `TodoItem` components, you can add an e
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
