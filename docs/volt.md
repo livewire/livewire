@@ -27,8 +27,8 @@ $increment = fn () => $this->count++;
 To get started, install Volt into your project using the Composer package manager:
 
 ```bash
-composer require livewire/livewire:^3.0@beta # Or ensure Livewire v3.x is installed...
-composer require livewire/volt:^1.0@beta
+composer require livewire/livewire "^3.0@beta" # Or ensure Livewire v3.x is installed...
+composer require livewire/volt "^1.0@beta"
 ```
 
 After installing Volt, you may execute the `volt:install` Artisan command, which will install Volt's service provider file into your application. This service provider specifies the mounted directories in which Volt will search for single file components:
@@ -305,6 +305,8 @@ $ensurePostCanBeDeleted = protect(function () {
 Livewire's [forms](/docs/forms) provide a convenient way to deal with form validation and submission within a single class. To use a Livewire form within a Volt component, you may utilize the `form` function:
 
 ```php
+<?php
+
 use App\Livewire\Forms\PostForm;
 use function Livewire\Volt\{form};
 
@@ -315,6 +317,8 @@ $save = function () {
 
     // ...
 };
+
+?>
 
 <form wire:submit="save">
     <input type="text" wire:model="form.title">

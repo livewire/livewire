@@ -2,9 +2,10 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use Livewire\Livewire;
-use Livewire\Form;
+use Livewire\Attributes\Rule;
 use Livewire\Component;
+use Livewire\Form;
+use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -125,6 +126,58 @@ class UnitTest extends \Tests\TestCase
         ->call('save')
         ;
     }
+
+    /** @test */
+    function can_reset_property()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            function save()
+            {
+                $this->form->reset('title');
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some title...')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', 'Some content...')
+        ;
+    }
+
+    /** @test */
+    function can_reset_all_properties()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            function save()
+            {
+                $this->form->reset();
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some title...')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -148,9 +201,9 @@ class PostFormValidateStub extends Form
 
 class PostFormRuleAttributeStub extends Form
 {
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $title = '';
 
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $content = '';
 }

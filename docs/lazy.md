@@ -88,7 +88,7 @@ Because the above component specifies a "placeholder" by returning HTML from a `
 
 ## Passing in props
 
-In general, you can treat `lazy` components the same as normal components since you can still pass data into them from outside.
+In general, you can treat `lazy` components the same as normal components, since you can still pass data into them from outside.
 
 For example, here's a scenario where you might pass a time interval into the `Revenue` component from a parent component:
 
@@ -96,7 +96,7 @@ For example, here's a scenario where you might pass a time interval into the `Re
 <input type="date" wire:model="start">
 <input type="date" wire:model="end">
 
-<livewire:revenue lazy :start="$start" :end="$end" />
+<livewire:revenue lazy :$start :$end />
 ```
 
 You can accept this data in `mount()` just like any other component:
@@ -141,7 +141,7 @@ However, unlike a normal component load, a `lazy` component has to serialize or 
 For example, you might want to pass in an Eloquent model to the `Revenue` component like so:
 
 ```blade
-<livewire:revenue lazy :user="$user" />
+<livewire:revenue lazy :$user />
 ```
 
 In a normal component, the actual PHP in-memory `$user` model would be passed into the `mount()` method of `Revenue`. However, because we won't run `mount()` until the next network request, Livewire will internally serialize `$user` to JSON and then re-query it from the database before the next request is handled.

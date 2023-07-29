@@ -1,4 +1,4 @@
-Polling is a technique used in web applications to "poll" the server (send regular requests) for updates. It's a simple way to keep a page up to date without the need for a more sophisticated technology like [WebSockets](/docs/events#real-time-events-using-laravel-echo).
+Polling is a technique used in web applications to "poll" the server (send regular requests) for updates. It's a simple way to keep a page up-to-date without the need for a more sophisticated technology like [WebSockets](/docs/events#real-time-events-using-laravel-echo).
 
 ## Basic usage
 
@@ -11,6 +11,7 @@ Below is an example of a `SubscriberCount` component that shows a user's subscri
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class SubscriberCount extends Component
@@ -58,7 +59,7 @@ If you want to opt-out of this behavior and keep polling continuously, even when
 
 ##  Viewport throttling
 
-Another measure you can take to only poll when necessary is to add the `.visible` modifier to `wire:poll`. The `.visible` modifier instructs Livewire to only poll the component when it is visible on the page:
+Another measure you can take to only poll when necessary, is to add the `.visible` modifier to `wire:poll`. The `.visible` modifier instructs Livewire to only poll the component when it is visible on the page:
 
 ```blade
 <div wire:poll.visible>

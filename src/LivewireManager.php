@@ -57,6 +57,11 @@ class LivewireManager
         return app(ComponentRegistry::class)->new($name, $id);
     }
 
+    function isDiscoverable($componentNameOrClass)
+    {
+        return app(ComponentRegistry::class)->isDiscoverable($componentNameOrClass);
+    }
+
     function resolveMissingComponent($resolver)
     {
         return app(ComponentRegistry::class)->resolveMissingComponent($resolver);

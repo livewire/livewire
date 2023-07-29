@@ -53,6 +53,25 @@ class ComponentRegistry
         return $component;
     }
 
+    function isDiscoverable($classOrName)
+    {
+        if (is_object($classOrName)) {
+            $classOrName = get_class($classOrName);
+        }
+
+        if (class_exists($name = $classOrName)) {
+            $name = $this->generateNameFromClass($classOrName);
+        }
+
+        $class = $this->generateClassFromName($name);
+
+        if (class_exists($class) && is_subclass_of($class, Component::class)) {
+            return true;
+        }
+
+        return false;
+    }
+
     function getName($nameOrClassOrComponent)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);

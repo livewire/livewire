@@ -47,6 +47,7 @@ For example, let's check out a `TodoList` component that passes a collection of 
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class TodoList extends Component
@@ -68,7 +69,7 @@ class TodoList extends Component
 </div>
 ```
 
-As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos= "$todos"`.
+As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos="$todos"`.
 
 Now that `$todos` has been passed to the child component, you can receive that data through the child component's `mount()` method:
 
@@ -146,7 +147,7 @@ You can specify the component's key by specifying a `:key` prop on the child com
     <h1>Todos</h1>
 
     @foreach ($todos as $todo)
-        <livewire:todo-item :todo="$todo" :key="$todo->id" />
+        <livewire:todo-item :$todo :key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -226,6 +227,7 @@ Below is an example of a parent `TodoList` component that contains a `$todo` pro
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -313,6 +315,7 @@ Consider a `TodoList` component with functionality to show and remove todos:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -322,7 +325,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
@@ -351,6 +354,7 @@ To call `remove()` from inside the child `TodoItem` components, you can add an e
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -361,7 +365,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
@@ -584,7 +588,7 @@ For example, consider the following nested `todo-count` component:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" />
+    <livewire:todo-count :$todos />
 </div>
 ```
 
@@ -592,7 +596,7 @@ Livewire internally attaches a random string key to the component like so:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" key="lska" />
+    <livewire:todo-count :$todos key="lska" />
 </div>
 ```
 

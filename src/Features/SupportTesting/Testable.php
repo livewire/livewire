@@ -47,8 +47,11 @@ class Testable
             $name = array_shift($otherComponents);
 
             foreach ($otherComponents as $key => $value) {
-                if (is_numeric($key)) app('livewire')->component($value);
-                else app('livewire')->component($key, $value);
+                if (is_numeric($key)) {
+                    app('livewire')->isDiscoverable($name) || app('livewire')->component($value);
+                } else {
+                    app('livewire')->component($key, $value);
+                }
             }
         } elseif (is_object($name)) {
             $anonymousClassComponent = $name;
@@ -57,7 +60,7 @@ class Testable
 
             app('livewire')->component($name, $anonymousClassComponent);
         } else {
-            app('livewire')->component($name);
+            app('livewire')->isDiscoverable($name) || app('livewire')->component($name);
         }
 
         return $name;
