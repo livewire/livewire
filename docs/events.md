@@ -9,6 +9,10 @@ To dispatch an event from a Livewire component, you can call the `dispatch()` me
 Below is an example of dispatching a `post-created` event from a `CreatePost` component:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class CreatePost extends Component
@@ -35,6 +39,10 @@ $this->dispatch('post-created', title: $post->title);
 To listen for an event in a Livewire component, add the `#[On]` attribute above the method you want to be called when a given event is dispatched:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 use Livewire\Attributes\On; // [tl! highlight]
 
@@ -59,6 +67,10 @@ Occasionally, you may want to dynamically generate event listener names at run-t
 For example, if you wanted to scope an event listener to a specific Eloquent model, you could append the model's ID to the event name like so:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 use App\Models\Post;
 use Livewire\Attributes\On; // [tl! highlight]
@@ -139,6 +151,10 @@ If you want to use events for communicating directly between two components on t
 Below is an example of the `CreatePost` component dispatching the `post-created` event directly to the `Dashboard` component, skipping any other components listening for that specific event:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class CreatePost extends Component
@@ -157,6 +173,10 @@ class CreatePost extends Component
 Using the `dispatch()->self()` modifier, you can restrict an event to only being intercepted by the component it was triggered from:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Component;
 
 class CreatePost extends Component
