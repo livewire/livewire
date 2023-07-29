@@ -226,6 +226,13 @@ class PostForm extends Form
 Now you can call `$this->form->store()` from the component:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use App\Livewire\Forms\PostForm;
+
 class CreatePost extends Component
 {
     public PostForm $form;
