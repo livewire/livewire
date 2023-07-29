@@ -82,10 +82,14 @@ As you saw in the previous example, when a property uses `#[Url]`, not only does
 For example, if a user visits the URL `https://example.com/users?search=bob`, Livewire will set the initial value of `$search` to "bob".
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url]
     public $search = ''; // Will be set to "bob"...
@@ -101,10 +105,14 @@ Livewire gives you full control over what name displays in the URL's query strin
 You can specify a query string alias by providing the `as` parameter to the `#[Url]` attribute:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(as: 'q')]
     public $search = '';
@@ -122,10 +130,14 @@ By default, Livewire will only display a value in the query string after the val
 If you want the `?search` entry to always be included in the query string, even when the value is empty, you can provide the `keep` parameter to the `#[Url]` attribute:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(keep: true)]
     public $search = '';
@@ -145,10 +157,14 @@ Because Livewire "replaces" the current history, pressing the "back" button in t
 To force Livewire to use `history.pushState` when updating the URL, you can provide the `history` parameter to the `#[Url]` attribute:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Component;
 use Livewire\With\Url;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(history: true)]
     public $search = '';
