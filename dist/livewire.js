@@ -3994,6 +3994,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function matchesForLivewireDirective(attributeName) {
     return attributeName.match(new RegExp("wire:"));
   }
+  function extractDirective(el, name) {
+    let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
+    return new Directive(value, modifiers, name, el);
+  }
   function directive2(name, callback) {
     on("directive.init", ({ el, component, directive: directive4, cleanup: cleanup3 }) => {
       if (directive4.value === name) {

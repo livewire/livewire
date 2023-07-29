@@ -1,5 +1,5 @@
 import { closestComponent, destroyComponent, initComponent } from './store'
-import { matchesForLivewireDirective } from './directives'
+import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './events'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'

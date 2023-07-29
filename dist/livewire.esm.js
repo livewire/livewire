@@ -8672,6 +8672,10 @@ var import_alpinejs4 = __toESM(require_module_cjs());
 function matchesForLivewireDirective(attributeName) {
   return attributeName.match(new RegExp("wire:"));
 }
+function extractDirective(el, name) {
+  let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
+  return new Directive(value, modifiers, name, el);
+}
 function directive(name, callback) {
   on("directive.init", ({ el, component, directive: directive2, cleanup: cleanup2 }) => {
     if (directive2.value === name) {
