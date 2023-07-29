@@ -234,6 +234,7 @@ Let's look at an example that uses both `mount()` , `hydrate()`, and `dehydrate(
 namespace App\Livewire;
  
 use Livewire\Component;
+use App\Dtos\PostDto;
 
 class ShowPost extends Component
 {
@@ -329,6 +330,7 @@ Below is an example of a component referencing a trait called `HasPostForm`:
 namespace App\Livewire;
  
 use Livewire\Component;
+use App\Livewire\Traits\HasPostForm;
 
 class CreatePost extends Component
 {
@@ -341,6 +343,10 @@ class CreatePost extends Component
 Now here's the actual `HasPostForm` trait containing all the available prefixed hooks:
 
 ```php
+<?php
+
+namespace App\Livewire\Traits;
+
 trait HasPostForm
 {
     public $title = '';
