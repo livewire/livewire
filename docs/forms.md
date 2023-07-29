@@ -307,7 +307,7 @@ class PostForm extends Form
 
     public function store()
     {
-        Post::create($this->all());
+        Post::create($this->only(['title', 'content']));
     }
 
     public function update()
