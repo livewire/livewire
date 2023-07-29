@@ -288,7 +288,7 @@ use App\Models\Post;
 
 class PostForm extends Form
 {
-    public ?Post $post;
+    protected ?Post $post;
 
     #[Rule('required|min:5')]
     public $title = '';
