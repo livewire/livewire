@@ -167,6 +167,12 @@ Livewire supports primitive types such as strings, integers, etc. These types ca
 Livewire supports the following primitive property types: `Array`, `String`, `Integer`, `Float`, `Boolean`, and `Null`.
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+
 class TodoList extends Component
 {
     public $todos = []; // Array
@@ -230,6 +236,10 @@ Wireables are any class in your application that implements the `Wireable` inter
 For example, let's imagine you have a `Customer` object in your application that contains the primary data about a customer:
 
 ```php
+<?php
+ 
+namespace App\Models;
+
 class Customer
 {
     protected $name;
@@ -246,6 +256,13 @@ class Customer
 Attempting to set an instance of this class to a Livewire component property will result in an error telling you that the `Customer` property type isn't supported:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+
+use App\Models\Customer;
+use Livewire\Component;
+
 class ShowCustomer extends Component
 {
     public Customer $customer;
@@ -260,6 +277,10 @@ class ShowCustomer extends Component
 However, you can solve this by implementing the `Wireable` interface and adding a `toLivewire()` and `fromLivewire()` method to your class. These methods tell Livewire how to turn properties of this type into JSON and back again:
 
 ```php
+<?php
+ 
+namespace App\Models;
+
 use Livewire\Wireable;
 
 class Customer implements Wireable
@@ -466,6 +487,10 @@ If a malicious user mutates the `$id` property, the added authorization will cat
 Livewire also allows you to "lock" properties in order to prevent properties from being modified on the client-side. You can "lock" a property from client-side manipulation using the `#[Locked]` attribute:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
