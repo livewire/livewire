@@ -10,6 +10,12 @@ This has the benefit of preserving existing, un-changed elements on a component.
 To understand how Livewire determines which elements to update between Livewire requests, consider this simple `Todos` component:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
+use Livewire\Component;
+
 class Todos extends Component
 {
     public $todo = '';
