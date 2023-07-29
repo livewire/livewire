@@ -36,6 +36,7 @@ By adding the `#[Locked]` attribute, you are ensured that the `$id` property wil
 > namespace App\Livewire;
 > 
 > use Livewire\Component;
+> use App\Models\Post;
 > 
 > class ShowPost extends Component
 > {
