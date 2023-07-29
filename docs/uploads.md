@@ -87,6 +87,10 @@ Livewire automatically handles multiple file uploads by detecting the `multiple`
 For example, below is a component with an array property named `$photos`. By adding `multiple` to the form's file input, Livewire will automatically append new files to this array:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Rule;
@@ -138,6 +142,10 @@ Livewire makes this trivial by using the `->temporaryUrl()` method on uploaded f
 Let's explore an example of a file upload with an image preview:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Rule;
@@ -213,6 +221,10 @@ class UploadPhotoTest extends TestCase
 Below is an example of the `UploadPhoto` component required to make the previous test pass:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
