@@ -64,7 +64,12 @@ Livewire can now use this tuple to hydrate the `$title` property back into a str
 Now that you've seen the outside-in effects of Synthesizers, here is the actual source code for Livewire's internal stringable synth:
 
 ```php
+<?php
+
+namespace App\Livewire\Synths;
+
 use Illuminate\Support\Stringable;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
 class StringableSynth extends Synth
 {
@@ -171,6 +176,7 @@ To support properties of type `Address`, we can use the following Synthesizer:
 namespace App\Livewire\Synths;
 
 use App\Dtos\Address;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
 class AddressSynth extends Synth
 {
@@ -216,7 +222,7 @@ Livewire::propertySynthesizer(AddressSynth::class);
 
 ## Supporting data binding
 
-Using the `CreateProperty` example from above, it is likely that you would want to support `wire:model` binding directly to properties of the `Address` object. Synthesizers allow you to support this using the `get()` and `set()` methods:
+Using the `UpdateProperty` example from above, it is likely that you would want to support `wire:model` binding directly to properties of the `Address` object. Synthesizers allow you to support this using the `get()` and `set()` methods:
 
 ```php
 <?php
@@ -224,6 +230,7 @@ Using the `CreateProperty` example from above, it is likely that you would want 
 namespace App\Livewire\Synths;
 
 use App\Dtos\Address;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
 class AddressSynth extends Synth
 {
