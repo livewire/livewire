@@ -124,6 +124,10 @@ Because both Laravel and Livewire use URL query string parameters to store and t
 To demonstrate the problem more clearly, consider the following `ShowClients` component:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Client;
@@ -150,6 +154,10 @@ http://application.test/?page=2
 Suppose the page also contains a `ShowInvoices` component that also uses pagination. To independently track each paginator's current page, you need to specify a name for the second paginator like so:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
 use Livewire\WithPagination;
 use Livewire\Component;
 use App\Models\Invoices;
@@ -190,7 +198,13 @@ $this->previousPage(pageName: 'invoices-page');
 Livewire allows you to execute code before and after a page is updated by defining either of the following methods inside your component:
 
 ```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
 use Livewire\WithPagination;
+use App\Models\Post;
 
 class ShowPosts extends Component
 {
