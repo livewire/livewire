@@ -11,6 +11,8 @@ For example, here's a `ShowUser` component that uses a computed property named `
 ```php
 <?php
 
+namespace App\Livewire;
+
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -78,6 +80,8 @@ Below is an example of an action called `createPost()` that, by creating a new p
 ```php
 <?php
 
+namespace App\Livewire;
+
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -115,6 +119,8 @@ Below is an example of a computed property named `user()`, where instead of exec
 
 ```php
 <?php
+
+namespace App\Livewire;
 
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -265,6 +271,8 @@ Below is an example of an inline component where, because we are returning a tem
 ```php
 <?php
 
+namespace App\Livewire;
+
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\Post;
@@ -302,6 +310,8 @@ Rather than re-introducing the `render()` method into your component, you can in
 
 ```php
 <?php
+
+namespace App\Livewire;
 
 use Livewire\Attributes\Computed;
 use Livewire\Component;
