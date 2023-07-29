@@ -5,6 +5,10 @@ Livewire properties are able to be modified freely on both the frontend and back
 Below is a `ShowPost` component that stores a `Post` model's ID as a public property named `$id`. To keep this property from being modified by a curious or malicious user, you can add the `#[Locked]` attribute to the property:
 
 ```php
+<?php
+ 
+namespace App\Livewire;
+ 
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -27,6 +31,12 @@ By adding the `#[Locked]` attribute, you are ensured that the `$id` property wil
 > [!tip] Model properties are secure by default
 > If you store an Eloquent model in a public property instead of just the model's ID, Livewire will ensure the ID isn't tampered with, without you needing to explicitly add the `#[Locked]` attribute to the property. For most cases, this is a better approach than using `#[Locked]`:
 > ```php
+> <?php
+>  
+> namespace App\Livewire;
+> 
+> use Livewire\Component;
+> 
 > class ShowPost extends Component
 > {
 >    public Post $post; // [tl! highlight]
