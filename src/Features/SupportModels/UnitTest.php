@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
-use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -14,36 +13,11 @@ class UnitTest extends \Tests\TestCase
     {
         parent::setUp();
 
-        Schema::create('authors', function ($table) {
-            $table->bigIncrements('id');
-            $table->string('title');
-            $table->string('name');
-            $table->string('email');
-            $table->timestamps();
-        });
-
         Schema::create('posts', function ($table) {
             $table->bigIncrements('id');
             $table->string('title');
             $table->string('description');
             $table->string('content');
-            $table->foreignId('author_id')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('comments', function ($table) {
-            $table->bigIncrements('id');
-            $table->string('comment');
-            $table->foreignId('post_id');
-            $table->foreignId('author_id');
-            $table->timestamps();
-        });
-
-        Schema::create('other_comments', function ($table) {
-            $table->bigIncrements('id');
-            $table->string('comment');
-            $table->foreignId('post_id');
-            $table->foreignId('author_id');
             $table->timestamps();
         });
     }
@@ -180,17 +154,12 @@ class UnitTest extends \Tests\TestCase
             ->call('$refresh')
             ->assertSet('post', $post);
     }
+
 }
 
 #[\Attribute]
 class Lazy {
     //
-}
-
-class Post extends Model
-{
-    protected $connection = 'testbench';
-    protected $guarded = [];
 }
 
 class PostComponent extends \Livewire\Component
@@ -208,4 +177,9 @@ class PostComponent extends \Livewire\Component
         <div></div>
         HTML;
     }
+}
+class Post extends Model
+{
+    protected $connection = 'testbench';
+    protected $guarded = [];
 }
