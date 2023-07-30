@@ -12,6 +12,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::visit(Page::class)
             ->assertSee('Page')
+            ->value('input[id="title"]', 'This is a title')
+            ->assertInputValue('#title', 'This is a title')
             ->assertValue('input[id="title"]', 'This is a title')
 
             ->waitForLivewire()->click('@save')
@@ -21,7 +23,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
 class Page extends Component
 {
-    public $title = 'This is a title';
+    public $title = '';
 
     public function save()
     {
