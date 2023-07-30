@@ -3,21 +3,36 @@
 namespace Livewire\Features\SupportModels;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        Schema::create('posts', function ($table) {
+            $table->bigIncrements('id');
+            $table->string('title');
+            $table->string('description');
+            $table->string('content');
+            $table->timestamps();
+        });
+    }
+
     /** @test */
     public function model_properties_are_persisted()
     {
-        (new Post)::resolveConnection()->enableQueryLog();
+        (new SushiPost)::resolveConnection()->enableQueryLog();
 
         Livewire::test(new class extends \Livewire\Component {
-            public Post $post;
+            public SushiPost $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = SushiPost::first();
             }
 
             public function render() { return <<<'HTML'
@@ -28,7 +43,7 @@ class UnitTest extends \Tests\TestCase
         ->call('$refresh')
         ->assertSee('First');
 
-        $this->assertCount(2, Post::resolveConnection()->getQueryLog());
+        $this->assertCount(2, SushiPost::resolveConnection()->getQueryLog());
     }
 
     /** @test */
@@ -37,10 +52,10 @@ class UnitTest extends \Tests\TestCase
         $this->expectExceptionMessage("Can't set model properties directly");
 
         Livewire::test(new class extends \Livewire\Component {
-            public Post $post;
+            public SushiPost $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = SushiPost::first();
             }
 
             public function render() { return <<<'HTML'
@@ -55,10 +70,10 @@ class UnitTest extends \Tests\TestCase
     public function cant_view_model_data_in_javascript()
     {
         $data = Livewire::test(new class extends \Livewire\Component {
-            public Post $post;
+            public SushiPost $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = SushiPost::first();
             }
 
             public function render() { return <<<'HTML'
@@ -73,14 +88,14 @@ class UnitTest extends \Tests\TestCase
     public function model_properties_are_lazy_loaded()
     {
         $this->markTestSkipped(); // @todo: probably not going to go this route...
-        (new Post)::resolveConnection()->enableQueryLog();
+        (new SushiPost)::resolveConnection()->enableQueryLog();
 
         Livewire::test(new class extends \Livewire\Component {
             #[Lazy]
-            public Post $post;
+            public SushiPost $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = SushiPost::first();
             }
 
             public function save()
@@ -95,7 +110,38 @@ class UnitTest extends \Tests\TestCase
         ->call('$refresh')
         ->call('save');
 
-        $this->assertCount(2, Post::resolveConnection()->getQueryLog());
+        $this->assertCount(2, SushiPost::resolveConnection()->getQueryLog());
+    }
+
+
+    /** @test */
+    public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
+    {
+        $post = Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
+
+        Relation::morphMap([
+            'post' => Post::class,
+        ]);
+
+        $component =  Livewire::test(PostComponent::class);
+
+        $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
+    }
+
+    /** @test */
+    public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
+    {
+        $post = Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
+
+        $post = $post->fresh();
+
+        Relation::morphMap([
+            'post' => Post::class,
+        ]);
+
+        Livewire::test(PostComponent::class)
+            ->call('$refresh')
+            ->assertSet('post', $post);
     }
 }
 
@@ -104,7 +150,7 @@ class Lazy {
     //
 }
 
-class Post extends Model
+class SushiPost extends Model
 {
     use Sushi;
 
@@ -112,4 +158,27 @@ class Post extends Model
         ['title' => 'First'],
         ['title' => 'Second'],
     ];
+}
+
+class Post extends Model
+{
+    protected $connection = 'testbench';
+    protected $guarded = [];
+}
+
+class PostComponent extends \Livewire\Component
+{
+    public $post;
+
+    public function mount()
+    {
+        $this->post = Post::first();
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div></div>
+        HTML;
+    }
 }
