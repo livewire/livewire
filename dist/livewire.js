@@ -1175,9 +1175,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     return findClosest(el.parentElement, callback);
   }
-  function isRoot(el) {
-    return rootSelectors().some((selector) => el.matches(selector));
-  }
   var initInterceptors2 = [];
   function interceptInit(callback) {
     initInterceptors2.push(callback);
@@ -1594,27 +1591,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function onlyDuringClone(callback) {
     return (...args) => isCloning && callback(...args);
   }
-  function clone(oldEl, newEl) {
-    if (!newEl._x_dataStack)
-      newEl._x_dataStack = oldEl._x_dataStack;
-    isCloning = true;
-    dontRegisterReactiveSideEffects(() => {
-      cloneTree(newEl);
-    });
-    isCloning = false;
-  }
-  function cloneTree(el) {
-    let hasRunThroughFirstEl = false;
-    let shallowWalker = (el2, callback) => {
-      walk(el2, (el3, skip) => {
-        if (hasRunThroughFirstEl && isRoot(el3))
-          return skip();
-        hasRunThroughFirstEl = true;
-        callback(el3, skip);
-      });
-    };
-    initTree(el, shallowWalker);
-  }
   function dontRegisterReactiveSideEffects(callback) {
     let cache = effect;
     overrideEffect((callback2, el) => {
@@ -1625,6 +1601,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     callback();
     overrideEffect(cache);
+  }
+  function clone(from, to) {
+    if (from._x_dataStack) {
+      to._x_dataStack = from._x_dataStack;
+      to.setAttribute("data-has-alpine-state", true);
+    }
+    isCloning = true;
+    dontRegisterReactiveSideEffects(() => {
+      let hasRunThroughFirstEl = false;
+      let shallowWalker = (el, callback) => {
+        walk(el, (el2, skip) => {
+          if (hasRunThroughFirstEl && hasMarkedAlpineState(el2))
+            return skip();
+          hasRunThroughFirstEl = true;
+          callback(el2, skip);
+        });
+      };
+      initTree(to, shallowWalker);
+    });
+    isCloning = false;
+  }
+  function shouldSkipRegisteringDataDuringClone(el) {
+    if (!isCloning)
+      return false;
+    return el.hasAttribute("data-has-alpine-state");
+  }
+  function hasMarkedAlpineState(el) {
+    return el.hasAttribute("data-has-alpine-state");
   }
   function bind(el, name, value, modifiers = []) {
     if (!el._x_bindings)
@@ -2001,8 +2005,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2035,8 +2039,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2126,7 +2130,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.options.onTrack) {
+      if (false) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2190,7 +2194,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect32) => {
-      if (effect32.options.onTrigger) {
+      if (false) {
         effect32.options.onTrigger({
           effect: effect32,
           target,
@@ -2327,13 +2331,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2395,7 +2399,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32.call(target, key);
@@ -2414,7 +2418,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get32 ? get32.call(target, key) : void 0;
@@ -2427,7 +2431,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear2() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2472,7 +2476,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2574,13 +2578,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has2, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has2.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2613,7 +2610,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3123,7 +3120,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   addRootSelector(() => `[${prefix("data")}]`);
   directive("data", (el, { expression }, { cleanup: cleanup22 }) => {
-    if (isCloning && el._x_dataStack)
+    if (shouldSkipRegisteringDataDuringClone(el))
       return;
     expression = expression === "" ? "{}" : expression;
     let magicContext = {};
@@ -6238,9 +6235,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     return findClosest2(el.parentElement, callback);
   }
-  function isRoot2(el) {
-    return rootSelectors2().some((selector) => el.matches(selector));
-  }
   var initInterceptors22 = [];
   function interceptInit2(callback) {
     initInterceptors22.push(callback);
@@ -6657,27 +6651,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function onlyDuringClone2(callback) {
     return (...args) => isCloning2 && callback(...args);
   }
-  function clone2(oldEl, newEl) {
-    if (!newEl._x_dataStack)
-      newEl._x_dataStack = oldEl._x_dataStack;
-    isCloning2 = true;
-    dontRegisterReactiveSideEffects2(() => {
-      cloneTree2(newEl);
-    });
-    isCloning2 = false;
-  }
-  function cloneTree2(el) {
-    let hasRunThroughFirstEl = false;
-    let shallowWalker = (el2, callback) => {
-      walk2(el2, (el3, skip) => {
-        if (hasRunThroughFirstEl && isRoot2(el3))
-          return skip();
-        hasRunThroughFirstEl = true;
-        callback(el3, skip);
-      });
-    };
-    initTree2(el, shallowWalker);
-  }
   function dontRegisterReactiveSideEffects2(callback) {
     let cache = effect3;
     overrideEffect2((callback2, el) => {
@@ -6688,6 +6661,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     callback();
     overrideEffect2(cache);
+  }
+  function clone2(from, to) {
+    if (from._x_dataStack) {
+      to._x_dataStack = from._x_dataStack;
+      to.setAttribute("data-has-alpine-state", true);
+    }
+    isCloning2 = true;
+    dontRegisterReactiveSideEffects2(() => {
+      let hasRunThroughFirstEl = false;
+      let shallowWalker = (el, callback) => {
+        walk2(el, (el2, skip) => {
+          if (hasRunThroughFirstEl && hasMarkedAlpineState2(el2))
+            return skip();
+          hasRunThroughFirstEl = true;
+          callback(el2, skip);
+        });
+      };
+      initTree2(to, shallowWalker);
+    });
+    isCloning2 = false;
+  }
+  function hasMarkedAlpineState2(el) {
+    return el.hasAttribute("data-has-alpine-state");
   }
   function isBooleanAttr3(attrName) {
     const booleanAttributes = [
@@ -7509,7 +7505,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let updateChildrenOnly = false;
       if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true))
         return;
-      window.Alpine && initializeAlpineOnTo(from2, to, () => updateChildrenOnly = true);
+      if (from2.nodeType === 1 && window.Alpine && hasMarkedAlpineState3(from2)) {
+        window.Alpine.clone(from2, to);
+      }
       if (textOrComment(to)) {
         patchNodeValue(from2, to);
         updated(from2, to);
@@ -7713,11 +7711,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     assignOptions(options);
     fromEl = from;
     toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+    let undo = markElementsThatHaveAlpineStateSoMorphKnowsToInitializeThatStateOnTheToElTree(fromEl);
     if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
       toEl._x_dataStack = window.Alpine.closestDataStack(from);
       toEl._x_dataStack && window.Alpine.clone(from, toEl);
     }
     patch(from, toEl);
+    undo();
     fromEl = void 0;
     toEl = void 0;
     return from;
@@ -7730,13 +7730,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let skip = false;
     hook(...args, () => skip = true);
     return skip;
-  }
-  function initializeAlpineOnTo(from, to, childrenOnly) {
-    if (from.nodeType !== 1)
-      return;
-    if (from._x_dataStack) {
-      window.Alpine.clone(from, to);
-    }
   }
   var patched = false;
   function monkeyPatchDomSetAttributeToAllowAtSymbols() {
@@ -7755,8 +7748,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.setAttributeNode(attr2);
     };
   }
-  function src_default7(Alpine4) {
-    Alpine4.morph = morph;
+  function markElementsThatHaveAlpineStateSoMorphKnowsToInitializeThatStateOnTheToElTree(root) {
+    let reversals = [];
+    Alpine.walk(root, (el, skip) => {
+      if (el._x_dataStack) {
+        el.setAttribute("data-has-alpine-state", true);
+        reversals.push(() => {
+          el.removeAttribute("data-has-alpine-state");
+        });
+      }
+    });
+    return () => {
+      while (reversals.length > 0)
+        reversals.pop()();
+    };
+  }
+  function hasMarkedAlpineState3(el) {
+    return el.hasAttribute("data-has-alpine-state");
+  }
+  function src_default7(Alpine22) {
+    Alpine22.morph = morph;
   }
   var module_default8 = src_default7;
 

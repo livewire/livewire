@@ -23,14 +23,14 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     <script>
                         document.addEventListener('alpine:init', () => {
-                            Alpine.directive('counter', function (el, {value}) {
-                                if(value === 'increment') {
+                            Alpine.directive('counter', function (el, { value }) {
+                                if (value === 'increment') {
                                     Alpine.bind(el, {
                                         'x-on:click.prevent'() {
                                             this.$data.__counter++;
                                         }
                                     })
-                                } else if(!value) {
+                                } else if (! value) {
                                     Alpine.bind(el, {
                                         'x-modelable': '__counter',
                                         'x-data'() {
@@ -47,9 +47,44 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-            ->click('@increment')
-            ->waitForLivewire()
+            ->waitForLivewire()->click('@increment')
             ->assertInputValue('@counter', '1')
+        ;
+    }
+
+    /** @test */
+    public function deep_alpine_state_is_preserved_when_morphing_with_uninitialized_livewire_html()
+    {
+        Livewire::visit(new class extends Component {
+            function render() {
+                return <<<'HTML'
+                <div>
+                    <div x-data="{ showCounter: false }">
+                        <button @click="showCounter = true" dusk="button">show</button>
+
+                        <template x-if="showCounter">
+                            <div x-data="{ count: 0 }">
+                                <button x-on:click="count++" dusk="increment">+</button>
+
+                                <h1 x-text="count" dusk="count"></h1>
+                            </div>
+                        </template>
+                    </div>
+
+                    <button wire:click="$commit" dusk="refresh">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertMissing('@count')
+            ->click('@button')
+            ->assertVisible('@count')
+            ->assertSeeIn('@count', '0')
+            ->click('@increment')
+            ->assertSeeIn('@count', '1')
+            ->waitForLivewire()->click('@refresh')
+            ->assertVisible('@count')
+            ->assertSeeIn('@count', '1');
         ;
     }
 }
