@@ -7,7 +7,7 @@ use Livewire\Livewire;
 
 const PROPERTY_NAME = 'virtualProperty';
 
-class VirtualPropertyTest extends \Tests\TestCase
+class VirtualPropertyUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function virtual_property_is_accessible()

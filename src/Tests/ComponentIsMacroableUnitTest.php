@@ -5,7 +5,7 @@ namespace Livewire\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentIsMacroableTest extends \Tests\TestCase
+class ComponentIsMacroableUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function it_resolves_the_mount_parameters()
