@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
 
-class CompileLivewireTagsTest extends \Tests\TestCase
+class CompileLivewireTagsUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function can_compile_livewire_self_closing_tags()

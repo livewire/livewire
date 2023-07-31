@@ -5,7 +5,7 @@ namespace Livewire\Concerns\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ResetPropertiesTest extends \Tests\TestCase
+class ResetPropertiesUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function can_reset_properties()

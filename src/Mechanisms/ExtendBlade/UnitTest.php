@@ -13,7 +13,7 @@ use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class Test extends \Tests\TestCase
+class UnitTest extends \Tests\TestCase
 {
     /** @test */
     public function livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()

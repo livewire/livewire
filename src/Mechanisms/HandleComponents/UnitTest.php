@@ -7,7 +7,7 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class Test extends \Tests\TestCase
+class UnitTest extends \Tests\TestCase
 {
     /** @test */
     public function it_restores_laravel_middleware_after_livewire_test()

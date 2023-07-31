@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Request;
 use Livewire\Response;
 
-class InvadeHelperTest extends \Tests\TestCase
+class InvadeHelperUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function get_property()

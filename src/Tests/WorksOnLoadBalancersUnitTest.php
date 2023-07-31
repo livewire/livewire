@@ -7,7 +7,7 @@ use Livewire\Component;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 
-class WorksOnLoadBalancersTest extends \Tests\TestCase
+class WorksOnLoadBalancersUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function livewire_renders_chidren_properly_across_load_balancers()
