@@ -5,7 +5,7 @@ namespace Livewire\Tests;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\View;
 
-class LivewireAssetsDirectiveTest extends \Tests\TestCase
+class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
 {
     function setUp(): void
     {

@@ -7,7 +7,7 @@ use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
 
-class ComponentCanBeFilledTest extends \Tests\TestCase
+class ComponentCanBeFilledUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function can_fill_from_an_array()

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentMethodBindingsTest extends \Tests\TestCase
+class ComponentMethodBindingsUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function mount_method_receives_explicit_binding()

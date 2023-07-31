@@ -180,6 +180,26 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function rule_attributes_can_contain_multiple_rules_userland(): void
+    {
+        Livewire::test(new class extends TestComponent {
+            #[\Livewire\Attributes\Rule('required')]
+            #[\Livewire\Attributes\Rule('min:2')]
+            #[\Livewire\Attributes\Rule('max:3')]
+            public $foo = '';
+        })
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->set('foo', '1')
+            ->assertHasErrors(['foo' => 'min'])
+            ->set('foo', '12345')
+            ->assertHasErrors(['foo' => 'max'])
+            ->set('foo', 'ok')
+            ->assertHasNoErrors()
+        ;
+    }
+
+    /** @test */
     public function rule_attributes_can_be_repeated()
     {
         Livewire::test(new class extends TestComponent {

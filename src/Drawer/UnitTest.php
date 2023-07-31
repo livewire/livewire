@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 use Livewire\Livewire;
 
-class Test extends \Tests\TestCase
+class UnitTest extends \Tests\TestCase
 {
     /** @test */
     public function root_element_has_id_and_component_data()

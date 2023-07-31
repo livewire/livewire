@@ -343,7 +343,6 @@ class OrderTracker extends Component
         ];
     }
 
-    #[On('echo:orders,OrderShipped')]
     public function notifyShipped()
     {
         $this->showOrderShippedNotification = true;

@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Livewire\Component;
 
-class PublicPropertyHydrationHooksTest extends \Tests\TestCase
+class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function public_properties_can_be_cast()
