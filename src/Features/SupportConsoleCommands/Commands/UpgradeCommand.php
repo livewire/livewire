@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Pipeline\Pipeline;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToEntangleDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToWireModelDirectives;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeComputedProperties;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultLayoutView;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultNamespace;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeLazyToBlurModifierOnWireModelDirectives;
@@ -51,6 +52,7 @@ class UpgradeCommand extends Command
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
             ChangeForgetComputedToUnset::class,
+            ChangeComputedProperties::class,
 
             // Partially automated steps
             ReplaceEmitWithDispatch::class,
