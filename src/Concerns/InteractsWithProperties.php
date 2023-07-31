@@ -44,6 +44,11 @@ trait InteractsWithProperties
             ? $properties[0]
             : $properties;
 
+        // Reset all
+        if (empty($properties)) {
+            $properties = array_keys($this->all());
+        }
+
         $freshInstance = new static;
 
         foreach ($properties as $property) {
