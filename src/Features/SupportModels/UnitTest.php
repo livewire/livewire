@@ -4,30 +4,14 @@ namespace Livewire\Features\SupportModels;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
+use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        Schema::create('posts', function ($table) {
-            $table->bigIncrements('id');
-            $table->string('title');
-            $table->string('description');
-            $table->string('content');
-            $table->timestamps();
-        });
-    }
-
     /** @test */
     public function model_properties_are_persisted()
     {
-        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
-        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content']);
-
         (new Post)::resolveConnection()->enableQueryLog();
 
         Livewire::test(new class extends \Livewire\Component {
@@ -41,9 +25,9 @@ class UnitTest extends \Tests\TestCase
                 <div>{{ $post->title }}</div>
             HTML; }
         })
-        ->assertSee('Post 1')
+        ->assertSee('First')
         ->call('$refresh')
-        ->assertSee('Post 1');
+        ->assertSee('First');
 
         $this->assertCount(2, Post::resolveConnection()->getQueryLog());
     }
@@ -51,9 +35,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function cant_update_a_model_property()
     {
-        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
-        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content']);
-
         $this->expectExceptionMessage("Can't set model properties directly");
 
         Livewire::test(new class extends \Livewire\Component {
@@ -67,16 +48,13 @@ class UnitTest extends \Tests\TestCase
                 <div>{{ $post->title }}</div>
             HTML; }
         })
-        ->assertSee('Post 1')
+        ->assertSee('First')
         ->set('post.title', 'bar');
     }
 
     /** @test */
     public function cant_view_model_data_in_javascript()
     {
-        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
-        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content']);
-
         $data = Livewire::test(new class extends \Livewire\Component {
             public Post $post;
 
@@ -96,9 +74,6 @@ class UnitTest extends \Tests\TestCase
     public function model_properties_are_lazy_loaded()
     {
         $this->markTestSkipped(); // @todo: probably not going to go this route...
-        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
-        Post::create(['id' => 2, 'title' => 'Post 2', 'description' => 'Post 2 Description', 'content' => 'Post 2 Content']);
-
         (new Post)::resolveConnection()->enableQueryLog();
 
         Livewire::test(new class extends \Livewire\Component {
@@ -128,8 +103,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
     {
-        $post = Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
-
         Relation::morphMap([
             'post' => Post::class,
         ]);
@@ -142,9 +115,7 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
     {
-        $post = Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
-
-        $post = $post->fresh();
+        $post = Post::first();
 
         Relation::morphMap([
             'post' => Post::class,
@@ -180,6 +151,10 @@ class PostComponent extends \Livewire\Component
 }
 class Post extends Model
 {
-    protected $connection = 'testbench';
-    protected $guarded = [];
+    use Sushi;
+
+    protected $rows = [
+        ['title' => 'First'],
+        ['title' => 'Second'],
+    ];
 }
