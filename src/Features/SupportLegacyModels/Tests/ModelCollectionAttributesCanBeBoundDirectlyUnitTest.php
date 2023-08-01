@@ -127,16 +127,30 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
         $component->call('$refresh');
     }
 }
+class ModelForBindingHasOneDefault extends  Model
+{
+    use Sushi;
+    protected $rows = [
+        ['id'=>1,'title' => 'foo'],
+        ['id'=>2,'title' => 'bar'],
+    ];
 
+}
 class ModelForBinding extends Model
 {
     use Sushi;
 
     protected $rows = [
-        ['title' => 'foo'],
-        ['title' => 'bar'],
-        ['title' => 'baz'],
+        ['id'=>1,'title' => 'foo'],
+        ['id'=>2,'title' => 'bar'],
+        ['id'=>3,'title' => 'baz'],
     ];
+
+    public function one()
+    {
+        return $this->hasOne(ModelForBindingHasOneDefault::class,'id','id')
+            ->withDefault(['title'=>'default']);
+    }
 }
 
 class CustomCollection extends EloquentCollection
@@ -149,15 +163,16 @@ class ModelWithCustomCollectionForBinding extends Model
     use Sushi;
 
     protected $rows = [
-        ['title' => 'foo'],
-        ['title' => 'bar'],
-        ['title' => 'baz'],
+        ['id'=>1,'title' => 'foo'],
+        ['id'=>2,'title' => 'bar'],
+        ['id'=>3,'title' => 'baz'],
     ];
 
     public function newCollection(array $models = [])
     {
         return new CustomCollection($models);
     }
+
 }
 
 class ComponentWithModelCollectionProperty extends Component
@@ -165,13 +180,23 @@ class ComponentWithModelCollectionProperty extends Component
     public $models;
     public $modelsType;
 
+    public $latestOne;
+    public $latestOneArray;
+
+
+
     protected $rules = [
         'models.*.title' => 'required|min:3',
     ];
 
     public function mount()
     {
-        $this->models = ModelForBinding::all();
+        $this->models = ModelForBinding::with('one')->get();
+        $latest_one = $this->models[2]->one;
+        $this->latestOne= $latest_one;
+        $this->latestOneArray= $latest_one->toArray();
+
+
     }
 
     public function addModel()
