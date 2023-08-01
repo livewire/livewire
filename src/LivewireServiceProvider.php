@@ -130,6 +130,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportJsEvaluation\Js::class => '\\Livewire\\Attributes\\Js',
             \Livewire\Features\SupportEvents\On::class => '\\Livewire\\Attributes\\On',
         ] as $attribute => $alias) {
+            if (class_exists($alias)) continue;
             class_alias($attribute, $alias);
         }
     }
