@@ -118,17 +118,17 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function registerAliases(): void
     {
         foreach([
-            \Livewire\Features\SupportWireModelingNestedComponents\Modelable::class => '\\Livewire\\Attributes\\Modelable',
-            \Livewire\Mechanisms\HandleComponents\Renderless::class => '\\Livewire\\Attributes\\Renderless',
-            \Livewire\Features\SupportReactiveProps\Reactive::class => '\\Livewire\\Attributes\\Reactive',
-            \Livewire\Features\SupportLockedProperties\Locked::class => '\\Livewire\\Attributes\\Locked',
-            \Livewire\Features\SupportPageComponents\Layout::class => '\\Livewire\\Attributes\\Layout',
-            \Livewire\Features\SupportPageComponents\Title::class => '\\Livewire\\Attributes\\Title',
-            \Livewire\Features\SupportComputed\Computed::class => '\\Livewire\\Attributes\\Computed',
-            \Livewire\Features\SupportValidation\Rule::class => '\\Livewire\\Attributes\\Rule',
-            \Livewire\Features\SupportQueryString\Url::class => '\\Livewire\\Attributes\\Url',
-            \Livewire\Features\SupportJsEvaluation\Js::class => '\\Livewire\\Attributes\\Js',
-            \Livewire\Features\SupportEvents\On::class => '\\Livewire\\Attributes\\On',
+            \Livewire\Features\SupportWireModelingNestedComponents\Modelable::class => '\Livewire\Attributes\Modelable',
+            \Livewire\Mechanisms\HandleComponents\Renderless::class => '\Livewire\Attributes\Renderless',
+            \Livewire\Features\SupportReactiveProps\Reactive::class => '\Livewire\Attributes\Reactive',
+            \Livewire\Features\SupportLockedProperties\Locked::class => '\Livewire\Attributes\Locked',
+            \Livewire\Features\SupportPageComponents\Layout::class => '\Livewire\Attributes\Layout',
+            \Livewire\Features\SupportPageComponents\Title::class => '\Livewire\Attributes\Title',
+            \Livewire\Features\SupportComputed\Computed::class => '\Livewire\Attributes\Computed',
+            \Livewire\Features\SupportValidation\Rule::class => '\Livewire\Attributes\Rule',
+            \Livewire\Features\SupportQueryString\Url::class => '\Livewire\Attributes\Url',
+            \Livewire\Features\SupportJsEvaluation\Js::class => '\Livewire\Attributes\Js',
+            \Livewire\Features\SupportEvents\On::class => '\Livewire\Attributes\On',
         ] as $attribute => $alias) {
             if (class_exists($alias)) continue;
             class_alias($attribute, $alias);
