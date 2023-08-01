@@ -407,6 +407,19 @@ class UnitTest extends \Tests\TestCase
             ->get('/configurable-layout')
             ->assertSee('some-title');
     }
+
+    /** @test */
+    public function can_push_to_stacks()
+    {
+        Route::get('/layout-with-stacks', ComponentWithStacks::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/layout-with-stacks')
+            ->assertSee('I am a style')
+            ->assertSee('I am a script')
+            ;
+    }
 }
 
 class ComponentForConfigurableLayoutTest extends Component
@@ -658,5 +671,26 @@ class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
     {
         return view('null-view')
             ->title('some-title');
+    }
+}
+
+#[Layout('layouts.app-layout-with-stacks')]
+class ComponentWithStacks extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                Contents
+            </div>
+
+            @push('styles')
+            <div>I am a style</div>
+            @endpush
+
+            @push('scripts')
+            <div>I am a script</div>
+            @endpush
+        HTML;
     }
 }
