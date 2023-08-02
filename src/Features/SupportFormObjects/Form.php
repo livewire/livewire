@@ -15,32 +15,20 @@ class Form implements Arrayable
         $this->addValidationRulesToComponent();
     }
 
-    public function getComponent()
-    {
-        return $this->component;
-    }
-
-    public function getPropertyName()
-    {
-        return $this->propertyName;
-    }
+    public function getComponent() { return $this->component; }
+    public function getPropertyName() { return $this->propertyName; }
 
     public function addValidationRulesToComponent()
     {
         $rules = [];
 
-        if (method_exists($this, 'rules')) {
-            $rules = $this->rules();
-        } else {
-            if (property_exists($this, 'rules')) {
-                $rules = $this->rules;
-            }
-        }
+        if (method_exists($this, 'rules')) $rules = $this->rules();
+        else if (property_exists($this, 'rules')) $rules = $this->rules;
 
         $rulesWithPrefixedKeys = [];
 
         foreach ($rules as $key => $value) {
-            $rulesWithPrefixedKeys[$this->propertyName.'.'.$key] = $value;
+            $rulesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
         }
 
         $this->component->addRulesFromOutside($rulesWithPrefixedKeys);
@@ -48,7 +36,7 @@ class Form implements Arrayable
 
     public function addError($key, $message)
     {
-        $this->component->addError($this->propertyName.'.'.$key, $message);
+        $this->component->addError($this->propertyName . '.' . $key, $message);
     }
 
     public function validate()
@@ -58,9 +46,7 @@ class Form implements Arrayable
         $filteredRules = [];
 
         foreach ($rules as $key => $value) {
-            if (!str($key)->startsWith($this->propertyName.'.')) {
-                continue;
-            }
+            if (! str($key)->startsWith($this->propertyName . '.')) continue;
 
             $filteredRules[$key] = $value;
         }
@@ -117,9 +103,7 @@ class Form implements Arrayable
             ? $properties[0]
             : $properties;
 
-        if (empty($properties)) {
-            $properties = array_keys($this->all());
-        }
+        if (empty($properties)) $properties = array_keys($this->all());
 
         $freshInstance = new static($this->getComponent(), $this->getPropertyName());
 
