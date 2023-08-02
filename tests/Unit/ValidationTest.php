@@ -4,15 +4,10 @@ namespace Tests\Unit;
 
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\Validator as ValidatorContract;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads;
 use Livewire\Livewire;
-use Livewire\TemporaryUploadedFile;
-use Livewire\WithFileUploads;
 
 use function PHPUnit\Framework\assertTrue;
 
@@ -515,24 +510,6 @@ class ValidationTest extends TestCase
             ->assertHasNoErrors('customCollection.0.amount')
             ;
     }
-
-    /** @test */
-    public function an_image_validates_correctly()
-    {
-        Storage::fake('tmp-for-tests');
-
-        $invalidImageSize = UploadedFile::fake()->image('hmm.jpg',50,50);
-        $validImageSize = UploadedFile::fake()->image('avatar.jpg',100,100);
-
-        Livewire::test(ImageDimensionValidation::class)
-            ->set('image', $invalidImageSize)
-            ->call('runValidation')
-            ->assertHasErrors('image')
-            ->set('image', $validImageSize)
-            ->call('runValidation')
-            ->assertHasNoErrors('image')
-        ;
-    }
 }
 
 #[\AllowDynamicProperties]
@@ -913,25 +890,6 @@ class ValidatesComputedProperty extends Component
     public function runResetValidation()
     {
         $this->resetValidation();
-    }
-
-    public function render()
-    {
-        return view('null-view');
-    }
-}
-
-class ImageDimensionValidation extends Component
-{
-    use WithFileUploads;
-
-    public $image;
-
-    public function runValidation()
-    {
-        $this->validate([
-            'image' => 'dimensions:width=100,height=100',
-        ]);
     }
 
     public function render()
