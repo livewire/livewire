@@ -545,16 +545,17 @@ Like Laravel, Livewire's default pagination view uses Tailwind classes for styli
 usesPagination(theme: 'bootstrap');
 ```
 
-## Custom traits
+## Custom traits and interfaces
 
-To include any arbitrary trait on your functional Volt component, you may use the `uses` function:
+To include any arbitrary trait or interface on your functional Volt component, you may use the `uses` function:
 
 ```php
 use function Livewire\Volt\{uses};
 
+use App\Contracts\Sorting;
 use App\Concerns\WithSorting;
 
-uses(WithSorting::class);
+uses([Sorting::class, WithSorting::class]);
 ```
 
 ## Anonymous components
