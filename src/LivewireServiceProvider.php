@@ -90,6 +90,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportFileUploads\SupportFileUploads::class,
             \Livewire\Features\SupportTeleporting\SupportTeleporting::class,
             \Livewire\Features\SupportLazyLoading\SupportLazyLoading::class,
+            \Livewire\Features\SupportDeferLoading\SupportDeferLoading::class,
             \Livewire\Features\SupportFormObjects\SupportFormObjects::class,
             \Livewire\Features\SupportAttributes\SupportAttributes::class,
             \Livewire\Features\SupportPagination\SupportPagination::class,
