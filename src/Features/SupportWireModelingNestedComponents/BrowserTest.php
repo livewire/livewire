@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Livewire\Livewire;
 
+/** @group morphing */
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */

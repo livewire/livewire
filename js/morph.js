@@ -102,7 +102,7 @@ export function morph(component, el, html) {
                     : el.id
         },
 
-        lookahead: true,
+        lookahead: false,
     })
 }
 
