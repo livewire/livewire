@@ -260,7 +260,7 @@ class UpdatePost extends Component
 
 ### Setting URL parameters
 
-If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withUrlParams()` method to set the query parameters manually for your test.
+If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withQueryParams()` method to set the query parameters manually for your test.
 
 Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/docs/url) to store and track the current search query in the query string:
 
@@ -309,7 +309,7 @@ class SearchPostsTest extends TestCase
         Post::factory()->create(['title' => 'Testing the first water-proof hair dryer']);
         Post::factory()->create(['title' => 'Rubber duckies that actually float']);
 
-        Livewire::withUrlParams(['search' => 'hair'])
+        Livewire::withQueryParams(['search' => 'hair'])
             ->test(SearchPosts::class)
             ->assertSee('Testing the first')
             ->assertDontSee('Rubber duckies');
