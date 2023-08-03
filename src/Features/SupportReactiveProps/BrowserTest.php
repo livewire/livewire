@@ -82,7 +82,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() { return <<<'HTML'
                     <div>
-                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+                        <h1>Parent count: <h1 dusk="parent.count">{{ $count }}</h1>
 
                         <button wire:click="inc" dusk="parent.inc">inc</button>
 
@@ -97,20 +97,20 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() { return <<<'HTML'
                     <div>
-                        <h1>Child count: <span dusk="child.count">{{ $count }}</span>
+                        <h2>Child count: <h2 dusk="child.count">{{ $count }}</h2>
                         
-                        <livewire:nested-child :$count />
+                        <livewire:nestedchild :$count />
                     </div>
                     HTML;
                 }
             },
-            'nested-child' => new class extends Component {
+            'nestedchild' => new class extends Component {
                 #[Reactive]
                 public $count;
 
                 public function render() { return <<<'HTML'
                     <div>
-                        <h1>Nested child count: <span dusk="nested-child.count">{{ $count }}</span>
+                        <h3>Nested child count: <h3 dusk="nested-child.count">{{ $count }}</h3>
                     </div>
                     HTML;
                 }
@@ -123,7 +123,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewire()->click('@parent.inc')
             ->assertSeeIn('@parent.count', 1)
             ->assertSeeIn('@child.count', 1)
-            ->assertSeeIn('@nested-child.count', 1);
+            ->assertSeeIn('@nested-child.count', 1)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 2)
+            ->assertSeeIn('@child.count', 2)
+            ->assertSeeIn('@nested-child.count', 2);
     }
 
     /** @test */
