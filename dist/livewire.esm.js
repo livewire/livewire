@@ -9191,7 +9191,7 @@ function morph2(component, el, html) {
         return;
       return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
     },
-    lookahead: true
+    lookahead: false
   });
 }
 function isntElement(el) {
