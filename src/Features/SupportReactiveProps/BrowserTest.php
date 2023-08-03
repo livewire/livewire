@@ -120,6 +120,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child.count', 0)
             ->assertSeeIn('@nested-child.count', 0)
 
+            // without sleeping here, this test does not fail :-/
+            ->tap(fn() => sleep(1))
+
             ->waitForLivewire()->click('@parent.inc')
             ->assertSeeIn('@parent.count', 1)
             ->assertSeeIn('@child.count', 1)
