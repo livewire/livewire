@@ -140,6 +140,11 @@ class LivewireManager
 
     protected $queryParamsForTesting = [];
 
+    function withUrlParams($params)
+    {
+        return $this->withQueryParams($params);
+    }
+
     function withQueryParams($params)
     {
         $this->queryParamsForTesting = $params;
