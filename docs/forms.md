@@ -362,7 +362,7 @@ $this->reset('title');
 
 // Or multiple at once...
 
-$this->reset('title', 'content);
+$this->reset('title', 'content');
 ```
 
 ### Showing a loading indicator
