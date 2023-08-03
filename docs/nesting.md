@@ -281,6 +281,7 @@ Below is the `TodoInput` component with the `#[Modelable]` attribute added above
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Modelable;
 
 class TodoInput extends Component
 {
