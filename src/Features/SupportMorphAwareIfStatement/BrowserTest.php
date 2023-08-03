@@ -30,18 +30,6 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         <div>bar<input dusk="bar"></div>
                     </div>
-
-                    <ul>
-                        <li>first</li>
-
-                        <!-- BLOCK -->
-                        @if ($foo)
-                            <li>sedonde</li>
-                        @endif
-                        <!-- ENDBLOCK -->
-
-                        <li>third</li>
-                    </ul>
                 </div>
                 HTML;
             }
