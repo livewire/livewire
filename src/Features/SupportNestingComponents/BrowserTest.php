@@ -87,6 +87,59 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child', 'Child')
         ;
     }
+
+    /** @test */
+    public function nested_components_do_not_error_when_child_deleted()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $children = [
+                    'one',
+                    'two'
+                ];
+
+                public function deleteChild($name) {
+                    unset($this->children[array_search($name, $this->children)]);
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div>
+                        </div>
+
+                        @foreach($this->children as $key => $name)
+                            <livewire:child wire:key="{{ $key }}" :name="$name" :dusk="child-{{ $name }}" />
+                        @endforeach
+
+                        <div>
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $name = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child">
+                        {{ $name }}
+
+                        <button :dusk="delete-{{ $name }}" wire:click="$parent.deleteChild('{{ $name }}')">Delete</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertPresent('@child-one')
+        ->assertSeeIn('@child-one', 'one')
+        ->waitForLivewire()->click('@delete-one')
+        ->pause(500)
+        ->assertNotPresent('@child-one');
+    }
 }
 
 class Page extends Component
