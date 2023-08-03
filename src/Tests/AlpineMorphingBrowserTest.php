@@ -1,11 +1,12 @@
 <?php
 
-namespace Livewire\Features\SupportModels;
+namespace Livewire\Tests;
 
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
 
-class BrowserTest extends \Tests\BrowserTestCase
+/** @group morphing */
+class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
     public function component_with_custom_directive_keeps_state_after_cloning()
@@ -88,4 +89,3 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 }
-
