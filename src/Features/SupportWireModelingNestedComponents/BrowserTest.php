@@ -8,6 +8,7 @@ use Livewire\Form;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
+/** @group morphing */
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
