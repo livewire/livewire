@@ -311,42 +311,42 @@ trait HasPostForm
 
     public $content = '';
 
-    public function hasPostFormMount()
+    public function mountHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormHydrate()
+    public function hydrateHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormBoot()
+    public function bootHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormUpdating()
+    public function updatingHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormUpdated()
+    public function updatedHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormRendering()
+    public function renderingHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormRendered()
+    public function renderedHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormDehydrated()
+    public function dehydratedHasPostForm()
     {
         // ...
     }
