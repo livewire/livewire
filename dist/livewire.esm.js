@@ -7234,7 +7234,6 @@ var require_module_cjs8 = __commonJS({
         let defaultGetKey = (el) => el.getAttribute("key");
         let noop = () => {
         };
-        console.log(options2.key);
         updating = options2.updating || noop;
         updated = options2.updated || noop;
         removing = options2.removing || noop;

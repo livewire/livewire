@@ -7466,7 +7466,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let defaultGetKey = (el) => el.getAttribute("key");
       let noop = () => {
       };
-      console.log(options2.key);
       updating = options2.updating || noop;
       updated = options2.updated || noop;
       removing = options2.removing || noop;
