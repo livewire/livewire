@@ -33,12 +33,12 @@ class Modelable extends LivewireAttribute
     // final value for the child's request...
     function update($fullPath, $newValue)
     {
-        // if (store($this->component)->get('hasBeenSeeded', false)) {
-        //     $oldValue = $this->getValue();
+        if (store($this->component)->get('hasBeenSeeded', false)) {
+            $oldValue = $this->getValue();
 
-        //     return function () use ($oldValue) {
-        //         $this->setValue($oldValue);
-        //     };
-        // }
+            return function () use ($oldValue) {
+                $this->setValue($oldValue);
+            };
+        }
     }
 }
