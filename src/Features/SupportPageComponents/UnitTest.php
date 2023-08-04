@@ -417,8 +417,8 @@ class UnitTest extends \Tests\TestCase
             ->withoutExceptionHandling()
             ->get('/layout-with-stacks')
             ->assertSee('I am a style')
-            ->assertSee('I am a script')
-            ;
+            ->assertSee('I am a script 1')
+            ->assertDontSee('I am a script 2');
     }
 }
 
@@ -688,9 +688,13 @@ class ComponentWithStacks extends Component
             <div>I am a style</div>
             @endpush
 
-            @push('scripts')
-            <div>I am a script</div>
-            @endpush
+            @foreach([1, 2] as $attempt)
+                @once
+                    @push('scripts')
+                    <div>I am a script {{ $attempt }}</div>
+                    @endpush
+                @endonce
+            @endforeach
         HTML;
     }
 }
