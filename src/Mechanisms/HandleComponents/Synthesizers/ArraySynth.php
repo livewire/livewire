@@ -18,6 +18,10 @@ class ArraySynth extends Synth {
     }
 
     function hydrate($value, $meta, $hydrateChild) {
+        if (! is_array($value)) {
+            return $value;
+        }
+
         foreach ($value as $key => $child) {
             $value[$key] = $hydrateChild($key, $child);
         }
