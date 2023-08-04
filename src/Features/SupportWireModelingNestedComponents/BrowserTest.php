@@ -12,7 +12,7 @@ use Sushi\Sushi;
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
-    public function can_bind_a_propert_from_parent_to_property_from_child()
+    public function can_bind_a_property_from_parent_to_property_from_child()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
@@ -60,7 +60,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_bind_a_propert_from_parent_array_to_property_from_child()
+    public function can_bind_a_property_from_parent_array_to_property_from_child()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
@@ -114,7 +114,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_bind_a_propert_from_parent_form_to_property_from_child()
+    public function can_bind_a_property_from_parent_form_to_property_from_child()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
@@ -172,8 +172,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@parent.ephemeral', 'foo')
         ->assertSeeIn('@child.ephemeral', 'foo')
         ->waitForLivewire()->click('@submit')
-        ->waitForLivewire()->click('@refresh')->pause(500)
-        ->assertDontSee('Property [$form.title] not found');
+        ->assertSeeNothingIn('@parent.ephemeral', '')
+        ->assertSeeNothingIn('@child.ephemeral', '')
+        ;
     }
 }
 
