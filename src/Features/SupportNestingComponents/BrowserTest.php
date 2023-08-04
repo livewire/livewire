@@ -110,7 +110,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         </div>
 
                         @foreach($this->children as $key => $name)
-                            <livewire:child wire:key="{{ $key }}" :name="$name" dusk="child-{{ $name }}" />
+                            <livewire:child wire:key="{{ $key }}" :name="$name" />
                         @endforeach
 
                         <div>
@@ -125,7 +125,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render()
                 {
                     return <<<'HTML'
-                    <div dusk="child">
+                    <div dusk="child-{{ $name }}">
                         {{ $name }}
 
                         <button dusk="delete-{{ $name }}" wire:click="$parent.deleteChild('{{ $name }}')">Delete</button>
@@ -134,11 +134,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-        ->tinker()
         ->assertPresent('@child-one')
         ->assertSeeIn('@child-one', 'one')
         ->waitForLivewire()->click('@delete-one')
-        ->pause(500)
         ->assertNotPresent('@child-one');
     }
 }
