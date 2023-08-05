@@ -281,6 +281,7 @@ Below is the `TodoInput` component with the `#[Modelable]` attribute added above
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Modelable;
 
 class TodoInput extends Component
 {
@@ -301,6 +302,10 @@ class TodoInput extends Component
 ```
 
 Now the parent `TodoList` component can treat `TodoInput` like any other input element and bind directly to its value using `wire:model`.
+
+> [!warning]
+> Currently Livewire only support a single `#[Modelable]` attribute, only the first one will be bound.
+
 
 ## Listening for events from children
 
