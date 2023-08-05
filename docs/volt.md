@@ -682,3 +682,25 @@ If your Volt component is nested, you may use "dot" notation to specify the comp
 ```php
 Volt::test('users.stats')
 ```
+
+#### Testing a page contains a Volt component
+
+The simplest way of asserting a given endpoint contains and renders a Volt component is by using `assertSeeVolt`:
+
+```php
+<?php
+
+namespace Tests\Feature\Volt;
+
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function component_exists_on_the_page()
+    {
+        $this->get('/posts/create')
+            ->assertSeeVolt('create-post');
+    }
+}
+```
