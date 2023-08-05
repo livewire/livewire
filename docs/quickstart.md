@@ -15,7 +15,7 @@ Before we start, make sure you have the following installed:
 From the root directory of your Laravel app, run the following [Composer](https://getcomposer.org/) command:
 
 ```shell
-composer require livewire/livewire "^3.0@beta"
+composer require livewire/livewire "^3.0.*@beta"
 ```
 
 ## Create a Livewire component
