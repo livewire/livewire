@@ -346,7 +346,7 @@ trait HasPostForm
         // ...
     }
 
-    public function dehydratedHasPostForm()
+    public function dehydrateHasPostForm()
     {
         // ...
     }
