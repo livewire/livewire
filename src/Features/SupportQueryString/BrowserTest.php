@@ -46,12 +46,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertQueryStringMissing('tableFilters')
         ->type('@filter_1', 'test')
         ->waitForLivewire()
-        // This assertQueryStringMissing is here purposely to make this test fail
-        // to see the query string in the error message. I don't know of a way to test
-        // nested arrays in the query string. 
-        // The expected query string should JUST be ?tableFilters[filter_1][value]=test
-        // however when you look at the failing test message you'll see that the query string
-        // is ?tableFilters[filter_1][value]=test&tableFilters[filter_2][value]=null&tableFilters[filter_3][value]=null.
-        ->assertQueryStringMissing('tableFilters');
+        ->assertScript(
+            '(new URLSearchParams(window.location.search)).toString()',
+            'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
+        );
     }
 }
