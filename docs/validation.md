@@ -391,7 +391,7 @@ If you wish to use your own validation system in Livewire, that isn't a problem.
 Below is an example of the `CreatePost` component, but instead of using Livewire's validation features, a completely custom validator is being created and applied to the component properties:
 
 ```php
-use Illuminate\Validation\Validator;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use App\Models\Post;
 
