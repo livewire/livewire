@@ -61,4 +61,35 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ;
     }
+
+     /** @test */
+     public function can_call_remove_upload_from_trait_in_frontend()
+     {
+         Livewire::visit(new class extends Component {
+             use WithFileUploads;
+ 
+             public $photo;
+             public $show = true;
+             
+             public function removeUpload($field, $fileName)
+             {              
+                 $this->show = false;
+             }
+ 
+             function render() { return <<<'HTML'
+                 <div>
+                     <button wire:click="removeUpload('photo', 'example.txt')" dusk="removeUpload">Remove</button> 
+                     @if ($show)
+                             <div dusk="show">Show</div>
+                     @endif
+                 </div>
+                 HTML; }
+         })
+         ->assertVisible('@show')
+         ->click('@removeUpload')
+         ->pause(250)
+         ->assertMissing('@show')
+         ;     
+     }
+
 }
