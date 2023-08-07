@@ -46,6 +46,7 @@ async function sendRequestToServer() {
             headers: {
                 'Content-type': 'application/json',
                 'X-Livewire': '',
+                'X-Socket-Id': Echo?.socketId(),
             },
         }
 
