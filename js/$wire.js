@@ -131,7 +131,7 @@ wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, 
 
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
-wireProperty('$removeUpload', (component) => (...params) =>removeUpload(component, ...params))
+wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
 
 let parentMemo
 

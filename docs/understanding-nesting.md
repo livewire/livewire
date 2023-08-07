@@ -53,15 +53,13 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
-class ShowPosts extends Component
+class ShowPost extends Component
 {
     public Post $post;
 
     public function render()
     {
-        return view('livewire.show-posts', [
-            'posts' => Auth::user()->posts,
-        ]);
+        return view('livewire.show-post');
     }
 }
 ```
