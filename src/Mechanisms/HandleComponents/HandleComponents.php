@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{ store, trigger, wrap };
+use function Livewire\{ invade, store, trigger, wrap };
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
@@ -236,7 +236,14 @@ class HandleComponents
             $revertA = Utils::shareWithViews('__livewire', $component);
             $revertB = Utils::shareWithViews('_instance', $component); // @deprecated
 
-            $html = $view->render();
+            $slots = $pushes = $prepends = $sections = null;
+
+            $viewContext = new ViewContext;
+
+            $html = $view->render(function ($view) use ($viewContext) {
+                // Extract leftover slots, sections, and pushes before they get flushed...
+                $viewContext->extractFromEnvironment($view->getFactory());
+            });
 
             $revertA(); $revertB();
 
@@ -248,7 +255,7 @@ class HandleComponents
                 $html = $newHtml;
             };
 
-            $html = $finish($html, $replaceHtml);
+            $html = $finish($html, $replaceHtml, $viewContext);
 
             return $html;
         });

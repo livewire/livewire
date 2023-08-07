@@ -93,19 +93,12 @@ class SupportPageComponents extends ComponentHook
                 $view->title($titleAttr->content);
             }
 
-            // Here, ->layoutConfig is set from the layout view macros...
-            if (! $view->layoutConfig) return;
+            $layoutConfig = $view->layoutConfig ?? new LayoutConfig;
 
-            $layoutConfig = $view->layoutConfig;
-
-            return function () use ($view, $layoutConfig) {
-                // Gather up any slots declared in the component template and store them
+            return function ($html, $replace, $viewContext) use ($view, $layoutConfig) {
+                // Gather up any slots and sections declared in the component template and store them
                 // to be later forwarded into the layout component itself...
-                $data = $view->gatherData();
-                if (! $env = $data['__env'] ?? false) return;
-                if (! is_array($slots = invade($env)->slots)) return;
-                if (! is_array($slots = head($slots))) return;
-                $layoutConfig->slots = $slots;
+                $layoutConfig->viewContext = $viewContext;
             };
         };
 
@@ -147,6 +140,8 @@ class SupportPageComponents extends ComponentHook
         try {
             if ($layoutConfig->type === 'component') {
                 return Blade::render(<<<'HTML'
+                    <?php $layout->viewContext->mergeIntoNewEnvironment($__env); ?>
+
                     @component($layout->view, $layout->params)
                         @slot($layout->slotOrSection)
                             {!! $content !!}
@@ -154,7 +149,7 @@ class SupportPageComponents extends ComponentHook
 
                         <?php
                         // Manually forward slots defined in the Livewire template into the layout component...
-                        foreach ($layout->slots as $name => $slot) {
+                        foreach (\Illuminate\Support\Arr::collapse($layout->viewContext->slots) as $name => $slot) {
                             $__env->slot($name, attributes: $slot->attributes->getAttributes());
                             echo $slot->toHtml();
                             $__env->endSlot();
@@ -167,6 +162,8 @@ class SupportPageComponents extends ComponentHook
                 ]);
             } else {
                 return Blade::render(<<<'HTML'
+                    <?php $layout->viewContext->mergeIntoNewEnvironment($__env); ?>
+
                     @extends($layout->view, $layout->params)
 
                     @section($layout->slotOrSection)
