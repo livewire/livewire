@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\Features\SupportFormObjectsInWireTarget;
+namespace Livewire\Features\SupportWireLoading;
 
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
 
-class UnitTest extends \Tests\BrowserTestCase
+class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
     function can_wire_target_to_a_form_object_property()
@@ -18,7 +18,7 @@ class UnitTest extends \Tests\BrowserTestCase
 
             public function updating() {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
-                usleep(750000);
+                usleep(500000);
             }
 
             public function render() {
@@ -81,3 +81,4 @@ class PostFormStub extends Form
 {
     public $text = '';
 }
+

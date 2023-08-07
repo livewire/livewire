@@ -9379,7 +9379,10 @@ function containsTargets(payload, targets) {
         return target === method && params === quickHash(JSON.stringify(methodParams));
       });
     }
-    if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
+    let hasMatchingUpdate = Object.keys(updates).some((property) => {
+      return property.startsWith(target);
+    });
+    if (hasMatchingUpdate)
       return true;
     if (calls.map((i) => i.method).includes(target))
       return true;
