@@ -69,6 +69,30 @@ $increment = fn () => $this->count++;
 // ...
 ```
 
+### Class based Volt components
+
+If you would like to enjoy the single-file component capabilities of Volt while still writing class-based components, we've got you covered. To get started, define an anonymous class that extends `Livewire\Volt\Component`. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
+
+```blade
+<?php
+
+use Livewire\Volt\Component;
+
+new class extends Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+} ?>
+
+<div>
+    <h1>{{ $count }}</h1>
+    <button wire:click="increment">+</button>
+</div>
+```
+
 ## Rendering and mounting components
 
 Just like a typical Livewire component, Volt components may be rendered using Livewire's tag syntax or the `@livewire` Blade directive:

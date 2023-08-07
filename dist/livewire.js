@@ -8287,7 +8287,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
       },
-      lookahead: true
+      lookahead: false
     });
   }
   function isntElement(el) {
@@ -8522,7 +8522,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return target === method && params === quickHash(JSON.stringify(methodParams));
         });
       }
-      if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
+      let hasMatchingUpdate = Object.keys(updates).some((property) => {
+        return property.startsWith(target);
+      });
+      if (hasMatchingUpdate)
         return true;
       if (calls.map((i) => i.method).includes(target))
         return true;
