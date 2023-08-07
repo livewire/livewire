@@ -18,4 +18,4 @@ If you want to run a single test instead of the whole test suite, you can do:
 `./vendor/bin/phpunit --filter path/to/your/test.php`
 
 > [!NOTE]
-> At this point in the beta, building the JavaScript assets locally is a bit of a mess. But if you're not updating the JavaScript portions of Livewire in your PR, you don't have to worry about this for running Dusk tests — a built version of the assets is baked into the repo.
+> At this point in the beta, building the JavaScript assets locally can be complicated. But if you're not updating the JavaScript portions of Livewire in your PR, you don't have to worry about this for running Dusk tests — a built version of the assets is baked into the repo.
