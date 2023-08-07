@@ -8254,7 +8254,7 @@ var UploadManager = class {
       tmpFilename,
       finishCallback
     });
-    this.component.$wire.call("removeUpload", name, tmpFilename);
+    this.component.$wire.call("_removeUpload", name, tmpFilename);
   }
   setUpload(name, uploadObject) {
     this.uploadBag.add(name, uploadObject);
@@ -8299,14 +8299,14 @@ var UploadManager = class {
     request.addEventListener("load", () => {
       if ((request.status + "")[0] === "2") {
         let paths = retrievePaths(request.response && JSON.parse(request.response));
-        this.component.$wire.call("finishUpload", name, paths, this.uploadBag.first(name).multiple);
+        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
         return;
       }
       let errors = null;
       if (request.status === 422) {
         errors = request.response;
       }
-      this.component.$wire.call("uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+      this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
     });
     request.send(formData);
   }
@@ -8314,7 +8314,7 @@ var UploadManager = class {
     let fileInfos = uploadObject.files.map((file) => {
       return { name: file.name, size: file.size, type: file.type };
     });
-    this.component.$wire.call("startUpload", name, fileInfos, uploadObject.multiple);
+    this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
     setUploadLoading(this.component, name);
   }
   markUploadFinished(name, tmpFilenames) {
