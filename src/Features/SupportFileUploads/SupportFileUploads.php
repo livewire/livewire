@@ -24,7 +24,7 @@ class SupportFileUploads extends ComponentHook
         ]);
 
         on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
-            if ($method === 'startUpload') {
+            if ($method === '_startUpload') {
                 if (! method_exists($component, $method)) {
                     throw new MissingFileUploadsTraitException($component);
                 }
