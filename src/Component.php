@@ -2,7 +2,6 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportStacks\HandlesStacks;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
@@ -28,7 +27,6 @@ abstract class Component
     use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
-    use HandlesStacks;
     use HandlesRedirects;
     use HandlesStreaming;
     use HandlesAttributes;

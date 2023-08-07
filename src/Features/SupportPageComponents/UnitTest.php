@@ -191,7 +191,7 @@ class UnitTest extends \Tests\TestCase
 
         Route::get('/foo', ComponentWithCustomSection::class);
 
-        $this->get('/foo')->assertSee('baz');
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
     /** @test */

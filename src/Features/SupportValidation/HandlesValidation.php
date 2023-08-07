@@ -23,7 +23,7 @@ trait HandlesValidation
 
     public function addRulesFromOutside($rules)
     {
-        $this->rulesFromOutside = array_merge($this->rulesFromOutside, $rules);
+        $this->rulesFromOutside = array_merge_recursive($this->rulesFromOutside, $rules);
     }
 
     public function addMessagesFromOutside($messages)
