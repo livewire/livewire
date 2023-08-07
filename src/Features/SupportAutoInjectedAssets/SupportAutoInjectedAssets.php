@@ -48,7 +48,7 @@ class SupportAutoInjectedAssets extends ComponentHook
 
         $html = str($html);
 
-        if ($html->test('/<\s*head(?:\s|\s[^>])*>/i') && $html->test('/<\s*\/\s*body\s*>/i')) {
+        if ($html->test('/<\s*\/\s*head\s*>/i') && $html->test('/<\s*\/\s*body\s*>/i')) {
             return $html
                 ->replaceMatches('/(<\s*\/\s*head\s*>)/i', $livewireStyles.'$1')
                 ->replaceMatches('/(<\s*\/\s*body\s*>)/i', $livewireScripts.'$1')
