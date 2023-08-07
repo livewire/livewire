@@ -101,6 +101,38 @@ class DuskBrowserMacros
         };
     }
 
+    public function assertNotInViewPort()
+    {
+        return function ($selector) {
+            /** @var \Laravel\Dusk\Browser $this */
+            return $this->assertInViewPort($selector, invert: true);
+        };
+    }
+
+    public function assertInViewPort()
+    {
+        return function ($selector, $invert = false) {
+            /** @var \Laravel\Dusk\Browser $this */
+
+            $fullSelector = $this->resolver->format($selector);
+
+            $result = $this->script(
+                'const rect = document.querySelector(\''.$fullSelector.'\').getBoundingClientRect();
+                 return (
+                     rect.top >= 0 &&
+                     rect.left >= 0 &&
+                     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                 );',
+                 $selector
+            )[0];
+
+            PHPUnit::assertEquals($invert ? false : true, $result);
+
+            return $this;
+        };
+    }
+
     public function assertClassMissing()
     {
         return function ($selector, $className) {

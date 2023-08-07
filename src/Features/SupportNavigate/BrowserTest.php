@@ -26,6 +26,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('third-asset-page', ThirdAssetPage::class);
             Livewire::component('first-tracked-asset-page', FirstTrackedAssetPage::class);
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
+            Livewire::component('first-scroll-page', FirstScrollPage::class);
+            Livewire::component('second-scroll-page', SecondScrollPage::class);
 
             Route::get('/query-page', QueryPage::class)->middleware('web');
             Route::get('/first', FirstPage::class)->middleware('web');
@@ -40,6 +42,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
+            Route::get('/first-scroll', FirstScrollPage::class)->middleware('web');
+            Route::get('/second-scroll', SecondScrollPage::class)->middleware('web');
 
             Route::get('/first-tracked-asset', FirstTrackedAssetPage::class)->middleware('web');
             Route::get('/second-tracked-asset', SecondTrackedAssetPage::class)->middleware('web');
@@ -233,6 +237,28 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('Query: 2');
         });
     }
+
+    /** @test */
+    function navigate_scrolls_to_top_and_back_preserves_scroll()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->assertVisible('@first-target')
+                ->assertNotInViewPort('@first-target')
+                ->scrollTo('@first-target')
+                ->assertInViewPort('@first-target')
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertNotInViewPort('@second-target')
+                ->scrollTo('@second-target')
+                ->back()
+                ->assertInViewPort('@first-target')
+                ->forward()
+                ->assertInViewPort('@second-target')
+                ;
+        });
+    }
 }
 
 class FirstPage extends Component
@@ -363,6 +389,44 @@ class QueryPage extends Component
                 <a href="/query-page?query=1" dusk="link.with.query.1">Link with query 1</a>
                 <a href="/query-page?query=2" wire:navigate dusk="link.with.query.2">Link with query 2</a>
             </div>
+        HTML;
+    }
+}
+
+class FirstScrollPage extends Component
+{
+    function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On first</div>
+
+            <div style="height: 100vh;">spacer</div>
+
+            <div dusk="first-target">below the fold</div>
+
+            <a href="/second-scroll" wire:navigate.hover dusk="link.to.second">Go to second page</a>
+
+            <div style="height: 100vh;">spacer</div>
+        </div>
+        HTML;
+    }
+}
+
+class SecondScrollPage extends Component
+{
+    function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On second</div>
+
+            <div style="height: 100vh;">spacer</div>
+
+            <div dusk="second-target">below the fold</div>
+
+            <div style="height: 100vh;">spacer</div>
+        </div>
         HTML;
     }
 }
