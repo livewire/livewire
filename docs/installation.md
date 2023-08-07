@@ -37,10 +37,10 @@ If you want more control over this behavior, you can manually include the assets
 </html>
 ```
 
-By including these assets manually on a page, Livewire knows to not inject the assets automatically.
+By including these assets manually on a page, Livewire knows not to inject the assets automatically.
 
-> [!warning] Alpine.js will only work where Livewire is detected
-> Livewire will automatically inject its assets along with Alpine.js only into pages with Livewire components detected, meaning that Alpine.js will not be available on pages that do not utilize Livewire components.
+> [!warning] AlpineJS is bundled with Livewire
+> Because Alpine is bundled with Livewire's JavaScript assets, you must include `@livewireScripts` on every page you wish to use Alpine. Even if you're not using Livewire on that page.
 
 Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-config) in your application's `config/livewire.php` file:
 
