@@ -2,16 +2,20 @@
 
 > Better README coming soon after I'm home from Laracon lol.
 
-### Setup locally
+### Local setup for contributing
 
-(This is a WIP)
+(This is a work-in-progress)
 
 * `git clone`
 * `composer install`
 * `./vendor/bin/testbench-dusk dusk:chrome-driver`
 * (`./vendor/bin/dusk-updater update` also sometimes fixes chromedriver issues)
 
-* `npm install`
-* (link all the missing Alpine dependancies)
-* `npm run build`
+Please consult the old v2 docs for [general guidelines for contributing](https://laravel-livewire.com/docs/2.x/contribution-guide).
 
+If you want to run a single test instead of the whole test suite, you can do:
+
+`./vendor/bin/phpunit --filter path/to/your/test.php`
+
+> [!NOTE]
+> At this point in the beta, building the JavaScript assets locally is a bit of a mess. But if you're not updating the JavaScript portions of Livewire in your PR, you don't have to worry about this for running Dusk tests — a built version of the assets is baked into the repo.
