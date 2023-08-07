@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="https://packagist.org/packages/livewire/livewire">
-        <img src="https://poser.pugx.org/livewire/volt/d/total.svg" alt="Total Downloads">
+        <img src="https://poser.pugx.org/livewire/livewire/d/total.svg" alt="Total Downloads">
     </a>
     <a href="https://packagist.org/packages/livewire/livewire">
         <img src="https://poser.pugx.org/livewire/livewire/v/stable.svg" alt="Latest Stable Version">
@@ -38,4 +38,4 @@ Please review [our security policy](https://github.com/livewire/livewire/securit
 ## License
 <a name="license"></a>
 
-Volt is open-sourced software licensed under the [MIT license](LICENSE.md).
+Livewire is open-sourced software licensed under the [MIT license](LICENSE.md).
