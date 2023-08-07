@@ -18,6 +18,9 @@ From the root directory of your Laravel app, run the following [Composer](https:
 composer require livewire/livewire "^3.0@beta"
 ```
 
+> [!warning] PowerShell for Windows
+> The `^` operator causes issues for installing the beta when using PowerShell for Windows. See [Composer docs](https://getcomposer.org/doc/articles/versions.md#caret-version-range-) for more details.
+
 ## Create a Livewire component
 
 Livewire provides a convenient Artisan command to generate new components quickly. Run the following command to make a new `Counter` component:
