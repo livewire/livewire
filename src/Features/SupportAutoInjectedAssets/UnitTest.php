@@ -29,10 +29,10 @@ class UnitTest extends TestCase
         HTML, <<<HTML
             <!doctype html>
             <html>
-                <head>$livewireStyles
+                <head>
                     <meta charset="utf-8"/>
                     <title></title>
-                </head>
+                $livewireStyles</head>
                 <body>
                 $livewireScripts</body>
             </html>
@@ -82,10 +82,10 @@ class UnitTest extends TestCase
                 lang="en"
             >
                 <head
-                >$livewireStyles
+                >
                     <meta charset="utf-8"/>
                     <title></title>
-                </head>
+                $livewireStyles</head>
                 <body>
                 $livewireScripts</body
                 >
@@ -120,10 +120,10 @@ class UnitTest extends TestCase
                 lang="en"
             >
                 <Head
-                >$livewireStyles
+                >
                     <meta charset="utf-8"/>
                     <title></title>
-                </Head>
+                $livewireStyles</Head>
                 <bOdY>
                     <header class=""></header>
                 $livewireScripts</bOdY
