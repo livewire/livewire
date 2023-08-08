@@ -5496,6 +5496,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function whenThisLinkIsPressed(el, callback) {
     el.addEventListener("click", (e) => e.preventDefault());
     el.addEventListener("mousedown", (e) => {
+      if (e.button !== 0)
+        return;
       e.preventDefault();
       callback((whenReleased) => {
         let handler4 = (e2) => {

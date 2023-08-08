@@ -259,6 +259,25 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ;
         });
     }
+
+    /** @test */
+    public function navigate_is_only_triggered_on_left_click()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->rightClick('@link.to.second')
+                ->pause(500) // Let navigate run if it was going to (it should not)
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ;
+        });
+    }
 }
 
 class FirstPage extends Component

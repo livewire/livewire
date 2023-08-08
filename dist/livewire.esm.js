@@ -5200,6 +5200,8 @@ var require_module_cjs6 = __commonJS({
     function whenThisLinkIsPressed(el, callback) {
       el.addEventListener("click", (e) => e.preventDefault());
       el.addEventListener("mousedown", (e) => {
+        if (e.button !== 0)
+          return;
         e.preventDefault();
         callback((whenReleased) => {
           let handler = (e2) => {
