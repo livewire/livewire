@@ -26,6 +26,7 @@ export class Component {
         this.name = this.snapshot.memo.name
 
         this.effects = JSON.parse(el.getAttribute('wire:effects'))
+        this.originalEffects = deepClone(this.effects)
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data))
@@ -36,6 +37,8 @@ export class Component {
 
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
+
+        this.cleanups = []
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
         processEffects(this, this.effects)
@@ -102,6 +105,21 @@ export class Component {
 
         this.el.setAttribute('wire:snapshot', this.snapshotEncoded)
 
-        this.el.setAttribute('wire:effects', JSON.stringify([]))
+        // We need to re-register any event listeners that were originally registered...
+        let effects = this.originalEffects.listeners
+            ? { listeners: this.originalEffects.listeners }
+            : {}
+
+        this.el.setAttribute('wire:effects', JSON.stringify(effects))
+    }
+
+    addCleanup(cleanup) {
+        this.cleanups.push(cleanup)
+    }
+
+    cleanup() {
+        while (this.cleanups.length > 0) {
+            this.cleanups.pop()()
+        }
     }
 }

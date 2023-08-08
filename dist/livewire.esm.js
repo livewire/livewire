@@ -8601,10 +8601,12 @@ var Component = class {
     }
     this.name = this.snapshot.memo.name;
     this.effects = JSON.parse(el.getAttribute("wire:effects"));
+    this.originalEffects = deepClone(this.effects);
     this.canonical = extractData(deepClone(this.snapshot.data));
     this.ephemeral = extractData(deepClone(this.snapshot.data));
     this.reactive = Alpine.reactive(this.ephemeral);
     this.$wire = generateWireObject(this, this.reactive);
+    this.cleanups = [];
     processEffects(this, this.effects);
   }
   mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -8643,7 +8645,16 @@ var Component = class {
   inscribeSnapshotAndEffectsOnElement() {
     let el = this.el;
     this.el.setAttribute("wire:snapshot", this.snapshotEncoded);
-    this.el.setAttribute("wire:effects", JSON.stringify([]));
+    let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+    this.el.setAttribute("wire:effects", JSON.stringify(effects));
+  }
+  addCleanup(cleanup2) {
+    this.cleanups.push(cleanup2);
+  }
+  cleanup() {
+    while (this.cleanups.length > 0) {
+      this.cleanups.pop()();
+    }
   }
 };
 
@@ -8661,6 +8672,7 @@ function destroyComponent(id) {
   let component = components[id];
   if (!component)
     return;
+  component.cleanup();
   delete components[id];
 }
 function findComponent(id) {
@@ -8705,11 +8717,13 @@ on("effects", (component, effects) => {
 });
 function registerListeners(component, listeners2) {
   listeners2.forEach((name) => {
-    window.addEventListener(name, (e) => {
+    let handler = (e) => {
       if (e.__livewire)
         e.__livewire.receivedBy.push(component);
       component.$wire.call("__dispatch", name, e.detail || {});
-    });
+    };
+    window.addEventListener(name, handler);
+    component.addCleanup(() => window.removeEventListener(name, handler));
     component.el.addEventListener(name, (e) => {
       if (e.__livewire && e.bubbles)
         return;
