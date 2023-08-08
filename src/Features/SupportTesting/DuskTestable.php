@@ -44,7 +44,7 @@ class DuskTestable
             static::$currentTestCase = null;
         });
 
-        if (isset($_SERVER['CI'])) {
+        if (isset($_SERVER['CI']) && class_exists(\Orchestra\Testbench\Dusk\Options::class)) {
             \Orchestra\Testbench\Dusk\Options::withoutUI();
         }
 
