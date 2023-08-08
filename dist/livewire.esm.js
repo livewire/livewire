@@ -7840,12 +7840,17 @@ function extractData(payload) {
 function isSynthetic(subject) {
   return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
 }
+var csrf;
 function getCsrfToken() {
+  if (csrf)
+    return csrf;
   if (document.querySelector("[data-csrf]")) {
-    return document.querySelector("[data-csrf]").getAttribute("data-csrf");
+    csrf = document.querySelector("[data-csrf]").getAttribute("data-csrf");
+    return csrf;
   }
   if (window.livewireScriptConfig["csrf"] ?? false) {
-    return window.livewireScriptConfig["csrf"];
+    csrf = window.livewireScriptConfig["csrf"];
+    return csrf;
   }
   throw "Livewire: No CSRF token detected";
 }
