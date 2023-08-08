@@ -274,6 +274,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('On first')
                 ->click('@link.to.second')
                 ->waitFor('@link.to.first')
+                ->assertSee('On second')
                 ;
         });
     }
