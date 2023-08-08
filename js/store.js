@@ -1,6 +1,6 @@
-import { Component } from "./component";
-import { trigger } from "./events";
-import { deepClone } from "./utils"
+import { Component } from "@/component";
+import { trigger } from "@/events";
+import { deepClone } from "@/utils"
 
 let components = {}
 
@@ -20,6 +20,8 @@ export function destroyComponent(id) {
     let component = components[id]
 
     if (! component) return
+
+    component.cleanup()
 
     delete components[id]
 }

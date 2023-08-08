@@ -3868,10 +3868,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       this.name = this.snapshot.memo.name;
       this.effects = JSON.parse(el.getAttribute("wire:effects"));
+      this.originalEffects = deepClone(this.effects);
       this.canonical = extractData(deepClone(this.snapshot.data));
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.$wire = generateWireObject(this, this.reactive);
+      this.cleanups = [];
       processEffects(this, this.effects);
     }
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -3910,7 +3912,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
       this.el.setAttribute("wire:snapshot", this.snapshotEncoded);
-      this.el.setAttribute("wire:effects", JSON.stringify([]));
+      let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+      this.el.setAttribute("wire:effects", JSON.stringify(effects));
+    }
+    addCleanup(cleanup3) {
+      this.cleanups.push(cleanup3);
+    }
+    cleanup() {
+      while (this.cleanups.length > 0) {
+        this.cleanups.pop()();
+      }
     }
   };
 
@@ -3928,6 +3939,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = components[id];
     if (!component)
       return;
+    component.cleanup();
     delete components[id];
   }
   function findComponent(id) {
@@ -3971,11 +3983,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
-      window.addEventListener(name, (e) => {
+      let handler4 = (e) => {
         if (e.__livewire)
           e.__livewire.receivedBy.push(component);
         component.$wire.call("__dispatch", name, e.detail || {});
-      });
+      };
+      window.addEventListener(name, handler4);
+      component.addCleanup(() => window.removeEventListener(name, handler4));
       component.el.addEventListener(name, (e) => {
         if (e.__livewire && e.bubbles)
           return;

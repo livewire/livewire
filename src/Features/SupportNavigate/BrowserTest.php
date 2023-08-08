@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportNavigate;
 
+use Laravel\Dusk\Browser;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -30,6 +32,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
             Livewire::component('first-scroll-page', FirstScrollPage::class);
             Livewire::component('second-scroll-page', SecondScrollPage::class);
+            Livewire::component('parent-component', ParentComponent::class);
+            Livewire::component('child-component', ChildComponent::class);
 
             Route::get('/query-page', QueryPage::class)->middleware('web');
             Route::get('/first', FirstPage::class)->middleware('web');
@@ -54,6 +58,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return Utils::pretendResponseIsFile(__DIR__ . '/test-views/test-navigate-asset.js');
             });
 
+            Route::get('/parent', ParentComponent::class)->middleware('web');
             Route::get('/page-with-link-to-page-without-livewire', PageWithLinkAway::class);
             Route::get('/page-without-livewire-component', fn () => Blade::render(<<<'HTML'
                 <html>
@@ -317,6 +322,35 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ;
         });
     }
+
+    /** @test */
+    public function events_from_child_components_still_function_after_navigation()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/parent')
+                ->assertSeeNothingIn('@text-child')
+                ->assertSeeNothingIn('@text-parent')
+                ->waitForLivewire()->type('@text-input', 'test')
+                ->assertSeeIn('@text-child', 'test')
+                ->assertSeeIn('@text-parent', 'test')
+
+                ->waitForNavigate()->click('@home-link')
+                ->assertSeeNothingIn('@text-child')
+                ->assertSeeNothingIn('@text-parent')
+                ->waitForLivewire()->type('@text-input', 'testing')
+                ->assertSeeIn('@text-child', 'testing')
+                ->assertSeeIn('@text-parent', 'testing')
+
+                ->back()
+                ->assertSeeIn('@text-child', 'test')
+                ->assertSeeIn('@text-parent', 'test')
+                ->waitForLivewire()->type('@text-input', 'testing')
+                ->assertSeeIn('@text-child', 'testing')
+                ->assertSeeIn('@text-parent', 'testing')
+                ;
+        });
+    }
 }
 
 class FirstPage extends Component
@@ -497,6 +531,51 @@ class SecondScrollPage extends Component
             <div dusk="second-target">below the fold</div>
 
             <div style="height: 100vh;">spacer</div>
+        </div>
+        HTML;
+    }
+}
+
+class ParentComponent extends Component
+{
+    public $text = '';
+
+    #[On('my-event')]
+    public function change_text($text)
+    {
+        $this->text = $text;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <a href="/parent" wire:navigate dusk="home-link">Home</a>
+
+            <p dusk="text-parent">{{ $text }}</p>
+
+            <livewire:child-component key="child" />
+        </div>
+        HTML;
+    }
+}
+
+class ChildComponent extends Component
+{
+    public $text = '';
+
+    public function updated()
+    {
+        $this->dispatch('my-event', text: $this->text);
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <p dusk="text-child">{{ $text }}</p>
+
+            <input type="text" wire:model.live="text" dusk="text-input">
         </div>
         HTML;
     }
