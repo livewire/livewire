@@ -140,7 +140,7 @@ Optionally, you may render a Volt component as a full page component by defining
 Volt::route('/users', 'user-index');
 ```
 
-By default, the component will be rendered using the `components.layouts.app` layout. You may customize this layout file by using the `layout` function:
+By default, the component will be rendered using the `components.layouts.app` layout. You may customize this layout file using the `layout` function:
 
 ```php
 use function Livewire\Volt\{layout, state};
