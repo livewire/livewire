@@ -8249,6 +8249,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isNavigating = true;
     document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
+  document.addEventListener("alpine:navigating", (e) => {
+    document.dispatchEvent(new CustomEvent("livewire:navigating", { bubbles: true }));
+  });
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
     if (forceNavigate || isNavigating) {

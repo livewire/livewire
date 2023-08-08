@@ -90,6 +90,17 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
+## Updating the page before navigating away
+
+Livewire dispatches a useful event called `wire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
+
+This is useful for scenarios like modifying the contents of the current page before it is stored and reloaded as the back-button cache HTML.
+
+```js
+document.addEventListener('wire:navigating', () => {
+    // Mutate the HTML before the page is navigated away...
+})
+```
 
 ## Script evaluation
 
