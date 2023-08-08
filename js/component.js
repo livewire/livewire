@@ -20,7 +20,7 @@ export class Component {
         this.snapshot = JSON.parse(this.snapshotEncoded)
 
         if (! this.snapshot) {
-            throw new `Snapshot missing on Livewire component with id: ` + this.id
+            throw `Snapshot missing on Livewire component with id: ` + this.id
         }
 
         this.name = this.snapshot.memo.name
@@ -95,5 +95,13 @@ export class Component {
         let childIds = Object.values(meta.children).map(i => i[1])
 
         return childIds.map(id => findComponent(id))
+    }
+
+    inscribeSnapshotAndEffectsOnElement() {
+        let el = this.el
+
+        this.el.setAttribute('wire:snapshot', this.snapshotEncoded)
+
+        this.el.setAttribute('wire:effects', JSON.stringify([]))
     }
 }

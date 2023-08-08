@@ -964,7 +964,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
       let staticAttributes = attributesOnly(vAttributes);
       vAttributes = vAttributes.map((attribute) => {
-        if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+        if (staticAttributes.find((attr) => attr.name === attribute.name)) {
           return {
             name: `x-bind:${attribute.name}`,
             value: `"${attribute.value}"`
@@ -981,7 +981,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function attributesOnly(attributes) {
-    return Array.from(attributes).map(toTransformedAttributes()).filter((attr2) => !outNonAlpineAttributes(attr2));
+    return Array.from(attributes).map(toTransformedAttributes()).filter((attr) => !outNonAlpineAttributes(attr));
   }
   var isDeferringHandlers = false;
   var directiveHandlerStacks = /* @__PURE__ */ new Map();
@@ -1800,15 +1800,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return getAttributeBinding(el, name, fallback2);
   }
   function getAttributeBinding(el, name, fallback2) {
-    let attr2 = el.getAttribute(name);
-    if (attr2 === null)
+    let attr = el.getAttribute(name);
+    if (attr === null)
       return typeof fallback2 === "function" ? fallback2() : fallback2;
-    if (attr2 === "")
+    if (attr === "")
       return true;
     if (isBooleanAttr(name)) {
-      return !![name, "true"].includes(attr2);
+      return !![name, "true"].includes(attr);
     }
-    return attr2;
+    return attr;
   }
   function debounce(func, wait) {
     var timeout;
@@ -1917,7 +1917,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let attributes = Object.entries(obj).map(([name, value]) => ({ name, value }));
     let staticAttributes = attributesOnly(attributes);
     attributes = attributes.map((attribute) => {
-      if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+      if (staticAttributes.find((attr) => attr.name === attribute.name)) {
         return {
           name: `x-bind:${attribute.name}`,
           value: `"${attribute.value}"`
@@ -3852,7 +3852,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.snapshotEncoded = el.getAttribute("wire:snapshot");
       this.snapshot = JSON.parse(this.snapshotEncoded);
       if (!this.snapshot) {
-        throw new `Snapshot missing on Livewire component with id: `() + this.id;
+        throw `Snapshot missing on Livewire component with id: ` + this.id;
       }
       this.name = this.snapshot.memo.name;
       this.effects = JSON.parse(el.getAttribute("wire:effects"));
@@ -3894,6 +3894,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let meta = this.snapshot.memo;
       let childIds = Object.values(meta.children).map((i) => i[1]);
       return childIds.map((id) => findComponent(id));
+    }
+    inscribeSnapshotAndEffectsOnElement() {
+      let el = this.el;
+      this.el.setAttribute("wire:snapshot", this.snapshotEncoded);
+      this.el.setAttribute("wire:effects", JSON.stringify([]));
     }
   };
 
@@ -6051,7 +6056,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
       let staticAttributes = attributesOnly2(vAttributes);
       vAttributes = vAttributes.map((attribute) => {
-        if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+        if (staticAttributes.find((attr) => attr.name === attribute.name)) {
           return {
             name: `x-bind:${attribute.name}`,
             value: `"${attribute.value}"`
@@ -6068,7 +6073,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function attributesOnly2(attributes) {
-    return Array.from(attributes).map(toTransformedAttributes2()).filter((attr2) => !outNonAlpineAttributes2(attr2));
+    return Array.from(attributes).map(toTransformedAttributes2()).filter((attr) => !outNonAlpineAttributes2(attr));
   }
   var isDeferringHandlers2 = false;
   var directiveHandlerStacks2 = /* @__PURE__ */ new Map();
@@ -6772,15 +6777,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return getAttributeBinding2(el, name, fallback2);
   }
   function getAttributeBinding2(el, name, fallback2) {
-    let attr2 = el.getAttribute(name);
-    if (attr2 === null)
+    let attr = el.getAttribute(name);
+    if (attr === null)
       return typeof fallback2 === "function" ? fallback2() : fallback2;
-    if (attr2 === "")
+    if (attr === "")
       return true;
     if (isBooleanAttr3(name)) {
-      return !![name, "true"].includes(attr2);
+      return !![name, "true"].includes(attr);
     }
-    return attr2;
+    return attr;
   }
   function debounce2(func, wait) {
     var timeout;
@@ -6874,7 +6879,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let attributes = Object.entries(obj).map(([name, value]) => ({ name, value }));
     let staticAttributes = attributesOnly2(attributes);
     attributes = attributes.map((attribute) => {
-      if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+      if (staticAttributes.find((attr) => attr.name === attribute.name)) {
         return {
           name: `x-bind:${attribute.name}`,
           value: `"${attribute.value}"`
@@ -7147,7 +7152,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let script = document.createElement("script");
     script.textContent = el.textContent;
     script.async = el.async;
-    for (attr of el.attributes) {
+    for (let attr of el.attributes) {
       script.setAttribute(attr.name, attr.value);
     }
     return script;
@@ -7206,6 +7211,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function navigateTo(destination) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
+        fireEventForOtherLibariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
@@ -7214,7 +7220,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           swapCurrentPageWithNewHtml(html, () => {
             enablePersist && putPersistantElementsBack();
             restoreScroll && restoreScrollPosition();
-            fireEventForOtherLibariesToHookInto();
+            fireEventForOtherLibariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
             andAfterAllThis(() => {
               autofocus && autofocusElementsWithTheAutofocusAttribute();
@@ -7231,7 +7237,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         swapCurrentPageWithNewHtml(html, (andThen) => {
           enablePersist && putPersistantElementsBack();
           restoreScroll && restoreScrollPosition();
-          fireEventForOtherLibariesToHookInto();
+          fireEventForOtherLibariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine22);
@@ -7240,7 +7246,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     setTimeout(() => {
-      fireEventForOtherLibariesToHookInto(true);
+      fireEventForOtherLibariesToHookInto("alpine:navigated", true);
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -7257,8 +7263,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(init = false) {
-    document.dispatchEvent(new CustomEvent("alpine:navigated", { bubbles: true, detail: { init } }));
+  function fireEventForOtherLibariesToHookInto(eventName, init = false) {
+    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true, detail: { init } }));
   }
   function nowInitializeAlpineOnTheNewPage(Alpine22) {
     Alpine22.initTree(document.body, void 0, (el, skip) => {
@@ -7768,9 +7774,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return original.call(this, name, value);
       }
       hostDiv.innerHTML = `<span ${name}="${value}"></span>`;
-      let attr2 = hostDiv.firstElementChild.getAttributeNode(name);
-      hostDiv.firstElementChild.removeAttributeNode(attr2);
-      this.setAttributeNode(attr2);
+      let attr = hostDiv.firstElementChild.getAttributeNode(name);
+      hostDiv.firstElementChild.removeAttributeNode(attr);
+      this.setAttributeNode(attr);
     };
   }
   function src_default7(Alpine4) {
@@ -8386,6 +8392,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       module_default.bind(el, { ["x-navigate.hover"]: true });
     }
   }));
+  document.addEventListener("alpine:navigating", () => {
+    Livewire.all().forEach((component) => {
+      component.inscribeSnapshotAndEffectsOnElement();
+    });
+  });
 
   // js/directives/shared.js
   function toggleBooleanStateDirective(el, directive4, isTruthy) {
@@ -8859,7 +8870,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/index.js
-  var Livewire = {
+  var Livewire2 = {
     directive: directive2,
     dispatchTo,
     start: start3,
@@ -8878,11 +8889,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     console.warn("Detected multiple instances of Livewire running");
   if (window.Alpine)
     console.warn("Detected multiple instances of Alpine running");
-  window.Livewire = Livewire;
+  window.Livewire = Livewire2;
   window.Alpine = module_default;
   if (window.livewireScriptConfig === void 0) {
     document.addEventListener("DOMContentLoaded", () => {
-      Livewire.start();
+      Livewire2.start();
     });
   }
 })();
