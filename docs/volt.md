@@ -704,3 +704,10 @@ If your Volt component is nested, you may use "dot" notation to specify the comp
 ```php
 Volt::test('users.stats')
 ```
+
+When testing a page that contains an anonymous Volt component, you may use the `assertSeeVolt` method to assert that the component is rendered:
+
+```php
+$this->get('/users')
+    ->assertSeeVolt('stats');
+```
