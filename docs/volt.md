@@ -137,7 +137,7 @@ mount(function (UserCounter $counter, $users) {
 Optionally, you may render a Volt component as a full page component by defining a Volt route in your application's `routes/web.php` file:
 
 ```php
-use Laravel\Volt\Volt;
+use Livewire\Volt\Volt;
 
 Volt::route('/users', 'user-index');
 ```
