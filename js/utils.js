@@ -165,12 +165,21 @@ export function isSynthetic(subject) {
  * Post requests in Laravel require a csrf token to be passed
  * along with the payload. Here, we'll try and locate one.
  */
+let csrf
+
 export function getCsrfToken() {
+    if (csrf) return csrf
+
     if (document.querySelector('[data-csrf]')) {
-        return document.querySelector('[data-csrf]').getAttribute('data-csrf')
+        csrf = document.querySelector('[data-csrf]').getAttribute('data-csrf')
+
+        return csrf
     }
-    if(window.livewireScriptConfig['csrf'] ?? false) {
-        return window.livewireScriptConfig['csrf'];
+
+    if (window.livewireScriptConfig['csrf'] ?? false) {
+        csrf = window.livewireScriptConfig['csrf']
+
+        return csrf
     }
 
     throw 'Livewire: No CSRF token detected'

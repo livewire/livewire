@@ -7856,12 +7856,17 @@ function extractData(payload) {
 function isSynthetic(subject) {
   return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
 }
+var csrf;
 function getCsrfToken() {
+  if (csrf)
+    return csrf;
   if (document.querySelector("[data-csrf]")) {
-    return document.querySelector("[data-csrf]").getAttribute("data-csrf");
+    csrf = document.querySelector("[data-csrf]").getAttribute("data-csrf");
+    return csrf;
   }
   if (window.livewireScriptConfig["csrf"] ?? false) {
-    return window.livewireScriptConfig["csrf"];
+    csrf = window.livewireScriptConfig["csrf"];
+    return csrf;
   }
   throw "Livewire: No CSRF token detected";
 }
@@ -9062,6 +9067,11 @@ function normalizeQueryStringEntry(key, value) {
 }
 
 // js/features/supportLaravelEcho.js
+on("request", ({ options }) => {
+  if (window.Echo) {
+    options.headers["X-Socket-ID"] = window.Echo.socketId();
+  }
+});
 on("effects", (component, effects) => {
   let listeners2 = effects.listeners || [];
   listeners2.forEach((event) => {
