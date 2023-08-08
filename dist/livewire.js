@@ -8156,6 +8156,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportLaravelEcho.js
+  on("request", ({ options }) => {
+    if (window.Echo) {
+      options.headers["X-Socket-ID"] = window.Echo.socketId();
+    }
+  });
   on("effects", (component, effects) => {
     let listeners2 = effects.listeners || [];
     listeners2.forEach((event) => {
