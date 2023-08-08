@@ -185,6 +185,9 @@ If you are using [Laravel's Vite plug-in](https://laravel.com/docs/vite#loading-
 
 Livewire will automatically inject `data-navigate-track` onto the rendered HTML tags.
 
+> [!warning] Only query string changes are tracked
+> Livewire will only reload a page if a `[data-navigate-track]` element's query string (`?id="456"`) changes, not the URI itself (`/app.js`).
+
 ### Scripts in the `<body>` are re-evaluated
 
 Because Livewire replaces the entire contents of the `<body>` on every new page, all `<script>` tags on the new page will be run:
