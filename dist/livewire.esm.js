@@ -6840,14 +6840,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     function mergeNewHead(newHead) {
-      let headChildrenHtmlLookup = Array.from(document.head.children).map((i) => i.outerHTML);
+      let children = Array.from(document.head.children);
+      let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
       let garbageCollector = document.createDocumentFragment();
       for (let child of Array.from(newHead.children)) {
         if (isAsset(child)) {
           if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
             if (isTracked(child)) {
-              setTimeout(() => window.location.reload());
-              return;
+              if (ifTheQueryStringChangedSinceLastRequest(child, children)) {
+                setTimeout(() => window.location.reload());
+              }
             }
             if (isScript(child)) {
               document.head.appendChild(cloneScriptTag(child));
@@ -6878,6 +6880,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isTracked(el) {
       return el.hasAttribute("data-navigate-track");
+    }
+    function ifTheQueryStringChangedSinceLastRequest(el, currentHeadChildren) {
+      let [uri, queryString] = extractUriAndQueryString(el);
+      return currentHeadChildren.some((child) => {
+        if (!isTracked(child))
+          return false;
+        let [currentUri, currentQueryString] = extractUriAndQueryString(child);
+        if (currentUri === uri && queryString !== currentQueryString)
+          return true;
+      });
+    }
+    function extractUriAndQueryString(el) {
+      let url = isScript(el) ? el.src : el.href;
+      return url.split("?");
     }
     function isAsset(el) {
       return el.tagName.toLowerCase() === "link" && el.getAttribute("rel").toLowerCase() === "stylesheet" || el.tagName.toLowerCase() === "style" || el.tagName.toLowerCase() === "script";
