@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -85,6 +86,46 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(500)
         ->assertPresent('@child')
         ->assertSeeIn('@child', 'Child')
+        ;
+    }
+
+    /** @test */
+    public function nested_components_do_not_error_when_parent_has_custom_layout_and_default_layout_does_not_exist()
+    {
+        config()->set('livewire.layout', '');
+
+        Livewire::visit([
+            new class extends Component {
+                #[Layout('layouts.app')]
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="$refresh" dusk="refresh">
+                            Refresh
+                        </button>
+                        <livewire:child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child">
+                        Child
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertPresent('@child')
+            ->assertSeeIn('@child', 'Child')
+            ->waitForLivewire()->click('@refresh')
+            ->pause(500)
+            ->assertPresent('@child')
+            ->assertSeeIn('@child', 'Child')
         ;
     }
 
