@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{ store, trigger, wrap };
+use function Livewire\{ invade, store, trigger, wrap };
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
@@ -236,7 +236,14 @@ class HandleComponents
             $revertA = Utils::shareWithViews('__livewire', $component);
             $revertB = Utils::shareWithViews('_instance', $component); // @deprecated
 
-            $html = $view->render();
+            $slots = $pushes = $prepends = $sections = null;
+
+            $viewContext = new ViewContext;
+
+            $html = $view->render(function ($view) use ($viewContext) {
+                // Extract leftover slots, sections, and pushes before they get flushed...
+                $viewContext->extractFromEnvironment($view->getFactory());
+            });
 
             $revertA(); $revertB();
 
@@ -248,7 +255,7 @@ class HandleComponents
                 $html = $newHtml;
             };
 
-            $html = $finish($html, $replaceHtml);
+            $html = $finish($html, $replaceHtml, $viewContext);
 
             return $html;
         });
@@ -302,7 +309,7 @@ class HandleComponents
         // If this isn't a "deep" set, set it directly, otherwise we have to
         // recursively get up and set down the value through the synths...
         if (empty($segments)) {
-            if ($value !== '__rm__') $component->$property = $value;
+            if ($value !== '__rm__') $this->setComponentPropertyAwareOfTypes($component, $property, $value);
         } else {
             $propertyValue = $component->$property;
 
@@ -373,6 +380,21 @@ class HandleComponents
         $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
 
         return $target;
+    }
+
+    protected function setComponentPropertyAwareOfTypes($component, $property, $value)
+    {
+        try {
+           $component->$property = $value;
+        } catch (\TypeError $e) {
+            // If an "int" is being set to empty string, unset the property (making it null).
+            // This is common in the case of `wire:model`ing an int to a text field...
+            if ($value === '' && str($e->getMessage())->isMatch('/of type [\?]?int/')) {
+                unset($component->$property);
+            } else {
+                throw $e;
+            }
+        }
     }
 
     protected function callMethods($root, $calls, $context)

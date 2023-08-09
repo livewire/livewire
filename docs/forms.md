@@ -127,10 +127,10 @@ Form objects allow you to re-use form logic across components and provide a nice
 You can either create a form class by hand or use the convenient artisan command:
 
 ```shell
-php artisan livewire:form CreatePost
+php artisan livewire:form PostForm
 ```
 
-The above command will create a file called `app/Livewire/Forms/CreatePost.php`.
+The above command will create a file called `app/Livewire/Forms/PostForm.php`.
 
 Let's rewrite the `CreatePost` component to use a `PostForm` class:
 
@@ -362,7 +362,7 @@ $this->reset('title');
 
 // Or multiple at once...
 
-$this->reset('title', 'content);
+$this->reset('title', 'content');
 ```
 
 ### Showing a loading indicator

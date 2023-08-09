@@ -11,11 +11,15 @@ hook('effects', (component, effects) => {
 function registerListeners(component, listeners) {
     listeners.forEach(name => {
         // Register a global listener...
-        window.addEventListener(name, (e) => {
+        let handler = (e) => {
             if (e.__livewire) e.__livewire.receivedBy.push(component)
 
             component.$wire.call('__dispatch', name, e.detail || {})
-        })
+        }
+
+        window.addEventListener(name, handler)
+
+        component.addCleanup(() => window.removeEventListener(name, handler))
 
         // Register a listener for when "to" or "self"
         component.el.addEventListener(name, (e) => {

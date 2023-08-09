@@ -233,12 +233,12 @@ public function updatingInvoicesPage($page)
 If you prefer to not reference the paginator name in the hook method name, you can use the more generic alternatives and simply receive the `$pageName` as a second argument to the hook method:
 
 ```php
-public function updatingPaginator($page, $pageName)
+public function updatingPaginators($page, $pageName)
 {
     // Runs before the page is updated for this component...
 }
 
-public function updatedPaginator($page, $pageName)
+public function updatedPaginators($page, $pageName)
 {
     // Runs after the page is updated for this component...
 }

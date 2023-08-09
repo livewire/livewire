@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
-use Arr;
+use Illuminate\Support\Arr;
 use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemAdapter;

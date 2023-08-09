@@ -1,6 +1,12 @@
 import { on } from '@/events'
 import { dispatchSelf } from './supportEvents'
 
+on('request', ({ options }) => {
+    if (window.Echo) {
+        options.headers['X-Socket-ID'] = window.Echo.socketId()
+    }
+})
+
 on('effects', (component, effects) => {
     let listeners = effects.listeners || []
 
