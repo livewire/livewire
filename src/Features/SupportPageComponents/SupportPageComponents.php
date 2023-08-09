@@ -2,9 +2,7 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
-use function Livewire\invade;
-use function Livewire\on;
-use function Livewire\off;
+use function Livewire\{invade, on, off, once};
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
 use Illuminate\View\View;
@@ -81,7 +79,9 @@ class SupportPageComponents extends ComponentHook
         $layoutConfig = null;
         $slots = [];
 
-        $handler = function ($target, $view, $data) use (&$layoutConfig, &$slots) {
+        // Only run this handler once for the parent-most component. Otherwise child components
+        // will run this handler too and override the configured layout...
+        $handler = once(function ($target, $view, $data) use (&$layoutConfig, &$slots) {
             $layoutAttr = $target->getAttributes()->whereInstanceOf(Layout::class)->first();
             $titleAttr = $target->getAttributes()->whereInstanceOf(Title::class)->first();
 
@@ -100,7 +100,7 @@ class SupportPageComponents extends ComponentHook
                 // to be later forwarded into the layout component itself...
                 $layoutConfig->viewContext = $viewContext;
             };
-        };
+        });
 
         on('render', $handler);
 
