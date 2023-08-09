@@ -123,7 +123,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertPresent('@child')
             ->assertSeeIn('@child', 'Child')
             ->waitForLivewire()->click('@refresh')
-            ->pause(500)
             ->assertPresent('@child')
             ->assertSeeIn('@child', 'Child')
         ;
