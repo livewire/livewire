@@ -9242,7 +9242,7 @@ on("commit.prepare", ({ component }) => {
 function getChildrenRecursively(component, callback) {
   component.children.forEach((child) => {
     callback(child);
-    recursive(child, callback);
+    getChildrenRecursively(child, callback);
   });
 }
 
