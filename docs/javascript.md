@@ -225,7 +225,7 @@ let $wire = {
     $on(event, callback) { ... },
 
     // Dispatch an event from this component...
-    // Usage: $wire.$dispatchTo('post-created', { postId: 2 })
+    // Usage: $wire.$dispatch('post-created', { postId: 2 })
     $dispatch(event, params = {}) { ... },
 
     // Dispatch an event onto another component...

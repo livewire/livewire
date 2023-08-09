@@ -13,3 +13,11 @@ Alpine.interceptInit(
         }
     })
 )
+
+document.addEventListener('alpine:navigating', () => {
+    // Before navigating away, we'll inscribe the latest state of each component
+    // in their HTML so that upon return, they will have the latest state...
+    Livewire.all().forEach(component => {
+        component.inscribeSnapshotAndEffectsOnElement()
+    })
+})

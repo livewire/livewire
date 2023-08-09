@@ -191,7 +191,7 @@ class UnitTest extends \Tests\TestCase
 
         Route::get('/foo', ComponentWithCustomSection::class);
 
-        $this->get('/foo')->assertSee('baz');
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
     /** @test */
@@ -406,6 +406,19 @@ class UnitTest extends \Tests\TestCase
             ->withoutExceptionHandling()
             ->get('/configurable-layout')
             ->assertSee('some-title');
+    }
+
+    /** @test */
+    public function can_push_to_stacks()
+    {
+        Route::get('/layout-with-stacks', ComponentWithStacks::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/layout-with-stacks')
+            ->assertSee('I am a style')
+            ->assertSee('I am a script 1')
+            ->assertDontSee('I am a script 2');
     }
 }
 
@@ -658,5 +671,30 @@ class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
     {
         return view('null-view')
             ->title('some-title');
+    }
+}
+
+#[Layout('layouts.app-layout-with-stacks')]
+class ComponentWithStacks extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                Contents
+            </div>
+
+            @push('styles')
+            <div>I am a style</div>
+            @endpush
+
+            @foreach([1, 2] as $attempt)
+                @once
+                    @push('scripts')
+                    <div>I am a script {{ $attempt }}</div>
+                    @endpush
+                @endonce
+            @endforeach
+        HTML;
     }
 }

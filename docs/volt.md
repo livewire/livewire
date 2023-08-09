@@ -132,6 +132,28 @@ mount(function (UserCounter $counter, $users) {
 });
 ```
 
+### Full page components
+
+Optionally, you may render a Volt component as a full page component by defining a Volt route in your application's `routes/web.php` file:
+
+```php
+use Livewire\Volt\Volt;
+
+Volt::route('/users', 'user-index');
+```
+
+By default, the component will be rendered using the `components.layouts.app` layout. You may customize this layout file using the `layout` function:
+
+```php
+use function Livewire\Volt\{layout, state};
+
+state('users');
+
+layout('components.layouts.admin');
+
+// ...
+```
+
 ## Properties
 
 Volt properties, like Livewire properties, are conveniently accessible in the view and persist between Livewire updates. You can define a property using the `state` function:
@@ -681,4 +703,11 @@ If your Volt component is nested, you may use "dot" notation to specify the comp
 
 ```php
 Volt::test('users.stats')
+```
+
+When testing a page that contains an anonymous Volt component, you may use the `assertSeeVolt` method to assert that the component is rendered:
+
+```php
+$this->get('/users')
+    ->assertSeeVolt('stats');
 ```

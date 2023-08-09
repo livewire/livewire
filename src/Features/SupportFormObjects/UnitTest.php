@@ -128,6 +128,31 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_validate_a_form_object_using_rule_attribute_with_custom_name()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormRuleAttributeWithCustomNameStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.name', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors('form.name')
+            ->set('form.name', 'Mfawa...')
+            ->assertHasNoErrors()
+            ->call('save')
+        ;
+    }
+
+    /** @test */
     function can_reset_property()
     {
         Livewire::test(new class extends Component {
@@ -206,4 +231,17 @@ class PostFormRuleAttributeStub extends Form
 
     #[Rule('required')]
     public $content = '';
+}
+
+class PostFormRuleAttributeWithCustomNameStub extends Form
+{
+    #[Rule(
+        rule: [
+            'required',
+            'min:3',
+            'max:255'
+        ],
+        as: 'my name'
+    )]
+    public $name = '';
 }

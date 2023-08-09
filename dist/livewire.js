@@ -97,12 +97,17 @@
   function isSynthetic(subject) {
     return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
   }
+  var csrf;
   function getCsrfToken() {
+    if (csrf)
+      return csrf;
     if (document.querySelector("[data-csrf]")) {
-      return document.querySelector("[data-csrf]").getAttribute("data-csrf");
+      csrf = document.querySelector("[data-csrf]").getAttribute("data-csrf");
+      return csrf;
     }
     if (window.livewireScriptConfig["csrf"] ?? false) {
-      return window.livewireScriptConfig["csrf"];
+      csrf = window.livewireScriptConfig["csrf"];
+      return csrf;
     }
     throw "Livewire: No CSRF token detected";
   }
@@ -3585,7 +3590,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         tmpFilename,
         finishCallback
       });
-      this.component.$wire.call("removeUpload", name, tmpFilename);
+      this.component.$wire.call("_removeUpload", name, tmpFilename);
     }
     setUpload(name, uploadObject) {
       this.uploadBag.add(name, uploadObject);
@@ -3630,14 +3635,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       request.addEventListener("load", () => {
         if ((request.status + "")[0] === "2") {
           let paths = retrievePaths(request.response && JSON.parse(request.response));
-          this.component.$wire.call("finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
           return;
         }
         let errors = null;
         if (request.status === 422) {
           errors = request.response;
         }
-        this.component.$wire.call("uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+        this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
       });
       request.send(formData);
     }
@@ -3645,7 +3650,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let fileInfos = uploadObject.files.map((file) => {
         return { name: file.name, size: file.size, type: file.type };
       });
-      this.component.$wire.call("startUpload", name, fileInfos, uploadObject.multiple);
+      this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
       setUploadLoading(this.component, name);
     }
     markUploadFinished(name, tmpFilenames) {
@@ -3859,14 +3864,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.snapshotEncoded = el.getAttribute("wire:snapshot");
       this.snapshot = JSON.parse(this.snapshotEncoded);
       if (!this.snapshot) {
-        throw new `Snapshot missing on Livewire component with id: `() + this.id;
+        throw `Snapshot missing on Livewire component with id: ` + this.id;
       }
       this.name = this.snapshot.memo.name;
       this.effects = JSON.parse(el.getAttribute("wire:effects"));
+      this.originalEffects = deepClone(this.effects);
       this.canonical = extractData(deepClone(this.snapshot.data));
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.$wire = generateWireObject(this, this.reactive);
+      this.cleanups = [];
       processEffects(this, this.effects);
     }
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -3902,6 +3909,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let childIds = Object.values(meta.children).map((i) => i[1]);
       return childIds.map((id) => findComponent(id));
     }
+    inscribeSnapshotAndEffectsOnElement() {
+      let el = this.el;
+      this.el.setAttribute("wire:snapshot", this.snapshotEncoded);
+      let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+      this.el.setAttribute("wire:effects", JSON.stringify(effects));
+    }
+    addCleanup(cleanup3) {
+      this.cleanups.push(cleanup3);
+    }
+    cleanup() {
+      while (this.cleanups.length > 0) {
+        this.cleanups.pop()();
+      }
+    }
   };
 
   // js/store.js
@@ -3918,6 +3939,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = components[id];
     if (!component)
       return;
+    component.cleanup();
     delete components[id];
   }
   function findComponent(id) {
@@ -3961,11 +3983,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
-      window.addEventListener(name, (e) => {
+      let handler4 = (e) => {
         if (e.__livewire)
           e.__livewire.receivedBy.push(component);
         component.$wire.call("__dispatch", name, e.detail || {});
-      });
+      };
+      window.addEventListener(name, handler4);
+      component.addCleanup(() => window.removeEventListener(name, handler4));
       component.el.addEventListener(name, (e) => {
         if (e.__livewire && e.bubbles)
           return;
@@ -8162,6 +8186,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportLaravelEcho.js
+  on("request", ({ options }) => {
+    if (window.Echo) {
+      options.headers["X-Socket-ID"] = window.Echo.socketId();
+    }
+  });
   on("effects", (component, effects) => {
     let listeners2 = effects.listeners || [];
     listeners2.forEach((event) => {
@@ -8219,6 +8248,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     isNavigating = true;
     document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
+  });
+  document.addEventListener("alpine:navigating", (e) => {
+    document.dispatchEvent(new CustomEvent("livewire:navigating", { bubbles: true }));
   });
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
@@ -8419,6 +8451,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       module_default.bind(el, { ["x-navigate.hover"]: true });
     }
   }));
+  document.addEventListener("alpine:navigating", () => {
+    Livewire.all().forEach((component) => {
+      component.inscribeSnapshotAndEffectsOnElement();
+    });
+  });
 
   // js/directives/shared.js
   function toggleBooleanStateDirective(el, directive4, isTruthy) {
@@ -8555,7 +8592,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return target === method && params === quickHash(JSON.stringify(methodParams));
         });
       }
-      if (Object.keys(updates).map((i) => i.split(".")[0]).includes(target))
+      let hasMatchingUpdate = Object.keys(updates).some((property) => {
+        return property.startsWith(target);
+      });
+      if (hasMatchingUpdate)
         return true;
       if (calls.map((i) => i.method).includes(target))
         return true;
@@ -8889,7 +8929,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/index.js
-  var Livewire = {
+  var Livewire2 = {
     directive: directive2,
     dispatchTo,
     start: start3,
@@ -8908,11 +8948,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     console.warn("Detected multiple instances of Livewire running");
   if (window.Alpine)
     console.warn("Detected multiple instances of Alpine running");
-  window.Livewire = Livewire;
+  window.Livewire = Livewire2;
   window.Alpine = module_default;
   if (window.livewireScriptConfig === void 0) {
     document.addEventListener("DOMContentLoaded", () => {
-      Livewire.start();
+      Livewire2.start();
     });
   }
 })();
