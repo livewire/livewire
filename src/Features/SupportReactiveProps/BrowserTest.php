@@ -98,7 +98,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() { return <<<'HTML'
                     <div>
                         <h2>Child count: <h2 dusk="child.count">{{ $count }}</h2>
-                        
+
                         <livewire:nestedchild :$count />
                     </div>
                     HTML;
@@ -116,6 +116,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             }
         ])
+            ->tinker()
             ->assertSeeIn('@parent.count', 0)
             ->assertSeeIn('@child.count', 0)
             ->assertSeeIn('@nested-child.count', 0)

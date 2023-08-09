@@ -2,7 +2,9 @@ import { findComponent } from "../store";
 import { on } from '@/events'
 
 on('commit.prepare', ({ component }) => {
-    component.children.forEach(child => {
+    // Ensure that all child components with reactive props (even deeply nested)
+    // are included in the network request...
+    getChildrenRecursively(component, child => {
         let childMeta = child.snapshot.memo
         let props = childMeta.props
 
@@ -10,3 +12,11 @@ on('commit.prepare', ({ component }) => {
         if (props) child.$wire.$commit()
     })
 })
+
+function getChildrenRecursively(component, callback) {
+    component.children.forEach(child => {
+        callback(child)
+
+        recursive(child, callback)
+    })
+}

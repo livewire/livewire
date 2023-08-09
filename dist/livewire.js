@@ -964,7 +964,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
       let staticAttributes = attributesOnly(vAttributes);
       vAttributes = vAttributes.map((attribute) => {
-        if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+        if (staticAttributes.find((attr) => attr.name === attribute.name)) {
           return {
             name: `x-bind:${attribute.name}`,
             value: `"${attribute.value}"`
@@ -981,7 +981,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function attributesOnly(attributes) {
-    return Array.from(attributes).map(toTransformedAttributes()).filter((attr2) => !outNonAlpineAttributes(attr2));
+    return Array.from(attributes).map(toTransformedAttributes()).filter((attr) => !outNonAlpineAttributes(attr));
   }
   var isDeferringHandlers = false;
   var directiveHandlerStacks = /* @__PURE__ */ new Map();
@@ -1800,15 +1800,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return getAttributeBinding(el, name, fallback2);
   }
   function getAttributeBinding(el, name, fallback2) {
-    let attr2 = el.getAttribute(name);
-    if (attr2 === null)
+    let attr = el.getAttribute(name);
+    if (attr === null)
       return typeof fallback2 === "function" ? fallback2() : fallback2;
-    if (attr2 === "")
+    if (attr === "")
       return true;
     if (isBooleanAttr(name)) {
-      return !![name, "true"].includes(attr2);
+      return !![name, "true"].includes(attr);
     }
-    return attr2;
+    return attr;
   }
   function debounce(func, wait) {
     var timeout;
@@ -1917,7 +1917,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let attributes = Object.entries(obj).map(([name, value]) => ({ name, value }));
     let staticAttributes = attributesOnly(attributes);
     attributes = attributes.map((attribute) => {
-      if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+      if (staticAttributes.find((attr) => attr.name === attribute.name)) {
         return {
           name: `x-bind:${attribute.name}`,
           value: `"${attribute.value}"`
@@ -5486,6 +5486,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function whenThisLinkIsPressed(el, callback) {
     el.addEventListener("click", (e) => e.preventDefault());
     el.addEventListener("mousedown", (e) => {
+      if (e.button !== 0)
+        return;
       e.preventDefault();
       callback((whenReleased) => {
         let handler4 = (e2) => {
@@ -6058,7 +6060,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let vAttributes = Object.entries(el._x_virtualDirectives).map(([name, value]) => ({ name, value }));
       let staticAttributes = attributesOnly2(vAttributes);
       vAttributes = vAttributes.map((attribute) => {
-        if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+        if (staticAttributes.find((attr) => attr.name === attribute.name)) {
           return {
             name: `x-bind:${attribute.name}`,
             value: `"${attribute.value}"`
@@ -6075,7 +6077,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function attributesOnly2(attributes) {
-    return Array.from(attributes).map(toTransformedAttributes2()).filter((attr2) => !outNonAlpineAttributes2(attr2));
+    return Array.from(attributes).map(toTransformedAttributes2()).filter((attr) => !outNonAlpineAttributes2(attr));
   }
   var isDeferringHandlers2 = false;
   var directiveHandlerStacks2 = /* @__PURE__ */ new Map();
@@ -6779,15 +6781,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return getAttributeBinding2(el, name, fallback2);
   }
   function getAttributeBinding2(el, name, fallback2) {
-    let attr2 = el.getAttribute(name);
-    if (attr2 === null)
+    let attr = el.getAttribute(name);
+    if (attr === null)
       return typeof fallback2 === "function" ? fallback2() : fallback2;
-    if (attr2 === "")
+    if (attr === "")
       return true;
     if (isBooleanAttr3(name)) {
-      return !![name, "true"].includes(attr2);
+      return !![name, "true"].includes(attr);
     }
-    return attr2;
+    return attr;
   }
   function debounce2(func, wait) {
     var timeout;
@@ -6881,7 +6883,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let attributes = Object.entries(obj).map(([name, value]) => ({ name, value }));
     let staticAttributes = attributesOnly2(attributes);
     attributes = attributes.map((attribute) => {
-      if (staticAttributes.find((attr2) => attr2.name === attribute.name)) {
+      if (staticAttributes.find((attr) => attr.name === attribute.name)) {
         return {
           name: `x-bind:${attribute.name}`,
           value: `"${attribute.value}"`
@@ -7085,11 +7087,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     `;
     document.head.appendChild(style);
   }
+  var oldBodyScriptTagHashes = [];
   function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = new DOMParser().parseFromString(html, "text/html");
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
-    let oldBodyScriptTagHashes = Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML));
+    oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML)));
     mergeNewHead(newHead);
     prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
     transitionOut(document.body);
@@ -7112,25 +7115,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       body.style.opacity = "1";
     });
   }
-  function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
+  function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes2) {
     newBody.querySelectorAll("script").forEach((i) => {
       if (i.hasAttribute("data-navigate-once")) {
         let hash = simpleHash(i.outerHTML);
-        if (oldBodyScriptTagHashes.includes(hash))
+        if (oldBodyScriptTagHashes2.includes(hash))
           return;
       }
       i.replaceWith(cloneScriptTag(i));
     });
   }
   function mergeNewHead(newHead) {
-    let headChildrenHtmlLookup = Array.from(document.head.children).map((i) => i.outerHTML);
+    let children = Array.from(document.head.children);
+    let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
     let garbageCollector = document.createDocumentFragment();
     for (let child of Array.from(newHead.children)) {
       if (isAsset(child)) {
         if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
           if (isTracked(child)) {
-            setTimeout(() => window.location.reload());
-            return;
+            if (ifTheQueryStringChangedSinceLastRequest(child, children)) {
+              setTimeout(() => window.location.reload());
+            }
           }
           if (isScript(child)) {
             document.head.appendChild(cloneScriptTag(child));
@@ -7154,13 +7159,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let script = document.createElement("script");
     script.textContent = el.textContent;
     script.async = el.async;
-    for (attr of el.attributes) {
+    for (let attr of el.attributes) {
       script.setAttribute(attr.name, attr.value);
     }
     return script;
   }
   function isTracked(el) {
     return el.hasAttribute("data-navigate-track");
+  }
+  function ifTheQueryStringChangedSinceLastRequest(el, currentHeadChildren) {
+    let [uri, queryString] = extractUriAndQueryString(el);
+    return currentHeadChildren.some((child) => {
+      if (!isTracked(child))
+        return false;
+      let [currentUri, currentQueryString] = extractUriAndQueryString(child);
+      if (currentUri === uri && queryString !== currentQueryString)
+        return true;
+    });
+  }
+  function extractUriAndQueryString(el) {
+    let url = isScript(el) ? el.src : el.href;
+    return url.split("?");
   }
   function isAsset(el) {
     return el.tagName.toLowerCase() === "link" && el.getAttribute("rel").toLowerCase() === "stylesheet" || el.tagName.toLowerCase() === "style" || el.tagName.toLowerCase() === "script";
@@ -7213,6 +7232,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function navigateTo(destination) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
+        fireEventForOtherLibariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
@@ -7221,7 +7241,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           swapCurrentPageWithNewHtml(html, () => {
             enablePersist && putPersistantElementsBack();
             restoreScroll && restoreScrollPosition();
-            fireEventForOtherLibariesToHookInto();
+            fireEventForOtherLibariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
             andAfterAllThis(() => {
               autofocus && autofocusElementsWithTheAutofocusAttribute();
@@ -7238,7 +7258,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         swapCurrentPageWithNewHtml(html, (andThen) => {
           enablePersist && putPersistantElementsBack();
           restoreScroll && restoreScrollPosition();
-          fireEventForOtherLibariesToHookInto();
+          fireEventForOtherLibariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine22);
@@ -7247,7 +7267,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     setTimeout(() => {
-      fireEventForOtherLibariesToHookInto(true);
+      fireEventForOtherLibariesToHookInto("alpine:navigated", true);
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -7264,8 +7284,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(init = false) {
-    document.dispatchEvent(new CustomEvent("alpine:navigated", { bubbles: true, detail: { init } }));
+  function fireEventForOtherLibariesToHookInto(eventName, init = false) {
+    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true, detail: { init } }));
   }
   function nowInitializeAlpineOnTheNewPage(Alpine22) {
     Alpine22.initTree(document.body, void 0, (el, skip) => {
@@ -7466,7 +7486,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let defaultGetKey = (el) => el.getAttribute("key");
       let noop = () => {
       };
-      console.log(options2.key);
       updating = options2.updating || noop;
       updated = options2.updated || noop;
       removing = options2.removing || noop;
@@ -7776,9 +7795,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return original.call(this, name, value);
       }
       hostDiv.innerHTML = `<span ${name}="${value}"></span>`;
-      let attr2 = hostDiv.firstElementChild.getAttributeNode(name);
-      hostDiv.firstElementChild.removeAttributeNode(attr2);
-      this.setAttributeNode(attr2);
+      let attr = hostDiv.firstElementChild.getAttributeNode(name);
+      hostDiv.firstElementChild.removeAttributeNode(attr);
+      this.setAttributeNode(attr);
     };
   }
   function src_default7(Alpine4) {
@@ -8317,13 +8336,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportProps.js
   on("commit.prepare", ({ component }) => {
-    component.children.forEach((child) => {
+    getChildrenRecursively(component, (child) => {
       let childMeta = child.snapshot.memo;
       let props = childMeta.props;
       if (props)
         child.$wire.$commit();
     });
   });
+  function getChildrenRecursively(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      recursive(child, callback);
+    });
+  }
 
   // js/directives/wire-transition.js
   on("morph.added", (el) => {
