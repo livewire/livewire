@@ -178,10 +178,19 @@ class AddressSynth extends Synth {
 }
 ```
 
-To make it available globally in your application, you can use Livewire's `propertySynthesizer` method from any service provider:
+To make it available globally in your application, you can use Livewire's `propertySynthesizer` method to register the synthesizer from your service provider boot method:
 
 ```php
-Livewire::propertySynthesizer(AddressSynth::class);
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Livewire::propertySynthesizer(DataSynth::class);
+    }
+}
 ```
 
 ## Supporting data binding
