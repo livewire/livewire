@@ -9264,13 +9264,19 @@ on("effects", (component, effects) => {
 
 // js/features/supportProps.js
 on("commit.prepare", ({ component }) => {
-  component.children.forEach((child) => {
+  getChildrenRecursively(component, (child) => {
     let childMeta = child.snapshot.memo;
     let props = childMeta.props;
     if (props)
       child.$wire.$commit();
   });
 });
+function getChildrenRecursively(component, callback) {
+  component.children.forEach((child) => {
+    callback(child);
+    getChildrenRecursively(child, callback);
+  });
+}
 
 // js/directives/wire-transition.js
 var import_alpinejs10 = __toESM(require_module_cjs());
