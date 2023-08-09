@@ -188,7 +188,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Livewire::propertySynthesizer(DataSynth::class);
+        Livewire::propertySynthesizer(AddressSynth::class);
     }
 }
 ```
