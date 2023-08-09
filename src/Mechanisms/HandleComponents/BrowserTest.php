@@ -85,7 +85,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertSeeIn('@number', 5)
         ->waitForLivewire()->keys('@numberInput', '{backspace}')
-        ->assertSeeIn('@number', '')
+        ->assertSeeNothingIn('@number', '')
         ;
     }
 

@@ -302,7 +302,7 @@ class HandleComponents
         // If this isn't a "deep" set, set it directly, otherwise we have to
         // recursively get up and set down the value through the synths...
         if (empty($segments)) {
-            if ($value !== '__rm__') $component->$property = $value;
+            if ($value !== '__rm__') $this->setComponentPropertyAwareOfTypes($component, $property, $value);
         } else {
             $propertyValue = $component->$property;
 
@@ -373,6 +373,21 @@ class HandleComponents
         $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
 
         return $target;
+    }
+
+    protected function setComponentPropertyAwareOfTypes($component, $property, $value)
+    {
+        try {
+           $component->$property = $value;
+        } catch (\TypeError $e) {
+            // If an "int" is being set to empty string, unset the property (making it null).
+            // This is common in the case of `wire:model`ing an int to a text field...
+            if ($value === '' && str($e->getMessage())->isMatch('/of type [\?]?int/')) {
+                unset($component->$property);
+            } else {
+                throw $e;
+            }
+        }
     }
 
     protected function callMethods($root, $calls, $context)

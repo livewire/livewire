@@ -7,7 +7,7 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class Test extends \Tests\TestCase
+class UnitTest extends \Tests\TestCase
 {
     /** @test */
     public function it_restores_laravel_middleware_after_livewire_test()
@@ -48,6 +48,28 @@ class Test extends \Tests\TestCase
             ->assertSet('foo', 'baz')
             ->call('checkStringable')
             ->assertSet('isStringable', true)
+        ;
+    }
+
+    /** @test */
+    public function uninitialized_integer_can_be_set_to_empty_string()
+    {
+        Livewire::test(new class extends Component {
+            public int $count;
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <h1 dusk="count">count: {{ $count }};</h1>
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSee('count: ;')
+            ->set('count', 1)
+            ->assertSee('count: 1;')
+            ->set('count', '')
+            ->assertSee('count: ;')
         ;
     }
 
