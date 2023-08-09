@@ -2,7 +2,7 @@ Properties store and manage data inside your Livewire components. They are defin
 
 ## Initializing properties
 
-You can set initial values for properties within your component's `mount` method.
+You can set initial values for properties within your component's `mount()` method.
 
 Consider the following example:
 
@@ -11,6 +11,7 @@ Consider the following example:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class TodoList extends Component
@@ -32,7 +33,7 @@ In this example, we've defined an empty `todos` array and initialized it with ex
 
 ## Bulk assignment
 
-Sometimes initializing many properties in the `mount()` method can feel verbose. To help with this, Livewire provides a convenient way to assign multiple properties at once via the `fill()` method. By passing an associative array of property names and their respective values, you can set several properties simultaneously and cut down on repetitive lines of code in `mount`.
+Sometimes initializing many properties in the `mount()` method can feel verbose. To help with this, Livewire provides a convenient way to assign multiple properties at once via the `fill()` method. By passing an associative array of property names and their respective values, you can set several properties simultaneously and cut down on repetitive lines of code in `mount()`.
 
 For example:
 
@@ -71,7 +72,7 @@ Because `$post->only(...)` returns an associative array of model attributes and 
 
 Livewire supports two-way data binding through the `wire:model` HTML attribute. This allows you to easily synchronize data between component properties and HTML inputs, keeping your user interface and component state in sync.
 
-Let's use the `wire:model` directive to bind the `todo` property in a `TodoList` component to a basic input element:
+Let's use the `wire:model` directive to bind the `$todo` property in a `TodoList` component to a basic input element:
 
 ```php
 <?php
@@ -113,7 +114,7 @@ class TodoList extends Component
 
 In the above example, the text input's value will synchronize with the `$todo` property on the server when the "Add Todo" button is clicked.
 
-This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/forms).
+This is just scratching the surface of `wire:model`. For deeper information on data binding, check out our [documentation on forms](/docs/forms).
 
 ## Resetting properties
 
@@ -128,7 +129,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 
-class ManageTodos extends Controller
+class ManageTodos extends Component
 {
     public $todos = [];
 
@@ -148,7 +149,7 @@ class ManageTodos extends Controller
 In the above example, after a user clicks "Add Todo", the input field holding the todo that has just been added will clear, allowing the user to write a new todo.
 
 > [!warning] `reset()` won't work on values set in `mount()`
-> `reset()` will reset a property to its state before the `mount` method was called. If you initialized the property in `mount()` to a different value, you will need to reset the property manually.
+> `reset()` will reset a property to its state before the `mount()` method was called. If you initialized the property in `mount()` to a different value, you will need to reset the property manually.
 
 
 ## Supported property types
@@ -159,7 +160,7 @@ Each property in a Livewire component is serialized or "dehydrated" into JSON be
 
 This two-way conversion process has certain limitations, restricting the types of properties Livewire can work with.
 
-### Primitives types
+### Primitive types
 
 Livewire supports primitive types such as strings, integers, etc. These types can be easily converted to and from JSON, making them ideal for use as properties in Livewire components.
 
@@ -296,7 +297,7 @@ As mentioned earlier, if you want to support types more globally and powerfully,
 
 ## Accessing properties from JavaScript
 
-Because Livewire properties are also available in the browser via JavaScript, you can access and manipulate their JavaScript representations from [AlpineJS](https://alpinejs.dev/)
+Because Livewire properties are also available in the browser via JavaScript, you can access and manipulate their JavaScript representations from [AlpineJS](https://alpinejs.dev/).
 
 Alpine is a lightweight JavaScript library that is included with Livewire. Alpine provides a way to build lightweight interactions into your Livewire components without making full server roundtrips.
 
@@ -346,21 +347,26 @@ For example, let's add a "Clear" button to the `TodoList` component to allow the
 </div>
 ```
 
-After the user clicks "Clear", the input will be reset to an empty string without sending a network request to the server.
+After the user clicks "Clear", the input will be reset to an empty string, without sending a network request to the server.
 
 On the subsequent request, the server-side value of `$todo` will be updated and synchronized.
 
-If you prefer, you can also use the more explicit `.set()` method for setting properties client-side. However, you should note that using `.set()` immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API:
+If you prefer, you can also use the more explicit `.set()` method for setting properties client-side. However, you should note that using `.set()` by default immediately triggers a network request and synchronizes the state with the server. If that is desired, then this is an excellent API:
 
 ```blade
 <button x-on:click="$wire.set('todo', '')">Clear</button>
+```
+
+In order to update the property without sending a network request to the server, you can pass a third bool parameter. This will defer the network request and on a subsequent request, the state will be synchronized on the server-side:
+```blade
+<button x-on:click="$wire.set('todo', '', false)">Clear</button>
 ```
 
 ## Security concerns
 
 While Livewire properties are a powerful feature, there are a few security considerations that you should be aware of before using them.
 
-In short, always treat public properties as user input—as if they were request input from a traditional endpoint. In light of this, it's essential to validate and authorize properties before persisting them to a database—just like you would do when working with request input in a controller.
+In short, always treat public properties as user input — as if they were request input from a traditional endpoint. In light of this, it's essential to validate and authorize properties before persisting them to a database — just like you would do when working with request input in a controller.
 
 ### Don't trust property values
 
@@ -472,7 +478,7 @@ class UpdatePost extends Component
 }
 ```
 
-Now, if a user tries to modify `$id` on the front end an error will be thrown.
+Now, if a user tries to modify `$id` on the front end, an error will be thrown.
 
 By using `#[Locked]`, you can assume this property has not been manipulated anywhere outside your component's class.
 
@@ -480,7 +486,7 @@ For more information on locking properties, [consult the Locked properties docum
 
 #### Eloquent models and locking
 
-When an Eloquent model is assigned to a Livewire component property, Livewire will automatically lock the property and ensure the ID isn't changed so that you are safe from these kinds of attacks:
+When an Eloquent model is assigned to a Livewire component property, Livewire will automatically lock the property and ensure the ID isn't changed, so that you are safe from these kinds of attacks:
 
 ```php
 <?php
@@ -535,7 +541,7 @@ For example, suppose you have a Livewire component that defines a public propert
 }
 ```
 
-As you can see, the dehydrated value of the `$post` property includes the class name of the model (`App\Models\Post\`) as well as the ID and any relationships that have been eager-loaded.
+As you can see, the dehydrated value of the `$post` property includes the class name of the model (`App\Models\Post`) as well as the ID and any relationships that have been eager-loaded.
 
 If you don't want to expose the class name of the model, you can use Laravel's "morphMap" functionality from a service provider to assign an alias to a model class name:
 
@@ -583,6 +589,7 @@ To demonstrate, consider the following `ShowTodos` component with a `select()` c
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class ShowTodos extends Component
@@ -619,6 +626,7 @@ Here's the above example re-written using a computed property:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -629,7 +637,7 @@ class ShowTodos extends Component
     {
         return Auth::user()
             ->todos()
-            ->select('content')
+            ->select(['title', 'content'])
             ->get();
     }
 
@@ -659,6 +667,7 @@ You can also access `$todos` from inside your class. For example, if you had a `
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -669,7 +678,7 @@ class ShowTodos extends Component
     {
         return Auth::user()
             ->todos()
-            ->select('content')
+            ->select(['title', 'content'])
             ->get();
     }
 
@@ -687,6 +696,6 @@ class ShowTodos extends Component
 
 You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Computed]` in the first place?
 
-The reason is that computed properties have a performance advantage since they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once so that you don't run an expensive query multiple times in the same request.
+The reason is that computed properties have a performance advantage, since they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once, so that you don't run an expensive query multiple times in the same request.
 
 For more information, [visit the computed properties documentation](/docs/computed-properties).

@@ -2,8 +2,11 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Tests\TestComponent;
 use Tests\TestCase;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends TestCase
 {
@@ -26,10 +29,10 @@ class UnitTest extends TestCase
         HTML, <<<HTML
             <!doctype html>
             <html>
-                <head>$livewireStyles
+                <head>
                     <meta charset="utf-8"/>
                     <title></title>
-                </head>
+                $livewireStyles</head>
                 <body>
                 $livewireScripts</body>
             </html>
@@ -79,14 +82,53 @@ class UnitTest extends TestCase
                 lang="en"
             >
                 <head
-                >$livewireStyles
+                >
                     <meta charset="utf-8"/>
                     <title></title>
-                </head>
+                $livewireStyles</head>
                 <body>
                 $livewireScripts</body
                 >
             </html>
+        HTML);
+    }
+
+    /** @test */
+    public function it_injects_livewire_assets_html_with_header(): void
+    {
+        $livewireStyles = FrontendAssets::styles();
+        $livewireScripts = FrontendAssets::scripts();
+
+        $this->compare(<<<'HTML'
+            <!doctype html>
+            <HTML
+                lang="en"
+            >
+                <Head
+                >
+                    <meta charset="utf-8"/>
+                    <title></title>
+                </Head>
+                <bOdY>
+                    <header class=""></header>
+                </bOdY
+                >
+            </HTML>
+        HTML, <<<HTML
+            <!doctype html>
+            <HTML
+                lang="en"
+            >
+                <Head
+                >
+                    <meta charset="utf-8"/>
+                    <title></title>
+                $livewireStyles</Head>
+                <bOdY>
+                    <header class=""></header>
+                $livewireScripts</bOdY
+                >
+            </HTML>
         HTML);
     }
 
@@ -105,7 +147,31 @@ class UnitTest extends TestCase
     /** @test */
     public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
-        $this->markTestIncomplete();
+        Route::get('/with-livewire', function () {
+            return (new class Extends TestComponent {})();
+        });
+
+        Route::get('/without-livewire', function () {
+            return '<html></html>';
+        });
+
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
+        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.js');
+    }
+
+    /** @test */
+    public function only_auto_injects_when_persist_was_rendered_on_the_page(): void
+    {
+        Route::get('/with-persist', function () {
+            return Blade::render('<html>@persist("foo") ... @endpersist</html>');
+        });
+
+        Route::get('/without-persist', function () {
+            return '<html></html>';
+        });
+
+        $this->get('/with-persist')->assertSee('/livewire/livewire.js');
+        $this->get('/without-persist')->assertDontSee('/livewire/livewire.js');
     }
 
     /** @test */

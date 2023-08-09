@@ -1,27 +1,23 @@
 import Alpine from 'alpinejs'
+import { on } from './events'
 
-let directives = {}
-
-export function directive(name, callback) {
-    directives[name] = callback
+export function matchesForLivewireDirective(attributeName) {
+    return attributeName.match(new RegExp('wire:'))
 }
 
-export function initDirectives(el, component) {
-    let elDirectives = getDirectives(el)
+export function extractDirective(el, name) {
+    let [value, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
 
-    Object.entries(directives).forEach(([name, callback]) => {
-        elDirectives.directives
-            .filter(({ value }) => value === name)
-            .forEach(directive => {
-                callback({
-                    el,
-                    directive,
-                    component,
-                    cleanup: (callback) => {
-                        Alpine.onAttributeRemoved(el, 'wire:'.directive, callback)
-                    }
-                })
+    return new Directive(value, modifiers, name, el)
+}
+
+export function directive(name, callback) {
+    on('directive.init', ({ el, component, directive, cleanup }) => {
+        if (directive.value === name) {
+            callback({
+                el, directive, component, cleanup
             })
+        }
     })
 }
 
@@ -54,7 +50,7 @@ class DirectiveManager {
     extractTypeModifiersAndValue() {
         return Array.from(this.el.getAttributeNames()
             // Filter only the livewire directives.
-            .filter(name => name.match(new RegExp('wire:')))
+            .filter(name => matchesForLivewireDirective(name))
             // Parse out the type, modifiers, and value from it.
             .map(name => {
                 const [value, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
@@ -64,7 +60,7 @@ class DirectiveManager {
     }
 }
 
-class Directive {
+export class Directive {
     constructor(value, modifiers, rawName, el) {
         this.rawName = this.raw = rawName
         this.el = el

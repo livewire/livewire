@@ -91,6 +91,46 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function it_can_register_multiple_listeners_via_attribute(): void
+    {
+        Livewire::test(new class extends Component {
+            public $counter = 0;
+
+            #[On('foo'), On('bar')]
+            public function add(): void
+            {
+                $this->counter++;
+            }
+
+            public function render() { return '<div></div>'; }
+        })
+            ->dispatch('foo')
+            ->assertSet('counter', 1)
+            ->dispatch('bar')
+            ->assertSet('counter', 2);
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_attribute_userland(): void
+    {
+        Livewire::test(new class extends Component {
+            public $counter = 0;
+
+            #[\Livewire\Attributes\On('foo'), \Livewire\Attributes\On('bar')]
+            public function add(): void
+            {
+                $this->counter++;
+            }
+
+            public function render() { return '<div></div>'; }
+        })
+            ->dispatch('foo')
+            ->assertSet('counter', 1)
+            ->dispatch('bar')
+            ->assertSet('counter', 2);
+    }
+
+    /** @test */
     public function receive_event()
     {
         $component = Livewire::test(ReceivesEvents::class);

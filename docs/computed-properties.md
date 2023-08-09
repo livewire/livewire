@@ -1,16 +1,17 @@
 Computed properties are a way to create "derived" properties in Livewire. Like accessors on an Eloquent model, computed properties allow you to access values and cache them for future access during the request.
 
-Computed properties are particularly useful in combination with a component's public properties.
+Computed properties are particularly useful in combination with component's public properties.
 
 ## Basic usage
 
 To create a computed property, you can add the `#[Computed]` attribute above any method in your Livewire component. Once the attribute has been added to the method, you can access it like any other property.
 
-For example, here's a `ShowUser` component that uses a computed property named `user` to access a `User` Eloquent model based on a property named `$userId`:
+For example, here's a `ShowUser` component that uses a computed property named `user()` to access a `User` Eloquent model based on a property named `$userId`:
 
 ```php
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use App\Models\User;
@@ -72,11 +73,12 @@ Consider the following problematic scenario:
 
 To clear, or "bust", the stored cache, you can use PHP's `unset()` function.
 
-Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale—meaning the `posts` computed property needs to be re-computed to include the newly added post:
+Below is an example of an action called `createPost()` that, by creating a new post in the application, makes the `posts()` computed stale — meaning the computed property `posts()` needs to be re-computed to include the newly added post:
 
 ```php
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -103,13 +105,13 @@ class ShowPosts extends Component
 }
 ```
 
-In the above component, the computed property is cached before a new post is created because the `createPost` method accesses `$this->posts` before the new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
+In the above component, the computed property is cached before a new post is created because the `createPost()` method accesses `$this->posts` before the new post is created. To ensure that `$this->posts` contains the most up-to-date contents when accessed inside the view, the cache is invalidated using `unset($this->posts)`.
 
 ### Caching between requests
 
 Sometimes you would like to cache the value of a computed property for the lifespan of a Livewire component, rather than it being cleared after every request. In these cases, you can use [Laravel's caching utilities](https://laravel.com/docs/cache#retrieve-store).
 
-Below is an example of a `user()` computed property, where instead of executing the Eloquent query directly, we wrap the query in `Cache::remember()` to ensure that any future requests retrieve it from Laravel's cache instead of re-executing the query:
+Below is an example of a computed property named `user()`, where instead of executing the Eloquent query directly, we wrap the query in `Cache::remember()` to ensure that any future requests retrieve it from Laravel's cache instead of re-executing the query:
 
 ```php
 <?php
@@ -140,7 +142,7 @@ class ShowUser extends Component
 
 Because each unique instance of a Livewire component has a unique ID, we can use `$this->getId()` to generate a unique cache key that will only be applied to future requests for this same component instance.
 
-But, as you may have noticed, most of this code is predictable and can easily be abstracted. Because of this, Livewire's `#[Computed]` attribute provides a helpful `persist` parameter. By applying `[Computed(persist: true)]` to a method, you can achieve the same result without any extra code:
+But, as you may have noticed, most of this code is predictable and can easily be abstracted. Because of this, Livewire's `#[Computed]` attribute provides a helpful `persist` parameter. By applying `#[Computed(persist: true)]` to a method, you can achieve the same result without any extra code:
 
 ```php
 use Livewire\Attributes\Computed;
@@ -162,11 +164,11 @@ Livewire caches persisted values for 3600 seconds (one hour). You can override t
 ```
 
 > [!tip] Calling `unset()` will bust this cache
-> As previously discussed, you can clear a computed property's cache using PHP's `unset()` method. This also applies to computed properties using the `persist: true` parameter. When calling `unset()` on a cached computed property, Livewire will clear not only the computed property cache but also the underlying cached value in the Laravel cache.
+> As previously discussed, you can clear a computed property's cache using PHP's `unset()` method. This also applies to computed properties using the `persist: true` parameter. When calling `unset()` on a cached computed property, Livewire will clear not only the computed property cache, but also the underlying cached value in Laravel's cache.
 
 ## Caching across all components
 
-Instead of caching a the value of a computed property for the duration of a single component's lifecycle, you can cache the value of a computed across all components in your application using the `cache: true` parameter provided by the `#[Computed]` attribute:
+Instead of caching the value of a computed property for the duration of a single component's lifecycle, you can cache the value of a computed across all components in your application using the `cache: true` parameter provided by the `#[Computed]` attribute:
 
 ```php
 use Livewire\Attributes\Computed;

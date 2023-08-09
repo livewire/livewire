@@ -48,7 +48,7 @@ class Dashboard extends Component
 }
 ```
 
-Now, when the `post-created` event is dispatched from `CreatePost`, a network request will be triggered and the `notifyAboutNewPost()` action will be invoked.
+Now, when the `post-created` event is dispatched from `CreatePost`, a network request will be triggered and the `updatePostList()` action will be invoked.
 
 As you can see, additional data sent with the event will be provided to the action as its first argument.
 
@@ -123,30 +123,6 @@ Like Livewire's `dispatch()` method, you can pass additional data along with the
 
 To learn more about dispatching events using Alpine, consult the [Alpine documentation](https://alpinejs.dev/magics/dispatch).
 
-### Listening for events from children only
-
-By default, when you register a Livewire event listener using `#[On]`, it will listen for that event anywhere on the page. Livewire does this by listening for the event on the `window` object.
-
-But, sometimes you may want to scope an event listener to only listen for events from child components rendered within the listening component.
-
-To accomplish this, you may provide the `fromChildren` argument to `#[On]`:
-
-```php
-use Livewire\Component;
-use Livewire\Attributes\On; // [tl! highlight]
-
-class Dashboard extends Component
-{
-	#[On('post-created', fromChildren: true)] // [tl! highlight]
-    public function updatePostCount()
-    {
-		// ...
-    }
-}
-```
-
-Now, the `updatePostCount()` method will only be triggered when a child component dispatches a `post-created` event.
-
 > [!tip] You might not need events
 > If you are using events to call behavior on a parent from a child, you can instead call the action directly from the child using `$parent` in your Blade template. For example:
 >
@@ -204,11 +180,21 @@ You can dispatch events directly from your Blade templates using the `$dispatch`
 </button>
 ```
 
-In this example, when the button is clicked, the `show-post-modal` event will be emitted with the specified data.
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched with the specified data.
+
+If you want to dispatch an event directly to another component you can use the `$dispatchTo()` JavaScript function:
+
+```blade
+<button wire:click="$dispatchTo('posts', 'show-post-modal', { id: {{ $post->id }} })">
+    EditPost
+</button>
+```
+
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched directly to the `Posts` component.
 
 ## Testing dispatched events
 
-To test events emitted by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
+To test events dispatched by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
 
 ```php
 <?php
@@ -237,7 +223,7 @@ In this example, the test ensures that the `post-created` event is dispatched wi
 
 ### Testing Event Listeners
 
-To test event listeners, you can emit events from the test environment and assert that the expected actions are performed in response to the event:
+To test event listeners, you can dispatch events from the test environment and assert that the expected actions are performed in response to the event:
 
 ```php
 <?php
@@ -343,7 +329,7 @@ class OrderTracker extends Component
 }
 ```
 
-If you have Echo channels with variables embedded in them (such as a Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
+If you have Echo channels with variables embedded in them (such as an Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
 
 ```php
 <?php
@@ -367,7 +353,6 @@ class OrderTracker extends Component
         ];
     }
 
-    #[On('echo:orders,OrderShipped')]
     public function notifyShipped()
     {
         $this->showOrderShippedNotification = true;

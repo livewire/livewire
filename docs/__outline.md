@@ -54,7 +54,7 @@ Fundamentals:
 	* Data binding (Basic introduction with link to other documentation page)
 	* Supported property types
 		* (Brief explanation of hydration/dehydration and why every possible type isn't supported)
-		* Primitives types (strings, int, boolean, etc...)
+		* Primitive types (strings, int, boolean, etc...)
 		* Common PHP types (Collection, DateTime, etc...)
 		* Supporting custom types (explain how users can add support for types specific to their application)
 			* Using Wireables

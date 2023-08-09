@@ -32,7 +32,11 @@ class SupportStreaming extends ComponentHook
     public static function streamContent($body)
     {
         echo json_encode(['stream' => true, 'body' => $body, 'endStream' => true]);
-        ob_flush();
+
+        if (ob_get_level() > 0) {
+            ob_flush();
+        }
+
         flush();
     }
 }

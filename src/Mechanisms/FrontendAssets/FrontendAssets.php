@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\FrontendAssets;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use function Livewire\on;
 
 class FrontendAssets
 {
@@ -29,6 +30,13 @@ class FrontendAssets
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
+
+        on('flush-state', function () {
+            $instance = app(static::class);
+
+            $instance->hasRenderedScripts = false;
+            $instance->hasRenderedStyles = false;
+        });
     }
 
     function useScriptTagAttributes($attributes)
@@ -38,9 +46,7 @@ class FrontendAssets
 
     function setScriptRoute($callback)
     {
-        $route = $callback(function () {
-            return $this->returnJavaScriptAsFile();
-        });
+        $route = $callback([self::class, 'returnJavaScriptAsFile']);
 
         $this->javaScriptRoute = $route;
     }
@@ -94,6 +100,10 @@ class FrontendAssets
             [wire\:dirty]:not(textarea):not(input):not(select) {
                 display: none;
             }
+
+            [x-cloak] {
+                display: none;
+            }
         </style>
         HTML;
 
@@ -143,6 +153,8 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
+        $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
+
         $updateUri = app('livewire')->getUpdateUri();
 
         $extraAttributes = Utils::stringifyHtmlAttributes(
@@ -150,7 +162,7 @@ class FrontendAssets
         );
 
         return <<<HTML
-        <script src="{$url}" {$nonce} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
+        <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -160,9 +172,12 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
+        $progressBar = config('livewire.navigate.show_progress_bar', true);
+
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => app('livewire')->getUpdateUri(),
+            'progressBar' => $progressBar,
         ]);
 
         return <<<HTML

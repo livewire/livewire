@@ -166,7 +166,7 @@ class AddressSynth extends Synth {
 
     public function hydrate($value)
     {
-        $instance = new Addresss;
+        $instance = new Address;
 
         $instance->street = $value['street'];
         $instance->city = $value['city'];
@@ -211,7 +211,7 @@ class AddressSynth extends Synth {
 
     public function hydrate($value)
     {
-        $instance = new Addresss;
+        $instance = new Address;
 
         $instance->street = $value['street'];
         $instance->city = $value['city'];

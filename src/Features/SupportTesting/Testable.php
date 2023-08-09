@@ -47,8 +47,11 @@ class Testable
             $name = array_shift($otherComponents);
 
             foreach ($otherComponents as $key => $value) {
-                if (is_numeric($key)) app('livewire')->component($value);
-                else app('livewire')->component($key, $value);
+                if (is_numeric($key)) {
+                    app('livewire')->isDiscoverable($name) || app('livewire')->component($value);
+                } else {
+                    app('livewire')->component($key, $value);
+                }
             }
         } elseif (is_object($name)) {
             $anonymousClassComponent = $name;
@@ -57,7 +60,7 @@ class Testable
 
             app('livewire')->component($name, $anonymousClassComponent);
         } else {
-            app('livewire')->component($name);
+            app('livewire')->isDiscoverable($name) || app('livewire')->component($name);
         }
 
         return $name;
@@ -180,7 +183,7 @@ class Testable
         // This methhod simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
         $this->call(
-            'startUpload',
+            '_startUpload',
             $name,
             collect($files)->map(function ($file) {
                 return [
@@ -199,7 +202,7 @@ class Testable
         try {
             $fileHashes = (new \Livewire\Features\SupportFileUploads\FileUploadController)->validateAndStore($files, \Livewire\Features\SupportFileUploads\FileUploadConfiguration::disk());
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->call('uploadErrored', $name, json_encode(['errors' => $e->errors()]), $isMultiple);
+            $this->call('_uploadErrored', $name, json_encode(['errors' => $e->errors()]), $isMultiple);
 
             return $this;
         }
@@ -216,7 +219,7 @@ class Testable
 
         // Now we finish the upload with a final call to the Livewire component
         // with the temporarily uploaded file path.
-        $this->call('finishUpload', $name, $newFileHashes, $isMultiple);
+        $this->call('_finishUpload', $name, $newFileHashes, $isMultiple);
 
         return $this;
     }

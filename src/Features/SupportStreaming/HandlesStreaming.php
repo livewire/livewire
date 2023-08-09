@@ -6,10 +6,10 @@ use Livewire\ComponentHookRegistry;
 
 trait HandlesStreaming
 {
-    function stream($name, $content, $append = false)
+    function stream($name, $content, $replace = false)
     {
         $hook = ComponentHookRegistry::getHook($this, SupportStreaming::class);
 
-        $hook->stream($name, $content, $append);
+        $hook->stream($name, $content, $replace);
     }
 }

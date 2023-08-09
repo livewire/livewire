@@ -111,13 +111,17 @@ function containsTargets(payload, targets) {
 
     return targets.some(({ target, params }) => {
         if (params) {
-            return calls.some(({ method, params: methodParams}) => {
+            return calls.some(({ method, params: methodParams }) => {
                 return target === method
-                    && params === quickHash(methodParams.toString())
+                    && params === quickHash(JSON.stringify(methodParams))
             })
         }
 
-        if (Object.keys(updates).map(i => i.split('.')[0]).includes(target)) return true
+        let hasMatchingUpdate = Object.keys(updates).some(property => {
+            return property.startsWith(target)
+        })
+
+        if (hasMatchingUpdate) return true
 
         if (calls.map(i => i.method).includes(target)) return true
     })
@@ -134,7 +138,7 @@ function getTargets(el) {
         let raw = directive.expression
 
         if (raw.includes('(') && raw.includes(')')) {
-            targets.push({ target: directive.method, params: quickHash(directive.params.toString()) })
+            targets.push({ target: directive.method, params: quickHash(JSON.stringify(directive.params)) })
         } else if (raw.includes(',')) {
             raw.split(',').map(i => i.trim()).forEach(target => {
                 targets.push({ target })

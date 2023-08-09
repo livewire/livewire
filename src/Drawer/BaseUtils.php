@@ -81,43 +81,4 @@ class BaseUtils
     static function getProperty($target, $property) {
         return (new ReflectionClass($target))->getProperty($property);
     }
-
-    static function propertyHasAnnotation($target, $property, $annotation) {
-        foreach (static::getAnnotations($target) as $prop => $annotations) {
-            if ($prop === $property && array_key_exists($annotation, $annotations)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    static function getAnnotations($target) {
-        if (! is_object($target)) return [];
-
-        return collect()
-            ->concat((new \ReflectionClass($target))->getProperties())
-            ->concat((new \ReflectionClass($target))->getMethods())
-            ->filter(function ($subject) use ($target) {
-                if ($subject->class !== get_class($target)) return false;
-                if ($subject->getDocComment() === false) return false;
-                return true;
-            })
-            ->mapWithKeys(function ($subject) {
-                return [$subject->getName() => static::parseAnnotations($subject->getDocComment())];
-            })->toArray();
-    }
-
-    static function parseAnnotations($raw) {
-        return str($raw)
-            ->matchAll('/\@([^\*]+)/')
-            ->mapWithKeys(function ($line) {
-                $segments = explode(' ', trim($line));
-
-                $annotation = array_shift($segments);
-
-                return [$annotation => $segments];
-            })
-            ->toArray();
-    }
 }

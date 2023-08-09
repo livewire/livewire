@@ -1,4 +1,4 @@
-Components are the building block of your Livewire application. They combine state and behavior to create reusable pieces of UI for your front end. Here, we'll cover the basics of creating and rendering components.
+Components are the building blocks of your Livewire application. They combine state and behavior to create reusable pieces of UI for your front end. Here, we'll cover the basics of creating and rendering components.
 
 ## Creating components
 
@@ -49,7 +49,7 @@ php artisan make:livewire posts.create-post
 
 ### Inline components
 
-If your component is fairly small, you may want to create an _inline_ component. Inline components are single-file Livewire components whose view template is contained directly in the `render` method rather than a separate file:
+If your component is fairly small, you may want to create an _inline_ component. Inline components are single-file Livewire components whose view template is contained directly in the `render()` method rather than a separate file:
 
 ```php
 <?php
@@ -79,7 +79,7 @@ php artisan make:livewire CreatePost --inline
 
 ### Omitting the render method
 
-To reduce boilerplate in your components, you can omit the `render()` method entirely and Livewire will use its own underlying `render()` method which returns a view with the conventional name corresponding to your component:
+To reduce boilerplate in your components, you can omit the `render()` method entirely and Livewire will use its own underlying `render()` method, which returns a view with the conventional name corresponding to your component:
 
 ```php
 <?php
@@ -106,10 +106,10 @@ php artisan livewire:stubs
 
 This will create four new files in your application:
 
-* `stubs/livewire.stub`—used for generating new components
-* `stubs/livewire.inline.stub`—used for generating _inline_ components
-* `stubs/livewire.test.stub`—used for generating test files
-* `stubs/livewire.view.stub`—used for generating component views
+* `stubs/livewire.stub` — used for generating new components
+* `stubs/livewire.inline.stub` — used for generating _inline_ components
+* `stubs/livewire.test.stub` — used for generating test files
+* `stubs/livewire.view.stub` — used for generating component views
 
 Even though these files live in your application, you can still use the `make:livewire` Artisan command and Livewire will automatically use your custom stubs when generating files.
 
@@ -117,7 +117,7 @@ Even though these files live in your application, you can still use the `make:li
 
 Livewire components have properties that store data and can be easily accessed within the component's class and Blade view. This section discusses the basics of adding a property to a component and using it in your application.
 
-To add a property to a Livewire component, declare a public property in your component class. For example, let's create a property called `title` in the `CreatePost` component:
+To add a property to a Livewire component, declare a public property in your component class. For example, let's create a `$title` property in the `CreatePost` component:
 
 ```php
 <?php
@@ -157,7 +157,7 @@ The rendered output of this component would be:
 
 ### Sharing additional data with the view
 
-In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](/docs/properties#security-concerns).
+In addition to accessing properties from the view, you can explicitly pass data to the view from the `render()` method, like you might typically do from a controller. This can be useful when you want to pass additional data without first storing it as a property—because properties have [specific performance and security implications](/docs/properties#security-concerns).
 
 To pass data to the view in the `render()` method, you can use the `with()` method on the view instance. For example, let's say you want to pass the post author's name to the view. In this case, the post's author is the currently authenticated user:
 
@@ -166,6 +166,7 @@ To pass data to the view in the `render()` method, you can use the `with()` meth
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class CreatePost extends Component
@@ -175,13 +176,13 @@ class CreatePost extends Component
     public function render()
     {
         return view('livewire.create-post')->with([
-	        'author' => auth()->user()->name,
+	        'author' => Auth::user()->name,
 	    ]);
     }
 }
 ```
 
-Now you may access the `$author` from the component's Blade view:
+Now you may access the `$author` property from the component's Blade view:
 
 ```blade
 <div>
@@ -278,7 +279,7 @@ Next, let's call the `save` action from the component's Blade view by adding the
 </form>
 ```
 
-When the "Save" button is clicked, the `save` method in your Livewire component will be executed and your component will re-render.
+When the "Save" button is clicked, the `save()` method in your Livewire component will be executed and your component will re-render.
 
 To keep learning about Livewire actions, visit the [actions documentation](/docs/actions).
 
@@ -305,7 +306,7 @@ You can include a Livewire component in your Blade templates using the `<livewir
 
 To pass outside data into a Livewire component, you can use attributes on the component tag. This is useful when you want to initialize a component with specific data.
 
-To pass an initial value to the `title` property of the `CreatePost` component, you can use the following syntax:
+To pass an initial value to the `$title` property of the `CreatePost` component, you can use the following syntax:
 
 ```blade
 <livewire:create-post title="Initial Title" />
@@ -317,7 +318,7 @@ If you need to pass dynamic values or variables to a component, you can write PH
 <livewire:create-post :title="$initialTitle" />
 ```
 
-Data passed into components is received through the `mount()` lifecycle hook as method parameters. In this case, to assign the `title` parameter to a property, you would write a `mount()` method like the following:
+Data passed into components is received through the `mount()` lifecycle hook as method parameters. In this case, to assign the `$title` parameter to a property, you would write a `mount()` method like the following:
 
 ```php
 <?php
@@ -339,7 +340,7 @@ class CreatePost extends Component
 }
 ```
 
-In this example, the `title` property will be initialized with the value "Initial Title".
+In this example, the `$title` property will be initialized with the value "Initial Title".
 
 You can think of the `mount()` method as a class constructor. It runs on the initial load of the component, but not on subsequent requests within a page. You can learn more about `mount()` and other helpful lifecycle hooks within the [lifecycle documentation](/docs/lifecycle-hooks).
 
@@ -368,28 +369,28 @@ This is effectively the same as assigning `$title` inside a `mount()` method.
 
 ## Full-page components
 
-Livewire allows you to assign components directly to a route in your Laravel application. These are called "full-page components". You can use them to build standalone pages with logic and views fully encapsulated within a Livewire component.
+Livewire allows you to assign components directly to a route in your Laravel application. These are called "full-page components". You can use them to build standalone pages with logic and views, fully encapsulated within a Livewire component.
 
-To create a full-page component, define a route in your `routes/web.php` file and use the `Route::get()` method to map the component directly to a specific URL. For example, let's imagine you want to render the `CreatePost` component at the dedicated route: `/post/create`.
+To create a full-page component, define a route in your `routes/web.php` file and use the `Route::get()` method to map the component directly to a specific URL. For example, let's imagine you want to render the `CreatePost` component at the dedicated route: `/posts/create`.
 
 You can accomplish this by adding the following line to your `routes/web.php` file:
 
 ```php
 use App\Livewire\CreatePost;
 
-Route::get('/post/create', CreatePost::class);
+Route::get('/posts/create', CreatePost::class);
 ```
 
-Now, when you visit the `/post/create` path in your browser, the `CreatePost` component will be rendered as a full-page component.
+Now, when you visit the `/posts/create` path in your browser, the `CreatePost` component will be rendered as a full-page component.
 
 ### Layout files
 
-Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layout.blade.php` file.
+Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layouts/app.blade.php` file.
 
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
 ```blade
-<!-- resources/views/components/layout.blade.php -->
+<!-- resources/views/components/layouts/app.blade.php -->
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -407,7 +408,7 @@ Ensure you have created a Blade file at this location and included a `{{ $slot }
 
 #### Global layout configuration
 
-To use a custom layout across all your components, you can set the `'layout'` key in `config/livewire.php` to the path of your custom layout, relative to `resources/views`. For example:
+To use a custom layout across all your components, you can set the `layout` key in `config/livewire.php` to the path of your custom layout, relative to `resources/views`. For example:
 
 ```php
 'layout' => 'layouts.app',
@@ -456,7 +457,7 @@ class CreatePost extends Component
 }
 ```
 
-PHP attributes only support literal values. If you need to pass a dynamic value, or prefer this alternative syntax, you can use the fluent `->layout()` method in `render()`:
+PHP attributes only support literal values. If you need to pass a dynamic value, or prefer this alternative syntax, you can use the fluent `->layout()` method in the component's `render()` method:
 
 ```php
 public function render()
@@ -519,7 +520,7 @@ class CreatePost extends Component
 }
 ```
 
-If you need to pass a dynamic title, such as a title that uses a component property, you can use the `->title()` fluent method in `render()`:
+If you need to pass a dynamic title, such as a title that uses a component property, you can use the `->title()` fluent method in the component's `render()` method:
 
 ```php
 public function render()
@@ -538,7 +539,7 @@ To demonstrate, first, define a route with a parameter in your `routes/web.php` 
 ```php
 use App\Livewire\ShowPost;
 
-Route::get('/post/{id}', ShowPost::class);
+Route::get('/posts/{id}', ShowPost::class);
 ```
 
 Here, we've defined a route with an `id` parameter which represents a post's ID.
@@ -569,7 +570,7 @@ class ShowPost extends Component
 }
 ```
 
-In this example, because the parameter name `$id` matches the route parameter `{id}`, if the `/post/1` URL is visited, Livewire will pass the value of "1" as `$id`.
+In this example, because the parameter name `$id` matches the route parameter `{id}`, if the `/posts/1` URL is visited, Livewire will pass the value of "1" as `$id`.
 
 ### Using route model binding
 
@@ -580,7 +581,7 @@ After defining a route with a model parameter in your `routes/web.php` file:
 ```php
 use App\Livewire\ShowPost;
 
-Route::get('/post/{post}', ShowPost::class);
+Route::get('/posts/{post}', ShowPost::class);
 ```
 
 You can now accept the route model parameter through the `mount()` method of your component:

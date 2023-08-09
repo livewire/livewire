@@ -52,7 +52,7 @@ class CreatePostTest extends TestCase
     /** @test */
     public function component_exists_on_the_page()
     {
-        $this->get('/post/create')
+        $this->get('/posts/create')
             ->assertSeeLivewire(CreatePost::class);
     }
 }
@@ -179,7 +179,7 @@ Livewire also provides helpful testing utilities for setting and asserting prope
 
 Component properties are typically updated in your application when users interact with form inputs containing `wire:model`. But, because tests don't typically type into an actual browser, Livewire allows you to set properties directly using the `set()` method.
 
-Below is an example of using `set()` to update the `$title` property of a `CreatePosts` component:
+Below is an example of using `set()` to update the `$title` property of a `CreatePost` component:
 
 ```php
 <?php
@@ -260,7 +260,7 @@ class UpdatePost extends Component
 
 ### Setting URL parameters
 
-If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withUrlParams()` method to set the query parameters manually for your test.
+If your Livewire component depends on specific query parameters in the URL of the page it's loaded on, you can use the `withQueryParams()` method to set the query parameters manually for your test.
 
 Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/docs/url) to store and track the current search query in the query string:
 
@@ -309,7 +309,7 @@ class SearchPostsTest extends TestCase
         Post::factory()->create(['title' => 'Testing the first water-proof hair dryer']);
         Post::factory()->create(['title' => 'Rubber duckies that actually float']);
 
-        Livewire::withUrlParams(['search' => 'hair'])
+        Livewire::withQueryParams(['search' => 'hair'])
             ->test(SearchPosts::class)
             ->assertSee('Testing the first')
             ->assertDontSee('Rubber duckies');
@@ -323,7 +323,7 @@ Livewire actions are typically called from the frontend using something like `wi
 
 Because Livewire component tests don't use an actual browser, you can instead trigger actions in your tests using the `call()` method.
 
-Below is an example of a `CreatePosts` component using the `call()` method to trigger the `save()` action:
+Below is an example of a `CreatePost` component using the `call()` method to trigger the `save()` action:
 
 ```php
 <?php
@@ -386,10 +386,10 @@ class CreatePostTest extends TestCase
 }
 ```
 
-If you want to test that a specific validation rule has failed, you can pass an array of rules as a second argument to `assertHasErrors()`:
+If you want to test that a specific validation rule has failed, you can pass an array of rules:
 
 ```php
-$this->assertHasErrors('title', ['required']);
+$this->assertHasErrors(['title', ['required']]);
 ```
 
 ### Authorization
@@ -492,7 +492,7 @@ class CreatePostTest extends TestCase
 }
 ```
 
-It is often helpful to test that two components can communicate with each other by dispatching and listening for events. Using the `dispatch()` method, let's simulate a `CreatePost` component dispatching a `create-post` event. Then, when will assert that a `PostCountBadge` component which listens for that event updates its post count appropriately:
+It is often helpful to test that two components can communicate with each other by dispatching and listening for events. Using the `dispatch()` method, let's simulate a `CreatePost` component dispatching a `create-post` event. Then, we will assert that a `PostCountBadge` component, which listens for that event, updates its post count appropriately:
 
 ```php
 <?php
@@ -524,6 +524,56 @@ class PostCountBadgeTest extends TestCase
 }
 ```
 
+Sometimes it may come in handy to assert that an event was dispatched with one or more parameters. Let's have a look at a component called `ShowPosts` that dispatches an event called `banner-message` with a parameter called `message`:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\ShowPosts;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class ShowPostsTest extends TestCase
+{
+    /** @test */
+    public function notification_is_dispatched_when_deleting_a_post()
+    {
+        Livewire::test(ShowPosts::class)
+            ->call('delete', postId: 3)
+            ->assertDispatched('notify',
+                message: 'The post was deleted',
+            );
+    }
+}
+```
+
+If your component dispatches an event of which the parameter values must be asserted conditionally, you can pass in a closure as the second argument to the `assertDispatched` method like below. It receives the event name as the first argument, and an array containing the parameters as the second argument. Make sure the closure returns a boolean.
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\ShowPosts;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class ShowPostsTest extends TestCase
+{
+    /** @test */
+    public function notification_is_dispatched_when_deleting_a_post()
+    {
+        Livewire::test(ShowPosts::class)
+            ->call('delete', postId: 3)
+            ->assertDispatched('notify', function($eventName, $params) {
+                return ($params['message'] ?? '') === 'The post was deleted';
+            })
+    }
+}
+```
+
 ## All available testing utilities
 
 Livewire provides many more testing utilities. Below is a comprehensive list of every testing method available to you, with a short description of how it's intended to be used:
@@ -548,35 +598,35 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `dispatch('post-created', postId: $post->id)`                      | Dispatch the `post-created` event with `$post->id` as an additional parameter (`$event.detail` from Alpine) |
 
 ### Assertions
-| Method                                                  | Description                                                                                                      |
-|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
-| `assertSet('title', '...')`                      | Assert that the `title` property is set to the provided value |
-| `assertNotSet('title', '...')`                   | Assert that the `title` property is not set to the provided value |
-| `assertCount('posts', 3)`                    | Assert that the `posts` property is an array-like value with `3` items in it |
-| `assertSnapshotSet('date', '08/26/1990')`               | Assert that the `date` property's raw / dehydrated value (from JSON) is set to `08/26/1990`. Alternative to asserting against the hydrated `DateTime` instance in the case of `date` |
-| `assertSnapshotNotSet('date', '08/26/1990')`            | Assert that `date`'s raw / dehydrated value is not equal to the provided value |
-| `assertSee($post->title)`                                    | Assert that the rendered HTML of the component contains the provided value |
-| `assertDontSee($post->title)`                                | Assert that the rendered HTML does not contain the provided value |
-| `assertSeeHtml('<div>...</div>')`          | Assert the provided string literal is contained in the rendered HTML without escaping the HTML characters (unlike `assertSee`, which does escape the provided characters by default)  |
-| `assertDontSeeHtml('<div>...</div>')`                            | Assert the provided string is contained in the rendered HTML |
-| `assertSeeInOrder(['...', '...'])`       | Assert that the provided strings appear in order in the rendered HTML output of the component |
-| `assertSeeHtmlInOrder([$firstString, $secondString])`   | Assert that the provided HTML strings appear in order in the rendered output of the component |
-| `assertDispatched('post-created')`              | Assert that the given event has been dispatched by the component |
-| `assertNotDispatched('post-created')`              | Assert that the given event has not been dispatched by the component |
-| `assertHasErrors('title')`                        | Assert that validation has failed for the `title` property |
-| `assertHasErrors('title', ['required', 'min:6'])` | Assert that the provided validation rules failed for the `title` property |
-| `assertHasNoErrors('title')`                      | Assert that there are no validation errors for the `title` property |
-| `assertHasNoErrors('title', ['required', 'min:6'])`| Assert that the provided validation rules haven't failed for the `title` property |
-| `assertRedirect()`                                      | Assert that a redirect has been triggered from within the component |
-| `assertRedirect('/posts')`                                  | Assert the component triggered a redirect to the `/posts` endpoint |
-| `assertRedirect(ShowPosts::class)`               | Assert that the component triggered a redirect to the `ShowPosts` component |
-| `assertNoRedirect()`                                  | Assert that no redirect has been triggered |
-| `assertViewHas('posts')`                           | Assert that the `render()` method has passed a `posts` item to the view data |
-| `assertViewHas('postCount', 3)`           | Assert that a `postCount` variable has been passed to the view with a value of `3` |
-| `assertViewHas('posts', function ($posts) { ... })` | Assert that `postCount` view data exists and that it passes any assertions declared in the provided callback |
-| `assertViewIs('livewire.show-posts')`     | Assert that the component's render method returned the provided view name |
-| `assertFileDownloaded()`             | Assert that a file download has been triggered |
-| `assertFileDownloaded($filename)`             | Assert that a file download matching the provided file name has been triggered |
-| `assertUnauthorized()`             | Assert that an authorization exception has been thrown within the component (status code: 401) |
-| `assertForbidden()`             | Assert that an error response was triggered with the status code: 403 |
-| `assertStatus(500)`             | Assert that the latest response matches the provided status code |
+| Method                                                | Description                                                                                                                                                                          |
+|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `assertSet('title', '...')`                           | Assert that the `title` property is set to the provided value                                                                                                                        |
+| `assertNotSet('title', '...')`                        | Assert that the `title` property is not set to the provided value                                                                                                                    |
+| `assertCount('posts', 3)`                             | Assert that the `posts` property is an array-like value with `3` items in it                                                                                                         |
+| `assertSnapshotSet('date', '08/26/1990')`             | Assert that the `date` property's raw / dehydrated value (from JSON) is set to `08/26/1990`. Alternative to asserting against the hydrated `DateTime` instance in the case of `date` |
+| `assertSnapshotNotSet('date', '08/26/1990')`          | Assert that `date`'s raw / dehydrated value is not equal to the provided value                                                                                                       |
+| `assertSee($post->title)`                             | Assert that the rendered HTML of the component contains the provided value                                                                                                           |
+| `assertDontSee($post->title)`                         | Assert that the rendered HTML does not contain the provided value                                                                                                                    |
+| `assertSeeHtml('<div>...</div>')`                     | Assert the provided string literal is contained in the rendered HTML without escaping the HTML characters (unlike `assertSee`, which does escape the provided characters by default) |
+| `assertDontSeeHtml('<div>...</div>')`                 | Assert the provided string is contained in the rendered HTML                                                                                                                         |
+| `assertSeeInOrder(['...', '...'])`                    | Assert that the provided strings appear in order in the rendered HTML output of the component                                                                                        |
+| `assertSeeHtmlInOrder([$firstString, $secondString])` | Assert that the provided HTML strings appear in order in the rendered output of the component                                                                                        |
+| `assertDispatched('post-created')`                    | Assert that the given event has been dispatched by the component                                                                                                                     |
+| `assertNotDispatched('post-created')`                 | Assert that the given event has not been dispatched by the component                                                                                                                 |
+| `assertHasErrors('title')`                            | Assert that validation has failed for the `title` property                                                                                                                           |
+| `assertHasErrors(['title', ['required', 'min:6']])`   | Assert that the provided validation rules failed for the `title` property                                                                                                            |
+| `assertHasNoErrors('title')`                          | Assert that there are no validation errors for the `title` property                                                                                                                  |
+| `assertHasNoErrors(['title', ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
+| `assertRedirect()`                                    | Assert that a redirect has been triggered from within the component                                                                                                                  |
+| `assertRedirect('/posts')`                            | Assert the component triggered a redirect to the `/posts` endpoint                                                                                                                   |
+| `assertRedirect(ShowPosts::class)`                    | Assert that the component triggered a redirect to the `ShowPosts` component                                                                                                          |
+| `assertNoRedirect()`                                  | Assert that no redirect has been triggered                                                                                                                                           |
+| `assertViewHas('posts')`                              | Assert that the `render()` method has passed a `posts` item to the view data                                                                                                         |
+| `assertViewHas('postCount', 3)`                       | Assert that a `postCount` variable has been passed to the view with a value of `3`                                                                                                   |
+| `assertViewHas('posts', function ($posts) { ... })`   | Assert that `postCount` view data exists and that it passes any assertions declared in the provided callback                                                                         |
+| `assertViewIs('livewire.show-posts')`                 | Assert that the component's render method returned the provided view name                                                                                                            |
+| `assertFileDownloaded()`                              | Assert that a file download has been triggered                                                                                                                                       |
+| `assertFileDownloaded($filename)`                     | Assert that a file download matching the provided file name has been triggered                                                                                                       |
+| `assertUnauthorized()`                                | Assert that an authorization exception has been thrown within the component (status code: 401)                                                                                       |
+| `assertForbidden()`                                   | Assert that an error response was triggered with the status code: 403                                                                                                                |
+| `assertStatus(500)`                                   | Assert that the latest response matches the provided status code                                                                                                                     |

@@ -2,9 +2,10 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use Livewire\Livewire;
-use Livewire\Form;
+use Livewire\Attributes\Rule;
 use Livewire\Component;
+use Livewire\Form;
+use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -24,6 +25,31 @@ class UnitTest extends \Tests\TestCase
         ->set('form.content', 'Some content...')
         ->assertSet('form.title', 'Some Title')
         ->assertSet('form.content', 'Some content...')
+        ;
+    }
+
+    /** @test */
+    function can_reset_form_object_property()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            public function resetForm()
+            {
+                $this->reset('form.title', 'form.content');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->call('resetForm')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
         ;
     }
 
@@ -48,6 +74,28 @@ class UnitTest extends \Tests\TestCase
         ->call('save')
         ->assertHasErrors('form.title')
         ->assertHasErrors('form.content')
+        ;
+    }
+
+    function can_manually_add_errors_to_the_error_bag()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->addError('status', 'An error message...');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.status')
         ;
     }
 
@@ -78,6 +126,83 @@ class UnitTest extends \Tests\TestCase
         ->call('save')
         ;
     }
+
+    /** @test */
+    function can_validate_a_form_object_using_rule_attribute_with_custom_name()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormRuleAttributeWithCustomNameStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.name', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors('form.name')
+            ->set('form.name', 'Mfawa...')
+            ->assertHasNoErrors()
+            ->call('save')
+        ;
+    }
+
+    /** @test */
+    function can_reset_property()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            function save()
+            {
+                $this->form->reset('title');
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some title...')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', 'Some content...')
+        ;
+    }
+
+    /** @test */
+    function can_reset_all_properties()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            function save()
+            {
+                $this->form->reset();
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->set('form.title', 'Some title...')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -101,9 +226,22 @@ class PostFormValidateStub extends Form
 
 class PostFormRuleAttributeStub extends Form
 {
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $title = '';
 
-    #[\Livewire\Attributes\Rule('required')]
+    #[Rule('required')]
     public $content = '';
+}
+
+class PostFormRuleAttributeWithCustomNameStub extends Form
+{
+    #[Rule(
+        rule: [
+            'required',
+            'min:3',
+            'max:255'
+        ],
+        as: 'my name'
+    )]
+    public $name = '';
 }

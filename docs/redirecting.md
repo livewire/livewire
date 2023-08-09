@@ -1,4 +1,4 @@
-After a user performs some action—like submitting a form—you may want to redirect them to another page in your application.
+After a user performs some action — like submitting a form — you may want to redirect them to another page in your application.
 
 Because Livewire requests aren't standard full-page browser requests, standard HTTP redirects won't work. Instead, you need to trigger redirects via JavaScript. Fortunately, Livewire exposes a simple `$this->redirect()` helper method to use within your components. Internally, Livewire will handle the process of redirecting on the frontend.
 
@@ -68,7 +68,7 @@ public function save()
 
 In addition to allowing you to use Laravel's built-in redirection methods, Livewire also supports Laravel's [session flash data utilities](https://laravel.com/docs/session#flash-data).
 
-To pass flash data along with a redirect, you can use Laravels' `->with()` method like so:
+To pass flash data along with a redirect, you can use Laravel's `->with()` method like so:
 
 ```php
 use Livewire\Component;

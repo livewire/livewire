@@ -34,6 +34,33 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
+    function can_test_component_using_magic_render()
+    {
+        mkdir($this->livewireViewsPath());
+        file_put_contents($this->livewireViewsPath().'/foo.blade.php', <<<'PHP'
+        <div>
+            Im foo
+        </div>
+        PHP);
+
+        mkdir($this->livewireClassesPath());
+        file_put_contents($this->livewireClassesPath().'/Foo.php', <<<'PHP'
+        <?php
+
+        namespace App\Livewire;
+
+        use Livewire\Component;
+
+        class Foo extends Component
+        {
+            //
+        }
+        PHP);
+
+        Livewire::test('foo')->assertSee('Im foo');
+    }
+
+    /** @test */
     function can_assert_see_livewire_on_standard_blade_view_using_class_name()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);

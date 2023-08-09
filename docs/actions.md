@@ -43,7 +43,7 @@ class CreatePost extends Component
 </form>
 ```
 
-In the above example, when a user submits the form by clicking "Save", `wire:submit` intercepts the `submit` event and calls the `save` action on the server.
+In the above example, when a user submits the form by clicking "Save", `wire:submit` intercepts the `submit` event and calls the `save()` action on the server.
 
 In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
@@ -204,7 +204,7 @@ Consider the `CreatePost` example we previously discussed:
 </form>
 ```
 
-When a user clicks "Save", a network request is sent to the server to call the `save` action on the Livewire component.
+When a user clicks "Save", a network request is sent to the server to call the `save()` action on the Livewire component.
 
 But, let's imagine that a user is filling out this form on a slow internet connection. The user clicks "Save" and nothing happens initially because the network request takes longer than usual. They might wonder if the submission failed and attempt to click the "Save" button again while the first request is still being handled.
 
@@ -218,7 +218,7 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 
 ```blade
 <form wire:submit="save">
-    <textarea wire:submit="content"></textarea>
+    <textarea wire:model="content"></textarea>
 
     <button type="submit">Save</button>
 
@@ -239,6 +239,7 @@ For example, let's imagine you have a `ShowPosts` component that allows users to
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -248,7 +249,7 @@ class ShowPosts extends Component
     {
         $post = Post::findOrFail($id);
 
-        $this->authorize('update', $post);
+        $this->authorize('delete', $post);
 
         $post->delete();
     }
@@ -296,6 +297,7 @@ As an added convenience, you may automatically resolve Eloquent models by a corr
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -303,7 +305,7 @@ class ShowPosts extends Component
 {
     public function delete(Post $post) // [tl! highlight]
     {
-        $this->authorize('update', $post);
+        $this->authorize('delete', $post);
 
         $post->delete();
     }
@@ -326,6 +328,7 @@ You can take advantage of [Laravel's dependency injection](https://laravel.com/d
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Repositories\PostRepository;
 
@@ -358,7 +361,7 @@ class ShowPosts extends Component
 </div>
 ```
 
-In this example, the `delete` method receives an instance of `PostRepository` resolved via [Laravel's service container](https://laravel.com/docs/container#main-content) before receiving the provided `$postId` parameter.
+In this example, the `delete()` method receives an instance of `PostRepository` resolved via [Laravel's service container](https://laravel.com/docs/container#main-content) before receiving the provided `$postId` parameter.
 
 ## Calling actions from Alpine
 
@@ -391,7 +394,7 @@ Within your component's Blade template, you can invoke this action via Alpine, p
 
 ```blade
 <div x-data="{ todo: '' }">
-    <input type="text" wire:model="todo">
+    <input type="text" x-model="todo">
 
     <button x-on:click="$wire.addTodo(todo)">Add Todo</button>
 </div>
@@ -480,7 +483,7 @@ In the above example, when the "Reset Search" button is pressed, the text input 
 
 In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions.
 
-This is generally useful for performing some kind of client-side followup after a server-side action is performed.
+This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
 
 For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
 
@@ -520,7 +523,7 @@ The `$parent` magic variable allows you to access parent component properties an
 <button wire:click="$parent.removePost({{ $post->id }})">Remove</button>
 ```
 
-In the above example, if a parent component has a `removePost` action, a child can call it directly from its Blade template using `$parent.removePost()`.
+In the above example, if a parent component has a `removePost()` action, a child can call it directly from its Blade template using `$parent.removePost()`.
 
 ### `$set`
 
@@ -552,7 +555,7 @@ The `$toggle` action is used to toggle the value of a boolean property in your L
 </button>
 ```
 
-In this example, when the button is clicked, the `sortAsc` property in the component will toggle between `true` and `false`.
+In this example, when the button is clicked, the `$sortAsc` property in the component will toggle between `true` and `false`.
 
 ### `$dispatch`
 
@@ -665,7 +668,7 @@ class ShowPost extends Component
 
 ## Security concerns
 
-Remember that any public method in your Livewire component can be called from the client-side, Even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
+Remember that any public method in your Livewire component can be called from the client-side, even without an associated `wire:click` handler that invokes it. In these scenarios, users can still trigger the action from the browser's DevTools.
 
 Below are three examples of easy-to-miss vulnerabilities in Livewire components. Each will show the vulnerable component first and the secure component after. As an exercise, try spotting the vulnerabilities in the first example before viewing the solution.
 
@@ -684,6 +687,7 @@ Here is a vulnerable version of component:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -718,7 +722,7 @@ class ShowPosts extends Component
 </div>
 ```
 
-Remember that a malicious user can call `delete` directly from a JavaScript console, passing any parameters they would like to the action. This means that a user viewing one of their posts can delete another user's post by passing the un-owned post ID to `delete()`.
+Remember that a malicious user can call `delete()` directly from a JavaScript console, passing any parameters they would like to the action. This means that a user viewing one of their posts can delete another user's post by passing the un-owned post ID to `delete()`.
 
 To protect against this, we need to authorize that the user owns the post about to be deleted:
 
@@ -727,6 +731,7 @@ To protect against this, we need to authorize that the user owns the post about 
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -736,7 +741,7 @@ class ShowPosts extends Component
     {
         $post = Post::find($id);
 
-        $this->authorize('update', $post); // [tl! highlight]
+        $this->authorize('delete', $post); // [tl! highlight]
 
         $post->delete();
     }
@@ -806,6 +811,7 @@ To patch this vulnerability, we need to authorize the action on the server like 
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -840,10 +846,12 @@ Every public method inside your Livewire component is callable from the client. 
 Consider the `BrowsePosts` example that we previously discussed, where users can view all posts in your application, but only administrators can delete posts. In the [Always authorize server-side](/docs/actions#always-authorize-server-side) section, we made the action secure by adding server-side authorization. Now imagine we refactor the actual deletion of the post into a dedicated method like you might do in order to simplify your code:
 
 ```php
+// Warning: This snippet demonstrates what NOT to do...
 <?php
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -896,6 +904,7 @@ To remedy this, we can mark the method as `protected` or `private`. Once the met
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Post;
 

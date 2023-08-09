@@ -108,12 +108,16 @@ class SupportPagination extends ComponentHook
 
     protected function paginationView()
     {
-        return 'livewire::' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
+        if (method_exists($this->component, 'paginationView')) {
+            return $this->component->paginationView();
+        }
+
+        return 'livewire::' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 
     protected function paginationSimpleView()
     {
-        return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
+        return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 
     protected function getQueryString()

@@ -26,13 +26,13 @@ Livewire now requires that your application is running on PHP version 8.1 or gre
 Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3:
 
 ```shell
-composer require livewire/livewire:3.0.0-beta.1
+composer require livewire/livewire "3.0.0-beta.4"
 ```
 
 The above command will lock you to the current beta version. If you want to receive more frequent updates, you can switch to the more flexible version constraint:
 
 ```shell
-composer require livewire/livewire:^3.0@beta
+composer require livewire/livewire "^3.0@beta"
 ```
 
 <!-- @todo after launch:
@@ -84,7 +84,7 @@ The following configuration items have been updated with new default values:
 
 #### New class namespace
 
-Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `App\Livewire`. You are welcome to keep the old namespace configuration value; however, if you choose to update your configuration to the new namespace, you will have to move your Livewire component's to `app/Livewire`:
+Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `App\Livewire`. You are welcome to keep the old namespace configuration value; however, if you choose to update your configuration to the new namespace, you will have to move your Livewire components to `app/Livewire`:
 
 ```php
 'class_namespace' => 'App\\Http\\Livewire', // [tl! remove]
@@ -95,7 +95,7 @@ Livewire's default `class_namespace` has changed from `App\Http\Livewire` to `Ap
 
 When rendering full-page components in version 2, Livewire would use `resources/views/layouts/app.blade.php` as the default layout Blade component.
 
-Because of an growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
+Because of a growing community preference for anonymous Blade components, Livewire 3 has changed the default location to: `resources/views/components/layouts/app.blade.php`.
 
 ```php
 'layout' => 'layouts.app', // [tl! remove]
@@ -152,7 +152,7 @@ When rendering Livewire components as full pages using a syntax like the followi
 Route::get('/posts', ShowPosts::class);
 ```
 
-The Blade layout file used by Livewire to render the component inside of has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
+The Blade layout file used by Livewire to render the component has changed from `resources/views/layouts/app.blade.php` to `resources/views/components/layouts/app.blade.php`:
 
 ```shell
 resources/views/layouts/app.blade.php #[tl! remove]
@@ -200,7 +200,7 @@ By setting `legacy_model_binding` to `true`, Livewire will handle Eloquent model
 
 Livewire 3 ships with [AlpineJS](https://alpinejs.dev) by default.
 
-If you manually include Alpine in your Livewire application, you will need to remove it so that Livewire's built-in version doesn't conflict.
+If you manually include Alpine in your Livewire application, you will need to remove it, so that Livewire's built-in version doesn't conflict.
 
 ### Including Alpine via a script tag
 
@@ -214,12 +214,12 @@ If you include Alpine into your application via a script tag like the following,
 
 Livewire 3 now ships with the following Alpine plugins out-of-the-box:
 
-* [Intersect](https://alpinejs.dev/docs/plugins/intersect)
-* [Collapse](https://alpinejs.dev/docs/plugins/collapse)
-* [Persist](https://alpinejs.dev/docs/plugins/persist)
-* [Morph](https://alpinejs.dev/docs/plugins/morph)
-* [Focus](https://alpinejs.dev/docs/plugins/focus)
-* [Mask](https://alpinejs.dev/docs/plugins/mask)
+* [Collapse](https://alpinejs.dev/plugins/collapse)
+* [Focus](https://alpinejs.dev/plugins/focus)
+* [Intersect](https://alpinejs.dev/plugins/intersect)
+* [Mask](https://alpinejs.dev/plugins/mask)
+* [Morph](https://alpinejs.dev/plugins/morph)
+* [Persist](https://alpinejs.dev/plugins/persist)
 
 If you have already included any of these in your application via `<script>` tags like below, you can remove them along with Alpine's core:
 
@@ -240,7 +240,7 @@ If you are currently accessing the `Alpine` global object from a script tag like
 </script>
 ```
 
-You may continue to do so as Livewire internally includes and registers Alpine's global object like before.
+You may continue to do so, as Livewire internally includes and registers Alpine's global object like before.
 
 ### Including via JS bundle
 
@@ -257,7 +257,10 @@ Alpine.plugin(intersect)
 Alpine.start()
 ```
 
-You can remove them entirely because Livewire includes Alpine and many popular Alpine plugins by default.
+You can remove them entirely, because Livewire includes Alpine and many popular Alpine plugins by default.
+
+> [!warning] "Livewire V3 (beta) with Laravel Breeze or Laravel Jetstream"
+> If you are trying the Livewire V3 beta with the Laravel Breeze or Laravel JetStream, you will need to unload the Alpine as demonstrated above. Also, you can remove Alpine and any other Alpine plugins from your NPM dependencies as well. The Laravel Breeze and Laravel JetStream are not ready for Livewire V3 yet by default.
 
 #### Accessing Alpine via JS bundle
 
@@ -405,6 +408,9 @@ $this->dispatch('post-created', postId: $post->id); // [tl! add]
 <button wire:click="$emit('post-created', 1)">...</button> <!-- [tl! remove] -->
 <button wire:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
 
+<button wire:click="$emitTo('foo', post-created', 1)">...</button> <!-- [tl! remove] -->
+<button wire:click="$dispatchTo('foo', 'post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
+
 <button x-on:click="$wire.emit('post-created', 1)">...</button> <!-- [tl! remove] -->
 <button x-on:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
 ```
@@ -434,7 +440,7 @@ Livewire::test(Component::class)->assertEmittedUp() // [tl! remove]
 
 ### URL query string
 
-In previous Livewire versions, if you bound a property to the URL's query string, the property value would always be present in the query string unless you used the `except` option.
+In previous Livewire versions, if you bound a property to the URL's query string, the property value would always be present in the query string, unless you used the `except` option.
 
 In Livewire 3, all properties bound to the query string will only show up if their value has been changed after the page load. This default removes the need for the `except` option:
 
@@ -605,6 +611,10 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // 
 ```
 
 You may consult the new [JavaScript hook documentation](/docs/javascript) for a more thorough understanding of the new hook system.
+
+### @this.on() deprecated
+
+While in Livewire 2 you could register JavaScript callbacks for component events using `@this.on('event-name', callbackFn)` in your Blade template, in Livewire 3 this has been deprecated. Instead, you should take advantage of Alpine's inclusion, and use the `x-on:event-name="callbackCode"` pattern.
 
 ## Localization
 
