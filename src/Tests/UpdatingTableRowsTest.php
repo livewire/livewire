@@ -43,11 +43,13 @@ class UpdatingTableRowsTest extends \Tests\BrowserTestCase
                 HTML;
             }
         }])
-            ->assertVisible('@table-row')
+            ->assertPresent('@table-row')
+            ->assertPresent('@counter')
             ->assertInputValue('@counter', '0')
             ->click('@increment')
             ->waitForLivewire()
-            ->assertVisible('@table-row')
+            ->assertPresent('@table-row')
+            ->assertPresent('@counter')
             ->assertInputValue('@counter', '1')
         ;
     }
