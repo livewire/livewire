@@ -87,4 +87,68 @@ class BrowserTest extends BrowserTestCase
             ->assertMissing('@item2')
             ->assertMissing('@item3');
     }
+
+    /** @test */
+    public function can_destroy_entangled_watchers_when_they_are_removed_from_the_dom()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = null;
+
+            public $isVisible = true;
+
+            public function increment()
+            {
+                $this->foo = Str::random();
+            }
+
+            public function hideAndIncrement()
+            {
+                $this->isVisible = false;
+                $this->increment();
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div x-data="{}">
+                    <div>
+                        @if ($isVisible)
+                            <div
+                                x-data="{ foo: $wire.entangle('foo') }"
+                                x-init="
+                                    $watch('foo', () => {
+                                        $refs.counter.innerText = +$refs.counter.innerText + 1
+                                    })
+                                "
+                            ></div>
+                        @endif
+                    </div>
+
+                    <span
+                        dusk="counter"
+                        wire:ignore
+                        x-ref="counter"
+                    >0</span>
+
+                    <button dusk="increment" type="button" wire:click="increment">
+                        Increment
+                    </button>
+
+                    <button dusk="hideAndIncrement" type="button" wire:click="hideAndIncrement">
+                        Hide and increment
+                    </button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@counter', '0')
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@counter', '1')
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@counter', '2')
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@counter', '3')
+            ->waitForLivewire()->click('@hideAndIncrement')
+            ->assertSeeIn('@counter', '3');
+    }
 }
