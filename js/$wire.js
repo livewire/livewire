@@ -91,7 +91,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         set(target, property, value) {
             if (! component) component = closestComponent(el)
 
-            component.$wire = value
+            component.$wire[property] = value
 
             return true
         },

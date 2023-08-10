@@ -3804,7 +3804,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       set(target, property, value) {
         if (!component)
           component = closestComponent(el);
-        component.$wire = value;
+        component.$wire[property] = value;
         return true;
       }
     });

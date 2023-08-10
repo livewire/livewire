@@ -8548,7 +8548,7 @@ import_alpinejs2.default.magic("wire", (el, { cleanup: cleanup2 }) => {
     set(target, property, value) {
       if (!component)
         component = closestComponent(el);
-      component.$wire = value;
+      component.$wire[property] = value;
       return true;
     }
   });
