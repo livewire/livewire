@@ -10,7 +10,18 @@ class UpdatingTableRowsTest extends \Tests\BrowserTestCase
     /** @test */
     public function component_renders_table_rows_and_updates_properly()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit([new class extends Component {
+            public function render() {
+                return <<<'HTML'
+                    <table>
+                        <tbody>
+                            <livewire:child />
+                        </tbody>
+                    </table>
+                HTML;
+            }
+        },
+        'child' => new class extends Component {
             public int $counter = 0;
 
             public function increment()
@@ -18,7 +29,8 @@ class UpdatingTableRowsTest extends \Tests\BrowserTestCase
                 $this->counter++;
             }
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <tr dusk="table-row">
                         <td>
@@ -30,7 +42,7 @@ class UpdatingTableRowsTest extends \Tests\BrowserTestCase
                     </tr>
                 HTML;
             }
-        })
+        }])
             ->assertVisible('@table-row')
             ->assertInputValue('@counter', '0')
             ->click('@increment')
