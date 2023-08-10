@@ -46,6 +46,6 @@ class S3CleanupCommand extends Command
             ],
         ]);
 
-        $this->info('Livewire temporary S3 upload directory ['.$prefix.'] set to automatically cleanup files older than 24hrs!');
+        $this->components->info('Livewire temporary S3 upload directory ['.$prefix.'] set to automatically cleanup files older than 24hrs!');
     }
 }

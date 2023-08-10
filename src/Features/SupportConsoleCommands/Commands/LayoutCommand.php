@@ -26,7 +26,7 @@ class LayoutCommand extends FileManipulationCommand
         $stubPath = $this->stubPath($this->option('stub'));
 
         if (File::exists($layoutPath) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$relativeLayoutPath}");
+            $this->components->error("View already exists: {$relativeLayoutPath}");
 
             return false;
         }
@@ -36,8 +36,8 @@ class LayoutCommand extends FileManipulationCommand
         $result = File::copy($stubPath, $layoutPath);
 
         if ($result) {
-            $this->line("<options=bold,reverse;fg=green> LAYOUT CREATED </> 🤙\n");
-            $this->line("<options=bold;fg=green>CLASS:</> {$relativeLayoutPath}");
+            $this->components->info("LAYOUT CREATED 🤙");
+            $this->components->info("CLASS: {$relativeLayoutPath}");
         }
     }
 

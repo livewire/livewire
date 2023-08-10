@@ -13,10 +13,10 @@ class StubsCommand extends Command
 
     protected $parser;
 
-    public function handle()
+    public function handle(Filesystem $filesystem)
     {
         if (! is_dir($stubsPath = base_path('stubs'))) {
-            (new Filesystem)->makeDirectory($stubsPath);
+            $filesystem->makeDirectory($stubsPath);
         }
 
         file_put_contents(
@@ -39,6 +39,6 @@ class StubsCommand extends Command
             file_get_contents(__DIR__.'/livewire.test.stub')
         );
 
-        $this->info('Stubs published successfully.');
+        $this->components->info('Stubs published successfully.');
     }
 }

@@ -47,15 +47,15 @@ class MakeCommand extends FileManipulationCommand
         }
 
         if($class || $view) {
-            $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
-            $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
+            $this->components->info("COMPONENT CREATED 🤙");
+            $class && $this->components->info("CLASS: {$this->parser->relativeClassPath()}");
 
             if (! $inline) {
-                $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+                $view && $this->components->info("VIEW: {$this->parser->relativeViewPath()}");
             }
 
             if ($test) {
-                $test && $this->line("<options=bold;fg=green>TEST:</>  {$this->parser->relativeTestPath()}");
+                $this->components->info("TEST: {$this->parser->relativeTestPath()}");
             }
 
             if ($showWelcomeMessage && ! app()->runningUnitTests()) {
@@ -69,8 +69,8 @@ class MakeCommand extends FileManipulationCommand
         $classPath = $this->parser->classPath();
 
         if (File::exists($classPath) && ! $force) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->relativeClassPath()}");
+            $this->components->error("WHOOPS-IE-TOOTLES 😳");
+            $this->components->error("Class already exists: {$this->parser->relativeClassPath()}");
 
             return false;
         }
@@ -90,7 +90,7 @@ class MakeCommand extends FileManipulationCommand
         $viewPath = $this->parser->viewPath();
 
         if (File::exists($viewPath) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->relativeViewPath()}");
+            $this->components->error("View already exists: {$this->parser->relativeViewPath()}");
 
             return false;
         }
@@ -107,8 +107,8 @@ class MakeCommand extends FileManipulationCommand
         $testPath = $this->parser->testPath();
 
         if (File::exists($testPath) && ! $force) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Test class already exists:</> {$this->parser->relativeTestPath()}");
+            $this->components->error("WHOOPS-IE-TOOTLES 😳");
+            $this->components->error("Test class already exists: {$this->parser->relativeTestPath()}");
 
             return false;
         }
@@ -206,5 +206,4 @@ class MakeCommand extends FileManipulationCommand
             'yield',
         ];
     }
-
 }

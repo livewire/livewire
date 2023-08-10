@@ -36,17 +36,19 @@ class CopyCommand extends FileManipulationCommand
         if ($test){
             $test = $this->copyTest($force);
         }
-        $this->line("<options=bold,reverse;fg=green> COMPONENT COPIED </> 🤙\n");
-        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
-        if (! $inline) $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
-        if ($test) $test && $this->line("<options=bold;fg=green>Test:</>  {$this->parser->relativeTestPath()} <options=bold;fg=green>=></> {$this->newParser->relativeTestPath()}");
+
+        $this->components->info('COMPONENT COPIED 🤙');
+        $class && $this->components->info("CLASS: {$this->parser->relativeClassPath()}");
+        if (! $inline) $view && $this->components->info("VIEW {$this->parser->relativeViewPath()} => {$this->newParser->relativeViewPath()}");
+        $test && $this->components->info("Test: {$this->parser->relativeTestPath()} => {$this->newParser->relativeTestPath()}");
     }
 
     protected function copyTest($force)
     {
         if (File::exists($this->newParser->testPath()) && ! $force) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Test already exists:</> {$this->newParser->relativeTestPath()}");
+            $this->components->error('WHOOPS-IE-TOOTLES 😳');
+            $this->components->error("Test already exists: {$this->newParser->relativeTestPath()}");
+
             return false;
         }
 
@@ -58,8 +60,8 @@ class CopyCommand extends FileManipulationCommand
     protected function copyClass($force, $inline)
     {
         if (File::exists($this->newParser->classPath()) && ! $force) {
-            $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->newParser->relativeClassPath()}");
+            $this->components->error('WHOOPS-IE-TOOTLES 😳');
+            $this->components->error("Class already exists: {$this->newParser->relativeClassPath()}");
 
             return false;
         }
@@ -72,7 +74,7 @@ class CopyCommand extends FileManipulationCommand
     protected function copyView($force)
     {
         if (File::exists($this->newParser->viewPath()) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->newParser->relativeViewPath()}");
+            $this->components->error("View already exists: {$this->newParser->relativeViewPath()}");
 
             return false;
         }
