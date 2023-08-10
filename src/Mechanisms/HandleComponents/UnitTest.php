@@ -52,6 +52,28 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function uninitialized_integer_can_be_set_to_empty_string()
+    {
+        Livewire::test(new class extends Component {
+            public int $count;
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <h1 dusk="count">count: {{ $count }};</h1>
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSee('count: ;')
+            ->set('count', 1)
+            ->assertSee('count: 1;')
+            ->set('count', '')
+            ->assertSee('count: ;')
+        ;
+    }
+
+    /** @test */
     public function livewire_request_data_doesnt_get_manipulated()
     {
         // This test is better done as a Laravel dusk test now.
