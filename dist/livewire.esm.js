@@ -9176,7 +9176,7 @@ on("effects", (component, effects) => {
 // js/morph.js
 var import_alpinejs9 = __toESM(require_module_cjs());
 function morph2(component, el, html) {
-  let wrapper = document.createElement("div");
+  let wrapper = document.createElement(el.parentElement.tagName.toLowerCase());
   wrapper.innerHTML = html;
   let parentComponent;
   try {

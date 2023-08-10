@@ -8280,7 +8280,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/morph.js
   function morph2(component, el, html) {
-    let wrapper = document.createElement("div");
+    let wrapper = document.createElement(el.parentElement.tagName.toLowerCase());
     wrapper.innerHTML = html;
     let parentComponent;
     try {

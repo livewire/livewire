@@ -3,7 +3,7 @@ import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 
 export function morph(component, el, html) {
-    let wrapper = document.createElement('div')
+    let wrapper = document.createElement(el.parentElement.tagName.toLowerCase())
 
     wrapper.innerHTML = html
     let parentComponent
