@@ -9,16 +9,7 @@ use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class PersistentMiddleware
 {
-    protected static $persistentMiddleware = [
-        \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
-        \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        \App\Http\Middleware\RedirectIfAuthenticated::class,
-        \Illuminate\Auth\Middleware\Authenticate::class,
-        \Illuminate\Auth\Middleware\Authorize::class,
-        \App\Http\Middleware\Authenticate::class,
-    ];
+    protected static $persistentMiddleware = [];
 
     protected $path;
     protected $method;
@@ -65,7 +56,10 @@ class PersistentMiddleware
 
     function getPersistentMiddleware()
     {
-        return static::$persistentMiddleware;
+        return array_merge(
+            config('livewire.persistent_middlewares'),
+            static::$persistentMiddleware;
+        );
     }
 
     protected function extractPathAndMethodFromRequest()
