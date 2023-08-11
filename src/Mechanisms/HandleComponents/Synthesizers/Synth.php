@@ -21,6 +21,11 @@ abstract class Synth {
 
     abstract static function match($target);
 
+    static function matchByType($type)
+    {
+        return false;
+    }
+
     function get(&$target, $key) {
         if (is_array($target)) {
             return $target[$key] ?? null;
@@ -35,6 +40,10 @@ abstract class Synth {
         }
 
         if ($method === 'hydrate') {
+            throw new \Exception('You must define a "hydrate" method');
+        }
+
+        if ($method === 'hydrateFromType') {
             throw new \Exception('You must define a "hydrate" method');
         }
 

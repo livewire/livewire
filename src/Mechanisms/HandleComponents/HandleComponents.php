@@ -17,6 +17,7 @@ class HandleComponents
         Synthesizers\EnumSynth::class,
         Synthesizers\StdClassSynth::class,
         Synthesizers\ArraySynth::class,
+        Synthesizers\IntSynth::class,
     ];
 
     public static $renderStack = [];
@@ -313,7 +314,9 @@ class HandleComponents
         } else {
             $propertyValue = $component->$property;
 
-            $component->$property = $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context);
+            $this->setComponentPropertyAwareOfTypes($component, $property,
+                $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context)
+            );
         }
 
         $finish();
@@ -322,8 +325,29 @@ class HandleComponents
     protected function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
+        $component = $context->component;
 
-        if ($meta) return $this->hydrate([$value, $meta], $context, $path);
+        // If we have meta data already for this property, let's use that to get a synth...
+        if ($meta) {
+            return $this->hydrate([$value, $meta], $context, $path);
+        }
+
+        // If we don't, let's check to see if it's a typed property and fetch the synth that way...
+        $parentObject = str($path)->contains('.')
+            ? data_get($context->component, str($path)->beforeLast('.')->toString(), function () {
+                throw new \Exception;
+            })
+            : $context->component;
+
+        $childKey = str($path)->afterLast('.');
+
+        if (Utils::propertyIsTyped($parentObject, $childKey)) {
+            $type = Utils::getProperty($parentObject, $childKey)->getType();
+
+            $synth = $this->getSynthesizerByType($type->getName(), $context, $path);
+
+            if ($synth) return $synth->hydrateFromType($type->getName(), $value);
+        }
 
         return $value;
     }
@@ -389,7 +413,8 @@ class HandleComponents
         } catch (\TypeError $e) {
             // If an "int" is being set to empty string, unset the property (making it null).
             // This is common in the case of `wire:model`ing an int to a text field...
-            if ($value === '' && str($e->getMessage())->isMatch('/of type [\?]?int/')) {
+            // If a value is being set to "null", do the same...
+            if ($value === '' || $value === null) {
                 unset($component->$property);
             } else {
                 throw $e;
@@ -470,6 +495,17 @@ class HandleComponents
         }
 
         throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+    }
+
+    protected function getSynthesizerByType($type, $context, $path)
+    {
+        foreach ($this->propertySynthesizers as $synth) {
+            if ($synth::matchByType($type)) {
+                return new $synth($context, $path);
+            }
+        }
+
+        return null;
     }
 
     protected function pushOntoComponentStack($component)

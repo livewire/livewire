@@ -81,4 +81,16 @@ class BaseUtils
     static function getProperty($target, $property) {
         return (new ReflectionClass($target))->getProperty($property);
     }
+
+    static function propertyIsTyped($target, $property) {
+        $property = static::getProperty($target, $property);
+
+        return $property->hasType();
+    }
+
+    static function propertyIsTypedAndUninitialized($target, $property) {
+        $property = static::getProperty($target, $property);
+
+        return $property->hasType() && (! $property->isInitialized($target));
+    }
 }
