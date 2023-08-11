@@ -113,7 +113,7 @@ class ReplaceEmitWithDispatch extends UpgradeStep
 
         $this->manualUpgradeWarning(
             console: $console,
-            warning: 'The concept of `emitUp` has been removed entirely. Events are not dispatched as actual browser events and therefore "bubble up" by default.',
+            warning: 'The concept of `emitUp` has been removed entirely. Events are now dispatched as actual browser events and therefore "bubble up" by default.',
             before: ['$this->emitUp(\'post-created\');', '$emitUp(\'post-created\', 1)'],
             after: ['<removed>', '<removed>'],
         );
