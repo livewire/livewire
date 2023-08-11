@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportPagination;
 
 trait HandlesPagination
 {
+    protected $pageName = 'page';
     public $paginators = [];
 
     public function queryStringHandlesPagination()
@@ -13,32 +14,32 @@ trait HandlesPagination
         })->toArray();
     }
 
-    public function getPage($pageName = 'page')
+    public function getPage($pageName = null)
     {
-        return $this->paginators[$pageName] ?? 1;
+        return $this->paginators[($pageName ?: $this->pageName)] ?? 1;
     }
 
-    public function previousPage($pageName = 'page')
+    public function previousPage($pageName = null)
     {
-        $this->setPage(max(($this->paginators[$pageName] ?? 1) - 1, 1), $pageName);
+        $this->setPage(max(($this->paginators[($pageName ?: $this->pageName)] ?? 1) - 1, 1), ($pageName ?: $this->pageName));
     }
 
-    public function nextPage($pageName = 'page')
+    public function nextPage($pageName = null)
     {
-        $this->setPage(($this->paginators[$pageName] ?? 1) + 1, $pageName);
+        $this->setPage(($this->paginators[($pageName ?: $this->pageName)] ?? 1) + 1, ($pageName ?: $this->pageName));
     }
 
-    public function gotoPage($page, $pageName = 'page')
+    public function gotoPage($page, $pageName = null)
     {
-        $this->setPage($page, $pageName);
+        $this->setPage($page, ($pageName ?: $this->pageName));
     }
 
-    public function resetPage($pageName = 'page')
+    public function resetPage($pageName = null)
     {
-        $this->setPage(1, $pageName);
+        $this->setPage(1, ($pageName ?: $this->pageName));
     }
 
-    public function setPage($page, $pageName = 'page')
+    public function setPage($page, $pageName = null)
     {
         if (is_numeric($page)) {
             $page = (int) ($page <= 0 ? 1 : $page);
@@ -47,21 +48,21 @@ trait HandlesPagination
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
-        $beforeMethod = 'updating' . $pageName;
-        $afterMethod = 'updated' . $pageName;
+        $beforeMethod = 'updating' . ($pageName ?: $this->pageName);
+        $afterMethod = 'updated' . ($pageName ?: $this->pageName);
 
         if (method_exists($this, $beforePaginatorMethod)) {
-            $this->{$beforePaginatorMethod}($page, $pageName);
+            $this->{$beforePaginatorMethod}($page, ($pageName ?: $this->pageName));
         }
 
         if (method_exists($this, $beforeMethod)) {
             $this->{$beforeMethod}($page, null);
         }
 
-        $this->paginators[$pageName] = $page;
+        $this->paginators[($pageName ?: $this->pageName)] = $page;
 
         if (method_exists($this, $afterPaginatorMethod)) {
-            $this->{$afterPaginatorMethod}($page, $pageName);
+            $this->{$afterPaginatorMethod}($page, ($pageName ?: $this->pageName));
         }
 
         if (method_exists($this, $afterMethod)) {

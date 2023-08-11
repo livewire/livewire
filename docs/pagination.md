@@ -117,6 +117,13 @@ In addition to `$this->resetPage()`, Livewire provides other useful methods for 
 | `$this->nextPage()`    | Go to the next page |
 | `$this->previousPage()`    | Go to the previous page |
 
+## Default page name
+The default parameter used to track current page is 'page' but it can be changed by setting the $pageName property.
+
+```blade
+protected $pageName = 'customPage';
+```
+
 ## Multiple paginators
 
 Because both Laravel and Livewire use URL query string parameters to store and track the current page number, if a single page contains multiple paginators, it's important to assign them different names.
