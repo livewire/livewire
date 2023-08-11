@@ -143,4 +143,25 @@ return [
     */
 
     'pagination_theme' => 'tailwind',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Persistent Middlewares
+    |---------------------------------------------------------------------------
+    |
+    | This value sets the persistent middlewares that will be applied
+    | on each Livewire request.
+    |
+    */
+    
+    'persistent_middlewares' => [
+        \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        \Laravel\Jetstream\Http\Middleware\AuthenticateSession::class,
+        \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        \App\Http\Middleware\RedirectIfAuthenticated::class,
+        \Illuminate\Auth\Middleware\Authenticate::class,
+        \Illuminate\Auth\Middleware\Authorize::class,
+        \App\Http\Middleware\Authenticate::class,
+    ],
 ];
