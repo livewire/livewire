@@ -333,16 +333,14 @@ class HandleComponents
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
-        $parentObject = str($path)->contains('.')
-            ? data_get($context->component, str($path)->beforeLast('.')->toString(), function () {
-                throw new \Exception;
-            })
+        $parent = str($path)->contains('.')
+            ? data_get($context->component, str($path)->beforeLast('.')->toString())
             : $context->component;
 
         $childKey = str($path)->afterLast('.');
 
-        if (Utils::propertyIsTyped($parentObject, $childKey)) {
-            $type = Utils::getProperty($parentObject, $childKey)->getType();
+        if ($parent && is_object($parent) && property_exists($parent, $childKey) && Utils::propertyIsTyped($parent, $childKey)) {
+            $type = Utils::getProperty($parent, $childKey)->getType();
 
             $synth = $this->getSynthesizerByType($type->getName(), $context, $path);
 
