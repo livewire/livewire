@@ -24,11 +24,11 @@ class ModelSynth extends Synth {
         // If no alias is found, this just returns the class name
         $alias = $target->getMorphClass();
 
-        $serializedModel = (array) $this->getSerializedPropertyValue($target);
+        $key = $target->getRouteKey();
 
         return [
             null,
-            ['class' => $alias, 'key' => $serializedModel['id']],
+            ['class' => $alias, 'key' => $key],
         ];
     }
 
@@ -43,7 +43,11 @@ class ModelSynth extends Synth {
             $class = $aliasClass;
         }
 
-        $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
+        $model = (new $class)
+            ->newQueryWithoutScopes()
+            ->where((new $class)->getRouteKeyName(), $key)
+            ->useWritePdo()
+            ->firstOrFail();
 
         return $model;
     }
