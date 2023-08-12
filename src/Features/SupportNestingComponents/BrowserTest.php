@@ -180,6 +180,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertNotPresent('@child-one');
     }
     
+    /** @test */
     public function lazy_nested_components_do_not_call_boot_method_twice()
     {
         Livewire::visit([
