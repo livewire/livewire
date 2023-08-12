@@ -179,6 +179,19 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@delete-one')
         ->assertNotPresent('@child-one');
     }
+    
+    public function lazy_nested_components_do_not_call_boot_method_twice()
+    {
+        Livewire::visit([
+            BootPage::class,
+            'nested-boot-component' => NestedBootComponent::class,
+        ])
+            ->assertSee('Page')
+            ->pause(500)
+            ->assertDontSee('Boot count: 2')
+            ->assertSee('Boot count: 1');
+        ;
+    }
 }
 
 class Page extends Component
@@ -242,5 +255,39 @@ class ThirdComponent extends Component
     public function render()
     {
         return '<div>Third Component Rendered</div>';
+    }
+}
+
+class BootPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>Page</div>
+
+            <livewire:nested-boot-component lazy/>
+        </div>
+        HTML;
+    }
+}
+
+class NestedBootComponent extends Component
+{
+    public $bootCount = 0;
+
+    public function boot()
+    {
+        $this->increment();
+    }
+
+    public function increment()
+    {
+        $this->bootCount ++;
+    }
+
+    public function render()
+    {
+        return '<div>Boot count: {{ $bootCount }}</div>';
     }
 }
