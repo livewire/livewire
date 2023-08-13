@@ -49,9 +49,9 @@ class Rule extends LivewireAttribute
 
         if ($this->as) {
             if (is_array($this->as)) {
-                $this->component->addValidationAttributesFromOutside($this->as);
+                $this->component->addValidationAttributesFromOutside(trans($this->as));
             } else {
-                $this->component->addValidationAttributesFromOutside([$this->getName() => $this->as]);
+                $this->component->addValidationAttributesFromOutside([$this->getName() => trans($this->as)]);
             }
         }
 

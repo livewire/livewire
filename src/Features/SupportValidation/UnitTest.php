@@ -7,6 +7,8 @@ use Livewire\Livewire;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Component;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;
 use Tests\TestComponent;
@@ -109,6 +111,29 @@ class UnitTest extends \Tests\TestCase
                     $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
                 } else {
                     $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
+                }
+            })
+            ;
+    }
+
+    /** @test */
+    public function rule_attribute_alias_is_translatable()
+    {
+        Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
+
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required|min:3', as: 'translatable.foo')]
+            public $foo = '';
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The Translated Foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The Translated Foo must be at least 3 characters.', $messages['foo'][0]);
                 }
             })
             ;
