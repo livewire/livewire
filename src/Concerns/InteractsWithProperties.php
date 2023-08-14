@@ -52,6 +52,12 @@ trait InteractsWithProperties
         $freshInstance = new static;
 
         foreach ($properties as $property) {
+            if (! isset($freshInstance->{$property})) {
+                unset($this->{$property});
+
+                continue;
+            }
+
             data_set($this, $property, data_get($freshInstance, $property));
         }
     }
