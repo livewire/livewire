@@ -103,14 +103,14 @@ export class Component {
     inscribeSnapshotAndEffectsOnElement() {
         let el = this.el
 
-        this.el.setAttribute('wire:snapshot', this.snapshotEncoded)
+        el.setAttribute('wire:snapshot', this.snapshotEncoded)
 
         // We need to re-register any event listeners that were originally registered...
         let effects = this.originalEffects.listeners
             ? { listeners: this.originalEffects.listeners }
             : {}
 
-        this.el.setAttribute('wire:effects', JSON.stringify(effects))
+        el.setAttribute('wire:effects', JSON.stringify(effects))
     }
 
     addCleanup(cleanup) {
