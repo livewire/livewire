@@ -577,7 +577,7 @@ class SurveyQuestion extends Component
     Question: {{ $question->content }}
 
     @foreach ($subQuestions as $subQuestion)
-        <livewire:survey-question :question="$subQuestion" />
+        <livewire:survey-question :question="$subQuestion" :key="$subQuestion->id" />
     @endforeach
 </div>
 ```
