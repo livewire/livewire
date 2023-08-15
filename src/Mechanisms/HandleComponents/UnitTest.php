@@ -148,7 +148,7 @@ class UnitTest extends \Tests\TestCase
         })
         ->assertSet('form.selected', null)
         ->set('form.selected', 'D')
-        ->assertSet('form.selected', Suit::Diamonds)
+        ->assertSet('form.selected', UnitSuit::Diamonds)
         ->set('form.selected', null)
         ->assertSet('form.selected', null)
         ;
