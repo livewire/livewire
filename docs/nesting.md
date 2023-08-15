@@ -527,7 +527,7 @@ class Steps extends Component
 </div>
 ```
 
-Now, if the `Steps` component's `$current` prop is set to "step-1", Livewire will render a component named "step-one" like so:
+Now, if the `Steps` component's `$current` prop is set to "step-one", Livewire will render a component named "step-one" like so:
 
 ```php
 <?php
