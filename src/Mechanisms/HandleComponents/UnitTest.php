@@ -100,12 +100,12 @@ class UnitTest extends \Tests\TestCase
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
         Livewire::test(new class extends \Livewire\Component {
-            public ?Suit $selected;
+            public ?UnitSuit $selected;
 
             #[\Livewire\Attributes\Computed]
             public function cases()
             {
-                return Suit::cases();
+                return UnitSuit::cases();
             }
 
             public function render()
@@ -125,7 +125,7 @@ class UnitTest extends \Tests\TestCase
         })
         ->assertSet('selected', null)
         ->set('selected', 'D')
-        ->assertSet('selected', Suit::Diamonds)
+        ->assertSet('selected', UnitSuit::Diamonds)
         ->set('selected', null)
         ->assertSet('selected', null)
         ;
@@ -234,7 +234,7 @@ class ComponentWithStringPropertiesStub extends Component
     }
 }
 
-enum Suit: string
+enum UnitSuit: string
 {
     case Hearts = 'H';
 
@@ -252,5 +252,5 @@ class CountForm extends Form
 
 class SuitForm extends Form
 {
-    public Suit $selected;
+    public UnitSuit $selected;
 }
