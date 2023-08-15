@@ -772,7 +772,7 @@ Often, you may build your dropdown options dynamically using Blade:
 ```blade
 <select wire:model="state">
     @foreach (\App\Models\State::all() as $state)
-        <option value="{{ $option->id }}">{{ $option->label }}</option>
+        <option value="{{ $option->id }}" wire:key="{{ $option->id }}">{{ $option->label }}</option>
     @endforeach
 </select>
 ```
@@ -784,7 +784,7 @@ If you don't have a specific option selected by default, you may want to show a 
     <option disabled>Select a state...</option>
 
     @foreach (\App\Models\State::all() as $state)
-        <option value="{{ $option->id }}">{{ $option->label }}</option>
+        <option value="{{ $option->id }}" wire:key="{{ $option->id }}">{{ $option->label }}</option>
     @endforeach
 </select>
 ```
