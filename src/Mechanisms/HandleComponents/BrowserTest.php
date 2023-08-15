@@ -92,6 +92,32 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function it_uses_the_synthesizers_for_multiple_types_property_updates()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public string|int $localValue = 15;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" dusk="localInput" wire:model.live.debounce.100ms="localValue">
+
+                    <span dusk="localValue">{{ $localValue }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForText(15)
+        ->assertSee(15)
+
+        ->type('@localInput', 25)
+        ->waitForText(25)
+        ->assertSee(25)
+        ;
+    }
+
+    /** @test */
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
         Livewire::visit(new class extends \Livewire\Component {
