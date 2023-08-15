@@ -97,7 +97,7 @@ In situations where the same action is triggered with different parameters from 
 ```blade
 <div>
     @foreach ($posts as $post)
-        <div>
+        <div wire:key="{{ $post->id }}">
             <h2>{{ $post->title }}</h2>
 
             <button wire:click="remove({{ $post->id }})">Remove</button>
