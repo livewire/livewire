@@ -7,6 +7,7 @@ use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
+use ReflectionUnionType;
 
 class HandleComponents
 {
@@ -342,9 +343,13 @@ class HandleComponents
         if ($parent && is_object($parent) && property_exists($parent, $childKey) && Utils::propertyIsTyped($parent, $childKey)) {
             $type = Utils::getProperty($parent, $childKey)->getType();
 
-            $synth = $this->getSynthesizerByType($type->getName(), $context, $path);
+            $types = $type instanceof ReflectionUnionType ? $type->getTypes() : [$type];
 
-            if ($synth) return $synth->hydrateFromType($type->getName(), $value);
+            foreach ($types as $type) {
+                $synth = $this->getSynthesizerByType($type->getName(), $context, $path);
+
+                if ($synth) return $synth->hydrateFromType($type->getName(), $value);
+            }
         }
 
         return $value;
