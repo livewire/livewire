@@ -609,7 +609,7 @@ uses([Sorting::class, WithSorting::class]);
 Sometimes, you may want to convert a small portion of a page a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
 
 ```php
-Route::get('/counter', fn () => view('pages/counter.blade.php'));
+Route::get('/counter', fn () => view('pages.counter'));
 ```
 
 The view's content is a typical Blade template, including layout definitions and slots. However, by wrapping a portion of the view within the `@volt` Blade directive, we can convert that piece of the view into a fully-functional Volt component:
