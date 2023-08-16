@@ -31,12 +31,13 @@ class BrowserTest extends \Tests\BrowserTestCase
                 </div>
                 HTML; }
         })
+        ->waitUntilMissingText('Toggle Me!')
         ->assertDontSee('Toggle Me!')
         ->click('@toggle')
-        ->pause(100)
+        ->waitForText('Toggle Me!')
         ->assertSee('Toggle Me!')
         ->click('@toggle')
-        ->pause(100)
+        ->waitUntilMissingText('Toggle Me!')
         ->assertDontSee('Toggle Me!')
         ;
     }
