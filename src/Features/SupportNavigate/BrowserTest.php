@@ -285,7 +285,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function back_forward_navigation_is_reliable()
     {
         $this->browse(function ($browser) {
-            $repeatTimes = 20;
+            $repeatTimes = 40;
 
             $browser->visit('/first-scroll');
 
