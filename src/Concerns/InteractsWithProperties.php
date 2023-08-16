@@ -52,14 +52,20 @@ trait InteractsWithProperties
         $freshInstance = new static;
 
         foreach ($properties as $property) {
-            // Handle uninitialized properties differently to avoid an error being thrown.
-            if (! isset($freshInstance->{$property})) {
-                unset($this->{$property});
+            $defaultValue = data_get($freshInstance, $property);
 
-                continue;
+            // Handle unsetting properties that are unset by default.
+            if (!$defaultValue) {
+                // Generate a unique handle so we can distinguish between falsey and unset properties.
+                $notSet = uniqid($property);
+                if ($notSet === data_get($freshInstance, $property, $notSet)) {
+                    // The property's default is unset.
+                    data_forget($this, $property);
+                    continue;
+                }
             }
 
-            data_set($this, $property, data_get($freshInstance, $property));
+            data_set($this, $property, $defaultValue);
         }
     }
 
