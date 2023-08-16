@@ -3,7 +3,12 @@ import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 
 export function morph(component, el, html) {
-    let wrapper = document.createElement(el.parentElement.tagName.toLowerCase())
+    let wrapperTag = el.parentElement
+        // If the root element is a "tr", we need the wrapper to be a "table"...
+        ? el.parentElement.tagName.toLowerCase()
+        : 'div'
+
+    let wrapper = document.createElement(wrapperTag)
 
     wrapper.innerHTML = html
     let parentComponent
