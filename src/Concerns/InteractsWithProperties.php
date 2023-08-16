@@ -53,16 +53,13 @@ trait InteractsWithProperties
 
         foreach ($properties as $property) {
             $defaultValue = data_get($freshInstance, $property);
+            $unset = '__unset__';
+            $unsetByDefault = !$defaultValue && $unset === data_get($freshInstance, $property, $unset);
 
-            // Handle unsetting properties that are unset by default.
-            if (!$defaultValue) {
-                // Generate a unique handle so we can distinguish between falsey and unset properties.
-                $notSet = uniqid($property);
-                if ($notSet === data_get($freshInstance, $property, $notSet)) {
-                    // The property's default is unset.
-                    data_forget($this, $property);
-                    continue;
-                }
+            // Handle resetting properties that are unset by default.
+            if ($unsetByDefault) {
+                data_forget($this, $property);
+                continue;
             }
 
             data_set($this, $property, $defaultValue);
