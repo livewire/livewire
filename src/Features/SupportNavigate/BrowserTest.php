@@ -332,22 +332,22 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSeeNothingIn('@text-child')
                 ->assertSeeNothingIn('@text-parent')
                 ->waitForLivewire()->type('@text-input', 'test')
-                ->assertSeeIn('@text-child', 'test')
-                ->assertSeeIn('@text-parent', 'test')
+                ->waitForTextIn('@text-child', 'test')
+                ->waitForTextIn('@text-parent', 'test')
 
                 ->waitForNavigate()->click('@home-link')
                 ->assertSeeNothingIn('@text-child')
                 ->assertSeeNothingIn('@text-parent')
                 ->waitForLivewire()->type('@text-input', 'testing')
-                ->assertSeeIn('@text-child', 'testing')
-                ->assertSeeIn('@text-parent', 'testing')
+                ->waitForTextIn('@text-child', 'testing')
+                ->waitForTextIn('@text-parent', 'testing')
 
                 ->back()
-                ->assertSeeIn('@text-child', 'test')
-                ->assertSeeIn('@text-parent', 'test')
+                ->waitForTextIn('@text-child', 'test')
+                ->waitForTextIn('@text-parent', 'test')
                 ->waitForLivewire()->type('@text-input', 'testing')
-                ->assertSeeIn('@text-child', 'testing')
-                ->assertSeeIn('@text-parent', 'testing')
+                ->waitForTextIn('@text-child', 'testing')
+                ->waitForTextIn('@text-parent', 'testing')
                 ;
         });
     }
