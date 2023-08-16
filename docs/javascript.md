@@ -110,7 +110,7 @@ Livewire.directive('confirm', ({ el, directive, component, cleanup }) => {
     let onClick = e => {
         if (! confirm(content)) {
             e.preventDefault()
-            e.stopPropagation()
+            e.stopImmediatePropagation()
         }
     }
 

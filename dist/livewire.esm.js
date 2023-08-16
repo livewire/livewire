@@ -8163,7 +8163,10 @@ function processEffects(target, effects) {
 
 // js/features/supportEntangle.js
 var import_alpinejs = __toESM(require_module_cjs());
-function generateEntangleFunction(component) {
+function generateEntangleFunction(component, cleanup2) {
+  if (!cleanup2)
+    cleanup2 = () => {
+    };
   return (name, live) => {
     let isLive = live;
     let livewireProperty = name;
@@ -8175,7 +8178,7 @@ function generateEntangleFunction(component) {
         return;
       }
       queueMicrotask(() => {
-        import_alpinejs.default.entangle({
+        let release = import_alpinejs.default.entangle({
           get() {
             return livewireComponent.get(name);
           },
@@ -8190,6 +8193,7 @@ function generateEntangleFunction(component) {
             setter(value);
           }
         });
+        cleanup2(() => release());
       });
       return livewireComponent.get(name);
     }, (obj) => {
@@ -8481,7 +8485,25 @@ function getProperty(component, name) {
 function getFallback(component) {
   return fallback(component);
 }
-import_alpinejs2.default.magic("wire", (el) => closestComponent(el).$wire);
+import_alpinejs2.default.magic("wire", (el, { cleanup: cleanup2 }) => {
+  let component;
+  return new Proxy({}, {
+    get(target, property) {
+      if (!component)
+        component = closestComponent(el);
+      if (property === "entangle") {
+        return generateEntangleFunction(component, cleanup2);
+      }
+      return component.$wire[property];
+    },
+    set(target, property, value) {
+      if (!component)
+        component = closestComponent(el);
+      component.$wire[property] = value;
+      return true;
+    }
+  });
+});
 wireProperty("__instance", (component) => component);
 wireProperty("$get", (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property));
 wireProperty("$set", (component) => async (property, value, live = true) => {

@@ -9,6 +9,16 @@ class EnumSynth extends Synth {
         return is_object($target) && is_subclass_of($target, 'BackedEnum');
     }
 
+    static function matchByType($type) {
+        return is_subclass_of($type, 'BackedEnum');
+    }
+
+    static function hydrateFromType($type, $value) {
+        if ($value === '') return null;
+
+        return $type::from($value);
+    }
+
     function dehydrate($target) {
         return [
             $target->value,
@@ -17,6 +27,8 @@ class EnumSynth extends Synth {
     }
 
     function hydrate($value, $meta) {
+        if ($value === null) return null;
+
         $class = $meta['class'];
 
         return $class::from($value);

@@ -1,6 +1,8 @@
 <?php
 
 namespace Livewire;
+use Composer\InstalledVersions;
+use Illuminate\Foundation\Console\AboutCommand;
 
 class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
@@ -65,6 +67,12 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function bootMechanisms()
     {
+        if (class_exists(AboutCommand::class) && class_exists(InstalledVersions::class)) {
+            AboutCommand::add('Livewire', [
+                'Livewire' => InstalledVersions::getPrettyVersion('livewire/livewire'),
+            ]);
+        }
+        
         foreach ($this->getMechanisms() as $mechanism) {
             (new $mechanism)->boot($this);
         }

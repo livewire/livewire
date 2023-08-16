@@ -3464,7 +3464,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default = src_default;
 
   // js/features/supportEntangle.js
-  function generateEntangleFunction(component) {
+  function generateEntangleFunction(component, cleanup3) {
+    if (!cleanup3)
+      cleanup3 = () => {
+      };
     return (name, live) => {
       let isLive = live;
       let livewireProperty = name;
@@ -3476,7 +3479,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         }
         queueMicrotask(() => {
-          module_default.entangle({
+          let release3 = module_default.entangle({
             get() {
               return livewireComponent.get(name);
             },
@@ -3491,6 +3494,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               setter(value);
             }
           });
+          cleanup3(() => release3());
         });
         return livewireComponent.get(name);
       }, (obj) => {
@@ -3779,7 +3783,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getFallback(component) {
     return fallback(component);
   }
-  module_default.magic("wire", (el) => closestComponent(el).$wire);
+  module_default.magic("wire", (el, { cleanup: cleanup3 }) => {
+    let component;
+    return new Proxy({}, {
+      get(target, property) {
+        if (!component)
+          component = closestComponent(el);
+        if (property === "entangle") {
+          return generateEntangleFunction(component, cleanup3);
+        }
+        return component.$wire[property];
+      },
+      set(target, property, value) {
+        if (!component)
+          component = closestComponent(el);
+        component.$wire[property] = value;
+        return true;
+      }
+    });
+  });
   wireProperty("__instance", (component) => component);
   wireProperty("$get", (component) => (property, reactive4 = true) => dataGet(reactive4 ? component.reactive : component.ephemeral, property));
   wireProperty("$set", (component) => async (property, value, live = true) => {

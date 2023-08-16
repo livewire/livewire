@@ -2,7 +2,9 @@ import { findComponent } from "../store";
 import { on } from '@/events'
 import Alpine from 'alpinejs'
 
-export function generateEntangleFunction(component) {
+export function generateEntangleFunction(component, cleanup) {
+    if (! cleanup) cleanup = () => {}
+
     return (name, live) => {
         let isLive = live
         let livewireProperty = name
@@ -18,7 +20,7 @@ export function generateEntangleFunction(component) {
             }
 
             queueMicrotask(() => {
-                Alpine.entangle({
+                let release = Alpine.entangle({
                     // Outer scope...
                     get() {
                         return livewireComponent.get(name)
@@ -35,6 +37,8 @@ export function generateEntangleFunction(component) {
                         setter(value)
                     }
                 })
+
+                cleanup(() => release())
             })
 
             return livewireComponent.get(name)
