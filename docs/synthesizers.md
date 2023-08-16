@@ -54,7 +54,8 @@ Now that you've seen the outside-in effects of Synthesizers, here is the actual 
 ```php
 use Illuminate\Support\Stringable;
 
-class StringableSynth extends Synth {
+class StringableSynth extends Synth
+{
     public static $key = 'str';
 
     public static function match($target)
@@ -146,7 +147,8 @@ To support properties of type `Address`, we can use the following Synthesizer:
 ```php
 use App\Dtos\Address;
 
-class AddressSynth extends Synth {
+class AddressSynth extends Synth
+{
     public static $key = 'address';
 
     public static function match($target)
@@ -191,7 +193,8 @@ Using the `CreateProperty` example from above, it is likely that you would want 
 ```php
 use App\Dtos\Address;
 
-class AddressSynth extends Synth {
+class AddressSynth extends Synth
+{
     public static $key = 'address';
 
     public static function match($target)
