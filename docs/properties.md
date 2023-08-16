@@ -105,8 +105,8 @@ class TodoList extends Component
     <button wire:click="add">Add Todo</button>
 
     <ul>
-        @foreach ($todos as $index => $todo)
-            <li wire:key="{{ $index }}">{{ $todo }}</li>
+        @foreach ($todos as $todo)
+            <li>{{ $todo }}</li>
         @endforeach
     </ul>
 </div>
@@ -652,8 +652,8 @@ Here's how you would access these _todos_ from the Blade view:
 
 ```blade
 <ul>
-    @foreach ($this->todos as $index => $todo)
-        <li wire:key="{{ $index }}">{{ $todo }}</li>
+    @foreach ($this->todos as $todo)
+        <li>{{ $todo }}</li>
     @endforeach
 </ul>
 ```

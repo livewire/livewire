@@ -29,8 +29,8 @@ class Todos extends Component
 ```blade
 <div wire:submit="add">
     <ul>
-        @foreach ($todos as $index => $todo)
-            <li wire:key="{{ $index }}">{{ $todo }}</li>
+        @foreach ($todos as $todo)
+            <li>{{ $todo }}</li>
         @endforeach
     </ul>
 
