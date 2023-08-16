@@ -282,6 +282,26 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function back_forward_navigation_is_reliable()
+    {
+        $this->browse(function ($browser) {
+            $repeatTimes = 20;
+
+            $browser->visit('/first-scroll');
+
+            for ($i = 0; $i < $repeatTimes; $i++) {
+                $browser
+                    ->waitFor('@first-target')
+                    ->assertVisible('@first-target')
+                    ->click('@link.to.second')
+                    ->waitFor('@second-target')
+                    ->back()
+                ;
+            }
+        });
+    }
+
+    /** @test */
     public function navigate_back_works_from_page_without_a_livewire_component_that_has_a_script_with_data_navigate_track()
     {
         // When using `@vite` on the page without a Livewire component,
