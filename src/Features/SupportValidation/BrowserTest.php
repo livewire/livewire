@@ -6,7 +6,6 @@ use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\Livewire;
 
-/** @group morphing */
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
@@ -14,7 +13,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Livewire::visit(new class extends Component
         {
-            #[Rule('required', 'min:3')]
+            #[Rule(['required', 'min:3'])]
             public string $title = '';
 
             public function render()
@@ -34,7 +33,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->type('@title', 'a')
-            ->click('@save')
+            ->waitForLivewire()->click('@save')
             ->assertSeeIn('@error', 'The title field must be at least 3 characters.');
     }
 }
