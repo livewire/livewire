@@ -13,7 +13,7 @@ class Form implements Arrayable
         protected $propertyName
     ) {
         $this->addValidationRulesToComponent();
-        $this->addAttributesToComponent();
+        $this->addValidationAttributesToComponent();
         $this->addMessagesToComponent();
     }
 
@@ -32,15 +32,15 @@ class Form implements Arrayable
         );
     }
 
-    protected function addAttributesToComponent()
+    protected function addValidationAttributesToComponent()
     {
-        $attributes = [];
+        $validationAttributes = [];
 
-        if (method_exists($this, 'attributes')) $attributes = $this->attributes();
-        else if (property_exists($this, 'attributes')) $attributes = $this->attributes;
+        if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+        else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
 
         $this->component->addValidationAttributesFromOutside(
-            $this->getAttributesWithPrefixedKeys($attributes)
+            $this->getAttributesWithPrefixedKeys($validationAttributes)
         );
     }
 
