@@ -266,7 +266,7 @@ class ShowPosts extends Component
 ```blade
 <div>
     @foreach ($posts as $post)
-        <div>
+        <div wire:key="{{ $post->id }}">
             <h1>{{ $post->title }}</h1>
             <span>{{ $post->content }}</span>
 
@@ -351,7 +351,7 @@ class ShowPosts extends Component
 ```blade
 <div>
     @foreach ($posts as $post)
-        <div>
+        <div wire:key="{{ $post->id }}">
             <h1>{{ $post->title }}</h1>
             <span>{{ $post->content }}</span>
 
@@ -712,7 +712,7 @@ class ShowPosts extends Component
 ```blade
 <div>
     @foreach ($posts as $post)
-        <div>
+        <div wire:key="{{ $post->id }}">
             <h1>{{ $post->title }}</h1>
             <span>{{ $post->content }}</span>
 
@@ -790,7 +790,7 @@ class BrowsePosts extends Component
 ```blade
 <div>
     @foreach ($posts as $post)
-        <div>
+        <div wire:key="{{ $post->id }}">
             <h1>{{ $post->title }}</h1>
             <span>{{ $post->content }}</span>
 
@@ -885,12 +885,12 @@ class BrowsePosts extends Component
 ```blade
 <div>
     @foreach ($posts as $post)
-    <div>
-        <h1>{{ $post->title }}</h1>
-        <span>{{ $post->content }}</span>
+        <div wire:key="{{ $post->id }}">
+            <h1>{{ $post->title }}</h1>
+            <span>{{ $post->content }}</span>
 
-        <button wire:click="deletePost({{ $post->id }})">Delete</button>
-    </div>
+            <button wire:click="deletePost({{ $post->id }})">Delete</button>
+        </div>
     @endforeach
 </div>
 ```

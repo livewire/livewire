@@ -32,7 +32,7 @@ class ShowUsers extends Component
 
     <ul>
         @foreach ($users as $user)
-            <li>{{ $user->name }}</li>
+            <li wire:key="{{ $user->id }}">{{ $user->name }}</li>
         @endforeach
     </ul>
 </div>

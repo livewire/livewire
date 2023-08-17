@@ -7,7 +7,7 @@ use Exception;
 use Illuminate\Routing\Route;
 use Tests\TestCase;
 
-class LivewireRouteCachingTest extends TestCase
+class LivewireRouteCachingUnitTest extends TestCase
 {
     /** @test */
     public function livewire_script_route_is_cacheable(): void

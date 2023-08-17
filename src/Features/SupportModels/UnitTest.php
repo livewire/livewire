@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportModels;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
@@ -97,6 +98,34 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertCount(2, Post::resolveConnection()->getQueryLog());
     }
+
+
+    /** @test */
+    public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
+    {
+        Relation::morphMap([
+            'post' => Post::class,
+        ]);
+
+        $component =  Livewire::test(PostComponent::class);
+
+        $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
+    }
+
+    /** @test */
+    public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
+    {
+        $post = Post::first();
+
+        Relation::morphMap([
+            'post' => Post::class,
+        ]);
+
+        Livewire::test(PostComponent::class)
+            ->call('$refresh')
+            ->assertSet('post', $post);
+    }
+
 }
 
 #[\Attribute]
@@ -104,6 +133,22 @@ class Lazy {
     //
 }
 
+class PostComponent extends \Livewire\Component
+{
+    public $post;
+
+    public function mount()
+    {
+        $this->post = Post::first();
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div></div>
+        HTML;
+    }
+}
 class Post extends Model
 {
     use Sushi;

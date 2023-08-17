@@ -61,6 +61,19 @@ function invade($obj)
     };
 }
 
+function once($fn)
+{
+    $hasRun = false;
+
+    return function (...$params) use ($fn, &$hasRun) {
+        if ($hasRun) return;
+
+        $hasRun = true;
+
+        return $fn(...$params);
+    };
+}
+
 function of(...$params)
 {
     return $params;

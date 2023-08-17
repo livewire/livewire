@@ -44,10 +44,25 @@ trait InteractsWithProperties
             ? $properties[0]
             : $properties;
 
+        // Reset all
+        if (empty($properties)) {
+            $properties = array_keys($this->all());
+        }
+
         $freshInstance = new static;
 
         foreach ($properties as $property) {
-            data_set($this, $property, data_get($freshInstance, $property));
+            $defaultValue = data_get($freshInstance, $property);
+            $unset = '__unset__';
+            $unsetByDefault = !$defaultValue && $unset === data_get($freshInstance, $property, $unset);
+
+            // Handle resetting properties that are unset by default.
+            if ($unsetByDefault) {
+                data_forget($this, $property);
+                continue;
+            }
+
+            data_set($this, $property, $defaultValue);
         }
     }
 

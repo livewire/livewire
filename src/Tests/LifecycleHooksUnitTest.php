@@ -7,7 +7,7 @@ use Livewire\Livewire;
 use Illuminate\Support\Stringable;
 use PHPUnit\Framework\Assert as PHPUnit;
 
-class LifecycleHooksTest extends \Tests\TestCase
+class LifecycleHooksUnitTest extends \Tests\TestCase
 {
 
     /** @test */

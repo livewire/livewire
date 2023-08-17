@@ -41,6 +41,9 @@ class SubsequentRender extends Render
 
         $json = $response->json();
 
+        // Set "original" to Blade view for assertions like "assertViewIs()"...
+        $response->original = $componentView;
+
         $componentResponsePayload = $json['components'][0];
 
         $snapshot = json_decode($componentResponsePayload['snapshot'], true);

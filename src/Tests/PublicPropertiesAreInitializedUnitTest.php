@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Stringable;
 
-class PublicPropertiesAreInitializedTest extends \Tests\TestCase
+class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function uninitialized_public_property_is_null()

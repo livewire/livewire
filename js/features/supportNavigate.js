@@ -13,6 +13,11 @@ document.addEventListener('alpine:navigated', e => {
     document.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
 })
 
+document.addEventListener('alpine:navigating', e => {
+    // Forward a "livewire" version of the Alpine event...
+    document.dispatchEvent(new CustomEvent('livewire:navigating', { bubbles: true }))
+})
+
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate
 

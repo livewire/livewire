@@ -5,7 +5,7 @@ namespace Livewire\Concerns\Tests;
 use Livewire\Livewire;
 use Livewire\Component;
 
-class ComponentCanReturnPublicPropertiesTest extends \Tests\TestCase
+class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
 {
     /** @test */
     public function a_livewire_component_can_return_an_associative_array_of_public_properties()

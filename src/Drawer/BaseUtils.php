@@ -40,7 +40,7 @@ class BaseUtils
                 if (method_exists($property, 'isInitialized') && !$property->isInitialized($target)) {
                     // If a type of `array` is given with no value, let's assume users want
                     // it prefilled with an empty array...
-                    $value = (method_exists($property->getType(), 'getName') && $property->getType()->getName() === 'array')
+                    $value = (method_exists($property, 'getType') && $property->getType() && method_exists($property->getType(), 'getName') && $property->getType()->getName() === 'array')
                         ? [] : null;
                 } else {
                     $value = $property->getValue($target);
@@ -80,5 +80,17 @@ class BaseUtils
 
     static function getProperty($target, $property) {
         return (new ReflectionClass($target))->getProperty($property);
+    }
+
+    static function propertyIsTyped($target, $property) {
+        $property = static::getProperty($target, $property);
+
+        return $property->hasType();
+    }
+
+    static function propertyIsTypedAndUninitialized($target, $property) {
+        $property = static::getProperty($target, $property);
+
+        return $property->hasType() && (! $property->isInitialized($target));
     }
 }
