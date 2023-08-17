@@ -9,6 +9,8 @@ artisan make:livewire create-post --test
 
 In addition to generating the component files themselves, the above command will generate the following test file `tests/Feature/Livewire/CreatePostTest.php`:
 
+If you would like to create a [Pest PHP](https://pestphp.com/) test, you may provide the `--pest` option to the make:livewire command:
+
 ```php
 <?php
 

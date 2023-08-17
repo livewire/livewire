@@ -186,9 +186,9 @@ class ComponentParser
         return str($this->testPath())->replaceFirst(base_path().'/', '');
     }
 
-    public function testContents()
+    public function testContents($testType = 'phpunit')
     {
-        $stubName = 'livewire.test.stub';
+        $stubName = $testType === 'pest' ? 'livewire.pest.stub' : 'livewire.test.stub';
 
         if(File::exists($stubPath = base_path($this->stubDirectory.$stubName))) {
             $template = file_get_contents($stubPath);
