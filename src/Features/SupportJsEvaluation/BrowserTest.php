@@ -13,7 +13,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends \Livewire\Component {
                 public $show = false;
 
-                #[Js]
+                #[BaseJs]
                 function toggle()
                 {
                     return <<<'JS'

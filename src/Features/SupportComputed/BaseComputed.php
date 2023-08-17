@@ -10,7 +10,7 @@ use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
 
 #[\Attribute]
-class Computed extends Attribute
+class BaseComputed extends Attribute
 {
     protected $requestCachedValue;
 

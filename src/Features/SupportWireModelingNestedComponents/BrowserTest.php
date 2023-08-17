@@ -30,7 +30,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML; }
             },
             'child' => new class extends \Livewire\Component {
-                #[Modelable]
+                #[BaseModelable]
                 public $bar;
 
                 public function render() { return <<<'HTML'
@@ -81,7 +81,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends \Livewire\Component {
-                #[Modelable]
+                #[BaseModelable]
                 public $bar;
 
                 public function render()
@@ -141,7 +141,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends \Livewire\Component {
-                #[Modelable]
+                #[BaseModelable]
                 public $bar;
 
                 public function render()
