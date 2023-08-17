@@ -72,13 +72,9 @@ class Form implements Arrayable
 
     public function except($properties)
     {
-        $results = $this->all();
+        if (! is_array($properties)) $properties = [$properties];
 
-        foreach ($properties as $property) {
-            unset($results[$property]);
-        }
-
-        return $results;
+        return array_diff_key($this->all(), array_flip($properties));
     }
 
     public function hasProperty($prop)

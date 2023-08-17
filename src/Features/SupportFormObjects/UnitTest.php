@@ -188,7 +188,12 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals(
             ["content" => ""],
-            $form->except(["title"])
+            $form->except('title')
+        );
+
+        $this->assertEquals(
+            ["content" => ""],
+            $form->except(['title'])
         );
     }
 }

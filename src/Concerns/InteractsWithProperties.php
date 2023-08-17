@@ -80,6 +80,8 @@ trait InteractsWithProperties
 
     public function except($properties)
     {
+        if (! is_array($properties)) $properties = [$properties];
+
         return array_diff_key($this->all(), array_flip($properties));
     }
 
