@@ -6,7 +6,7 @@ use function Livewire\store;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Modelable extends LivewireAttribute
+class BaseModelable extends LivewireAttribute
 {
     public function mount($params, $parent)
     {

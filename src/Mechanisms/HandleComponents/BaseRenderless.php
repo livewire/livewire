@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms\HandleComponents;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Renderless extends LivewireAttribute
+class BaseRenderless extends LivewireAttribute
 {
     function call()
     {
