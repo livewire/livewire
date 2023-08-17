@@ -22,6 +22,10 @@ class SupportEvents extends ComponentHook
 
             $method = static::getListenerMethodName($this->component, $name);
 
+            if (! is_array($params) && ! is_iterable($params)) {
+                throw new \Exception('EventParametersNotIterable');
+            }
+
             $returnEarly(
                 wrap($this->component)->$method(...$params)
             );
