@@ -61,6 +61,7 @@ return [
             'mov', 'avi', 'wmv', 'mp3', 'm4a',
             'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ],
+        'should_cleanup_old_files' => true, // If true after every upload we will check for files older than 24 hr to delete from the temp folder.
         'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
     ],
 

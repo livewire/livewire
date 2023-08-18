@@ -97,6 +97,12 @@ trait WithFileUploads
 
     protected function cleanupOldUploads()
     {
+        $shouldCleanupOldFiles = config('livewire.temporary_file_upload.should_cleanup_old_files', true);
+
+        if (!$shouldCleanupOldFiles) {
+            return;
+        }
+
         if (FileUploadConfiguration::isUsingS3()) return;
 
         $storage = FileUploadConfiguration::storage();
