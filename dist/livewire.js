@@ -3932,9 +3932,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
-      this.el.setAttribute("wire:snapshot", this.snapshotEncoded);
+      el.setAttribute("wire:snapshot", this.snapshotEncoded);
       let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
-      this.el.setAttribute("wire:effects", JSON.stringify(effects));
+      el.setAttribute("wire:effects", JSON.stringify(effects));
     }
     addCleanup(cleanup3) {
       this.cleanups.push(cleanup3);
@@ -8529,7 +8529,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("loading", ({ el, directive: directive4, component }) => {
     let targets = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive4);
-    toggleBooleanStateDirective(el, directive4, false);
     whenTargetsArePartOfRequest(component, targets, [
       () => delay3(() => toggleBooleanStateDirective(el, directive4, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive4, false))

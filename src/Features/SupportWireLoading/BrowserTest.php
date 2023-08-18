@@ -75,10 +75,48 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Loaded form.text')
         ;
     }
+
+    /** @test */
+    function wire_loading_attr_doesnt_conflict_with_exist_one()
+    {
+        Livewire::visit(new class extends Component {
+            public $localText = '';
+
+            public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <section>
+                            <button
+                                disabled
+                                dusk="button"
+                                wire:loading.attr="disabled"
+                                wire:target="localText">
+                                Submit
+                            </button>
+                            <input type="text" dusk="localInput" wire:model.live.debounce.100ms="localText">
+                            {{ $localText }}
+                        </section>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForText('Submit')
+        ->assertSee('Submit')
+        ->assertAttribute('@button', 'disabled', 'true')
+        ->type('@localInput', 'Text')
+        ->assertAttribute('@button', 'disabled', 'true')
+        ->waitForText('Text')
+        ->assertAttribute('@button', 'disabled', 'true')
+        ;
+    }
 }
 
 class PostFormStub extends Form
 {
     public $text = '';
 }
-

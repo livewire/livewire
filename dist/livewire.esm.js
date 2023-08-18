@@ -8634,9 +8634,9 @@ var Component = class {
   }
   inscribeSnapshotAndEffectsOnElement() {
     let el = this.el;
-    this.el.setAttribute("wire:snapshot", this.snapshotEncoded);
+    el.setAttribute("wire:snapshot", this.snapshotEncoded);
     let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
-    this.el.setAttribute("wire:effects", JSON.stringify(effects));
+    el.setAttribute("wire:effects", JSON.stringify(effects));
   }
   addCleanup(cleanup2) {
     this.cleanups.push(cleanup2);
@@ -9386,7 +9386,6 @@ directive("offline", ({ el, directive: directive2, cleanup: cleanup2 }) => {
 directive("loading", ({ el, directive: directive2, component }) => {
   let targets = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  toggleBooleanStateDirective(el, directive2, false);
   whenTargetsArePartOfRequest(component, targets, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))

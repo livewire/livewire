@@ -7,8 +7,6 @@ directive('loading', ({ el, directive, component }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    toggleBooleanStateDirective(el, directive, false)
-
     whenTargetsArePartOfRequest(component, targets, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
