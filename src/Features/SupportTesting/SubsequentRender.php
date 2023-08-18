@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Illuminate\View\View;
+
 class SubsequentRender extends Render
 {
     function __construct(
@@ -33,11 +35,22 @@ class SubsequentRender extends Render
 
         [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $payload) {
             return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $payload) {
-                return $requestBroker->withHeaders(['X-Livewire' => true])->post($uri, $payload);
+                return $this->requestBroker->withHeaders(['X-Livewire' => true])->post($uri, $payload);
             });
         });
 
         app('livewire')->flushState();
+
+        if (! $response->isOk()) {
+            return new ComponentState(
+                $componentInstance,
+                $response,
+                null,
+                '',
+                [],
+                [],
+            );
+        }
 
         $json = $response->json();
 
