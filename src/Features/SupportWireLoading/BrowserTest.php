@@ -84,7 +84,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             public function updating() {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
-                usleep(500000);
+                usleep(250000);
             }
 
             public function render() {
