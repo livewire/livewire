@@ -585,6 +585,33 @@ $posts = computed(function () {
 </div>
 ```
 
+### Class-based pagination
+
+Paginating when using Volt's class-based approach uses [computed properties](/docs/computed-properties):
+
+```php
+<?php
+
+use App\Models\Post;
+use Livewire\Attributes\Computed;
+use Livewire\Volt\Component;
+use Livewire\WithPagination;
+
+new class extends Component {
+
+    use WithPagination;
+
+    #[Computed]
+    public function posts()
+    {
+        return Post::paginate(10);
+    }
+    
+}
+?>
+```
+
+
 Like Laravel, Livewire's default pagination view uses Tailwind classes for styling. If you use Bootstrap in your application, you can enable the Bootstrap pagination theme by specifying your desired theme when invoking the `usesPagination` function:
 
 ```php
