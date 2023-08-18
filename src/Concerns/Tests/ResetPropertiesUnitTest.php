@@ -70,13 +70,29 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->assertSet('bob', 'law')
             ->assertSet('mwa', 'hah');
     }
+
+    /** @test */
+    public function can_reset_unset_properties()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->set('notSet', 1)
+            ->assertSet('notSet', 1)
+            // Reset only notSet.
+            ->call('resetKeys', 'notSet');
+
+        $this->assertFalse(isset($component->notSet));
+    }
 }
 
 class ResetPropertiesComponent extends Component
 {
     public $foo = 'bar';
+
     public $bob = 'lob';
+
     public $mwa = 'hah';
+
+    public int $notSet;
 
     public function resetAll()
     {

@@ -2,7 +2,7 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportPageComponents\Layout as BaseLayout;
+use Livewire\Features\SupportPageComponents\BaseLayout;
 
 #[\Attribute]
 class Layout extends BaseLayout

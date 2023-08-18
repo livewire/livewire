@@ -6,7 +6,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use function Livewire\store;
 
 #[\Attribute]
-class Reactive extends LivewireAttribute
+class BaseReactive extends LivewireAttribute
 {
     function __construct() {}
 

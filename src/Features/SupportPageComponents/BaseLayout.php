@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportPageComponents;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Layout extends LivewireAttribute
+class BaseLayout extends LivewireAttribute
 {
     function __construct(
         public $name,

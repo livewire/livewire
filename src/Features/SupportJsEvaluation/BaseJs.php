@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportJsEvaluation;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Js extends LivewireAttribute
+class BaseJs extends LivewireAttribute
 {
     function dehydrate($context)
     {

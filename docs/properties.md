@@ -105,7 +105,7 @@ class TodoList extends Component
     <button wire:click="add">Add Todo</button>
 
     <ul>
-        @foreach($todos as $todo)
+        @foreach ($todos as $todo)
             <li>{{ $todo }}</li>
         @endforeach
     </ul>

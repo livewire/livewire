@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportLockedProperties;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Locked extends LivewireAttribute
+class BaseLocked extends LivewireAttribute
 {
     public function update()
     {

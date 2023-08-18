@@ -619,14 +619,14 @@ class ComponentForRenderLayoutAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+    #[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
     public function render()
     {
         return view('show-name');
     }
 }
 
-#[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+#[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
 class ComponentForClassLayoutAttribute extends Component
 {
     public $name = 'bob';
@@ -641,8 +641,8 @@ class ComponentForTitleAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Title('some-title')]
-    #[Layout('layouts.app-with-title')]
+    #[BaseTitle('some-title')]
+    #[BaseLayout('layouts.app-with-title')]
     public function render()
     {
         return view('show-name');
@@ -664,7 +664,7 @@ class ComponentWithModel extends Component
     public FrameworkModel $framework;
 }
 
-#[Layout('layouts.app-with-title')]
+#[BaseLayout('layouts.app-with-title')]
 class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
 {
     public function render()
@@ -674,7 +674,7 @@ class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
     }
 }
 
-#[Layout('layouts.app-layout-with-stacks')]
+#[BaseLayout('layouts.app-layout-with-stacks')]
 class ComponentWithStacks extends Component
 {
     public function render()
