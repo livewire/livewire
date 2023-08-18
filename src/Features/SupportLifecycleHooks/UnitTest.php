@@ -113,6 +113,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => 0,
             'hydrateFoo' => 0,
+            'rendering' => 1,
+            'rendered' => 1,
             'dehydrate' => 1,
             'dehydrateFoo' => 1,
             'updating' => false,
@@ -496,6 +498,8 @@ class ForLifecycleHooks extends Component
         'mount' => false,
         'hydrate' => 0,
         'hydrateFoo' => 0,
+        'rendering' => 0,
+        'rendered' => 0,
         'dehydrate' => 0,
         'dehydrateFoo' => 0,
         'updating' => false,
@@ -621,8 +625,18 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['updatedBarBaz'] = true;
     }
 
+    public function rendering()
+    {
+        $this->lifecycles['rendering']++;
+    }
+
     public function render()
     {
         return app('view')->make('null-view');
+    }
+
+    public function rendered()
+    {
+        $this->lifecycles['rendered']++;
     }
 }
