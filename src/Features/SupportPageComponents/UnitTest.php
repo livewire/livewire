@@ -298,10 +298,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function route_supports_laravels_missing_fallback_function(): void
     {
-        if (! method_exists(\Illuminate\Routing\Route::class, 'missing')) {
-            $this->markTestSkipped('Need Laravel >= 8');
-        }
-
         Route::get('awesome-js/{framework}', ComponentWithModel::class)
              ->missing(function (Request $request) {
                  $this->assertEquals(request(), $request);
