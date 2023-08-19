@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLazyLoading;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Attributes\Reactive;
 
 class BrowserTest extends BrowserTestCase
 {
@@ -117,8 +118,6 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_pass_reactive_props_to_lazyilly_loaded_component()
     {
-        // @todo: flaky test
-        $this->markTestSkipped('flaky');
         Livewire::visit([new class extends Component {
             public $count = 1;
             public function inc() { $this->count++; }
@@ -129,7 +128,7 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }, 'child' => new class extends Component {
-            #[Prop(reactive: true)]
+            #[Reactive]
             public $count;
             public function mount() { sleep(1); }
             public function render() { return <<<'HTML'
@@ -139,10 +138,13 @@ class BrowserTest extends BrowserTestCase
             HTML; }
         }])
         ->waitFor('#child')
+        ->waitForText('Count: 1')
         ->assertSee('Count: 1')
         ->waitForLivewire()->click('@button')
+        ->waitForText('Count: 2')
         ->assertSee('Count: 2')
         ->waitForLivewire()->click('@button')
+        ->waitForText('Count: 3')
         ->assertSee('Count: 3')
         ;
     }
