@@ -197,7 +197,7 @@ class AppServiceProvider extends ServiceProvider
 
 ## Supporting data binding
 
-Using the `CreateProperty` example from above, it is likely that you would want to support `wire:model` binding directly to properties of the `Address` object. Synthesizers allow you to support this using the `get()` and `set()` methods:
+Using the `UpdateProperty` example from above, it is likely that you would want to support `wire:model` binding directly to properties of the `Address` object. Synthesizers allow you to support this using the `get()` and `set()` methods:
 
 ```php
 use App\Dtos\Address;

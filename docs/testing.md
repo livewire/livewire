@@ -4,7 +4,7 @@
 By appending the `--test` flag to the `make:livewire` command, you can generate a test file along with a component:
 
 ```shell
-artisan make:livewire create-post --test
+php artisan make:livewire create-post --test
 ```
 
 In addition to generating the component files themselves, the above command will generate the following test file `tests/Feature/Livewire/CreatePostTest.php`:
