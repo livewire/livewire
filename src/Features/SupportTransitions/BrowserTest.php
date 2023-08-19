@@ -9,8 +9,6 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function can_transition_blade_conditional_dom_segments()
     {
-        $this->markTestSkipped('this is flaky');
-
         Livewire::visit(
             new class extends \Livewire\Component {
                 public $show = false;
@@ -25,7 +23,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <button wire:click="toggle" dusk="toggle">Toggle</button>
 
                     @if ($show)
-                    <div dusk="target" wire:transition.duration.250ms>
+                    <div dusk="target" wire:transition.duration.500ms>
                         Transition Me!
                     </div>
                     @endif
@@ -34,18 +32,20 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertDontSee('@target')
         ->waitForLivewire()->click('@toggle')
+        ->waitFor('@target')
+        ->pause(100) // Let the transition start.
         ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity < 1', true)
-        ->pause(250)
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
+        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity > 0', true) // In progress.
+        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity < 0.75', true) // But not completed
+        ->pause(600) // It really should have completed by now.
         ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity', 1)
-        ->pause(250)
         ->waitForLivewire()->click('@toggle')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity', 1)
-        ->pause(200)
         ->assertPresent('@target')
-        ->pause(100)
+        ->pause(100) // Let the transition start.
+        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
+        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity < 1', true) // In progress.
+        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity > 0.25', true) // But not completed.
+        ->pause(600) // It really should have completed by now.
         ->assertMissing('@target')
         ;
     }
