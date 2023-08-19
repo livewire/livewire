@@ -140,6 +140,29 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function rule_attribute_alias_translation_can_be_opted_out()
+    {
+        Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
+
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required|min:3', as: 'translatable.foo', localize: false)]
+            public $foo = '';
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The translatable.foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The translatable.foo must be at least 3 characters.', $messages['foo'][0]);
+                }
+            })
+            ;
+    }
+
+    /** @test */
     public function rule_attribute_supports_custom_messages()
     {
         Livewire::test(new class extends TestComponent {

@@ -17,6 +17,7 @@ class Rule extends LivewireAttribute
         protected $as = null,
         protected $message = null,
         protected $onUpdate = true,
+        protected bool $localize = true
     ) {}
 
     function boot()
@@ -48,10 +49,12 @@ class Rule extends LivewireAttribute
         }
 
         if ($this->as) {
+            $as = $this->localize ? trans($this->as) : $this->as;
+
             if (is_array($this->as)) {
-                $this->component->addValidationAttributesFromOutside(trans($this->as));
+                $this->component->addValidationAttributesFromOutside($as);
             } else {
-                $this->component->addValidationAttributesFromOutside([$this->getName() => trans($this->as)]);
+                $this->component->addValidationAttributesFromOutside([$this->getName() => $as]);
             }
         }
 
