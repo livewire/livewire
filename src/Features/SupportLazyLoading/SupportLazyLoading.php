@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
+use function Livewire\store;
 use function Livewire\wrap;
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
@@ -16,6 +17,8 @@ class SupportLazyLoading extends ComponentHook
 
         $this->component->skipMount();
 
+        store($this->component)->set('isLazyLoadMounting', true);
+
         $mountParams = array_diff_key($params, array_flip(['lazy']));
 
         $this->component->skipRender(
@@ -25,20 +28,22 @@ class SupportLazyLoading extends ComponentHook
 
     public function hydrate($memo)
     {
-        if (isset($memo['lazyLoaded'])) return;
+        if (! isset($memo['lazyLoaded'])) return;
+        if ($memo['lazyLoaded'] === true) return;
 
-        if ($memo['lazyLoaded'] === false) $this->component->skipHydrate();
+        $this->component->skipHydrate();
+
+        store($this->component)->set('isLazyLoadHydrating', true);
     }
 
     function dehydrate($context)
     {
-        $context->addMemo('lazyLoaded', false);
-
-        if (! $context->mounting) return;
-
-        $context->addMemo('lazyLoaded', true);
+        if (store($this->component)->get('isLazyLoadMounting') === true) {
+            $context->addMemo('lazyLoaded', false);
+        } elseif (store($this->component)->get('isLazyLoadHydrating') === true) {
+            $context->addMemo('lazyLoaded', true);
+        }
     }
-
 
     function call($method, $params, $returnEarly)
     {
