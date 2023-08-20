@@ -69,7 +69,7 @@ $increment = fn () => $this->count++;
 // ...
 ```
 
-### Class based Volt components
+### Class-based Volt components
 
 If you would like to enjoy the single-file component capabilities of Volt while still writing class-based components, we've got you covered. To get started, define an anonymous class that extends `Livewire\Volt\Component`. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
 
@@ -132,7 +132,7 @@ mount(function (UserCounter $counter, $users) {
 });
 ```
 
-### Full page components
+### Full-page components
 
 Optionally, you may render a Volt component as a full page component by defining a Volt route in your application's `routes/web.php` file:
 
@@ -499,7 +499,7 @@ rules(['name' => 'required|min:6', 'email' => 'required|email'])
 
 ## File uploads
 
-When using Volt, [uploading and storing files](/docs/uploads) is made incredibly thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
+When using Volt, [uploading and storing files](/docs/uploads) is much easier thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
 
 ```php
 use function Livewire\Volt\{state, usesFileUploads};
@@ -606,7 +606,7 @@ uses([Sorting::class, WithSorting::class]);
 
 ## Anonymous components
 
-Sometimes, you may want to convert a small portion of a page a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
+Sometimes, you may want to convert a small portion of a page to a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
 
 ```php
 Route::get('/counter', fn () => view('pages/counter.blade.php'));
