@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\BootTest;
+namespace Livewire\Features\SupportLifecycleHooks;
 
 use Livewire\Component;
 use Livewire\Livewire;
@@ -13,7 +13,6 @@ class BrowserTest extends BrowserTestCase
     public function test_component_booth_method_is_called_before_running_synths()
     {
         Livewire::visit(new class extends Component {
-
             public SomeObject $someObject;
 
             public function boot()
@@ -34,13 +33,11 @@ class BrowserTest extends BrowserTestCase
                     <button dusk="button" wire:click="$refresh">Click</button>
                 </div>
                 HTML;
-            }
-        })
+            }})
             ->waitForLivewire()
             ->click('@button')
             ->waitForLivewire()
             ->assertSeeIn('@value', 'valueSetByComponentBoot')
-            ->pause(5000)
             ;
     }
 }
