@@ -65,13 +65,19 @@ class ImplicitRouteBinding
         return $this->getPublicPropertyTypes($component)
             ->intersectByKeys($route->parametersWithoutNulls())
             ->map(function ($className, $propName) use ($route) {
-                $resolved = $this->resolveParameter($route, $propName, $className);
+                // If typed public property, resolve the class
+                if($className) {
+                    $resolved = $this->resolveParameter($route, $propName, $className);
 
-                // We'll also pass the resolved model back to the route
-                // so that it can be used for any depending bindings
-                $route->setParameter($propName, $resolved);
+                    // We'll also pass the resolved model back to the route
+                    // so that it can be used for any depending on bindings
+                    $route->setParameter($propName, $resolved);
 
-                return $resolved;
+                    return $resolved;
+                }
+
+                // Otherwise, just return the route parameter
+                return $route->parameter($propName);
             });
     }
 
@@ -84,8 +90,7 @@ class ImplicitRouteBinding
         return collect(Utils::getPublicPropertiesDefinedOnSubclass($component))
             ->map(function ($value, $name) use ($component) {
                 return Reflector::getParameterClassName(new \ReflectionProperty($component, $name));
-            })
-            ->filter();
+            });
     }
 
     protected function resolveParameter($route, $parameterName, $parameterClassName)
