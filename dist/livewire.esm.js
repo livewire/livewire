@@ -9097,21 +9097,21 @@ on("effects", (component, effects) => {
       ] = event_parts;
       if (["channel", "private", "encryptedPrivate"].includes(channel_type)) {
         window.Echo[channel_type](channel).listen(event_name, (e) => {
-          dispatchSelf(component, event, e);
+          dispatchSelf(component, event, [e]);
         });
       } else if (channel_type == "presence") {
         if (["here", "joining", "leaving"].includes(event_name)) {
           window.Echo.join(channel)[event_name]((e) => {
-            dispatchSelf(component, event, e);
+            dispatchSelf(component, event, [e]);
           });
         } else {
           window.Echo.join(channel).listen(event_name, (e) => {
-            dispatchSelf(component, event, e);
+            dispatchSelf(component, event, [e]);
           });
         }
       } else if (channel_type == "notification") {
         window.Echo.private(channel).notification((notification) => {
-          dispatchSelf(component, event, notification);
+          dispatchSelf(component, event, [notification]);
         });
       } else {
         console.warn("Echo channel type not yet supported");
