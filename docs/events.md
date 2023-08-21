@@ -362,6 +362,28 @@ class OrderTracker extends Component
 }
 ```
 
+Or, if you prefer, you can use the dynamic event name syntax:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder()
+{
+    $this->showNewOrderNotification = true;
+}
+```
+
+If you need to access the event payload, you can do so via the passed in `$event` parameter:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder($event)
+{
+    $order = Order::find($event['orderId']);
+
+    //
+}
+```
+
 ### Private & presence channels
 
 You may also listen to events broadcast to private and presence channels:
