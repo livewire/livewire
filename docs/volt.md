@@ -606,7 +606,7 @@ uses([Sorting::class, WithSorting::class]);
 
 ## Anonymous components
 
-Sometimes, you may want to convert a small portion of a page to a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
+Sometimes, you may want to convert a small portion of a page into a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
 
 ```php
 Route::get('/counter', fn () => view('pages/counter.blade.php'));
