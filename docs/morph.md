@@ -147,7 +147,7 @@ Here's an example of the previous Blade template but with Livewire's injected ma
     @if ($errors->has('title'))
         <div>Error: {{ $errors->first('title') }}</div>
     @endif
-    <!-- ENDBLOCK --> <!-- [tl! highlight] -->
+    <!-- __ENDBLOCK__ --> <!-- [tl! highlight] -->
 
     <div>
         <button>Save</button>
