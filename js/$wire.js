@@ -21,6 +21,7 @@ function wireFallback(callback) {
 // For V2 backwards compatibility...
 // And I actually like both depending on the scenario...
 let aliases = {
+    'on': '$on',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -149,6 +150,8 @@ wireProperty('$watch', (component) => (path, callback) => {
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => await requestCommit(component))
+
+wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 

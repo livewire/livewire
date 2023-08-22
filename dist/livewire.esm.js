@@ -8174,7 +8174,7 @@ function generateEntangleFunction(component, cleanup2) {
     let livewirePropertyValue = livewireComponent.get(livewireProperty);
     let interceptor = import_alpinejs.default.interceptor((initialValue, getter, setter, path, key) => {
       if (typeof livewirePropertyValue === "undefined") {
-        console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`);
+        console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
         return;
       }
       queueMicrotask(() => {
@@ -8443,6 +8443,7 @@ function wireFallback(callback) {
   fallback = callback;
 }
 var aliases = {
+  "on": "$on",
   "get": "$get",
   "set": "$set",
   "call": "$call",
@@ -8538,6 +8539,7 @@ wireProperty("$watch", (component) => (path, callback) => {
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => await requestCommit(component));
+wireProperty("$on", (component) => (...params) => listen(component, ...params));
 wireProperty("$on", (component) => (...params) => listen(component, ...params));
 wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
 wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
