@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
+use function Livewire\store;
 use function Livewire\wrap;
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
@@ -12,9 +13,11 @@ class SupportLazyLoading extends ComponentHook
 {
     public function mount($params)
     {
-        if (!($params['lazy'] ?? false)) return;
+        if (! ($params['lazy'] ?? false)) return;
 
         $this->component->skipMount();
+
+        store($this->component)->set('isLazyLoadMounting', true);
 
         $this->component->skipRender(
             $this->generatePlaceholderHtml($params)
@@ -23,26 +26,28 @@ class SupportLazyLoading extends ComponentHook
 
     public function hydrate($memo)
     {
-        if (isset($memo['lazyLoaded'])) return;
+        if (! isset($memo['lazyLoaded'])) return;
+        if ($memo['lazyLoaded'] === true) return;
 
-        if ($memo['lazyLoaded'] === false) $this->component->skipHydrate();
+        $this->component->skipHydrate();
+
+        store($this->component)->set('isLazyLoadHydrating', true);
     }
 
     function dehydrate($context)
     {
-        $context->addMemo('lazyLoaded', false);
-
-        if (!$context->mounting) return;
-
-        $context->addMemo('lazyLoaded', true);
+        if (store($this->component)->get('isLazyLoadMounting') === true) {
+            $context->addMemo('lazyLoaded', false);
+        } elseif (store($this->component)->get('isLazyLoadHydrating') === true) {
+            $context->addMemo('lazyLoaded', true);
+        }
     }
-
 
     function call($method, $params, $returnEarly)
     {
         if ($method !== '__lazyLoad') return;
 
-        [$encoded] = $params;
+        [ $encoded ] = $params;
 
         $mountParams = $this->resurrectMountParams($encoded);
 
@@ -68,7 +73,7 @@ class SupportLazyLoading extends ComponentHook
             ->placeholder();
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
-            ($params['lazy'] === 'on-load' ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\'' . $encoded . '\')',
+            ($params['lazy'] === 'on-load' ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
         ]);
 
         return $html;
@@ -80,7 +85,7 @@ class SupportLazyLoading extends ComponentHook
 
         $this->registerContainerComponent();
 
-        [$container] = app('livewire')->fromSnapshot($snapshot);
+        [ $container ] = app('livewire')->fromSnapshot($snapshot);
 
         return $container->forMount;
     }
