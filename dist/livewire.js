@@ -3838,7 +3838,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
   wireProperty("$on", (component) => (...params) => listen(component, ...params));
-  wireProperty("$on", (component) => (...params) => listen(component, ...params));
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
