@@ -12,14 +12,12 @@ class SupportLazyLoading extends ComponentHook
 {
     public function mount($params)
     {
-        if (! ($params['lazy'] ?? false)) return;
+        if (!($params['lazy'] ?? false)) return;
 
         $this->component->skipMount();
 
-        $mountParams = array_diff_key($params, array_flip(['lazy']));
-
         $this->component->skipRender(
-            $this->generatePlaceholderHtml($mountParams)
+            $this->generatePlaceholderHtml($params)
         );
     }
 
@@ -34,7 +32,7 @@ class SupportLazyLoading extends ComponentHook
     {
         $context->addMemo('lazyLoaded', false);
 
-        if (! $context->mounting) return;
+        if (!$context->mounting) return;
 
         $context->addMemo('lazyLoaded', true);
     }
@@ -44,7 +42,7 @@ class SupportLazyLoading extends ComponentHook
     {
         if ($method !== '__lazyLoad') return;
 
-        [ $encoded ] = $params;
+        [$encoded] = $params;
 
         $mountParams = $this->resurrectMountParams($encoded);
 
@@ -59,7 +57,7 @@ class SupportLazyLoading extends ComponentHook
 
         $container = app('livewire')->new('__mountParamsContainer');
 
-        $container->forMount = $params;
+        $container->forMount = array_diff_key($params, array_flip(['lazy']));
 
         $snapshot = app('livewire')->snapshot($container);
 
@@ -70,7 +68,7 @@ class SupportLazyLoading extends ComponentHook
             ->placeholder();
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
-            'x-intersect' => '$wire.__lazyLoad(\''.$encoded.'\')',
+            ($params['lazy'] === 'on-load' ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\'' . $encoded . '\')',
         ]);
 
         return $html;
@@ -82,7 +80,7 @@ class SupportLazyLoading extends ComponentHook
 
         $this->registerContainerComponent();
 
-        [ $container ] = app('livewire')->fromSnapshot($snapshot);
+        [$container] = app('livewire')->fromSnapshot($snapshot);
 
         return $container->forMount;
     }

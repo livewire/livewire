@@ -43,20 +43,15 @@ To enable lazy loading, you can pass the `lazy` parameter into the component:
 
 Now, instead of loading the component right away, Livewire will skip this component, loading the page without it. Then, when the component is visible in the viewport, Livewire will make a network request to fully load this component on the page.
 
-## Defer Loading
+## Lazy load after the page is ready
 
-If you want to load the component when the page is ready without the component being in the viewport, you can use the defer parameter instead of the lazy one.
+If you want to load the component after the page is ready, without the component being in the viewport, you can set the lazy parameter to "on-load".
 
 ```blade
-<livewire:revenue defer />
+<livewire:revenue lazy="on-load" />
 ```
 
-Now this component will load when the page is ready without waiting for it to be inside the viewport.
-
-> [!tip]
-> 
-> The documentation below is the same for defer and lazy but for simplicity the examples are only with the lazy one.
->
+Now this component will load after the page is ready without waiting for it to be inside the viewport.
 
 ## Rendering placeholder HTML
 
@@ -103,11 +98,11 @@ Because the above component specifies a "placeholder" by returning HTML from a `
 
 > [!tip]
 >
-> When you use a placeholder don't use x-init and x-intersect on the root element of the returned HTML because they will be replaced by the component itself.
+> When you use the placeholder don't use x-init and x-intersect on the root element of the returned HTML because they will be replaced by the component itself.
 > <br>
 > <b>x-intersect</b> for lazy
 > <br>
-> <b>x-init</b> for defer
+> <b>x-init</b> for lazy on load
 >
 
 ## Passing in props
