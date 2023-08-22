@@ -597,7 +597,7 @@ use function Livewire\Volt\{computed, usesPagination};
 
 usesPagination();
 
-with(fn () => Post::paginate(10));
+with(fn () => ['posts' => Post::paginate(10)]);
 
 ?>
 
