@@ -69,6 +69,17 @@ class EloquentCollectionsBrowserTest extends TestCase
         $author->posts[0]->comments[1]->author->name = 'John';
         $author->push();
     }
+
+    /** @test */
+    public function it_hydrate_work_property_without_rules()
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitLivewireComponent($browser, EloquentCollectionsWithoutRulesComponent::class)
+                ->waitForLivewire()->click('@something')
+                ->assertSeeIn('@output', 'Ok!');
+            ;
+        });
+    }
 }
 
 class EloquentCollectionsComponent extends BaseComponent
@@ -146,6 +157,36 @@ class EloquentCollectionsComponent extends BaseComponent
     <button wire:click="save" type="button" dusk="save">Save</button>
 </div>
 HTML;
+    }
+}
+
+
+class EloquentCollectionsWithoutRulesComponent extends EloquentCollectionsComponent
+{
+    public $output;
+
+    protected $rules = [];
+
+    public function something()
+    {
+        $this->output = 'Ok!';
+    }
+
+    public function render()
+    {
+        return
+        <<<'HTML'
+<div>
+      <div>
+          @foreach($authors as $author)
+              <p>{{ $author->name }}</p>
+          @endforeach
+      </div>
+      <span dusk='output'>{{ $output }}</span>
+      <button dusk='something' wire:click='something'>something</button>
+</div>
+HTML;
+
     }
 }
 

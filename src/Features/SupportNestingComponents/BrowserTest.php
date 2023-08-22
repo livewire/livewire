@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -87,6 +88,136 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child', 'Child')
         ;
     }
+
+    /** @test */
+    public function nested_components_do_not_error_when_parent_has_custom_layout_and_default_layout_does_not_exist()
+    {
+        config()->set('livewire.layout', '');
+
+        Livewire::visit([
+            new class extends Component {
+                #[Layout('layouts.app')]
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="$refresh" dusk="refresh">
+                            Refresh
+                        </button>
+                        <livewire:child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child">
+                        Child
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertPresent('@child')
+            ->assertSeeIn('@child', 'Child')
+            ->waitForLivewire()->click('@refresh')
+            ->assertPresent('@child')
+            ->assertSeeIn('@child', 'Child')
+        ;
+    }
+
+    /** @test */
+    public function nested_components_do_not_error_when_child_deleted()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $children = [
+                    'one',
+                    'two'
+                ];
+
+                public function deleteChild($name) {
+                    unset($this->children[array_search($name, $this->children)]);
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div>
+                        </div>
+
+                        @foreach($this->children as $key => $name)
+                            <livewire:child wire:key="{{ $key }}" :name="$name" />
+                        @endforeach
+
+                        <div>
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $name = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child-{{ $name }}">
+                        {{ $name }}
+
+                        <button dusk="delete-{{ $name }}" wire:click="$parent.deleteChild('{{ $name }}')">Delete</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertPresent('@child-one')
+        ->assertSeeIn('@child-one', 'one')
+        ->waitForLivewire()->click('@delete-one')
+        ->assertNotPresent('@child-one');
+    }
+
+    /** @test */
+    public function lazy_nested_components_do_not_call_boot_method_twice()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div>Page</div>
+                        <livewire:nested-boot-component lazy/>
+                    </div>
+                    HTML;
+                }
+            },
+            'nested-boot-component' => new class extends Component {
+                public $bootCount = 0;
+
+                public function boot()
+                {
+                    $this->increment();
+                }
+
+                public function increment()
+                {
+                    $this->bootCount ++;
+                }
+
+                public function render()
+                {
+                    return '<div>Boot count: {{ $bootCount }}</div>';
+                }
+
+            }])
+            ->assertSee('Page')
+            ->waitForText('Boot count: 1');
+        ;
+    }
 }
 
 class Page extends Component
@@ -150,5 +281,39 @@ class ThirdComponent extends Component
     public function render()
     {
         return '<div>Third Component Rendered</div>';
+    }
+}
+
+class BootPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>Page</div>
+
+            <livewire:nested-boot-component lazy/>
+        </div>
+        HTML;
+    }
+}
+
+class NestedBootComponent extends Component
+{
+    public $bootCount = 0;
+
+    public function boot()
+    {
+        $this->increment();
+    }
+
+    public function increment()
+    {
+        $this->bootCount ++;
+    }
+
+    public function render()
+    {
+        return '<div>Boot count: {{ $bootCount }}</div>';
     }
 }

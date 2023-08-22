@@ -28,12 +28,12 @@ trait HandlesValidation
 
     public function addMessagesFromOutside($messages)
     {
-        $this->messagesFromOutside = array_merge_recursive($this->messagesFromOutside, $messages);
+        $this->messagesFromOutside = array_merge($this->messagesFromOutside, $messages);
     }
 
     public function addValidationAttributesFromOutside($validationAttributes)
     {
-        $this->validationAttributesFromOutside = array_merge_recursive($this->validationAttributesFromOutside, $validationAttributes);
+        $this->validationAttributesFromOutside = array_merge($this->validationAttributesFromOutside, $validationAttributes);
     }
 
     public function getErrorBag()

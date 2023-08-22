@@ -34,12 +34,6 @@ trait TestsRedirects
 
     public function assertNoRedirect()
     {
-        if (! app('livewire')->isLivewireRequest()) {
-            $this->lastState->getResponse()->assertNoRedirect();
-
-            return $this;
-        }
-
         PHPUnit::assertTrue(! isset($this->effects['redirect']));
 
         return $this;

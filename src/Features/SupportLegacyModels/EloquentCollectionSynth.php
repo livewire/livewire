@@ -38,7 +38,7 @@ class EloquentCollectionSynth extends Synth
 
         $rules = $this->getRules($this->context);
 
-        if (empty($rules)) return [[], []];
+        if (empty($rules)) return [[], $meta];
 
         $data = $this->getDataFromCollection($target, $rules);
 

@@ -281,6 +281,7 @@ Below is the `TodoInput` component with the `#[Modelable]` attribute added above
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Modelable;
 
 class TodoInput extends Component
 {
@@ -526,7 +527,7 @@ class Steps extends Component
 </div>
 ```
 
-Now, if the `Steps` component's `$current` prop is set to "step-1", Livewire will render a component named "step-one" like so:
+Now, if the `Steps` component's `$current` prop is set to "step-one", Livewire will render a component named "step-one" like so:
 
 ```php
 <?php
@@ -576,7 +577,7 @@ class SurveyQuestion extends Component
     Question: {{ $question->content }}
 
     @foreach ($subQuestions as $subQuestion)
-        <livewire:survey-question :question="$subQuestion" />
+        <livewire:survey-question :question="$subQuestion" :key="$subQuestion->id" />
     @endforeach
 </div>
 ```

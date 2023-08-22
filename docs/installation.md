@@ -6,6 +6,9 @@ To install Livewire, open your terminal and navigate to your Laravel application
 composer require livewire/livewire "^3.0@beta"
 ```
 
+> [!warning] PowerShell for Windows
+> The `^` operator causes issues for installing the beta when using PowerShell for Windows. See [Composer docs](https://getcomposer.org/doc/articles/versions.md#caret-version-range-) for more details.
+
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
 ## Publishing the configuration file
@@ -37,7 +40,10 @@ If you want more control over this behavior, you can manually include the assets
 </html>
 ```
 
-By including these assets manually on a page, Livewire knows to not inject the assets automatically.
+By including these assets manually on a page, Livewire knows not to inject the assets automatically.
+
+> [!warning] AlpineJS is bundled with Livewire
+> Because Alpine is bundled with Livewire's JavaScript assets, you must include `@livewireScripts` on every page you wish to use Alpine. Even if you're not using Livewire on that page.
 
 Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-config) in your application's `config/livewire.php` file:
 

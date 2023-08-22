@@ -18,6 +18,14 @@ class ArraySynth extends Synth {
     }
 
     function hydrate($value, $meta, $hydrateChild) {
+        // If we are "hydrating" a value about to be used in an update,
+        // Let's make sure it's actually an array before try to set it.
+        // This is most common in the case of "__rm__" values, but also
+        // applies to any non-array value...
+        if (! is_array($value)) {
+            return $value;
+        }
+
         foreach ($value as $key => $child) {
             $value[$key] = $hydrateChild($key, $child);
         }

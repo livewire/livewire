@@ -31,9 +31,9 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         }])
-            ->assertDontSee('Child!')
-            ->waitFor('#child')
-            ->assertSee('Child!')
+        ->assertDontSee('Child!')
+        ->waitFor('#child')
+        ->assertSee('Child!')
         ;
     }
 
@@ -125,11 +125,11 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }])
-            ->assertSee('Loading...')
-            ->assertDontSee('Child!')
-            ->waitFor('#child')
-            ->assertDontSee('Loading...')
-            ->assertSee('Child!')
+        ->assertSee('Loading...')
+        ->assertDontSee('Child!')
+        ->waitFor('#child')
+        ->assertDontSee('Loading...')
+        ->assertSee('Child!')
         ;
     }
 
@@ -152,8 +152,8 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }])
-            ->waitFor('#child')
-            ->assertSee('Count: 1')
+        ->waitFor('#child')
+        ->assertSee('Count: 1')
         ;
     }
 
@@ -176,8 +176,8 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }])
-            ->waitFor('#child')
-            ->assertSee('Count: 3')
+        ->waitFor('#child')
+        ->assertSee('Count: 3')
         ;
     }
 
@@ -203,15 +203,15 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }])
-            ->waitFor('#child')
-            ->waitForText('Count: 1')
-            ->assertSee('Count: 1')
-            ->waitForLivewire()->click('@button')
-            ->waitForText('Count: 2')
-            ->assertSee('Count: 2')
-            ->waitForLivewire()->click('@button')
-            ->waitForText('Count: 3')
-            ->assertSee('Count: 3')
+        ->waitFor('#child')
+        ->waitForText('Count: 1')
+        ->assertSee('Count: 1')
+        ->waitForLivewire()->click('@button')
+        ->waitForText('Count: 2')
+        ->assertSee('Count: 2')
+        ->waitForLivewire()->click('@button')
+        ->waitForText('Count: 3')
+        ->assertSee('Count: 3')
         ;
     }
 }

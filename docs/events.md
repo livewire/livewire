@@ -182,6 +182,16 @@ You can dispatch events directly from your Blade templates using the `$dispatch`
 
 In this example, when the button is clicked, the `show-post-modal` event will be dispatched with the specified data.
 
+If you want to dispatch an event directly to another component you can use the `$dispatchTo()` JavaScript function:
+
+```blade
+<button wire:click="$dispatchTo('posts', 'show-post-modal', { id: {{ $post->id }} })">
+    EditPost
+</button>
+```
+
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched directly to the `Posts` component.
+
 ## Testing dispatched events
 
 To test events dispatched by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
@@ -349,6 +359,28 @@ class OrderTracker extends Component
     }
 
     // ...
+}
+```
+
+Or, if you prefer, you can use the dynamic event name syntax:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder()
+{
+    $this->showNewOrderNotification = true;
+}
+```
+
+If you need to access the event payload, you can do so via the passed in `$event` parameter:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder($event)
+{
+    $order = Order::find($event['orderId']);
+
+    //
 }
 ```
 

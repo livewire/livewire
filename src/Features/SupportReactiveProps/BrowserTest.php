@@ -32,7 +32,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function render() { return <<<'HTML'
@@ -72,6 +72,66 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_pass_a_reactive_property_from_parent_to_nested_children()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                public function inc() { $this->count++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <h1 dusk="parent.count">{{ $count }}</h1>
+
+                        <button wire:click="inc" dusk="parent.inc">inc</button>
+
+                        <livewire:child :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h2>Child count: <h2 dusk="child.count">{{ $count }}</h2>
+
+                        <livewire:nestedchild :$count />
+                    </div>
+                    HTML;
+                }
+            },
+            'nestedchild' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h3>Nested child count: <h3 dusk="nested-child.count">{{ $count }}</h3>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@nested-child.count', 0)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@child.count', 1)
+            ->assertSeeIn('@nested-child.count', 1)
+
+            ->waitForLivewire()->click('@parent.inc')
+            ->assertSeeIn('@parent.count', 2)
+            ->assertSeeIn('@child.count', 2)
+            ->assertSeeIn('@nested-child.count', 2);
+    }
+
+    /** @test */
     public function can_throw_exception_cannot_mutate_reactive_prop()
     {
         Livewire::visit([
@@ -92,7 +152,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function inc() { $this->count++; }
@@ -139,7 +199,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function inc() { $this->count++; }

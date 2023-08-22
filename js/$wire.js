@@ -21,6 +21,7 @@ function wireFallback(callback) {
 // For V2 backwards compatibility...
 // And I actually like both depending on the scenario...
 let aliases = {
+    'on': '$on',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -69,7 +70,34 @@ function getFallback(component) {
     return fallback(component)
 }
 
-Alpine.magic('wire', el => closestComponent(el).$wire)
+Alpine.magic('wire', (el, { cleanup }) => {
+    // Purposely initializing an empty variable here is a "memo"
+    // so that a component is lazy-loaded when using $wire from Alpine...
+    let component
+
+    // Override $wire methods that need to be cleaned up when
+    // and element is removed. For example, `x-data="{ foo: $wire.entangle(...) }"`:
+    // we would want the entangle effect freed if the element was removed from the DOM...
+    return new Proxy({}, {
+        get(target, property) {
+            if (! component) component = closestComponent(el)
+
+            if (property === 'entangle') {
+                return generateEntangleFunction(component, cleanup)
+            }
+
+            return component.$wire[property]
+        },
+
+        set(target, property, value) {
+            if (! component) component = closestComponent(el)
+
+            component.$wire[property] = value
+
+            return true
+        },
+    })
+})
 
 wireProperty('__instance', (component) => component)
 
@@ -131,7 +159,7 @@ wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, 
 
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
-wireProperty('$removeUpload', (component) => (...params) =>removeUpload(component, ...params))
+wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
 
 let parentMemo
 

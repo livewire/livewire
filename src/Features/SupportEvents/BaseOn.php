@@ -8,7 +8,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use function Livewire\store;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
-class On extends LivewireAttribute
+class BaseOn extends LivewireAttribute
 {
     public function __construct(public $event) {}
 

@@ -7,7 +7,7 @@ To begin your Livewire journey, we will create a simple "counter" component and 
 
 Before we start, make sure you have the following installed:
 
-- Laravel version 9 or later
+- Laravel version 10 or later
 - PHP version 8.1 or later
 
 ## Install Livewire
@@ -17,6 +17,9 @@ From the root directory of your Laravel app, run the following [Composer](https:
 ```shell
 composer require livewire/livewire "^3.0@beta"
 ```
+
+> [!warning] PowerShell for Windows
+> The `^` operator causes issues for installing the beta when using PowerShell for Windows. See [Composer docs](https://getcomposer.org/doc/articles/versions.md#caret-version-range-) for more details.
 
 ## Create a Livewire component
 

@@ -52,7 +52,17 @@ trait InteractsWithProperties
         $freshInstance = new static;
 
         foreach ($properties as $property) {
-            data_set($this, $property, data_get($freshInstance, $property));
+            $defaultValue = data_get($freshInstance, $property);
+            $unset = '__unset__';
+            $unsetByDefault = !$defaultValue && $unset === data_get($freshInstance, $property, $unset);
+
+            // Handle resetting properties that are unset by default.
+            if ($unsetByDefault) {
+                data_forget($this, $property);
+                continue;
+            }
+
+            data_set($this, $property, $defaultValue);
         }
     }
 
@@ -80,6 +90,8 @@ trait InteractsWithProperties
 
     public function except($properties)
     {
+        if (! is_array($properties)) $properties = [$properties];
+
         return array_diff_key($this->all(), array_flip($properties));
     }
 

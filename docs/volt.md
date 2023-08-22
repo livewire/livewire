@@ -69,6 +69,30 @@ $increment = fn () => $this->count++;
 // ...
 ```
 
+### Class-based Volt components
+
+If you would like to enjoy the single-file component capabilities of Volt while still writing class-based components, we've got you covered. To get started, define an anonymous class that extends `Livewire\Volt\Component`. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
+
+```blade
+<?php
+
+use Livewire\Volt\Component;
+
+new class extends Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+} ?>
+
+<div>
+    <h1>{{ $count }}</h1>
+    <button wire:click="increment">+</button>
+</div>
+```
+
 ## Rendering and mounting components
 
 Just like a typical Livewire component, Volt components may be rendered using Livewire's tag syntax or the `@livewire` Blade directive:
@@ -106,6 +130,28 @@ mount(function (UserCounter $counter, $users) {
 
     // ...
 });
+```
+
+### Full-page components
+
+Optionally, you may render a Volt component as a full page component by defining a Volt route in your application's `routes/web.php` file:
+
+```php
+use Livewire\Volt\Volt;
+
+Volt::route('/users', 'user-index');
+```
+
+By default, the component will be rendered using the `components.layouts.app` layout. You may customize this layout file using the `layout` function:
+
+```php
+use function Livewire\Volt\{layout, state};
+
+state('users');
+
+layout('components.layouts.admin');
+
+// ...
 ```
 
 ## Properties
@@ -453,7 +499,7 @@ rules(['name' => 'required|min:6', 'email' => 'required|email'])
 
 ## File uploads
 
-When using Volt, [uploading and storing files](/docs/uploads) is made incredibly thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
+When using Volt, [uploading and storing files](/docs/uploads) is much easier thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
 
 ```php
 use function Livewire\Volt\{state, usesFileUploads};
@@ -560,7 +606,7 @@ uses([Sorting::class, WithSorting::class]);
 
 ## Anonymous components
 
-Sometimes, you may want to convert a small portion of a page a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
+Sometimes, you may want to convert a small portion of a page into a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
 
 ```php
 Route::get('/counter', fn () => view('pages/counter.blade.php'));
@@ -657,4 +703,11 @@ If your Volt component is nested, you may use "dot" notation to specify the comp
 
 ```php
 Volt::test('users.stats')
+```
+
+When testing a page that contains an anonymous Volt component, you may use the `assertSeeVolt` method to assert that the component is rendered:
+
+```php
+$this->get('/users')
+    ->assertSeeVolt('stats');
 ```

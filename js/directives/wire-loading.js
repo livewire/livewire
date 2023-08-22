@@ -7,8 +7,6 @@ directive('loading', ({ el, directive, component }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    toggleBooleanStateDirective(el, directive, false)
-
     whenTargetsArePartOfRequest(component, targets, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
@@ -111,13 +109,17 @@ function containsTargets(payload, targets) {
 
     return targets.some(({ target, params }) => {
         if (params) {
-            return calls.some(({ method, params: methodParams}) => {
+            return calls.some(({ method, params: methodParams }) => {
                 return target === method
                     && params === quickHash(JSON.stringify(methodParams))
             })
         }
 
-        if (Object.keys(updates).map(i => i.split('.')[0]).includes(target)) return true
+        let hasMatchingUpdate = Object.keys(updates).some(property => {
+            return property.startsWith(target)
+        })
+
+        if (hasMatchingUpdate) return true
 
         if (calls.map(i => i.method).includes(target)) return true
     })

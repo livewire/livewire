@@ -113,6 +113,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => 0,
             'hydrateFoo' => 0,
+            'rendering' => 1,
+            'rendered' => 1,
             'dehydrate' => 1,
             'dehydrateFoo' => 1,
             'updating' => false,
@@ -146,6 +148,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => 1,
             'hydrateFoo' => 1,
+            'rendering' => 2,
+            'rendered' => 2,
             'dehydrate' => 2,
             'dehydrateFoo' => 2,
             'updating' => true,
@@ -197,6 +201,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => 3,
             'hydrateFoo' => 3,
+            'rendering' => 4,
+            'rendered' => 4,
             'dehydrate' => 4,
             'dehydrateFoo' => 4,
             'updating' => true,
@@ -242,6 +248,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => true,
             'hydrateFoo' => true,
+            'rendering' => true,
+            'rendered' => true,
             'dehydrate' => true,
             'dehydrateFoo' => true,
             'updating' => true,
@@ -496,6 +504,8 @@ class ForLifecycleHooks extends Component
         'mount' => false,
         'hydrate' => 0,
         'hydrateFoo' => 0,
+        'rendering' => 0,
+        'rendered' => 0,
         'dehydrate' => 0,
         'dehydrateFoo' => 0,
         'updating' => false,
@@ -621,8 +631,18 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['updatedBarBaz'] = true;
     }
 
+    public function rendering()
+    {
+        $this->lifecycles['rendering']++;
+    }
+
     public function render()
     {
         return app('view')->make('null-view');
+    }
+
+    public function rendered()
+    {
+        $this->lifecycles['rendered']++;
     }
 }

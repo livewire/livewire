@@ -27,7 +27,6 @@ class CompileLivewireTags extends ComponentTagCompiler
         return preg_replace_callback($pattern, function (array $matches) {
             $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
 
-            // This is only for Laracon and makes :todos="$todos" work...
             $keys = array_keys($attributes);
             $values = array_values($attributes);
 

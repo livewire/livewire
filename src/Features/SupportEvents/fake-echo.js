@@ -73,6 +73,10 @@ class FakeEcho {
         return new FakePrivateChannel(channel);
     }
 
+    socketId() {
+        return 'fake-socked-id'
+    }
+
     // For dusk to trigger listeners...
 
     fakeTrigger({ channel, event, type, payload = {} }) {

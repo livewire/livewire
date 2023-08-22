@@ -2,11 +2,12 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{ store, trigger, wrap };
+use function Livewire\{ invade, store, trigger, wrap };
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
+use ReflectionUnionType;
 
 class HandleComponents
 {
@@ -17,6 +18,7 @@ class HandleComponents
         Synthesizers\EnumSynth::class,
         Synthesizers\StdClassSynth::class,
         Synthesizers\ArraySynth::class,
+        Synthesizers\IntSynth::class,
     ];
 
     public static $renderStack = [];
@@ -236,7 +238,14 @@ class HandleComponents
             $revertA = Utils::shareWithViews('__livewire', $component);
             $revertB = Utils::shareWithViews('_instance', $component); // @deprecated
 
-            $html = $view->render();
+            $slots = $pushes = $prepends = $sections = null;
+
+            $viewContext = new ViewContext;
+
+            $html = $view->render(function ($view) use ($viewContext) {
+                // Extract leftover slots, sections, and pushes before they get flushed...
+                $viewContext->extractFromEnvironment($view->getFactory());
+            });
 
             $revertA(); $revertB();
 
@@ -248,7 +257,7 @@ class HandleComponents
                 $html = $newHtml;
             };
 
-            $html = $finish($html, $replaceHtml);
+            $html = $finish($html, $replaceHtml, $viewContext);
 
             return $html;
         });
@@ -302,11 +311,13 @@ class HandleComponents
         // If this isn't a "deep" set, set it directly, otherwise we have to
         // recursively get up and set down the value through the synths...
         if (empty($segments)) {
-            if ($value !== '__rm__') $component->$property = $value;
+            if ($value !== '__rm__') $this->setComponentPropertyAwareOfTypes($component, $property, $value);
         } else {
             $propertyValue = $component->$property;
 
-            $component->$property = $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context);
+            $this->setComponentPropertyAwareOfTypes($component, $property,
+                $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context)
+            );
         }
 
         $finish();
@@ -315,8 +326,31 @@ class HandleComponents
     protected function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
+        $component = $context->component;
 
-        if ($meta) return $this->hydrate([$value, $meta], $context, $path);
+        // If we have meta data already for this property, let's use that to get a synth...
+        if ($meta) {
+            return $this->hydrate([$value, $meta], $context, $path);
+        }
+
+        // If we don't, let's check to see if it's a typed property and fetch the synth that way...
+        $parent = str($path)->contains('.')
+            ? data_get($context->component, str($path)->beforeLast('.')->toString())
+            : $context->component;
+
+        $childKey = str($path)->afterLast('.');
+
+        if ($parent && is_object($parent) && property_exists($parent, $childKey) && Utils::propertyIsTyped($parent, $childKey)) {
+            $type = Utils::getProperty($parent, $childKey)->getType();
+
+            $types = $type instanceof ReflectionUnionType ? $type->getTypes() : [$type];
+
+            foreach ($types as $type) {
+                $synth = $this->getSynthesizerByType($type->getName(), $context, $path);
+
+                if ($synth) return $synth->hydrateFromType($type->getName(), $value);
+            }
+        }
 
         return $value;
     }
@@ -373,6 +407,22 @@ class HandleComponents
         $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
 
         return $target;
+    }
+
+    protected function setComponentPropertyAwareOfTypes($component, $property, $value)
+    {
+        try {
+           $component->$property = $value;
+        } catch (\TypeError $e) {
+            // If an "int" is being set to empty string, unset the property (making it null).
+            // This is common in the case of `wire:model`ing an int to a text field...
+            // If a value is being set to "null", do the same...
+            if ($value === '' || $value === null) {
+                unset($component->$property);
+            } else {
+                throw $e;
+            }
+        }
     }
 
     protected function callMethods($root, $calls, $context)
@@ -448,6 +498,17 @@ class HandleComponents
         }
 
         throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
+    }
+
+    protected function getSynthesizerByType($type, $context, $path)
+    {
+        foreach ($this->propertySynthesizers as $synth) {
+            if ($synth::matchByType($type)) {
+                return new $synth($context, $path);
+            }
+        }
+
+        return null;
     }
 
     protected function pushOntoComponentStack($component)
