@@ -483,7 +483,7 @@ Events and direct parent communication are a few of the ways to communicate back
 Sometimes, you may not know which child component should be rendered on a page until run-time. Therefore, Livewire allows you to choose a child component at run-time via `<livewire:dynamic-component ...>`, which receives an `:is` prop:
 
 ```blade
-<livewire:dynamic-component :is="$current" />
+<livewire:dynamic-component :component="$current" />
 ```
 
 Dynamic child components are useful in a variety of different scenarios, but below is an example of rendering different steps in a multi-step form using a dynamic component:
@@ -521,7 +521,7 @@ class Steps extends Component
 
 ```blade
 <div>
-    <livewire:dynamic-component :is="$current" />
+    <livewire:dynamic-component :component="$current" />
 
     <button wire:click="next">Next</button>
 </div>
