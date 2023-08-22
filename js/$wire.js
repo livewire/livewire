@@ -21,6 +21,7 @@ function wireFallback(callback) {
 // For V2 backwards compatibility...
 // And I actually like both depending on the scenario...
 let aliases = {
+    'on': '$on',
     'get': '$get',
     'set': '$set',
     'call': '$call',

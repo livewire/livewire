@@ -3475,7 +3475,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let livewirePropertyValue = livewireComponent.get(livewireProperty);
       let interceptor3 = module_default.interceptor((initialValue, getter, setter, path, key) => {
         if (typeof livewirePropertyValue === "undefined") {
-          console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`);
+          console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
           return;
         }
         queueMicrotask(() => {
@@ -3741,6 +3741,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     fallback = callback;
   }
   var aliases = {
+    "on": "$on",
     "get": "$get",
     "set": "$set",
     "call": "$call",
