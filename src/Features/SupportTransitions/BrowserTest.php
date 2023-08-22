@@ -9,6 +9,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function can_transition_blade_conditional_dom_segments()
     {
+        $opacity = 'parseFloat(getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity, 10)';
+        $isBlock = 'getComputedStyle(document.querySelector(\'[dusk="target"]\')).display === "block"';
+
         Livewire::visit(
             new class extends \Livewire\Component {
                 public $show = false;
@@ -23,7 +26,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <button wire:click="toggle" dusk="toggle">Toggle</button>
 
                     @if ($show)
-                    <div dusk="target" wire:transition.duration.500ms>
+                    <div dusk="target" wire:transition.duration.2000ms>
                         Transition Me!
                     </div>
                     @endif
@@ -33,19 +36,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('@target')
         ->waitForLivewire()->click('@toggle')
         ->waitFor('@target')
-        ->pause(100) // Let the transition start.
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity > 0', true) // In progress.
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity < 0.75', true) // But not completed
-        ->pause(600) // It really should have completed by now.
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity', 1)
+        ->waitUntil($isBlock)
+        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
+        ->waitUntil("$opacity === 1") // Now it's done.
+        ->assertScript($opacity, 1) // Assert that it's done.
         ->waitForLivewire()->click('@toggle')
         ->assertPresent('@target')
-        ->pause(100) // Let the transition start.
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity < 1', true) // In progress.
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity > 0.25', true) // But not completed.
-        ->pause(600) // It really should have completed by now.
+        ->assertScript($isBlock, true) // That should not have changed yet.
+        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
+        ->waitUntilMissing('@target')
         ->assertMissing('@target')
         ;
     }
