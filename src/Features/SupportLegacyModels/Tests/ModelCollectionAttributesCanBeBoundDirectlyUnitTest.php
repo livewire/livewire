@@ -126,6 +126,41 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 
         $component->call('$refresh');
     }
+
+    /** @test */
+    public function can_use_with_default_on_model_relations()
+    {
+        $this->resetSushiModel(ModelForBinding::class);
+        $this->resetSushiModel(ModelForBindingHasOne::class);
+        Livewire::test(ComponentWithModelHasDefaultRelation::class)
+            ->call('notThing')
+            ->assertOk();
+
+    }
+
+    private function resetSushiModel($class): void
+    {
+        (new $class)->resolveConnection()->getSchemaBuilder()->drop((new $class)->getTable());
+        (new $class)->migrate();
+    }
+}
+
+class ModelForBindingHasOne extends Model
+{
+    use Sushi;
+
+    protected $primaryKey = 'parent_id';
+    public $incrementing = false;
+
+    protected $rows = [
+        ['parent_id' => 1, 'title' => 'foo'],
+        ['parent_id' => 2, 'title' => 'bar'],
+    ];
+
+    public function parent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(ModelForBinding::class, 'parent_id');
+    }
 }
 
 class ModelForBinding extends Model
@@ -137,6 +172,12 @@ class ModelForBinding extends Model
         ['title' => 'bar'],
         ['title' => 'baz'],
     ];
+
+    public function one(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ModelForBindingHasOne::class, 'parent_id')
+            ->withDefault(['title' => 'default']);
+    }
 }
 
 class CustomCollection extends EloquentCollection
@@ -199,6 +240,35 @@ class ComponentWithModelCollectionProperty extends Component
     public function refreshModels()
     {
         $this->models = $this->models->filter->exists->fresh();
+    }
+
+    public function render()
+    {
+        return view('null-view');
+    }
+}
+
+class ComponentWithModelHasDefaultRelation extends Component
+{
+    public $models;
+
+    public $modelsLatestOne;
+    public $modelsType;
+
+    protected $rules = [
+        'models.*.title' => 'required|min:3',
+        'modelsLatestOne.title' => 'required|min:3',
+    ];
+
+    public function mount()
+    {
+        $this->models = ModelForBinding::with('one')->get();
+        $this->modelsLatestOne = $this->models[2]->one;
+    }
+
+    public function notThing()
+    {
+
     }
 
     public function render()
