@@ -17,7 +17,8 @@ If you want to run a single test instead of the whole test suite, you can do:
 #### Compiling the JavaScript assets locally
 
 * `git clone https://github.com/alpinejs/alpine.git` outside of the Livewire repo
-* In the cloned Alpine repo, `cd packages/alpinejs && npm link && cd ../history && npm link && cd ../morph && npm link && cd ../navigate && npm link && cd ../../`
+* In the cloned Alpine repo, run `npm install` & `npm run build`
+* After building successfully `cd packages/alpinejs && npm link && cd ../history && npm link && cd ../morph && npm link && cd ../navigate && npm link && cd ../../`
 * In the Livewire repo, `npm link alpinejs @alpinejs/history @alpinejs/morph @alpinejs/navigate`
 
 > [!NOTE]
