@@ -95,7 +95,7 @@ new class extends Component {
 
 #### View Data
 
-When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass data to the view, you may use the `with` method:
+When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
 
 ```blade
 <?php
