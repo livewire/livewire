@@ -5,7 +5,7 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class IntSynthTest extends \Tests\TestCase
+class IntSynthUnitTest extends \Tests\TestCase
 {
     /**
      * @test
