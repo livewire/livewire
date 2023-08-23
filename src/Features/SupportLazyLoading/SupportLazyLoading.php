@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use function Livewire\{ store, on, pipe, wrap };
+use function Livewire\{ store, wrap };
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
@@ -12,7 +12,7 @@ class SupportLazyLoading extends ComponentHook
 {
     public function mount($params)
     {
-        // if (! ($params['lazy'] ?? false)) return;
+        if (! ($params['lazy'] ?? false)) return;
 
         // $hasLazyParam = isset($params['lazy']);
         // $lazyProperty = $params['lazy'] ?? false;

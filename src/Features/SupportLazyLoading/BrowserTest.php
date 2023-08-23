@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportLazyLoading;
 
 use Illuminate\Support\Facades\Route;
-use Livewire\WithLazyLoading;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
