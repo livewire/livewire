@@ -92,8 +92,14 @@ class SupportLazyLoading extends ComponentHook
 
         $encoded = base64_encode(json_encode($snapshot));
 
+        $globalPlaceholder = config('livewire.lazy_placeholder');
+
+        $placeholderHtml = $globalPlaceholder
+            ? view($globalPlaceholder)->render()
+            : '<div></div>';
+
         $placeholder = wrap($this->component)
-            ->withFallback('<div></div>')
+            ->withFallback($placeholderHtml)
             ->placeholder();
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
