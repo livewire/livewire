@@ -58,7 +58,6 @@ class BrowserTest extends BrowserTestCase
                 </div>
                 HTML; }
         })
-        ->tinker()
         ->assertSee('Loading...')
         ->assertDontSee('Hello World')
         ->waitFor('#page')
@@ -72,7 +71,7 @@ class BrowserTest extends BrowserTestCase
     {
         $this->tweakApplication(function() {
             Livewire::component('page', Page::class);
-            Route::get('/', Page::class)->lazyLoad()->middleware('web');
+            Route::get('/', Page::class)->lazy()->middleware('web');
         });
 
         $this->browse(function ($browser) {

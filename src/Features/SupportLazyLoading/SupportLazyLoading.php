@@ -12,18 +12,16 @@ class SupportLazyLoading extends ComponentHook
 {
     public function mount($params)
     {
-        if (! ($params['lazy'] ?? false)) return;
+        $hasLazyParam = isset($params['lazy']);
+        $lazyProperty = $params['lazy'] ?? false;
 
-        // $hasLazyParam = isset($params['lazy']);
-        // $lazyProperty = $params['lazy'] ?? false;
+        $reflectionClass = new \ReflectionClass($this->component);
+        $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
 
-        // $reflectionClass = new \ReflectionClass($this->component);
-        // $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
-
-        // // If `:lazy="false"` disable lazy loading...
-        // if ($hasLazyParam && ! $lazyProperty) return;
-        // // If no lazy loading is included at all...
-        // if (! $hasLazyParam && ! $hasLazyAttribute) return;
+        // If `:lazy="false"` disable lazy loading...
+        if ($hasLazyParam && ! $lazyProperty) return;
+        // If no lazy loading is included at all...
+        if (! $hasLazyParam && ! $hasLazyAttribute) return;
 
         $this->component->skipMount();
 
