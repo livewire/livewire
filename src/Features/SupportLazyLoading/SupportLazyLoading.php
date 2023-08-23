@@ -10,6 +10,20 @@ use Livewire\Component;
 
 class SupportLazyLoading extends ComponentHook
 {
+    static function provide()
+    {
+        static::registerRouteMacro();
+    }
+
+    static function registerRouteMacro()
+    {
+        Route::macro('lazy', function ($enabled = true) {
+            $this->defaults['lazy'] = $enabled;
+
+            return $this;
+        });
+    }
+
     public function mount($params)
     {
         $hasLazyParam = isset($params['lazy']);

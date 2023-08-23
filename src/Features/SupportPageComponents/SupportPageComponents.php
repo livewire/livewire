@@ -16,16 +16,6 @@ class SupportPageComponents extends ComponentHook
     static function provide()
     {
         static::registerLayoutViewMacros();
-        static::registerRouteMacros();
-    }
-
-    static function registerRouteMacros()
-    {
-        Route::macro('lazy', function ($enabled = true) {
-            $this->defaults['lazy'] = $enabled;
-
-            return $this;
-        });
     }
 
     static function registerLayoutViewMacros()
