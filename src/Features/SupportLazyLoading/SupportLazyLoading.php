@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use Livewire\WithLazyLoading;
 use function Livewire\{ store, on, pipe, wrap };
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
@@ -11,33 +10,20 @@ use Livewire\Component;
 
 class SupportLazyLoading extends ComponentHook
 {
-    static function provide()
-    {
-        app('livewire')->provide(function () {
-            $this->loadViewsFrom(__DIR__.'/views', 'livewire');
-
-            $paths = [__DIR__.'/views' => resource_path('views/vendor/livewire')];
-
-            $this->publishes($paths, 'livewire');
-            $this->publishes($paths, 'livewire:lazy-loading');
-        });
-    }
-
     public function mount($params)
     {
-        $reflectionClass = new \ReflectionClass($this->component);
-        $hasLazyProperty = isset($params['lazy']);
-        $lazyProperty = $params['lazy'] ?? false;
-        $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
-        $hasLazyTrait = in_array(WithLazyLoading::class, get_declared_traits(), true);
+        // if (! ($params['lazy'] ?? false)) return;
 
-        if ($hasLazyProperty && !$lazyProperty) {
-            return;
-        }
+        // $hasLazyParam = isset($params['lazy']);
+        // $lazyProperty = $params['lazy'] ?? false;
 
-        if (!$hasLazyProperty && !$hasLazyAttribute && !$hasLazyTrait) {
-            return;
-        }
+        // $reflectionClass = new \ReflectionClass($this->component);
+        // $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
+
+        // // If `:lazy="false"` disable lazy loading...
+        // if ($hasLazyParam && ! $lazyProperty) return;
+        // // If no lazy loading is included at all...
+        // if (! $hasLazyParam && ! $hasLazyAttribute) return;
 
         $this->component->skipMount();
 
@@ -95,7 +81,7 @@ class SupportLazyLoading extends ComponentHook
         $encoded = base64_encode(json_encode($snapshot));
 
         $placeholder = wrap($this->component)
-            ->withFallback(view(config('livewire.lazy_loading_placeholder'))->render())
+            ->withFallback('<div></div>')
             ->placeholder();
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [

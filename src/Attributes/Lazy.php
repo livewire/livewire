@@ -2,7 +2,7 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportLazyLoading\Lazy as BaseLazy;
+use Livewire\Features\SupportLazyLoading\BaseLazy;
 
 #[\Attribute]
 class Lazy extends BaseLazy

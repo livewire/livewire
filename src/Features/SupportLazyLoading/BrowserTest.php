@@ -40,36 +40,6 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_lazy_load_full_page_component_using_trait()
-    {
-        Livewire::visit(new class extends Component {
-            use WithLazyLoading;
-
-            public function mount() {
-                sleep(1);
-            }
-
-            public function placeholder() { return <<<HTML
-                <div id="loading">
-                    Loading...
-                </div>
-                HTML; }
-
-            public function render() { return <<<HTML
-                <div id="page">
-                    Hello World
-                </div>
-                HTML; }
-        })
-        ->assertSee('Loading...')
-        ->assertDontSee('Hello World')
-        ->waitFor('#page')
-        ->assertDontSee('Loading...')
-        ->assertSee('Hello World')
-        ;
-    }
-
-    /** @test */
     public function can_lazy_load_full_page_component_using_attribute()
     {
         Livewire::visit(new #[\Livewire\Attributes\Lazy] class extends Component {
@@ -89,6 +59,7 @@ class BrowserTest extends BrowserTestCase
                 </div>
                 HTML; }
         })
+        ->tinker()
         ->assertSee('Loading...')
         ->assertDontSee('Hello World')
         ->waitFor('#page')

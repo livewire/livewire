@@ -21,8 +21,7 @@ class SupportPageComponents extends ComponentHook
 
     static function registerRouteMacros()
     {
-        Route::macro('lazyLoad', function ($enabled = true) {
-
+        Route::macro('lazy', function ($enabled = true) {
             $this->defaults['lazy'] = $enabled;
 
             return $this;

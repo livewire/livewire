@@ -149,7 +149,8 @@ In a normal component, the actual PHP in-memory `$user` model would be passed in
 Typically, this serialization should not cause any behavioral differences in your application.
 
 ## Lazy load by default
-If you want to lazy load components by default you can add the `WithLazyLoading` trait:
+
+If you want to enforce that all usages of a component will be lazy-loaded, you can add the `#[Lazy]` attribute above the component class:
 
 ```php
 <?php
@@ -157,25 +158,7 @@ If you want to lazy load components by default you can add the `WithLazyLoading`
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithLazyLoading;
-
-class Revenue extends Component
-{
-    use WithLazyLoading;
-
-    // ...
-}
-```
-
-Or you can use the `[#Lazy]` attribute:
-
-```php
-<?php
-
-namespace App\Livewire;
-
 use Livewire\Attributes\Lazy;
-use Livewire\Component;
 
 #[Lazy]
 class Revenue extends Component
@@ -192,25 +175,24 @@ If you want to override lazy loading you can set the `lazy` parameter to `false`
 
 ## Full-page lazy loading
 
-You may want to lazy load full-page Livewire components or disable lazy loading. You can do this by calling `->lazyLoad()` on the route like so:
+You may want to lazy load full-page Livewire components. You can do this by calling `->lazy()` on the route like so:
 
 ```php
-Route::get('/users', \App\Livewire\Users::class)->lazyLoad();
-Route::get('/users', \App\Livewire\Users::class)->lazyLoad(enabled: false);
-````
+Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy();
+```
 
-## Default placeholder
-
-If you want to set a default placeholder for all your components you can do so by defining the view in the `livewire` config file:
+Or alternatively, if there is a component that is lazy-loaded by default and you would like to opt-out of lazy-loading, you can use the following `enabled: false` parameter:
 
 ```php
-'lazy_loading_placeholder' => 'livewire::lazy-load-placeholder',
+Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy(enabled: false);
 ```
 
-An alternative would be to publish the view and edit it directly:
+## Default placeholder view
 
-```bash
-php artisan livewire:publish --lazy-loading
+If you want to set a default placeholder view for all your components you can do so by referencing the view in the `/config/livewire.php` config file:
+
+```php
+'lazy_placeholder' => 'livewire.placeholder',
 ```
 
-
+Now, when a component is lazy-loaded and no `placeholder()` is definied, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)
