@@ -49,20 +49,18 @@ class BaseRule extends LivewireAttribute
         }
 
         if ($this->as) {
-            $as = $this->translate ? trans($this->as) : $this->as;
-
             if (is_array($this->as)) {
-                $this->component->addValidationAttributesFromOutside($as);
+                $this->component->addValidationAttributesFromOutside($this->translate ? trans($this->as) : $this->as);
             } else {
-                $this->component->addValidationAttributesFromOutside([$this->getName() => $as]);
+                $this->component->addValidationAttributesFromOutside([$this->getName() => $this->translate ? trans($this->as) : $this->as]);
             }
         }
 
         if ($this->message) {
             if (is_array($this->message)) {
-                $this->component->addMessagesFromOutside($this->message);
+                $this->component->addMessagesFromOutside($this->translate ? trans($this->message) : $this->message);
             } else {
-                $this->component->addMessagesFromOutside([$this->getName() => $this->message]);
+                $this->component->addMessagesFromOutside([$this->getName() => $this->translate ? trans($this->message) : $this->message]);
             }
         }
 

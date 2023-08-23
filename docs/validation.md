@@ -150,6 +150,10 @@ If you wish to add different messages for different rules, you can simply provid
 public $title;
 ```
 
+### Opting out of localization
+
+By default, Livewire rule messages and attributes are localized using Laravel's translate helper: `translate()`
+
 ### Custom key
 
 When applying validation rules directly to a property using the `#[Rule]` attribute, Livewire assumes the validation key should be the name of the property itself. However, there are times when you may want to customize the validation key.
