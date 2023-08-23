@@ -39,6 +39,71 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    public function can_lazy_load_a_component_on_intersect_outside_viewport()
+    {
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<HTML
+            <div>
+                <div style="height: 200vh"></div>
+                <livewire:child lazy="on-load" />
+            </div>
+            HTML;
+            }
+        }, 'child' => new class extends Component {
+            public function mount()
+            {
+                sleep(1);
+            }
+
+            public function render()
+            {
+                return <<<HTML
+                <div id="child">
+                    Child!
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSee('Child!')
+            ->waitFor('#child')
+            ->assertSee('Child!');
+    }
+
+    /** @test */
+    public function cant_lazy_load_a_component_on_intersect_outside_viewport()
+    {
+        Livewire::visit([new class extends Component {
+            public function render()
+            {
+                return <<<HTML
+            <div>
+                <div style="height: 200vh"></div>
+                <livewire:child lazy />
+            </div>
+            HTML;
+            }
+        }, 'child' => new class extends Component {
+            public function mount()
+            {
+                sleep(1);
+            }
+
+            public function render()
+            {
+                return <<<HTML
+                <div id="child">
+                    Child!
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSee('Child!')
+            ->pause(2000)
+            ->assertDontSee('Child!');
+    }
+
     public function can_lazy_load_full_page_component_using_attribute()
     {
         Livewire::visit(new #[\Livewire\Attributes\Lazy] class extends Component {
