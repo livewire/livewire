@@ -122,7 +122,7 @@ class UnitTest extends \Tests\TestCase
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
 
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', as: 'translatable.foo')]
+            #[BaseRule('required|min:3', as: 'translatable.foo')]
             public $foo = '';
         })
             ->set('foo', 'te')
@@ -145,7 +145,7 @@ class UnitTest extends \Tests\TestCase
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
 
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', as: 'translatable.foo', localize: false)]
+            #[BaseRule('required|min:3', as: 'translatable.foo', translate: false)]
             public $foo = '';
         })
             ->set('foo', 'te')

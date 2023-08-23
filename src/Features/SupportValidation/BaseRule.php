@@ -17,7 +17,7 @@ class BaseRule extends LivewireAttribute
         protected $as = null,
         protected $message = null,
         protected $onUpdate = true,
-        protected bool $localize = true
+        protected bool $translate = true
     ) {}
 
     function boot()
@@ -49,7 +49,7 @@ class BaseRule extends LivewireAttribute
         }
 
         if ($this->as) {
-            $as = $this->localize ? trans($this->as) : $this->as;
+            $as = $this->translate ? trans($this->as) : $this->as;
 
             if (is_array($this->as)) {
                 $this->component->addValidationAttributesFromOutside($as);
