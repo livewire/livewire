@@ -93,6 +93,33 @@ new class extends Component {
 </div>
 ```
 
+#### View Data
+
+When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
+
+```blade
+<?php
+
+use Livewire\WithPagination;
+use Livewire\Volt\Component;
+use App\Models\Post;
+
+new class extends Component {
+    use WithPagination;
+    
+    public function with(): array
+    {
+        return [
+            'posts' => Post::paginate(10),
+        ];
+    }
+} ?>
+
+<div>
+    <!-- ... -->
+</div>
+```
+
 ## Rendering and mounting components
 
 Just like a typical Livewire component, Volt components may be rendered using Livewire's tag syntax or the `@livewire` Blade directive:
@@ -570,9 +597,7 @@ use function Livewire\Volt\{computed, usesPagination};
 
 usesPagination();
 
-$posts = computed(function () {
-    return Post::paginate(10);
-});
+with(fn () => ['posts' => Post::paginate(10)]);
 
 ?>
 
