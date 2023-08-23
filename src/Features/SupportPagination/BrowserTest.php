@@ -494,7 +494,7 @@ class BrowserTest extends BrowserTestCase
                     HTML,
                     [
                         'posts' => Post::paginate(3),
-                        'items' => Item::paginate(3, ['*'], 'itemPage'),
+                        'items' => Item::paginate(3, ['*'], 'item-page'),
                         'pageHookOutput' => $this->pageHookOutput,
                         'itemPageHookOutput' => $this->itemPageHookOutput,
                     ]
@@ -522,7 +522,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #2')
         ->assertSee('Item #3')
         ->assertDontSee('Item #4')
-        ->assertQueryStringMissing('itemPage')
+        ->assertQueryStringMissing('item-page')
 
         ->waitForLivewire()->click('@previousPage.before')
 
@@ -535,10 +535,10 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #2')
         ->assertSee('Item #3')
         ->assertDontSee('Item #4')
-        ->assertQueryStringMissing('itemPage')
+        ->assertQueryStringMissing('item-page')
 
         // Test Items paginator
-        ->waitForLivewire()->click('@nextPage.itemPage.before')
+        ->waitForLivewire()->click('@nextPage.item-page.before')
 
         ->assertSee('Post #1')
         ->assertSee('Post #2')
@@ -549,9 +549,10 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #4')
         ->assertSee('Item #5')
         ->assertSee('Item #6')
-        ->assertQueryStringHas('itemPage', '2')
+        ->assertQueryStringHas('item-page', '2')
+        ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2')
 
-        ->waitForLivewire()->click('@previousPage.itemPage.before')
+        ->waitForLivewire()->click('@previousPage.item-page.before')
 
         ->assertSee('Post #1')
         ->assertSee('Post #2')
@@ -562,7 +563,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #1')
         ->assertSee('Item #2')
         ->assertSee('Item #3')
-        ->assertQueryStringMissing('itemPage')
+        ->assertQueryStringMissing('item-page')
         ;
     }
 
@@ -619,7 +620,7 @@ class BrowserTest extends BrowserTestCase
                     HTML,
                     [
                         'posts' => Post::paginate(3),
-                        'items' => Item::paginate(3, ['*'], 'itemPage'),
+                        'items' => Item::paginate(3, ['*'], 'item-page'),
                         'pageHookOutput' => $this->pageHookOutput,
                         'itemPageHookOutput' => $this->itemPageHookOutput,
                     ]
@@ -647,7 +648,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #2')
         ->assertSee('Item #3')
         ->assertDontSee('Item #4')
-        ->assertQueryStringMissing('itemPage')
+        ->assertQueryStringMissing('item-page')
 
         ->waitForLivewire()->click('@previousPage')
 
@@ -660,10 +661,10 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #2')
         ->assertSee('Item #3')
         ->assertDontSee('Item #4')
-        ->assertQueryStringMissing('itemPage')
+        ->assertQueryStringMissing('item-page')
 
         // Test Items paginator
-        ->waitForLivewire()->click('@nextPage.itemPage')
+        ->waitForLivewire()->click('@nextPage.item-page')
 
         ->assertSee('Post #1')
         ->assertSee('Post #2')
@@ -674,9 +675,9 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #4')
         ->assertSee('Item #5')
         ->assertSee('Item #6')
-        ->assertQueryStringHas('itemPage', '2')
+        ->assertQueryStringHas('item-page', '2')
 
-        ->waitForLivewire()->click('@previousPage.itemPage')
+        ->waitForLivewire()->click('@previousPage.item-page')
 
         ->assertSee('Post #1')
         ->assertSee('Post #2')
@@ -687,7 +688,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #1')
         ->assertSee('Item #2')
         ->assertSee('Item #3')
-        ->assertQueryStringMissing('itemPage')
+        ->assertQueryStringMissing('item-page')
         ;
     }
 
@@ -742,7 +743,7 @@ class BrowserTest extends BrowserTestCase
                     HTML,
                     [
                         'posts' => Post::paginate(3),
-                        'items' => Item::paginate(3, ['*'], 'itemPage'),
+                        'items' => Item::paginate(3, ['*'], 'item-page'),
                         'pageHookOutput' => $this->pageHookOutput,
                         'itemPageHookOutput' => $this->itemPageHookOutput,
                     ]
@@ -761,14 +762,14 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Post #4')
         ->assertSee('Item #1')
 
-        ->waitForLivewire()->click('@nextPage.itemPage.before')
+        ->waitForLivewire()->click('@nextPage.item-page.before')
 
         ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
         ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2')
         ->assertSee('Post #4')
         ->assertSee('Item #4')
 
-        ->waitForLivewire()->click('@previousPage.itemPage.before')
+        ->waitForLivewire()->click('@previousPage.item-page.before')
 
         ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
         ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-1')
