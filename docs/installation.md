@@ -126,7 +126,7 @@ To address this issue, we need to inform Livewire that we want to use the ESM (E
 <html>
 <head>
     <!-- ... -->
-
+    @livewireStyles
     @vite(['resources/js/app.js'])
 </head>
 <body>
@@ -137,7 +137,7 @@ To address this issue, we need to inform Livewire that we want to use the ESM (E
 </html>
 ```
 
-When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it.
+When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it. Make sure to add the `@livewireStyles` directive if it is not already present.
 
 The final step is importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire and Alpine:
 
