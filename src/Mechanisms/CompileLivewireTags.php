@@ -62,11 +62,11 @@ class CompileLivewireTags extends ComponentTagCompiler
             if ($component === 'styles') return '@livewireStyles';
             if ($component === 'scripts') return '@livewireScripts';
             if ($component === 'dynamic-component' || $component === 'is') {
-                if(! (isset($attributes['component']) || isset($attributes['is']))) {
                     $dynamicComponentExists = rescue(function() use ($component, $attributes) {
                         // Need to run this in rescue otherwise running this during a test causes Livewire directory not found exception
                         return $component === 'dynamic-component' && app('livewire')->getClass('dynamic-component');
                     });
+                if (! isset($attributes['component']) && ! isset($attributes['is'])) {
 
                     if ($dynamicComponentExists) {
                         return $this->componentString("'{$component}'", $attributes);
