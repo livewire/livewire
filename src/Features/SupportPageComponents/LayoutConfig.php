@@ -7,6 +7,7 @@ use Illuminate\View\AnonymousComponent;
 class LayoutConfig
 {
     public $slots = [];
+    public $viewContext = null;
 
     function __construct(
         public $type = 'component',
