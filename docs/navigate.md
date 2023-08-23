@@ -92,12 +92,12 @@ If the above HTML appears on both pages â€” the current page, and the next one â
 
 ## Updating the page before navigating away
 
-Livewire dispatches a useful event called `wire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
+Livewire dispatches a useful event called `livewire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
 
 This is useful for scenarios like modifying the contents of the current page before it is stored and reloaded as the back-button cache HTML.
 
 ```js
-document.addEventListener('wire:navigating', () => {
+document.addEventListener('livewire:navigating', () => {
     // Mutate the HTML before the page is navigated away...
 })
 ```
@@ -226,4 +226,3 @@ If you have a `<script>` tag in the body that you only want to be run once, you 
     console.log('Runs only on page one')
 </script>
 ```
-
