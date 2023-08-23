@@ -320,7 +320,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function pdf_dimensions_cannot_be_validated()
+    public function invalid_file_extension_can_validate_dimensions()
     {
         Storage::fake('avatars');
 
