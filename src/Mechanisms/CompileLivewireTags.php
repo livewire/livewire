@@ -29,8 +29,9 @@ class CompileLivewireTags extends ComponentTagCompiler
 
             $keys = array_keys($attributes);
             $values = array_values($attributes);
+            $attributesCount = count($attributes);
 
-            for ($i=0; $i < count($keys); $i++) {
+            for ($i=0; $i < $attributesCount; $i++) {
                 if ($keys[$i] === ':' && $values[$i] === 'true') {
                     if (isset($values[$i + 1]) && $values[$i + 1] === 'true') {
                         $attributes[$keys[$i + 1]] = '$'.$keys[$i + 1];
