@@ -86,15 +86,6 @@ class Revenue extends Component
 
 Because the above component specifies a "placeholder" by returning HTML from a `placeholder()` method, the user will see an SVG loading spinner on the page until the component is fully loaded.
 
-> [!tip]
->
-> When you use the placeholder don't use x-init and x-intersect on the root element of the returned HTML because they will be replaced by the component itself.
-> <br>
-> <b>x-intersect</b> for lazy
-> <br>
-> <b>x-init</b> for lazy on load
->
-
 ## Lazy loading outside of the viewport
 
 By default, Lazy-loaded components aren't full loaded until they enter the browser's viewport, for example when a user scrolls to one.
