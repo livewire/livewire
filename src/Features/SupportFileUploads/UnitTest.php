@@ -309,7 +309,7 @@ class UnitTest extends \Tests\TestCase
     {
         Storage::fake('avatars');
 
-        $file = UploadedFile::fake()->image('avatar.pdf', 100, 200);
+        $file = UploadedFile::fake()->image('avatar.png', 100, 200);
 
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
