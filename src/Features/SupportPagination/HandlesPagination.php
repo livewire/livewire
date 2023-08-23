@@ -49,8 +49,8 @@ trait HandlesPagination
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
-        $beforeMethod = 'updating' . Str::camel($pageName);
-        $afterMethod = 'updated' . Str::camel($pageName);
+        $beforeMethod = 'updating' . ucfirst(Str::camel($pageName));
+        $afterMethod = 'updated' . ucfirst(Str::camel($pageName));
 
         if (method_exists($this, $beforePaginatorMethod)) {
             $this->{$beforePaginatorMethod}($page, $pageName);
