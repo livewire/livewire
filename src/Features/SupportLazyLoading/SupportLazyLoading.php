@@ -7,6 +7,7 @@ use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 use Livewire\Component;
+use Illuminate\Routing\Route;
 
 class SupportLazyLoading extends ComponentHook
 {
