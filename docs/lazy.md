@@ -43,16 +43,6 @@ To enable lazy loading, you can pass the `lazy` parameter into the component:
 
 Now, instead of loading the component right away, Livewire will skip this component, loading the page without it. Then, when the component is visible in the viewport, Livewire will make a network request to fully load this component on the page.
 
-## Lazy load after the page is ready
-
-If you want to load the component after the page is ready, without the component being in the viewport, you can set the lazy parameter to "on-load".
-
-```blade
-<livewire:revenue lazy="on-load" />
-```
-
-Now this component will load after the page is ready without waiting for it to be inside the viewport.
-
 ## Rendering placeholder HTML
 
 By default, Livewire will insert an empty `<div></div>` for your component before it is fully loaded. As the component will initially be invisible to users, it can be jarring when the component suddenly appears on the page.
@@ -104,6 +94,18 @@ Because the above component specifies a "placeholder" by returning HTML from a `
 > <br>
 > <b>x-init</b> for lazy on load
 >
+
+## Lazy loading outside of the viewport
+
+By default, Lazy-loaded components aren't full loaded until they enter the browser's viewport, for example when a user scrolls to one.
+
+If you'd rather lazy load all components on a page as soon as the page is loaded, without waiting for them to enter the viewport, you can do so by passing "on-load" into the `lazy` parameter:
+
+```blade
+<livewire:revenue lazy="on-load" />
+```
+
+Now this component will load after the page is ready without waiting for it to be inside the viewport.
 
 ## Passing in props
 
