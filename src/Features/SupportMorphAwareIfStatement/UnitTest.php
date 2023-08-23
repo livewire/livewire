@@ -22,8 +22,8 @@ class UnitTest extends \Tests\TestCase
             <livewire:foo />
         ');
 
-        $this->assertCount(2, explode('__BLOCK__', $output));
-        $this->assertCount(2, explode('__ENDBLOCK__', $output));
+        $this->assertCount(3, explode('__BLOCK__', $output));
+        $this->assertCount(3, explode('__ENDBLOCK__', $output));
     }
 
     /** @test */
