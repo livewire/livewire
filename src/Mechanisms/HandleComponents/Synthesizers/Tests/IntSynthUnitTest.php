@@ -13,8 +13,8 @@ class IntSynthUnitTest extends \Tests\TestCase
     public function null_value_hydrated_returns_null()
     {
         Livewire::test(ComponentWithNullableInt::class)
-            ->set(['intField' => null])
-            ->assertSet('intField', null);
+            ->set('intField', null)
+            ->assertSet('intField', null, true); // Use strict mode
     }
 }
 
