@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
-use Illuminate\Routing\Route;
 use function Livewire\{invade, on, off, once};
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
