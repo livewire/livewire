@@ -8,7 +8,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use function Livewire\wrap;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_ALL)]
-class Rule extends LivewireAttribute
+class BaseRule extends LivewireAttribute
 {
     // @todo: support custom messages...
     function __construct(

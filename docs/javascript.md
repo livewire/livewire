@@ -42,7 +42,7 @@ let component = Livewire.first()
 let component = Livewire.find(id)
 
 // Retrieve an array of component `$wire` objects by name...
-let components = Livewire.getByName()
+let components = Livewire.getByName(name)
 
 // Retrieve $wire objects for every component on the page...
 let components = Livewire.all()
@@ -110,7 +110,7 @@ Livewire.directive('confirm', ({ el, directive, component, cleanup }) => {
     let onClick = e => {
         if (! confirm(content)) {
             e.preventDefault()
-            e.stopPropagation()
+            e.stopImmediatePropagation()
         }
     }
 
@@ -133,7 +133,7 @@ In general, you shouldn't need to manually start or stop Livewire, however, if y
 // Start Livewire on a page that doesn't have Livewire running...
 Livewire.start()
 
-// Stop Livewire and teardown it's JavaScript runtime
+// Stop Livewire and teardown its JavaScript runtime
 // (remove event listeners and such)...
 Livewire.stop()
 
@@ -283,7 +283,7 @@ let snapshot = {
         // to subsequent component update requests (commits)...
         path: '/',
         method: 'GET',
-        locale: "en",
+        locale: 'en',
 
         // A list of any nested "child" components. Keyed by
         // internal template ID with the component ID as the values...

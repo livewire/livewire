@@ -5,7 +5,7 @@ namespace Livewire\Features\SupportQueryString;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class Url extends LivewireAttribute
+class BaseUrl extends LivewireAttribute
 {
     public function __construct(
         public $as = null,

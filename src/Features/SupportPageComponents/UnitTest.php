@@ -298,10 +298,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function route_supports_laravels_missing_fallback_function(): void
     {
-        if (! method_exists(\Illuminate\Routing\Route::class, 'missing')) {
-            $this->markTestSkipped('Need Laravel >= 8');
-        }
-
         Route::get('awesome-js/{framework}', ComponentWithModel::class)
              ->missing(function (Request $request) {
                  $this->assertEquals(request(), $request);
@@ -419,6 +415,54 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('I am a style')
             ->assertSee('I am a script 1')
             ->assertDontSee('I am a script 2');
+    }
+
+    /** @test */
+    public function can_access_route_parameters_without_mount_method()
+    {
+        Route::get('/route-with-params/{myId}', ComponentForRouteWithoutMountParametersTest::class);
+
+        $this->get('/route-with-params/123')->assertSeeText('123');
+    }
+
+    /** @test */
+    public function can_access_route_parameters_with_mount_method()
+    {
+        Route::get('/route-with-params/{myId}', ComponentForRouteWithMountParametersTest::class);
+
+        $this->get('/route-with-params/123')->assertSeeText('123');
+    }
+}
+
+class ComponentForRouteWithoutMountParametersTest extends Component
+{
+    public $myId;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $myId }}
+        </div>
+        HTML;
+    }
+}
+
+class ComponentForRouteWithMountParametersTest extends Component
+{
+    public $myId;
+
+    public function mount()
+    {
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $myId }}
+        </div>
+        HTML;
     }
 }
 
@@ -619,14 +663,14 @@ class ComponentForRenderLayoutAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+    #[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
     public function render()
     {
         return view('show-name');
     }
 }
 
-#[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+#[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
 class ComponentForClassLayoutAttribute extends Component
 {
     public $name = 'bob';
@@ -641,8 +685,8 @@ class ComponentForTitleAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Title('some-title')]
-    #[Layout('layouts.app-with-title')]
+    #[BaseTitle('some-title')]
+    #[BaseLayout('layouts.app-with-title')]
     public function render()
     {
         return view('show-name');
@@ -664,7 +708,7 @@ class ComponentWithModel extends Component
     public FrameworkModel $framework;
 }
 
-#[Layout('layouts.app-with-title')]
+#[BaseLayout('layouts.app-with-title')]
 class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
 {
     public function render()
@@ -674,7 +718,7 @@ class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
     }
 }
 
-#[Layout('layouts.app-layout-with-stacks')]
+#[BaseLayout('layouts.app-layout-with-stacks')]
 class ComponentWithStacks extends Component
 {
     public function render()

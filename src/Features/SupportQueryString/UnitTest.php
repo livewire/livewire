@@ -11,7 +11,7 @@ class UnitTest extends \Tests\TestCase
     function can_track_properties_in_the_url()
     {
         $component = Livewire::test(new class extends Component {
-            #[Url]
+            #[BaseUrl]
             public $count = 1;
 
             function increment() { $this->count++; }

@@ -19,10 +19,10 @@ class UnitTest extends \Tests\TestCase
     public function update_triggers_rule_attribute()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required')]
+            #[BaseRule('required')]
             public $foo = '';
 
-            #[Rule('required')]
+            #[BaseRule('required')]
             public $bar = '';
 
             function clear() { $this->clearValidation(); }
@@ -45,10 +45,10 @@ class UnitTest extends \Tests\TestCase
     public function realtime_validation_can_be_opted_out_of()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', onUpdate: false)]
+            #[BaseRule('required|min:3', onUpdate: false)]
             public $foo = '';
 
-            #[Rule('required|min:3')]
+            #[BaseRule('required|min:3')]
             public $bar = '';
 
             function clear() { $this->clearValidation(); }
@@ -70,7 +70,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_attribute()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', attribute: 'The Foo')]
+            #[BaseRule('required|min:3', attribute: 'The Foo')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -95,7 +95,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_attribute_as_alias()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', as: 'The Foo')]
+            #[BaseRule('required|min:3', as: 'The Foo')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -166,7 +166,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_messages()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('min:5', message: 'Your foo is too short.')]
+            #[BaseRule('min:5', message: 'Your foo is too short.')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -187,7 +187,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attributes_can_contain_rules_for_multiple_properties()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule(['foo' => 'required', 'bar' => 'required'])]
+            #[BaseRule(['foo' => 'required', 'bar' => 'required'])]
             public $foo = '';
 
             public $bar = '';
@@ -213,7 +213,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attributes_can_contain_multiple_rules()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule(['required', 'min:2', 'max:3'])]
+            #[BaseRule(['required', 'min:2', 'max:3'])]
             public $foo = '';
         })
             ->set('foo', '')
@@ -251,14 +251,14 @@ class UnitTest extends \Tests\TestCase
     public function rule_attributes_can_be_repeated()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required')]
-            #[Rule('min:2')]
-            #[Rule('max:3')]
+            #[BaseRule('required')]
+            #[BaseRule('min:2')]
+            #[BaseRule('max:3')]
             public $foo = '';
 
             #[
-                Rule('sometimes'),
-                Rule('max:1')
+                BaseRule('sometimes'),
+                BaseRule('max:1')
             ]
             public $bar = '';
         })

@@ -69,7 +69,7 @@ $increment = fn () => $this->count++;
 // ...
 ```
 
-### Class based Volt components
+### Class-based Volt components
 
 If you would like to enjoy the single-file component capabilities of Volt while still writing class-based components, we've got you covered. To get started, define an anonymous class that extends `Livewire\Volt\Component`. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
 
@@ -90,6 +90,33 @@ new class extends Component {
 <div>
     <h1>{{ $count }}</h1>
     <button wire:click="increment">+</button>
+</div>
+```
+
+#### View Data
+
+When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
+
+```blade
+<?php
+
+use Livewire\WithPagination;
+use Livewire\Volt\Component;
+use App\Models\Post;
+
+new class extends Component {
+    use WithPagination;
+    
+    public function with(): array
+    {
+        return [
+            'posts' => Post::paginate(10),
+        ];
+    }
+} ?>
+
+<div>
+    <!-- ... -->
 </div>
 ```
 
@@ -132,7 +159,7 @@ mount(function (UserCounter $counter, $users) {
 });
 ```
 
-### Full page components
+### Full-page components
 
 Optionally, you may render a Volt component as a full page component by defining a Volt route in your application's `routes/web.php` file:
 
@@ -499,7 +526,7 @@ rules(['name' => 'required|min:6', 'email' => 'required|email'])
 
 ## File uploads
 
-When using Volt, [uploading and storing files](/docs/uploads) is made incredibly thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
+When using Volt, [uploading and storing files](/docs/uploads) is much easier thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
 
 ```php
 use function Livewire\Volt\{state, usesFileUploads};
@@ -570,9 +597,7 @@ use function Livewire\Volt\{computed, usesPagination};
 
 usesPagination();
 
-$posts = computed(function () {
-    return Post::paginate(10);
-});
+with(fn () => ['posts' => Post::paginate(10)]);
 
 ?>
 
@@ -606,7 +631,7 @@ uses([Sorting::class, WithSorting::class]);
 
 ## Anonymous components
 
-Sometimes, you may want to convert a small portion of a page a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
+Sometimes, you may want to convert a small portion of a page into a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
 
 ```php
 Route::get('/counter', fn () => view('pages/counter.blade.php'));

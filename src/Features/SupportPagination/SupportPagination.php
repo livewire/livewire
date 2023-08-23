@@ -9,7 +9,7 @@ use Illuminate\Pagination\Paginator;
 use Livewire\ComponentHook;
 use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportQueryString\SupportQueryString;
-use Livewire\Features\SupportQueryString\Url;
+use Livewire\Features\SupportQueryString\BaseUrl;
 
 class SupportPagination extends ComponentHook
 {
@@ -103,7 +103,7 @@ class SupportPagination extends ComponentHook
         $keep = $queryStringDetails['keep'];
 
         // @todo: make this work...
-        $this->component->setPropertyAttribute($key, new Url(as: $alias, history: $history, keep: $keep));
+        $this->component->setPropertyAttribute($key, new BaseUrl(as: $alias, history: $history, keep: $keep));
     }
 
     protected function paginationView()

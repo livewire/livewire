@@ -41,7 +41,7 @@ To enable lazy loading, you can pass the `lazy` parameter into the component:
 <livewire:revenue lazy />
 ```
 
-Now, instead of loading the component right away, Livewire will skip this component, loading the page without it. Then, after loading the rest of the page, Livewire will make a network request to fully load this component on the page.
+Now, instead of loading the component right away, Livewire will skip this component, loading the page without it. Then, when the component is visible in the viewport, Livewire will make a network request to fully load this component on the page.
 
 ## Rendering placeholder HTML
 
@@ -85,6 +85,18 @@ class Revenue extends Component
 ```
 
 Because the above component specifies a "placeholder" by returning HTML from a `placeholder()` method, the user will see an SVG loading spinner on the page until the component is fully loaded.
+
+## Lazy loading outside of the viewport
+
+By default, Lazy-loaded components aren't full loaded until they enter the browser's viewport, for example when a user scrolls to one.
+
+If you'd rather lazy load all components on a page as soon as the page is loaded, without waiting for them to enter the viewport, you can do so by passing "on-load" into the `lazy` parameter:
+
+```blade
+<livewire:revenue lazy="on-load" />
+```
+
+Now this component will load after the page is ready without waiting for it to be inside the viewport.
 
 ## Passing in props
 
@@ -147,3 +159,52 @@ For example, you might want to pass in an Eloquent model to the `Revenue` compon
 In a normal component, the actual PHP in-memory `$user` model would be passed into the `mount()` method of `Revenue`. However, because we won't run `mount()` until the next network request, Livewire will internally serialize `$user` to JSON and then re-query it from the database before the next request is handled.
 
 Typically, this serialization should not cause any behavioral differences in your application.
+
+## Lazy load by default
+
+If you want to enforce that all usages of a component will be lazy-loaded, you can add the `#[Lazy]` attribute above the component class:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\Attributes\Lazy;
+
+#[Lazy]
+class Revenue extends Component
+{
+    // ...
+}
+```
+
+If you want to override lazy loading you can set the `lazy` parameter to `false`:
+
+```blade
+<livewire:revenue :lazy="false" />
+```
+
+## Full-page lazy loading
+
+You may want to lazy load full-page Livewire components. You can do this by calling `->lazy()` on the route like so:
+
+```php
+Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy();
+```
+
+Or alternatively, if there is a component that is lazy-loaded by default and you would like to opt-out of lazy-loading, you can use the following `enabled: false` parameter:
+
+```php
+Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy(enabled: false);
+```
+
+## Default placeholder view
+
+If you want to set a default placeholder view for all your components you can do so by referencing the view in the `/config/livewire.php` config file:
+
+```php
+'lazy_placeholder' => 'livewire.placeholder',
+```
+
+Now, when a component is lazy-loaded and no `placeholder()` is definied, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)

@@ -203,6 +203,24 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.content', '')
         ;
     }
+
+    /** @test */
+    function can_get_properties_except()
+    {
+        $component = new class extends Component {};
+
+        $form = new PostFormStub($component, 'foobar');
+
+        $this->assertEquals(
+            ["content" => ""],
+            $form->except('title')
+        );
+
+        $this->assertEquals(
+            ["content" => ""],
+            $form->except(['title'])
+        );
+    }
 }
 
 class PostFormStub extends Form

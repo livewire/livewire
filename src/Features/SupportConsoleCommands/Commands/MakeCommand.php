@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class MakeCommand extends FileManipulationCommand
 {
-    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--stub= : If you have several stubs, stored in subfolders }';
+    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--pest} {--stub= : If you have several stubs, stored in subfolders }';
 
     protected $description = 'Create a new Livewire component';
 
@@ -35,7 +35,8 @@ class MakeCommand extends FileManipulationCommand
 
         $force = $this->option('force');
         $inline = $this->option('inline');
-        $test = $this->option('test');
+        $test = $this->option('test') || $this->option('pest');
+        $testType = $this->option('test') ? 'phpunit' : 'pest';
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
@@ -43,7 +44,7 @@ class MakeCommand extends FileManipulationCommand
         $view = $this->createView($force, $inline);
 
         if ($test) {
-            $test = $this->createTest($force);
+            $test = $this->createTest($force, $testType);
         }
 
         if($class || $view) {
@@ -102,7 +103,7 @@ class MakeCommand extends FileManipulationCommand
         return $viewPath;
     }
 
-    protected function createTest($force = false)
+    protected function createTest($force = false, $testType = 'phpunit')
     {
         $testPath = $this->parser->testPath();
 
@@ -115,7 +116,7 @@ class MakeCommand extends FileManipulationCommand
 
         $this->ensureDirectoryExists($testPath);
 
-        File::put($testPath, $this->parser->testContents());
+        File::put($testPath, $this->parser->testContents($testType));
 
         return $testPath;
     }

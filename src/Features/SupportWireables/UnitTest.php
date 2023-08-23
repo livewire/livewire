@@ -10,13 +10,6 @@ use Livewire\Wireable;
 
 class UnitTest extends \Tests\TestCase
 {
-    function setUp(): void
-    {
-        // @todo: Josh Hanley: this is broken because of the morph aware conditional stuff...
-
-        $this->markTestSkipped('broken');
-    }
-
     /** @test */
     public function a_wireable_can_be_set_as_a_public_property_and_validates()
     {

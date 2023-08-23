@@ -241,7 +241,7 @@ class CreatePost extends Component
 }
 ```
 
-If you want to use this form object for both a create and update form, you can easily adapt it the form to handle both use cases.
+If you want to use this form object for both a create and update form, you can easily adapt it to handle both use cases.
 
 Here's what it would look like to use this same form object for an `UpdatePost` component and fill it with initial data:
 
@@ -772,7 +772,7 @@ Often, you may build your dropdown options dynamically using Blade:
 ```blade
 <select wire:model="state">
     @foreach (\App\Models\State::all() as $state)
-        <option value="{{ $option->id }}">{{ $option->label }}</option>
+        <option value="{{ $state->id }}">{{ $state->label }}</option>
     @endforeach
 </select>
 ```

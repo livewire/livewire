@@ -32,7 +32,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function render() { return <<<'HTML'
@@ -92,7 +92,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function render() { return <<<'HTML'
@@ -105,7 +105,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'nestedchild' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function render() { return <<<'HTML'
@@ -152,7 +152,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function inc() { $this->count++; }
@@ -199,7 +199,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class extends Component {
-                #[Reactive]
+                #[BaseReactive]
                 public $count;
 
                 public function inc() { $this->count++; }

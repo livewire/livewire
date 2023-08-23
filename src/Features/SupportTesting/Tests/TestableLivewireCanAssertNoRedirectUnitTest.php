@@ -27,6 +27,21 @@ class TestableLivewireCanAssertNoRedirectUnitTest extends \Tests\TestCase
         $component->call('performRedirect');
         $component->assertNoRedirect();
     }
+
+    /** @test */
+    function can_assert_no_redirect_on_plain_component()
+    {
+        $component = Livewire::test(PlainRenderingComponent::class);
+        $component->assertNoRedirect();
+    }
+}
+
+class PlainRenderingComponent extends Component
+{
+    function render()
+    {
+        return view('null-view');
+    }
 }
 
 class NoRedirectComponent extends Component

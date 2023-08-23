@@ -57,7 +57,7 @@ For more information, see [Laravel's documentation on rendering validation error
 
 If you prefer to co-locate your component's validation rules with the properties directly, you can use Livewire's `#[Rule]` attribute.
 
-By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. This frees you from needing to run `$this->validate()` manually:
+By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. However, you should still run `$this->validate()` before persisting data to a database so that properties that haven't been updated are also validated.
 
 ```php
 use Livewire\Attributes\Rule;
@@ -74,6 +74,8 @@ class CreatePost extends Component
 
     public function save()
     {
+        $this->validate();
+
 		Post::create([
             'title' => $this->title,
             'content' => $this->content,
@@ -86,7 +88,7 @@ class CreatePost extends Component
 }
 ```
 
-If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
+If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validate()` method:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -341,7 +343,7 @@ Method | Description
 `$this->getErrorBag()` | Retrieve the underlying Laravel error bag used in the Livewire component
 
 > [!info] Using `$this->addError()` with Form Objects
-> When manually adding errors using `$this->addError` inside of a form object the key will automatically be prefixed with the name of the property the form is assigned to in the parent component. For example, if in your Component you assign the form to a property called `$data`, key will become `data.key`. 
+> When manually adding errors using `$this->addError` inside of a form object the key will automatically be prefixed with the name of the property the form is assigned to in the parent component. For example, if in your Component you assign the form to a property called `$data`, key will become `data.key`.
 
 ## Accessing the validator instance
 

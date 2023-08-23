@@ -492,7 +492,7 @@ $this->setPage(2);
 
 ### `wire:click.prefetch`
 
-Livewire's prefetching feature (`wire:click.prefetching`) has been removed entirely. If you depended on this feature, your application will still work, it will just be slightly less performant in the instances where you were previously benefiting from `.prefetch`.
+Livewire's prefetching feature (`wire:click.prefetch`) has been removed entirely. If you depended on this feature, your application will still work, it will just be slightly less performant in the instances where you were previously benefiting from `.prefetch`.
 
 ```html
 <button wire:click.prefetch=""> <!-- [tl! remove] -->
@@ -611,10 +611,6 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // 
 ```
 
 You may consult the new [JavaScript hook documentation](/docs/javascript) for a more thorough understanding of the new hook system.
-
-### @this.on() deprecated
-
-While in Livewire 2 you could register JavaScript callbacks for component events using `@this.on('event-name', callbackFn)` in your Blade template, in Livewire 3 this has been deprecated. Instead, you should take advantage of Alpine's inclusion, and use the `x-on:event-name="callbackCode"` pattern.
 
 ## Localization
 
