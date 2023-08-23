@@ -3,10 +3,12 @@
 namespace Livewire\Features\SupportPageComponents;
 
 use Illuminate\View\AnonymousComponent;
+use Livewire\Mechanisms\HandleComponents\ViewContext;
 
 class LayoutConfig
 {
     public $slots = [];
+    public $viewContext = null;
 
     function __construct(
         public $type = 'component',
@@ -15,6 +17,7 @@ class LayoutConfig
         public $params = [],
     ) {
         $this->view = $view ?: config('livewire.layout');
+        $this->viewContext = new ViewContext;
     }
 
     function mergeParams($toMerge)
