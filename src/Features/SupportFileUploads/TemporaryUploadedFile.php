@@ -74,11 +74,11 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->extractOriginalNameFromFilePath($this->path);
     }
 
-    public function dimensions(): ?array
+    public function dimensions(): null|array|bool
     {
         stream_copy_to_stream($this->storage->readStream($this->path), $tmpFile = tmpfile());
 
-        return @getimagesize(stream_get_meta_data($tmpFile)['uri']);;
+        return @getimagesize(stream_get_meta_data($tmpFile)['uri']);
     }
 
     public function temporaryUrl()

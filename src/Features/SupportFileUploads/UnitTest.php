@@ -309,7 +309,7 @@ class UnitTest extends \Tests\TestCase
     {
         Storage::fake('avatars');
 
-        $file = UploadedFile::fake()->image('avatar.png', 100, 200);
+        $file = UploadedFile::fake()->image('avatar.pdf', 100, 200);
 
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
@@ -317,6 +317,22 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['photo' => 'dimensions']);
 
         Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
+    }
+
+    /** @test */
+    public function pdf_dimensions_cannot_be_validated()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()
+            ->create('not-a-png-image.pdf', 512, 512);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUploadWithDimensions')
+            ->assertHasErrors(['photo' => 'dimensions']);
+
+        Storage::disk('avatars')->assertMissing('uploaded-not-a-png-image.png');
     }
 
     /** @test */
