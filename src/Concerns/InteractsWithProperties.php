@@ -2,8 +2,8 @@
 
 namespace Livewire\Concerns;
 
-use Livewire\Drawer\Utils;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Drawer\Utils;
 
 trait InteractsWithProperties
 {
@@ -40,22 +40,29 @@ trait InteractsWithProperties
 
     public function reset(...$properties)
     {
-        $propertyKeys = array_keys($this->all());
-
-        // Keys to reset from array
-        if (count($properties) && is_array($properties[0])) {
-            $properties = $properties[0];
-        }
+        $properties = count($properties) && is_array($properties[0])
+            ? $properties[0]
+            : $properties;
 
         // Reset all
         if (empty($properties)) {
-            $properties = $propertyKeys;
+            $properties = array_keys($this->all());
         }
 
-        foreach ($properties as $property) {
-            $freshInstance = new static;
+        $freshInstance = new static;
 
-            $this->{$property} = $freshInstance->{$property};
+        foreach ($properties as $property) {
+            $defaultValue = data_get($freshInstance, $property);
+            $unset = '__unset__';
+            $unsetByDefault = !$defaultValue && $unset === data_get($freshInstance, $property, $unset);
+
+            // Handle resetting properties that are unset by default.
+            if ($unsetByDefault) {
+                data_forget($this, $property);
+                continue;
+            }
+
+            data_set($this, $property, $defaultValue);
         }
     }
 
@@ -83,6 +90,8 @@ trait InteractsWithProperties
 
     public function except($properties)
     {
+        if (! is_array($properties)) $properties = [$properties];
+
         return array_diff_key($this->all(), array_flip($properties));
     }
 

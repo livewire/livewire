@@ -55,7 +55,7 @@ When sorting or filtering results, it is common to want to reset the page number
 
 For this reason, Livewire provides the `$this->resetPage()` method, allowing you to reset the page number from anywhere in your component.
 
-The following component demonstrates using this method to reset the page after a search field is updated and submitted:
+The following component demonstrates using this method to reset the page after the search form is submitted:
 
 ```php
 <?php
@@ -144,7 +144,7 @@ class ShowClients extends Component
 As you can see, the above component contains a paginated set of *clients*. If a user were to navigate to page `2` of this result set, the URL might look like the following:
 
 ```
-http://application.test/?page=2`
+http://application.test/?page=2
 ```
 
 Suppose the page also contains a `ShowInvoices` component that also uses pagination. To independently track each paginator's current page, you need to specify a name for the second paginator like so:
@@ -161,7 +161,7 @@ class ShowInvoices extends Component
     public function render()
     {
         return view('show-invoices', [
-            'invoices' => Invoice::paginate(10, pageName: 'invoice-page'),
+            'invoices' => Invoice::paginate(10, pageName: 'invoices-page'),
         ]);
     }
 }
@@ -170,19 +170,19 @@ class ShowInvoices extends Component
 Now, because of the `pageName` parameter that has been added to the `paginate` method, when a user visits page `2` of the *invoices*, the URL will contain the following:
 
 ```
-`https://application.test/customers?page=2&invoice-page=2`
+https://application.test/customers?page=2&invoices-page=2
 ```
 
 When using Livewire's page navigation methods on a named paginator, you must provide the page name as an additional parameter:
 
 ```php
-$this->setPage(2, pageName: 'invoice-page');
+$this->setPage(2, pageName: 'invoices-page');
 
-$this->resetPage(pageName: 'invoice-page');
+$this->resetPage(pageName: 'invoices-page');
 
-$this->nextPage(pageName: 'invoice-page');
+$this->nextPage(pageName: 'invoices-page');
 
-$this->previousPage(pageName: 'invoice-page');
+$this->previousPage(pageName: 'invoices-page');
 ```
 
 ## Hooking into page updates
@@ -233,12 +233,12 @@ public function updatingInvoicesPage($page)
 If you prefer to not reference the paginator name in the hook method name, you can use the more generic alternatives and simply receive the `$pageName` as a second argument to the hook method:
 
 ```php
-public function updatingPaginator($page, $pageName)
+public function updatingPaginators($page, $pageName)
 {
     // Runs before the page is updated for this component...
 }
 
-public function updatedPaginator($page, $pageName)
+public function updatedPaginators($page, $pageName)
 {
     // Runs after the page is updated for this component...
 }
@@ -263,7 +263,7 @@ For more information on simple pagination, check out [Laravel's "simplePaginator
 
 ## Using cursor pagination
 
-Livewire also supports using Laravel's cursor pagination—a faster pagination method useful in large datasets:
+Livewire also supports using Laravel's cursor pagination — a faster pagination method useful in large datasets:
 
 ```php
 public function render()

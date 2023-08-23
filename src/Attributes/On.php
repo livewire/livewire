@@ -2,9 +2,10 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportEvents\On as BaseOn;
+use Attribute;
+use Livewire\Features\SupportEvents\BaseOn;
 
-#[\Attribute]
+#[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class On extends BaseOn
 {
     //

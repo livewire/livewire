@@ -32,7 +32,7 @@ class ShowUsers extends Component
 
     <ul>
         @foreach ($users as $user)
-            <li>{{ $user->name }}</li>
+            <li wire:key="{{ $user->id }}">{{ $user->name }}</li>
         @endforeach
     </ul>
 </div>
@@ -85,7 +85,7 @@ For example, if a user visits the URL `https://example.com/users?search=bob`, Li
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url]
     public $search = ''; // Will be set to "bob"...
@@ -104,7 +104,7 @@ You can specify a query string alias by providing the `as` parameter to the `#[U
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(as: 'q')]
     public $search = '';
@@ -125,7 +125,7 @@ If you want the `?search` entry to always be included in the query string, even 
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(keep: true)]
     public $search = '';
@@ -148,7 +148,7 @@ To force Livewire to use `history.pushState` when updating the URL, you can prov
 use Livewire\Component;
 use Livewire\With\Url;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(history: true)]
     public $search = '';

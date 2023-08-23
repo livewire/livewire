@@ -6,7 +6,6 @@ use Livewire\Wireable;
 use Livewire\Livewire;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Component;
-
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;
@@ -14,16 +13,14 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    // @todo: test that this supports email_validation rules (dependant validation rule in attribute)
-
     /** @test */
     public function update_triggers_rule_attribute()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required')]
+            #[BaseRule('required')]
             public $foo = '';
 
-            #[Rule('required')]
+            #[BaseRule('required')]
             public $bar = '';
 
             function clear() { $this->clearValidation(); }
@@ -46,10 +43,10 @@ class UnitTest extends \Tests\TestCase
     public function realtime_validation_can_be_opted_out_of()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', onUpdate: false)]
+            #[BaseRule('required|min:3', onUpdate: false)]
             public $foo = '';
 
-            #[Rule('required|min:3')]
+            #[BaseRule('required|min:3')]
             public $bar = '';
 
             function clear() { $this->clearValidation(); }
@@ -71,7 +68,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_attribute()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', attribute: 'The Foo')]
+            #[BaseRule('required|min:3', attribute: 'The Foo')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -83,7 +80,11 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
+                }
             })
             ;
     }
@@ -92,7 +93,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_attribute_as_alias()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('required|min:3', as: 'The Foo')]
+            #[BaseRule('required|min:3', as: 'The Foo')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -104,7 +105,11 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                if (version_compare(app()->version(), '10', '>=')) {
+                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
+                } else {
+                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
+                }
             })
             ;
     }
@@ -113,7 +118,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_messages()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule('min:5', message: 'Your foo is too short.')]
+            #[BaseRule('min:5', message: 'Your foo is too short.')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -131,10 +136,10 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function rule_attributes_can_contain_multiple_rules()
+    public function rule_attributes_can_contain_rules_for_multiple_properties()
     {
         Livewire::test(new class extends TestComponent {
-            #[Rule(['foo' => 'required', 'bar' => 'required'])]
+            #[BaseRule(['foo' => 'required', 'bar' => 'required'])]
             public $foo = '';
 
             public $bar = '';
@@ -154,6 +159,74 @@ class UnitTest extends \Tests\TestCase
                 'foo' => 'required',
                 'bar' => 'required',
             ]);
+    }
+
+    /** @test */
+    public function rule_attributes_can_contain_multiple_rules()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[BaseRule(['required', 'min:2', 'max:3'])]
+            public $foo = '';
+        })
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->set('foo', '1')
+            ->assertHasErrors(['foo' => 'min'])
+            ->set('foo', '12345')
+            ->assertHasErrors(['foo' => 'max'])
+            ->set('foo', 'ok')
+            ->assertHasNoErrors()
+        ;
+    }
+
+    /** @test */
+    public function rule_attributes_can_contain_multiple_rules_userland(): void
+    {
+        Livewire::test(new class extends TestComponent {
+            #[\Livewire\Attributes\Rule('required')]
+            #[\Livewire\Attributes\Rule('min:2')]
+            #[\Livewire\Attributes\Rule('max:3')]
+            public $foo = '';
+        })
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->set('foo', '1')
+            ->assertHasErrors(['foo' => 'min'])
+            ->set('foo', '12345')
+            ->assertHasErrors(['foo' => 'max'])
+            ->set('foo', 'ok')
+            ->assertHasNoErrors()
+        ;
+    }
+
+    /** @test */
+    public function rule_attributes_can_be_repeated()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[BaseRule('required')]
+            #[BaseRule('min:2')]
+            #[BaseRule('max:3')]
+            public $foo = '';
+
+            #[
+                BaseRule('sometimes'),
+                BaseRule('max:1')
+            ]
+            public $bar = '';
+        })
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->set('foo', '1')
+            ->assertHasErrors(['foo' => 'min'])
+            ->set('foo', '12345')
+            ->assertHasErrors(['foo' => 'max'])
+            ->set('foo', 'ok')
+            ->assertHasNoErrors()
+            ->set('bar', '12')
+            ->assertHasErrors(['bar' => 'max'])
+            ->set('bar', '1')
+            ->assertHasNoErrors()
+        ;
     }
 
     /** @test */

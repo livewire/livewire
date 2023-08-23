@@ -57,7 +57,7 @@ For more information, see [Laravel's documentation on rendering validation error
 
 If you prefer to co-locate your component's validation rules with the properties directly, you can use Livewire's `#[Rule]` attribute.
 
-By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. This frees you from needing to run `$this->validate()` manually:
+By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. However, you should still run `$this->validate()` before persisting data to a database so that properties that haven't been updated are also validated.
 
 ```php
 use Livewire\Attributes\Rule;
@@ -74,6 +74,8 @@ class CreatePost extends Component
 
     public function save()
     {
+        $this->validate();
+
 		Post::create([
             'title' => $this->title,
             'content' => $this->content,
@@ -86,7 +88,7 @@ class CreatePost extends Component
 }
 ```
 
-If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
+If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validate()` method:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -112,6 +114,40 @@ class CreatePost extends Component
 
     // ...
 }
+```
+
+### Custom attribute name
+
+If you wish to customize the attribute name injected into the validation message, you may do so using the `as: ` parameter:
+
+```php
+use Livewire\Attributes\Rule;
+
+#[Rule('required', as: 'date of birth')]
+public $dob;
+```
+
+When validation fails in the above snippet, Laravel will use "date of birth" instead of "dob" as the name of the field in the validation message. The generated message will be "The date of birth field is required" instead of "The dob field is required".
+
+### Custom validation message
+
+To bypass Laravel's validation message and replace it with your own, you can use the `message: ` parameter in the `#[Rule]` attribute:
+
+```php
+use Livewire\Attributes\Rule;
+
+#[Rule('required', message: 'Please provide a post title')]
+public $title;
+```
+
+Now, when the validation fails for this property, the message will  be "Please provide a post title" instead of "The title field is required".
+
+If you wish to add different messages for different rules, you can simply provide multiple `#[Rule]` attributes:
+
+```php
+#[Rule('required', message: 'Please provide a post title')]
+#[Rule('min:3', message: 'This title is too short')]
+public $title;
 ```
 
 ### Custom key
@@ -244,12 +280,12 @@ However, you may need to customize the language of these error messages to bette
 
 Sometimes the property you are validating has a name that isn't suited for displaying to users. For example, if you have a database field in your app named `dob` that stands for "Date of birth", you would want to show your users "The date of birth field is required" instead of "The dob field is required".
 
-Livewire allows you to specify an alternative name for a property using the `attribute: ` parameter:
+Livewire allows you to specify an alternative name for a property using the `as: ` parameter:
 
 ```php
 use Livewire\Attributes\Rule;
 
-#[Rule('required', attribute: 'date of birth')]
+#[Rule('required', as: 'date of birth')]
 public $dob = '';
 ```
 
@@ -306,6 +342,9 @@ Method | Description
 `$this->resetValidation([?key])` | Reset the validation errors for the provided key, or reset all errors if no key is supplied
 `$this->getErrorBag()` | Retrieve the underlying Laravel error bag used in the Livewire component
 
+> [!info] Using `$this->addError()` with Form Objects
+> When manually adding errors using `$this->addError` inside of a form object the key will automatically be prefixed with the name of the property the form is assigned to in the parent component. For example, if in your Component you assign the form to a property called `$data`, key will become `data.key`.
+
 ## Accessing the validator instance
 
 Sometimes you may want to access the Validator instance that Livewire uses internally in the `validate()` method. This is possible using the `withValidator` method. The closure you provide receives the fully constructed validator as an argument, allowing you to call any of its methods before the validation rules are actually evaluated.
@@ -354,7 +393,7 @@ If you wish to use your own validation system in Livewire, that isn't a problem.
 Below is an example of the `CreatePost` component, but instead of using Livewire's validation features, a completely custom validator is being created and applied to the component properties:
 
 ```php
-use Illuminate\Validation\Validator;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use App\Models\Post;
 
@@ -424,7 +463,7 @@ public function cant_create_post_with_title_shorter_than_3_characters()
         ->set('title', 'Sa')
         ->set('content', 'Sample content...')
         ->call('save')
-        ->assertHasErrors('title', ['min:3']);
+        ->assertHasErrors(['title', ['min:3']]);
 }
 ```
 

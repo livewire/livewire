@@ -2,15 +2,18 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
+use Carbon\CarbonImmutable;
 use DateTime;
 use Carbon\Carbon;
+use DateTimeImmutable;
+use DateTimeInterface;
 
 class CarbonSynth extends Synth {
     public static $types = [
-        'native' => \DateTime::class,
-        'nativeImmutable' => \DateTimeImmutable::class,
-        'carbon' => \Carbon\Carbon::class,
-        'carbonImmutable' => \Carbon\CarbonImmutable::class,
+        'native' => DateTime::class,
+        'nativeImmutable' => DateTimeImmutable::class,
+        'carbon' => Carbon::class,
+        'carbonImmutable' => CarbonImmutable::class,
         'illuminate' => \Illuminate\Support\Carbon::class,
     ];
 
@@ -26,7 +29,7 @@ class CarbonSynth extends Synth {
 
     function dehydrate($target) {
         return [
-            $target->format(\DateTimeInterface::ISO8601),
+            $target->format(DateTimeInterface::ATOM),
             ['type' => array_search(get_class($target), static::$types)],
         ];
     }

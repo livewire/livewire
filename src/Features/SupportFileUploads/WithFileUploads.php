@@ -2,16 +2,13 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Livewire\Features\SupportFileUploads\S3DoesntSupportMultipleFileUploads;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
-use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 
 trait WithFileUploads
 {
-    public function startUpload($name, $fileInfo, $isMultiple)
+    function _startUpload($name, $fileInfo, $isMultiple)
     {
         if (FileUploadConfiguration::isUsingS3()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
@@ -26,7 +23,7 @@ trait WithFileUploads
         $this->dispatch('upload:generatedSignedUrl', name: $name, url: GenerateSignedUploadUrl::forLocal())->self();
     }
 
-    public function finishUpload($name, $tmpPath, $isMultiple)
+    function _finishUpload($name, $tmpPath, $isMultiple)
     {
         $this->cleanupOldUploads();
 
@@ -49,7 +46,7 @@ trait WithFileUploads
         app('livewire')->updateProperty($this, $name, $file);
     }
 
-    public function uploadErrored($name, $errorsInJson, $isMultiple) {
+    function _uploadErrored($name, $errorsInJson, $isMultiple) {
         $this->dispatch('upload:errored', name: $name)->self();
 
         if (is_null($errorsInJson)) {
@@ -74,7 +71,7 @@ trait WithFileUploads
         throw (ValidationException::withMessages($errors));
     }
 
-    public function removeUpload($name, $tmpFilename)
+    function _removeUpload($name, $tmpFilename)
     {
         $uploads = $this->getPropertyValue($name);
 

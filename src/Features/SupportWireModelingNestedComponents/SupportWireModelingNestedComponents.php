@@ -7,7 +7,6 @@ use Livewire\Drawer\Utils;
 use function Livewire\on;
 use function Livewire\store;
 
-
 class SupportWireModelingNestedComponents extends ComponentHook
 {
     protected static $outersByComponentId = [];
@@ -25,7 +24,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
             $outer = $params['wire:model'];
 
-            static::$outersByComponentId[$id] = [$outer => $parent->$outer];
+            static::$outersByComponentId[$id] = [$outer => data_get($parent, $outer)];
         });
     }
 
@@ -45,6 +44,8 @@ class SupportWireModelingNestedComponents extends ComponentHook
         $outers = static::$outersByComponentId[$memo['id']];
 
         foreach ($bindings as $outer => $inner) {
+            store($this->component)->set('hasBeenSeeded', true);
+
             $this->component->$inner = $outers[$outer];
         }
     }

@@ -2,7 +2,6 @@
 
 namespace Livewire\Drawer;
 
-use DOMDocument;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
 use function Livewire\invade;
@@ -91,7 +90,7 @@ class Utils extends BaseUtils
 
     static function containsDots($subject)
     {
-        return strpos($subject, '.') !== false;
+        return str_contains($subject, '.');
     }
 
     static function dotSegments($subject)
@@ -153,43 +152,6 @@ class Utils extends BaseUtils
         $view = app('view')->make($component->resolveView(), $data);
 
         return $view;
-    }
-
-    static function anonymousClassToStringClass($target, $class, $namespace = null)
-    {
-        $raw = file((new \ReflectionObject($target))->getFilename());
-        $start = (new \ReflectionObject($target))->getStartLine();
-        $end = (new \ReflectionObject($target))->getEndLine();
-
-        $firstLine = $raw[$start - 1];
-        $suffix = (string) str($firstLine)->between('new class ', '{');
-
-        $uses = '';
-
-        foreach ($raw as $line) {
-            if (str_starts_with($line, 'use ')) {
-                $uses .= $line;
-            }
-        }
-
-        $body = '';
-        foreach (range($start, $end - 2) as $line) {
-            $body .= $raw[$line];
-        }
-
-        $namespace = $namespace ? 'namespace '.$namespace.';' : '';
-
-        return <<<PHP
-<?php
-
-$namespace
-
-$uses
-
-class $class $suffix {
-$body
-}
-PHP;
     }
 
     static function applyMiddleware(\Illuminate\Http\Request $request, $middleware = [])

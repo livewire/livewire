@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportTesting;
 
 use PHPUnit\Framework\ExpectationFailedException;
-use PHPUnit\Framework\AssertionFailedError;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
@@ -32,6 +31,33 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse = new TestResponse($fakeClass);
 
         $testResponse->assertSeeLivewire('foo');
+    }
+
+    /** @test */
+    function can_test_component_using_magic_render()
+    {
+        mkdir($this->livewireViewsPath());
+        file_put_contents($this->livewireViewsPath().'/foo.blade.php', <<<'PHP'
+        <div>
+            Im foo
+        </div>
+        PHP);
+
+        mkdir($this->livewireClassesPath());
+        file_put_contents($this->livewireClassesPath().'/Foo.php', <<<'PHP'
+        <?php
+
+        namespace App\Livewire;
+
+        use Livewire\Component;
+
+        class Foo extends Component
+        {
+            //
+        }
+        PHP);
+
+        Livewire::test('foo')->assertSee('Im foo');
     }
 
     /** @test */
@@ -168,10 +194,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     function can_assert_see_livewire_on_test_view()
     {
-        if(! class_exists(TestView::class)) {
-            self::markTestSkipped('Need Laravel >= 8');
-        }
-
         Artisan::call('make:livewire', ['name' => 'foo']);
 
         $testView = new TestView(view('render-component', [
@@ -184,10 +206,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     function can_assert_see_livewire_on_test_view_refering_by_subfolder_without_dot_index()
     {
-        if(! class_exists(TestView::class)) {
-            self::markTestSkipped('Need Laravel >= 8');
-        }
-
         Artisan::call('make:livewire', ['name' => 'bar.index']);
 
         $testView = new TestView(view('render-component', [
@@ -200,10 +218,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     function can_assert_dont_see_livewire_on_test_view()
     {
-        if(! class_exists(TestView::class)) {
-            self::markTestSkipped('Need Laravel >= 8');
-        }
-
         Artisan::call('make:livewire', ['name' => 'foo']);
 
         $testView = new TestView(view('null-view'));
@@ -352,7 +366,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     function assert_dont_see_multiple()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
-            ->assertDontSee(['no', 'one', 'really']);
+            ->assertDontSee(['nobody', 'really', 'knows']);
     }
 
     /** @test */

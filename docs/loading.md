@@ -97,7 +97,7 @@ In situations where the same action is triggered with different parameters from 
 ```blade
 <div>
     @foreach ($posts as $post)
-        <div>
+        <div wire:key="{{ $post->id }}">
             <h2>{{ $post->title }}</h2>
 
             <button wire:click="remove({{ $post->id }})">Remove</button>
@@ -126,7 +126,7 @@ Consider the following example where a form input named `username` uses `wire:mo
     @error('username') <span>{{ $message }}</span> @enderror
 
     <div wire:loading wire:target="username"> <!-- [tl! highlight:2] -->
-        Checking avilability of username...
+        Checking availability of username...
     </div>
 
     <!-- ... -->

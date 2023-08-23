@@ -2,10 +2,9 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
-use Illuminate\Support\Facades\Hash;
+use Tests\TestComponent;
 use Livewire\Component;
 use Livewire\Livewire;
-use stdClass;
 
 class DataBindingUnitTest extends \Tests\TestCase
 {
@@ -29,6 +28,22 @@ class DataBindingUnitTest extends \Tests\TestCase
         $component->set('foo.bar', 'baz');
 
         $this->assertEquals(['bar', 'bar' => 'baz'], $component->foo);
+    }
+
+    /** @test */
+    public function can_remove_an_array_from_an_array()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $tasks = [
+                [ 'id' => 123 ],
+                [ 'id' => 456 ],
+            ];
+        })
+        // We can simulate Livewire's removing an item from an array
+        // by hardcoding "__rm__"...
+        ->set('tasks.1', '__rm__')
+        ->assertSet('tasks', [['id' => 123]])
+        ;
     }
 }
 

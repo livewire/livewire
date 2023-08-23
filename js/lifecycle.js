@@ -1,5 +1,5 @@
 import { closestComponent, destroyComponent, initComponent } from './store'
-import { initDirectives } from './directives'
+import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './events'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
@@ -27,6 +27,22 @@ export function start() {
 
     Alpine.addRootSelector(() => '[wire\\:id]')
 
+    Alpine.onAttributesAdded((el, attributes) => {
+        let component = closestComponent(el, false)
+
+        if (! component) return
+
+        attributes.forEach(attribute => {
+            if (! matchesForLivewireDirective(attribute.name)) return;
+
+            let directive = extractDirective(el, attribute.name)
+
+            trigger('directive.init', { el, component, directive, cleanup: (callback) => {
+                Alpine.onAttributeRemoved(el, directive.raw, callback)
+            } })
+        })
+    })
+
     Alpine.interceptInit(
         Alpine.skipDuringClone(el => {
             if (el.hasAttribute('wire:id')) {
@@ -40,9 +56,17 @@ export function start() {
             let component = closestComponent(el, false)
 
             if (component) {
-                initDirectives(el, component)
-
                 trigger('element.init', { el, component })
+
+                let directives = Array.from(el.getAttributeNames())
+                    .filter(name => matchesForLivewireDirective(name))
+                    .map(name => extractDirective(el, name))
+
+                directives.forEach(directive => {
+                    trigger('directive.init', { el, component, directive, cleanup: (callback) => {
+                        Alpine.onAttributeRemoved(el, directive.raw, callback)
+                    } })
+                })
             }
         })
     )

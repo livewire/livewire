@@ -60,7 +60,7 @@ class UnitTest extends \Tests\TestCase
 
         $tmpFilename = $component->viewData('photo')->getFilename();
 
-        $component->call('removeUpload', 'photo', $tmpFilename)
+        $component->call('_removeUpload', 'photo', $tmpFilename)
             ->assertDispatched('upload:removed', name: 'photo', tmpFilename: $tmpFilename)
             ->assertSet('photo', null);
     }
@@ -74,7 +74,7 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(FileUploadComponent::class)
             ->set('photo', $file);
 
-        $component->call('removeUpload', 'photo', 'mismatched-filename.png')
+        $component->call('_removeUpload', 'photo', 'mismatched-filename.png')
             ->assertNotDispatched('upload:removed', name: 'photo', tmpFilename: 'mismatched-filename.png')
             ->assertNotSet('photo', null);
 
@@ -91,7 +91,7 @@ class UnitTest extends \Tests\TestCase
 
         $tmpFiles = $component->viewData('photos');
 
-        $component->call('removeUpload', 'photos', $tmpFiles[1]->getFilename())
+        $component->call('_removeUpload', 'photos', $tmpFiles[1]->getFilename())
             ->assertDispatched('upload:removed', name: 'photos', tmpFilename: $tmpFiles[1]->getFilename());
 
         $tmpFiles = $component->call('$refresh')->viewData('photos');
@@ -491,12 +491,7 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function file_paths_cant_include_slashes_which_would_allow_them_to_access_other_private_directories()
     {
-        // Flysystem V2.0+ removed the Util class which throws the LogicException, so this checks for the new class and exception first
-        if (class_exists("League\Flysystem\WhitespacePathNormalizer")) {
-            $this->expectException(PathTraversalDetected::class);
-        } else {
-            $this->expectException(LogicException::class);
-        }
+        $this->expectException(PathTraversalDetected::class);
 
         $file = UploadedFile::fake()->image('avatar.jpg');
 
@@ -742,7 +737,7 @@ class FileUploadComponent extends Component
 
     public function uploadError($name)
     {
-        $this->uploadErrored($name, null, false);
+        $this->_uploadErrored($name, null, false);
     }
 
     public function render() { return app('view')->make('null-view'); }

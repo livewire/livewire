@@ -22,6 +22,7 @@ Livewire components don't use `__construct()` because Livewire components are _r
 Here's an example of using the `mount()` method to initialize the `name` and `email` properties of an `UpdateProfile` component:
 
 ```php
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class UpdateProfile extends Component
@@ -310,42 +311,42 @@ trait HasPostForm
 
     public $content = '';
 
-    public function hasPostFormMount()
+    public function mountHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormHydrate()
+    public function hydrateHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormBoot()
+    public function bootHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormUpdating()
+    public function updatingHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormUpdated()
+    public function updatedHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormRendering()
+    public function renderingHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormRendered()
+    public function renderedHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormDehydrated()
+    public function dehydrateHasPostForm()
     {
         // ...
     }

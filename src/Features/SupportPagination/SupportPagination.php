@@ -2,17 +2,14 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use function Livewire\invade;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\Paginator;
 use Livewire\ComponentHook;
 use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportQueryString\SupportQueryString;
-use Livewire\Features\SupportQueryString\Url;
-
-use function Livewire\invade;
-use function Livewire\on;
-use function Livewire\wrap;
+use Livewire\Features\SupportQueryString\BaseUrl;
 
 class SupportPagination extends ComponentHook
 {
@@ -106,17 +103,21 @@ class SupportPagination extends ComponentHook
         $keep = $queryStringDetails['keep'];
 
         // @todo: make this work...
-        $this->component->setPropertyAttribute($key, new Url(as: $alias, history: $history, keep: $keep));
+        $this->component->setPropertyAttribute($key, new BaseUrl(as: $alias, history: $history, keep: $keep));
     }
 
     protected function paginationView()
     {
-        return 'livewire::' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
+        if (method_exists($this->component, 'paginationView')) {
+            return $this->component->paginationView();
+        }
+
+        return 'livewire::' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 
     protected function paginationSimpleView()
     {
-        return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : 'tailwind');
+        return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 
     protected function getQueryString()

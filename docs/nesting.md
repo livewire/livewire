@@ -47,6 +47,7 @@ For example, let's check out a `TodoList` component that passes a collection of 
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class TodoList extends Component
@@ -68,7 +69,7 @@ class TodoList extends Component
 </div>
 ```
 
-As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos= "$todos"`.
+As you can see, we are passing `$todos` into `todo-count` with the syntax: `:todos="$todos"`.
 
 Now that `$todos` has been passed to the child component, you can receive that data through the child component's `mount()` method:
 
@@ -125,7 +126,7 @@ Boolean values may be provided to components by only specifying the key. For exa
 ```
 
 > [!tip]
-> If the name of the the property and variable you are passing into the child component match, you can use the following shorter, alternative syntax:
+> If the name of the property and variable you are passing into the child component match, you can use the following shorter, alternative syntax:
 >
 > ```blade
 > <livewire:todo-count :todos="$todos" /> <!-- [tl! remove] -->
@@ -146,7 +147,7 @@ You can specify the component's key by specifying a `:key` prop on the child com
     <h1>Todos</h1>
 
     @foreach ($todos as $todo)
-        <livewire:todo-item :todo="$todo" :key="$todo->id" />
+        <livewire:todo-item :$todo :key="$todo->id" />
     @endforeach
 </div>
 ```
@@ -226,6 +227,7 @@ Below is an example of a parent `TodoList` component that contains a `$todo` pro
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -279,6 +281,7 @@ Below is the `TodoInput` component with the `#[Modelable]` attribute added above
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Modelable;
 
 class TodoInput extends Component
 {
@@ -300,6 +303,10 @@ class TodoInput extends Component
 
 Now the parent `TodoList` component can treat `TodoInput` like any other input element and bind directly to its value using `wire:model`.
 
+> [!warning]
+> Currently Livewire only support a single `#[Modelable]` attribute, only the first one will be bound.
+
+
 ## Listening for events from children
 
 Another powerful parent-child component communication technique is Livewire's event system, which allows you to dispatch an event on the server or client that can be intercepted by other components.
@@ -313,6 +320,7 @@ Consider a `TodoList` component with functionality to show and remove todos:
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -322,7 +330,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
@@ -351,6 +359,7 @@ To call `remove()` from inside the child `TodoItem` components, you can add an e
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
 
@@ -361,7 +370,7 @@ class TodoList extends Component
     {
         $todo = Todo::find($todoId);
 
-        $this->authorize('update', $todo);
+        $this->authorize('delete', $todo);
 
         $todo->delete();
     }
@@ -518,7 +527,7 @@ class Steps extends Component
 </div>
 ```
 
-Now, if the `Steps` component's `$current` prop is set to "step-1", Livewire will render a component named "step-one" like so:
+Now, if the `Steps` component's `$current` prop is set to "step-one", Livewire will render a component named "step-one" like so:
 
 ```php
 <?php
@@ -568,7 +577,7 @@ class SurveyQuestion extends Component
     Question: {{ $question->content }}
 
     @foreach ($subQuestions as $subQuestion)
-        <livewire:survey-question :question="$subQuestion" />
+        <livewire:survey-question :question="$subQuestion" :key="$subQuestion->id" />
     @endforeach
 </div>
 ```
@@ -584,7 +593,7 @@ For example, consider the following nested `todo-count` component:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" />
+    <livewire:todo-count :$todos />
 </div>
 ```
 
@@ -592,7 +601,7 @@ Livewire internally attaches a random string key to the component like so:
 
 ```blade
 <div>
-    <livewire:todo-count :todos="$todos" key="lska" />
+    <livewire:todo-count :$todos key="lska" />
 </div>
 ```
 

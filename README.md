@@ -1,63 +1,41 @@
+<p align="center"><img width="300" src="/art/readme_logo.png" alt="Livewire Logo"></p>
 
-## Big Laracon goals:
-- [ ] New site ready
-- [ ] Livewire 3 beta "good enough"
-- [ ] Talk as good and polished as possible
-- [x] Have cool swag
+<p align="center">
+    <a href="https://packagist.org/packages/livewire/livewire">
+        <img src="https://poser.pugx.org/livewire/livewire/d/total.svg" alt="Total Downloads">
+    </a>
+    <a href="https://packagist.org/packages/livewire/livewire">
+        <img src="https://poser.pugx.org/livewire/livewire/v/stable.svg" alt="Latest Stable Version">
+    </a>
+    <a href="https://packagist.org/packages/livewire/livewire">
+        <img src="https://poser.pugx.org/livewire/livewire/license.svg" alt="License">
+    </a>
+</p>
 
-## Todo:
-- [x] Get testimonials
-- [x] Write advanced documentation
-- [x] Polish config file
-- [x] Resolve "PSR-4" not compliant artisan messages
-- [x] Support `->assertStatus()`
-- [x] Write morphing documentation
-- [x] Rethink Alpine bundling and JS extension/upgrade path
-- [x] Detect multiple root elements
-- [x] Finish upgrade guide
-- [x] Review advanced documentation
-- [ ] Write and practice talk
-- [ ] Finish landing page copy
-- [x] Fix bug where submit form disabling isn't re-enabled on failure
-- [ ] Build v3 launch command/experience
-- [ ] Put old site on new URL: 'v2.laravel-livewire.com'
-- [ ] Add proper old site redirects
-- [ ] Add "livewire 3 beta is available" banner to v2 site
-- [ ] Add relevant docblocks
-- [ ] Work through `@todo` comments
-- [ ] Work through `->markTestSkipped()` statements
-- [ ] Brainstorm providing key-value attribute methods (protected getListeners() kinda thing)
+## Introduction
 
-## Pre-release notes
+Livewire is a full-stack framework for Laravel that allows you to build dynamic UI components without leaving PHP.
 
-* Tagged version will be: v3.0.0-beta.1
-* Composer commands:
-    * `composer require livewire/livewire:3.0.0-beta.1`
-    * `composer require livewire/livewire:^3.0@beta`
-* Launch strategy
-    * Landing page
-        * Using SSH unrestrict the docs site
-    * V3 on composer
-        * Backup `master` branch in case I eff something up (actually do this so that we have a branch to track future v2 patches...)
-        * Make livewire/next public? (might not need to)
-        * `git checkout master`
-        * `git remote add next git@github.com:livewire/next.git`
-        * `git pull next master --allow-unrelated-histories`
-        * `git checkout --theirs .`
-        * `git add .`
-        * `git commit -m "Merge v3 from 'next' repo, resolved in favor of 'next'"`
-        * `git push origin master`
-        * `git tag v3.0.0-beta.1`
-        * `git push origin v3.0.0-beta.1`
-    * Make this all a single command? call it?
-        * `artisan livewire:launch`
-            * Display: doing git stuff...
-            * Display: tagging beta...
-            * Display: publishing to composer
-            * Display: making docs site public...
-            * Display: That's all folks!
-        * Something more creative?
-            * A web gui?
-            * A crowd yelling trigger?
-            * something else?
+## Official Documentation
 
+You can read the official documentation on the [Livewire website](https://livewire.laravel.com/docs).
+
+## Contributing
+<a name="contributing"></a>
+
+Thank you for considering contributing to Livewire! You can read the contribution guide [here](.github/CONTRIBUTING.md).
+
+## Code of Conduct
+<a name="code-of-conduct"></a>
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by Laravel's [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+<a name="security-vulnerabilities"></a>
+
+Please review [our security policy](https://github.com/livewire/livewire/security/policy) on how to report security vulnerabilities.
+
+## License
+<a name="license"></a>
+
+Livewire is open-sourced software licensed under the [MIT license](LICENSE.md).

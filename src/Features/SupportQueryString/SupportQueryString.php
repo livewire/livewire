@@ -2,12 +2,7 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use function Livewire\on;
-use function Livewire\before;
 use function Livewire\invade;
-
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
-use Illuminate\Support\Arr;
 use Livewire\ComponentHook;
 
 class SupportQueryString extends ComponentHook
@@ -25,9 +20,9 @@ class SupportQueryString extends ComponentHook
             $key = is_string($key) ? $key : $value;
             $alias = $value['as'] ?? $key;
             $history = $value['history'] ?? true;
-            $keep = $value['keep'] ?? false;
+            $keep = $value['alwaysShow'] ?? $value['keep'] ?? false;
 
-            $this->component->setPropertyAttribute($key, new Url(as: $alias, history: $history, keep: $keep));
+            $this->component->setPropertyAttribute($key, new BaseUrl(as: $alias, history: $history, keep: $keep));
         }
     }
 

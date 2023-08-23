@@ -4,7 +4,6 @@ namespace Livewire;
 
 use ReflectionClass;
 use Illuminate\Support\Str;
-use Livewire\Drawer\ImplicitlyBoundMethod;
 
 function str($string = null)
 {
@@ -59,6 +58,19 @@ function invade($obj)
 
             return $method->invoke($this->obj, ...$params);
         }
+    };
+}
+
+function once($fn)
+{
+    $hasRun = false;
+
+    return function (...$params) use ($fn, &$hasRun) {
+        if ($hasRun) return;
+
+        $hasRun = true;
+
+        return $fn(...$params);
     };
 }
 

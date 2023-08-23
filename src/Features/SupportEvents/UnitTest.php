@@ -13,7 +13,7 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(new class extends Component {
             public $foo = 'bar';
 
-            #[On('bar')]
+            #[BaseOn('bar')]
             public function onBar($param)
             {
                 $this->foo = $param;
@@ -35,7 +35,7 @@ class UnitTest extends \Tests\TestCase
 
             public $foo = 'bar';
 
-            #[On('bar.{post.id}')]
+            #[BaseOn('bar.{post.id}')]
             public function onBar($param)
             {
                 $this->foo = $param;
@@ -55,7 +55,7 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(new class extends Component {
             public $foo = 'bar';
 
-            #[On('bar')]
+            #[BaseOn('bar')]
             public function onBar($name, $game)
             {
                 $this->foo = $name . $game;
@@ -88,6 +88,46 @@ class UnitTest extends \Tests\TestCase
             ->assertNotDispatched('foo', games: 'baz')
             ->assertNotDispatched('foo', name: 'baz')
         ;
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_attribute(): void
+    {
+        Livewire::test(new class extends Component {
+            public $counter = 0;
+
+            #[BaseOn('foo'), BaseOn('bar')]
+            public function add(): void
+            {
+                $this->counter++;
+            }
+
+            public function render() { return '<div></div>'; }
+        })
+            ->dispatch('foo')
+            ->assertSet('counter', 1)
+            ->dispatch('bar')
+            ->assertSet('counter', 2);
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_attribute_userland(): void
+    {
+        Livewire::test(new class extends Component {
+            public $counter = 0;
+
+            #[\Livewire\Attributes\On('foo'), \Livewire\Attributes\On('bar')]
+            public function add(): void
+            {
+                $this->counter++;
+            }
+
+            public function render() { return '<div></div>'; }
+        })
+            ->dispatch('foo')
+            ->assertSet('counter', 1)
+            ->dispatch('bar')
+            ->assertSet('counter', 2);
     }
 
     /** @test */

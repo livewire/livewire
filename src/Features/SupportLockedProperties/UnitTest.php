@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportLockedProperties;
 
 use Livewire\Livewire;
 use Livewire\Component;
-use ReflectionObject;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -16,7 +15,7 @@ class UnitTest extends \Tests\TestCase
         );
 
         Livewire::test(new class extends Component {
-            #[Locked]
+            #[BaseLocked]
             public $count = 1;
 
             function increment() { $this->count++; }

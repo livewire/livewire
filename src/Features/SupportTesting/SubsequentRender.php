@@ -39,7 +39,21 @@ class SubsequentRender extends Render
 
         app('livewire')->flushState();
 
+        if (! $response->isOk()) {
+            return new ComponentState(
+                $componentInstance,
+                $response,
+                null,
+                '',
+                [],
+                [],
+            );
+        }
+
         $json = $response->json();
+
+        // Set "original" to Blade view for assertions like "assertViewIs()"...
+        $response->original = $componentView;
 
         $componentResponsePayload = $json['components'][0];
 

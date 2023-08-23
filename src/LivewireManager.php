@@ -2,9 +2,6 @@
 
 namespace Livewire;
 
-use function Livewire\trigger;
-use Orchestra\DuskUpdater\UpdateCommand;
-use Livewire\Mechanisms\RenderComponent;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
@@ -15,8 +12,6 @@ use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
-use Livewire\ComponentHookRegistry;
-use Livewire\ComponentHook;
 
 class LivewireManager
 {
@@ -60,6 +55,11 @@ class LivewireManager
     function new($name, $id = null)
     {
         return app(ComponentRegistry::class)->new($name, $id);
+    }
+
+    function isDiscoverable($componentNameOrClass)
+    {
+        return app(ComponentRegistry::class)->isDiscoverable($componentNameOrClass);
     }
 
     function resolveMissingComponent($resolver)
@@ -113,6 +113,11 @@ class LivewireManager
         return SupportAutoInjectedAssets::$hasRenderedAComponentThisRequest;
     }
 
+    function forceAssetInjection()
+    {
+        SupportAutoInjectedAssets::$forceAssetInjection = true;
+    }
+
     function setUpdateRoute($callback)
     {
         return app(HandleRequests::class)->setUpdateRoute($callback);
@@ -134,6 +139,11 @@ class LivewireManager
     }
 
     protected $queryParamsForTesting = [];
+
+    function withUrlParams($params)
+    {
+        return $this->withQueryParams($params);
+    }
 
     function withQueryParams($params)
     {

@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportJsEvaluation;
 
-use Illuminate\Database\Eloquent\Model;
-use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -15,7 +13,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends \Livewire\Component {
                 public $show = false;
 
-                #[Js]
+                #[BaseJs]
                 function toggle()
                 {
                     return <<<'JS'
@@ -33,12 +31,13 @@ class BrowserTest extends \Tests\BrowserTestCase
                 </div>
                 HTML; }
         })
+        ->waitUntilMissingText('Toggle Me!')
         ->assertDontSee('Toggle Me!')
         ->click('@toggle')
-        ->pause(100)
+        ->waitForText('Toggle Me!')
         ->assertSee('Toggle Me!')
         ->click('@toggle')
-        ->pause(100)
+        ->waitUntilMissingText('Toggle Me!')
         ->assertDontSee('Toggle Me!')
         ;
     }

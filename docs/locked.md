@@ -1,8 +1,8 @@
-Livewire properties are able to modified freely on both the frontend and backend using utilities like `wire:model`. If you want to prevent a property—like a model ID—from being modified on the frontend, you can use Livewire's `#[Locked]` attribute.
+Livewire properties are able to be modified freely on both the frontend and backend using utilities like `wire:model`. If you want to prevent a property — like a model ID — from being modified on the frontend, you can use Livewire's `#[Locked]` attribute.
 
 ## Basic usage
 
-Below is a `ShowPost` component that stores a post model's ID as a public property named `$id`. To keep this property from being modified by a curious or malicious user, you can add the `#[Locked]` attribute to the property:
+Below is a `ShowPost` component that stores a `Post` model's ID as a public property named `$id`. To keep this property from being modified by a curious or malicious user, you can add the `#[Locked]` attribute to the property:
 
 ```php
 use Livewire\Attributes\Locked;
@@ -25,7 +25,7 @@ class ShowPost extends Component
 By adding the `#[Locked]` attribute, you are ensured that the `$id` property will never be tampered with.
 
 > [!tip] Model properties are secure by default
-> If you store an Eloquent model in public property instead of just the model's ID, Livewire will ensure the ID isn't tampered with without you needing to explicitly add the `#[Locked]` attribute to the property. For most cases, this is a better approach than using `#[Locked]`:
+> If you store an Eloquent model in a public property instead of just the model's ID, Livewire will ensure the ID isn't tampered with, without you needing to explicitly add the `#[Locked]` attribute to the property. For most cases, this is a better approach than using `#[Locked]`:
 > ```php
 > class ShowPost extends Component
 > {
@@ -42,7 +42,7 @@ By adding the `#[Locked]` attribute, you are ensured that the `$id` property wil
 
 ### Why not use protected properties?
 
-You might ask yourself: why not just protected properties for sensitive data?
+You might ask yourself: why not just use protected properties for sensitive data?
 
 Remember, Livewire only persists public properties between network requests. For static, hard-coded data, protected properties are suitable. However, for data that is stored at runtime, you must use a public property to ensure that the data is persisted properly.
 

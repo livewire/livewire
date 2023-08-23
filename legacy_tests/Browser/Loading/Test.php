@@ -34,6 +34,7 @@ class Test extends TestCase
                     $browser->assertNotVisible('@targeting');
                     $browser->assertNotVisible('@targeting-both');
                     $browser->assertNotVisible('@targeting-param');
+                    $browser->assertNotVisible('@targeting-js-param');
                     $browser->assertClassMissing('@self-target-button', 'foo');
                 })
                 ->tap($this->assertInitialState())
@@ -67,7 +68,17 @@ class Test extends TestCase
                     $browser->waitFor('@targeting');
                     $browser->assertVisible('@targeting-both');
                     $browser->assertVisible('@targeting-param');
+                    $browser->assertVisible('@targeting-js-param');
                     $browser->assertNotVisible('@target-top-level-property');
+                })
+                ->tap($this->assertInitialState())
+                ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@target-button-w-js-object-param');
+
+                    $browser->waitFor('@targeting');
+                    $browser->assertVisible('@targeting-both');
+                    $browser->assertVisible('@targeting-js-object-param');
+                    $browser->assertNotVisible('@targeting-js-wrong-object-param');
                 })
                 ->tap($this->assertInitialState())
                 ->waitForLivewire(function (Browser $browser) {
@@ -210,6 +221,9 @@ class Test extends TestCase
             $browser->assertNotVisible('@targeting');
             $browser->assertNotVisible('@targeting-both');
             $browser->assertNotVisible('@targeting-param');
+            $browser->assertNotVisible('@targeting-js-param');
+            $browser->assertNotVisible('@targeting-js-object-param');
+            $browser->assertNotVisible('@targeting-js-wrong-object-param');
 
             $browser->assertClassMissing('@self-target-button', 'foo');
             $browser->assertClassMissing('@self-target-model', 'foo');

@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms\ExtendBlade;
 
 use Illuminate\Support\Facades\Blade;
-
 use function Livewire\invade;
 use function Livewire\on;
 

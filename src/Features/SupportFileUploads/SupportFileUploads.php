@@ -3,11 +3,7 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use function Livewire\on;
-
-use Livewire\Mechanisms\HandleComponents\Synthesizers\LivewireSynth;
-use Livewire\Features\SupportFileUploads\MissingFileUploadsTraitException;
 use Livewire\ComponentHook;
-use Livewire\Component;
 use Illuminate\Support\Facades\Route;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl as GenerateSignedUploadUrlFacade;
 
@@ -28,7 +24,7 @@ class SupportFileUploads extends ComponentHook
         ]);
 
         on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
-            if ($method === 'startUpload') {
+            if ($method === '_startUpload') {
                 if (! method_exists($component, $method)) {
                     throw new MissingFileUploadsTraitException($component);
                 }

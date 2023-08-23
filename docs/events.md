@@ -36,6 +36,7 @@ To listen for an event in a Livewire component, add the `#[On]` attribute above 
 
 ```php
 use Livewire\Component;
+use Livewire\Attributes\On; // [tl! highlight]
 
 class Dashboard extends Component
 {
@@ -47,7 +48,7 @@ class Dashboard extends Component
 }
 ```
 
-Now, when the `post-created` event is dispatched from `CreatePost`, a network request will be triggered and the `notifyAboutNewPost()` action will be invoked.
+Now, when the `post-created` event is dispatched from `CreatePost`, a network request will be triggered and the `updatePostList()` action will be invoked.
 
 As you can see, additional data sent with the event will be provided to the action as its first argument.
 
@@ -60,6 +61,7 @@ For example, if you wanted to scope an event listener to a specific Eloquent mod
 ```php
 use Livewire\Component;
 use App\Models\Post;
+use Livewire\Attributes\On; // [tl! highlight]
 
 class ShowPost extends Component
 {
@@ -87,7 +89,7 @@ For example, we may easily listen for the `post-created` event using Alpine:
 <div x-on:post-created="..."></div>
 ```
 
-The above snippet would listen for for the `post-created` event from any Livewire components that are children of the HTML element that the `x-on` directive is assigned to.
+The above snippet would listen for the `post-created` event from any Livewire components that are children of the HTML element that the `x-on` directive is assigned to.
 
 To listen for the event from any Livewire component on the page, you can add `.window` to the listener:
 
@@ -120,29 +122,6 @@ Like Livewire's `dispatch()` method, you can pass additional data along with the
 ```
 
 To learn more about dispatching events using Alpine, consult the [Alpine documentation](https://alpinejs.dev/magics/dispatch).
-
-### Listening for events from children only
-
-By default, when you register a Livewire event listener using `#[On]`, it will listen for that event anywhere on the page. Livewire does this by listening for the event on the `window` object.
-
-But, sometimes you may want to scope an event listener to only listen for events from child components rendered within the listening component.
-
-To accomplish this, you may provide the `fromChildren` argument to `#[On]`:
-
-```php
-use Livewire\Component;
-
-class Dashboard extends Component
-{
-	#[On('post-created', fromChildren: true)] // [tl! highlight]
-    public function updatePostCount()
-    {
-		// ...
-    }
-}
-```
-
-Now, the `updatePostCount()` method will only be triggered when a child component dispatches a `post-created` event.
 
 > [!tip] You might not need events
 > If you are using events to call behavior on a parent from a child, you can instead call the action directly from the child using `$parent` in your Blade template. For example:
@@ -201,11 +180,21 @@ You can dispatch events directly from your Blade templates using the `$dispatch`
 </button>
 ```
 
-In this example, when the button is clicked, the `show-post-modal` event will be emitted with the specified data.
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched with the specified data.
+
+If you want to dispatch an event directly to another component you can use the `$dispatchTo()` JavaScript function:
+
+```blade
+<button wire:click="$dispatchTo('posts', 'show-post-modal', { id: {{ $post->id }} })">
+    EditPost
+</button>
+```
+
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched directly to the `Posts` component.
 
 ## Testing dispatched events
 
-To test events emitted by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
+To test events dispatched by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
 
 ```php
 <?php
@@ -234,7 +223,7 @@ In this example, the test ensures that the `post-created` event is dispatched wi
 
 ### Testing Event Listeners
 
-To test event listeners, you can emit events from the test environment and assert that the expected actions are performed in response to the event:
+To test event listeners, you can dispatch events from the test environment and assert that the expected actions are performed in response to the event:
 
 ```php
 <?php
@@ -323,7 +312,7 @@ Below is an example of an `OrderTracker` component that is listening for the `Or
 
 namespace App\Livewire;
 
-use Livewire\Attributes\On;
+use Livewire\Attributes\On; // [tl! highlight]
 use Livewire\Component;
 
 class OrderTracker extends Component
@@ -340,14 +329,14 @@ class OrderTracker extends Component
 }
 ```
 
-If you have Echo channels with variables embedded in them (such as a Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
+If you have Echo channels with variables embedded in them (such as an Order ID), you can define listeners via the `getListeners()` method instead of the `#[On]` attribute:
 
 ```php
 <?php
 
 namespace App\Livewire;
 
-use Livewire\Attributes\On;
+use Livewire\Attributes\On; // [tl! highlight]
 use Livewire\Component;
 use App\Models\Order;
 
@@ -364,13 +353,34 @@ class OrderTracker extends Component
         ];
     }
 
-    #[On('echo:orders,OrderShipped')]
     public function notifyShipped()
     {
         $this->showOrderShippedNotification = true;
     }
 
     // ...
+}
+```
+
+Or, if you prefer, you can use the dynamic event name syntax:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder()
+{
+    $this->showNewOrderNotification = true;
+}
+```
+
+If you need to access the event payload, you can do so via the passed in `$event` parameter:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder($event)
+{
+    $order = Order::find($event['orderId']);
+
+    //
 }
 ```
 
@@ -386,7 +396,6 @@ You may also listen to events broadcast to private and presence channels:
 
 namespace App\Livewire;
 
-use Livewire\Attributes\On;
 use Livewire\Component;
 
 class OrderTracker extends Component

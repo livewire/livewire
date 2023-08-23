@@ -1,0 +1,57 @@
+body:
+  - type: input
+    id: livewire-version
+    attributes:
+      label: Livewire version
+      description: Which version of Livewire are you using? (e.g. v2.12.3)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: php-version
+    attributes:
+      label: Which PHP version are you using?
+      options:
+        - PHP 8.2
+        - PHP 8.1
+        - PHP 8.0
+        - PHP 7.4
+        - PHP 7.3
+        - PHP 7.2
+        - PHP 7.1
+    validations:
+      required: true
+
+  - type: input
+    id: example-repository
+    attributes:
+      label: Repository URL
+      description: Get your bugs resolved quicker by providing a demo repository.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Steps To Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1.
+        2.
+        3.
+
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: |
+        Links? References? Anything that will give us more context about the issue you are encountering! When providing code snippets, please provide the actual code that is easy to replicate and don't use code screenshots.
+
+  - type: checkboxes
+    attributes:
+      label: Please confirm (incomplete submissions will not be addressed)
+      options:
+        - label: I have provided easy and step-by-step instructions to reproduce the bug.
+          required: true
+        - label: I have provided code samples as text and NOT images.
+          required: true
+        - label: I understand my bug report will be removed if I haven't met the criteria above.
+          required: true

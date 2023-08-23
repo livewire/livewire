@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Support\Facades\URL;
-use League\Flysystem\Cached\CachedAdapter;
 
 use function Livewire\invade;
 
@@ -21,29 +20,13 @@ class GenerateSignedUploadUrl
         $driver = FileUploadConfiguration::storage()->getDriver();
 
         // Flysystem V2+ doesn't allow direct access to adapter, so we need to invade instead.
-        if (method_exists($driver, 'getAdapter')) {
-            $adapter = $driver->getAdapter();
-        } else {
-            $adapter = invade($driver)->adapter;
-        }
-
-        if ($adapter instanceof CachedAdapter) {
-            $adapter = $adapter->getAdapter();
-        }
+        $adapter = invade($driver)->adapter;
 
         // Flysystem V2+ doesn't allow direct access to client, so we need to invade instead.
-        if (method_exists($adapter, 'getClient')) {
-            $client = $adapter->getClient();
-        } else {
-            $client = invade($adapter)->client;
-        }
+        $client = invade($adapter)->client;
 
         // Flysystem V2+ doesn't allow direct access to bucket, so we need to invade instead.
-        if (method_exists($adapter, 'getBucket')) {
-            $bucket = $adapter->getBucket();
-        } else {
-            $bucket = invade($adapter)->bucket;
-        }
+        $bucket = invade($adapter)->bucket;
 
         $fileType = $file->getMimeType();
         $fileHashName = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);

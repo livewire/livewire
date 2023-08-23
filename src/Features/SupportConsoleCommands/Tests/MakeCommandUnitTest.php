@@ -37,6 +37,22 @@ class MakeCommandUnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function component_pest_test_is_created_by_make_command_with_pest_option()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo', '--pest' => true]);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireTestsPath('FooTest.php')));
+
+        $file = File::get($this->livewireTestsPath('FooTest.php'));
+
+        $this->assertStringContainsString('use App\Livewire\Foo;', $file);
+        $this->assertStringContainsString('use Livewire\Livewire;', $file);
+        $this->assertStringContainsString('it(\'renders successfully\', function () {', $file);
+    }
+
+    /** @test */
     public function component_is_created_by_livewire_make_command()
     {
         Artisan::call('livewire:make', ['name' => 'foo', '--test' => true]);

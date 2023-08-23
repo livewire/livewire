@@ -2,13 +2,21 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-use Illuminate\Support\Stringable as SupportStringable;
-
 class EnumSynth extends Synth {
     public static $key = 'enm';
 
     static function match($target) {
         return is_object($target) && is_subclass_of($target, 'BackedEnum');
+    }
+
+    static function matchByType($type) {
+        return is_subclass_of($type, 'BackedEnum');
+    }
+
+    static function hydrateFromType($type, $value) {
+        if ($value === '') return null;
+
+        return $type::from($value);
     }
 
     function dehydrate($target) {
@@ -19,6 +27,8 @@ class EnumSynth extends Synth {
     }
 
     function hydrate($value, $meta) {
+        if ($value === null) return null;
+
         $class = $meta['class'];
 
         return $class::from($value);

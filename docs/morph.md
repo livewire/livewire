@@ -1,9 +1,9 @@
 
-When a Livewire component update's the browser's DOM, it does so in an intelligent way we call "morphing". The term _morph_ is in contrast with a word like _replace_.
+When a Livewire component updates the browser's DOM, it does so in an intelligent way we call "morphing". The term _morph_ is in contrast with a word like _replace_.
 
 Instead of _replacing_ a component's HTML with newly rendered HTML every time a component is updated, Livewire dynamically compares the current HTML with the new HTML, identifies differences, and makes surgical changes to the HTML only in the places where changes are needed.
 
-This has the benefit of preserving existing, un-changed elements, on a component. For example, event listeners, focus state, and form input values are all preserved between Livewire updates. Not to mention the performance benefits of replacing small portions of the DOM rather than wiping and re-rending new DOM on every update.
+This has the benefit of preserving existing, un-changed elements on a component. For example, event listeners, focus state, and form input values are all preserved between Livewire updates. Of course, morphing also offers increased performance compared to wiping and re-rending new DOM on every update.
 
 ## How morphing works
 
@@ -68,7 +68,7 @@ Now, imagine you typed "third" into the input field and pressed the `[Enter]` ke
 </form>
 ```
 
-When Livewire process the component update, it _morphs_ the original DOM into the newly rendered HTML. The following visualization should intuitively give you an understanding of how it works:
+When Livewire processes the component update, it _morphs_ the original DOM into the newly rendered HTML. The following visualization should intuitively give you an understanding of how it works:
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/844600772?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="morph_basic"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
 
@@ -88,8 +88,8 @@ Consider the following Livewire Blade template for a fictitious `CreatePost` com
         <input wire:model="title">
     </div>
 
-    @if (@error('title'))
-        <div>{{ $message }}</div>
+    @if ($errors->has('title'))
+        <div>{{ $errors->first('title') }}</div>
     @endif
 
     <div>
@@ -102,7 +102,7 @@ If a user tries submitting the form, but encounters a validation error, the foll
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/844600840?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="morph_problem"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
 
-As you can see, when Livewire encounters the new `<div>` for the error message, it doesn't know weather to change the existing `<div>` in-place, or insert the new `<div>` in the middle.
+As you can see, when Livewire encounters the new `<div>` for the error message, it doesn't know whether to change the existing `<div>` in-place, or insert the new `<div>` in the middle.
 
 To re-iterate what's happening more explicitly:
 
@@ -125,7 +125,7 @@ Fortunately, Livewire has worked hard to mitigate these problems using the follo
 
 Livewire has an additional step in its morphing algorithm that checks subsequent elements and their contents before changing an element.
 
-The prevents the above scenario from happening in many cases.
+This prevents the above scenario from happening in many cases.
 
 Here is a visualization of the "look-ahead" algorithm in action:
 
@@ -133,7 +133,7 @@ Here is a visualization of the "look-ahead" algorithm in action:
 
 ### Injecting morph markers
 
-On the backend, Livewire automatically detects conditional inside Blade templates and wraps them in markers that Livewire's JavaScript can use as a guide when morphing.
+On the backend, Livewire automatically detects conditionals inside Blade templates and wraps them in markers that Livewire's JavaScript can use as a guide when morphing.
 
 Here's an example of the previous Blade template but with Livewire's injected markers:
 
@@ -144,10 +144,10 @@ Here's an example of the previous Blade template but with Livewire's injected ma
     </div>
 
     <!-- __BLOCK__ --> <!-- [tl! highlight] -->
-    @if (@error('title'))
-        <div>Error: {{ $message }}</div>
+    @if ($errors->has('title'))
+        <div>Error: {{ $errors->first('title') }}</div>
     @endif
-    <!-- ENDBLOCK --> <!-- [tl! highlight] -->
+    <!-- __ENDBLOCK__ --> <!-- [tl! highlight] -->
 
     <div>
         <button>Save</button>
@@ -157,7 +157,7 @@ Here's an example of the previous Blade template but with Livewire's injected ma
 
 With these markers injected into the template, Livewire can now more easily detect the difference between a change and an addition.
 
-This feature is extremely beneficial to Livewire applications, but because it requires parsing templates via regex, it can sometimes fail to properly detect conditionals. If this feature is more of a hindrance than a help to your application, you can disable it with the following configuration in `config/livewire.php`:
+This feature is extremely beneficial to Livewire applications, but because it requires parsing templates via regex, it can sometimes fail to properly detect conditionals. If this feature is more of a hindrance than a help to your application, you can disable it with the following configuration in your application's `config/livewire.php` file:
 
 ```php
 'inject_morph_markers' => false,
@@ -167,7 +167,7 @@ This feature is extremely beneficial to Livewire applications, but because it re
 
 If the above two solutions don't cover your situation, the most reliable way to avoid morphing problems is to wrap conditionals and loops in their own elements that are always present.
 
-For example, here's the above Blade template rewritten with wrapping `<div>`s:
+For example, here's the above Blade template rewritten with wrapping `<div>` elements:
 
 ```blade
 <form wire:submit="save">
@@ -176,8 +176,8 @@ For example, here's the above Blade template rewritten with wrapping `<div>`s:
     </div>
 
     <div> <!-- [tl! highlight] -->
-        @if (@error('title'))
-            <div>{{ $message }}</div>
+        @if ($errors->has('title'))
+            <div>{{ $errors->first('title') }}</div>
         @endif
     </div> <!-- [tl! highlight] -->
 

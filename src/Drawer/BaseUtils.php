@@ -21,7 +21,7 @@ class BaseUtils
     }
 
     static function getPublicPropertiesDefinedOnSubclass($target) {
-        return static::getPublicProperties($target, function ($property) use ($target) {
+        return static::getPublicProperties($target, function ($property) {
             // Filter out any properties from the first-party Component class...
             return $property->getDeclaringClass()->getName() !== \Livewire\Component::class;
         });
@@ -40,7 +40,7 @@ class BaseUtils
                 if (method_exists($property, 'isInitialized') && !$property->isInitialized($target)) {
                     // If a type of `array` is given with no value, let's assume users want
                     // it prefilled with an empty array...
-                    $value = (method_exists($property->getType(), 'getName') && $property->getType()->getName() === 'array')
+                    $value = (method_exists($property, 'getType') && $property->getType() && method_exists($property->getType(), 'getName') && $property->getType()->getName() === 'array')
                         ? [] : null;
                 } else {
                     $value = $property->getValue($target);
@@ -53,7 +53,7 @@ class BaseUtils
 
     static function getPublicMethodsDefinedBySubClass($target)
     {
-        $methods = array_filter((new \ReflectionObject($target))->getMethods(), function ($method) use ($target) {
+        $methods = array_filter((new \ReflectionObject($target))->getMethods(), function ($method) {
             $isInBaseComponentClass = $method->getDeclaringClass()->getName() === \Livewire\Component::class;
 
             return $method->isPublic()
@@ -82,42 +82,15 @@ class BaseUtils
         return (new ReflectionClass($target))->getProperty($property);
     }
 
-    static function propertyHasAnnotation($target, $property, $annotation) {
-        foreach (static::getAnnotations($target) as $prop => $annotations) {
-            if ($prop === $property && array_key_exists($annotation, $annotations)) {
-                return true;
-            }
-        }
+    static function propertyIsTyped($target, $property) {
+        $property = static::getProperty($target, $property);
 
-        return false;
+        return $property->hasType();
     }
 
-    static function getAnnotations($target) {
-        if (! is_object($target)) return [];
+    static function propertyIsTypedAndUninitialized($target, $property) {
+        $property = static::getProperty($target, $property);
 
-        return collect()
-            ->concat((new \ReflectionClass($target))->getProperties())
-            ->concat((new \ReflectionClass($target))->getMethods())
-            ->filter(function ($subject) use ($target) {
-                if ($subject->class !== get_class($target)) return false;
-                if ($subject->getDocComment() === false) return false;
-                return true;
-            })
-            ->mapWithKeys(function ($subject) {
-                return [$subject->getName() => static::parseAnnotations($subject->getDocComment())];
-            })->toArray();
-    }
-
-    static function parseAnnotations($raw) {
-        return str($raw)
-            ->matchAll('/\@([^\*]+)/')
-            ->mapWithKeys(function ($line) {
-                $segments = explode(' ', trim($line));
-
-                $annotation = array_shift($segments);
-
-                return [$annotation => $segments];
-            })
-            ->toArray();
+        return $property->hasType() && (! $property->isInitialized($target));
     }
 }

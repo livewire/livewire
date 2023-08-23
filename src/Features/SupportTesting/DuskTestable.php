@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Dusk\Browser;
 use function Livewire\{ invade, on };
 use Illuminate\Support\Arr;
 use Tests\TestCase;
@@ -44,13 +45,16 @@ class DuskTestable
             static::$currentTestCase = null;
         });
 
-        if (isset($_SERVER['CI'])) {
+        if (isset($_SERVER['CI']) && class_exists(\Orchestra\Testbench\Dusk\Options::class)) {
             \Orchestra\Testbench\Dusk\Options::withoutUI();
         }
 
-        \Laravel\Dusk\Browser::mixin(new \Tests\DuskBrowserMacros);
+        \Laravel\Dusk\Browser::mixin(new DuskBrowserMacros);
     }
 
+    /**
+     * @return Browser
+     */
     static function create($components, $params = [], $queryParams = [])
     {
         if (static::$shortCircuitCreateCall) {

@@ -191,7 +191,7 @@ class UnitTest extends \Tests\TestCase
 
         Route::get('/foo', ComponentWithCustomSection::class);
 
-        $this->get('/foo')->assertSee('baz');
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
     /** @test */
@@ -298,10 +298,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function route_supports_laravels_missing_fallback_function(): void
     {
-        if (! method_exists(\Illuminate\Routing\Route::class, 'missing')) {
-            $this->markTestSkipped('Need Laravel >= 8');
-        }
-
         Route::get('awesome-js/{framework}', ComponentWithModel::class)
              ->missing(function (Request $request) {
                  $this->assertEquals(request(), $request);
@@ -380,6 +376,45 @@ class UnitTest extends \Tests\TestCase
             ->get('/configurable-layout')
             ->assertSee('bob')
             ->assertSee('some-title');
+    }
+
+    /** @test */
+    public function can_use_layout_slots_in_full_page_components()
+    {
+        Route::get('/configurable-layout', ComponentWithMultipleLayoutSlots::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertDontSeeText('No Header')
+            ->assertDontSeeText('No Footer')
+            ->assertSee('I am a header - foo')
+            ->assertSee('Hello World')
+            ->assertSee('I am a footer - foo');
+    }
+
+    /** @test */
+    public function can_configure_title_in_render_method_and_layout_using_layout_attribute()
+    {
+        Route::get('/configurable-layout', ComponentWithClassBasedComponentTitleAndLayoutAttribute::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertSee('some-title');
+    }
+
+    /** @test */
+    public function can_push_to_stacks()
+    {
+        Route::get('/layout-with-stacks', ComponentWithStacks::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/layout-with-stacks')
+            ->assertSee('I am a style')
+            ->assertSee('I am a script 1')
+            ->assertDontSee('I am a script 2');
     }
 }
 
@@ -580,14 +615,14 @@ class ComponentForRenderLayoutAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+    #[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
     public function render()
     {
         return view('show-name');
     }
 }
 
-#[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+#[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
 class ComponentForClassLayoutAttribute extends Component
 {
     public $name = 'bob';
@@ -602,15 +637,60 @@ class ComponentForTitleAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Title('some-title')]
-    #[Layout('layouts.app-with-title')]
+    #[BaseTitle('some-title')]
+    #[BaseLayout('layouts.app-with-title')]
     public function render()
     {
         return view('show-name');
     }
 }
 
+class ComponentWithMultipleLayoutSlots extends Component
+{
+    public function render()
+    {
+        return view('show-layout-slots', [
+            'bar' => 'foo',
+        ])->layout('layouts.app-layout-with-slots');
+    }
+}
+
 class ComponentWithModel extends Component
 {
     public FrameworkModel $framework;
+}
+
+#[BaseLayout('layouts.app-with-title')]
+class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
+{
+    public function render()
+    {
+        return view('null-view')
+            ->title('some-title');
+    }
+}
+
+#[BaseLayout('layouts.app-layout-with-stacks')]
+class ComponentWithStacks extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                Contents
+            </div>
+
+            @push('styles')
+            <div>I am a style</div>
+            @endpush
+
+            @foreach([1, 2] as $attempt)
+                @once
+                    @push('scripts')
+                    <div>I am a script {{ $attempt }}</div>
+                    @endpush
+                @endonce
+            @endforeach
+        HTML;
+    }
 }
