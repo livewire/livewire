@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -181,6 +183,68 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function nested_components_do_not_error_when_child_deletes_itself()
+    {
+        Schema::create('posts', function ($table) {
+            $table->id();
+            $table->string('title');
+            $table->timestamps();
+        });
+
+        Post::create(['title' => 'one']);
+        Post::create(['title' => 'two']);
+
+        Livewire::visit([
+            new class extends Component {
+                public $posts;
+
+                protected $listeners = [
+                    'delete' => '$refresh',
+                ];
+
+                public function render()
+                {
+                    $this->posts = Post::all();
+
+                    return <<<'HTML'
+                    <div>
+                        @foreach($posts as $post)
+                            <livewire:child wire:key="{{ $post->id }}" :post="$post" />
+                        @endforeach
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $post;
+
+                public function delete()
+                {
+                    $this->post->delete();
+
+                    $this->dispatch('delete');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child-{{ $post->title }}">
+                        {{ $post->title }}
+                        <button dusk="delete-{{ $post->title }}" wire:click="delete">Delete</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertPresent('@child-one')
+            ->assertSeeIn('@child-one', 'one')
+            ->waitForLivewire()->click('@delete-one')
+            ->assertNotPresent('@child-one');
+
+        Schema::drop('posts');
+    }
+
+    /** @test */
     public function lazy_nested_components_do_not_call_boot_method_twice()
     {
         Livewire::visit([
@@ -218,6 +282,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForText('Boot count: 1');
         ;
     }
+}
+
+class Post extends Model
+{
+    public $fillable = ['title'];
 }
 
 class Page extends Component
