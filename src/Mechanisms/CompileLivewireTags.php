@@ -78,8 +78,7 @@ class CompileLivewireTags extends ComponentTagCompiler
                 // Does not need quotes as resolved with quotes already.
                 $component = $attributes['component'] ?? $attributes['is'];
 
-                unset($attributes['component']);
-                unset($attributes['is']);
+                unset($attributes['component'], $attributes['is']);
             } else {
                 // Add single quotes to the component name to compile it as string in quotes
                 $component = "'{$component}'";
