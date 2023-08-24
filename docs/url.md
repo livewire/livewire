@@ -146,7 +146,7 @@ To force Livewire to use `history.pushState` when updating the URL, you can prov
 
 ```php
 use Livewire\Component;
-use Livewire\With\Url;
+use Livewire\Attributes\Url;
 
 class ShowUsers extends Component
 {
@@ -167,4 +167,20 @@ When you pass this parameter you're disabling the query string functionality for
 
 ```blade
 <livewire:show-users :query-string="false" />
+```
+
+You can also change the default use of query string with the `QueryString` attribute and override it to `true` where needed.
+
+```php
+use Livewire\Component;
+use Livewire\Attributes\QueryString;
+
+#[QueryString(enabled: false)]
+class ShowUsers extends Component
+{
+}
+```
+
+```blade
+<livewire:show-users :query-string="true" />
 ```
