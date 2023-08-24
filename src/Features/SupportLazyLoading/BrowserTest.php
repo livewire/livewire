@@ -104,6 +104,7 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('Child!');
     }
 
+    /** @test */
     public function can_lazy_load_full_page_component_using_attribute()
     {
         Livewire::visit(new #[\Livewire\Attributes\Lazy] class extends Component {

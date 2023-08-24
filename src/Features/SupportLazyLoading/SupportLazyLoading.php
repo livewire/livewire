@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use function Livewire\{ store, wrap };
+use function Livewire\{store, wrap};
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
@@ -11,6 +11,8 @@ use Illuminate\Routing\Route;
 
 class SupportLazyLoading extends ComponentHook
 {
+    static bool $isLazyRoute = false;
+
     static function provide()
     {
         static::registerRouteMacro();
@@ -19,7 +21,7 @@ class SupportLazyLoading extends ComponentHook
     static function registerRouteMacro()
     {
         Route::macro('lazy', function ($enabled = true) {
-            $this->defaults['lazy'] = $enabled;
+            SupportLazyLoading::$isLazyRoute = $enabled;
 
             return $this;
         });
@@ -27,29 +29,35 @@ class SupportLazyLoading extends ComponentHook
 
     public function mount($params)
     {
-        $hasLazyParam = isset($params['lazy']);
-        $lazyProperty = $params['lazy'] ?? false;
+        // Check if is a full page component with lazy load enabled
+        if (SupportLazyLoading::$isLazyRoute) {
+            $lazyValue = 'on-load';
+        } else {
+            $lazyValue = $params['lazy'] ?? null;
+            // If lazy param is missing or null try to get lazy attribute
+            if($lazyValue === null){
+                $lazyAttribute = (new \ReflectionClass($this->component))->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
+                if ($lazyAttribute) {
+                    // If there is the lazy attribute get the value or use true as default
+                    $lazyValue = $lazyAttribute->getArguments()[0] ?? true;
+                }
+            }
+        }
 
-        $reflectionClass = new \ReflectionClass($this->component);
-        $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
-
-        // If `:lazy="false"` disable lazy loading...
-        if ($hasLazyParam && ! $lazyProperty) return;
-        // If no lazy loading is included at all...
-        if (! $hasLazyParam && ! $hasLazyAttribute) return;
+        if (!$lazyValue) return;
 
         $this->component->skipMount();
 
         store($this->component)->set('isLazyLoadMounting', true);
 
         $this->component->skipRender(
-            $this->generatePlaceholderHtml($params)
+            $this->generatePlaceholderHtml($params, $lazyValue)
         );
     }
 
     public function hydrate($memo)
     {
-        if (! isset($memo['lazyLoaded'])) return;
+        if (!isset($memo['lazyLoaded'])) return;
         if ($memo['lazyLoaded'] === true) return;
 
         $this->component->skipHydrate();
@@ -70,7 +78,7 @@ class SupportLazyLoading extends ComponentHook
     {
         if ($method !== '__lazyLoad') return;
 
-        [ $encoded ] = $params;
+        [$encoded] = $params;
 
         $mountParams = $this->resurrectMountParams($encoded);
 
@@ -79,7 +87,7 @@ class SupportLazyLoading extends ComponentHook
         $returnEarly();
     }
 
-    public function generatePlaceholderHtml($params)
+    public function generatePlaceholderHtml($params, $lazyValue)
     {
         $this->registerContainerComponent();
 
@@ -102,7 +110,7 @@ class SupportLazyLoading extends ComponentHook
             ->placeholder();
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
-            ($params['lazy'] === 'on-load' ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
+            ($lazyValue === 'on-load' ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\'' . $encoded . '\')',
         ]);
 
         return $html;
@@ -114,7 +122,7 @@ class SupportLazyLoading extends ComponentHook
 
         $this->registerContainerComponent();
 
-        [ $container ] = app('livewire')->fromSnapshot($snapshot);
+        [$container] = app('livewire')->fromSnapshot($snapshot);
 
         return $container->forMount;
     }
