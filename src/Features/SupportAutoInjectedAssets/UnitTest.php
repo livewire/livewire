@@ -141,7 +141,18 @@ class UnitTest extends TestCase
     /** @test */
     public function can_disable_auto_injection_using_config(): void
     {
-        $this->markTestIncomplete();
+        config()->set('livewire.inject_assets', false);
+
+        Route::get('/with-livewire', function () {
+            return (new class Extends TestComponent {})();
+        });
+
+        Route::get('/without-livewire', function () {
+            return Blade::render('<html></html>');
+        });
+
+        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.js');
+        $this->get('/with-livewire')->assertDontSee('/livewire/livewire.js');
     }
 
     /** @test */
