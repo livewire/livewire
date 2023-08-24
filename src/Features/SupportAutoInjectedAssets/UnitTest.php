@@ -156,6 +156,27 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    public function can_force_injection_over_config(): void
+    {
+        config()->set('livewire.inject_assets', false);
+
+        Route::get('/with-livewire', function () {
+            return (new class Extends TestComponent {})();
+        });
+
+        Route::get('/without-livewire', function () {
+            return '<html></html>';
+        });
+
+        \Livewire\Livewire::forceAssetInjection();
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
+
+        \Livewire\Livewire::flushState();
+        \Livewire\Livewire::forceAssetInjection();
+        $this->get('/without-livewire')->assertSee('/livewire/livewire.js');
+    }
+
+    /** @test */
     public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
         Route::get('/with-livewire', function () {
