@@ -849,23 +849,20 @@ class BrowserTest extends BrowserTestCase
                 return Blade::render(
                     <<< 'HTML'
                     <div>
-                        {{$items->links()}}
+                        {{ $items->links() }}
                         <span dusk="item-page-pagination-hook">{{ $itemPageHookOutput }}</span>
                     </div>
                     HTML,
                     [
                         'items' => Item::paginate(3, ['*'], 'item-page'),
-                        'itemPageHookOutput' => $this->itemPageHookOutput,
+                        'itemPageHookOutput' => $this->itemPageHookOutput
                     ]
                 );
             }
         })
             ->assertSeeNothingIn('@item-page-pagination-hook')
-
             ->waitForLivewire()->click('@nextPage.item-page.before')
-
-            ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2')
-        ;
+            ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2');
     }
 }
 
