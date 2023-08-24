@@ -10,8 +10,10 @@
 
 Please consult the old v2 docs for [general guidelines for contributing](https://laravel-livewire.com/docs/2.x/contribution-guide).
 
-If you want to run a single test instead of the whole test suite, you can specify the test suite and file.
+If you want to run limited tests instead of the whole test suite, you can specify the test suite and file or the test name.
 
+* Any single test \
+`./vendor/bin/phpunit --filter the_test_function_name`
 * Unit tests in src/ \
 `./vendor/bin/phpunit --filter Unit ./src/path/to/the/*UnitTest.php`
 * Browser tests in src/ \
