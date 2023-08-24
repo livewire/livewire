@@ -47,9 +47,9 @@ class LivewireManager
         app(ExtendBlade::class)->livewireOnlyDirective($name, $callback);
     }
 
-    function precompiler($pattern, $callback)
+    function precompiler($callback)
     {
-        app(ExtendBlade::class)->livewireOnlyPrecompiler($pattern, $callback);
+        app(ExtendBlade::class)->livewireOnlyPrecompiler($callback);
     }
 
     function new($name, $id = null)
