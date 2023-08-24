@@ -58,10 +58,6 @@ class ImplicitRouteBinding
 
     public function resolveComponentProps(Route $route, Component $component)
     {
-        if (PHP_VERSION_ID < 70400) {
-            return;
-        }
-
         return $this->getPublicPropertyTypes($component)
             ->intersectByKeys($route->parametersWithoutNulls())
             ->map(function ($className, $propName) use ($route) {
@@ -83,10 +79,6 @@ class ImplicitRouteBinding
 
     public function getPublicPropertyTypes($component)
     {
-        if (PHP_VERSION_ID < 70400) {
-            return new Collection();
-        }
-
         return collect(Utils::getPublicPropertiesDefinedOnSubclass($component))
             ->map(function ($value, $name) use ($component) {
                 return Reflector::getParameterClassName(new \ReflectionProperty($component, $name));

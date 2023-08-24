@@ -82,11 +82,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                if (version_compare(app()->version(), '10', '>=')) {
-                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
-                } else {
-                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
-                }
+                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
             })
             ;
     }
@@ -107,11 +103,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                if (version_compare(app()->version(), '10', '>=')) {
-                    $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
-                } else {
-                    $this->assertEquals('The The Foo must be at least 3 characters.', $messages['foo'][0]);
-                }
+                $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
             })
             ;
     }
@@ -130,11 +122,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                if (version_compare(app()->version(), '10', '>=')) {
-                    $this->assertEquals('The Translated Foo field must be at least 3 characters.', $messages['foo'][0]);
-                } else {
-                    $this->assertEquals('The Translated Foo must be at least 3 characters.', $messages['foo'][0]);
-                }
+                $this->assertEquals('The Translated Foo field must be at least 3 characters.', $messages['foo'][0]);
             })
             ;
     }
@@ -153,11 +141,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
 
-                if (version_compare(app()->version(), '10', '>=')) {
-                    $this->assertEquals('The translatable.foo field must be at least 3 characters.', $messages['foo'][0]);
-                } else {
-                    $this->assertEquals('The translatable.foo must be at least 3 characters.', $messages['foo'][0]);
-                }
+                $this->assertEquals('The translatable.foo field must be at least 3 characters.', $messages['foo'][0]);
             })
             ;
     }
@@ -384,13 +368,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->runAction('runNestedValidation');
 
-        if (version_compare(app()->version(), '10', '>=')) {
-            $validationMessage = 'The emails.1 field must be a valid email address.';
-        } else {
-            $validationMessage = 'emails.1 must be a valid email address.';
-        }
-
-        $this->assertStringContainsString($validationMessage, $component->effects['html']);
+        $this->assertStringContainsString('The emails.1 field must be a valid email address.', $component->effects['html']);
     }
 
     /** @test */
@@ -689,37 +667,20 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function validation_fails_when_same_rule_is_used_without_matching()
     {
-        $component = Livewire::test(ForValidation::class);
-
-        if (version_compare(app()->version(), '10', '>=')) {
-            $validationMessage = 'The password field must match password confirmation.';
-        } else {
-            $validationMessage = 'The password and password confirmation must match';
-        }
-
-
-        $component
+        Livewire::test(ForValidation::class)
             ->set('password', 'supersecret')
             ->call('runSameValidation')
-            ->assertSee($validationMessage);
+            ->assertSee('The password field must match password confirmation.');
     }
 
     /** @test */
     public function validation_passes_when_same_rule_is_used_and_matches()
     {
-        $component = Livewire::test(ForValidation::class);
-
-        if (version_compare(app()->version(), '10', '>=')) {
-            $validationMessage = 'The password field must match password confirmation.';
-        } else {
-            $validationMessage = 'The password and password confirmation must match';
-        }
-
-        $component
+        Livewire::test(ForValidation::class)
             ->set('password', 'supersecret')
             ->set('passwordConfirmation', 'supersecret')
             ->call('runSameValidation')
-            ->assertDontSee($validationMessage);
+            ->assertDontSee('The password field must match password confirmation.');
     }
 
     /** @test */
