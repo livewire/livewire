@@ -72,7 +72,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
                 'Livewire' => InstalledVersions::getPrettyVersion('livewire/livewire'),
             ]);
         }
-        
+
         foreach ($this->getMechanisms() as $mechanism) {
             (new $mechanism)->boot($this);
         }
@@ -103,7 +103,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportPagination\SupportPagination::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
             \Livewire\Features\SupportRedirects\SupportRedirects::class,
-            \Livewire\Features\SupportWireables\SupportWireables::class,
             \Livewire\Features\SupportStreaming\SupportStreaming::class,
             \Livewire\Features\SupportNavigate\SupportNavigate::class,
             \Livewire\Features\SupportEntangle\SupportEntangle::class,
@@ -115,6 +114,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             // Some features we want to have priority over others...
             \Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             \Livewire\Features\SupportLegacyModels\SupportLegacyModels::class,
+            \Livewire\Features\SupportWireables\SupportWireables::class,
         ] as $feature) {
             app('livewire')->componentHook($feature);
         }

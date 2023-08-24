@@ -27,8 +27,7 @@ $increment = fn () => $this->count++;
 To get started, install Volt into your project using the Composer package manager:
 
 ```bash
-composer require livewire/livewire "^3.0@beta" # Or ensure Livewire v3.x is installed...
-composer require livewire/volt "^1.0@beta"
+composer require livewire/volt
 ```
 
 After installing Volt, you may execute the `volt:install` Artisan command, which will install Volt's service provider file into your application. This service provider specifies the mounted directories in which Volt will search for single file components:
@@ -90,6 +89,33 @@ new class extends Component {
 <div>
     <h1>{{ $count }}</h1>
     <button wire:click="increment">+</button>
+</div>
+```
+
+#### View Data
+
+When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
+
+```blade
+<?php
+
+use Livewire\WithPagination;
+use Livewire\Volt\Component;
+use App\Models\Post;
+
+new class extends Component {
+    use WithPagination;
+    
+    public function with(): array
+    {
+        return [
+            'posts' => Post::paginate(10),
+        ];
+    }
+} ?>
+
+<div>
+    <!-- ... -->
 </div>
 ```
 
@@ -570,9 +596,7 @@ use function Livewire\Volt\{computed, usesPagination};
 
 usesPagination();
 
-$posts = computed(function () {
-    return Post::paginate(10);
-});
+with(fn () => ['posts' => Post::paginate(10)]);
 
 ?>
 

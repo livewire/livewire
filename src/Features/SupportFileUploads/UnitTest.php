@@ -320,6 +320,22 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function invalid_file_extension_can_validate_dimensions()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()
+            ->create('not-a-png-image.pdf', 512, 512);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUploadWithDimensions')
+            ->assertHasErrors(['photo' => 'dimensions']);
+
+        Storage::disk('avatars')->assertMissing('uploaded-not-a-png-image.png');
+    }
+
+    /** @test */
     public function temporary_files_older_than_24_hours_are_cleaned_up_on_every_new_upload()
     {
         Storage::fake('avatars');
@@ -434,12 +450,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function cant_preview_a_non_image_temporary_file_with_a_temporary_signed_url()
     {
-        if (version_compare(app()->version(), '9.2.0', '<')) {
-            // Laravel 9.2 added support for faking temporary URLs PR#41113
-            // so will no longer throw an exception
-            $this->expectException(RuntimeException::class);
-        }
-
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->create('avatar.pdf');

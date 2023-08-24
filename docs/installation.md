@@ -3,11 +3,8 @@ Livewire is a Laravel package, so you will need to have a Laravel application up
 To install Livewire, open your terminal and navigate to your Laravel application directory, then run the following command:
 
 ```shell
-composer require livewire/livewire "^3.0@beta"
+composer require livewire/livewire
 ```
-
-> [!warning] PowerShell for Windows
-> The `^` operator causes issues for installing the beta when using PowerShell for Windows. See [Composer docs](https://getcomposer.org/doc/articles/versions.md#caret-version-range-) for more details.
 
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
@@ -126,7 +123,7 @@ To address this issue, we need to inform Livewire that we want to use the ESM (E
 <html>
 <head>
     <!-- ... -->
-
+    @livewireStyles
     @vite(['resources/js/app.js'])
 </head>
 <body>
@@ -137,7 +134,7 @@ To address this issue, we need to inform Livewire that we want to use the ESM (E
 </html>
 ```
 
-When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it.
+When Livewire detects the `@livewireScriptConfig` directive, it will refrain from injecting the Livewire and Alpine scripts. If you are using the `@livewireScripts` directive to manually load Livewire, be sure to remove it. Make sure to add the `@livewireStyles` directive if it is not already present.
 
 The final step is importing Alpine and Livewire in our `app.js` file, allowing us to register any custom resources, and ultimately starting Livewire and Alpine:
 

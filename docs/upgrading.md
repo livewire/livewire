@@ -1,7 +1,4 @@
 
-> [!warning] Livewire 3 is still in beta
-> While we attempt to keep breaking changes to a minimum, they are still possible while Livewire 3 remains in beta. Therefore, we recommend testing your application thoroughly before using Livewire 3 in production.
-
 ## Automated upgrade tool
 
 To save you time upgrading, we've included an Artisan command to automate as many parts of the upgrade process as possible.
@@ -26,23 +23,8 @@ Livewire now requires that your application is running on PHP version 8.1 or gre
 Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3:
 
 ```shell
-composer require livewire/livewire "3.0.0-beta.4"
+composer require livewire/livewire "^3.0"
 ```
-
-The above command will lock you to the current beta version. If you want to receive more frequent updates, you can switch to the more flexible version constraint:
-
-```shell
-composer require livewire/livewire "^3.0@beta"
-```
-
-<!-- @todo after launch:
-### Update composer dependancies
-
-Any other packages in your application that depends on Livewire will need to be upgraded to a version that supports v3.
-
-Below is a list of dependancies and their corresponding version with support for v3:
-
-* `spatie/laravel-ignition` - ? -->
 
 > [!warning] Livewire 3 package compatibility
 > Most of the major third-party Livewire packages either currently support Livewire 3 or are working on supporting it soon. However, there will inevitably be packages that take longer to release support for Livewire 3.
@@ -58,9 +40,6 @@ php artisan view:clear
 ## Merge new configuration
 
 Livewire 3 has changed multiple configuration options. If your application has a published configuration file (`config/livewire.php`), you will need to update it to account for the following changes.
-
-<!-- @todo after launch:
-If you'd rather view the changes in a more visual way, you can reference [the GitHub file comparison](???). -->
 
 ### New configuration
 
@@ -258,9 +237,6 @@ Alpine.start()
 ```
 
 You can remove them entirely, because Livewire includes Alpine and many popular Alpine plugins by default.
-
-> [!warning] "Livewire V3 (beta) with Laravel Breeze or Laravel Jetstream"
-> If you are trying the Livewire V3 beta with the Laravel Breeze or Laravel JetStream, you will need to unload the Alpine as demonstrated above. Also, you can remove Alpine and any other Alpine plugins from your NPM dependencies as well. The Laravel Breeze and Laravel JetStream are not ready for Livewire V3 yet by default.
 
 #### Accessing Alpine via JS bundle
 
