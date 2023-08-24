@@ -1,4 +1,4 @@
-import Alpine from "alpinejs/src/alpine"
+import Alpine from 'alpinejs'
 
 let els = {}
 

@@ -4,10 +4,9 @@ import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHo
 import { restoreScrollPosition, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, showAndStartProgressBar } from "./bar"
-import { transition } from "alpinejs/src/directives/x-transition"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
-import { prefix } from "alpinejs/src/directives"
+import Alpine from "alpinejs"
 
 let enablePersist = true
 let showProgressBar = true
@@ -25,7 +24,7 @@ export default function (Alpine) {
         showProgressBar = false
     }
 
-    Alpine.addInitSelector(() => `[${prefix('navigate')}]`)
+    Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
 
     Alpine.directive('navigate', (el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')

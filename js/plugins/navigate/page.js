@@ -1,5 +1,3 @@
-import Alpine from "alpinejs/src/alpine"
-
 let oldBodyScriptTagHashes = []
 
 export function swapCurrentPageWithNewHtml(html, andThen) {
