@@ -785,53 +785,6 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function pagination_trait_resolves_query_string_alias_for_page_from_component()
-    {
-        Livewire::withQueryParams(['p' => '2'])
-            ->visit(new class extends Component {
-                use WithPagination;
-
-                protected $queryString = [
-                    'paginators.page' => ['as' => 'p']
-                ];
-
-                public function render()
-                {
-                    return Blade::render(
-                        <<< 'HTML'
-                    <div>
-                        @foreach ($posts as $post)
-                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
-                        @endforeach
-
-                        {{ $posts->links() }}
-                    </div>
-                    HTML,
-                        [
-                            'posts' => Post::paginate(3),
-                        ]
-                    );
-                }
-            })
-
-            // Test a deeplink to page 2 with "p" from the query string shows the second page.
-            ->assertDontSee('Post #3')
-            ->assertSee('Post #4')
-            ->assertSee('Post #5')
-            ->assertSee('Post #6')
-            ->assertQueryStringHas('p', '2')
-
-            ->waitForLivewire()->click('@previousPage.before')
-
-            ->assertDontSee('Post #4')
-            ->assertSee('Post #1')
-            ->assertSee('Post #2')
-            ->assertSee('Post #3')
-            ->assertQueryStringHas('p', '1')
-        ;
-    }
-
-    /** @test */
     public function it_can_have_two_pagination_instances_on_a_page_tailwind_kebab()
     {
         Livewire::visit(new class extends Component {
@@ -1170,6 +1123,53 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-1')
             ->assertSee('Post #1')
             ->assertSee('Item #1')
+        ;
+    }
+
+    /** @test */
+    public function pagination_trait_resolves_query_string_alias_for_page_from_component()
+    {
+        Livewire::withQueryParams(['p' => '2'])
+            ->visit(new class extends Component {
+                use WithPagination;
+
+                protected $queryString = [
+                    'paginators.page' => ['as' => 'p']
+                ];
+
+                public function render()
+                {
+                    return Blade::render(
+                        <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                        [
+                            'posts' => Post::paginate(3),
+                        ]
+                    );
+                }
+            })
+
+            // Test a deeplink to page 2 with "p" from the query string shows the second page.
+            ->assertDontSee('Post #3')
+            ->assertSee('Post #4')
+            ->assertSee('Post #5')
+            ->assertSee('Post #6')
+            ->assertQueryStringHas('p', '2')
+
+            ->waitForLivewire()->click('@previousPage.before')
+
+            ->assertDontSee('Post #4')
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertQueryStringHas('p', '1')
         ;
     }
 }
