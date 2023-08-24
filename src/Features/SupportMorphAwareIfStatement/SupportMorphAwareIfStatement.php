@@ -12,12 +12,10 @@ class SupportMorphAwareIfStatement extends ComponentHook
     {
         if (! config('livewire.inject_morph_markers', true)) return;
 
-        static::registerPrecompilers(
-            app('livewire')->precompiler(...)
-        );
+        static::registerPrecompilers();
     }
 
-    static function registerPrecompilers($precompile)
+    static function registerPrecompilers()
     {
         $generatePattern = function ($directives) {
             $directivesPattern = '('
