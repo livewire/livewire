@@ -36,8 +36,10 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function livewire_only_precompilers_apply_to_livewire_components_and_not_normal_blade()
     {
-        Livewire::precompiler('/@foo/sm', function ($matches) {
-            return 'bar';
+        Livewire::precompiler(function ($string) {
+            return preg_replace_callback('/@foo/sm',  function ($matches) {
+                return 'bar';
+            }, $string);
         });
 
         $output = Blade::render('

@@ -78,13 +78,9 @@ class ExtendBlade
         $this->directives[$name] = $handler;
     }
 
-    function livewireOnlyPrecompiler($pattern, $handler)
+    function livewireOnlyPrecompiler($handler)
     {
-        $this->precompilers[] = function ($string) use ($pattern, $handler) {
-            return preg_replace_callback($pattern, function ($matches) use ($handler, $string) {
-                return $handler($matches, $string);
-            }, $string);
-        };
+        $this->precompilers[] = $handler;
     }
 
     function livewireifyBladeCompiler() {

@@ -2,12 +2,12 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
 use Livewire\ComponentHook;
+use Illuminate\Support\Facades\Blade;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
-    // @todo: exempt @class and support @error?
     static function provide()
     {
         if (! config('livewire.inject_morph_markers', true)) return;
@@ -28,11 +28,11 @@ class SupportMorphAwareIfStatement extends ComponentHook
             .')';
 
             $pattern = '/
-                '.$directivesPattern.'        # Blade directive
-                (?!                   # Not followed by:
-                    [^<]*             # ...
-                    (?<![?=-])        # ...
-                    >                 # A ">" character, not preceded by a "<" character
+                '.$directivesPattern.'  # Blade directive
+                (?!                     # Not followed by:
+                    [^<]*               # ...
+                    (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
+                    >                   # A ">" character that isn\'t preceded by a "<" character (meaning it\'s outside of a tag)
                 )
             /mUx';
 
@@ -54,7 +54,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
             '@for' => '@endfor',
         ];
 
-        Blade::precompiler(function ($entire) use ($generatePattern, $directives) {
+        Livewire::precompiler(function ($entire) use ($generatePattern, $directives) {
+            $conditions = \Livewire\invade(app('blade.compiler'))->conditions;
+
+            foreach (array_keys($conditions) as $conditionalDirective) {
+                $directives['@'.$conditionalDirective] = '@end'.$conditionalDirective;
+            }
+
             $openings = array_keys($directives);
             $closings = array_values($directives);
 
