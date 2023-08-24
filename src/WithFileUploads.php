@@ -11,7 +11,7 @@ trait WithFileUploads
 {
     public function startUpload($name, $fileInfo, $isMultiple)
     {
-        if (FileUploadConfiguration::isUsingS3()) {
+        if (FileUploadConfiguration::isUsingS3DirectURL()) {
             throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
 
             $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);

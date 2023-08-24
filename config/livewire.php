@@ -106,6 +106,7 @@ return [
             'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ],
         'max_upload_time' => 5, // Max duration (in minutes) before an upload gets invalidated.
+        's3_direct_url' => true,
     ],
 
     /*

@@ -46,6 +46,11 @@ class FileUploadConfiguration
         return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
 
+    public static function isUsingS3DirectURL()
+    {
+        return self::isUsingS3() && config('livewire.temporary_file_upload.s3_direct_url');
+    }
+
     public static function isUsingGCS()
     {
         $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
