@@ -159,6 +159,24 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_redirect_to_a_page_after_destorying_session()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@redirect.to.second.and.destroy.session')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Livewire')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Alpine');
+        });
+    }
+
+    /** @test */
     public function can_persist_elements_across_pages()
     {
         $this->browse(function ($browser) {
@@ -360,6 +378,13 @@ class FirstPage extends Component
         return $this->redirect('/second', navigate: true);
     }
 
+    public function redirectToPageTwoUsingNavigateAndDestroyingSession()
+    {
+        session()->regenerate();
+
+        return $this->redirect('/second', navigate: true);
+    }
+
     public function render()
     {
         return <<<'HTML'
@@ -369,6 +394,7 @@ class FirstPage extends Component
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
+            <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
             @persist('foo')
                 <div x-data="{ count: 1 }">

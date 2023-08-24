@@ -1,11 +1,17 @@
 let oldBodyScriptTagHashes = []
 
+let attributesExemptFromScriptTagHashing = [
+    'data-csrf'
+]
+
 export function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = (new DOMParser()).parseFromString(html, "text/html")
     let newBody = document.adoptNode(newDocument.body)
     let newHead = document.adoptNode(newDocument.head)
 
-    oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll('script')).map(i => simpleHash(i.outerHTML)))
+    oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll('script')).map(i => {
+        return simpleHash(ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing))
+    }))
 
     mergeNewHead(newHead)
 
@@ -50,7 +56,10 @@ function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
             // However, if they didn't exist on the previous page, we do.
             // Therefore, we'll check the "old body script hashes" to
             // see if it was already there before skipping it...
-            let hash = simpleHash(i.outerHTML)
+
+            let hash = simpleHash(
+                ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing)
+            )
 
             if (oldBodyScriptTagHashes.includes(hash)) return
         }
@@ -151,4 +160,18 @@ function simpleHash(str) {
 
         return a & a
     }, 0);
+}
+
+function ignoreAttributes(subject, attributesToRemove) {
+    let result = subject
+
+    attributesToRemove.forEach(attr => {
+        // Create a regex pattern to match the attribute and its value.
+        // The regex handles attributes that have values surrounded by either single or double quotes.
+        const regex = new RegExp(`${attr}="[^"]*"|${attr}='[^']*'`, 'g')
+
+        result = result.replace(regex, '')
+    })
+
+    return result.trim()
 }

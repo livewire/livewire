@@ -310,6 +310,8 @@ class DuskBrowserMacros
             }
 
             PHPUnit::assertTrue($containsError, "Console log error message \"{$expectedMessage}\" not found");
+
+            return $this;
         };
     }
 
@@ -330,6 +332,8 @@ class DuskBrowserMacros
             }
 
             PHPUnit::assertFalse($containsError, "Console log error message \"{$expectedMessage}\" was found");
+
+            return $this;
         };
     }
 }
