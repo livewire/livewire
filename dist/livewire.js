@@ -4408,10 +4408,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return this.directives.find((directive3) => directive3.value === value);
     }
     extractTypeModifiersAndValue() {
-      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => {
-        const [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
-        return new Directive(value, modifiers, name, this.el);
-      }));
+      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
     }
   };
   var Directive = class {
@@ -4449,7 +4446,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4543,7 +4540,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var matches = typeof Element === "undefined" ? function() {
@@ -5353,7 +5350,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5401,7 +5398,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate2 = evaluateLater2(expression);
@@ -6455,7 +6452,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default7(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
       let templateFn = () => expression;
@@ -6470,8 +6467,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 evaluator((value2) => {
                   result = typeof value2 === "function" ? value2(input) : value2;
                 }, { scope: {
-                  "$input": input,
-                  "$money": formatMoney.bind({ el })
+                  $input: input,
+                  $money: formatMoney.bind({ el })
                 } });
               });
               return result;
@@ -6527,7 +6524,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let output = "";
     let regexes = {
       "9": /[0-9]/,
-      "a": /[a-zA-Z]/,
+      a: /[a-zA-Z]/,
       "*": /[a-zA-Z0-9]/
     };
     let wildcardTemplate = "";

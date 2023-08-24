@@ -3679,31 +3679,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports) {
     var __defProp2 = Object.defineProperty;
-    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
-    var __getOwnPropNames2 = Object.getOwnPropertyNames;
-    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __markAsModule = (target) => __defProp2(target, "__esModule", { value: true });
     var __export = (target, all2) => {
       for (var name in all2)
         __defProp2(target, name, { get: all2[name], enumerable: true });
     };
-    var __copyProps2 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
-      }
-      return to;
-    };
-    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var module_exports = {};
-    __export(module_exports, {
+    __markAsModule(exports);
+    __export(exports, {
       default: () => module_default
     });
-    module.exports = __toCommonJS(module_exports);
     function src_default(Alpine20) {
       Alpine20.directive("collapse", collapse2);
       collapse2.inline = (el, { modifiers }) => {
@@ -3799,9 +3787,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getProtoOf2 = Object.getPrototypeOf;
@@ -4672,9 +4660,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports) {
     var __defProp2 = Object.defineProperty;
     var __markAsModule = (target) => __defProp2(target, "__esModule", { value: true });
     var __export = (target, all2) => {
@@ -4734,31 +4722,19 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports) {
     var __defProp2 = Object.defineProperty;
-    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
-    var __getOwnPropNames2 = Object.getOwnPropertyNames;
-    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __markAsModule = (target) => __defProp2(target, "__esModule", { value: true });
     var __export = (target, all2) => {
       for (var name in all2)
         __defProp2(target, name, { get: all2[name], enumerable: true });
     };
-    var __copyProps2 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
-      }
-      return to;
-    };
-    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var module_exports = {};
-    __export(module_exports, {
+    __markAsModule(exports);
+    __export(exports, {
       default: () => module_default
     });
-    module.exports = __toCommonJS(module_exports);
     function src_default(Alpine20) {
       Alpine20.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
@@ -5448,32 +5424,20 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports) {
     var __defProp2 = Object.defineProperty;
-    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
-    var __getOwnPropNames2 = Object.getOwnPropertyNames;
-    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __markAsModule = (target) => __defProp2(target, "__esModule", { value: true });
     var __export = (target, all2) => {
       for (var name in all2)
         __defProp2(target, name, { get: all2[name], enumerable: true });
     };
-    var __copyProps2 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
-      }
-      return to;
-    };
-    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var module_exports = {};
-    __export(module_exports, {
+    __markAsModule(exports);
+    __export(exports, {
       default: () => module_default,
       stripDown: () => stripDown
     });
-    module.exports = __toCommonJS(module_exports);
     function src_default(Alpine20) {
       Alpine20.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
         let templateFn = () => expression;
@@ -5488,8 +5452,8 @@ var require_module_cjs7 = __commonJS({
                   evaluator((value2) => {
                     result = typeof value2 === "function" ? value2(input) : value2;
                   }, { scope: {
-                    "$input": input,
-                    "$money": formatMoney.bind({ el })
+                    $input: input,
+                    $money: formatMoney.bind({ el })
                   } });
                 });
                 return result;
@@ -5545,7 +5509,7 @@ var require_module_cjs7 = __commonJS({
       let output = "";
       let regexes = {
         "9": /[0-9]/,
-        "a": /[a-zA-Z]/,
+        a: /[a-zA-Z]/,
         "*": /[a-zA-Z0-9]/
       };
       let wildcardTemplate = "";
@@ -6719,10 +6683,7 @@ var DirectiveManager = class {
     return this.directives.find((directive2) => directive2.value === value);
   }
   extractTypeModifiersAndValue() {
-    return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => {
-      const [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
-      return new Directive(value, modifiers, name, this.el);
-    }));
+    return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
   }
 };
 var Directive = class {
