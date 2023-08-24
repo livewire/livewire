@@ -10,9 +10,14 @@
 
 Please consult the old v2 docs for [general guidelines for contributing](https://laravel-livewire.com/docs/2.x/contribution-guide).
 
-If you want to run a single test instead of the whole test suite, you can do:
+If you want to run a single test instead of the whole test suite, you can specify the test suite and file.
 
-`./vendor/bin/phpunit --filter path/to/your/test.php`
+* Unit tests in src/ \
+`./vendor/bin/phpunit --filter Unit ./src/path/to/the/*UnitTest.php`
+* Browser tests in src/ \
+`./vendor/bin/phpunit --filter Browser ./src/path/to/the/*BrowserTest.php`
+* Legacy browser tests in legacy_tests/ \
+`./vendor/bin/phpunit --filter LegacyBrowser ./legacy_tests/path/to/the/*Test.php`
 
 #### Compiling the JavaScript assets locally
 
