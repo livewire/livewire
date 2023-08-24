@@ -28,7 +28,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
             .')';
 
             $pattern = '/
-                '.$directivesPattern.'  # Blade directive
+                '.$directivesPattern.'  # Blade directives: (@if|@foreach|...)
                 (?!                     # Not followed by:
                     [^<]*               # ...
                     (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
