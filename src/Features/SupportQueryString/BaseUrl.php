@@ -16,8 +16,8 @@ class BaseUrl extends LivewireAttribute
 
     public function mount($params)
     {
-        if($params['disableUrls'] ?? false) {
-            store($this->component)->set('disableUrls', true);
+        if(!($params['queryString'] ?? true)) {
+            store($this->component)->set('useQueryString', false);
             return;
         }
 
@@ -34,7 +34,7 @@ class BaseUrl extends LivewireAttribute
 
     public function dehydrate($context)
     {
-        if (!$context->mounting || store($this->component)->get('disableUrls')) return;
+        if (!$context->mounting || !store($this->component)->get('useQueryString', true)) return;
 
         $queryString = [
             'as' => $this->as,

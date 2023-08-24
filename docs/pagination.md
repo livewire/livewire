@@ -375,3 +375,9 @@ As you can see, you can use Livewire's page navigation helpers like `$this->next
 </div>
 ```
 
+### Disable query string pagination
+
+You can disable query string functionality for pagination and variables with Url attribute.
+<br>
+<a href='https://livewire.laravel.com/docs/url#disable-query-string'>Check how from URL Query Parameters</a>
+

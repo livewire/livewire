@@ -158,3 +158,13 @@ class ShowUsers extends Component
 ```
 
 In the example above, when a user changes the search value from "bob" to "frank" and then clicks the browser's back button, the search value (and the URL) will be set back to "bob" instead of navigating to the previously visited page.
+
+## Disable query string
+
+If you need to disable query string functionality somewhere because you're reusing your components for something like a dashboard you can use `:query-string="false"`.
+<br>
+When you pass this parameter you're disabling the query string functionality for your variables(with Url attribute) but also for pagination.
+
+```blade
+<livewire:show-users :query-string="false" />
+```

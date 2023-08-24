@@ -830,6 +830,81 @@ class BrowserTest extends BrowserTestCase
         ->assertQueryStringHas('p', '1')
         ;
     }
+
+    /** @test */
+    public function test_disable_urls_change()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child :query-string='false' />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            use WithPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        }])
+            // Test that going to page 2 doesn't change the query string.
+            ->waitForLivewire()->click('@nextPage.before')
+            ->assertQueryStringMissing('page')
+        ;
+    }
+
+    /** @test */
+    public function test_disable_urls_init()
+    {
+        Livewire::withQueryParams(['page' => '2'])->visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child :query-string='false' />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            use WithPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        }])
+            // Test that query param page isn't used if disabled.
+            ->assertQueryStringHas('page', '2')
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertDontSee('Post #4')
+        ;
+    }
 }
 
 class Post extends Model
