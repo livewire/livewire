@@ -222,4 +222,10 @@ class UnitTest extends TestCase
     {
         $this->assertEquals($expected, SupportAutoInjectedAssets::injectAssets($original));
     }
+
+    public function makeACleanSlate()
+    {
+        \Livewire\Livewire::flushState();
+        parent::makeACleanSlate();
+    }
 }
