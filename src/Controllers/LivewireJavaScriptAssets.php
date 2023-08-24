@@ -8,11 +8,13 @@ class LivewireJavaScriptAssets
 
     public function source()
     {
-        return $this->pretendResponseIsFile(__DIR__.'/../../dist/livewire.js');
+        $path = __DIR__.'/../../dist/livewire.js';
+        return $this->pretendResponseIsFile(file_get_contents($path), filemtime($path));
     }
 
     public function maps()
     {
-        return $this->pretendResponseIsFile(__DIR__.'/../../dist/livewire.js.map');
+        $path = __DIR__.'/../../dist/livewire.js.map';
+        return $this->pretendResponseIsFile(file_get_contents($path), filemtime($path));
     }
 }
