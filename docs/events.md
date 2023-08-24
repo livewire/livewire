@@ -77,6 +77,60 @@ class ShowPost extends Component
 
 If the above `$post` model had an ID of `3`, the `refreshPost()` method would only be triggered by an event named: `post-updated.3`.
 
+## Events in scripts
+
+You can dispatch and listen events from inline scripts in component.
+
+### Listening for Livewire events in Script
+
+For example, we may easily listen for the `post-created` event using:
+
+```html
+<script>
+    document.addEventListener('livewire:initialized', () => {
+       @this.on('post-created', (event) => {
+           
+       });
+    });
+</script>
+```
+
+The above snippet would listen for the `post-created` event from any Livewire components.
+
+### Dispatching Livewire events from Script
+
+Any event dispatched from script is capable of being intercepted by a Livewire component.
+
+For example:
+
+```html
+<script>
+    document.addEventListener('livewire:initialized', () => {
+       @this.dispatch('post-created');
+    });
+</script>
+```
+
+Like Livewire's `dispatch()` method, you can pass additional data along with the event by passing the data as the second parameter to the method:
+
+```html
+<script>
+    document.addEventListener('livewire:initialized', () => {
+       @this.dispatch('post-created', { title: 'Post Title' });
+    });
+</script>
+```
+
+To dispatch the event only to the component where the script resides you can use `dispatchSelf()`:
+
+```html
+<script>
+    document.addEventListener('livewire:initialized', () => {
+       @this.dispatchSelf('post-created');
+    });
+</script>
+```
+
 ## Events in Alpine
 
 Because Livewire events are plain browser events under the hood, you can use Alpine to listen for them or even dispatch them.
