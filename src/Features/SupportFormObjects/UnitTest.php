@@ -221,6 +221,97 @@ class UnitTest extends \Tests\TestCase
             $form->except(['title'])
         );
     }
+
+    /** @test */
+    function validation_can_show_a_form_object_dynamic_validation_attributes()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormDynamicValidationAttributesStub $withDynamicValidationAttributesForm;
+
+            function save()
+            {
+                $this->withDynamicValidationAttributesForm->validate();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    {{ $errors }}
+                </div>
+            HTML; }
+        })
+            ->set('withDynamicValidationAttributesForm.title', '')
+            ->set('withDynamicValidationAttributesForm.content', '')
+            ->call('save')
+            ->assertSee('Custom Title')
+            ->assertSee('Custom Content')
+        ;
+    }
+
+    /** @test */
+    function multiple_form_objects_in_component_not_interfering_between()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormDynamicValidationAttributesStub $firstForm;
+            public PostFormDynamicMessagesAndAttributesStub $secondForm;
+
+            function saveFirstForm()
+            {
+                $this->firstForm->validate();
+            }
+
+            function saveSecondForm()
+            {
+                $this->secondForm->validate();
+            }
+
+            public function render() { return <<<'HTML'
+                    <div>{{ $errors }}</div>
+                HTML; }
+        })
+            ->set('firstForm.title', '')
+            ->set('firstForm.content', '')
+            ->call('saveFirstForm')
+            ->assertSee('Custom Title')
+            ->assertSee('The Custom Title field is required')
+            ->assertSee('Custom Content')
+            ->assertSee('The Custom Content field is required')
+            ->assertDontSee('Name')
+            ->assertDontSee('Body')
+
+            ->set('secondForm.title', '')
+            ->set('secondForm.content', '')
+            ->call('saveSecondForm')
+            ->assertSee('Name')
+            ->assertSee('Name is required to fill')
+            ->assertSee('Body')
+            ->assertSee('Body is must to fill')
+            ->assertDontSee('Custom Title')
+            ->assertDontSee('Custom Content')
+        ;
+    }
+
+    /** @test */
+    function validation_showing_a_form_object_dynamic_messages()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormDynamicMessagesStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            public function render() { return <<<'HTML'
+                    <div>{{ $errors }}</div>
+                HTML; }
+        })
+            ->set('form.title', '')
+            ->set('form.content', 'Livewire')
+            ->call('save')
+            ->assertSee('title is must to fill')
+            ->assertSee('content need at least 10 letters')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -262,4 +353,61 @@ class PostFormRuleAttributeWithCustomNameStub extends Form
         as: 'my name'
     )]
     public $name = '';
+}
+
+class PostFormDynamicValidationAttributesStub extends Form
+{
+    #[Rule('required')]
+    public $title = '';
+
+    #[Rule('required')]
+    public $content = '';
+
+    public function validationAttributes() {
+        return [
+            'title' => 'Custom Title',
+            'content' => 'Custom Content',
+        ];
+    }
+}
+
+class PostFormDynamicMessagesStub extends Form
+{
+    #[Rule('required')]
+    public $title = '';
+
+    #[Rule(['required', 'min:10'])]
+    public $content = '';
+
+    public function messages()
+    {
+        return [
+            'title.required' => ':attribute is must to fill',
+            'content.min' => ':attribute need at least 10 letters',
+        ];
+    }
+}
+
+class PostFormDynamicMessagesAndAttributesStub extends Form
+{
+    #[Rule('required')]
+    public $title = '';
+
+    #[Rule('required')]
+    public $content = '';
+
+    public function validationAttributes() {
+        return [
+            'title' => 'Name',
+            'content' => 'Body',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'title' => ':attribute is required to fill',
+            'content' => ':attribute is must to fill',
+        ];
+    }
 }
