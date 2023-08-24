@@ -21,7 +21,7 @@ class SupportAutoInjectedAssets extends ComponentHook
         });
 
         app('events')->listen(RequestHandled::class, function ($handled) {
-            if (config('livewire.inject_assets', true) === false) return;
+            if (! static::$forceAssetInjection && config('livewire.inject_assets', true) === false) return;
             if (! str($handled->response->headers->get('content-type'))->contains('text/html')) return;
             if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) return;
             if ((! static::$hasRenderedAComponentThisRequest) && (! static::$forceAssetInjection)) return;
