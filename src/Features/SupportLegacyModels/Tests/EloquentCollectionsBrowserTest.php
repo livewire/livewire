@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
+use Livewire\Component;
 use Livewire\Component as BaseComponent;
 use Sushi\Sushi;
 
@@ -75,6 +76,17 @@ class EloquentCollectionsBrowserTest extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutRulesComponent::class)
+                ->waitForLivewire()->click('@something')
+                ->assertSeeIn('@output', 'Ok!');
+            ;
+        });
+    }
+
+    /** @test */
+    public function it_empty()
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitLivewireComponent($browser, EloquentCollectionsEmptyComponent::class)
                 ->waitForLivewire()->click('@something')
                 ->assertSeeIn('@output', 'Ok!');
             ;
@@ -160,7 +172,6 @@ HTML;
     }
 }
 
-
 class EloquentCollectionsWithoutRulesComponent extends EloquentCollectionsComponent
 {
     public $output;
@@ -176,6 +187,42 @@ class EloquentCollectionsWithoutRulesComponent extends EloquentCollectionsCompon
     {
         return
         <<<'HTML'
+<div>
+      <div>
+          @foreach($authors as $author)
+              <p>{{ $author->name }}</p>
+          @endforeach
+      </div>
+      <span dusk='output'>{{ $output }}</span>
+      <button dusk='something' wire:click='something'>something</button>
+</div>
+HTML;
+
+    }
+}
+
+class EloquentCollectionsEmptyComponent extends Component
+{
+    public $authors;
+
+    public $output;
+
+    protected $rules = [];
+
+    public function mount()
+    {
+        $this->authors = EloquentCollectionsEmpty::get();
+    }
+
+    public function something()
+    {
+        $this->output = 'Ok!';
+    }
+
+    public function render()
+    {
+        return
+            <<<'HTML'
 <div>
       <div>
           @foreach($authors as $author)
@@ -254,4 +301,14 @@ class EloquentCollectionsComment extends Model
     {
         return $this->belongsTo(EloquentCollectionsPost::class, 'eloquent_collections_post_id');
     }
+}
+
+
+class EloquentCollectionsEmpty extends Model
+{
+    use Sushi;
+
+    protected $guarded = [];
+
+    protected $rows = [];
 }
