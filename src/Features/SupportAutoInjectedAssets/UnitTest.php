@@ -187,8 +187,8 @@ class UnitTest extends TestCase
             return '<html></html>';
         });
 
-        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
         $this->get('/without-livewire')->assertDontSee('/livewire/livewire.js');
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
     }
 
     /** @test */
@@ -202,8 +202,8 @@ class UnitTest extends TestCase
             return '<html></html>';
         });
 
-        $this->get('/with-persist')->assertSee('/livewire/livewire.js');
         $this->get('/without-persist')->assertDontSee('/livewire/livewire.js');
+        $this->get('/with-persist')->assertSee('/livewire/livewire.js');
     }
 
     /** @test */
