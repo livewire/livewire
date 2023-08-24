@@ -2,8 +2,8 @@
 
 namespace Tests\Tests;
 
+use LegacyTests\Browser\TestCase;
 use Livewire\Livewire;
-use Tests\TestCase;
 
 class Test extends TestCase
 {
