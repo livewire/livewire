@@ -1,7 +1,7 @@
 import { on } from '@/events'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
-import { track } from '@alpinejs/history'
+import { track } from '@/plugins/history'
 
 on('component.init', ({ component }) => {
     let effects = component.effects
