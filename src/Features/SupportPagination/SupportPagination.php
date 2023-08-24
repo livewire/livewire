@@ -26,12 +26,20 @@ class SupportPagination extends ComponentHook
     }
 
     protected $restoreOverriddenPaginationViews;
+    protected $disableUrls = false;
 
     function boot()
     {
         $this->setPageResolvers();
 
         $this->overrideDefaultPaginationViews();
+    }
+
+    function mount($params)
+    {
+        if($params['disableUrls'] ?? false) {
+            $this->disableUrls = true;
+        }
     }
 
     function destroy()
@@ -92,11 +100,13 @@ class SupportPagination extends ComponentHook
 
     protected function resolvePage($alias, $default)
     {
+        if($this->disableUrls) return $default;
         return request()->query($alias, $default);
     }
 
     protected function addUrlHook($pageName, $queryStringDetails)
     {
+        if($this->disableUrls) return;
         $key = 'paginators.' . $pageName;
         $alias = $queryStringDetails['as'];
         $history = $queryStringDetails['history'];

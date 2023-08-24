@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportQueryString;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+use function Livewire\store;
 
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
@@ -13,8 +14,13 @@ class BaseUrl extends LivewireAttribute
         public $keep = false,
     ) {}
 
-    public function mount()
+    public function mount($params)
     {
+        if($params['disableUrls'] ?? false) {
+            store($this->component)->set('disableUrls', true);
+            return;
+        }
+
         $initialValue = request()->query($this->urlName(), 'noexist');
 
         if ($initialValue === 'noexist') return;
@@ -28,7 +34,7 @@ class BaseUrl extends LivewireAttribute
 
     public function dehydrate($context)
     {
-        if (! $context->mounting) return;
+        if (!$context->mounting || store($this->component)->get('disableUrls')) return;
 
         $queryString = [
             'as' => $this->as,
