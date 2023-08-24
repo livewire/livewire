@@ -179,10 +179,28 @@ class Revenue extends Component
 }
 ```
 
-If you want to override lazy loading you can set the `lazy` parameter to `false`:
+You can pass the mode to Lazy attribute also:
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\Attributes\Lazy;
+
+#[Lazy('on-load')]
+class Revenue extends Component
+{
+    // ...
+}
+```
+
+If you want to override lazy loading you can set the `lazy` parameter to `false`, `on-load` or `on-viewport`:
 
 ```blade
 <livewire:revenue :lazy="false" />
+<livewire:revenue lazy="on-load" />
+<livewire:revenue lazy="on-viewport" />
 ```
 
 ## Full-page lazy loading
