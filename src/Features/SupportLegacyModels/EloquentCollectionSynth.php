@@ -145,7 +145,7 @@ class EloquentCollectionSynth extends Synth
 
     protected function loadCollection($meta)
     {
-        if (isset($meta['keys']) && count($meta['keys']) >= 0) {
+        if (isset($meta['keys']) && count($meta['keys']) >= 0 && !empty($meta['modelClass'])) {
             $model = new $meta['modelClass'];
 
             if (isset($meta['connection'])) {
