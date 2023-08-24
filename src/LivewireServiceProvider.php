@@ -72,7 +72,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
                 'Livewire' => InstalledVersions::getPrettyVersion('livewire/livewire'),
             ]);
         }
-        
+
         foreach ($this->getMechanisms() as $mechanism) {
             (new $mechanism)->boot($this);
         }
