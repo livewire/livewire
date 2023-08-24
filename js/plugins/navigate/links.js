@@ -32,16 +32,15 @@ export function whenThisLinkIsPressed(el, callback) {
 export function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
     el.addEventListener('mouseenter', e => {
         let timeout = setTimeout(() => {
-
+            callback(e)
         }, ms)
 
         let handler = () => {
-            clear
+            clearTimeout(timeout)
             el.removeEventListener('mouseleave', handler)
         }
 
         el.addEventListener('mouseleave', handler)
-        callback(e)
     })
 }
 

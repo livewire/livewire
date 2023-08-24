@@ -866,7 +866,7 @@ var require_module_cjs = __commonJS({
           }
           return result;
         }
-        function clear2() {
+        function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
           const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
@@ -933,7 +933,7 @@ var require_module_cjs = __commonJS({
             add,
             set: set$1,
             delete: deleteEntry,
-            clear: clear2,
+            clear,
             forEach: createForEach(false, false)
           };
           const shallowInstrumentations2 = {
@@ -947,7 +947,7 @@ var require_module_cjs = __commonJS({
             add,
             set: set$1,
             delete: deleteEntry,
-            clear: clear2,
+            clear,
             forEach: createForEach(false, true)
           };
           const readonlyInstrumentations2 = {
@@ -6872,13 +6872,13 @@ function whenThisLinkIsPressed(el, callback) {
 function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
   el.addEventListener("mouseenter", (e) => {
     let timeout = setTimeout(() => {
+      callback(e);
     }, ms);
     let handler = () => {
-      clear;
+      clearTimeout(timeout);
       el.removeEventListener("mouseleave", handler);
     };
     el.addEventListener("mouseleave", handler);
-    callback(e);
   });
 }
 function extractDestinationFromLink(linkEl) {
@@ -7034,11 +7034,16 @@ function injectStyles() {
 
 // js/plugins/navigate/page.js
 var oldBodyScriptTagHashes = [];
+var attributesExemptFromScriptTagHashing = [
+  "data-csrf"
+];
 function swapCurrentPageWithNewHtml(html, andThen) {
   let newDocument = new DOMParser().parseFromString(html, "text/html");
   let newBody = document.adoptNode(newDocument.body);
   let newHead = document.adoptNode(newDocument.head);
-  oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll("script")).map((i) => simpleHash(i.outerHTML)));
+  oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll("script")).map((i) => {
+    return simpleHash(ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing));
+  }));
   mergeNewHead(newHead);
   prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
   transitionOut(document.body);
@@ -7064,7 +7069,7 @@ function transitionIn(body) {
 function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes2) {
   newBody.querySelectorAll("script").forEach((i) => {
     if (i.hasAttribute("data-navigate-once")) {
-      let hash = simpleHash(i.outerHTML);
+      let hash = simpleHash(ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing));
       if (oldBodyScriptTagHashes2.includes(hash))
         return;
     }
@@ -7138,6 +7143,14 @@ function simpleHash(str) {
     a = (a << 5) - a + b.charCodeAt(0);
     return a & a;
   }, 0);
+}
+function ignoreAttributes(subject, attributesToRemove) {
+  let result = subject;
+  attributesToRemove.forEach((attr) => {
+    const regex = new RegExp(`${attr}="[^"]*"|${attr}='[^']*'`, "g");
+    result = result.replace(regex, "");
+  });
+  return result.trim();
 }
 
 // js/plugins/navigate/fetch.js
@@ -8304,9 +8317,9 @@ function poll(callback, interval = 2e3) {
   let stopConditions = [];
   return {
     start() {
-      let clear2 = syncronizedInterval(interval, () => {
+      let clear = syncronizedInterval(interval, () => {
         if (stopConditions.some((i) => i()))
-          return clear2();
+          return clear();
         if (pauseConditions.some((i) => i()))
           return;
         if (throttleConditions.some((i) => i()) && Math.random() < 0.95)
