@@ -16,9 +16,9 @@ class SupportPagination extends ComponentHook
     static function provide()
     {
         app('livewire')->provide(function () {
-            $this->loadViewsFrom(__DIR__.'/views', 'livewire');
+            $this->loadViewsFrom(__DIR__ . '/views', 'livewire');
 
-            $paths = [__DIR__.'/views' => resource_path('views/vendor/livewire')];
+            $paths = [__DIR__ . '/views' => resource_path('views/vendor/livewire')];
 
             $this->publishes($paths, 'livewire');
             $this->publishes($paths, 'livewire:pagination');
@@ -37,9 +37,15 @@ class SupportPagination extends ComponentHook
 
     function mount($params)
     {
-        if(!($params['queryString'] ?? true)) {
-            $this->useQueryString = false;
+        $useQueryString = $params['queryString'] ?? null;
+        if ($useQueryString === null) {
+            $queryStringAttribute = (new \ReflectionClass($this->component))->getAttributes(\Livewire\Attributes\QueryString::class)[0] ?? null;
+            if ($queryStringAttribute) {
+                $useQueryString = $queryStringAttribute->getArguments()[0] ?? true;
+            }
         }
+
+        if($useQueryString !== null && !$useQueryString) $this->useQueryString = false;
     }
 
     function destroy()
@@ -72,7 +78,7 @@ class SupportPagination extends ComponentHook
         Paginator::currentPageResolver(function ($pageName) {
             $this->ensurePaginatorIsInitialized($pageName);
 
-            return (int) $this->component->paginators[$pageName];
+            return (int)$this->component->paginators[$pageName];
         });
     }
 
@@ -100,13 +106,13 @@ class SupportPagination extends ComponentHook
 
     protected function resolvePage($alias, $default)
     {
-        if(!$this->useQueryString) return $default;
+        if (!$this->useQueryString) return $default;
         return request()->query($alias, $default);
     }
 
     protected function addUrlHook($pageName, $queryStringDetails)
     {
-        if(!$this->useQueryString) return;
+        if (!$this->useQueryString) return;
         $key = 'paginators.' . $pageName;
         $alias = $queryStringDetails['as'];
         $history = $queryStringDetails['history'];

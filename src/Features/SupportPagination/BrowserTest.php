@@ -832,7 +832,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function test_disable_urls_change()
+    public function test_url_disabled_by_query_string_param_change()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -868,7 +868,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function test_disable_urls_init()
+    public function test_url_disabled_by_query_string_param_init()
     {
         Livewire::withQueryParams(['page' => '2'])->visit([new class extends Component {
             public function render() { return <<<HTML
@@ -903,6 +903,156 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Post #2')
             ->assertSee('Post #3')
             ->assertDontSee('Post #4')
+        ;
+    }
+
+    /** @test */
+    public function test_url_disabled_by_query_string_attribute_change()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child />
+            </div>
+            HTML; }
+        }, 'child' => new #[\Livewire\Attributes\QueryString(false)] class extends Component {
+            use WithPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        }])
+            // Test that going to page 2 doesn't change the query string.
+            ->waitForLivewire()->click('@nextPage.before')
+            ->assertQueryStringMissing('page')
+        ;
+    }
+
+    /** @test */
+    public function test_url_disabled_by_query_string_attribute_init()
+    {
+        Livewire::withQueryParams(['page' => '2'])->visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child />
+            </div>
+            HTML; }
+        }, 'child' => new #[\Livewire\Attributes\QueryString(false)] class extends Component {
+            use WithPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        }])
+            // Test that query param page isn't used if disabled.
+            ->assertQueryStringHas('page', '2')
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertDontSee('Post #4')
+        ;
+    }
+
+    /** @test */
+    public function test_url_enabled_by_query_string_param_override_change()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child :query-string='true' />
+            </div>
+            HTML; }
+        }, 'child' => new #[\Livewire\Attributes\QueryString(false)] class extends Component {
+            use WithPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        }])
+            // Test that going to page 2 doesn't change the query string.
+            ->waitForLivewire()->click('@nextPage.before')
+            ->assertQueryStringHas('page', '2')
+        ;
+    }
+
+    /** @test */
+    public function test_url_enabled_by_query_string_param_override_init()
+    {
+        Livewire::withQueryParams(['page' => '2'])->visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child :query-string='true' />
+            </div>
+            HTML; }
+        }, 'child' => new #[\Livewire\Attributes\QueryString(false)] class extends Component {
+            use WithPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        }])
+            // Test that query param page isn't used if disabled.
+            ->assertQueryStringHas('page', '2')
+            ->assertSee('Post #4')
+            ->assertSee('Post #5')
+            ->assertSee('Post #6')
+            ->assertDontSee('Post #3')
         ;
     }
 }

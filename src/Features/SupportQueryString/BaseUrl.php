@@ -16,7 +16,15 @@ class BaseUrl extends LivewireAttribute
 
     public function mount($params)
     {
-        if(!($params['queryString'] ?? true)) {
+        $useQueryString = $params['queryString'] ?? null;
+        if ($useQueryString === null) {
+            $queryStringAttribute = (new \ReflectionClass($this->component))->getAttributes(\Livewire\Attributes\QueryString::class)[0] ?? null;
+            if ($queryStringAttribute) {
+                $useQueryString = $queryStringAttribute->getArguments()[0] ?? true;
+            }
+        }
+
+        if($useQueryString !== null && !$useQueryString) {
             store($this->component)->set('useQueryString', false);
             return;
         }
