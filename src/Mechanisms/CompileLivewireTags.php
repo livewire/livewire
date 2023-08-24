@@ -15,9 +15,7 @@ class CompileLivewireTags extends ComponentTagCompiler
 
     public function boot()
     {
-        app('blade.compiler')->precompiler(function ($string) {
-            return $this->compileLivewireSelfClosingTags($string);
-        });
+        app('blade.compiler')->precompiler($this->compileLivewireSelfClosingTags(...));
     }
 
     protected function compileLivewireSelfClosingTags($value)
