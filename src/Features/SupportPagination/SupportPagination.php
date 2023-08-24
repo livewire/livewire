@@ -102,7 +102,6 @@ class SupportPagination extends ComponentHook
         $history = $queryStringDetails['history'];
         $keep = $queryStringDetails['keep'];
 
-        // @todo: make this work...
         $this->component->setPropertyAttribute($key, new BaseUrl(as: $alias, history: $history, keep: $keep));
     }
 

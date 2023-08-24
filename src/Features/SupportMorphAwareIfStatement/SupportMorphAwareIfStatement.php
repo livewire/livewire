@@ -2,11 +2,12 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
+use Livewire\Livewire;
 use Livewire\ComponentHook;
+use Illuminate\Support\Facades\Blade;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
-    // @todo: exempt @class and support @error?
     static function provide()
     {
         if (! config('livewire.inject_morph_markers', true)) return;
@@ -18,44 +19,64 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
     static function registerPrecompilers($precompile)
     {
-        $outsideOfHtmlTag = function ($directive) {
-            $htmlTag = '<[^>]*("[^"]*"|\'[^\']*\'|\{\{[^}]*\}\}|@class[^[]*\[(?:[^[\]]++|(?R))*]|@if[^(]*\(([^)]*|->)*\)[^>]*|@foreach[^(]*\(([^)]*|->)*\)[^>]*|[^>])*?>';
-            $bladeEchoExpression = '\{\{[^}]*\}\}';
-            $bladeParameters = '\([^)]*\)';
-            $ignoreIfInsideHtmlTagOrExpression = "({$htmlTag}|{$bladeEchoExpression}|{$bladeParameters})(*SKIP)(*FAIL)|";
-            $noOpeningAngleBracketBefore = '(?<!<)';
-            $noClosingAngleBracketAfter = '(?!>)';
+        $generatePattern = function ($directives) {
+            $directivesPattern = '('
+                .collect($directives)
+                    // Ensure longer directives are in the pattern before shorter ones...
+                    ->sortBy(fn ($directive) => strlen($directive), descending: true)
+                    ->join('|')
+            .')';
 
-            return '/'
-                .$ignoreIfInsideHtmlTagOrExpression
-                .$noOpeningAngleBracketBefore
-                .$directive
-                .$noClosingAngleBracketAfter
-                .'/mU';
+            $pattern = '/
+                '.$directivesPattern.'  # Blade directive
+                (?!                     # Not followed by:
+                    [^<]*               # ...
+                    (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
+                    >                   # A ">" character that isn\'t preceded by a "<" character (meaning it\'s outside of a tag)
+                )
+            /mUx';
+
+            return $pattern;
         };
 
-        $precompile($outsideOfHtmlTag('@if'), function ($matches) {
-            [$before, $after] = explode('@if', $matches[0]);
+        $directives = [
+            '@if' => '@endif',
+            '@unless' => '@endunless',
+            '@error' => '@enderror',
+            '@isset' => '@endisset',
+            '@empty' => '@endempty',
+            '@auth' => '@endauth',
+            '@guest' => '@endguest',
+            '@switch' => '@endswitch',
+            '@foreach' => '@endforeach',
+            '@forelse' => '@endforelse',
+            '@while' => '@endwhile',
+            '@for' => '@endfor',
+        ];
 
-            return $before.'<!-- __BLOCK__ -->@if'.$after;
-        });
+        Livewire::precompiler(function ($entire) use ($generatePattern, $directives) {
+            $conditions = \Livewire\invade(app('blade.compiler'))->conditions;
 
-        $precompile($outsideOfHtmlTag('@endif'), function ($matches) {
-            [$before, $after] = explode('@endif', $matches[0]);
+            foreach (array_keys($conditions) as $conditionalDirective) {
+                $directives['@'.$conditionalDirective] = '@end'.$conditionalDirective;
+            }
 
-            return $before.'@endif <!-- __ENDBLOCK__ -->'.$after;
-        });
+            $openings = array_keys($directives);
+            $closings = array_values($directives);
 
-        $precompile($outsideOfHtmlTag('@foreach'), function ($matches) {
-            [$before, $after] = explode('@foreach', $matches[0]);
+            $entire = preg_replace_callback($generatePattern($openings), function ($matches) {
+                $original = $matches[0];
 
-            return $before.'<!-- __BLOCK__ -->@foreach'.$after;
-        });
+                return '<!-- __BLOCK__ -->'.$original;
+            }, $entire);
 
-        $precompile($outsideOfHtmlTag('@endforeach'), function ($matches) {
-            [$before, $after] = explode('@endforeach', $matches[0]);
+            $entire = preg_replace_callback($generatePattern($closings), function ($matches) {
+                $original = $matches[0];
 
-            return $before.'@endforeach <!-- __ENDBLOCK__ -->'.$after;
+                return $original.' <!-- __ENDBLOCK__ -->';
+            }, $entire);
+
+            return $entire;
         });
     }
 }

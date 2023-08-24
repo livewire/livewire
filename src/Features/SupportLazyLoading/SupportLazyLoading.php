@@ -2,27 +2,48 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use function Livewire\store;
-use function Livewire\wrap;
+use function Livewire\{ store, wrap };
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 use Livewire\Component;
+use Illuminate\Routing\Route;
 
 class SupportLazyLoading extends ComponentHook
 {
+    static function provide()
+    {
+        static::registerRouteMacro();
+    }
+
+    static function registerRouteMacro()
+    {
+        Route::macro('lazy', function ($enabled = true) {
+            $this->defaults['lazy'] = $enabled;
+
+            return $this;
+        });
+    }
+
     public function mount($params)
     {
-        if (! ($params['lazy'] ?? false)) return;
+        $hasLazyParam = isset($params['lazy']);
+        $lazyProperty = $params['lazy'] ?? false;
+
+        $reflectionClass = new \ReflectionClass($this->component);
+        $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
+
+        // If `:lazy="false"` disable lazy loading...
+        if ($hasLazyParam && ! $lazyProperty) return;
+        // If no lazy loading is included at all...
+        if (! $hasLazyParam && ! $hasLazyAttribute) return;
 
         $this->component->skipMount();
 
         store($this->component)->set('isLazyLoadMounting', true);
 
-        $mountParams = array_diff_key($params, array_flip(['lazy']));
-
         $this->component->skipRender(
-            $this->generatePlaceholderHtml($mountParams)
+            $this->generatePlaceholderHtml($params)
         );
     }
 
@@ -64,18 +85,24 @@ class SupportLazyLoading extends ComponentHook
 
         $container = app('livewire')->new('__mountParamsContainer');
 
-        $container->forMount = $params;
+        $container->forMount = array_diff_key($params, array_flip(['lazy']));
 
         $snapshot = app('livewire')->snapshot($container);
 
         $encoded = base64_encode(json_encode($snapshot));
 
+        $globalPlaceholder = config('livewire.lazy_placeholder');
+
+        $placeholderHtml = $globalPlaceholder
+            ? view($globalPlaceholder)->render()
+            : '<div></div>';
+
         $placeholder = wrap($this->component)
-            ->withFallback('<div></div>')
+            ->withFallback($placeholderHtml)
             ->placeholder();
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
-            'x-intersect' => '$wire.__lazyLoad(\''.$encoded.'\')',
+            ($params['lazy'] === 'on-load' ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
         ]);
 
         return $html;

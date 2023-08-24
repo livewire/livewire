@@ -416,6 +416,54 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('I am a script 1')
             ->assertDontSee('I am a script 2');
     }
+
+    /** @test */
+    public function can_access_route_parameters_without_mount_method()
+    {
+        Route::get('/route-with-params/{myId}', ComponentForRouteWithoutMountParametersTest::class);
+
+        $this->get('/route-with-params/123')->assertSeeText('123');
+    }
+
+    /** @test */
+    public function can_access_route_parameters_with_mount_method()
+    {
+        Route::get('/route-with-params/{myId}', ComponentForRouteWithMountParametersTest::class);
+
+        $this->get('/route-with-params/123')->assertSeeText('123');
+    }
+}
+
+class ComponentForRouteWithoutMountParametersTest extends Component
+{
+    public $myId;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $myId }}
+        </div>
+        HTML;
+    }
+}
+
+class ComponentForRouteWithMountParametersTest extends Component
+{
+    public $myId;
+
+    public function mount()
+    {
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $myId }}
+        </div>
+        HTML;
+    }
 }
 
 class ComponentForConfigurableLayoutTest extends Component
