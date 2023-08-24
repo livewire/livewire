@@ -59,9 +59,6 @@ php artisan view:clear
 
 Livewire 3 has changed multiple configuration options. If your application has a published configuration file (`config/livewire.php`), you will need to update it to account for the following changes.
 
-<!-- @todo after launch:
-If you'd rather view the changes in a more visual way, you can reference [the GitHub file comparison](???). -->
-
 ### New configuration
 
 The following configuration keys have been introduced in version 3:

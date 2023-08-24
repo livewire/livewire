@@ -545,6 +545,12 @@ class StepOne extends Component
 }
 ```
 
+If you prefer, you can use the alternative syntax:
+
+```blade
+<livewire:is :component="$current" />
+```
+
 ## Recursive components
 
 Although rarely needed by most applications, Livewire components may be nested recursively, meaning a parent component renders itself as its child.

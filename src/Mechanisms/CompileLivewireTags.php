@@ -61,13 +61,13 @@ class CompileLivewireTags extends ComponentTagCompiler
             if ($component === 'styles') return '@livewireStyles';
             if ($component === 'scripts') return '@livewireScripts';
             if ($component === 'dynamic-component' || $component === 'is') {
-                if(! isset($attributes['component'])) {
+                if(! (isset($attributes['component']) || isset($attributes['is']))) {
                     $dynamicComponentExists = rescue(function() use ($component, $attributes) {
                         // Need to run this in rescue otherwise running this during a test causes Livewire directory not found exception
                         return $component === 'dynamic-component' && app('livewire')->getClass('dynamic-component');
                     });
 
-                    if($dynamicComponentExists) {
+                    if ($dynamicComponentExists) {
                         return $this->componentString("'{$component}'", $attributes);
                     }
 
@@ -75,9 +75,10 @@ class CompileLivewireTags extends ComponentTagCompiler
                 }
 
                 // Does not need quotes as resolved with quotes already.
-                $component = $attributes['component'];
+                $component = $attributes['component'] ?? $attributes['is'];
 
                 unset($attributes['component']);
+                unset($attributes['is']);
             } else {
                 // Add single quotes to the component name to compile it as string in quotes
                 $component = "'{$component}'";

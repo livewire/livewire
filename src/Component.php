@@ -2,23 +2,19 @@
 
 namespace Livewire;
 
+use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
+use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
-use Livewire\Features\SupportPageComponents\HandlesPageComponents;
-use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Features\SupportEvents\HandlesEvents;
-use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
-use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use BadMethodCallException;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-
-/**
- * @todo - add Facade-esque method signatures to this file (from triggered __get and __call)
- */
 
 abstract class Component
 {
