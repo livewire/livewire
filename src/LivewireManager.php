@@ -197,18 +197,6 @@ class LivewireManager
         trigger('flush-state');
     }
 
-    protected $jsFeatures = [];
-
-    function enableJsFeature($name)
-    {
-        $this->jsFeatures[] = $name;
-    }
-
-    function getJsFeatures()
-    {
-        return $this->jsFeatures;
-    }
-
     function originalUrl()
     {
         if ($this->isLivewireRequest()) {
