@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
-use Livewire\Component;
 use Livewire\Component as BaseComponent;
 use Sushi\Sushi;
 
@@ -86,7 +85,7 @@ class EloquentCollectionsBrowserTest extends TestCase
     public function it_hydrate_work_property_when_collection_is_empty()
     {
         $this->browse(function (Browser $browser) {
-            $this->visitLivewireComponent($browser, EloquentCollectionsEmptyComponent::class)
+            $this->visitLivewireComponent($browser, EloquentCollectionsWithoutItemsComponent::class)
                 ->waitForLivewire()->click('@something')
                 ->assertSeeIn('@output', 'Ok!');
             ;
@@ -201,7 +200,7 @@ HTML;
     }
 }
 
-class EloquentCollectionsEmptyComponent extends Component
+class EloquentCollectionsWithoutItemsComponent extends BaseComponent
 {
     public $authors;
 
@@ -211,7 +210,7 @@ class EloquentCollectionsEmptyComponent extends Component
 
     public function mount()
     {
-        $this->authors = EloquentCollectionsEmpty::get();
+        $this->authors = EloquentCollectionsWithoutItems::get();
     }
 
     public function something()
@@ -304,7 +303,7 @@ class EloquentCollectionsComment extends Model
 }
 
 
-class EloquentCollectionsEmpty extends Model
+class EloquentCollectionsWithoutItems extends Model
 {
     use Sushi;
 
