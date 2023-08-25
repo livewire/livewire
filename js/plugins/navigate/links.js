@@ -8,7 +8,10 @@ export function whenThisLinkIsClicked(el, callback) {
 }
 
 export function whenThisLinkIsPressed(el, callback) {
-    el.addEventListener('click', e => e.preventDefault())
+    el.addEventListener('click', e => {
+        if (e.metaKey) return;
+        e.preventDefault();
+    })
 
     el.addEventListener('mousedown', e => {
         if (e.button !== 0) return; // Only on left click...
