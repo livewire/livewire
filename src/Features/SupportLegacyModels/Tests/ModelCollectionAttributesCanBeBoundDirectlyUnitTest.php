@@ -134,7 +134,11 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
         $this->resetSushiModel(ModelForBindingHasOne::class);
         Livewire::test(ComponentWithModelHasDefaultRelation::class)
             ->call('notThing')
-            ->assertOk();
+            ->assertSet('modelsLatestOne.title', 'default')
+            ->assertNotSet('modelsLatestOne.parent_id', 3)
+            ->call('saveOne')
+            ->assertSet('modelsLatestOne.title', 'default')
+            ->assertSet('modelsLatestOne.parent_id', 3);
 
     }
 
@@ -269,6 +273,12 @@ class ComponentWithModelHasDefaultRelation extends Component
     public function notThing()
     {
 
+    }
+
+    public function saveOne()
+    {
+        $this->models[2]->one->save($this->modelsLatestOne->toArray());
+        $this->modelsLatestOne = $this->models[2]->one;
     }
 
     public function render()
