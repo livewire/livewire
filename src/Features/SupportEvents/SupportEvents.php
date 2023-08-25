@@ -25,6 +25,9 @@ class SupportEvents extends ComponentHook
             $returnEarly(
                 wrap($this->component)->$method(...$params)
             );
+
+            $isRenderless = count((new \ReflectionMethod($this->component, $method))->getAttributes(\Livewire\Attributes\Renderless::class)) > 0;
+            if($isRenderless) $this->component->skipRender();
         }
     }
 
