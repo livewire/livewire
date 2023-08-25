@@ -6854,9 +6854,14 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 
 // js/plugins/navigate/links.js
 function whenThisLinkIsPressed(el, callback) {
-  el.addEventListener("click", (e) => e.preventDefault());
+  let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+  el.addEventListener("click", (e) => {
+    if (isNotPlainLeftClick(e))
+      return;
+    e.preventDefault();
+  });
   el.addEventListener("mousedown", (e) => {
-    if (e.button !== 0)
+    if (isNotPlainLeftClick(e))
       return;
     e.preventDefault();
     callback((whenReleased) => {
