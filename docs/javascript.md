@@ -1,6 +1,13 @@
 
 Livewire provides plenty of JavaScript extension points for advanced users who want to use Livewire in deeper ways or extend Livewire's features with custom APIs.
 
+// Todo:
+* Make new page: Third-party JavaScript
+    * Including package scripts
+    * Initializing components
+    * Ignoring DOM changes
+    * wire:model data inside
+
 ## Global Livewire events
 
 Livewire dispatches two helpful browser events for you to register any custom extension points:
