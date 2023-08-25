@@ -8,16 +8,16 @@ export function whenThisLinkIsClicked(el, callback) {
 }
 
 export function whenThisLinkIsPressed(el, callback) {
-    el.addEventListener('click', e => e.preventDefault());
+    let isOnlyLeftClick = e => (e.which > 1) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
+
+    el.addEventListener('click', e => {
+        if (isOnlyLeftClick(e)) return;
+
+        e.preventDefault()
+    })
 
     el.addEventListener('mousedown', e => {
-        if (
-            (e.which > 1) ||
-            (e.altKey) ||
-            (e.ctrlKey) ||
-            (e.metaKey) ||
-            (e.shiftKey)
-        ) return; // Only on left click...
+        if (isOnlyLeftClick(e)) return;
 
         e.preventDefault()
 
