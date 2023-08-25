@@ -42,7 +42,6 @@ class SupportMorphAwareIfStatement extends ComponentHook
             '@unless' => '@endunless',
             '@error' => '@enderror',
             '@isset' => '@endisset',
-            '@empty' => '@endempty',
             '@auth' => '@endauth',
             '@guest' => '@endguest',
             '@switch' => '@endswitch',
