@@ -83,7 +83,7 @@ class EloquentCollectionsBrowserTest extends TestCase
     }
 
     /** @test */
-    public function it_empty()
+    public function it_hydrate_work_property_when_collection_is_empty()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsEmptyComponent::class)
