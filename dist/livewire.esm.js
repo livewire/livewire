@@ -6402,7 +6402,7 @@ import_alpinejs2.default.magic("wire", (el, { cleanup: cleanup2 }) => {
     get(target, property) {
       if (!component)
         component = closestComponent(el);
-      if (property === "entangle") {
+      if (["$entangle", "entangle"].includes(property)) {
         return generateEntangleFunction(component, cleanup2);
       }
       return component.$wire[property];

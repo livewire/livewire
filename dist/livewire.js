@@ -4093,7 +4093,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get(target, property) {
         if (!component)
           component = closestComponent(el);
-        if (property === "entangle") {
+        if (["$entangle", "entangle"].includes(property)) {
           return generateEntangleFunction(component, cleanup3);
         }
         return component.$wire[property];
