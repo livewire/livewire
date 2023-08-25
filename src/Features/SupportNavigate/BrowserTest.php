@@ -342,6 +342,31 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function navigate_is_not_triggered_on_cmd_click()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->tap(function ($browser) {
+                    $browser->driver->getKeyboard()->pressKey(\Facebook\WebDriver\WebDriverKeys::COMMAND);
+                })
+                ->click('@link.to.second')
+                ->tap(function ($browser) {
+                    $browser->driver->getKeyboard()->releaseKey(\Facebook\WebDriver\WebDriverKeys::COMMAND);
+                })
+                ->pause(500) // Let navigate run if it was going to (it should not)
+                ->assertSee('On first')
+                ->assertScript('return window._lw_dusk_test')
+            ;
+
+            $this->assertCount(2, $browser->driver->getWindowHandles());
+        });
+    }
+
+    /** @test */
     public function events_from_child_components_still_function_after_navigation()
     {
         $this->browse(function (Browser $browser) {
