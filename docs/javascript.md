@@ -411,6 +411,24 @@ Livewire.hook('element.init', ({ component, el }) => {
 })
 ```
 
+### DOM Morph hooks
+
+During the DOM morphing lifecycle — which occurs after Livewire completes a network roundtrip — Livewire triggers a series of events for every element that is mutated.
+
+```js
+Livewire.hook('morph.updating', (fromEl, toEl, component) => {
+	//
+})
+
+Livewire.hook('morph.updated', (el, component) => {
+	//
+})
+
+Livewire.hook('morph.removed', (el, component) => {
+	//
+})
+```
+
 ### Commit hooks
 
 Because Livewire requests contain multiple components, _request_ is too broad of a term to refer to an individual component's request and response payload. Instead, internally, Livewire refers to component updates as _commits_ — in reference to _committing_ component state to the server.
