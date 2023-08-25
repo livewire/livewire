@@ -5544,14 +5544,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/links.js
   function whenThisLinkIsPressed(el, callback) {
-    let isOnlyLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+    let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
     el.addEventListener("click", (e) => {
-      if (isOnlyLeftClick(e))
+      if (isNotPlainLeftClick(e))
         return;
       e.preventDefault();
     });
     el.addEventListener("mousedown", (e) => {
-      if (isOnlyLeftClick(e))
+      if (isNotPlainLeftClick(e))
         return;
       e.preventDefault();
       callback((whenReleased) => {
