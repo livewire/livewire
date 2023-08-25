@@ -8,10 +8,16 @@ export function whenThisLinkIsClicked(el, callback) {
 }
 
 export function whenThisLinkIsPressed(el, callback) {
-    el.addEventListener('click', e => e.preventDefault())
+    let isNotPlainLeftClick = e => (e.which > 1) || (e.altKey) || (e.ctrlKey) || (e.metaKey) || (e.shiftKey)
+
+    el.addEventListener('click', e => {
+        if (isNotPlainLeftClick(e)) return;
+
+        e.preventDefault()
+    })
 
     el.addEventListener('mousedown', e => {
-        if (e.button !== 0) return; // Only on left click...
+        if (isNotPlainLeftClick(e)) return;
 
         e.preventDefault()
 
