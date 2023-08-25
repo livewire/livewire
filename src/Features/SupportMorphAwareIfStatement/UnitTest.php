@@ -284,6 +284,18 @@ class UnitTest extends \Tests\TestCase
                 <div something="here" @if ($object->method() && $object->method()) foo="bar" @endif something="here"></div>
                 HTML
             ],
+            19 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @forelse($posts as $post)
+                        ...
+                    @empty
+                        ...
+                    @endforelse
+                </div>
+                HTML
+            ],
         ];
     }
 
