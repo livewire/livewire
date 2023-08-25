@@ -259,4 +259,9 @@ class TestableLivewire
         
         return $this;
     }
+
+    public function __destruct()
+    {
+        unset(self::$instancesById[$this->id()]);
+    }
 }
