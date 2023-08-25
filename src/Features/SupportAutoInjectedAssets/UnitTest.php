@@ -226,6 +226,7 @@ class UnitTest extends TestCase
     public function makeACleanSlate()
     {
         \Livewire\Livewire::flushState();
+
         parent::makeACleanSlate();
     }
 }
