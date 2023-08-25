@@ -6561,13 +6561,9 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 
 // js/plugins/navigate/links.js
 function whenThisLinkIsPressed(el, callback) {
-  el.addEventListener("click", (e) => {
-    if (e.metaKey)
-      return;
-    e.preventDefault();
-  });
+  el.addEventListener("click", (e) => e.preventDefault());
   el.addEventListener("mousedown", (e) => {
-    if (e.button !== 0)
+    if (e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)
       return;
     e.preventDefault();
     callback((whenReleased) => {
