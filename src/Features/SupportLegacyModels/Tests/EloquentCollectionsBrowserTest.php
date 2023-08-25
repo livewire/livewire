@@ -71,7 +71,7 @@ class EloquentCollectionsBrowserTest extends TestCase
     }
 
     /** @test */
-    public function it_hydrate_work_property_without_rules()
+    public function hydrate_works_properly_without_rules()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutRulesComponent::class)
@@ -82,7 +82,7 @@ class EloquentCollectionsBrowserTest extends TestCase
     }
 
     /** @test */
-    public function it_hydrate_work_property_when_collection_is_empty()
+    public function hydrate_works_properly_when_collection_is_empty()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutItemsComponent::class)
