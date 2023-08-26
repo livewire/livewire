@@ -344,18 +344,20 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function navigate_is_not_triggered_on_cmd_click()
     {
-        $this->browse(function (Browser $browser) {
+        $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
+
+        $this->browse(function (Browser $browser) use ($key) {
             $browser
                 ->visit('/first')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
-                ->tap(function ($browser) {
-                    $browser->driver->getKeyboard()->pressKey(\Facebook\WebDriver\WebDriverKeys::COMMAND);
+                ->tap(function ($browser) use ($key) {
+                    $browser->driver->getKeyboard()->pressKey($key);
                 })
                 ->click('@link.to.second')
-                ->tap(function ($browser) {
-                    $browser->driver->getKeyboard()->releaseKey(\Facebook\WebDriver\WebDriverKeys::COMMAND);
+                ->tap(function ($browser) use ($key) {
+                    $browser->driver->getKeyboard()->releaseKey($key);
                 })
                 ->pause(500) // Let navigate run if it was going to (it should not)
                 ->assertSee('On first')
