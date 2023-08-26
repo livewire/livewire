@@ -344,7 +344,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function navigate_is_not_triggered_on_cmd_click()
     {
-        $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::META : \Facebook\WebDriver\WebDriverKeys::CONTROL;
+        $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
 
         $this->browse(function (Browser $browser) use ($key) {
             $browser
