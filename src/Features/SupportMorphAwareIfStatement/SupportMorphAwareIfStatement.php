@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
 use Livewire\ComponentHook;
-use Illuminate\Support\Facades\Blade;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
@@ -22,6 +21,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 .collect($directives)
                     // Ensure longer directives are in the pattern before shorter ones...
                     ->sortBy(fn ($directive) => strlen($directive), descending: true)
+                    ->map(fn ($directive) => $directive === '@empty' ? $directive.'[^\S\r\n]*\(' : $directive)
                     ->join('|')
             .')';
 
@@ -42,6 +42,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
             '@unless' => '@endunless',
             '@error' => '@enderror',
             '@isset' => '@endisset',
+            '@empty' => '@endempty',
             '@auth' => '@endauth',
             '@guest' => '@endguest',
             '@switch' => '@endswitch',
