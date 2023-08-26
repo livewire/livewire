@@ -351,11 +351,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
                 ->tap(function ($browser) {
-                    $browser->driver->getKeyboard()->pressKey(\Facebook\WebDriver\WebDriverKeys::COMMAND);
+                    $browser->driver->getKeyboard()->pressKey(\Facebook\WebDriver\WebDriverKeys::META);
                 })
                 ->click('@link.to.second')
                 ->tap(function ($browser) {
-                    $browser->driver->getKeyboard()->releaseKey(\Facebook\WebDriver\WebDriverKeys::COMMAND);
+                    $browser->driver->getKeyboard()->releaseKey(\Facebook\WebDriver\WebDriverKeys::META);
                 })
                 ->pause(500) // Let navigate run if it was going to (it should not)
                 ->assertSee('On first')
