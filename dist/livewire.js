@@ -57,10 +57,10 @@
         };
         NProgress2.status = null;
         NProgress2.set = function(n) {
-          var started = NProgress2.isStarted();
+          var started2 = NProgress2.isStarted();
           n = clamp(n, Settings.minimum, 1);
           NProgress2.status = n === 1 ? null : n;
-          var progress = NProgress2.render(!started), bar = progress.querySelector(Settings.barSelector), speed = Settings.speed, ease = Settings.easing;
+          var progress = NProgress2.render(!started2), bar = progress.querySelector(Settings.barSelector), speed = Settings.speed, ease = Settings.easing;
           progress.offsetWidth;
           queue2(function(next) {
             if (Settings.positionUsing === "")
@@ -739,6 +739,7 @@
   var flushPending = false;
   var flushing = false;
   var queue = [];
+  var lastFlushedIndex = -1;
   function scheduler(callback) {
     queueJob(callback);
   }
@@ -749,7 +750,7 @@
   }
   function dequeueJob(job) {
     let index = queue.indexOf(job);
-    if (index !== -1)
+    if (index !== -1 && index > lastFlushedIndex)
       queue.splice(index, 1);
   }
   function queueFlush() {
@@ -763,8 +764,10 @@
     flushing = true;
     for (let i = 0; i < queue.length; i++) {
       queue[i]();
+      lastFlushedIndex = i;
     }
     queue.length = 0;
+    lastFlushedIndex = -1;
     flushing = false;
   }
   var reactive;
@@ -816,6 +819,109 @@
       cleanup22();
     }];
   }
+  function dispatch2(el, name, detail = {}) {
+    el.dispatchEvent(new CustomEvent(name, {
+      detail,
+      bubbles: true,
+      composed: true,
+      cancelable: true
+    }));
+  }
+  function walk(el, callback) {
+    if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
+      Array.from(el.children).forEach((el2) => walk(el2, callback));
+      return;
+    }
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    let node = el.firstElementChild;
+    while (node) {
+      walk(node, callback, false);
+      node = node.nextElementSibling;
+    }
+  }
+  function warn(message2, ...args) {
+    console.warn(`Alpine Warning: ${message2}`, ...args);
+  }
+  var started = false;
+  function start() {
+    if (started)
+      warn("Alpine has already been initialized on this page. Calling Alpine.start() more than once can cause problems.");
+    started = true;
+    if (!document.body)
+      warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
+    dispatch2(document, "alpine:init");
+    dispatch2(document, "alpine:initializing");
+    startObservingMutations();
+    onElAdded((el) => initTree(el, walk));
+    onElRemoved((el) => destroyTree(el));
+    onAttributesAdded((el, attrs) => {
+      directives(el, attrs).forEach((handle) => handle());
+    });
+    let outNestedComponents = (el) => !closestRoot(el.parentElement, true);
+    Array.from(document.querySelectorAll(allSelectors())).filter(outNestedComponents).forEach((el) => {
+      initTree(el);
+    });
+    dispatch2(document, "alpine:initialized");
+  }
+  var rootSelectorCallbacks = [];
+  var initSelectorCallbacks = [];
+  function rootSelectors() {
+    return rootSelectorCallbacks.map((fn) => fn());
+  }
+  function allSelectors() {
+    return rootSelectorCallbacks.concat(initSelectorCallbacks).map((fn) => fn());
+  }
+  function addRootSelector(selectorCallback) {
+    rootSelectorCallbacks.push(selectorCallback);
+  }
+  function addInitSelector(selectorCallback) {
+    initSelectorCallbacks.push(selectorCallback);
+  }
+  function closestRoot(el, includeInitSelectors = false) {
+    return findClosest(el, (element) => {
+      const selectors = includeInitSelectors ? allSelectors() : rootSelectors();
+      if (selectors.some((selector) => element.matches(selector)))
+        return true;
+    });
+  }
+  function findClosest(el, callback) {
+    if (!el)
+      return;
+    if (callback(el))
+      return el;
+    if (el._x_teleportBack)
+      el = el._x_teleportBack;
+    if (!el.parentElement)
+      return;
+    return findClosest(el.parentElement, callback);
+  }
+  function isRoot(el) {
+    return rootSelectors().some((selector) => el.matches(selector));
+  }
+  var initInterceptors = [];
+  function interceptInit(callback) {
+    initInterceptors.push(callback);
+  }
+  function initTree(el, walker = walk, intercept = () => {
+  }) {
+    deferHandlingDirectives(() => {
+      walker(el, (el2, skip) => {
+        intercept(el2, skip);
+        initInterceptors.forEach((i) => i(el2, skip));
+        directives(el2, el2.attributes).forEach((handle) => handle());
+        el2._x_ignore && skip();
+      });
+    });
+  }
+  function destroyTree(root) {
+    walk(root, (el) => {
+      cleanupAttributes(el);
+      cleanupElement(el);
+    });
+  }
   var onAttributeAddeds = [];
   var onElRemoveds = [];
   var onElAddeds = [];
@@ -851,6 +957,12 @@
         delete el._x_attributeCleanups[name];
       }
     });
+  }
+  function cleanupElement(el) {
+    if (el._x_cleanups) {
+      while (el._x_cleanups.length)
+        el._x_cleanups.pop()();
+    }
   }
   var observer = new MutationObserver(onMutate);
   var currentlyObserving = false;
@@ -947,10 +1059,7 @@
       if (addedNodes.includes(node))
         continue;
       onElRemoveds.forEach((i) => i(node));
-      if (node._x_cleanups) {
-        while (node._x_cleanups.length)
-          node._x_cleanups.pop()();
-      }
+      destroyTree(node);
     }
     addedNodes.forEach((node) => {
       node._x_ignoreSelf = true;
@@ -984,12 +1093,6 @@
     return () => {
       node._x_dataStack = node._x_dataStack.filter((i) => i !== data2);
     };
-  }
-  function refreshScope(element, scope2) {
-    let existingScope = element._x_dataStack[0];
-    Object.entries(scope2).forEach(([key, value]) => {
-      existingScope[key] = value;
-    });
   }
   function closestDataStack(node) {
     if (node._x_dataStack)
@@ -1050,7 +1153,7 @@
     });
     return thisProxy;
   }
-  function initInterceptors(data2) {
+  function initInterceptors2(data2) {
     let isObject22 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
     let recurse = (obj, basePath = "") => {
       Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
@@ -1117,12 +1220,20 @@
   }
   function injectMagics(obj, el) {
     Object.entries(magics).forEach(([name, callback]) => {
+      let memoizedUtilities = null;
+      function getUtilities() {
+        if (memoizedUtilities) {
+          return memoizedUtilities;
+        } else {
+          let [utilities, cleanup22] = getElementBoundUtilities(el);
+          memoizedUtilities = { interceptor, ...utilities };
+          onElRemoved(el, cleanup22);
+          return memoizedUtilities;
+        }
+      }
       Object.defineProperty(obj, `$${name}`, {
         get() {
-          let [utilities, cleanup22] = getElementBoundUtilities(el);
-          utilities = { interceptor, ...utilities };
-          onElRemoved(el, cleanup22);
-          return callback(el, utilities);
+          return callback(el, getUtilities());
         },
         enumerable: false
       });
@@ -1149,8 +1260,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function dontAutoEvaluateFunctions(callback) {
     let cache = shouldAutoEvaluateFunctions;
     shouldAutoEvaluateFunctions = false;
-    callback();
+    let result = callback();
     shouldAutoEvaluateFunctions = cache;
+    return result;
   }
   function evaluate(el, expression, extras = {}) {
     let result;
@@ -1168,10 +1280,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let overriddenMagics = {};
     injectMagics(overriddenMagics, el);
     let dataStack = [overriddenMagics, ...closestDataStack(el)];
-    if (typeof expression === "function") {
-      return generateEvaluatorFromFunction(dataStack, expression);
-    }
-    let evaluator = generateEvaluatorFromString(dataStack, expression, el);
+    let evaluator = typeof expression === "function" ? generateEvaluatorFromFunction(dataStack, expression) : generateEvaluatorFromString(dataStack, expression, el);
     return tryCatch.bind(null, el, expression, evaluator);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
@@ -1188,7 +1297,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let AsyncFunction = Object.getPrototypeOf(async function() {
     }).constructor;
-    let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression) || /^(let|const)\s/.test(expression) ? `(() => { ${expression} })()` : expression;
+    let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
     const safeAsyncFunction = () => {
       try {
         return new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
@@ -1229,6 +1338,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       } else {
         receiver(result);
       }
+    } else if (typeof value === "object" && value instanceof Promise) {
+      value.then((i) => receiver(i));
     } else {
       receiver(value);
     }
@@ -1243,6 +1354,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var directiveHandlers = {};
   function directive(name, callback) {
     directiveHandlers[name] = callback;
+    return {
+      before(directive22) {
+        if (!directiveHandlers[directive22]) {
+          console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
+          return;
+        }
+        const pos = directiveOrder.indexOf(directive22);
+        directiveOrder.splice(pos >= 0 ? pos : directiveOrder.indexOf("DEFAULT"), 0, name);
+      }
+    };
   }
   function directives(el, attributes, originalAttributeOverride) {
     attributes = Array.from(attributes);
@@ -1307,15 +1428,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getDirectiveHandler(el, directive22) {
     let noop = () => {
     };
-    let handler3 = directiveHandlers[directive22.type] || noop;
+    let handler4 = directiveHandlers[directive22.type] || noop;
     let [utilities, cleanup22] = getElementBoundUtilities(el);
     onAttributeRemoved(el, directive22.original, cleanup22);
     let fullHandler = () => {
       if (el._x_ignore || el._x_ignoreSelf)
         return;
-      handler3.inline && handler3.inline(el, directive22, utilities);
-      handler3 = handler3.bind(handler3, el, directive22, utilities);
-      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler3) : handler3();
+      handler4.inline && handler4.inline(el, directive22, utilities);
+      handler4 = handler4.bind(handler4, el, directive22, utilities);
+      isDeferringHandlers ? directiveHandlerStacks.get(currentHandlerStackKey).push(handler4) : handler4();
     };
     fullHandler.runCleanups = cleanup22;
     return fullHandler;
@@ -1366,19 +1487,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "ref",
     "data",
     "id",
-    "radio",
-    "tabs",
-    "switch",
-    "disclosure",
-    "menu",
-    "listbox",
-    "list",
-    "item",
-    "combobox",
     "bind",
     "init",
     "for",
-    "mask",
     "model",
     "modelable",
     "transition",
@@ -1391,14 +1502,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let typeA = directiveOrder.indexOf(a.type) === -1 ? DEFAULT : a.type;
     let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
     return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
-  }
-  function dispatch2(el, name, detail = {}) {
-    el.dispatchEvent(new CustomEvent(name, {
-      detail,
-      bubbles: true,
-      composed: true,
-      cancelable: true
-    }));
   }
   var tickStack = [];
   var isHolding = false;
@@ -1423,87 +1526,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function holdNextTicks() {
     isHolding = true;
-  }
-  function walk(el, callback) {
-    if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
-      Array.from(el.children).forEach((el2) => walk(el2, callback));
-      return;
-    }
-    let skip = false;
-    callback(el, () => skip = true);
-    if (skip)
-      return;
-    let node = el.firstElementChild;
-    while (node) {
-      walk(node, callback, false);
-      node = node.nextElementSibling;
-    }
-  }
-  function warn(message2, ...args) {
-    console.warn(`Alpine Warning: ${message2}`, ...args);
-  }
-  function start() {
-    if (!document.body)
-      warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
-    dispatch2(document, "alpine:init");
-    dispatch2(document, "alpine:initializing");
-    startObservingMutations();
-    onElAdded((el) => initTree(el, walk));
-    onElRemoved((el) => destroyTree(el));
-    onAttributesAdded((el, attrs) => {
-      directives(el, attrs).forEach((handle) => handle());
-    });
-    let outNestedComponents = (el) => !closestRoot(el.parentElement, true);
-    Array.from(document.querySelectorAll(allSelectors())).filter(outNestedComponents).forEach((el) => {
-      initTree(el);
-    });
-    dispatch2(document, "alpine:initialized");
-  }
-  var rootSelectorCallbacks = [];
-  var initSelectorCallbacks = [];
-  function rootSelectors() {
-    return rootSelectorCallbacks.map((fn) => fn());
-  }
-  function allSelectors() {
-    return rootSelectorCallbacks.concat(initSelectorCallbacks).map((fn) => fn());
-  }
-  function addRootSelector(selectorCallback) {
-    rootSelectorCallbacks.push(selectorCallback);
-  }
-  function addInitSelector(selectorCallback) {
-    initSelectorCallbacks.push(selectorCallback);
-  }
-  function closestRoot(el, includeInitSelectors = false) {
-    return findClosest(el, (element) => {
-      const selectors = includeInitSelectors ? allSelectors() : rootSelectors();
-      if (selectors.some((selector) => element.matches(selector)))
-        return true;
-    });
-  }
-  function findClosest(el, callback) {
-    if (!el)
-      return;
-    if (callback(el))
-      return el;
-    if (el._x_teleportBack)
-      el = el._x_teleportBack;
-    if (!el.parentElement)
-      return;
-    return findClosest(el.parentElement, callback);
-  }
-  function isRoot(el) {
-    return rootSelectors().some((selector) => el.matches(selector));
-  }
-  function initTree(el, walker = walk) {
-    deferHandlingDirectives(() => {
-      walker(el, (el2, skip) => {
-        directives(el2, el2.attributes).forEach((handle) => handle());
-        el2._x_ignore && skip();
-      });
-    });
-  }
-  function destroyTree(root) {
-    walk(root, (el) => cleanupAttributes(el));
   }
   function setClasses(el, value) {
     if (Array.isArray(value)) {
@@ -1599,7 +1621,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("transition", (el, { value, modifiers, expression }, { evaluate: evaluate2 }) => {
     if (typeof expression === "function")
       expression = evaluate2(expression);
-    if (!expression) {
+    if (expression === false)
+      return;
+    if (!expression || typeof expression === "boolean") {
       registerTransitionsFromHelper(el, modifiers, value);
     } else {
       registerTransitionsFromClassString(el, expression, value);
@@ -1608,7 +1632,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function registerTransitionsFromClassString(el, classString, stage) {
     registerTransitionObject(el, setClasses, "");
     let directiveStorageMap = {
-      enter: (classes) => {
+      "enter": (classes) => {
         el._x_transition.enter.during = classes;
       },
       "enter-start": (classes) => {
@@ -1617,7 +1641,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "enter-end": (classes) => {
         el._x_transition.enter.end = classes;
       },
-      leave: (classes) => {
+      "leave": (classes) => {
         el._x_transition.leave.during = classes;
       },
       "leave-start": (classes) => {
@@ -1645,7 +1669,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let wantsScale = wantsAll || modifiers.includes("scale");
     let opacityValue = wantsOpacity ? 0 : 1;
     let scaleValue = wantsScale ? modifierValue(modifiers, "scale", 95) / 100 : 1;
-    let delay3 = modifierValue(modifiers, "delay", 0);
+    let delay3 = modifierValue(modifiers, "delay", 0) / 1e3;
     let origin = modifierValue(modifiers, "origin", "center");
     let property = "opacity, transform";
     let durationIn = modifierValue(modifiers, "duration", 150) / 1e3;
@@ -1654,7 +1678,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (transitioningIn) {
       el._x_transition.enter.during = {
         transformOrigin: origin,
-        transitionDelay: delay3,
+        transitionDelay: `${delay3}s`,
         transitionProperty: property,
         transitionDuration: `${durationIn}s`,
         transitionTimingFunction: easing
@@ -1671,7 +1695,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (transitioningOut) {
       el._x_transition.leave.during = {
         transformOrigin: origin,
-        transitionDelay: delay3,
+        transitionDelay: `${delay3}s`,
         transitionProperty: property,
         transitionDuration: `${durationOut}s`,
         transitionTimingFunction: easing
@@ -1857,7 +1881,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (isNaN(rawValue))
         return fallback2;
     }
-    if (key === "duration") {
+    if (key === "duration" || key === "delay") {
       let match = rawValue.match(/([0-9]+)ms/);
       if (match)
         return match[1];
@@ -1874,14 +1898,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }) {
     return (...args) => isCloning ? fallback2(...args) : callback(...args);
   }
+  function onlyDuringClone(callback) {
+    return (...args) => isCloning && callback(...args);
+  }
+  function cloneNode(from, to) {
+    if (from._x_dataStack) {
+      to._x_dataStack = from._x_dataStack;
+      to.setAttribute("data-has-alpine-state", true);
+    }
+    isCloning = true;
+    dontRegisterReactiveSideEffects(() => {
+      initTree(to, (el, callback) => {
+        callback(el, () => {
+        });
+      });
+    });
+    isCloning = false;
+  }
+  var isCloningLegacy = false;
   function clone(oldEl, newEl) {
     if (!newEl._x_dataStack)
       newEl._x_dataStack = oldEl._x_dataStack;
     isCloning = true;
+    isCloningLegacy = true;
     dontRegisterReactiveSideEffects(() => {
       cloneTree(newEl);
     });
     isCloning = false;
+    isCloningLegacy = false;
   }
   function cloneTree(el) {
     let hasRunThroughFirstEl = false;
@@ -1906,6 +1950,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     callback();
     overrideEffect(cache);
   }
+  function shouldSkipRegisteringDataDuringClone(el) {
+    if (!isCloning)
+      return false;
+    if (isCloningLegacy)
+      return true;
+    return el.hasAttribute("data-has-alpine-state");
+  }
   function bind(el, name, value, modifiers = []) {
     if (!el._x_bindings)
       el._x_bindings = reactive({});
@@ -1920,6 +1971,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         break;
       case "class":
         bindClasses(el, value);
+        break;
+      case "selected":
+      case "checked":
+        bindAttributeAndProperty(el, name, value);
         break;
       default:
         bindAttribute(el, name, value);
@@ -1937,7 +1992,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else if (el.type === "checkbox") {
       if (Number.isInteger(value)) {
         el.value = value;
-      } else if (!Number.isInteger(value) && !Array.isArray(value) && typeof value !== "boolean" && ![null, void 0].includes(value)) {
+      } else if (!Array.isArray(value) && typeof value !== "boolean" && ![null, void 0].includes(value)) {
         el.value = String(value);
       } else {
         if (Array.isArray(value)) {
@@ -1951,7 +2006,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       if (el.value === value)
         return;
-      el.value = value;
+      el.value = value === void 0 ? "" : value;
     }
   }
   function bindClasses(el, value) {
@@ -1963,6 +2018,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (el._x_undoAddedStyles)
       el._x_undoAddedStyles();
     el._x_undoAddedStyles = setStyles(el, value);
+  }
+  function bindAttributeAndProperty(el, name, value) {
+    bindAttribute(el, name, value);
+    setPropertyIfChanged(el, name, value);
   }
   function bindAttribute(el, name, value) {
     if ([null, void 0, false].includes(value) && attributeShouldntBePreservedIfFalsy(name)) {
@@ -1976,6 +2035,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function setIfChanged(el, attrName, value) {
     if (el.getAttribute(attrName) != value) {
       el.setAttribute(attrName, value);
+    }
+  }
+  function setPropertyIfChanged(el, propName, value) {
+    if (el[propName] !== value) {
+      el[propName] = value;
     }
   }
   function updateSelect(el, value) {
@@ -2028,6 +2092,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getBinding(el, name, fallback2) {
     if (el._x_bindings && el._x_bindings[name] !== void 0)
       return el._x_bindings[name];
+    return getAttributeBinding(el, name, fallback2);
+  }
+  function extractProp(el, name, fallback2, extract = true) {
+    if (el._x_bindings && el._x_bindings[name] !== void 0)
+      return el._x_bindings[name];
+    if (el._x_inlineBindings && el._x_inlineBindings[name] !== void 0) {
+      let binding = el._x_inlineBindings[name];
+      binding.extract = extract;
+      return dontAutoEvaluateFunctions(() => {
+        return evaluate(el, binding.expression);
+      });
+    }
+    return getAttributeBinding(el, name, fallback2);
+  }
+  function getAttributeBinding(el, name, fallback2) {
     let attr = el.getAttribute(name);
     if (attr === null)
       return typeof fallback2 === "function" ? fallback2() : fallback2;
@@ -2061,8 +2140,40 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   }
+  function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
+    let firstRun = true;
+    let outerHash, innerHash, outerHashLatest, innerHashLatest;
+    let reference = effect(() => {
+      let outer, inner;
+      if (firstRun) {
+        outer = outerGet();
+        innerSet(JSON.parse(JSON.stringify(outer)));
+        inner = innerGet();
+        firstRun = false;
+      } else {
+        outer = outerGet();
+        inner = innerGet();
+        outerHashLatest = JSON.stringify(outer);
+        innerHashLatest = JSON.stringify(inner);
+        if (outerHashLatest !== outerHash) {
+          inner = innerGet();
+          innerSet(outer);
+          inner = outer;
+        } else {
+          outerSet(JSON.parse(innerHashLatest ?? null));
+          outer = inner;
+        }
+      }
+      outerHash = JSON.stringify(outer);
+      innerHash = JSON.stringify(inner);
+    });
+    return () => {
+      release(reference);
+    };
+  }
   function plugin(callback) {
-    callback(alpine_default);
+    let callbacks = Array.isArray(callback) ? callback : [callback];
+    callbacks.forEach((i) => i(alpine_default));
   }
   var stores = {};
   var isReactive = false;
@@ -2078,7 +2189,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (typeof value === "object" && value !== null && value.hasOwnProperty("init") && typeof value.init === "function") {
       stores[name].init();
     }
-    initInterceptors(stores[name]);
+    initInterceptors2(stores[name]);
   }
   function getStores() {
     return stores;
@@ -2087,10 +2198,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function bind2(name, bindings) {
     let getBindings = typeof bindings !== "function" ? () => bindings : bindings;
     if (name instanceof Element) {
-      applyBindingsObject(name, getBindings());
+      return applyBindingsObject(name, getBindings());
     } else {
       binds[name] = getBindings;
     }
+    return () => {
+    };
   }
   function injectBindingProviders(obj) {
     Object.entries(binds).forEach(([name, callback]) => {
@@ -2123,6 +2236,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanupRunners.push(handle.runCleanups);
       handle();
     });
+    return () => {
+      while (cleanupRunners.length)
+        cleanupRunners.pop()();
+    };
   }
   var datas = {};
   function data(name, callback) {
@@ -2154,28 +2271,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.10.5",
+    version: "3.13.0",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
+    startObservingMutations,
+    stopObservingMutations,
     setReactivityEngine,
+    onAttributeRemoved,
+    onAttributesAdded,
     closestDataStack,
     skipDuringClone,
+    onlyDuringClone,
     addRootSelector,
     addInitSelector,
     addScopeToNode,
     deferMutations,
     mapAttributes,
     evaluateLater,
+    interceptInit,
     setEvaluator,
     mergeProxies,
+    extractProp,
     findClosest,
+    onElRemoved,
     closestRoot,
+    destroyTree,
     interceptor,
     transition,
     setStyles,
     mutateDom,
     directive,
+    entangle,
     throttle,
     debounce,
     evaluate,
@@ -2188,8 +2315,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     store,
     start,
     clone,
+    cloneNode,
     bound: getBinding,
     $data: scope,
+    walk,
     data,
     bind: bind2
   };
@@ -2206,7 +2335,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
   var EMPTY_OBJ = true ? Object.freeze({}) : {};
   var EMPTY_ARR = true ? Object.freeze([]) : [];
-  var extend = Object.assign;
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2416,34 +2544,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);
   var builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol).map((key) => Symbol[key]).filter(isSymbol));
   var get2 = /* @__PURE__ */ createGetter();
-  var shallowGet = /* @__PURE__ */ createGetter(false, true);
   var readonlyGet = /* @__PURE__ */ createGetter(true);
-  var shallowReadonlyGet = /* @__PURE__ */ createGetter(true, true);
-  var arrayInstrumentations = {};
-  ["includes", "indexOf", "lastIndexOf"].forEach((key) => {
-    const method = Array.prototype[key];
-    arrayInstrumentations[key] = function(...args) {
-      const arr = toRaw(this);
-      for (let i = 0, l = this.length; i < l; i++) {
-        track(arr, "get", i + "");
-      }
-      const res = method.apply(arr, args);
-      if (res === -1 || res === false) {
-        return method.apply(arr, args.map(toRaw));
-      } else {
+  var arrayInstrumentations = /* @__PURE__ */ createArrayInstrumentations();
+  function createArrayInstrumentations() {
+    const instrumentations = {};
+    ["includes", "indexOf", "lastIndexOf"].forEach((key) => {
+      instrumentations[key] = function(...args) {
+        const arr = toRaw(this);
+        for (let i = 0, l = this.length; i < l; i++) {
+          track(arr, "get", i + "");
+        }
+        const res = arr[key](...args);
+        if (res === -1 || res === false) {
+          return arr[key](...args.map(toRaw));
+        } else {
+          return res;
+        }
+      };
+    });
+    ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
+      instrumentations[key] = function(...args) {
+        pauseTracking();
+        const res = toRaw(this)[key].apply(this, args);
+        resetTracking();
         return res;
-      }
-    };
-  });
-  ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
-    const method = Array.prototype[key];
-    arrayInstrumentations[key] = function(...args) {
-      pauseTracking();
-      const res = method.apply(this, args);
-      resetTracking();
-      return res;
-    };
-  });
+      };
+    });
+    return instrumentations;
+  }
   function createGetter(isReadonly = false, shallow = false) {
     return function get3(target, key, receiver) {
       if (key === "__v_isReactive") {
@@ -2478,7 +2606,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   var set2 = /* @__PURE__ */ createSetter();
-  var shallowSet = /* @__PURE__ */ createSetter(true);
   function createSetter(shallow = false) {
     return function set3(target, key, value, receiver) {
       let oldValue = target[key];
@@ -2544,13 +2671,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return true;
     }
   };
-  var shallowReactiveHandlers = extend({}, mutableHandlers, {
-    get: shallowGet,
-    set: shallowSet
-  });
-  var shallowReadonlyHandlers = extend({}, readonlyHandlers, {
-    get: shallowReadonlyGet
-  });
   var toReactive = (value) => isObject2(value) ? reactive2(value) : value;
   var toReadonly = (value) => isObject2(value) ? readonly(value) : value;
   var toShallow = (value) => value;
@@ -2691,73 +2811,82 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return type === "delete" ? false : this;
     };
   }
-  var mutableInstrumentations = {
-    get(key) {
-      return get$1(this, key);
-    },
-    get size() {
-      return size(this);
-    },
-    has: has$1,
-    add,
-    set: set$1,
-    delete: deleteEntry,
-    clear,
-    forEach: createForEach(false, false)
-  };
-  var shallowInstrumentations = {
-    get(key) {
-      return get$1(this, key, false, true);
-    },
-    get size() {
-      return size(this);
-    },
-    has: has$1,
-    add,
-    set: set$1,
-    delete: deleteEntry,
-    clear,
-    forEach: createForEach(false, true)
-  };
-  var readonlyInstrumentations = {
-    get(key) {
-      return get$1(this, key, true);
-    },
-    get size() {
-      return size(this, true);
-    },
-    has(key) {
-      return has$1.call(this, key, true);
-    },
-    add: createReadonlyMethod("add"),
-    set: createReadonlyMethod("set"),
-    delete: createReadonlyMethod("delete"),
-    clear: createReadonlyMethod("clear"),
-    forEach: createForEach(true, false)
-  };
-  var shallowReadonlyInstrumentations = {
-    get(key) {
-      return get$1(this, key, true, true);
-    },
-    get size() {
-      return size(this, true);
-    },
-    has(key) {
-      return has$1.call(this, key, true);
-    },
-    add: createReadonlyMethod("add"),
-    set: createReadonlyMethod("set"),
-    delete: createReadonlyMethod("delete"),
-    clear: createReadonlyMethod("clear"),
-    forEach: createForEach(true, true)
-  };
-  var iteratorMethods = ["keys", "values", "entries", Symbol.iterator];
-  iteratorMethods.forEach((method) => {
-    mutableInstrumentations[method] = createIterableMethod(method, false, false);
-    readonlyInstrumentations[method] = createIterableMethod(method, true, false);
-    shallowInstrumentations[method] = createIterableMethod(method, false, true);
-    shallowReadonlyInstrumentations[method] = createIterableMethod(method, true, true);
-  });
+  function createInstrumentations() {
+    const mutableInstrumentations2 = {
+      get(key) {
+        return get$1(this, key);
+      },
+      get size() {
+        return size(this);
+      },
+      has: has$1,
+      add,
+      set: set$1,
+      delete: deleteEntry,
+      clear,
+      forEach: createForEach(false, false)
+    };
+    const shallowInstrumentations2 = {
+      get(key) {
+        return get$1(this, key, false, true);
+      },
+      get size() {
+        return size(this);
+      },
+      has: has$1,
+      add,
+      set: set$1,
+      delete: deleteEntry,
+      clear,
+      forEach: createForEach(false, true)
+    };
+    const readonlyInstrumentations2 = {
+      get(key) {
+        return get$1(this, key, true);
+      },
+      get size() {
+        return size(this, true);
+      },
+      has(key) {
+        return has$1.call(this, key, true);
+      },
+      add: createReadonlyMethod("add"),
+      set: createReadonlyMethod("set"),
+      delete: createReadonlyMethod("delete"),
+      clear: createReadonlyMethod("clear"),
+      forEach: createForEach(true, false)
+    };
+    const shallowReadonlyInstrumentations2 = {
+      get(key) {
+        return get$1(this, key, true, true);
+      },
+      get size() {
+        return size(this, true);
+      },
+      has(key) {
+        return has$1.call(this, key, true);
+      },
+      add: createReadonlyMethod("add"),
+      set: createReadonlyMethod("set"),
+      delete: createReadonlyMethod("delete"),
+      clear: createReadonlyMethod("clear"),
+      forEach: createForEach(true, true)
+    };
+    const iteratorMethods = ["keys", "values", "entries", Symbol.iterator];
+    iteratorMethods.forEach((method) => {
+      mutableInstrumentations2[method] = createIterableMethod(method, false, false);
+      readonlyInstrumentations2[method] = createIterableMethod(method, true, false);
+      shallowInstrumentations2[method] = createIterableMethod(method, false, true);
+      shallowReadonlyInstrumentations2[method] = createIterableMethod(method, true, true);
+    });
+    return [
+      mutableInstrumentations2,
+      readonlyInstrumentations2,
+      shallowInstrumentations2,
+      shallowReadonlyInstrumentations2
+    ];
+  }
+  var [mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations, shallowReadonlyInstrumentations] = /* @__PURE__ */ createInstrumentations();
   function createInstrumentationGetter(isReadonly, shallow) {
     const instrumentations = shallow ? isReadonly ? shallowReadonlyInstrumentations : shallowInstrumentations : isReadonly ? readonlyInstrumentations : mutableInstrumentations;
     return (target, key, receiver) => {
@@ -2772,16 +2901,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   var mutableCollectionHandlers = {
-    get: createInstrumentationGetter(false, false)
-  };
-  var shallowCollectionHandlers = {
-    get: createInstrumentationGetter(false, true)
+    get: /* @__PURE__ */ createInstrumentationGetter(false, false)
   };
   var readonlyCollectionHandlers = {
-    get: createInstrumentationGetter(true, false)
-  };
-  var shallowReadonlyCollectionHandlers = {
-    get: createInstrumentationGetter(true, true)
+    get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
   function checkIdentityKeys(target, has2, key) {
     const rawKey = toRaw(key);
@@ -2916,7 +3039,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function warnMissingPluginMagic(name, magicName, slug) {
     magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
-  directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
+  directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
     let innerGet = () => {
       let result;
@@ -2925,7 +3048,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     let evaluateInnerSet = evaluateLater2(`${expression} = __placeholder`);
     let innerSet = (val) => evaluateInnerSet(() => {
-    }, { scope: { __placeholder: val } });
+    }, { scope: { "__placeholder": val } });
     let initialValue = innerGet();
     innerSet(initialValue);
     queueMicrotask(() => {
@@ -2934,14 +3057,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_removeModelListeners["default"]();
       let outerGet = el._x_model.get;
       let outerSet = el._x_model.set;
-      effect3(() => innerSet(outerGet()));
-      effect3(() => outerSet(innerGet()));
+      let releaseEntanglement = entangle({
+        get() {
+          return outerGet();
+        },
+        set(value) {
+          outerSet(value);
+        }
+      }, {
+        get() {
+          return innerGet();
+        },
+        set(value) {
+          innerSet(value);
+        }
+      });
+      cleanup22(releaseEntanglement);
     });
   });
-  directive("teleport", (el, { expression }, { cleanup: cleanup22 }) => {
+  var teleportContainerDuringClone = document.createElement("div");
+  directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
       warn("x-teleport can only be used on a <template> tag", el);
-    let target = document.querySelector(expression);
+    let target = skipDuringClone(() => {
+      return document.querySelector(expression);
+    }, () => {
+      return teleportContainerDuringClone;
+    })();
     if (!target)
       warn(`Cannot find x-teleport element for selector: "${expression}"`);
     let clone2 = el.content.cloneNode(true).firstElementChild;
@@ -2957,7 +3099,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     addScopeToNode(clone2, {}, el);
     mutateDom(() => {
-      target.appendChild(clone2);
+      if (modifiers.includes("prepend")) {
+        target.parentNode.insertBefore(clone2, target);
+      } else if (modifiers.includes("append")) {
+        target.parentNode.insertBefore(clone2, target.nextSibling);
+      } else {
+        target.appendChild(clone2);
+      }
       initTree(clone2);
       clone2._x_ignore = true;
     });
@@ -2975,7 +3123,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive("effect", (el, { expression }, { effect: effect3 }) => effect3(evaluateLater(el, expression)));
   function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
-    let handler3 = (e) => callback(e);
+    let handler4 = (e) => callback(e);
     let options = {};
     let wrapHandler = (callback2, wrapper) => (e) => wrapper(callback2, e);
     if (modifiers.includes("dot"))
@@ -2990,23 +3138,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       listenerTarget = window;
     if (modifiers.includes("document"))
       listenerTarget = document;
+    if (modifiers.includes("debounce")) {
+      let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
+      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      handler4 = debounce(handler4, wait);
+    }
+    if (modifiers.includes("throttle")) {
+      let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
+      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
+      handler4 = throttle(handler4, wait);
+    }
     if (modifiers.includes("prevent"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.preventDefault();
         next(e);
       });
     if (modifiers.includes("stop"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.stopPropagation();
         next(e);
       });
     if (modifiers.includes("self"))
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         e.target === el && next(e);
       });
     if (modifiers.includes("away") || modifiers.includes("outside")) {
       listenerTarget = document;
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         if (el.contains(e.target))
           return;
         if (e.target.isConnected === false)
@@ -3019,12 +3177,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     if (modifiers.includes("once")) {
-      handler3 = wrapHandler(handler3, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
         next(e);
-        listenerTarget.removeEventListener(event, handler3, options);
+        listenerTarget.removeEventListener(event, handler4, options);
       });
     }
-    handler3 = wrapHandler(handler3, (next, e) => {
+    handler4 = wrapHandler(handler4, (next, e) => {
       if (isKeyEvent(event)) {
         if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
           return;
@@ -3032,19 +3190,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       next(e);
     });
-    if (modifiers.includes("debounce")) {
-      let nextModifier = modifiers[modifiers.indexOf("debounce") + 1] || "invalid-wait";
-      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = debounce(handler3, wait);
-    }
-    if (modifiers.includes("throttle")) {
-      let nextModifier = modifiers[modifiers.indexOf("throttle") + 1] || "invalid-wait";
-      let wait = isNumeric(nextModifier.split("ms")[0]) ? Number(nextModifier.split("ms")[0]) : 250;
-      handler3 = throttle(handler3, wait);
-    }
-    listenerTarget.addEventListener(event, handler3, options);
+    listenerTarget.addEventListener(event, handler4, options);
     return () => {
-      listenerTarget.removeEventListener(event, handler3, options);
+      listenerTarget.removeEventListener(event, handler4, options);
     };
   }
   function dotSyntax(subject) {
@@ -3057,6 +3205,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return !Array.isArray(subject) && !isNaN(subject);
   }
   function kebabCase2(subject) {
+    if ([" ", "_"].includes(subject))
+      return subject;
     return subject.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/[_\s]/, "-").toLowerCase();
   }
   function isKeyEvent(event) {
@@ -3064,10 +3214,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
-      return !["window", "document", "prevent", "stop", "once"].includes(i);
+      return !["window", "document", "prevent", "stop", "once", "capture"].includes(i);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
+      keyModifiers.splice(debounceIndex, isNumeric((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
+    }
+    if (keyModifiers.includes("throttle")) {
+      let debounceIndex = keyModifiers.indexOf("throttle");
       keyModifiers.splice(debounceIndex, isNumeric((keyModifiers[debounceIndex + 1] || "invalid-wait").split("ms")[0]) ? 2 : 1);
     }
     if (keyModifiers.length === 0)
@@ -3095,18 +3249,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return [];
     key = kebabCase2(key);
     let modifierToKeyMap = {
-      ctrl: "control",
-      slash: "/",
-      space: "-",
-      spacebar: "-",
-      cmd: "meta",
-      esc: "escape",
-      up: "arrow-up",
-      down: "arrow-down",
-      left: "arrow-left",
-      right: "arrow-right",
-      period: ".",
-      equal: "="
+      "ctrl": "control",
+      "slash": "/",
+      "space": " ",
+      "spacebar": " ",
+      "cmd": "meta",
+      "esc": "escape",
+      "up": "arrow-up",
+      "down": "arrow-down",
+      "left": "arrow-left",
+      "right": "arrow-right",
+      "period": ".",
+      "equal": "=",
+      "minus": "-",
+      "underscore": "_"
     };
     modifierToKeyMap[key] = key;
     return Object.keys(modifierToKeyMap).map((modifier) => {
@@ -3115,80 +3271,108 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }).filter((modifier) => modifier);
   }
   directive("model", (el, { modifiers, expression }, { effect: effect3, cleanup: cleanup22 }) => {
-    let evaluate2 = evaluateLater(el, expression);
-    let assignmentExpression = `${expression} = rightSideOfExpression($event, ${expression})`;
-    let evaluateAssignment = evaluateLater(el, assignmentExpression);
-    var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
-    let assigmentFunction = generateAssignmentFunction(el, modifiers, expression);
-    let removeListener = on2(el, event, modifiers, (e) => {
-      evaluateAssignment(() => {
-      }, { scope: {
-        $event: e,
-        rightSideOfExpression: assigmentFunction
-      } });
-    });
-    if (!el._x_removeModelListeners)
-      el._x_removeModelListeners = {};
-    el._x_removeModelListeners["default"] = removeListener;
-    cleanup22(() => el._x_removeModelListeners["default"]());
-    let evaluateSetModel = evaluateLater(el, `${expression} = __placeholder`);
-    el._x_model = {
-      get() {
-        let result;
-        evaluate2((value) => result = value);
-        return result;
-      },
-      set(value) {
-        evaluateSetModel(() => {
-        }, { scope: { __placeholder: value } });
+    let scopeTarget = el;
+    if (modifiers.includes("parent")) {
+      scopeTarget = el.parentNode;
+    }
+    let evaluateGet = evaluateLater(scopeTarget, expression);
+    let evaluateSet;
+    if (typeof expression === "string") {
+      evaluateSet = evaluateLater(scopeTarget, `${expression} = __placeholder`);
+    } else if (typeof expression === "function" && typeof expression() === "string") {
+      evaluateSet = evaluateLater(scopeTarget, `${expression()} = __placeholder`);
+    } else {
+      evaluateSet = () => {
+      };
+    }
+    let getValue = () => {
+      let result;
+      evaluateGet((value) => result = value);
+      return isGetterSetter(result) ? result.get() : result;
+    };
+    let setValue = (value) => {
+      let result;
+      evaluateGet((value2) => result = value2);
+      if (isGetterSetter(result)) {
+        result.set(value);
+      } else {
+        evaluateSet(() => {
+        }, {
+          scope: { "__placeholder": value }
+        });
       }
     };
-    el._x_forceModelUpdate = () => {
-      evaluate2((value) => {
-        if (value === void 0 && expression.match(/\./))
-          value = "";
-        window.fromModel = true;
-        mutateDom(() => bind(el, "value", value));
-        delete window.fromModel;
-      });
-    };
-    effect3(() => {
-      if (modifiers.includes("unintrusive") && document.activeElement.isSameNode(el))
-        return;
-      el._x_forceModelUpdate();
-    });
-  });
-  function generateAssignmentFunction(el, modifiers, expression) {
-    if (el.type === "radio") {
+    if (typeof expression === "string" && el.type === "radio") {
       mutateDom(() => {
         if (!el.hasAttribute("name"))
           el.setAttribute("name", expression);
       });
     }
-    return (event, currentValue) => {
-      return mutateDom(() => {
-        if (event instanceof CustomEvent && event.detail !== void 0) {
-          return event.detail || event.target.value;
-        } else if (el.type === "checkbox") {
-          if (Array.isArray(currentValue)) {
-            let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
-            return event.target.checked ? currentValue.concat([newValue]) : currentValue.filter((el2) => !checkedAttrLooseCompare2(el2, newValue));
-          } else {
-            return event.target.checked;
-          }
-        } else if (el.tagName.toLowerCase() === "select" && el.multiple) {
-          return modifiers.includes("number") ? Array.from(event.target.selectedOptions).map((option) => {
-            let rawValue = option.value || option.text;
-            return safeParseNumber(rawValue);
-          }) : Array.from(event.target.selectedOptions).map((option) => {
-            return option.value || option.text;
-          });
-        } else {
-          let rawValue = event.target.value;
-          return modifiers.includes("number") ? safeParseNumber(rawValue) : modifiers.includes("trim") ? rawValue.trim() : rawValue;
-        }
+    var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
+    let removeListener = isCloning ? () => {
+    } : on2(el, event, modifiers, (e) => {
+      setValue(getInputValue(el, modifiers, e, getValue()));
+    });
+    if (modifiers.includes("fill")) {
+      if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
+        el.dispatchEvent(new Event(event, {}));
+      }
+    }
+    if (!el._x_removeModelListeners)
+      el._x_removeModelListeners = {};
+    el._x_removeModelListeners["default"] = removeListener;
+    cleanup22(() => el._x_removeModelListeners["default"]());
+    if (el.form) {
+      let removeResetListener = on2(el.form, "reset", [], (e) => {
+        nextTick(() => el._x_model && el._x_model.set(el.value));
       });
+      cleanup22(() => removeResetListener());
+    }
+    el._x_model = {
+      get() {
+        return getValue();
+      },
+      set(value) {
+        setValue(value);
+      }
     };
+    el._x_forceModelUpdate = (value) => {
+      if (value === void 0 && typeof expression === "string" && expression.match(/\./))
+        value = "";
+      window.fromModel = true;
+      mutateDom(() => bind(el, "value", value));
+      delete window.fromModel;
+    };
+    effect3(() => {
+      let value = getValue();
+      if (modifiers.includes("unintrusive") && document.activeElement.isSameNode(el))
+        return;
+      el._x_forceModelUpdate(value);
+    });
+  });
+  function getInputValue(el, modifiers, event, currentValue) {
+    return mutateDom(() => {
+      if (event instanceof CustomEvent && event.detail !== void 0)
+        return event.detail ?? event.target.value;
+      else if (el.type === "checkbox") {
+        if (Array.isArray(currentValue)) {
+          let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
+          return event.target.checked ? currentValue.concat([newValue]) : currentValue.filter((el2) => !checkedAttrLooseCompare2(el2, newValue));
+        } else {
+          return event.target.checked;
+        }
+      } else if (el.tagName.toLowerCase() === "select" && el.multiple) {
+        return modifiers.includes("number") ? Array.from(event.target.selectedOptions).map((option) => {
+          let rawValue = option.value || option.text;
+          return safeParseNumber(rawValue);
+        }) : Array.from(event.target.selectedOptions).map((option) => {
+          return option.value || option.text;
+        });
+      } else {
+        let rawValue = event.target.value;
+        return modifiers.includes("number") ? safeParseNumber(rawValue) : modifiers.includes("trim") ? rawValue.trim() : rawValue;
+      }
+    });
   }
   function safeParseNumber(rawValue) {
     let number = rawValue ? parseFloat(rawValue) : null;
@@ -3199,6 +3383,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isNumeric2(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
+  }
+  function isGetterSetter(value) {
+    return value !== null && typeof value === "object" && typeof value.get === "function" && typeof value.set === "function";
   }
   directive("cloak", (el) => queueMicrotask(() => mutateDom(() => el.removeAttribute(prefix("cloak")))));
   addInitSelector(() => `[${prefix("init")}]`);
@@ -3232,7 +3419,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  directive("bind", (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
+  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
     if (!value) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3244,6 +3431,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     if (value === "key")
       return storeKeyForXFor(el, expression);
+    if (el._x_inlineBindings && el._x_inlineBindings[value] && el._x_inlineBindings[value].extract) {
+      return;
+    }
     let evaluate2 = evaluateLater(el, expression);
     effect3(() => evaluate2((result) => {
       if (result === void 0 && typeof expression === "string" && expression.match(/\./)) {
@@ -3251,30 +3441,40 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value, result, modifiers));
     }));
-  });
+  };
+  handler2.inline = (el, { value, modifiers, expression }) => {
+    if (!value)
+      return;
+    if (!el._x_inlineBindings)
+      el._x_inlineBindings = {};
+    el._x_inlineBindings[value] = { expression, extract: false };
+  };
+  directive("bind", handler2);
   function storeKeyForXFor(el, expression) {
     el._x_keyExpression = expression;
   }
   addRootSelector(() => `[${prefix("data")}]`);
-  directive("data", skipDuringClone((el, { expression }, { cleanup: cleanup22 }) => {
+  directive("data", (el, { expression }, { cleanup: cleanup22 }) => {
+    if (shouldSkipRegisteringDataDuringClone(el))
+      return;
     expression = expression === "" ? "{}" : expression;
     let magicContext = {};
     injectMagics(magicContext, el);
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext, magicContext);
     let data2 = evaluate(el, expression, { scope: dataProviderContext });
-    if (data2 === void 0)
+    if (data2 === void 0 || data2 === true)
       data2 = {};
     injectMagics(data2, el);
     let reactiveData = reactive(data2);
-    initInterceptors(reactiveData);
+    initInterceptors2(reactiveData);
     let undo = addScopeToNode(el, reactiveData);
     reactiveData["init"] && evaluate(el, reactiveData["init"]);
     cleanup22(() => {
       reactiveData["destroy"] && evaluate(el, reactiveData["destroy"]);
       undo();
     });
-  }));
+  });
   directive("show", (el, { modifiers, expression }, { effect: effect3 }) => {
     let evaluate2 = evaluateLater(el, expression);
     if (!el._x_doHide)
@@ -3403,6 +3603,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let elForSpot = lookup[keyForSpot];
         let marker = document.createElement("div");
         mutateDom(() => {
+          if (!elForSpot)
+            warn(`x-for ":key" is undefined or invalid`, templateEl);
           elForSpot.after(marker);
           elInSpot.after(elForSpot);
           elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -3410,7 +3612,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           elInSpot._x_currentIfEl && elInSpot.after(elInSpot._x_currentIfEl);
           marker.remove();
         });
-        refreshScope(elForSpot, scopes[keys.indexOf(keyForSpot)]);
+        elForSpot._x_refreshXForScope(scopes[keys.indexOf(keyForSpot)]);
       }
       for (let i = 0; i < adds.length; i++) {
         let [lastKey2, index] = adds[i];
@@ -3420,7 +3622,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let scope2 = scopes[index];
         let key = keys[index];
         let clone2 = document.importNode(templateEl.content, true).firstElementChild;
-        addScopeToNode(clone2, reactive(scope2), templateEl);
+        let reactiveScope = reactive(scope2);
+        addScopeToNode(clone2, reactiveScope, templateEl);
+        clone2._x_refreshXForScope = (newScope) => {
+          Object.entries(newScope).forEach(([key2, value]) => {
+            reactiveScope[key2] = value;
+          });
+        };
         mutateDom(() => {
           lastEl.after(clone2);
           initTree(clone2);
@@ -3431,7 +3639,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         lookup[key] = clone2;
       }
       for (let i = 0; i < sames.length; i++) {
-        refreshScope(lookup[sames[i]], scopes[keys.indexOf(sames[i])]);
+        lookup[sames[i]]._x_refreshXForScope(scopes[keys.indexOf(sames[i])]);
       }
       templateEl._x_prevKeys = keys;
     });
@@ -3482,16 +3690,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function isNumeric3(subject) {
     return !Array.isArray(subject) && !isNaN(subject);
   }
-  function handler2() {
+  function handler3() {
   }
-  handler2.inline = (el, { expression }, { cleanup: cleanup22 }) => {
+  handler3.inline = (el, { expression }, { cleanup: cleanup22 }) => {
     let root = closestRoot(el);
     if (!root._x_refs)
       root._x_refs = {};
     root._x_refs[expression] = el;
     cleanup22(() => delete root._x_refs[expression]);
   };
-  directive("ref", handler2);
+  directive("ref", handler3);
   directive("if", (el, { expression }, { effect: effect3, cleanup: cleanup22 }) => {
     let evaluate2 = evaluateLater(el, expression);
     let show = () => {
@@ -3542,7 +3750,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let removeListener = on2(el, value, modifiers, (e) => {
       evaluate2(() => {
-      }, { scope: { $event: e }, params: [e] });
+      }, { scope: { "$event": e }, params: [e] });
     });
     cleanup22(() => removeListener());
   }));
@@ -4100,13 +4308,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
-      let handler3 = (e) => {
+      let handler4 = (e) => {
         if (e.__livewire)
           e.__livewire.receivedBy.push(component);
         component.$wire.call("__dispatch", name, e.detail || {});
       };
-      window.addEventListener(name, handler3);
-      component.addCleanup(() => window.removeEventListener(name, handler3));
+      window.addEventListener(name, handler4);
+      component.addCleanup(() => window.removeEventListener(name, handler4));
       component.el.addEventListener(name, (e) => {
         if (e.__livewire && e.bubbles)
           return;
@@ -4336,10 +4544,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default2 = src_default2;
 
   // node_modules/@alpinejs/focus/dist/module.esm.js
-  var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
+  var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
-  var matches = typeof Element === "undefined" ? function() {
+  var NoElement = typeof Element === "undefined";
+  var matches = NoElement ? function() {
   } : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+  var getRootNode = !NoElement && Element.prototype.getRootNode ? function(element) {
+    return element.getRootNode();
+  } : function(element) {
+    return element.ownerDocument;
+  };
   var getCandidates = function getCandidates2(el, includeContainer, filter) {
     var candidates = Array.prototype.slice.apply(el.querySelectorAll(candidateSelector));
     if (includeContainer && matches.call(el, candidateSelector)) {
@@ -4348,19 +4562,52 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     candidates = candidates.filter(filter);
     return candidates;
   };
-  var isContentEditable = function isContentEditable2(node) {
-    return node.contentEditable === "true";
+  var getCandidatesIteratively = function getCandidatesIteratively2(elements, includeContainer, options) {
+    var candidates = [];
+    var elementsToCheck = Array.from(elements);
+    while (elementsToCheck.length) {
+      var element = elementsToCheck.shift();
+      if (element.tagName === "SLOT") {
+        var assigned = element.assignedElements();
+        var content = assigned.length ? assigned : element.children;
+        var nestedCandidates = getCandidatesIteratively2(content, true, options);
+        if (options.flatten) {
+          candidates.push.apply(candidates, nestedCandidates);
+        } else {
+          candidates.push({
+            scope: element,
+            candidates: nestedCandidates
+          });
+        }
+      } else {
+        var validCandidate = matches.call(element, candidateSelector);
+        if (validCandidate && options.filter(element) && (includeContainer || !elements.includes(element))) {
+          candidates.push(element);
+        }
+        var shadowRoot = element.shadowRoot || typeof options.getShadowRoot === "function" && options.getShadowRoot(element);
+        var validShadowRoot = !options.shadowRootFilter || options.shadowRootFilter(element);
+        if (shadowRoot && validShadowRoot) {
+          var _nestedCandidates = getCandidatesIteratively2(shadowRoot === true ? element.children : shadowRoot.children, true, options);
+          if (options.flatten) {
+            candidates.push.apply(candidates, _nestedCandidates);
+          } else {
+            candidates.push({
+              scope: element,
+              candidates: _nestedCandidates
+            });
+          }
+        } else {
+          elementsToCheck.unshift.apply(elementsToCheck, element.children);
+        }
+      }
+    }
+    return candidates;
   };
-  var getTabindex = function getTabindex2(node) {
-    var tabindexAttr = parseInt(node.getAttribute("tabindex"), 10);
-    if (!isNaN(tabindexAttr)) {
-      return tabindexAttr;
-    }
-    if (isContentEditable(node)) {
-      return 0;
-    }
-    if ((node.nodeName === "AUDIO" || node.nodeName === "VIDEO" || node.nodeName === "DETAILS") && node.getAttribute("tabindex") === null) {
-      return 0;
+  var getTabindex = function getTabindex2(node, isScope) {
+    if (node.tabIndex < 0) {
+      if ((isScope || /^(AUDIO|VIDEO|DETAILS)$/.test(node.tagName) || node.isContentEditable) && isNaN(parseInt(node.getAttribute("tabindex"), 10))) {
+        return 0;
+      }
     }
     return node.tabIndex;
   };
@@ -4390,7 +4637,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!node.name) {
       return true;
     }
-    var radioScope = node.form || node.ownerDocument;
+    var radioScope = node.form || getRootNode(node);
     var queryRadios = function queryRadios2(name) {
       return radioScope.querySelectorAll('input[type="radio"][name="' + name + '"]');
     };
@@ -4414,7 +4661,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var isNonTabbableRadio = function isNonTabbableRadio2(node) {
     return isRadio(node) && !isTabbableRadio(node);
   };
-  var isHidden = function isHidden2(node, displayCheck) {
+  var isZeroArea = function isZeroArea2(node) {
+    var _node$getBoundingClie = node.getBoundingClientRect(), width = _node$getBoundingClie.width, height = _node$getBoundingClie.height;
+    return width === 0 && height === 0;
+  };
+  var isHidden = function isHidden2(node, _ref) {
+    var displayCheck = _ref.displayCheck, getShadowRoot = _ref.getShadowRoot;
     if (getComputedStyle(node).visibility === "hidden") {
       return true;
     }
@@ -4423,31 +4675,43 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (matches.call(nodeUnderDetails, "details:not([open]) *")) {
       return true;
     }
+    var nodeRootHost = getRootNode(node).host;
+    var nodeIsAttached = (nodeRootHost === null || nodeRootHost === void 0 ? void 0 : nodeRootHost.ownerDocument.contains(nodeRootHost)) || node.ownerDocument.contains(node);
     if (!displayCheck || displayCheck === "full") {
-      while (node) {
-        if (getComputedStyle(node).display === "none") {
-          return true;
+      if (typeof getShadowRoot === "function") {
+        var originalNode = node;
+        while (node) {
+          var parentElement = node.parentElement;
+          var rootNode = getRootNode(node);
+          if (parentElement && !parentElement.shadowRoot && getShadowRoot(parentElement) === true) {
+            return isZeroArea(node);
+          } else if (node.assignedSlot) {
+            node = node.assignedSlot;
+          } else if (!parentElement && rootNode !== node.ownerDocument) {
+            node = rootNode.host;
+          } else {
+            node = parentElement;
+          }
         }
-        node = node.parentElement;
+        node = originalNode;
+      }
+      if (nodeIsAttached) {
+        return !node.getClientRects().length;
       }
     } else if (displayCheck === "non-zero-area") {
-      var _node$getBoundingClie = node.getBoundingClientRect(), width = _node$getBoundingClie.width, height = _node$getBoundingClie.height;
-      return width === 0 && height === 0;
+      return isZeroArea(node);
     }
     return false;
   };
   var isDisabledFromFieldset = function isDisabledFromFieldset2(node) {
-    if (isInput(node) || node.tagName === "SELECT" || node.tagName === "TEXTAREA" || node.tagName === "BUTTON") {
+    if (/^(INPUT|BUTTON|SELECT|TEXTAREA)$/.test(node.tagName)) {
       var parentNode = node.parentElement;
       while (parentNode) {
         if (parentNode.tagName === "FIELDSET" && parentNode.disabled) {
           for (var i = 0; i < parentNode.children.length; i++) {
             var child = parentNode.children.item(i);
             if (child.tagName === "LEGEND") {
-              if (child.contains(node)) {
-                return false;
-              }
-              return true;
+              return matches.call(parentNode, "fieldset[disabled] *") ? true : !child.contains(node);
             }
           }
           return true;
@@ -4458,43 +4722,87 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return false;
   };
   var isNodeMatchingSelectorFocusable = function isNodeMatchingSelectorFocusable2(options, node) {
-    if (node.disabled || isHiddenInput(node) || isHidden(node, options.displayCheck) || isDetailsWithSummary(node) || isDisabledFromFieldset(node)) {
+    if (node.disabled || isHiddenInput(node) || isHidden(node, options) || isDetailsWithSummary(node) || isDisabledFromFieldset(node)) {
       return false;
     }
     return true;
   };
   var isNodeMatchingSelectorTabbable = function isNodeMatchingSelectorTabbable2(options, node) {
-    if (!isNodeMatchingSelectorFocusable(options, node) || isNonTabbableRadio(node) || getTabindex(node) < 0) {
+    if (isNonTabbableRadio(node) || getTabindex(node) < 0 || !isNodeMatchingSelectorFocusable(options, node)) {
       return false;
     }
     return true;
   };
-  var tabbable = function tabbable2(el, options) {
-    options = options || {};
+  var isValidShadowRootTabbable = function isValidShadowRootTabbable2(shadowHostNode) {
+    var tabIndex = parseInt(shadowHostNode.getAttribute("tabindex"), 10);
+    if (isNaN(tabIndex) || tabIndex >= 0) {
+      return true;
+    }
+    return false;
+  };
+  var sortByOrder = function sortByOrder2(candidates) {
     var regularTabbables = [];
     var orderedTabbables = [];
-    var candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
-    candidates.forEach(function(candidate, i) {
-      var candidateTabindex = getTabindex(candidate);
+    candidates.forEach(function(item, i) {
+      var isScope = !!item.scope;
+      var element = isScope ? item.scope : item;
+      var candidateTabindex = getTabindex(element, isScope);
+      var elements = isScope ? sortByOrder2(item.candidates) : element;
       if (candidateTabindex === 0) {
-        regularTabbables.push(candidate);
+        isScope ? regularTabbables.push.apply(regularTabbables, elements) : regularTabbables.push(element);
       } else {
         orderedTabbables.push({
           documentOrder: i,
           tabIndex: candidateTabindex,
-          node: candidate
+          item,
+          isScope,
+          content: elements
         });
       }
     });
-    var tabbableNodes = orderedTabbables.sort(sortOrderedTabbables).map(function(a) {
-      return a.node;
-    }).concat(regularTabbables);
-    return tabbableNodes;
+    return orderedTabbables.sort(sortOrderedTabbables).reduce(function(acc, sortable) {
+      sortable.isScope ? acc.push.apply(acc, sortable.content) : acc.push(sortable.content);
+      return acc;
+    }, []).concat(regularTabbables);
+  };
+  var tabbable = function tabbable2(el, options) {
+    options = options || {};
+    var candidates;
+    if (options.getShadowRoot) {
+      candidates = getCandidatesIteratively([el], options.includeContainer, {
+        filter: isNodeMatchingSelectorTabbable.bind(null, options),
+        flatten: false,
+        getShadowRoot: options.getShadowRoot,
+        shadowRootFilter: isValidShadowRootTabbable
+      });
+    } else {
+      candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
+    }
+    return sortByOrder(candidates);
   };
   var focusable = function focusable2(el, options) {
     options = options || {};
-    var candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorFocusable.bind(null, options));
+    var candidates;
+    if (options.getShadowRoot) {
+      candidates = getCandidatesIteratively([el], options.includeContainer, {
+        filter: isNodeMatchingSelectorFocusable.bind(null, options),
+        flatten: true,
+        getShadowRoot: options.getShadowRoot
+      });
+    } else {
+      candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorFocusable.bind(null, options));
+    }
     return candidates;
+  };
+  var isTabbable = function isTabbable2(node, options) {
+    options = options || {};
+    if (!node) {
+      throw new Error("No node provided");
+    }
+    if (matches.call(node, candidateSelector) === false) {
+      return false;
+    }
+    return isNodeMatchingSelectorTabbable(options, node);
   };
   var focusableCandidateSelector = /* @__PURE__ */ candidateSelectors.concat("iframe").join(",");
   var isFocusable = function isFocusable2(node, options) {
@@ -4511,29 +4819,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var keys = Object.keys(object);
     if (Object.getOwnPropertySymbols) {
       var symbols = Object.getOwnPropertySymbols(object);
-      if (enumerableOnly) {
-        symbols = symbols.filter(function(sym) {
-          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-        });
-      }
-      keys.push.apply(keys, symbols);
+      enumerableOnly && (symbols = symbols.filter(function(sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      })), keys.push.apply(keys, symbols);
     }
     return keys;
   }
   function _objectSpread2(target) {
     for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i] != null ? arguments[i] : {};
-      if (i % 2) {
-        ownKeys2(Object(source), true).forEach(function(key) {
-          _defineProperty(target, key, source[key]);
-        });
-      } else if (Object.getOwnPropertyDescriptors) {
-        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-      } else {
-        ownKeys2(Object(source)).forEach(function(key) {
-          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-        });
-      }
+      var source = null != arguments[i] ? arguments[i] : {};
+      i % 2 ? ownKeys2(Object(source), true).forEach(function(key) {
+        _defineProperty(target, key, source[key]);
+      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys2(Object(source)).forEach(function(key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
     }
     return target;
   }
@@ -4608,8 +4907,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return typeof value === "function" ? value.apply(void 0, params) : value;
   };
+  var getActualTarget = function getActualTarget2(event) {
+    return event.target.shadowRoot && typeof event.composedPath === "function" ? event.composedPath()[0] : event.target;
+  };
   var createFocusTrap = function createFocusTrap2(elements, userOptions) {
-    var doc = document;
+    var doc = (userOptions === null || userOptions === void 0 ? void 0 : userOptions.document) || document;
     var config = _objectSpread2({
       returnFocusOnDeactivate: true,
       escapeDeactivates: true,
@@ -4617,6 +4919,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }, userOptions);
     var state = {
       containers: [],
+      containerGroups: [],
       tabbableGroups: [],
       nodeFocusedBeforeActivation: null,
       mostRecentlyFocusedNode: null,
@@ -4628,44 +4931,53 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var getOption = function getOption2(configOverrideOptions, optionName, configOptionName) {
       return configOverrideOptions && configOverrideOptions[optionName] !== void 0 ? configOverrideOptions[optionName] : config[configOptionName || optionName];
     };
-    var containersContain = function containersContain2(element) {
-      return state.containers.some(function(container) {
-        return container.contains(element);
+    var findContainerIndex = function findContainerIndex2(element) {
+      return state.containerGroups.findIndex(function(_ref) {
+        var container = _ref.container, tabbableNodes = _ref.tabbableNodes;
+        return container.contains(element) || tabbableNodes.find(function(node) {
+          return node === element;
+        });
       });
     };
     var getNodeForOption = function getNodeForOption2(optionName) {
       var optionValue = config[optionName];
+      if (typeof optionValue === "function") {
+        for (var _len2 = arguments.length, params = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+          params[_key2 - 1] = arguments[_key2];
+        }
+        optionValue = optionValue.apply(void 0, params);
+      }
+      if (optionValue === true) {
+        optionValue = void 0;
+      }
       if (!optionValue) {
-        return null;
+        if (optionValue === void 0 || optionValue === false) {
+          return optionValue;
+        }
+        throw new Error("`".concat(optionName, "` was specified but was not a node, or did not return a node"));
       }
       var node = optionValue;
       if (typeof optionValue === "string") {
         node = doc.querySelector(optionValue);
         if (!node) {
-          throw new Error("`".concat(optionName, "` refers to no known node"));
-        }
-      }
-      if (typeof optionValue === "function") {
-        node = optionValue();
-        if (!node) {
-          throw new Error("`".concat(optionName, "` did not return a node"));
+          throw new Error("`".concat(optionName, "` as selector refers to no known node"));
         }
       }
       return node;
     };
     var getInitialFocusNode = function getInitialFocusNode2() {
-      var node;
-      if (getOption({}, "initialFocus") === false) {
+      var node = getNodeForOption("initialFocus");
+      if (node === false) {
         return false;
       }
-      if (getNodeForOption("initialFocus") !== null) {
-        node = getNodeForOption("initialFocus");
-      } else if (containersContain(doc.activeElement)) {
-        node = doc.activeElement;
-      } else {
-        var firstTabbableGroup = state.tabbableGroups[0];
-        var firstTabbableNode = firstTabbableGroup && firstTabbableGroup.firstTabbableNode;
-        node = firstTabbableNode || getNodeForOption("fallbackFocus");
+      if (node === void 0) {
+        if (findContainerIndex(doc.activeElement) >= 0) {
+          node = doc.activeElement;
+        } else {
+          var firstTabbableGroup = state.tabbableGroups[0];
+          var firstTabbableNode = firstTabbableGroup && firstTabbableGroup.firstTabbableNode;
+          node = firstTabbableNode || getNodeForOption("fallbackFocus");
+        }
       }
       if (!node) {
         throw new Error("Your focus-trap needs to have at least one focusable element");
@@ -4673,18 +4985,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return node;
     };
     var updateTabbableNodes = function updateTabbableNodes2() {
-      state.tabbableGroups = state.containers.map(function(container) {
-        var tabbableNodes = tabbable(container);
-        if (tabbableNodes.length > 0) {
-          return {
-            container,
-            firstTabbableNode: tabbableNodes[0],
-            lastTabbableNode: tabbableNodes[tabbableNodes.length - 1]
-          };
-        }
-        return void 0;
-      }).filter(function(group) {
-        return !!group;
+      state.containerGroups = state.containers.map(function(container) {
+        var tabbableNodes = tabbable(container, config.tabbableOptions);
+        var focusableNodes = focusable(container, config.tabbableOptions);
+        return {
+          container,
+          tabbableNodes,
+          focusableNodes,
+          firstTabbableNode: tabbableNodes.length > 0 ? tabbableNodes[0] : null,
+          lastTabbableNode: tabbableNodes.length > 0 ? tabbableNodes[tabbableNodes.length - 1] : null,
+          nextTabbableNode: function nextTabbableNode(node) {
+            var forward = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : true;
+            var nodeIdx = focusableNodes.findIndex(function(n) {
+              return n === node;
+            });
+            if (nodeIdx < 0) {
+              return void 0;
+            }
+            if (forward) {
+              return focusableNodes.slice(nodeIdx + 1).find(function(n) {
+                return isTabbable(n, config.tabbableOptions);
+              });
+            }
+            return focusableNodes.slice(0, nodeIdx).reverse().find(function(n) {
+              return isTabbable(n, config.tabbableOptions);
+            });
+          }
+        };
+      });
+      state.tabbableGroups = state.containerGroups.filter(function(group) {
+        return group.tabbableNodes.length > 0;
       });
       if (state.tabbableGroups.length <= 0 && !getNodeForOption("fallbackFocus")) {
         throw new Error("Your focus-trap must have at least one container with at least one tabbable node in it at all times");
@@ -4710,16 +5040,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     var getReturnFocusNode = function getReturnFocusNode2(previousActiveElement) {
-      var node = getNodeForOption("setReturnFocus");
-      return node ? node : previousActiveElement;
+      var node = getNodeForOption("setReturnFocus", previousActiveElement);
+      return node ? node : node === false ? false : previousActiveElement;
     };
     var checkPointerDown = function checkPointerDown2(e) {
-      if (containersContain(e.target)) {
+      var target = getActualTarget(e);
+      if (findContainerIndex(target) >= 0) {
         return;
       }
       if (valueOrHandler(config.clickOutsideDeactivates, e)) {
         trap.deactivate({
-          returnFocus: config.returnFocusOnDeactivate && !isFocusable(e.target)
+          returnFocus: config.returnFocusOnDeactivate && !isFocusable(target, config.tabbableOptions)
         });
         return;
       }
@@ -4729,10 +5060,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       e.preventDefault();
     };
     var checkFocusIn = function checkFocusIn2(e) {
-      var targetContained = containersContain(e.target);
-      if (targetContained || e.target instanceof Document) {
+      var target = getActualTarget(e);
+      var targetContained = findContainerIndex(target) >= 0;
+      if (targetContained || target instanceof Document) {
         if (targetContained) {
-          state.mostRecentlyFocusedNode = e.target;
+          state.mostRecentlyFocusedNode = target;
         }
       } else {
         e.stopImmediatePropagation();
@@ -4740,13 +5072,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     var checkTab = function checkTab2(e) {
+      var target = getActualTarget(e);
       updateTabbableNodes();
       var destinationNode = null;
       if (state.tabbableGroups.length > 0) {
-        var containerIndex = findIndex(state.tabbableGroups, function(_ref) {
-          var container = _ref.container;
-          return container.contains(e.target);
-        });
+        var containerIndex = findContainerIndex(target);
+        var containerGroup = containerIndex >= 0 ? state.containerGroups[containerIndex] : void 0;
         if (containerIndex < 0) {
           if (e.shiftKey) {
             destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
@@ -4756,9 +5087,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         } else if (e.shiftKey) {
           var startOfGroupIndex = findIndex(state.tabbableGroups, function(_ref2) {
             var firstTabbableNode = _ref2.firstTabbableNode;
-            return e.target === firstTabbableNode;
+            return target === firstTabbableNode;
           });
-          if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
+          if (startOfGroupIndex < 0 && (containerGroup.container === target || isFocusable(target, config.tabbableOptions) && !isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target, false))) {
             startOfGroupIndex = containerIndex;
           }
           if (startOfGroupIndex >= 0) {
@@ -4769,9 +5100,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         } else {
           var lastOfGroupIndex = findIndex(state.tabbableGroups, function(_ref3) {
             var lastTabbableNode = _ref3.lastTabbableNode;
-            return e.target === lastTabbableNode;
+            return target === lastTabbableNode;
           });
-          if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
+          if (lastOfGroupIndex < 0 && (containerGroup.container === target || isFocusable(target, config.tabbableOptions) && !isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target))) {
             lastOfGroupIndex = containerIndex;
           }
           if (lastOfGroupIndex >= 0) {
@@ -4789,7 +5120,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     var checkKey = function checkKey2(e) {
-      if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates) !== false) {
+      if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates, e) !== false) {
         e.preventDefault();
         trap.deactivate();
         return;
@@ -4800,10 +5131,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     var checkClick = function checkClick2(e) {
-      if (valueOrHandler(config.clickOutsideDeactivates, e)) {
+      var target = getActualTarget(e);
+      if (findContainerIndex(target) >= 0) {
         return;
       }
-      if (containersContain(e.target)) {
+      if (valueOrHandler(config.clickOutsideDeactivates, e)) {
         return;
       }
       if (valueOrHandler(config.allowOutsideClick, e)) {
@@ -4851,6 +5183,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return trap;
     };
     trap = {
+      get active() {
+        return state.active;
+      },
+      get paused() {
+        return state.paused;
+      },
       activate: function activate(activateOptions) {
         if (state.active) {
           return this;
@@ -4887,19 +5225,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!state.active) {
           return this;
         }
+        var options = _objectSpread2({
+          onDeactivate: config.onDeactivate,
+          onPostDeactivate: config.onPostDeactivate,
+          checkCanReturnFocus: config.checkCanReturnFocus
+        }, deactivateOptions);
         clearTimeout(state.delayInitialFocusTimer);
         state.delayInitialFocusTimer = void 0;
         removeListeners();
         state.active = false;
         state.paused = false;
         activeFocusTraps.deactivateTrap(trap);
-        var onDeactivate = getOption(deactivateOptions, "onDeactivate");
-        var onPostDeactivate = getOption(deactivateOptions, "onPostDeactivate");
-        var checkCanReturnFocus = getOption(deactivateOptions, "checkCanReturnFocus");
+        var onDeactivate = getOption(options, "onDeactivate");
+        var onPostDeactivate = getOption(options, "onPostDeactivate");
+        var checkCanReturnFocus = getOption(options, "checkCanReturnFocus");
+        var returnFocus = getOption(options, "returnFocus", "returnFocusOnDeactivate");
         if (onDeactivate) {
           onDeactivate();
         }
-        var returnFocus = getOption(deactivateOptions, "returnFocus", "returnFocusOnDeactivate");
         var finishDeactivation = function finishDeactivation2() {
           delay(function() {
             if (returnFocus) {
@@ -5347,12 +5690,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       e.preventDefault();
       callback((whenReleased) => {
-        let handler3 = (e2) => {
+        let handler4 = (e2) => {
           e2.preventDefault();
           whenReleased();
-          el.removeEventListener("mouseup", handler3);
+          el.removeEventListener("mouseup", handler4);
         };
-        el.addEventListener("mouseup", handler3);
+        el.addEventListener("mouseup", handler4);
       });
     });
   }
@@ -5361,11 +5704,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let timeout = setTimeout(() => {
         callback(e);
       }, ms);
-      let handler3 = () => {
+      let handler4 = () => {
         clearTimeout(timeout);
-        el.removeEventListener("mouseleave", handler3);
+        el.removeEventListener("mouseleave", handler4);
       };
-      el.addEventListener("mouseleave", handler3);
+      el.addEventListener("mouseleave", handler4);
     });
   }
   function extractDestinationFromLink(linkEl) {
@@ -5924,82 +6267,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // node_modules/@alpinejs/morph/dist/module.esm.js
-  var DomManager = class {
-    el = void 0;
-    constructor(el) {
-      this.el = el;
-    }
-    traversals = {
-      first: "firstElementChild",
-      next: "nextElementSibling",
-      parent: "parentElement"
-    };
-    nodes() {
-      this.traversals = {
-        first: "firstChild",
-        next: "nextSibling",
-        parent: "parentNode"
-      };
-      return this;
-    }
-    first() {
-      return this.teleportTo(this.el[this.traversals["first"]]);
-    }
-    next() {
-      return this.teleportTo(this.teleportBack(this.el[this.traversals["next"]]));
-    }
-    before(insertee) {
-      this.el[this.traversals["parent"]].insertBefore(insertee, this.el);
-      return insertee;
-    }
-    replace(replacement) {
-      this.el[this.traversals["parent"]].replaceChild(replacement, this.el);
-      return replacement;
-    }
-    append(appendee) {
-      this.el.appendChild(appendee);
-      return appendee;
-    }
-    teleportTo(el) {
-      if (!el)
-        return el;
-      if (el._x_teleport)
-        return el._x_teleport;
-      return el;
-    }
-    teleportBack(el) {
-      if (!el)
-        return el;
-      if (el._x_teleportBack)
-        return el._x_teleportBack;
-      return el;
-    }
-  };
-  function dom(el) {
-    return new DomManager(el);
-  }
-  function createElement(html) {
-    const template = document.createElement("template");
-    template.innerHTML = html;
-    return template.content.firstElementChild;
-  }
-  function textOrComment(el) {
-    return el.nodeType === 3 || el.nodeType === 8;
-  }
-  var resolveStep = () => {
-  };
-  var logger = () => {
-  };
-  async function morph(from, toHtml, options) {
+  function morph(from, toHtml, options) {
+    monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
     let toEl;
-    let key, lookahead, updating, updated, removing, removed, adding, added, debug;
-    function breakpoint(message2) {
-      if (!debug)
-        return;
-      logger((message2 || "").replace("\n", "\\n"), fromEl, toEl);
-      return new Promise((resolve) => resolveStep = () => resolve());
-    }
+    let key, lookahead, updating, updated, removing, removed, adding, added;
     function assignOptions(options2 = {}) {
       let defaultGetKey = (el) => el.getAttribute("key");
       let noop = () => {
@@ -6012,50 +6284,50 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       added = options2.added || noop;
       key = options2.key || defaultGetKey;
       lookahead = options2.lookahead || false;
-      debug = options2.debug || false;
     }
-    async function patch(from2, to) {
+    function patch(from2, to) {
       if (differentElementNamesTypesOrKeys(from2, to)) {
-        let result = patchElement(from2, to);
-        await breakpoint("Swap elements");
-        return result;
+        return swapElements(from2, to);
       }
       let updateChildrenOnly = false;
       if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true))
         return;
-      window.Alpine && initializeAlpineOnTo(from2, to, () => updateChildrenOnly = true);
+      if (from2.nodeType === 1 && window.Alpine) {
+        window.Alpine.cloneNode(from2, to);
+      }
       if (textOrComment(to)) {
-        await patchNodeValue(from2, to);
+        patchNodeValue(from2, to);
         updated(from2, to);
         return;
       }
       if (!updateChildrenOnly) {
-        await patchAttributes(from2, to);
+        patchAttributes(from2, to);
       }
       updated(from2, to);
-      await patchChildren(from2, to);
+      patchChildren(from2, to);
     }
     function differentElementNamesTypesOrKeys(from2, to) {
       return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
     }
-    function patchElement(from2, to) {
+    function swapElements(from2, to) {
       if (shouldSkip(removing, from2))
         return;
       let toCloned = to.cloneNode(true);
       if (shouldSkip(adding, toCloned))
         return;
-      dom(from2).replace(toCloned);
+      from2.replaceWith(toCloned);
       removed(from2);
       added(toCloned);
     }
-    async function patchNodeValue(from2, to) {
+    function patchNodeValue(from2, to) {
       let value = to.nodeValue;
       if (from2.nodeValue !== value) {
         from2.nodeValue = value;
-        await breakpoint("Change text node to: " + value);
       }
     }
-    async function patchAttributes(from2, to) {
+    function patchAttributes(from2, to) {
+      if (from2._x_transitioning)
+        return;
       if (from2._x_isShown && !to._x_isShown) {
         return;
       }
@@ -6068,7 +6340,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
           from2.removeAttribute(name);
-          await breakpoint("Remove attribute");
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
@@ -6076,95 +6347,127 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let value = toAttributes[i].value;
         if (from2.getAttribute(name) !== value) {
           from2.setAttribute(name, value);
-          await breakpoint(`Set [${name}] attribute to: "${value}"`);
         }
       }
     }
-    async function patchChildren(from2, to) {
-      let domChildren = from2.childNodes;
-      let toChildren = to.childNodes;
-      let toKeyToNodeMap = keyToMap(toChildren);
-      let domKeyDomNodeMap = keyToMap(domChildren);
-      let currentTo = dom(to).nodes().first();
-      let currentFrom = dom(from2).nodes().first();
-      let domKeyHoldovers = {};
+    function patchChildren(from2, to) {
+      let fromKeys = keyToMap(from2.children);
+      let fromKeyHoldovers = {};
+      let currentTo = getFirstNode(to);
+      let currentFrom = getFirstNode(from2);
       while (currentTo) {
         let toKey = getKey(currentTo);
-        let domKey = getKey(currentFrom);
+        let fromKey = getKey(currentFrom);
         if (!currentFrom) {
-          if (toKey && domKeyHoldovers[toKey]) {
-            let holdover = domKeyHoldovers[toKey];
-            dom(from2).append(holdover);
+          if (toKey && fromKeyHoldovers[toKey]) {
+            let holdover = fromKeyHoldovers[toKey];
+            from2.appendChild(holdover);
             currentFrom = holdover;
-            await breakpoint("Add element (from key)");
           } else {
-            let added2 = addNodeTo(currentTo, from2) || {};
-            await breakpoint("Add element: " + (added2.outerHTML || added2.nodeValue));
-            currentTo = dom(currentTo).nodes().next();
+            if (!shouldSkip(adding, currentTo)) {
+              let clone2 = currentTo.cloneNode(true);
+              from2.appendChild(clone2);
+              added(clone2);
+            }
+            currentTo = getNextSibling(to, currentTo);
             continue;
           }
         }
-        if (lookahead) {
-          let nextToElementSibling = dom(currentTo).next();
+        let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
+        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
+        if (isIf(currentTo) && isIf(currentFrom)) {
+          let nestedIfCount = 0;
+          let fromBlockStart = currentFrom;
+          while (currentFrom) {
+            let next = getNextSibling(from2, currentFrom);
+            if (isIf(next)) {
+              nestedIfCount++;
+            } else if (isEnd(next) && nestedIfCount > 0) {
+              nestedIfCount--;
+            } else if (isEnd(next) && nestedIfCount === 0) {
+              currentFrom = next;
+              break;
+            }
+            currentFrom = next;
+          }
+          let fromBlockEnd = currentFrom;
+          nestedIfCount = 0;
+          let toBlockStart = currentTo;
+          while (currentTo) {
+            let next = getNextSibling(to, currentTo);
+            if (isIf(next)) {
+              nestedIfCount++;
+            } else if (isEnd(next) && nestedIfCount > 0) {
+              nestedIfCount--;
+            } else if (isEnd(next) && nestedIfCount === 0) {
+              currentTo = next;
+              break;
+            }
+            currentTo = next;
+          }
+          let toBlockEnd = currentTo;
+          let fromBlock = new Block(fromBlockStart, fromBlockEnd);
+          let toBlock = new Block(toBlockStart, toBlockEnd);
+          patchChildren(fromBlock, toBlock);
+          continue;
+        }
+        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
+          let nextToElementSibling = getNextSibling(to, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
-            if (currentFrom.isEqualNode(nextToElementSibling)) {
+            if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
-              currentFrom = addNodeBefore(currentTo, currentFrom);
-              domKey = getKey(currentFrom);
-              await breakpoint("Move element (lookahead)");
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              fromKey = getKey(currentFrom);
             }
-            nextToElementSibling = dom(nextToElementSibling).next();
+            nextToElementSibling = getNextSibling(to, nextToElementSibling);
           }
         }
-        if (toKey !== domKey) {
-          if (!toKey && domKey) {
-            domKeyHoldovers[domKey] = currentFrom;
-            currentFrom = addNodeBefore(currentTo, currentFrom);
-            domKeyHoldovers[domKey].remove();
-            currentFrom = dom(currentFrom).nodes().next();
-            currentTo = dom(currentTo).nodes().next();
-            await breakpoint('No "to" key');
+        if (toKey !== fromKey) {
+          if (!toKey && fromKey) {
+            fromKeyHoldovers[fromKey] = currentFrom;
+            currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+            fromKeyHoldovers[fromKey].remove();
+            currentFrom = getNextSibling(from2, currentFrom);
+            currentTo = getNextSibling(to, currentTo);
             continue;
           }
-          if (toKey && !domKey) {
-            if (domKeyDomNodeMap[toKey]) {
-              currentFrom = dom(currentFrom).replace(domKeyDomNodeMap[toKey]);
-              await breakpoint('No "from" key');
+          if (toKey && !fromKey) {
+            if (fromKeys[toKey]) {
+              currentFrom.replaceWith(fromKeys[toKey]);
+              currentFrom = fromKeys[toKey];
             }
           }
-          if (toKey && domKey) {
-            domKeyHoldovers[domKey] = currentFrom;
-            let domKeyNode = domKeyDomNodeMap[toKey];
-            if (domKeyNode) {
-              currentFrom = dom(currentFrom).replace(domKeyNode);
-              await breakpoint('Move "from" key');
+          if (toKey && fromKey) {
+            let fromKeyNode = fromKeys[toKey];
+            if (fromKeyNode) {
+              fromKeyHoldovers[fromKey] = currentFrom;
+              currentFrom.replaceWith(fromKeyNode);
+              currentFrom = fromKeyNode;
             } else {
-              domKeyHoldovers[domKey] = currentFrom;
-              currentFrom = addNodeBefore(currentTo, currentFrom);
-              domKeyHoldovers[domKey].remove();
-              currentFrom = dom(currentFrom).next();
-              currentTo = dom(currentTo).next();
-              await breakpoint("Swap elements with keys");
+              fromKeyHoldovers[fromKey] = currentFrom;
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              fromKeyHoldovers[fromKey].remove();
+              currentFrom = getNextSibling(from2, currentFrom);
+              currentTo = getNextSibling(to, currentTo);
               continue;
             }
           }
         }
-        let currentFromNext = currentFrom && dom(currentFrom).nodes().next();
-        await patch(currentFrom, currentTo);
-        currentTo = currentTo && dom(currentTo).nodes().next();
+        let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
+        patch(currentFrom, currentTo);
+        currentTo = currentTo && getNextSibling(to, currentTo);
         currentFrom = currentFromNext;
       }
       let removals = [];
       while (currentFrom) {
         if (!shouldSkip(removing, currentFrom))
           removals.push(currentFrom);
-        currentFrom = dom(currentFrom).nodes().next();
+        currentFrom = getNextSibling(from2, currentFrom);
       }
       while (removals.length) {
         let domForRemoval = removals.shift();
         domForRemoval.remove();
-        await breakpoint("remove el");
         removed(domForRemoval);
       }
     }
@@ -6173,60 +6476,119 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function keyToMap(els2) {
       let map = {};
-      els2.forEach((el) => {
+      for (let el of els2) {
         let theKey = getKey(el);
         if (theKey) {
           map[theKey] = el;
         }
-      });
+      }
       return map;
     }
-    function addNodeTo(node, parent) {
+    function addNodeBefore(parent, node, beforeMe) {
       if (!shouldSkip(adding, node)) {
         let clone2 = node.cloneNode(true);
-        dom(parent).append(clone2);
+        parent.insertBefore(clone2, beforeMe);
         added(clone2);
         return clone2;
       }
-      return null;
-    }
-    function addNodeBefore(node, beforeMe) {
-      if (!shouldSkip(adding, node)) {
-        let clone2 = node.cloneNode(true);
-        dom(beforeMe).before(clone2);
-        added(clone2);
-        return clone2;
-      }
-      return beforeMe;
+      return node;
     }
     assignOptions(options);
     fromEl = from;
-    toEl = createElement(toHtml);
+    toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
     if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
       toEl._x_dataStack = window.Alpine.closestDataStack(from);
-      toEl._x_dataStack && window.Alpine.clone(from, toEl);
+      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
     }
-    await breakpoint();
-    await patch(from, toEl);
+    patch(from, toEl);
     fromEl = void 0;
     toEl = void 0;
     return from;
   }
-  morph.step = () => resolveStep();
-  morph.log = (theLogger) => {
-    logger = theLogger;
+  morph.step = () => {
+  };
+  morph.log = () => {
   };
   function shouldSkip(hook, ...args) {
     let skip = false;
     hook(...args, () => skip = true);
     return skip;
   }
-  function initializeAlpineOnTo(from, to, childrenOnly) {
-    if (from.nodeType !== 1)
-      return;
-    if (from._x_dataStack) {
-      window.Alpine.clone(from, to);
+  var patched = false;
+  function createElement(html) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    return template.content.firstElementChild;
+  }
+  function textOrComment(el) {
+    return el.nodeType === 3 || el.nodeType === 8;
+  }
+  var Block = class {
+    constructor(start3, end) {
+      this.startComment = start3;
+      this.endComment = end;
     }
+    get children() {
+      let children = [];
+      let currentNode = this.startComment.nextSibling;
+      while (currentNode !== void 0 && currentNode !== this.endComment) {
+        children.push(currentNode);
+        currentNode = currentNode.nextSibling;
+      }
+      return children;
+    }
+    appendChild(child) {
+      this.endComment.before(child);
+    }
+    get firstChild() {
+      let first2 = this.startComment.nextSibling;
+      if (first2 === this.endComment)
+        return;
+      return first2;
+    }
+    nextNode(reference) {
+      let next = reference.nextSibling;
+      if (next === this.endComment)
+        return;
+      return next;
+    }
+    insertBefore(newNode, reference) {
+      reference.before(newNode);
+      return newNode;
+    }
+  };
+  function getFirstNode(parent) {
+    return parent.firstChild;
+  }
+  function getNextSibling(parent, reference) {
+    if (reference._x_teleport) {
+      return reference._x_teleport;
+    } else if (reference.teleportBack) {
+      return reference.teleportBack;
+    }
+    let next;
+    if (parent instanceof Block) {
+      next = parent.nextNode(reference);
+    } else {
+      next = reference.nextSibling;
+    }
+    return next;
+  }
+  function monkeyPatchDomSetAttributeToAllowAtSymbols() {
+    if (patched)
+      return;
+    patched = true;
+    let original = Element.prototype.setAttribute;
+    let hostDiv = document.createElement("div");
+    Element.prototype.setAttribute = function newSetAttribute(name, value) {
+      if (!name.includes("@")) {
+        return original.call(this, name, value);
+      }
+      hostDiv.innerHTML = `<span ${name}="${value}"></span>`;
+      let attr = hostDiv.firstElementChild.getAttributeNode(name);
+      hostDiv.firstElementChild.removeAttributeNode(attr);
+      this.setAttributeNode(attr);
+    };
   }
   function src_default6(Alpine3) {
     Alpine3.morph = morph;
@@ -6248,8 +6610,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 evaluator((value2) => {
                   result = typeof value2 === "function" ? value2(input) : value2;
                 }, { scope: {
-                  $input: input,
-                  $money: formatMoney.bind({ el })
+                  "$input": input,
+                  "$money": formatMoney.bind({ el })
                 } });
               });
               return result;
@@ -6305,7 +6667,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let output = "";
     let regexes = {
       "9": /[0-9]/,
-      a: /[a-zA-Z]/,
+      "a": /[a-zA-Z]/,
       "*": /[a-zA-Z0-9]/
     };
     let wildcardTemplate = "";
@@ -6934,16 +7296,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
     let timeout;
-    let started = false;
+    let started2 = false;
     return [
       (callback) => {
         timeout = setTimeout(() => {
           callback();
-          started = true;
+          started2 = true;
         }, duration);
       },
       (callback) => {
-        if (started) {
+        if (started2) {
           callback();
         } else {
           clearTimeout(timeout);
@@ -7362,11 +7724,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 })();
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */
-/*!
-* focus-trap 6.6.1
-* @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
-*/
-/*!
-* tabbable 5.2.1
-* @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
+/*! Bundled license information:
+
+tabbable/dist/index.esm.js:
+  (*!
+  * tabbable 5.3.3
+  * @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
+  *)
+
+focus-trap/dist/focus-trap.esm.js:
+  (*!
+  * focus-trap 6.9.4
+  * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
+  *)
 */
