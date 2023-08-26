@@ -296,6 +296,16 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            20 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @empty($foo)
+                        ...
+                    @endempty
+                </div>
+                HTML
+            ],
         ];
     }
 
