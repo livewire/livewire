@@ -11,7 +11,7 @@ use Illuminate\Routing\Route;
 
 class SupportLazyLoading extends ComponentHook
 {
-    static bool $isLazyRoute = false;
+    static bool $isLazyRoute = null;
 
     static function provide()
     {
@@ -29,9 +29,9 @@ class SupportLazyLoading extends ComponentHook
 
     public function mount($params)
     {
-        // Check if is a full page component with lazy load enabled
-        if (SupportLazyLoading::$isLazyRoute) {
-            $lazyValue = 'on-load';
+        // Priority to full page component route macro if there
+        if (SupportLazyLoading::$isLazyRoute !== null) {
+            $lazyValue = SupportLazyLoading::$isLazyRoute ? 'on-load' : false;
         } else {
             $lazyValue = $params['lazy'] ?? null;
             // If lazy param is missing or null try to get lazy attribute
