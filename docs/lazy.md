@@ -91,13 +91,13 @@ Because the above component specifies a "placeholder" by returning HTML from a `
 For more complex loaders (such as skeletons) you can return a `view` from the `placeholder()` similar to `render()`. 
 
 ```php
-public function placeholder(array $attributes = [])
+public function placeholder(array $params = [])
 {
-    return view('livewire.placeholders.skeleton', $attributes);
+    return view('livewire.placeholders.skeleton', $params);
 }
 ```
 
-Any attributes from the component being lazy loaded will be available as an `attributes` arugment passed to the `placeholder()` method.
+Any parameters from the component being lazy loaded will be available as an `$params` arugment passed to the `placeholder()` method.
 
 ## Lazy loading outside of the viewport
 
