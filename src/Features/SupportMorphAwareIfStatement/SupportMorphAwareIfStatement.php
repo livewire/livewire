@@ -21,7 +21,10 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 .collect($directives)
                     // Ensure longer directives are in the pattern before shorter ones...
                     ->sortBy(fn ($directive) => strlen($directive), descending: true)
-                    ->map(fn ($directive) => $directive === '@empty' ? $directive.'[^\S\r\n]*\(' : $directive)
+                    ->map(fn ($directive) => match ($directive) {
+                        '@empty' => '@empty[^\S\r\n]*\(', // @empty + optional whitespace that is not a newline + opening parenthesis
+                        default => $directive,
+                    })
                     ->join('|')
             .')';
 
