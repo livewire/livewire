@@ -11,7 +11,7 @@ use Illuminate\Routing\Route;
 
 class SupportLazyLoading extends ComponentHook
 {
-    static bool $isLazyRoute = null;
+    static ?bool $isLazyRoute = null;
 
     static function provide()
     {
