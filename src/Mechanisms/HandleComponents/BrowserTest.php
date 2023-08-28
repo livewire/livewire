@@ -177,6 +177,34 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@button')
         ->assertSee('43');
     }
+
+    /** @test */
+    public function it_can_update_a_custom_wireable_via_inputs()
+    {
+        Livewire::visit(new class () extends \Livewire\Component {
+            public Person $person;
+            
+            public function mount(): void
+            {
+                $this->person = new Person('Jæja', 42);
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" dusk="age" wire:model.live="person.age" />
+                    <span>{{ $person->age }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForText('42')
+        ->assertSee('42')
+        ->type('@age', '43')
+        ->waitForText('43')
+        ->assertSee('43');
+    }
 }
 
 enum Suit: string
@@ -209,6 +237,6 @@ class Person implements Wireable
             throw new RuntimeException("Can't fromLivewire without it being an array.");
         }
 
-        return new self($value['name'], $value['age']);
+        return new self($value['name'], (int) $value['age']);
     }
 }
