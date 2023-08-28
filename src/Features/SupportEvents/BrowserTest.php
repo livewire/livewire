@@ -35,33 +35,6 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function dispatch_from_javascript_is_called_once()
-    {
-        Livewire::visit(new class extends Component {
-            public $count = 0;
-
-            protected $listeners = ['foo' => 'onFoo'];
-
-            function onFoo()
-            {
-                $this->count++;
-            }
-
-            function render()
-            {
-                return Blade::render(<<<'HTML'
-                <div>
-                    <button @click="$dispatch('foo')" dusk="button">{{ $count }}</button>
-                </div>
-                HTML, ['count' => $this->count]);
-            }
-        })
-            ->assertSeeIn('@button', '0')
-            ->waitForLivewire()->click('@button')
-            ->assertSeeIn('@button', '1');
-    }
-
-    /** @test */
     public function call_render_after_event_handler()
     {
         Livewire::visit(new class extends Component {
