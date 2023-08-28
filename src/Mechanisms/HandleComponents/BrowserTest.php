@@ -6,13 +6,15 @@ use Livewire\Attributes\Computed;
 use Illuminate\View\ViewException;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Wireable;
+use RuntimeException;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
     public function corrupt_component_payload_exception_is_no_longer_thrown_from_data_incompatible_with_javascript()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class () extends \Livewire\Component {
             public $subsequentRequest = false;
 
             public $negativeZero = -0;
@@ -72,7 +74,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_converts_empty_strings_to_null_for_integer_properties()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class () extends \Livewire\Component {
             public ?int $number = 5;
 
             public function render()
@@ -94,7 +96,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_uses_the_synthesizers_for_multiple_types_property_updates()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class () extends \Livewire\Component {
             public string|int $localValue = 15;
 
             public function render()
@@ -120,7 +122,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class () extends \Livewire\Component {
             public Suit $selected;
 
             #[Computed]
@@ -149,6 +151,32 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@selected', 'D')
         ;
     }
+
+    /** @test */
+    public function it_can_update_a_custom_wireable_object()
+    {
+        Livewire::visit(new class () extends \Livewire\Component {
+            public Person $person;
+            
+            public function mount(): void
+            {
+                $this->person = new Person('Jæja', 42);
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="$set('person', {'name': 'foo', 'age': 43})" dusk="button">Button</button>
+                    <span>{{ $person->age }}</span
+                </div>
+                HTML;
+            }
+        })
+        ->assertSee('42')
+        ->waitForLivewire()->click('@button')
+        ->assertSee('43');
+    }
 }
 
 enum Suit: string
@@ -162,3 +190,25 @@ enum Suit: string
     case Spades = 'S';
 }
 
+class Person implements Wireable
+{
+    public function __construct(
+        public string $name,
+        public int $age
+    ) {
+
+    }
+    public function toLivewire()
+    {
+        return ['name' => $this->name, 'age' => $this->age];
+    }
+
+    public static function fromLivewire($value)
+    {
+        if (! is_array($value)) {
+            throw new RuntimeException("Can't fromLivewire without it being an array.");
+        }
+
+        return new self($value['name'], $value['age']);
+    }
+}
