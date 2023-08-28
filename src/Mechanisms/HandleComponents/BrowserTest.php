@@ -14,7 +14,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function corrupt_component_payload_exception_is_no_longer_thrown_from_data_incompatible_with_javascript()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component {
             public $subsequentRequest = false;
 
             public $negativeZero = -0;
@@ -74,7 +74,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_converts_empty_strings_to_null_for_integer_properties()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component {
             public ?int $number = 5;
 
             public function render()
@@ -96,7 +96,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_uses_the_synthesizers_for_multiple_types_property_updates()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component {
             public string|int $localValue = 15;
 
             public function render()
@@ -122,7 +122,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component {
             public Suit $selected;
 
             #[Computed]
@@ -155,7 +155,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_can_update_a_custom_wireable_object()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component {
             public Person $person;
             
             public function mount(): void
@@ -181,7 +181,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_can_update_a_custom_wireable_via_inputs()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component {
             public Person $person;
             
             public function mount(): void
