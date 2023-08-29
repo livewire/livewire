@@ -830,6 +830,84 @@ class BrowserTest extends BrowserTestCase
         ->assertQueryStringHas('p', '1')
         ;
     }
+
+    /** @test */
+    public function it_load_pagination_on_nested_alpine_tabs()
+    {
+        Livewire::visit(new class extends Component {
+            use WithPagination;
+
+            public $pageHookOutput = null;
+
+            public function updatedPage($page)
+            {
+                $this->pageHookOutput = 'page-is-set-to-'.$page;
+            }
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div x-data="{ tab: window.location.hash ? window.location.hash.substring(1) : 'general' }">
+                        <nav>
+                            <button dusk="general" x-on:click.prevent="tab = 'general'; window.location.hash = 'general'" :class="{ 'tab--active': tab === 'general' }"
+                                class="general">
+                                General
+                            </button>
+                        
+                            <button dusk="deals" x-on:click.prevent="tab = 'deals'; window.location.hash = 'deals'"
+                                :class="{ 'tab--active': tab === 'deals' }"
+                                class="deals">
+                                Deals
+                            </button>
+                        </nav>
+                        <div x-show="tab === 'deals'">
+                            <div x-data="{ dealSubTab: 'posts' }">
+                                <nav>
+                                       <button x-on:click.prevent="dealSubTab = 'posts'"
+                                          :class="{ 'tab--active': dealSubTab === 'posts' }">
+                                          Posts
+                                     </button>
+                                </nav>
+                                <div x-show="dealSubTab === 'posts'">
+                                    <div>
+                                        @foreach ($posts as $post)
+                                            <h1 wire:key='post-{{ $post->id }}'>{{ $post->title }}</h1>
+                                        @endforeach
+                                    </div>
+                                    {{ $posts->links() }}
+                                </div>
+                                <span dusk="page-pagination-hook">{{ $pageHookOutput }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    HTML,
+                    [
+                        'posts'          => Post::paginate(3),
+                        'pageHookOutput' => $this->pageHookOutput,
+                    ]
+                );
+            }
+        })
+        ->click('@deals')
+        ->assertFragmentIs('deals')
+        ->assertSee('Post #1')
+        ->assertSee('Post #2')
+        ->assertSee('Post #3')
+        ->assertDontSee('Post #4')
+        ->waitForLivewire()->click('@nextPage.before')
+        ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
+        ->assertDontSee('Post #3')
+        ->assertSee('Post #4')
+        ->assertSee('Post #5')
+        ->assertSee('Post #6')
+        ->waitForLivewire()->click('@nextPage.before')
+        ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-3')
+        ->assertDontSee('Post #6')
+        ->assertSee('Post #7')
+        ->assertSee('Post #8')
+        ->assertSee('Post #9');
+    }
 }
 
 class Post extends Model
