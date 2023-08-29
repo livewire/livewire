@@ -49,12 +49,14 @@ class UnitTest extends \Tests\TestCase
      * @test
      * @dataProvider templatesProvider
      **/
-    function foo($occurances, $template)
+    function foo($occurances, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 
         $this->assertOccurrences($occurances, '__BLOCK__', $compiled);
         $this->assertOccurrences($occurances, '__ENDBLOCK__', $compiled);
+
+        $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
     }
 
     public function templatesProvider()
@@ -293,6 +295,27 @@ class UnitTest extends \Tests\TestCase
                     @empty
                         ...
                     @endforelse
+                </div>
+                HTML
+            ],
+            20 => [
+                0,
+                <<<'HTML'
+                <div>
+                    @unlessfoo(true)
+                    <div class="col-span-3 text-right">
+                       toots
+                    </div>
+                    @endunlessfoo
+                </div>
+                HTML,
+                <<<'HTML'
+                <div>
+                    @unlessfoo(true)
+                    <div class="col-span-3 text-right">
+                       toots
+                    </div>
+                    @endunlessfoo
                 </div>
                 HTML
             ],

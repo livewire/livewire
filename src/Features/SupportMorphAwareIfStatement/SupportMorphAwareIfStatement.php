@@ -22,6 +22,9 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 .collect($directives)
                     // Ensure longer directives are in the pattern before shorter ones...
                     ->sortBy(fn ($directive) => strlen($directive), descending: true)
+                    // Only match directives that are an exact match and not ones that
+                    // simply start with the provided directive here...
+                    ->map(fn ($directive) => $directive.'(?![a-zA-Z])')
                     ->join('|')
             .')';
 
