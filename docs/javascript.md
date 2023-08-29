@@ -413,18 +413,30 @@ Livewire.hook('element.init', ({ component, el }) => {
 
 ### DOM Morph hooks
 
-During the DOM morphing lifecycle — which occurs after Livewire completes a network roundtrip — Livewire triggers a series of events for every element that is mutated.
+During the DOM morphing phase—which occurs after Livewire completes a network roundtrip—Livewire triggers a series of events for every element that is mutated.
 
 ```js
-Livewire.hook('morph.updating', (fromEl, toEl, component) => {
+Livewire.hook('morph.updating',  ({ el, component, toEl, skip, childrenOnly }) => {
 	//
 })
 
-Livewire.hook('morph.updated', (el, component) => {
+Livewire.hook('morph.updated', ({ el, component }) => {
 	//
 })
 
-Livewire.hook('morph.removed', (el, component) => {
+Livewire.hook('morph.removing', ({ el, component, skip }) => {
+	//
+})
+
+Livewire.hook('morph.removed', ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.adding',  ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.added',  ({ el }) => {
 	//
 })
 ```
