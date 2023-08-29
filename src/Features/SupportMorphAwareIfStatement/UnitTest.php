@@ -319,22 +319,28 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
-            20 => [
+            21 => [
                 0,
                 <<<'HTML'
                 <div @if (0 < 1) bar="bob" @endif></div>
                 HTML
             ],
-            21 => [
+            22 => [
                 0,
                 <<<'HTML'
                 <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
                 HTML
             ],
-            22 => [
+            23 => [
                 0,
                 <<<'HTML'
                 <div @if (1 > 0) bar="bob" @endif></div>
+                HTML
+            ],
+            24 => [
+                0,
+                <<<'HTML'
+                <div @if (1 < 0 && 0 > 1) bar="bob" @endif></div>
                 HTML
             ],
         ];
