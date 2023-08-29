@@ -832,7 +832,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function it_load_pagination_on_nested_alpine_tabs()
+    public function it_loads_pagination_on_nested_alpine_tabs()
     {
         Livewire::visit(new class extends Component {
             use WithPagination;
@@ -854,7 +854,7 @@ class BrowserTest extends BrowserTestCase
                                 class="general">
                                 General
                             </button>
-                        
+
                             <button dusk="deals" x-on:click.prevent="tab = 'deals'; window.location.hash = 'deals'"
                                 :class="{ 'tab--active': tab === 'deals' }"
                                 class="deals">
