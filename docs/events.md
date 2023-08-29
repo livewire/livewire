@@ -77,11 +77,11 @@ class ShowPost extends Component
 
 If the above `$post` model had an ID of `3`, the `refreshPost()` method would only be triggered by an event named: `post-updated.3`.
 
-## Events in scripts
+## Using events within inline scripts
 
-You can dispatch and listen events from inline scripts in component.
+You can dispatch and listen to events from inline scripts within your component's template.
 
-### Listening for Livewire events in Script
+### Listening for Livewire events in script tags
 
 For example, we may easily listen for the `post-created` event using:
 
@@ -89,46 +89,42 @@ For example, we may easily listen for the `post-created` event using:
 <script>
     document.addEventListener('livewire:initialized', () => {
        @this.on('post-created', (event) => {
-           
+           //
        });
     });
 </script>
 ```
 
-The above snippet would listen for the `post-created` event from any Livewire components.
+The above snippet would listen for the `post-created` from the component its registered within.
 
-### Dispatching Livewire events from Script
+### Dispatching Livewire events from script tags
 
-Any event dispatched from script is capable of being intercepted by a Livewire component.
+Any event dispatched from an inline script is capable of being intercepted by any Livewire component on the page.
 
 For example:
 
 ```html
 <script>
     document.addEventListener('livewire:initialized', () => {
-       @this.dispatch('post-created');
+        @this.on('post-created', (event) => {
+            @this.dispatch('refresh-posts'); // [tl! highlight]
+        });
     });
 </script>
 ```
+
+The above snippet would dispatch a "refresh-posts" event after a "post-created" event was triggered from this component.
 
 Like Livewire's `dispatch()` method, you can pass additional data along with the event by passing the data as the second parameter to the method:
 
-```html
-<script>
-    document.addEventListener('livewire:initialized', () => {
-       @this.dispatch('post-created', { title: 'Post Title' });
-    });
-</script>
+```js
+@this.dispatch('notify', { message: 'New post added. });
 ```
 
-To dispatch the event only to the component where the script resides you can use `dispatchSelf()`:
+To dispatch the event only to the component where the script resides and not other components on the page, you can use `dispatchSelf()`:
 
-```html
-<script>
-    document.addEventListener('livewire:initialized', () => {
-       @this.dispatchSelf('post-created');
-    });
-</script>
+```js
+@this.dispatchSelf('refresh-posts');
 ```
 
 ## Events in Alpine
