@@ -6961,8 +6961,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       added: (el2) => {
         if (isntElement(el2))
           return;
-        trigger("morph.added", el2);
         const closestComponentId = closestComponent(el2).id;
+        trigger("morph.added", { el: el2 });
         if (closestComponentId === component.id) {
         } else if (isComponentRootEl(el2)) {
           let data2;
@@ -7018,7 +7018,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-transition.js
-  on("morph.added", (el) => {
+  on("morph.added", ({ el }) => {
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {
