@@ -207,4 +207,4 @@ If you want to set a default placeholder view for all your components you can do
 'lazy_placeholder' => 'livewire.placeholder',
 ```
 
-Now, when a component is lazy-loaded and no `placeholder()` is definied, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)
+Now, when a component is lazy-loaded and no `placeholder()` is defined, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)

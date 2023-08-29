@@ -82,7 +82,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         get(target, property) {
             if (! component) component = closestComponent(el)
 
-            if (property === 'entangle') {
+            if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
             }
 
