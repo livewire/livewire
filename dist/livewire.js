@@ -4270,7 +4270,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function findComponent(id) {
     let component = components[id];
     if (!component)
-      throw "Component not found: ".id;
+      throw "Component not found: " + id;
     return component;
   }
   function closestComponent(el, strict = true) {
