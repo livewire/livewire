@@ -183,6 +183,37 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    public function can_lazy_load_a_component_with_a_placeholder_with_different_element_type()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function mount() { sleep(1); }
+            public function placeholder() { return <<<HTML
+                <div id="loading">
+                    Loading...
+                </div>
+                HTML; }
+            public function render() { return <<<HTML
+            <form id="child">
+                Child!
+            </form>
+            HTML; }
+        }])
+            ->assertSee('Loading...')
+            ->assertDontSee('Child!')
+            ->waitFor('#child')
+            ->assertDontSee('Loading...')
+            ->assertSee('Child!')
+            ->assertScript('Livewire.all().length', 2)
+        ;
+    }
+
+    /** @test */
     public function can_pass_props_to_lazyilly_loaded_component()
     {
         Livewire::visit([new class extends Component {
