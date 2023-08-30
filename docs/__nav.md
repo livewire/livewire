@@ -25,6 +25,7 @@ Features:
     Polling: { uri: /docs/polling, file: /polling.md }
     File Downloads: { uri: /docs/downloads, file: /downloads.md }
     Locked Properties: { uri: /docs/locked, file: /locked.md }
+    Encrypted Properties: { uri: /docs/encrypted, file: /encrypted.md }
     Dirty States: { uri: /docs/dirty, file: /dirty.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
