@@ -180,6 +180,20 @@ layout('components.layouts.admin');
 // ...
 ```
 
+You may also customize the title of the page using the `title` function:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title('Users');
+
+// ...
+```
+
 ## Properties
 
 Volt properties, like Livewire properties, are conveniently accessible in the view and persist between Livewire updates. You can define a property using the `state` function:
