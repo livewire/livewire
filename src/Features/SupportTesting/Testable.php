@@ -77,6 +77,11 @@ class Testable
         auth()->shouldUse($driver);
     }
 
+    function state()
+    {
+        return $this->lastState;
+    }
+
     function id() {
         return $this->lastState->getComponent()->getId();
     }

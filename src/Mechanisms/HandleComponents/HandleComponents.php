@@ -2,11 +2,12 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{ invade, store, trigger, wrap };
+use Livewire\Features\SupportEncryptedProperties\SupportEncryptedProperties;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use function Livewire\{ invade, store, trigger, wrap };
 use Livewire\Exceptions\MethodNotFoundException;
-use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
+use Livewire\Drawer\Utils;
 use ReflectionUnionType;
 
 class HandleComponents
@@ -188,7 +189,7 @@ class HandleComponents
 
         $meta['s'] = $synth::getKey();
 
-        return [ $data, $meta ];
+        return [ $data, $this->maybeEncrypt($meta, $context, $path) ];
     }
 
     protected function hydrateProperties($component, $data, $context)
@@ -210,6 +211,8 @@ class HandleComponents
         if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 
         [$value, $meta] = $tuple;
+
+        $meta = $this->maybeDecrypt($meta);
 
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
@@ -519,5 +522,15 @@ class HandleComponents
     protected function popOffComponentStack()
     {
         array_pop($this::$componentStack);
+    }
+
+    protected function maybeEncrypt($meta, $context, $path)
+    {
+        return app(SupportEncryptedProperties::class)->maybeEncrypt($meta, $context, $path);
+    }
+
+    protected function maybeDecrypt($encrypted)
+    {
+        return app(SupportEncryptedProperties::class)->maybeDecrypt($encrypted);
     }
 }
