@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
 use Livewire\ComponentHook;
-use Illuminate\Support\Facades\Blade;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
@@ -25,6 +24,10 @@ class SupportMorphAwareIfStatement extends ComponentHook
                     // Only match directives that are an exact match and not ones that
                     // simply start with the provided directive here...
                     ->map(fn ($directive) => $directive.'(?![a-zA-Z])')
+                    // @empty is a special case in that it can be used as a standalone directive
+                    // and also within a @forelese statement. We only want to target when it's standalone
+                    // by enforcing @empty has an opening parenthesis after it when matching...
+                    ->map(fn ($directive) => str($directive)->startsWith('@empty') ? $directive.'[^\S\r\n]*\(' : $directive)
                     ->join('|')
             .')';
 
@@ -65,6 +68,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
             '@unless' => '@endunless',
             '@error' => '@enderror',
             '@isset' => '@endisset',
+            '@empty' => '@endempty',
             '@auth' => '@endauth',
             '@guest' => '@endguest',
             '@switch' => '@endswitch',
