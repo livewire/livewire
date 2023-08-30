@@ -105,7 +105,7 @@ use App\Models\Post;
 
 new class extends Component {
     use WithPagination;
-    
+
     public function with(): array
     {
         return [
@@ -592,7 +592,7 @@ Livewire and Volt also have complete support for [pagination](/docs/pagination).
 ```php
 <?php
 
-use function Livewire\Volt\{computed, usesPagination};
+use function Livewire\Volt\{with, usesPagination};
 
 usesPagination();
 
@@ -601,11 +601,11 @@ with(fn () => ['posts' => Post::paginate(10)]);
 ?>
 
 <div>
-    @foreach ($this->posts as $post)
+    @foreach ($posts as $post)
         //
     @endforeach
 
-    {{ $this->posts->links() }}
+    {{ $posts->links() }}
 </div>
 ```
 
