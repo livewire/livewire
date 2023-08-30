@@ -1,5 +1,5 @@
 
-When Livewire properties are _dehydrated_, potentially sensitive information about them is sent as plain strings to the browser between requests.
+When Livewire properties are [_dehydrated_](/docs/hydration), potentially sensitive information about them is sent as plain strings to the browser between requests.
 
 For example, given the following component with a `$post` public property storing a Post model:
 
@@ -34,7 +34,7 @@ use Livewire\Attributes\Encrypted;
 
 class ShowPost extends Component
 {
-    #[Encrypted]
+    #[Encrypted] // [tl! highlight]
     public Post $post;
 
     // ...

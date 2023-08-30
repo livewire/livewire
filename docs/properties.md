@@ -578,7 +578,7 @@ Now, when the Eloquent model is "dehydrated" (serialized), the original class na
 
 > [!tip] Encrypting properties
 > If you'd rather obscure all information about a property from the front-end, you can use Livewire's `#[Encrypted]` attribute above the property. This way, Livewire will encrypt all property information and decrypt it during the next request.
-> Learn more on the [property encryption documentation page](/encrypt).
+> Learn more on the [property encryption documentation page](/docs/encrypted).
 
 ### Eloquent constraints aren't preserved between requests
 
