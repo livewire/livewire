@@ -159,6 +159,24 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_redirect_to_a_page_after_destorying_session()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@redirect.to.second.and.destroy.session')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Livewire')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Alpine');
+        });
+    }
+
+    /** @test */
     public function can_persist_elements_across_pages()
     {
         $this->browse(function ($browser) {
@@ -324,6 +342,33 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function navigate_is_not_triggered_on_cmd_click()
+    {
+        $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
+
+        $this->browse(function (Browser $browser) use ($key) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->tap(function ($browser) use ($key) {
+                    $browser->driver->getKeyboard()->pressKey($key);
+                })
+                ->click('@link.to.second')
+                ->tap(function ($browser) use ($key) {
+                    $browser->driver->getKeyboard()->releaseKey($key);
+                })
+                ->pause(500) // Let navigate run if it was going to (it should not)
+                ->assertSee('On first')
+                ->assertScript('return window._lw_dusk_test')
+            ;
+
+            $this->assertCount(2, $browser->driver->getWindowHandles());
+        });
+    }
+
+    /** @test */
     public function events_from_child_components_still_function_after_navigation()
     {
         $this->browse(function (Browser $browser) {
@@ -360,6 +405,13 @@ class FirstPage extends Component
         return $this->redirect('/second', navigate: true);
     }
 
+    public function redirectToPageTwoUsingNavigateAndDestroyingSession()
+    {
+        session()->regenerate();
+
+        return $this->redirect('/second', navigate: true);
+    }
+
     public function render()
     {
         return <<<'HTML'
@@ -369,6 +421,7 @@ class FirstPage extends Component
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
+            <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
             @persist('foo')
                 <div x-data="{ count: 1 }">

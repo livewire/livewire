@@ -1,5 +1,3 @@
-> [!warning] Livewire 3 is still in beta
-> While we attempt to keep breaking changes to a minimum, they are still possible while Livewire 3 remains in beta. Therefore, we recommend testing your application thoroughly before using Livewire 3 in production.
 
 To begin your Livewire journey, we will create a simple "counter" component and render it in the browser. This example is a great way to experience Livewire for the first time as it demonstrates Livewire's _liveness_ in the simplest way possible.
 
@@ -15,11 +13,8 @@ Before we start, make sure you have the following installed:
 From the root directory of your Laravel app, run the following [Composer](https://getcomposer.org/) command:
 
 ```shell
-composer require livewire/livewire "^3.0@beta"
+composer require livewire/livewire
 ```
-
-> [!warning] PowerShell for Windows
-> The `^` operator causes issues for installing the beta when using PowerShell for Windows. See [Composer docs](https://getcomposer.org/doc/articles/versions.md#caret-version-range-) for more details.
 
 ## Create a Livewire component
 

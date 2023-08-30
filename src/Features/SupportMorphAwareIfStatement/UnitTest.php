@@ -49,9 +49,11 @@ class UnitTest extends \Tests\TestCase
      * @test
      * @dataProvider templatesProvider
      **/
-    function foo($occurances, $template)
+    function foo($occurances, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
+
+        $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
 
         $this->assertOccurrences($occurances, '__BLOCK__', $compiled);
         $this->assertOccurrences($occurances, '__ENDBLOCK__', $compiled);
@@ -282,6 +284,57 @@ class UnitTest extends \Tests\TestCase
                 0,
                 <<<'HTML'
                 <div something="here" @if ($object->method() && $object->method()) foo="bar" @endif something="here"></div>
+                HTML
+            ],
+            19 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @forelse($posts as $post)
+                        ...
+                    @empty
+                        ...
+                    @endforelse
+                </div>
+                HTML
+            ],
+            20 => [
+                0,
+                <<<'HTML'
+                <div>
+                    @unlessfoo(true)
+                    <div class="col-span-3 text-right">
+                       toots
+                    </div>
+                    @endunlessfoo
+                </div>
+                HTML,
+                <<<'HTML'
+                <div>
+                    @unlessfoo(true)
+                    <div class="col-span-3 text-right">
+                       toots
+                    </div>
+                    @endunlessfoo
+                </div>
+                HTML
+            ],
+            21 => [
+                0,
+                <<<'HTML'
+                <div @if (0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            22 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            23 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0) bar="bob" @endif></div>
                 HTML
             ],
         ];

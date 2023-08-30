@@ -3,11 +3,8 @@ Livewire is a Laravel package, so you will need to have a Laravel application up
 To install Livewire, open your terminal and navigate to your Laravel application directory, then run the following command:
 
 ```shell
-composer require livewire/livewire "^3.0@beta"
+composer require livewire/livewire
 ```
-
-> [!warning] PowerShell for Windows
-> The `^` operator causes issues for installing the beta when using PowerShell for Windows. See [Composer docs](https://getcomposer.org/doc/articles/versions.md#caret-version-range-) for more details.
 
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
