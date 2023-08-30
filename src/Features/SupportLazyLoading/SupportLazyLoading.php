@@ -99,7 +99,7 @@ class SupportLazyLoading extends ComponentHook
 
         $placeholder = wrap($this->component)
             ->withFallback($placeholderHtml)
-            ->placeholder();
+            ->placeholder($params);
 
         $html = Utils::insertAttributesIntoHtmlRoot($placeholder, [
             ((isset($params['lazy']) and $params['lazy'] === 'on-load') ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
