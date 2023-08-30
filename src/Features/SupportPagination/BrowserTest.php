@@ -832,7 +832,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function it_calls_pagination_hook_methods_when_page_is_kebab()
+    public function it_calls_pagination_hook_methods_when_page_is_kebab_cased()
     {
         Livewire::visit(new class extends Component {
             use WithPagination;
