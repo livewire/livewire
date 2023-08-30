@@ -26,10 +26,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
                     ->map(fn ($directive) => $directive.'(?![a-zA-Z])')
                     // @empty is a special case that must be followed by an opening parenthesis in
                     // order to be matched. So we must leave @empty without parenthesis alone.
-                    ->map(fn ($directive) => match ($directive) {
-                        '@empty' => '@empty[^\S\r\n]*\(',
-                        default => $directive,
-                    })
+                    ->map(fn ($directive) => str($directive)->startsWith('@empty') ? $directive.'[^\S\r\n]*\(' : $directive)
                     ->join('|')
             .')';
 
