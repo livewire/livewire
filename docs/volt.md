@@ -180,7 +180,7 @@ layout('components.layouts.admin');
 // ...
 ```
 
-You may also customize the title of the page by using the `title` function:
+You may also customize the title of the page using the `title` function:
 
 ```php
 use function Livewire\Volt\{layout, state, title};
