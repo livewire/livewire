@@ -347,6 +347,22 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            25 => [
+                1,
+                '@if(true) ' . str_repeat('a', 6126) . ' @endif',
+            ],
+            26 => [
+                1,
+                '@if(true) ' . str_repeat('a', 6127) . ' @endif',
+            ],
+            27 => [
+                1,
+                '@if(true) ' . str_repeat('a', 6126) . ' @endif <div></div>',
+            ],
+            28 => [
+                1,
+                '@if(true) <div></div> ' . str_repeat('a', 6127) . ' @endif',
+            ],
         ];
     }
 
