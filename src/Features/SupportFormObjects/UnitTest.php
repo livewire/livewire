@@ -205,6 +205,29 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_get_only_specific_properties()
+    {
+        $component = new class extends Component {};
+
+        $form = new PostFormStub($component, 'foobar');
+
+        $this->assertEquals(
+            ['title' => ''],
+            $form->only('title')
+        );
+
+        $this->assertEquals(
+            ['content' => ''],
+            $form->except(['title'])
+        );
+
+        $this->assertEquals(
+            ['title' => '', 'content' => ''],
+            $form->only('title', 'content')
+        );
+    }
+
+    /** @test */
     function can_get_properties_except()
     {
         $component = new class extends Component {};
@@ -212,13 +235,18 @@ class UnitTest extends \Tests\TestCase
         $form = new PostFormStub($component, 'foobar');
 
         $this->assertEquals(
-            ["content" => ""],
+            ['content' => ''],
             $form->except('title')
         );
 
         $this->assertEquals(
-            ["content" => ""],
+            ['content' => ''],
             $form->except(['title'])
+        );
+
+        $this->assertEquals(
+            [],
+            $form->except('title', 'content')
         );
     }
 

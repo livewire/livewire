@@ -119,8 +119,8 @@ wireProperty('$entangle', (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live)
 })
 
-wireProperty('$toggle', (component) => (name) => {
-    return component.$wire.set(name, ! component.$wire.get(name))
+wireProperty('$toggle', (component) => (name, live = true) => {
+    return component.$wire.set(name, ! component.$wire.get(name), live)
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
