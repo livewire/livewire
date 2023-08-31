@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportValidation;
 use Attribute;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
+use Livewire\Form;
 use function Livewire\wrap;
 
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_ALL)]
@@ -22,22 +23,39 @@ class BaseRule extends LivewireAttribute
 
     function boot()
     {
+        $formPropertyName = null;
+        if (str_contains(str($this->getName()), '.')) {
+            $propertyName = explode('.', str($this->getName()))[0];
+            if(isset($this->component->$propertyName) && is_subclass_of($this->component->$propertyName, Form::class)){
+                $formPropertyName = $propertyName;
+            }
+        }
         $rules = [];
 
         // Support setting rules by key-value for this and other properties:
         // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
         if (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
-            $rules = $this->rule;
+            if ($formPropertyName) {
+                foreach ($this->rule as $field => $rule) {
+                    if (!str_starts_with($field, "{$formPropertyName}.")) $field = "{$formPropertyName}.{$field}";
+                    $rules[$field] = Form::getFixedRule($formPropertyName, $rule);
+                }
+            } else {
+                $rules = $this->rule;
+            }
         } else {
-            $rules[$this->getName()] = $this->rule;
-        }
-
-        // @todo: make this more robust (account for FormObjects that
-        // aren't named "form")...
-        if (str($this->getName())->startsWith('form.')) {
-            $name = (string) str($this->getName())->after('form.');
-
-            $this->component->addValidationAttributesFromOutside([$this->getName() => $name]);
+            if($formPropertyName) {
+                if (is_array($this->rule)) {
+                    $rules[$this->getName()] = [];
+                    foreach ($this->rule as $rule) {
+                        $rules[$this->getName()][] = Form::getFixedRule($formPropertyName, $rule);
+                    }
+                } else {
+                    $rules[$this->getName()] = Form::getFixedRule($formPropertyName, $this->rule);
+                }
+            } else {
+                $rules[$this->getName()] = $this->rule;
+            }
         }
 
         if ($this->attribute) {
