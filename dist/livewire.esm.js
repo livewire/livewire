@@ -6427,8 +6427,8 @@ wireProperty("$call", (component) => async (method, ...params) => {
 wireProperty("$entangle", (component) => (name, live = false) => {
   return generateEntangleFunction(component)(name, live);
 });
-wireProperty("$toggle", (component) => (name) => {
-  return component.$wire.set(name, !component.$wire.get(name));
+wireProperty("$toggle", (component) => (name, live = true) => {
+  return component.$wire.set(name, !component.$wire.get(name), live);
 });
 wireProperty("$watch", (component) => (path, callback) => {
   let firstTime = true;
@@ -6456,12 +6456,12 @@ wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(component, 
 wireProperty("$upload", (component) => (...params) => upload(component, ...params));
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
-var parentMemo;
+var parentMemo = /* @__PURE__ */ new WeakMap();
 wireProperty("$parent", (component) => {
-  if (parentMemo)
-    return parentMemo.$wire;
+  if (parentMemo.has(component))
+    return parentMemo.get(component).$wire;
   let parent = closestComponent(component.el.parentElement);
-  parentMemo = parent;
+  parentMemo.set(component, parent);
   return parent.$wire;
 });
 var overriddenMethods = /* @__PURE__ */ new WeakMap();

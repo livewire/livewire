@@ -161,14 +161,14 @@ wireProperty('$upload', (component) => (...params) => upload(component, ...param
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
 
-let parentMemo
+let parentMemo = new WeakMap
 
 wireProperty('$parent', component => {
-    if (parentMemo) return parentMemo.$wire
+    if (parentMemo.has(component)) return parentMemo.get(component).$wire
 
     let parent = closestComponent(component.el.parentElement)
 
-    parentMemo = parent
+    parentMemo.set(component, parent)
 
     return parent.$wire
 })
