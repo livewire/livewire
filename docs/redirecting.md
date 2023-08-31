@@ -29,7 +29,7 @@ class CreatePost extends Component
 			'content' => $this->content,
 		]);
 
-		return $this->redirect('/posts'); // [tl! highlight]
+		$this->redirect('/posts'); // [tl! highlight]
     }
 
     public function render()
@@ -60,7 +60,7 @@ public function save()
 {
     // ...
 
-    return $this->redirect(ShowPage::class);
+    $this->redirect(ShowPage::class);
 }
 ```
 
@@ -68,7 +68,7 @@ public function save()
 
 In addition to allowing you to use Laravel's built-in redirection methods, Livewire also supports Laravel's [session flash data utilities](https://laravel.com/docs/session#flash-data).
 
-To pass flash data along with a redirect, you can use Laravel's `->with()` method like so:
+To pass flash data along with a redirect, you can use Laravel's `session()->flash()` method like so:
 
 ```php
 use Livewire\Component;
@@ -81,14 +81,14 @@ class UpdatePost extends Component
     {
         // ...
 
-        $this->skipRender();
+        session()->flash('status', 'Post successfully updated.');
 
-        return redirect('/posts')->with('status', 'Post updated!');
+        $this->redirect('/posts');
     }
 }
 ```
 
-Assuming the page being redirected to contains the following Blade snippet, the user will see a "Post updated!" message after updating the post:
+Assuming the page being redirected to contains the following Blade snippet, the user will see a "Post successfully updated." message after updating the post:
 
 ```blade
 @if (session('status'))
@@ -96,19 +96,4 @@ Assuming the page being redirected to contains the following Blade snippet, the 
         {{ session('status') }}
     </div>
 @endif
-```
-
-### Flashing without redirecting
-
-Sometimes, you may want to flash data to users from the same component they're interacting with without redirecting them away.
-
-In these cases, you can use Laravel's session data utilities directly from any Livewire action:
-
-```php
-public function update()
-{
-    // ...
-
-    session()->flash('status', 'Post updated!');
-}
 ```
