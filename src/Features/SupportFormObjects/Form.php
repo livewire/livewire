@@ -28,7 +28,7 @@ class Form implements Arrayable
         else if (property_exists($this, 'rules')) $rules = $this->rules;
 
         $this->component->addRulesFromOutside(
-            $this->getAttributesWithPrefixedKeys($rules)
+            $this->getAttributesWithPrefixedKeys($rules, true)
         );
     }
 
@@ -135,14 +135,63 @@ class Form implements Arrayable
         return Utils::getPublicProperties($this);
     }
 
-    protected function getAttributesWithPrefixedKeys($attributes)
+    protected function getAttributesWithPrefixedKeys($attributes, $areRules = false)
     {
         $attributesWithPrefixedKeys = [];
 
         foreach ($attributes as $key => $value) {
-            $attributesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
+            $attributesWithPrefixedKeys[$this->propertyName . '.' . $key] = $areRules ? self::getFixedRule($this->propertyName, $value) : $value;
         }
 
         return $attributesWithPrefixedKeys;
+    }
+
+    public static function getFixedRule($propertyName, $value){
+        $rulesWithField = [
+            'required_if',
+            'required_unless',
+            'accepted_if',
+            'declined_if',
+            'different',
+            'exclude_if',
+            'exclude_unless',
+            'exclude_with',
+            'exclude_without',
+            'gt',
+            'gte',
+            'lt',
+            'lte',
+            'in_array',
+            'missing_if',
+            'missing_unless',
+            'prohibited_if',
+            'prohibited_unless',
+            'prohibits',
+        ];
+        $rulesWithMultipleFields = [
+            'required_with',
+            'required_with_all',
+            'required_without',
+            'required_without_all',
+            'missing_with',
+            'missing_with_all',
+        ];
+
+        $rule = explode(':', $value)[0] ?? null;
+        $ruleValue = explode(':', $value)[1] ?? null;
+
+        if ($rule && $ruleValue) {
+            if (in_array($rule, $rulesWithField)) {
+                $field = explode(',', $ruleValue)[0] ?? null;
+                if ($field) $value = str_replace($field, $propertyName . '.' . $field, $value);
+            } else if (in_array($rule, $rulesWithMultipleFields)) {
+                $fields = array_unique(explode(',', $ruleValue));
+                foreach ($fields as $field) {
+                    $value = str_replace($field, $propertyName . '.' . $field, $value);
+                }
+            }
+        }
+
+        return $value;
     }
 }
