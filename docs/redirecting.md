@@ -81,7 +81,9 @@ class UpdatePost extends Component
     {
         // ...
 
-		return $this->redirect('/posts')->with('status', 'Post updated!');
+        $this->skipRender();
+
+        return redirect('/posts')->with('status', 'Post updated!');
     }
 }
 ```
