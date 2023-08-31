@@ -54,7 +54,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
                         [^<]                      # All non "<" characters
                         |                         # OR
                         (?!<[a-zA-Z\/])<          # A "<" character without a forward slash or letter after it
-                    )*                            # As many characters as it can until ">" is reached
+                    ){0,1000}                     # As many characters as it can until ">" is reached (limited to 1000 characters for performance reasons)
                     (?<![?=-])                    # Ignore "?>", "->", and "=>"
                     >                             # A ">" character
                 )
