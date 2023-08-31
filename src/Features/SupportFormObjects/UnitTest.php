@@ -19,12 +19,12 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
-        ->set('form.title', 'Some Title')
-        ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some Title')
-        ->assertSet('form.content', 'Some content...')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->assertSet('form.title', 'Some Title')
+            ->assertSet('form.content', 'Some content...')
         ;
     }
 
@@ -68,12 +68,12 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
-        ->assertHasNoErrors()
-        ->call('save')
-        ->assertHasErrors('form.title')
-        ->assertHasErrors('form.content')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors('form.title')
+            ->assertHasErrors('form.content')
         ;
     }
 
@@ -91,11 +91,11 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
-        ->assertHasNoErrors()
-        ->call('save')
-        ->assertHasErrors('form.status')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors('form.status')
         ;
     }
 
@@ -114,16 +114,16 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
-        ->assertHasNoErrors()
-        ->call('save')
-        ->assertHasErrors('form.title')
-        ->assertHasErrors('form.content')
-        ->set('form.title', 'title...')
-        ->set('form.content', 'content...')
-        ->assertHasNoErrors()
-        ->call('save')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors('form.title')
+            ->assertHasErrors('form.content')
+            ->set('form.title', 'title...')
+            ->set('form.content', 'content...')
+            ->assertHasNoErrors()
+            ->call('save')
         ;
     }
 
@@ -167,14 +167,14 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->set('form.title', 'Some title...')
-        ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', 'Some content...')
+            ->set('form.title', 'Some title...')
+            ->set('form.content', 'Some content...')
+            ->assertSet('form.title', 'Some title...')
+            ->assertSet('form.content', 'Some content...')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', 'Some content...')
         ;
     }
 
@@ -193,14 +193,14 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->set('form.title', 'Some title...')
-        ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
-        ->call('save')
-        ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+            ->set('form.title', 'Some title...')
+            ->set('form.content', 'Some content...')
+            ->assertSet('form.title', 'Some title...')
+            ->assertSet('form.content', 'Some content...')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
         ;
     }
 
@@ -340,6 +340,56 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('content need at least 10 letters')
         ;
     }
+
+    /** @test */
+    function can_validate_a_form_object_with_field_dependency()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateWithFieldDependencyStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->set('form.title', 'foo')
+            ->assertSet('form.title', 'foo')
+            ->assertSet('form.content', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors('form.content')
+        ;
+    }
+
+    /** @test */
+    function can_validate_a_form_object_with_multi_field_dependency()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateWithFieldMultiDependencyStub $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->set('form.title', 'foo')
+            ->set('form.subTitle', 'foo')
+            ->assertSet('form.title', 'foo')
+            ->assertSet('form.subTitle', 'foo')
+            ->assertSet('form.content', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors('form.content')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -358,6 +408,31 @@ class PostFormValidateStub extends Form
     protected $rules = [
         'title' => 'required',
         'content' => 'required',
+    ];
+}
+
+class PostFormValidateWithFieldDependencyStub extends Form
+{
+    public $title = '';
+
+    public $content = '';
+
+    protected $rules = [
+        'title' => 'required',
+        'content' => 'required_if:title,foo',
+    ];
+}
+
+class PostFormValidateWithFieldMultiDependencyStub extends Form
+{
+    public $title = '';
+    public $subTitle = '';
+
+    public $content = '';
+
+    protected $rules = [
+        'title' => 'required',
+        'content' => 'required_with_all:title,subTitle',
     ];
 }
 
