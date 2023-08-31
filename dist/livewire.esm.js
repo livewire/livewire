@@ -6427,8 +6427,8 @@ wireProperty("$call", (component) => async (method, ...params) => {
 wireProperty("$entangle", (component) => (name, live = false) => {
   return generateEntangleFunction(component)(name, live);
 });
-wireProperty("$toggle", (component) => (name) => {
-  return component.$wire.set(name, !component.$wire.get(name));
+wireProperty("$toggle", (component) => (name, live = true) => {
+  return component.$wire.set(name, !component.$wire.get(name), live);
 });
 wireProperty("$watch", (component) => (path, callback) => {
   let firstTime = true;
@@ -6579,7 +6579,7 @@ function destroyComponent(id) {
 function findComponent(id) {
   let component = components[id];
   if (!component)
-    throw "Component not found: ".id;
+    throw "Component not found: " + id;
   return component;
 }
 function closestComponent(el, strict = true) {
@@ -7362,7 +7362,10 @@ function replace(url, key, object) {
   window.history.replaceState(state, "", url.toString());
 }
 function push(url, key, object) {
-  let state = { alpine: { ...window.history.state.alpine, ...{ [key]: unwrap(object) } } };
+  let state = window.history.state || {};
+  if (!state.alpine)
+    state.alpine = {};
+  state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
   window.history.pushState(state, "", url.toString());
 }
 function unwrap(object) {
@@ -7795,8 +7798,8 @@ function morph2(component, el, html) {
     added: (el2) => {
       if (isntElement(el2))
         return;
-      trigger("morph.added", el2);
       const closestComponentId = closestComponent(el2).id;
+      trigger("morph.added", { el: el2 });
       if (closestComponentId === component.id) {
       } else if (isComponentRootEl(el2)) {
         let data;
@@ -7853,7 +7856,7 @@ function getChildrenRecursively(component, callback) {
 
 // js/directives/wire-transition.js
 var import_alpinejs12 = __toESM(require_module_cjs());
-on("morph.added", (el) => {
+on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
