@@ -195,10 +195,10 @@ let $wire = {
 
     // Set a property on the component by name...
     // Usage: $wire.$set('count', 5)
-    $set(name, value) { ... },
+    $set(name, value, live = true) { ... },
 
     // Toggle the value of a boolean property...
-    $toggle(name) { ... },
+    $toggle(name, live = true) { ... },
 
     // Call the method
     // Usage: $wire.$call('increment')
