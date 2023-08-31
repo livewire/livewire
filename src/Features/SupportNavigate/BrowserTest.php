@@ -465,6 +465,7 @@ class FirstPageChild extends Component
             <div>First Child</div>
 
             <button type="button" wire:click="$parent.redirectToPageTwoUsingNavigate" dusk="redirect.to.second.from.child">Redirect to second page from child</button>
+            <button type="button" x-on:click="console.log($wire.$parent.__instance.id)">shmump up</button>
         </div>
         HTML;
     }
