@@ -153,6 +153,7 @@ class Form implements Arrayable
             'accepted_if',
             'declined_if',
             'different',
+            'same',
             'exclude_if',
             'exclude_unless',
             'exclude_with',
