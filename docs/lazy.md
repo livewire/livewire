@@ -102,7 +102,6 @@ public function placeholder(array $params = [])
 
 Any parameters from the component being lazy loaded will be available as an `$params` arugment passed to the `placeholder()` method.
 
-
 ## Lazy loading outside of the viewport
 
 By default, Lazy-loaded components aren't full loaded until they enter the browser's viewport, for example when a user scrolls to one.
