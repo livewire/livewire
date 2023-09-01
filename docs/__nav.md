@@ -28,6 +28,34 @@ Features:
     Dirty States: { uri: /docs/dirty, file: /dirty.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
+HTML Directives:
+    wire:click: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:submit: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:model: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:loading: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:dirty: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:navigate: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:transition: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:init: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:poll: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:offline: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:ignore: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:stream: { uri: /docs/wire-loading, file: /wire-loading.md }
+Blade Directives:
+    "@livewire": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@livewireScripts": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@livewireStyles": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@livewireConfig": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@teleport": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@persist": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@this": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@entangle": { uri: /docs/wire-loading, file: /wire-loading.md }
+Component Attributes:
+    "#[Reactive]": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "#[Locked]": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "#[Encrypted]": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "#[Lazy]": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "#[Js]": { uri: /docs/wire-loading, file: /wire-loading.md }
 Concepts:
     Morphing: { uri: /docs/morphing, file: /morph.md }
     Hydration: { uri: /docs/hydration, file: /hydration.md }
