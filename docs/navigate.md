@@ -226,3 +226,27 @@ If you have a `<script>` tag in the body that you only want to be run once, you 
     console.log('Runs only on page one')
 </script>
 ```
+
+## Customizing the progress bar
+
+...
+
+```php
+'navigate' => [
+    'show_progress_bar' => false,
+    'progress_bar_color' => '#2299dd',
+],
+```
+
+```html
+<style>
+:root {
+    --livewire-progress-bar-color: #3498db !important;
+}
+</style>
+```
+
+
+
+
+

@@ -6960,13 +6960,13 @@ function finishAndHideProgressBar() {
 function injectStyles() {
   let style = document.createElement("style");
   style.innerHTML = `/* Make clicks pass-through */
+
     #nprogress {
       pointer-events: none;
     }
 
     #nprogress .bar {
-    //   background: #FC70A9;
-      background: #29d;
+      background: var(--livewire-progress-bar-color, #29d);
 
       position: fixed;
       z-index: 1031;
@@ -7007,8 +7007,8 @@ function injectStyles() {
       box-sizing: border-box;
 
       border: solid 2px transparent;
-      border-top-color: #29d;
-      border-left-color: #29d;
+      border-top-color: var(--livewire-progress-bar-color, #29d);
+      border-left-color: var(--livewire-progress-bar-color, #29d);
       border-radius: 50%;
 
       -webkit-animation: nprogress-spinner 400ms linear infinite;
