@@ -575,6 +575,36 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    /** @test */
+    public function livewire_navigated_event_is_fired_on_first_load()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-asset')
+                ->assertScript('return _lw_dusk_navigated_event_count', 1)
+                ->assertSee('On first');
+        });
+    }
+
+    /** @test */
+    public function livewire_navigated_event_is_fired_on_subsequent_loads()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-asset')
+                ->assertScript('return _lw_dusk_navigated_event_count', 1)
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return _lw_dusk_navigated_event_count', 2)
+                ->assertSee('On second')
+                ->click('@link.to.third')
+                ->waitForText('On third')
+                ->assertScript('return _lw_dusk_navigated_event_count', 3)
+                ->assertSee('On third');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

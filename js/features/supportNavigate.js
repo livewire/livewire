@@ -1,13 +1,13 @@
 import { on, trigger } from "@/events"
 
-let isNavigating = false
+let isUsingAlpineNavigation = false
 
 shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
 
 document.addEventListener('alpine:navigated', e => {
-    if (e.detail && e.detail.init) return
-
-    isNavigating = true
+    if (!e.detail || !e.detail.isFistPageLoad) {
+        isUsingAlpineNavigation = true
+    }
 
     // Forward a "livewire" version of the Alpine event...
     document.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
@@ -21,7 +21,7 @@ document.addEventListener('alpine:navigating', e => {
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate
 
-    if (forceNavigate || isNavigating) {
+    if (forceNavigate || isUsingAlpineNavigation) {
         Alpine.navigate(url)
     } else {
         or()

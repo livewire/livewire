@@ -148,8 +148,8 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     })
 }
 
-function fireEventForOtherLibariesToHookInto(eventName, init = false) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true, detail: { init } }))
+function fireEventForOtherLibariesToHookInto(eventName, isFirstPageLoad = false) {
+    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true, detail: { isFirstPageLoad } }))
 }
 
 function nowInitializeAlpineOnTheNewPage(Alpine) {
