@@ -84,10 +84,14 @@ class TemporaryUploadedFile extends UploadedFile
     public function temporaryUrl()
     {
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
+
+            // Make sure filename contains only utf-8 characters due to S3 limitations.
+            $filename = preg_replace('/[^(\x20-\x7F)]*/', '', $this->getClientOriginalName());
+
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay(),
-                ['ResponseContentDisposition' => 'filename="' . $this->getClientOriginalName() . '"']
+                ['ResponseContentDisposition' => 'filename="' . $filename . '"']
             );
         }
 
