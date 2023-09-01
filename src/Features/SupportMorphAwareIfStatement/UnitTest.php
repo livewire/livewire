@@ -337,6 +337,16 @@ class UnitTest extends \Tests\TestCase
                 <div @if (1 > 0) bar="bob" @endif></div>
                 HTML
             ],
+            24 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @empty($foo)
+                        ...
+                    @endempty
+                </div>
+                HTML
+            ],
         ];
     }
 
@@ -356,4 +366,3 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($expected, count(explode($needle, $haystack)) - 1);
     }
 }
-

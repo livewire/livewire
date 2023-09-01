@@ -81,7 +81,7 @@ trait InteractsWithProperties
     {
         $results = [];
 
-        foreach ($properties as $property) {
+        foreach (is_array($properties) ? $properties : func_get_args() as $property) {
             $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
         }
 
@@ -90,7 +90,7 @@ trait InteractsWithProperties
 
     public function except($properties)
     {
-        if (! is_array($properties)) $properties = [$properties];
+        $properties = is_array($properties) ? $properties : func_get_args();
 
         return array_diff_key($this->all(), array_flip($properties));
     }
