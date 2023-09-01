@@ -80,7 +80,7 @@ class FrontendAssets
     {
         app(static::class)->hasRenderedStyles = true;
 
-        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\" data-livewire-style" : '';
 
         $html = <<<HTML
         <!-- Livewire Styles -->
