@@ -178,6 +178,7 @@ class FrontendAssets
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => app('livewire')->getUpdateUri(),
             'progressBar' => $progressBar,
+            'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
         ]);
 
         return <<<HTML

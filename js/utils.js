@@ -185,6 +185,29 @@ export function getCsrfToken() {
     throw 'Livewire: No CSRF token detected'
 }
 
+let nonce;
+
+export function getNonce() {
+    if (nonce) return nonce
+
+
+    if (window.livewireScriptConfig['nonce'] ?? false) {
+        nonce = window.livewireScriptConfig['nonce']
+
+        return nonce
+    }
+
+    const elWithNonce = document.querySelector('script[nonce]')
+
+    if (elWithNonce) {
+        nonce = (elWithNonce as any).nonce
+
+        return nonce
+    }
+
+    return null
+}
+
 export function contentIsFromDump(content) {
     return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
 }
