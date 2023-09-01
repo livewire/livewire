@@ -3,6 +3,7 @@ Getting Started:
     Quickstart: { uri: /docs/quickstart, file: /quickstart.md }
     Installation: { uri: /docs/installation, file: /installation.md }
     Upgrade Guide: { uri: /docs/upgrading, file: /upgrading.md }
+    Migrating from Vue: { uri: /docs/migrating-from-vue, file: /migrating-from-vue.md }
 Essentials:
     Components: { uri: /docs/components, file: /components.md }
     Properties: { uri: /docs/properties, file: /properties.md }
