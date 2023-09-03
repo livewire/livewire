@@ -157,7 +157,7 @@ public $title;
 
 By default, Livewire rule messages and attributes are localized using Laravel's translate helper: `trans()`.
 
-You can opt-out of locaization by passing the `translate: false` parameter to the Rule attribute:
+You can opt-out of localization by passing the `translate: false` parameter to the Rule attribute:
 
 ```php
 #[Rule('required', message: 'Please provide a post title', translate: false)]
