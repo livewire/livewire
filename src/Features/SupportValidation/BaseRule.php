@@ -50,13 +50,11 @@ class BaseRule extends LivewireAttribute
 
         if ($this->as) {
             if (is_array($this->as)) {
-                $multipleAs = $this->as;
-                if($this->translate){
-                    foreach ($multipleAs as &$as){
-                        $as = trans($as);
-                    }
-                }
-                $this->component->addValidationAttributesFromOutside($multipleAs);
+                $as = $this->translate
+                    ? array_map(fn ($i) => trans($i), $this->as)
+                    : $this->as;
+
+                $this->component->addValidationAttributesFromOutside($as);
             } else {
                 $this->component->addValidationAttributesFromOutside([$this->getName() => $this->translate ? trans($this->as) : $this->as]);
             }
@@ -64,12 +62,10 @@ class BaseRule extends LivewireAttribute
 
         if ($this->message) {
             if (is_array($this->message)) {
-                $messages = $this->message;
-                if($this->translate){
-                    foreach ($messages as &$message){
-                        $message = trans($message);
-                    }
-                }
+                $messages = $this->translate
+                    ? array_map(fn ($i) => trans($i), $this->message)
+                    : $this->message;
+
                 $this->component->addMessagesFromOutside($messages);
             } else {
                 $this->component->addMessagesFromOutside([$this->getName() => $this->translate ? trans($this->message) : $this->message]);
