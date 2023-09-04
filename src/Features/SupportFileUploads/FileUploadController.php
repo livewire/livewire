@@ -8,10 +8,10 @@ class FileUploadController
 {
     public function getMiddleware()
     {
-        return [[
-            'middleware' => FileUploadConfiguration::middleware(),
+        return array_map(fn($middleware) => [
+            'middleware' => $middleware,
             'options' => [],
-        ]];
+        ], (array) FileUploadConfiguration::middleware());
     }
 
     public function handle()
