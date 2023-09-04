@@ -50,7 +50,13 @@ class BaseRule extends LivewireAttribute
 
         if ($this->as) {
             if (is_array($this->as)) {
-                $this->component->addValidationAttributesFromOutside($this->translate ? trans($this->as) : $this->as);
+                $multipleAs = $this->as;
+                if($this->translate){
+                    foreach ($multipleAs as &$as){
+                        $as = trans($as);
+                    }
+                }
+                $this->component->addValidationAttributesFromOutside($multipleAs);
             } else {
                 $this->component->addValidationAttributesFromOutside([$this->getName() => $this->translate ? trans($this->as) : $this->as]);
             }
