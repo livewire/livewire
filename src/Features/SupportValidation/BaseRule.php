@@ -58,7 +58,13 @@ class BaseRule extends LivewireAttribute
 
         if ($this->message) {
             if (is_array($this->message)) {
-                $this->component->addMessagesFromOutside($this->translate ? trans($this->message) : $this->message);
+                $messages = $this->message;
+                if($this->translate){
+                    foreach ($messages as &$message){
+                        $message = trans($message);
+                    }
+                }
+                $this->component->addMessagesFromOutside($messages);
             } else {
                 $this->component->addMessagesFromOutside([$this->getName() => $this->translate ? trans($this->message) : $this->message]);
             }
