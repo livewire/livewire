@@ -295,7 +295,7 @@ class TodoInput extends Component
 Now the parent `TodoList` component can treat `TodoInput` like any other input element and bind directly to its value using `wire:model`.
 
 > [!warning]
-> Currently Livewire only support a single `#[Modelable]` attribute, only the first one will be bound.
+> Currently Livewire only supports a single `#[Modelable]` attribute, so only the first one will be bound.
 
 
 ## Listening for events from children
