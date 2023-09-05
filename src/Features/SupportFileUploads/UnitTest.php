@@ -669,13 +669,8 @@ class UnitTest extends \Tests\TestCase
         $file = UploadedFile::fake()->image('avatar.jpg');
 
         $photo = Livewire::test(FileUploadComponent::class)
-        ->set('photo', $file)
-        ->viewData('photo');
-
-        // Due to Livewire object still being in memory, we need to
-        // reset the "shouldDisableBackButtonCache" property back to it's default
-        // which is false to ensure it's not applied to the below route
-        Livewire::enableBackButtonCache();
+            ->set('photo', $file)
+            ->viewData('photo');
 
         Carbon::setTestNow(Carbon::today()->setTime(10, 01, 00));
 
