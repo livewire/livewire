@@ -346,6 +346,12 @@ class UnitTest extends \Tests\TestCase
                 <div @if (0 < 1) bar="bob" @endif></div>
                 HTML
             ],
+            22 => [
+                0,
+                <<<'HTML'
+                <{!! $tag !!} @if (0 < 1) bar="bob" @endif></{!! $tag !!}>
+                HTML
+            ],
             // Accounting for ">" is very difficult and has many tradeoffs.
             // Leaving this here in case we can crack the code someday...
             // 22 => [
