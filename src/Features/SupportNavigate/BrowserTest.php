@@ -124,6 +124,22 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->keys('@link.to.second', '{enter}')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    /** @test */
     public function can_navigate_to_page_from_child_via_parent_component_without_reloading()
     {
         $this->browse(function (Browser $browser) {

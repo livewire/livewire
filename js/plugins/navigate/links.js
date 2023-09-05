@@ -33,6 +33,16 @@ export function whenThisLinkIsPressed(el, callback) {
             el.addEventListener('mouseup', handler)
         })
     })
+
+    el.addEventListener("keydown", e => {
+        if (e.key !== "Enter") return;
+
+        e.preventDefault()
+
+        callback((whenReleased) => {
+            whenReleased()
+        })
+    })
 }
 
 export function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
