@@ -55,6 +55,8 @@ class UnitTest extends \Tests\TestCase
 
         $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
 
+        $this->assertNotEmpty($compiled);
+
         $this->assertOccurrences($occurances, '__BLOCK__', $compiled);
         $this->assertOccurrences($occurances, '__ENDBLOCK__', $compiled);
     }
@@ -344,6 +346,69 @@ class UnitTest extends \Tests\TestCase
                     @empty($foo)
                         ...
                     @endempty
+                </div>
+                HTML
+            ],
+            25 => [
+                5,
+                <<<'HTML'
+                <div>
+                                <x-filament-tables::generic>
+                                    @if (count($records = []))
+                                        @php
+                                            $isRecordRowStriped = false;
+                                            $previousRecord = null;
+                                            $previousRecordGroupKey = null;
+                                            $previousRecordGroupTitle = null;
+                                        @endphp
+
+                                        @foreach ($records as $record)
+                                            @php
+                                                $group = null;
+                                                $recordAction = $getRecordAction($record);
+                                                $recordKey = $getRecordKey($record);
+                                                $recordUrl = $getRecordUrl($record);
+                                                $recordGroupKey = $group?->getKey($record);
+                                                $recordGroupTitle = $group?->getTitle($record);
+                                            @endphp
+
+                                            @if (! $isGroupsOnly)
+                                                <x-filament-tables::generic
+                                                    :alpine-hidden="($group?->isCollapsible() ? 'true' : 'false') . ' && isGroupCollapsed(\'' . $recordGroupTitle . '\')'"
+                                                    :alpine-selected="'isRecordSelected(\'' . $recordKey . '\')'"
+                                                    :record-action="$recordAction"
+                                                    :record-url="$recordUrl"
+                                                    :striped="$isStriped && $isRecordRowStriped"
+                                                    :wire:key="$this->getId() . '.table.records.' . $recordKey"
+                                                    :x-sortable-handle="$isReordering"
+                                                    :x-sortable-item="$isReordering ? $recordKey : null"
+                                                    @class([
+                                                        'group cursor-move' => $isReordering,
+                                                        ...$getRecordClasses($record),
+                                                    ])
+                                                >
+                                                    @if (false)
+                                                        <x-filament-tables::generic>
+                                                            <x-filament-tables::generic />
+                                                        </x-filament-tables::generic>
+                                                    @endif
+
+                                                    @if (count($actions) && $actionsPosition === ActionsPosition::BeforeCells && (! $isReordering))
+                                                        <x-filament-tables::generic>
+                                                            <x-filament-tables::generic
+                                                                :actions="$actions"
+                                                                :alignment="$actionsAlignment"
+                                                                :record="$record"
+                                                            />
+                                                        </x-filament-tables::generic>
+                                                    @endif
+                                                </x-filament-tables::generic>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                </x-filament-tables::generic>
+
+                    <div>This should be rendered below</div>
                 </div>
                 HTML
             ],
