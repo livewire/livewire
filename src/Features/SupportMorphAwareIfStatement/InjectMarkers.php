@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Spatie\Ray\Origin\Origin;
-
 class InjectMarkers
 {
     protected $directives = [
