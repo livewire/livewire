@@ -418,6 +418,17 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_use_multiple_slots_with_same_name()
+    {
+        Route::get('/slots', ComponentWithTwoHeaderSlots::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/slots')
+            ->assertSee('No Header')
+            ->assertSee('The component header');
+    }
+
     public function can_access_route_parameters_without_mount_method()
     {
         Route::get('/route-with-params/{myId}', ComponentForRouteWithoutMountParametersTest::class);
@@ -700,6 +711,15 @@ class ComponentWithMultipleLayoutSlots extends Component
         return view('show-layout-slots', [
             'bar' => 'foo',
         ])->layout('layouts.app-layout-with-slots');
+    }
+}
+
+class ComponentWithTwoHeaderSlots extends Component
+{
+    public function render()
+    {
+        return view('show-double-header-slot')
+            ->layout('layouts.app-layout-with-slots');
     }
 }
 
