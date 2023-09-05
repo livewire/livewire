@@ -6885,6 +6885,14 @@ function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
     };
     el.addEventListener("mouseleave", handler);
   });
+  el.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter")
+      return;
+    e.preventDefault();
+    callback((whenReleased) => {
+      whenReleased();
+    });
+  });
 }
 function extractDestinationFromLink(linkEl) {
   return createUrlObjectFromString(linkEl.getAttribute("href"));

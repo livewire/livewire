@@ -5563,6 +5563,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.addEventListener("mouseup", handler4);
       });
     });
+    el.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter")
+        return;
+      e.preventDefault();
+      callback((whenReleased) => {
+        whenReleased();
+      });
+    });
   }
   function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
     el.addEventListener("mouseenter", (e) => {
