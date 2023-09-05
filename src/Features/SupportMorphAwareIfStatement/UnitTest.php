@@ -349,7 +349,7 @@ class UnitTest extends \Tests\TestCase
             22 => [
                 0,
                 <<<'HTML'
-                <{!! $tag !!} @if (0 < 1) bar="bob" @endif></{!! $tag !!}>
+                <{!! $tag !!} @if (true) bar="bob" @endif></{!! $tag !!}>
                 HTML
             ],
             // Accounting for ">" is very difficult and has many tradeoffs.
