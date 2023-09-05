@@ -12,9 +12,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->registerConfig();
         $this->bootEventBus();
         $this->registerMechanisms();
-
-        // This is only temporary for testing purposes, until the morph-aware if statement is fixed.
-        $this->loadViewsFrom(__DIR__ . '/../tests/views', 'filament-tables');
     }
 
     public function boot()

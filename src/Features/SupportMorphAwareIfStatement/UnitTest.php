@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
+use Illuminate\View\Factory;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
@@ -51,6 +52,24 @@ class UnitTest extends \Tests\TestCase
      **/
     function foo($occurances, $template, $expectedCompiled = null)
     {
+        $compiled = $this->compile($template);
+
+        $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
+
+        $this->assertNotEmpty($compiled);
+
+        $this->assertOccurrences($occurances, '__BLOCK__', $compiled);
+        $this->assertOccurrences($occurances, '__ENDBLOCK__', $compiled);
+    }
+
+    /**
+     * @test
+     * @dataProvider filamentTemplatesProvider
+     **/
+    function fooFilament($occurances, $template, $expectedCompiled = null)
+    {
+        app(Factory::class)->addNamespace('filament-tables', __DIR__ . '/../../../tests/views');
+
         $compiled = $this->compile($template);
 
         $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
@@ -349,7 +368,13 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
-            25 => [
+        ];
+    }
+
+    public function filamentTemplatesProvider()
+    {
+        return [
+            0 => [
                 5,
                 <<<'HTML'
                 <div>
