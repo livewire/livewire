@@ -29,33 +29,36 @@ Features:
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
 HTML Directives:
-    wire:click: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:submit: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:model: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:click: { uri: /docs/wire-click, file: /wire-click.md }
+    wire:submit: { uri: /docs/wire-submit, file: /wire-submit.md }
+    wire:model: { uri: /docs/wire-model, file: /wire-model.md }
     wire:loading: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:dirty: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:navigate: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:transition: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:init: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:poll: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:offline: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:ignore: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:stream: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:dirty: { uri: /docs/wire-dirty, file: /wire-dirty.md }
+    wire:navigate: { uri: /docs/wire-navigate, file: /wire-navigate.md }
+    wire:transition: { uri: /docs/wire-transition, file: /wire-transition.md }
+    wire:init: { uri: /docs/wire-init, file: /wire-init.md }
+    wire:poll: { uri: /docs/wire-poll, file: /wire-poll.md }
+    wire:offline: { uri: /docs/wire-offline, file: /wire-offline.md }
+    wire:ignore: { uri: /docs/wire-ignore, file: /wire-ignore.md }
+    wire:stream: { uri: /docs/wire-stream, file: /wire-stream.md }
 Blade Directives:
-    "@livewire": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "@livewireScripts": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "@livewireStyles": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "@livewireConfig": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "@teleport": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "@persist": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "@this": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "@entangle": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "@teleport": { uri: /docs/at-teleport, file: /at-teleport.md }
+    "@persist": { uri: /docs/at-persist, file: /at-persist.md }
+    "@this": { uri: /docs/at-this, file: /at-this.md }
+    "@entangle": { uri: /docs/at-entangle, file: /at-entangle.md }
 Component Attributes:
-    "#[Reactive]": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "#[Locked]": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "#[Encrypted]": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "#[Lazy]": { uri: /docs/wire-loading, file: /wire-loading.md }
-    "#[Js]": { uri: /docs/wire-loading, file: /wire-loading.md }
+    "#[Computed]": { uri: /docs/attribute-computed, file: /attribute-computed.md }
+    "#[Js]": { uri: /docs/attribute-js, file: /attribute-js.md }
+    "#[Layout]": { uri: /docs/attribute-layout, file: /attribute-layout.md }
+    "#[Lazy]": { uri: /docs/attribute-lazy, file: /attribute-lazy.md }
+    "#[Locked]": { uri: /docs/attribute-locked, file: /attribute-locked.md }
+    "#[Modelable]": { uri: /docs/attribute-modelable, file: /attribute-modelable.md }
+    "#[On]": { uri: /docs/attribute-on, file: /attribute-on.md }
+    "#[Reactive]": { uri: /docs/attribute-reactive, file: /attribute-reactive.md }
+    "#[Renderless]": { uri: /docs/attribute-renderless, file: /attribute-renderless.md }
+    "#[Rule]": { uri: /docs/attribute-rule, file: /attribute-rule.md }
+    "#[Title]": { uri: /docs/attribute-title, file: /attribute-title.md }
+    "#[Url]": { uri: /docs/attribute-url, file: /attribute-url.md }
 Concepts:
     Morphing: { uri: /docs/morphing, file: /morph.md }
     Hydration: { uri: /docs/hydration, file: /hydration.md }
