@@ -86,7 +86,7 @@ class TemporaryUploadedFile extends UploadedFile
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
             return $this->storage->temporaryUrl(
                 $this->path,
-                now()->addDay(),
+                now()->addDay()->endOfHour(),
                 ['ResponseContentDisposition' => 'filename="' . $this->getClientOriginalName() . '"']
             );
         }
@@ -97,7 +97,7 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         return URL::temporarySignedRoute(
-            'livewire.preview-file', now()->addMinutes(30), ['filename' => $this->getFilename()]
+            'livewire.preview-file', now()->addMinutes(30)->endOfHour(), ['filename' => $this->getFilename()]
         );
     }
 
