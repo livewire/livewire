@@ -10,9 +10,10 @@
 
 Please consult the old v2 docs for [general guidelines for contributing](https://laravel-livewire.com/docs/2.x/contribution-guide).
 
+
 If you want to run a single test instead of the whole test suite, you can do:
 
-`./vendor/bin/phpunit --filter path/to/your/test.php`
+`./vendor/bin/phpunit path/to/your/test.php`
 
 #### Compiling the JavaScript assets locally
 
