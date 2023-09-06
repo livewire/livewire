@@ -64,15 +64,11 @@ class FileUploadConfiguration
 
     protected static function s3Root()
     {
-        if(!static::isUsingS3()){
-            return '';
-        }
+        if (! static::isUsingS3()) return '';
 
         $diskConfig = static::diskConfig();
-        
-        if(!is_array($diskConfig)){
-            return '';
-        }
+
+        if (! is_array($diskConfig)) return '';
 
         $root = $diskConfig['root'] ?? null;
 
