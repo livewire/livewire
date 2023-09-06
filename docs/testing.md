@@ -592,6 +592,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | Method                                                  | Description                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `set('title', '...')`                      | Set the `title` property to the provided value |
+| `set(['title' => '...', ...])`                      | Set multiple component properties using an associative array |
 | `toggle('sortAsc')`                      | Toggle the `sortAsc` property between `true` and `false`  |
 | `call('save')`                      | Call the `save` action / method |
 | `call('remove', $post->id)`                      | Call the `remove` method and pass the `$post->id` as the first parameter (Accepts subsequent parameters as well) |
