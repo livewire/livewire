@@ -72,13 +72,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 $original = $matches[0];
 
                 return '<!-- __BLOCK__ -->'.$original;
-            }, $entire);
+            }, $entire) ?? $entire;
 
             $entire = preg_replace_callback($generatePattern($closings), function ($matches) {
                 $original = $matches[0];
 
                 return $original.' <!-- __ENDBLOCK__ -->';
-            }, $entire);
+            }, $entire) ?? $entire;
 
             return $entire;
         });
