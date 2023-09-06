@@ -4093,7 +4093,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get(target, property) {
         if (!component)
           component = closestComponent(el);
-        if (property === "entangle") {
+        if (["$entangle", "entangle"].includes(property)) {
           return generateEntangleFunction(component, cleanup3);
         }
         return component.$wire[property];
@@ -4118,8 +4118,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
   });
-  wireProperty("$toggle", (component) => (name) => {
-    return component.$wire.set(name, !component.$wire.get(name));
+  wireProperty("$toggle", (component) => (name, live = true) => {
+    return component.$wire.set(name, !component.$wire.get(name), live);
   });
   wireProperty("$watch", (component) => (path, callback) => {
     let firstTime = true;
@@ -4147,12 +4147,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$upload", (component) => (...params) => upload(component, ...params));
   wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
   wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
-  var parentMemo;
+  var parentMemo = /* @__PURE__ */ new WeakMap();
   wireProperty("$parent", (component) => {
-    if (parentMemo)
-      return parentMemo.$wire;
+    if (parentMemo.has(component))
+      return parentMemo.get(component).$wire;
     let parent = closestComponent(component.el.parentElement);
-    parentMemo = parent;
+    parentMemo.set(component, parent);
     return parent.$wire;
   });
   var overriddenMethods = /* @__PURE__ */ new WeakMap();
@@ -4270,7 +4270,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function findComponent(id) {
     let component = components[id];
     if (!component)
-      throw "Component not found: ".id;
+      throw "Component not found: " + id;
     return component;
   }
   function closestComponent(el, strict = true) {
@@ -5541,9 +5541,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/links.js
   function whenThisLinkIsPressed(el, callback) {
-    el.addEventListener("click", (e) => e.preventDefault());
+    let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+    el.addEventListener("click", (e) => {
+      if (isNotPlainLeftClick(e))
+        return;
+      e.preventDefault();
+    });
     el.addEventListener("mousedown", (e) => {
-      if (e.button !== 0)
+      if (isNotPlainLeftClick(e))
         return;
       e.preventDefault();
       callback((whenReleased) => {
@@ -6042,7 +6047,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     window.history.replaceState(state, "", url.toString());
   }
   function push(url, key, object) {
-    let state = { alpine: { ...window.history.state.alpine, ...{ [key]: unwrap(object) } } };
+    let state = window.history.state || {};
+    if (!state.alpine)
+      state.alpine = {};
+    state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
     window.history.pushState(state, "", url.toString());
   }
   function unwrap(object) {
@@ -6950,8 +6958,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       added: (el2) => {
         if (isntElement(el2))
           return;
-        trigger("morph.added", el2);
         const closestComponentId = closestComponent(el2).id;
+        trigger("morph.added", { el: el2 });
         if (closestComponentId === component.id) {
         } else if (isComponentRootEl(el2)) {
           let data2;
@@ -7007,7 +7015,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-transition.js
-  on("morph.added", (el) => {
+  on("morph.added", ({ el }) => {
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {

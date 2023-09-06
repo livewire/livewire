@@ -82,8 +82,10 @@ class CreatePost extends Component
 
     public function save()
     {
+        $this->validate(); // [tl! highlight]
+
         Post::create(
-            $this->only('title', 'content')
+            $this->only(['title', 'content'])
         );
 
         return $this->redirect('/posts');
@@ -803,4 +805,3 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
     ...
 </select>
 ```
-

@@ -195,10 +195,10 @@ let $wire = {
 
     // Set a property on the component by name...
     // Usage: $wire.$set('count', 5)
-    $set(name, value) { ... },
+    $set(name, value, live = true) { ... },
 
     // Toggle the value of a boolean property...
-    $toggle(name) { ... },
+    $toggle(name, live = true) { ... },
 
     // Call the method
     // Usage: $wire.$call('increment')
@@ -408,6 +408,36 @@ This can be used to provide custom Livewire HTML attributes within your applicat
 ```js
 Livewire.hook('element.init', ({ component, el }) => {
     //
+})
+```
+
+### DOM Morph hooks
+
+During the DOM morphing phase—which occurs after Livewire completes a network roundtrip—Livewire triggers a series of events for every element that is mutated.
+
+```js
+Livewire.hook('morph.updating',  ({ el, component, toEl, skip, childrenOnly }) => {
+	//
+})
+
+Livewire.hook('morph.updated', ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.removing', ({ el, component, skip }) => {
+	//
+})
+
+Livewire.hook('morph.removed', ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.adding',  ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.added',  ({ el }) => {
+	//
 })
 ```
 

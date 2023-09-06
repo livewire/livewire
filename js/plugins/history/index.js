@@ -114,7 +114,11 @@ function replace(url, key, object) {
 }
 
 function push(url, key, object) {
-    let state = { alpine: {...window.history.state.alpine, ...{[key]: unwrap(object)}} }
+    let state = window.history.state || {}
+
+    if (! state.alpine) state.alpine = {}
+
+    state = { alpine: {...state.alpine, ...{[key]: unwrap(object)}} }
 
     window.history.pushState(state, '', url.toString())
 }
