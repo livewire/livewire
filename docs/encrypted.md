@@ -19,7 +19,7 @@ When this component is _dehydrated_ (serialized) and sent to the browser, the `$
     "type": "model",
     "class": "App\Models\Post",
     "key": 1,
-    "relationships": [].
+    "relationships": [],
 }
 ```
 
