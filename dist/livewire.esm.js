@@ -6871,6 +6871,14 @@ function whenThisLinkIsPressed(el, callback) {
       el.addEventListener("mouseup", handler);
     });
   });
+  el.addEventListener("keydown", (e) => {
+    if (isNotPlainEnterKey(e))
+      return;
+    e.preventDefault();
+    callback((whenReleased) => {
+      whenReleased();
+    });
+  });
 }
 function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
   el.addEventListener("mouseenter", (e) => {
@@ -6882,14 +6890,6 @@ function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
       el.removeEventListener("mouseleave", handler);
     };
     el.addEventListener("mouseleave", handler);
-  });
-  el.addEventListener("keydown", (e) => {
-    if (isNotPlainEnterKey(e))
-      return;
-    e.preventDefault();
-    callback((whenReleased) => {
-      whenReleased();
-    });
   });
 }
 function extractDestinationFromLink(linkEl) {
