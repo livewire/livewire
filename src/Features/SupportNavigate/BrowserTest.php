@@ -145,6 +145,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
 
         $this->browse(function (Browser $browser) use ($key) {
+            $currentWindowHandles = count($browser->driver->getWindowHandles());
+
             $browser
                 ->visit('/first')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
@@ -155,7 +157,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('On first')
                 ->assertScript('return window._lw_dusk_test');
 
-            $this->assertCount(2, $browser->driver->getWindowHandles());
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
         });
     }
 
@@ -403,6 +405,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
 
         $this->browse(function (Browser $browser) use ($key) {
+            $currentWindowHandles = count($browser->driver->getWindowHandles());
+
             $browser
                 ->visit('/first')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
@@ -420,7 +424,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
             ;
 
-            $this->assertCount(2, $browser->driver->getWindowHandles());
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
         });
     }
 
