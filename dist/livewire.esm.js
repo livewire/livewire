@@ -6852,6 +6852,7 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 // js/plugins/navigate/links.js
 function whenThisLinkIsPressed(el, callback) {
   let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+  let isNotPlainEnterKey = (e) => e.which !== 13 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
   el.addEventListener("click", (e) => {
     if (isNotPlainLeftClick(e))
       return;
@@ -6883,7 +6884,7 @@ function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
     el.addEventListener("mouseleave", handler);
   });
   el.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter")
+    if (isNotPlainEnterKey(e))
       return;
     e.preventDefault();
     callback((whenReleased) => {

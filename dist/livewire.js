@@ -5542,6 +5542,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/links.js
   function whenThisLinkIsPressed(el, callback) {
     let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+    let isNotPlainEnterKey = (e) => e.which !== 13 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
     el.addEventListener("click", (e) => {
       if (isNotPlainLeftClick(e))
         return;
@@ -5561,7 +5562,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     el.addEventListener("keydown", (e) => {
-      if (e.key !== "Enter")
+      if (isNotPlainEnterKey(e))
         return;
       e.preventDefault();
       callback((whenReleased) => {
