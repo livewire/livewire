@@ -982,7 +982,6 @@ class BrowserTest extends BrowserTestCase
                     }
                 },
             ])
-                //->pause(1000000) Needed to see the error
 
                 // Test that going to page 2, then back to page 1 removes "page" from the query string.
                 ->assertSee('Post #1')
