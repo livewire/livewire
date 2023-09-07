@@ -21,7 +21,7 @@ document.addEventListener('alpine:navigating', e => {
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate
 
-    if (forceNavigate || isNavigating) {
+    if (forceNavigate || (isNavigating && forceNavigate !== false)) {
         Alpine.navigate(url)
     } else {
         or()

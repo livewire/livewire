@@ -163,6 +163,26 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_redirect_with_reloading_from_a_page_that_was_loaded_by_wire_navigate()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test')
+                ->click('@redirect.to.first-without-navigate')
+                ->waitFor('@link.to.second')
+                ->assertScript('return window._lw_dusk_test', false)
+                ->assertSee('On first');
+        });
+    }
+
+    /** @test */
     public function can_redirect_without_reloading_using_the_helper_from_a_page_that_was_loaded_normally()
     {
         $this->browse(function ($browser) {
@@ -487,6 +507,11 @@ class SecondPage extends Component
         return redirect('/first');
     }
 
+    public function redirectToPageOneWithoutNavigate()
+    {
+        return $this->redirect('/first', false);
+    }
+
     public function render()
     {
         return <<<'HTML'
@@ -495,6 +520,7 @@ class SecondPage extends Component
 
             <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
             <button type="button" wire:click="redirectToPageOne" dusk="redirect.to.first">Redirect to first page</button>
+            <button type="button" wire:click="redirectToPageOneWithoutNavigate" dusk="redirect.to.first-without-navigate">Redirect to first page without Navigate</button>
 
             @persist('foo')
                 <div x-data="{ count: 1 }">

@@ -52,6 +52,6 @@ class SupportRedirects extends ComponentHook
         }
 
         $context->addEffect('redirect', $to);
-        $usingNavigate && $context->addEffect('redirectUsingNavigate', true);
+        $usingNavigate !== null && $context->addEffect('redirectUsingNavigate', $usingNavigate);
     }
 }
