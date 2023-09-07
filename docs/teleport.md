@@ -44,3 +44,23 @@ Now, when the above Livewire template is rendered on the page, the _contents_ po
 
 > [!warning] You must teleport outside the component
 > Livewire only supports teleporting HTML outside your components. For example, teleporting a modal to the `<body>` tag is fine, but teleporting it to another element within your component will not work.
+
+> [!warning] When updating a component that contains `@teleport`, it must be wrapped in a `<div wire:ignore> ... </div>` or your component will not update:
+
+```blade
+<main>
+    <!-- ... -->
+
+    <div wire:ignore>
+        @teleport('breadcrumbs')
+            <ol>
+                <li>link 1</li>
+                <li>link 2</li>
+                <li>etc...</li>
+            </ol>
+        @endteleport
+    </div>
+
+    <!-- rest of component that gets updated dynamically -->
+</main>
+```
