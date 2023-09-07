@@ -48,4 +48,44 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertMissing('@target')
         ;
     }
+
+    /** @test */
+    public function elements_the_contain_transition_are_displayed_on_page_load()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $messages = [
+                    'message 1',
+                    'message 2',
+                    'message 3',
+                    'message 4',
+                ];
+
+                public function addMessage()
+                {
+                    $this->messages[] = 'message ' . count($this->messages) + 1;
+                }
+
+                public function render()
+                {
+                    return <<< 'HTML'
+                    <div>
+                        <ul class="text-xs">
+                            @foreach($messages as $index => $message)
+                                <li wire:transition.fade.duration.1000ms dusk="message-{{ $index + 1 }}">{{$message}}</li>
+                            @endforeach
+                        </ul>
+
+                        <button type="button" wire:click="addMessage" dusk="add-message">Add message</button>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->assertVisible('@message-1')
+        ->assertVisible('@message-2')
+        ->assertVisible('@message-3')
+        ->assertVisible('@message-4')
+        ;
+    }
 }
