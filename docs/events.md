@@ -118,7 +118,7 @@ The above snippet would dispatch a "refresh-posts" event after a "post-created" 
 Like Livewire's `dispatch()` method, you can pass additional data along with the event by passing the data as the second parameter to the method:
 
 ```js
-@this.dispatch('notify', { message: 'New post added. });
+@this.dispatch('notify', { message: 'New post added.' });
 ```
 
 To dispatch the event only to the component where the script resides and not other components on the page, you can use `dispatchSelf()`:

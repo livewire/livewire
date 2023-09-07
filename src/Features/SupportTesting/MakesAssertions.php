@@ -137,4 +137,17 @@ trait MakesAssertions
 
         return $this;
     }
+
+    public function assertReturned($value)
+    {
+        $data = data_get($this->lastState->getEffects(), 'returns.0');
+
+        if (is_callable($value)) {
+            PHPUnit::assertTrue($value($data));
+        } else {
+            PHPUnit::assertEquals($value, $data);
+        }
+
+        return $this;
+    }
 }

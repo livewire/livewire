@@ -592,6 +592,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | Method                                                  | Description                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `set('title', '...')`                      | Set the `title` property to the provided value |
+| `set(['title' => '...', ...])`                      | Set multiple component properties using an associative array |
 | `toggle('sortAsc')`                      | Toggle the `sortAsc` property between `true` and `false`  |
 | `call('save')`                      | Call the `save` action / method |
 | `call('remove', $post->id)`                      | Call the `remove` method and pass the `$post->id` as the first parameter (Accepts subsequent parameters as well) |
@@ -604,6 +605,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 |-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `assertSet('title', '...')`                           | Assert that the `title` property is set to the provided value                                                                                                                        |
 | `assertNotSet('title', '...')`                        | Assert that the `title` property is not set to the provided value                                                                                                                    |
+| `assertReturned('...')`                               | Assert that the previous `->call(...)` returned a given value
 | `assertCount('posts', 3)`                             | Assert that the `posts` property is an array-like value with `3` items in it                                                                                                         |
 | `assertSnapshotSet('date', '08/26/1990')`             | Assert that the `date` property's raw / dehydrated value (from JSON) is set to `08/26/1990`. Alternative to asserting against the hydrated `DateTime` instance in the case of `date` |
 | `assertSnapshotNotSet('date', '08/26/1990')`          | Assert that `date`'s raw / dehydrated value is not equal to the provided value                                                                                                       |
