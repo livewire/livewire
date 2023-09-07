@@ -347,12 +347,12 @@ class UnitTest extends \Tests\TestCase
     public function can_fill_a_form_object_from_model()
     {
         Livewire::test(new class extends Component {
-            public Post $post;
+            public PostForFormObjectTesting $post;
             public PostFormStub $form;
 
             public function mount()
             {
-                $this->post = Post::first();
+                $this->post = PostForFormObjectTesting::first();
             }
 
             public function fillForm()
@@ -499,7 +499,7 @@ class PostFormDynamicMessagesAndAttributesStub extends Form
     }
 }
 
-class Post extends Model
+class PostForFormObjectTesting extends Model
 {
     use Sushi;
 
