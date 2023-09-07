@@ -31,32 +31,12 @@ class SupportMorphAwareIfStatement extends ComponentHook
                     ->join('|')
             .')';
 
-            // Here's the regex strategy:
-            // Look for blade directives and only match ones that are OUTSIDE HTML tags.
-            // This is how we can know that a directive is INSIDE a tag:
-            // - find the tag
-            // - look ahead for the next "<" character
-            // - if we found a ">" character while looking ahead
-            // - we know we are OUTSIDE a tag...
-            //
-            // There are two exceptions we have to account for:
-            // 1) PHP has ->, =>, and ? > that we have make an exception for
-            // 2) logical comparisons like "1 < 2" also have to be accounted for...
-            //
-            // We get around these exceptions by using a negative look behind for "?,=,-"
-            // and ONLY matching "<" characters that have either "/" or a letter after them
-            // (because all "<" characters in HTML either are part of a closing tag or have a tag name next ot them)
-
             $pattern = '/
-                '.$directivesPattern.'            # Blade directives: (@if|@foreach|...)
-                (?!                               # NOT followed by:
-                    (
-                        [^<]                      # All non "<" characters
-                        |                         # OR
-                        (?!<[a-zA-Z\/])<          # A "<" character without a forward slash or letter after it
-                    )*                            # As many characters as it can until ">" is reached
-                    (?<![?=-])                    # Ignore "?>", "->", and "=>"
-                    >                             # A ">" character
+                '.$directivesPattern.'  # Blade directives: (@if|@foreach|...)
+                (?!                     # Not followed by:
+                    [^<]*               # ...
+                    (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
+                    >                   # A ">" character that isn\'t preceded by a "<" character (meaning it\'s outside of a tag)
                 )
             /mUx';
 
@@ -92,13 +72,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 $original = $matches[0];
 
                 return '<!-- __BLOCK__ -->'.$original;
-            }, $entire);
+            }, $entire) ?? $entire;
 
             $entire = preg_replace_callback($generatePattern($closings), function ($matches) {
                 $original = $matches[0];
 
                 return $original.' <!-- __ENDBLOCK__ -->';
-            }, $entire);
+            }, $entire) ?? $entire;
 
             return $entire;
         });

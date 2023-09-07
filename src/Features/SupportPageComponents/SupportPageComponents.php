@@ -149,7 +149,7 @@ class SupportPageComponents extends ComponentHook
 
                         <?php
                         // Manually forward slots defined in the Livewire template into the layout component...
-                        foreach (\Illuminate\Support\Arr::collapse($layout->viewContext->slots) as $name => $slot) {
+                        foreach ($layout->viewContext->slots[-1] ?? [] as $name => $slot) {
                             $__env->slot($name, attributes: $slot->attributes->getAttributes());
                             echo $slot->toHtml();
                             $__env->endSlot();

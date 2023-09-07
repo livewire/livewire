@@ -6719,10 +6719,7 @@ var DirectiveManager = class {
     return this.directives.find((directive2) => directive2.value === value);
   }
   extractTypeModifiersAndValue() {
-    return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => {
-      const [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
-      return new Directive(value, modifiers, name, this.el);
-    }));
+    return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
   }
 };
 var Directive = class {

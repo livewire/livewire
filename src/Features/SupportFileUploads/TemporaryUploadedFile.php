@@ -89,7 +89,7 @@ class TemporaryUploadedFile extends UploadedFile
 
             return $this->storage->temporaryUrl(
                 $this->path,
-                now()->addDay(),
+                now()->addDay()->endOfHour(),
                 ['ResponseContentDisposition' => 'filename="' . $filename . '"']
             );
         }
@@ -100,7 +100,7 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         return URL::temporarySignedRoute(
-            'livewire.preview-file', now()->addMinutes(30), ['filename' => $this->getFilename()]
+            'livewire.preview-file', now()->addMinutes(30)->endOfHour(), ['filename' => $this->getFilename()]
         );
     }
 
