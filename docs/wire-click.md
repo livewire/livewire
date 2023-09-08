@@ -25,6 +25,10 @@ class CreatePost extends Component
 <a href="#" wire:click.prevent="foo">
 ```
 
+### Event modifiers
+
+Livewire allows you to listen to any browser event by appending it to `wire:`. Because `wire:submit` is handled the same as any other event listener in Livewire, it accepts any of the following modifiers to customize how the event listener is registered.
+
 Here is a full list of all the available event listener modifiers and their functions:
 
 | Modifier         | Key                                                     |
@@ -46,4 +50,3 @@ Here is a full list of all the available event listener modifiers and their func
 | `.capture`       | Listen for event in the "capturing" phase                 |
 
 Because `wire:` uses [Alpine's](https://alpinejs.dev) `x-on` directive under the hood, these modifiers are made available to you by Alpine. For more context on when you should use these modifiers, consult the [Alpine Events documentation](https://alpinejs.dev/essentials/events).
-
