@@ -169,6 +169,8 @@ class CreatePost extends Component
 
     public function save()
     {
+        $this->validate();
+
         Post::create(
             $this->form->all()
         );
