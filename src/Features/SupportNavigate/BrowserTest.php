@@ -22,6 +22,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
+            Livewire::component('first-page-child', FirstPageChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('third-page', ThirdPage::class);
@@ -119,6 +120,63 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.second')
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first');
+        });
+    }
+
+    /** @test */
+    public function can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->keys('@link.to.second', '{enter}')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    /** @test */
+    public function navigate_is_not_triggered_on_cmd_and_enter()
+    {
+        $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
+
+        $this->browse(function (Browser $browser) use ($key) {
+            $currentWindowHandles = count($browser->driver->getWindowHandles());
+
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->keys('@link.to.second', $key, '{enter}')
+                ->pause(500) // Let navigate run if it was going to (it should not)
+                ->assertSee('On first')
+                ->assertScript('return window._lw_dusk_test');
+
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
+        });
+    }
+
+    /** @test */
+    public function can_navigate_to_page_from_child_via_parent_component_without_reloading()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->click('@redirect.to.second.from.child')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->click('@link.to.first')
+                ->waitFor('@redirect.to.second.from.child')
+                ->assertSee('On first')
+                ->click('@redirect.to.second.from.child')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second');
         });
     }
 
@@ -347,6 +405,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
 
         $this->browse(function (Browser $browser) use ($key) {
+            $currentWindowHandles = count($browser->driver->getWindowHandles());
+
             $browser
                 ->visit('/first')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
@@ -364,7 +424,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
             ;
 
-            $this->assertCount(2, $browser->driver->getWindowHandles());
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
         });
     }
 
@@ -423,12 +483,29 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
+            <livewire:first-page-child />
+
             @persist('foo')
                 <div x-data="{ count: 1 }">
                     <span x-text="count" dusk="count"></span>
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+        </div>
+        HTML;
+    }
+}
+
+class FirstPageChild extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>First Child</div>
+
+            <button type="button" wire:click="$parent.redirectToPageTwoUsingNavigate" dusk="redirect.to.second.from.child">Redirect to second page from child</button>
+            <button type="button" x-on:click="console.log($wire.$parent.__instance.id)">shmump up</button>
         </div>
         HTML;
     }

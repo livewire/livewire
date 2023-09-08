@@ -2,11 +2,13 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert;
+use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -232,6 +234,29 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_get_only_specific_properties()
+    {
+        $component = new class extends Component {};
+
+        $form = new PostFormStub($component, 'foobar');
+
+        $this->assertEquals(
+            ['title' => ''],
+            $form->only('title')
+        );
+
+        $this->assertEquals(
+            ['content' => ''],
+            $form->except(['title'])
+        );
+
+        $this->assertEquals(
+            ['title' => '', 'content' => ''],
+            $form->only('title', 'content')
+        );
+    }
+
+    /** @test */
     function can_get_properties_except()
     {
         $component = new class extends Component {};
@@ -239,13 +264,18 @@ class UnitTest extends \Tests\TestCase
         $form = new PostFormStub($component, 'foobar');
 
         $this->assertEquals(
-            ["content" => ""],
+            ['content' => ''],
             $form->except('title')
         );
 
         $this->assertEquals(
-            ["content" => ""],
+            ['content' => ''],
             $form->except(['title'])
+        );
+
+        $this->assertEquals(
+            [],
+            $form->except('title', 'content')
         );
     }
 
@@ -337,6 +367,63 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
             ->assertSee('title is must to fill')
             ->assertSee('content need at least 10 letters')
+        ;
+    }
+
+    /** @test */
+    public function can_fill_a_form_object_from_model()
+    {
+        Livewire::test(new class extends Component {
+            public PostForFormObjectTesting $post;
+            public PostFormStub $form;
+
+            public function mount()
+            {
+                $this->post = PostForFormObjectTesting::first();
+            }
+
+            public function fillForm()
+            {
+                $this->form->fill($this->post);
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->call('fillForm')
+            ->assertSet('form.title', 'A Title')
+            ->assertSet('form.content', 'Some content')
+        ;
+    }
+
+    /** @test */
+    public function can_fill_a_form_object_from_array()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            public function fillForm()
+            {
+                $this->form->fill([
+                    'title' => 'Title from array',
+                    'content' => 'Content from array',
+                ]);
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->call('fillForm')
+            ->assertSet('form.title', 'Title from array')
+            ->assertSet('form.content', 'Content from array')
         ;
     }
 }
@@ -459,4 +546,16 @@ class PostFormDynamicMessagesAndAttributesStub extends Form
             'content' => ':attribute is must to fill',
         ];
     }
+}
+
+class PostForFormObjectTesting extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        [
+            'title' => 'A Title',
+            'content' => 'Some content',
+        ],
+    ];
 }

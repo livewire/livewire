@@ -785,50 +785,162 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function pagination_trait_resolves_query_string_alias_for_page_from_component()
+    public function it_calls_pagination_hook_methods_when_page_is_kebab_cased()
     {
-        Livewire::withQueryParams(['p' => '2'])
-        ->visit(new class extends Component {
+        Livewire::visit(new class extends Component {
             use WithPagination;
 
-            protected $queryString = [
-                'paginators.page' => ['as' => 'p']
-            ];
+            public $itemPageHookOutput = null;
+
+            public function updatedItemPage($page)
+            {
+                $this->itemPageHookOutput = 'item-page-is-set-to-' . $page;
+            }
 
             public function render()
             {
                 return Blade::render(
                     <<< 'HTML'
                     <div>
-                        @foreach ($posts as $post)
-                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
-                        @endforeach
-
-                        {{ $posts->links() }}
+                        {{ $items->links() }}
+                        <span dusk="item-page-pagination-hook">{{ $itemPageHookOutput }}</span>
                     </div>
                     HTML,
                     [
-                        'posts' => Post::paginate(3),
+                        'items' => Item::paginate(3, ['*'], 'item-page'),
+                        'itemPageHookOutput' => $this->itemPageHookOutput
                     ]
                 );
             }
         })
+            ->assertSeeNothingIn('@item-page-pagination-hook')
+            ->waitForLivewire()->click('@nextPage.item-page.before')
+            ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2');
+    }
 
-        // Test a deeplink to page 2 with "p" from the query string shows the second page.
+    /** @test */
+    public function pagination_trait_resolves_query_string_alias_for_page_from_component()
+    {
+        Livewire::withQueryParams(['p' => '2'])
+            ->visit(new class extends Component {
+                use WithPagination;
+
+                protected $queryString = [
+                    'paginators.page' => ['as' => 'p']
+                ];
+
+                public function render()
+                {
+                    return Blade::render(
+                        <<< 'HTML'
+                        <div>
+                            @foreach ($posts as $post)
+                                <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                            @endforeach
+
+                            {{ $posts->links() }}
+                        </div>
+                        HTML,
+                        [
+                            'posts' => Post::paginate(3),
+                        ]
+                    );
+                }
+            })
+
+            // Test a deeplink to page 2 with "p" from the query string shows the second page.
+            ->assertDontSee('Post #3')
+            ->assertSee('Post #4')
+            ->assertSee('Post #5')
+            ->assertSee('Post #6')
+            ->assertQueryStringHas('p', '2')
+
+            ->waitForLivewire()->click('@previousPage.before')
+
+            ->assertDontSee('Post #4')
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertQueryStringHas('p', '1')
+        ;
+    }
+
+    /** @test */
+    public function it_loads_pagination_on_nested_alpine_tabs()
+    {
+        Livewire::visit(new class extends Component {
+            use WithPagination;
+
+            public $pageHookOutput = null;
+
+            public function updatedPage($page)
+            {
+                $this->pageHookOutput = 'page-is-set-to-'.$page;
+            }
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div x-data="{ tab: window.location.hash ? window.location.hash.substring(1) : 'general' }">
+                        <nav>
+                            <button dusk="general" x-on:click.prevent="tab = 'general'; window.location.hash = 'general'" :class="{ 'tab--active': tab === 'general' }"
+                                class="general">
+                                General
+                            </button>
+
+                            <button dusk="deals" x-on:click.prevent="tab = 'deals'; window.location.hash = 'deals'"
+                                :class="{ 'tab--active': tab === 'deals' }"
+                                class="deals">
+                                Deals
+                            </button>
+                        </nav>
+                        <div x-show="tab === 'deals'">
+                            <div x-data="{ dealSubTab: 'posts' }">
+                                <nav>
+                                       <button x-on:click.prevent="dealSubTab = 'posts'"
+                                          :class="{ 'tab--active': dealSubTab === 'posts' }">
+                                          Posts
+                                     </button>
+                                </nav>
+                                <div x-show="dealSubTab === 'posts'">
+                                    <div>
+                                        @foreach ($posts as $post)
+                                            <h1 wire:key='post-{{ $post->id }}'>{{ $post->title }}</h1>
+                                        @endforeach
+                                    </div>
+                                    {{ $posts->links() }}
+                                </div>
+                                <span dusk="page-pagination-hook">{{ $pageHookOutput }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    HTML,
+                    [
+                        'posts'          => Post::paginate(3),
+                        'pageHookOutput' => $this->pageHookOutput,
+                    ]
+                );
+            }
+        })
+        ->click('@deals')
+        ->assertFragmentIs('deals')
+        ->assertSee('Post #1')
+        ->assertSee('Post #2')
+        ->assertSee('Post #3')
+        ->assertDontSee('Post #4')
+        ->waitForLivewire()->click('@nextPage.before')
+        ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
         ->assertDontSee('Post #3')
         ->assertSee('Post #4')
         ->assertSee('Post #5')
         ->assertSee('Post #6')
-        ->assertQueryStringHas('p', '2')
-
-        ->waitForLivewire()->click('@previousPage.before')
-
-        ->assertDontSee('Post #4')
-        ->assertSee('Post #1')
-        ->assertSee('Post #2')
-        ->assertSee('Post #3')
-        ->assertQueryStringHas('p', '1')
-        ;
+        ->waitForLivewire()->click('@nextPage.before')
+        ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-3')
+        ->assertDontSee('Post #6')
+        ->assertSee('Post #7')
+        ->assertSee('Post #8')
+        ->assertSee('Post #9');
     }
 }
 

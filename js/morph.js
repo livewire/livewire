@@ -68,9 +68,9 @@ export function morph(component, el, html) {
         added: (el) => {
             if (isntElement(el)) return
 
-            trigger('morph.added', el)
-
             const closestComponentId = closestComponent(el).id
+
+            trigger('morph.added', { el })
 
             if (closestComponentId === component.id) {
                 // @todo

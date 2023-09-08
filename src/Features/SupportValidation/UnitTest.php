@@ -128,6 +128,25 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function rule_attribute_alias_is_translatable_with_array()
+    {
+        Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
+
+        Livewire::test(new class extends TestComponent {
+            #[BaseRule('required|min:3', as: ['foo' => 'translatable.foo'])]
+            public $foo = '';
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                $this->assertEquals('The Translated Foo field must be at least 3 characters.', $messages['foo'][0]);
+            })
+        ;
+    }
+
+    /** @test */
     public function rule_attribute_alias_translation_can_be_opted_out()
     {
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
@@ -165,6 +184,44 @@ class UnitTest extends \Tests\TestCase
                 $this->assertEquals('Your foo is too short.', $messages['foo'][0]);
             })
             ;
+    }
+
+    /** @test */
+    public function rule_attribute_message_is_translatable()
+    {
+        Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
+
+        Livewire::test(new class extends TestComponent {
+            #[BaseRule('min:5', message: 'translatable.foo')]
+            public $foo = '';
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                $this->assertEquals('Your foo is too short.', $messages['foo'][0]);
+            })
+        ;
+    }
+
+    /** @test */
+    public function rule_attribute_message_is_translatable_with_array()
+    {
+        Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
+
+        Livewire::test(new class extends TestComponent {
+            #[BaseRule('min:5', message: ['min' => 'translatable.foo'])]
+            public $foo = '';
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                $this->assertEquals('Your foo is too short.', $messages['foo'][0]);
+            })
+        ;
     }
 
     /** @test */
