@@ -103,8 +103,7 @@ trait HandlesValidation
         if (method_exists($this, 'rules')) $rulesFromComponent = $this->rules();
         else if (property_exists($this, 'rules')) $rulesFromComponent = $this->rules;
 
-    
-        $rulesFromOutside = array_merge(
+        $rulesFromOutside = array_merge_recursive(
             ...array_map(
                 fn($ruleFromOutside) => value($ruleFromOutside),
                 $this->rulesFromOutside
