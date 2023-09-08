@@ -9,6 +9,7 @@ use Livewire\Wireable;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Drawer\Utils;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +39,7 @@ trait HandlesValidation
 
     public function getErrorBag()
     {
-        return store($this)->get('errorBag', new MessageBag);
+        return store($this)->get('errorBag', session()->get('errors', app(ViewErrorBag::class))->getBag('default'));
     }
 
     public function addError($name, $message)
