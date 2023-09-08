@@ -22,37 +22,43 @@ class Form implements Arrayable
 
     protected function addValidationRulesToComponent()
     {
-        $rules = [];
-
-        if (method_exists($this, 'rules')) $rules = $this->rules();
-        else if (property_exists($this, 'rules')) $rules = $this->rules;
-
         $this->component->addRulesFromOutside(
-            $this->getAttributesWithPrefixedKeys($rules)
+            function() {
+                $rules = [];
+
+                if (method_exists($this, 'rules')) $rules = $this->rules();
+                else if (property_exists($this, 'rules')) $rules = $this->rules;
+
+                return $this->getAttributesWithPrefixedKeys($rules);
+            }
         );
     }
 
     protected function addValidationAttributesToComponent()
     {
-        $validationAttributes = [];
-
-        if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
-        else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
-
         $this->component->addValidationAttributesFromOutside(
-            $this->getAttributesWithPrefixedKeys($validationAttributes)
+            function() {
+                $validationAttributes = [];
+        
+                if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+                else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+
+                return $this->getAttributesWithPrefixedKeys($validationAttributes);
+            }
         );
     }
 
     protected function addMessagesToComponent()
     {
-        $messages = [];
-
-        if (method_exists($this, 'messages')) $messages = $this->messages();
-        else if (property_exists($this, 'messages')) $messages = $this->messages;
-
         $this->component->addMessagesFromOutside(
-            $this->getAttributesWithPrefixedKeys($messages)
+            function() {
+                $messages = [];
+
+                if (method_exists($this, 'messages')) $messages = $this->messages();
+                else if (property_exists($this, 'messages')) $messages = $this->messages;
+
+                return $this->getAttributesWithPrefixedKeys($messages);
+            }
         );
     }
 

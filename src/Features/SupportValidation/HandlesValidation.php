@@ -23,17 +23,17 @@ trait HandlesValidation
 
     public function addRulesFromOutside($rules)
     {
-        $this->rulesFromOutside = array_merge_recursive($this->rulesFromOutside, $rules);
+        $this->rulesFromOutside[] = $rules;
     }
 
     public function addMessagesFromOutside($messages)
     {
-        $this->messagesFromOutside = array_merge($this->messagesFromOutside, $messages);
+        $this->messagesFromOutside[] = $messages;
     }
 
     public function addValidationAttributesFromOutside($validationAttributes)
     {
-        $this->validationAttributesFromOutside = array_merge($this->validationAttributesFromOutside, $validationAttributes);
+        $this->validationAttributesFromOutside[] = $validationAttributes;
     }
 
     public function getErrorBag()
@@ -103,7 +103,15 @@ trait HandlesValidation
         if (method_exists($this, 'rules')) $rulesFromComponent = $this->rules();
         else if (property_exists($this, 'rules')) $rulesFromComponent = $this->rules;
 
-        return array_merge($rulesFromComponent, $this->rulesFromOutside);
+    
+        $rulesFromOutside = array_merge(
+            ...array_map(
+                fn($ruleFromOutside) => value($ruleFromOutside),
+                $this->rulesFromOutside
+            )
+        );
+
+        return array_merge($rulesFromComponent, $rulesFromOutside);
     }
 
     protected function getMessages()
@@ -113,7 +121,14 @@ trait HandlesValidation
         if (method_exists($this, 'messages')) $messages = $this->messages();
         elseif (property_exists($this, 'messages')) $messages = $this->messages;
 
-        return array_merge($messages, $this->messagesFromOutside);
+        $messagesFromOutside = array_merge(
+            ...array_map(
+                fn($messageFromOutside) => value($messageFromOutside),
+                $this->messagesFromOutside
+            )
+        );
+
+        return array_merge($messages, $messagesFromOutside);
     }
 
     protected function getValidationAttributes()
@@ -123,7 +138,14 @@ trait HandlesValidation
         if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
         elseif (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
 
-        return array_merge($validationAttributes, $this->validationAttributesFromOutside);
+        $validationAttributesFromOutside = array_merge(
+            ...array_map(
+                fn($validationAttributeFromOutside) => value($validationAttributeFromOutside),
+                $this->validationAttributesFromOutside
+            )
+        );
+
+        return array_merge($validationAttributes, $validationAttributesFromOutside);
     }
 
     protected function getValidationCustomValues()
