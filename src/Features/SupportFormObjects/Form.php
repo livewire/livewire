@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 
@@ -113,6 +114,21 @@ class Form implements Arrayable
         }
 
         return $value;
+    }
+
+    public function fill($values)
+    {
+        $publicProperties = array_keys($this->all());
+
+        if ($values instanceof Model) {
+            $values = $values->toArray();
+        }
+
+        foreach ($values as $key => $value) {
+            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+                data_set($this, $key, $value);
+            }
+        }
     }
 
     public function reset(...$properties)
