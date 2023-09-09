@@ -10,6 +10,7 @@ use Livewire\ComponentHook;
 use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportQueryString\SupportQueryString;
 use Livewire\Features\SupportQueryString\BaseUrl;
+use Livewire\WithPagination;
 
 class SupportPagination extends ComponentHook
 {
@@ -29,6 +30,8 @@ class SupportPagination extends ComponentHook
 
     function boot()
     {
+        if (! in_array(WithPagination::class, class_uses_recursive($this->component))) return;
+
         $this->setPageResolvers();
 
         $this->overrideDefaultPaginationViews();
@@ -36,6 +39,8 @@ class SupportPagination extends ComponentHook
 
     function destroy()
     {
+        if (! in_array(WithPagination::class, class_uses_recursive($this->component))) return;
+        
         ($this->restoreOverriddenPaginationViews)();
     }
 
