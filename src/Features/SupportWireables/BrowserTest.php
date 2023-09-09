@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportsWireables;
+namespace Livewire\Features\SupportWireables;
 
 use Livewire\Livewire;
 use Livewire\Wireable;
