@@ -52,11 +52,27 @@ trait InteractsWithProperties
         $freshInstance = new static;
 
         foreach ($properties as $property) {
-            $isInitialized = (new \ReflectionProperty($freshInstance, $property))->isInitialized($freshInstance);
+            $property = str($property);
+
+            // Check if the property contains a dot which means it is actually on a nested object like a FormObject
+            if (str($property)->contains('.')) {
+                $propertyName = $property->afterLast('.');
+                $objectName = $property->beforeLast('.');
+
+                $object = data_get($freshInstance, $objectName, null);
+
+                if (is_object($object)) {
+                    $isInitialized = (new \ReflectionProperty($object, (string) $propertyName))->isInitialized($object);
+                } else {
+                    $isInitialized = false;
+                }
+            } else {
+                $isInitialized = (new \ReflectionProperty($freshInstance, (string) $property))->isInitialized($freshInstance);
+            }
 
             // Handle resetting properties that are not initialized by default.
             if (! $isInitialized) {
-                data_forget($this, $property);
+                data_forget($this, (string) $property);
                 continue;
             }
 
