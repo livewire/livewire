@@ -10,8 +10,7 @@ class ChangeDefaultNamespace extends UpgradeStep
 {
     public function handle(UpgradeCommand $console, \Closure $next)
     {
-        if($this->hasOldNamespace())
-        {
+        if ($this->hasOldNamespace()) {
             $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> The Livewire namespace has changed. </>");
             $console->newLine();
 
@@ -22,7 +21,7 @@ class ChangeDefaultNamespace extends UpgradeStep
                 'keep',
             ], 'migrate');
 
-            if($choice === 'keep') {
+            if ($choice === 'keep') {
                 $console->line('Keeping the old namespace...');
 
                 $this->publishConfigIfMissing($console);
@@ -38,9 +37,11 @@ class ChangeDefaultNamespace extends UpgradeStep
 
             $componentNames = [];
 
-            $results = collect($this->filesystem()->allFiles('app/Http/Livewire'))->map(function($file) {
-                return str($file)->after('app/Http/Livewire/')->before('.php')->__toString();
-            })->map(function($component) use (&$componentNames) {
+            $results = collect($this->filesystem()->allFiles('app/Http/Livewire'))
+                ->filter(fn($file) => str($file)->endsWith('.php'))
+                ->map(function ($file) {
+                    return str($file)->after('app/Http/Livewire/')->before('.php')->__toString();
+                })->map(function ($component) use (&$componentNames) {
 
                 // Track component names to update namespace references later on.
                 $componentNames[] = $component;
@@ -62,7 +63,7 @@ class ChangeDefaultNamespace extends UpgradeStep
                     return ['Skipped', $component, 'Already exists'];
                 }
 
-                if($this->filesystem()->directoryMissing(dirname($newParser->relativeClassPath()))) {
+                if ($this->filesystem()->directoryMissing(dirname($newParser->relativeClassPath()))) {
                     $this->filesystem()->createDirectory(dirname($newParser->relativeClassPath()));
                 }
 
@@ -72,7 +73,7 @@ class ChangeDefaultNamespace extends UpgradeStep
                 return ['Migrated', $component];
             });
 
-            foreach($componentNames as $name) {
+            foreach ($componentNames as $name) {
                 $name = str($name)->replace('/', '\\\\')->toString();
 
                 // Update any namespace references
