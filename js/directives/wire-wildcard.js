@@ -6,7 +6,7 @@ import Alpine from 'alpinejs'
 on('directive.init', ({ el, directive, cleanup, component }) => {
     if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty'].includes(directive.value)) return
 
-    let attribute = directive.rawName.replace('wire:', 'x-on:')
+    let attribute = directive.rawName.replace('wire:', Alpine.prefixed('on:'))
 
     // Automatically add .prevent to wire:submit, if they didn't add it themselves...
     if (directive.value === 'submit' && ! directive.modifiers.includes('prevent')) {

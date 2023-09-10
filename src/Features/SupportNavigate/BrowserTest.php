@@ -22,6 +22,8 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
+            Livewire::component('first-component-with-no-auto-asset-injection', FirstComponentWithNoAutoAssetInjection::class);
+            Livewire::component('second-component-with-no-auto-asset-injection', SecondComponentWithNoAutoAssetInjection::class);
             Livewire::component('first-page-child', FirstPageChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
@@ -73,6 +75,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </body>
                 </html>
             HTML));
+            Route::get('/first-component-with-no-auto-asset-injection', FirstComponentWithNoAutoAssetInjection::class)->middleware('web');
+            Route::get('/second-component-with-no-auto-asset-injection', SecondComponentWithNoAutoAssetInjection::class)->middleware('web');
+            Route::get('/compiled-custom-livewire-init.js', fn () => Utils::pretendResponseIsFile(__DIR__ . '/test-views/compiled-custom-livewire-init.js'));
         };
     }
 
@@ -455,6 +460,120 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForTextIn('@text-parent', 'testing')
                 ;
         });
+    }
+
+    public function test_customizing_alpine_prefix_works()
+    {
+        config()->set('livewire.inject_assets', false);
+
+        $this->browse(fn (Browser $browser) => $browser
+            ->visit('/first-component-with-no-auto-asset-injection')
+            ->assertSourceMissing('/livewire/livewire.js')
+            ->assertSourceHas('window.livewireScriptConfig')
+
+            // test whether data-x-cloak gets removed
+            ->assertSourceHas('<div>I am always cloaked</div>')
+
+            ->assertDontSee('I remain hidden in first')
+            ->click('@x.data.click.in.first')
+            ->assertDontSee('I remain hidden in first')
+
+            ->assertDontSee('I was hidden in first')
+            ->click('@data.x.data.click.in.first')
+            ->waitForText('I was hidden in first')
+            ->assertSee('I was hidden in first')
+
+            ->assertDontSee('Hi, mom!')
+            ->click('@wire.click.in.first')
+            ->waitForText('Hi, mom!')
+            ->assertSee('Hi, mom!')
+
+            ->click('@go.to.second')
+            ->waitForText('goto first')
+            ->assertSee('goto first')
+
+            ->assertDontSee('I remain hidden in second')
+            ->click('@x.data.click.in.second')
+            ->assertDontSee('I remain hidden in second')
+
+            ->assertDontSee('I was hidden in second')
+            ->click('@data.x.data.click.in.second')
+            ->waitForText('I was hidden in second')
+            ->assertSee('I was hidden in second')
+
+            ->assertDontSee('Hi, pop!')
+            ->click('@wire.click.in.second')
+            ->waitForText('Hi, pop!')
+            ->assertSee('Hi, pop!')
+        );
+    }
+}
+
+class FirstComponentWithNoAutoAssetInjection extends Component {
+    public $greeting = '';
+
+    public function greetMom()
+    {
+        $this->greeting = 'Hi, mom!';
+    }
+
+    #[Layout('test-views::app-with-livewire-script-config')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <a href='/second-component-with-no-auto-asset-injection' wire:navigate dusk='go.to.second'>goto second component</a>
+            <div x-data="{ collapsed: true }">
+                <button type="button" x-on:click="collapsed = !collapsed" dusk="x.data.click.in.first">I wont work</button>
+                <div x-collapse x-cloak x-show="!collapsed">
+                    I remain hidden in first
+                </div>
+            </div>
+            <div data-x-data="{ collapsed: true }">
+                <button type="button" data-x-on:click="collapsed = !collapsed" dusk="data.x.data.click.in.first">click me reveal</button>
+                <div data-x-collapse data-x-cloak data-x-show="!collapsed">
+                    I was hidden in first
+                </div>
+            </div>
+            <button type="button" wire:click="greetMom()" dusk="wire.click.in.first">greet mom</button>
+            <div>{{ $greeting }}</div>
+            <div data-x-cloak>I am always cloaked</div>
+        </div>
+        HTML;
+
+    }
+}
+class SecondComponentWithNoAutoAssetInjection extends Component {
+    public $greeting = '';
+
+    public function greetPop()
+    {
+        $this->greeting = 'Hi, pop!';
+    }
+
+    #[Layout('test-views::app-with-livewire-script-config')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <a href="/first-component-with-no-auto-asset-injection" wire:navigate dusk="go.to.first">goto first component</a>
+            <div x-data="{ collapsed: true }">
+                <button type="button" x-on:click="collapsed = !collapsed" dusk="x.data.click.in.second">I wont work</button>
+                <div x-collapse x-cloak x-show="!collapsed">
+                    I remain hidden in second
+                </div>
+            </div>
+            <div data-x-data="{ collapsed: true }">
+                <button type="button" data-x-on:click="collapsed = !collapsed" dusk="data.x.data.click.in.second">click me reveal</button>
+                <div data-x-collapse data-x-cloak data-x-show="!collapsed">
+                    I was hidden in second
+                </div>
+            </div>
+            <button type="button" wire:click="greetPop()" dusk="wire.click.in.second">greet pops</button>
+            <div>{{ $greeting }}</div>
+        </div>
+        HTML;
+
     }
 }
 

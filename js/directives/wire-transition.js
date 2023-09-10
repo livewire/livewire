@@ -11,8 +11,8 @@ directive('transition', ({ el, directive, component, cleanup }) => {
 
     // We're going to control the element's transition with Alpine transitions...
     Alpine.bind(el, {
-        [directive.rawName.replace('wire:', 'x-')]: '',
-        'x-show'() { return visibility.state },
+        [directive.rawName.replace('wire:', Alpine.prefixed())]: '',
+        [Alpine.prefixed('show')]() { return visibility.state },
     })
 
     // If it's not the initial page load, transition the element in...

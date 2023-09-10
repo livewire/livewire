@@ -5728,7 +5728,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
     document.body.setAttribute("data-scroll-y", document.body.scrollTop);
-    document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach((el) => {
+    document.querySelectorAll([`[${module_default.prefixed("navigate\\:scroll")}]`, "[wire\\:scroll]"]).forEach((el) => {
       el.setAttribute("data-scroll-x", el.scrollLeft);
       el.setAttribute("data-scroll-y", el.scrollTop);
     });
@@ -5741,7 +5741,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     queueMicrotask(() => {
       scroll(document.body);
-      document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+      document.querySelectorAll([`[${module_default.prefixed("navigate\\:scroll")}]`, "[wire\\:scroll]"]).forEach(scroll);
     });
   }
 
@@ -5749,16 +5749,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var els = {};
   function storePersistantElementsForLater() {
     els = {};
-    document.querySelectorAll("[x-persist]").forEach((i) => {
-      els[i.getAttribute("x-persist")] = i;
+    document.querySelectorAll(`[${module_default.prefixed("persist")}]`).forEach((i) => {
+      els[i.getAttribute(module_default.prefixed("persist"))] = i;
       module_default.mutateDom(() => {
         i.remove();
       });
     });
   }
   function putPersistantElementsBack() {
-    document.querySelectorAll("[x-persist]").forEach((i) => {
-      let old = els[i.getAttribute("x-persist")];
+    document.querySelectorAll(`[${module_default.prefixed("persist")}]`).forEach((i) => {
+      let old = els[i.getAttribute(module_default.prefixed("persist"))];
       if (!old)
         return;
       old._x_wasPersisted = true;
@@ -7165,8 +7165,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {
     let visibility = module_default.reactive({ state: false });
     module_default.bind(el, {
-      [directive3.rawName.replace("wire:", "x-")]: "",
-      "x-show"() {
+      [directive3.rawName.replace("wire:", module_default.prefixed())]: "",
+      [module_default.prefixed("show")]() {
         return visibility.state;
       }
     });
@@ -7203,7 +7203,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on("directive.init", ({ el, directive: directive3, cleanup: cleanup3, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.value))
       return;
-    let attribute = directive3.rawName.replace("wire:", "x-on:");
+    let attribute = directive3.rawName.replace("wire:", module_default.prefixed("on:"));
     if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {
       attribute = attribute + ".prevent";
     }
@@ -7222,9 +7222,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
   module_default.interceptInit(module_default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:navigate")) {
-      module_default.bind(el, { ["x-navigate"]: true });
+      module_default.bind(el, { [module_default.prefixed("navigate")]: true });
     } else if (el.hasAttribute("wire:navigate.hover")) {
-      module_default.bind(el, { ["x-navigate.hover"]: true });
+      module_default.bind(el, { [module_default.prefixed("navigate.hover")]: true });
     }
   }));
   document.addEventListener("alpine:navigating", () => {
@@ -7559,7 +7559,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       ["@blur"]() {
         onBlur && update();
       },
-      ["x-model" + getModifierTail(modifiers)]() {
+      [module_default.prefixed("model") + getModifierTail(modifiers)]() {
         return {
           get() {
             return dataGet(component.$wire, expression);

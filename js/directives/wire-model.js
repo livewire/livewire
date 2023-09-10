@@ -57,7 +57,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
         ['@blur']() {
             onBlur && update()
         },
-        ['x-model' + getModifierTail(modifiers)]() {
+        [Alpine.prefixed('model') + getModifierTail(modifiers)]() {
             return {
                 get() {
                     return dataGet(component.$wire, expression)

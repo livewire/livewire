@@ -5,8 +5,8 @@ let els = {}
 export function storePersistantElementsForLater() {
     els = {}
 
-    document.querySelectorAll('[x-persist]').forEach(i => {
-        els[i.getAttribute('x-persist')] = i
+    document.querySelectorAll(`[${Alpine.prefixed('persist')}]`).forEach(i => {
+        els[i.getAttribute(Alpine.prefixed('persist'))] = i
 
         Alpine.mutateDom(() => {
             i.remove()
@@ -15,8 +15,8 @@ export function storePersistantElementsForLater() {
 }
 
 export function putPersistantElementsBack() {
-    document.querySelectorAll('[x-persist]').forEach(i => {
-        let old = els[i.getAttribute('x-persist')]
+    document.querySelectorAll(`[${Alpine.prefixed('persist')}]`).forEach(i => {
+        let old = els[i.getAttribute(Alpine.prefixed('persist'))]
 
         // There might be a brand new x-persist element...
         if (! old) return
