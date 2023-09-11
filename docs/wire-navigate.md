@@ -1,20 +1,9 @@
-## Basic usage
 
-Let's explore an example of using `wire:navigate`. Below is a typical Laravel routes file (`routes/web.php`) with three Livewire components defined as routes:
+Livewire's `wire:navigate` feature makes page navigate much faster, providing an SPA-like experience for your users.
 
-```php
-use App\Livewire\Dashboard;
-use App\Livewire\ShowPosts;
-use App\Livewire\ShowUsers;
+This page is a simple reference for the `wire:navigate` directive. Be sure to read the [page on Liveire's Navigate feature](/docs/navigate) for more complete documentation.
 
-Route::get('/', Dashboard::class);
-
-Route::get('/posts', ShowPosts::class);
-
-Route::get('/users', ShowUsers::class);
-```
-
-By adding `wire:navigate` to each link in a navigation menu on each page, Livewire will prevent the standard handling of the link click and replace it with its own, faster version:
+Below is a simple example of adding `wire:navigate` to links in a nav bar:
 
 ```blade
 <nav>
@@ -24,7 +13,12 @@ By adding `wire:navigate` to each link in a navigation menu on each page, Livewi
 </nav>
 ```
 
+When any of these links are clicked, Livewire will intercept the click and instead of allowing the browser to perform a full page visit, Livewire will fetch the page in the background and swap it with the current page (resulting in much faster and smoother page navigation).
 
-```
-<a href="/users" wire:navigate.hover>Users</a>
+## Prefetching pages on hover
+
+By adding the `.hover` modifier, Livewire will pre-fetch a page when a user hovers over a link. This way, the page will have already been downloaded from the server when the user clicks on the link.
+
+```blade
+<a href="/" wire:navigate.hover>Dashboard</a>
 ```

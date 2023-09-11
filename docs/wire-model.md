@@ -1,28 +1,115 @@
 
-One of Livewire's most powerful features is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
+Livewire make it easy to bind a component property's value with form inputs using `wire:model`.
 
-Let's bind the `$title` property from the `CreatePost` component to a text input using the `wire:model` directive:
+Here is a simple example of using `wire:model` to bind the `$title` and `$content` properties with form inputs in a "Create Post" component:
+
+```php
+use Livewire\Component;
+use App\Models\Post;
+
+class CreatePost extends Component
+{
+    public $title = '';
+
+    public $content = '';
+
+    public function save()
+    {
+		$post = Post::create([
+			'title' => $this->title
+			'content' => $this->content
+		]);
+
+        // ...
+    }
+}
+```
 
 ```blade
-<form>
-    <label for="title">Title:</label>
+<form wire:submit="save">
+    <label>
+        <span>Title</span>
 
-    <input type="text" id="title" wire:model="title"> <!-- [tl! highlight] -->
+        <input type="text" wire:model="title"> <!-- [tl! highlight] -->
+    </label>
+
+    <label>
+        <span>Content</span>
+
+        <textarea wire:model="content"></textarea> <!-- [tl! highlight] -->
+    </label>
+
+	<button type="submit">Save</button>
 </form>
 ```
 
-Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
+Because both inputs use `wire:model`, their values will be synchronized with the server's properties when the "Save" button is pressed.
 
 > [!warning] "Why isn't my component live updating as I type?"
 > If you tried this in your browser and are confused why the title isn't automatically updating, it's because Livewire only updates a component when an "action" is submitted—like pressing a submit button—not when a user types into a field. This cuts down on network requests and improves performance. To enable "live" updating as a user types, you can use `wire:model.live` instead. [Learn more about data binding](/docs/properties#data-binding).
 
-`wire:model.live`
-`wire:model.blur`
-`wire:model.lazy`
-`wire:model.debounce`
-`wire:model.throttle`
-`wire:model.number`
-`wire:model.fill`
+## Customizing update timing
+
+By default, Livewire will only send a network request when an action is performed (like `wire:click` or `wire:submit`), NOT when a `wire:model` input is updated.
+
+This durastically improves the performance of Livewire by reducing network requests and providing a smoother experience for your users.
+
+However, there are occasions where you may want to update the server more frequently for things like real-time validation.
+
+### Live updating
+
+To send property updates to the server as a user types into an input-field, you can append the `.live` modifier to `wire:model`:
+
+```html
+<input type="text" wire:model.live="title">
+```
+
+#### Customizing the debounce
+
+By default, when using `wire:model.live`, Livewire adds a 150 millisecond debounce to server updates. This meanas if a user is continually typing, Livewire will wait untill the user stops typing for 150 milliseconds before sending a request.
+
+You can customize this timing by appending `.debounce.Xms` to the input. Here is an example of changing the debounce to 250 milliseconds:
+
+```html
+<input type="text" wire:model.live.debounce.250ms="title">
+```
+
+### Updating on "blur" event
+
+By appending the `.blur` modifier, Livewire will only send network requests with property updates when a user clicks away from an input, or presses the tab key to move to the next input.
+
+Adding `.blur` is helpful for scenarios where you want to update the server more frequently, but not as a user types. For example, real-time validation is a common instance where `.blur` is helpful.
+
+```html
+<input type="text" wire:model.blur="title">
+```
+
+### Updating on "change" event
+
+There are times where the behavior of `.blur` isn't exactly what you want and instead `.change` is.
+
+For example, if you want to run validation every time a select input is changed, by adding `.change`, Livewire will send a network request and validate the property as soon as a user selects a new option. As opposed to `.blur` which will only update the server after the user tabs away from the select input.
+
+```html
+<select wire:model.change="title">
+    <!-- ... -->
+</select>
+```
+
+Any changes made to the text input will be automatically synchronized with the `$title` property in your Livewire component.
+
+## All available modifiers
+
+Modifier | Description
+--- | ---
+`.live` | Send updates as a user types
+`.blur` | Only send updates on the `blur` event
+`.change` | Only send updates on the the `change` event
+`.lazy` | An alias for `.change`
+`.debounce.[?]ms` | Debounce the sending of updates by specified millisecond delay
+`.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
+`.number` | Cast the text value of an input to `int` on the server
+`.fill` | Use the initial value provided by a "value" HTML attribute on page-load
 
 ## Input fields
 
@@ -150,3 +237,6 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
     ...
 </select>
 ```
+
+Further reading:
+* Creating custom form controls
