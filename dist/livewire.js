@@ -4238,6 +4238,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let el = this.el;
       el.setAttribute("wire:snapshot", this.snapshotEncoded);
       let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+      if (this.originalEffects.url) {
+        effects.url = this.originalEffects.url;
+      }
       el.setAttribute("wire:effects", JSON.stringify(effects));
     }
     addCleanup(cleanup3) {
