@@ -38,12 +38,20 @@ class ComponentHookRegistry
         foreach (static::$componentHooks as $hook) {
             on('mount', function ($component, $params, $key, $parent) use ($hook) {
                 $hook = static::initializeHook($hook, $component);
+                
+                // If hook hasn't been initialized, then don't continue.
+                if (!$hook) return;
+
                 $hook->callBoot();
                 $hook->callMount($params, $parent);
             });
 
             on('hydrate', function ($component, $memo) use ($hook) {
                 $hook = static::initializeHook($hook, $component);
+                
+                // If hook hasn't been initialized, then don't continue.
+                if (!$hook) return;
+
                 $hook->callBoot();
                 $hook->callHydrate($memo);
             });
@@ -80,11 +88,18 @@ class ComponentHookRegistry
     {
         if (! isset(static::$components[$target])) static::$components[$target] = [];
 
-        static::$components[$target][] = $hook = new $hook;
-
+        $hook = new $hook;
+        
         $hook->setComponent($target);
 
-        return tap($hook)->setComponent($target);
+        // If no `shouldBoot` method has been implemented, then boot the hook anyway
+        if (method_exists($hook, 'shouldBoot') && ! $hook->shouldBoot()) {
+            return;
+        }
+        
+        static::$components[$target][] = $hook;
+
+        return $hook;
     }
 
     static function proxyCallToHooks($target, $method) {
