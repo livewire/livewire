@@ -39,6 +39,37 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    public function lazy_loaded_component_javascript_is_evaluated()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function mount() {
+                sleep(1);
+            }
+
+            public function render() {
+                return <<<HTML
+                <div id="child">
+                    Child!
+
+                    <script>window.thisIsTheWay = 'Livewire forever';</script>
+                </div>
+                HTML;
+            }
+        }])
+            ->assertDontSee('Child!')
+            ->waitFor('#child')
+            ->assertSee('Child!')
+            ->assertScript('window.thisIsTheWay', 'Livewire forever')
+        ;
+    }
+
+    /** @test */
     public function can_lazy_load_a_component_on_intersect_outside_viewport()
     {
         Livewire::visit([new class extends Component {
@@ -277,7 +308,7 @@ class BrowserTest extends BrowserTestCase
             public function mount() {
                 sleep(1);
             }
-            public function placeholder(array $params = []) { 
+            public function placeholder(array $params = []) {
                 return view('placeholder', $params);
             }
             public function render() {
