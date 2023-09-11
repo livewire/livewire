@@ -4256,7 +4256,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = new Component(el);
     if (components[component.id])
       throw "Component already registered";
-    trigger("component.init", { component });
+    let cleanup3 = (i) => component.addCleanup(i);
+    trigger("component.init", { component, cleanup: cleanup3 });
     components[component.id] = component;
     return component;
   }
@@ -6034,7 +6035,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         update(push, newValue);
       },
       pop(receiver) {
-        window.addEventListener("popstate", (e) => {
+        let handler4 = (e) => {
           if (!e.state || !e.state.alpine)
             return;
           Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
@@ -6048,7 +6049,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               lock = false;
             }
           });
-        });
+        };
+        window.addEventListener("popstate", handler4);
+        return () => window.removeEventListener("popstate", handler4);
       }
     };
   }
@@ -6785,7 +6788,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportQueryString.js
-  on("component.init", ({ component }) => {
+  on("component.init", ({ component, cleanup: cleanup3 }) => {
     let effects = component.effects;
     let queryString = effects["url"];
     if (!queryString)
@@ -6797,11 +6800,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
       if (use === "replace") {
-        module_default.effect(() => {
+        let effectReference = module_default.effect(() => {
           replace2(dataGet(component.reactive, name));
         });
+        cleanup3(() => module_default.release(effectReference));
       } else if (use === "push") {
-        on("commit", ({ component: component2, succeed }) => {
+        let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
           let beforeValue = dataGet(component2.canonical, name);
           succeed(() => {
             let afterValue = dataGet(component2.canonical, name);
@@ -6810,11 +6814,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             push2(afterValue);
           });
         });
-        pop(async (newValue) => {
+        let forgetPopHandler = pop(async (newValue) => {
           await component.$wire.set(name, newValue);
           document.querySelectorAll("input").forEach((el) => {
             el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
           });
+        });
+        cleanup3(() => {
+          forgetCommitHandler();
+          forgetPopHandler();
         });
       }
     });

@@ -6565,7 +6565,8 @@ function initComponent(el) {
   let component = new Component(el);
   if (components[component.id])
     throw "Component already registered";
-  trigger("component.init", { component });
+  let cleanup2 = (i) => component.addCleanup(i);
+  trigger("component.init", { component, cleanup: cleanup2 });
   components[component.id] = component;
   return component;
 }
@@ -7346,7 +7347,7 @@ function track(name, initialSeedValue, alwaysShow = false) {
       update(push, newValue);
     },
     pop(receiver) {
-      window.addEventListener("popstate", (e) => {
+      let handler = (e) => {
         if (!e.state || !e.state.alpine)
           return;
         Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
@@ -7360,7 +7361,9 @@ function track(name, initialSeedValue, alwaysShow = false) {
             lock = false;
           }
         });
-      });
+      };
+      window.addEventListener("popstate", handler);
+      return () => window.removeEventListener("popstate", handler);
     }
   };
 }
@@ -7621,7 +7624,7 @@ on("effects", (component, effects) => {
 
 // js/features/supportQueryString.js
 var import_alpinejs10 = __toESM(require_module_cjs());
-on("component.init", ({ component }) => {
+on("component.init", ({ component, cleanup: cleanup2 }) => {
   let effects = component.effects;
   let queryString = effects["url"];
   if (!queryString)
@@ -7633,11 +7636,12 @@ on("component.init", ({ component }) => {
     let initialValue = dataGet(component.ephemeral, name);
     let { initial, replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow);
     if (use === "replace") {
-      import_alpinejs10.default.effect(() => {
+      let effectReference = import_alpinejs10.default.effect(() => {
         replace2(dataGet(component.reactive, name));
       });
+      cleanup2(() => import_alpinejs10.default.release(effectReference));
     } else if (use === "push") {
-      on("commit", ({ component: component2, succeed }) => {
+      let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
         let beforeValue = dataGet(component2.canonical, name);
         succeed(() => {
           let afterValue = dataGet(component2.canonical, name);
@@ -7646,11 +7650,15 @@ on("component.init", ({ component }) => {
           push2(afterValue);
         });
       });
-      pop(async (newValue) => {
+      let forgetPopHandler = pop(async (newValue) => {
         await component.$wire.set(name, newValue);
         document.querySelectorAll("input").forEach((el) => {
           el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
         });
+      });
+      cleanup2(() => {
+        forgetCommitHandler();
+        forgetPopHandler();
       });
     }
   });
