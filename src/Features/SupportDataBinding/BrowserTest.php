@@ -28,6 +28,7 @@ class BrowserTest extends BrowserTestCase
         })
             ->assertSee('The data is in-sync...')
             ->check('@checkbox')
+            ->assertDontSee('The data is in-sync')
             ->assertSee('Unsaved changes...')
             ->uncheck('@checkbox')
             ->assertSee('The data is in-sync...')
