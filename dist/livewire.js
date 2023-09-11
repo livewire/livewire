@@ -6872,12 +6872,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportNavigate.js
-  var isNavigating = false;
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
   document.addEventListener("alpine:navigated", (e) => {
     if (e.detail && e.detail.init)
       return;
-    isNavigating = true;
     document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
   document.addEventListener("alpine:navigating", (e) => {
@@ -6885,7 +6883,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
-    if (forceNavigate || (isNavigating && forceNavigate !== false)) {
+    if (forceNavigate) {
       Alpine.navigate(url);
     } else {
       or();

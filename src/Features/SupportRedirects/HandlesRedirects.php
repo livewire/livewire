@@ -6,11 +6,11 @@ use function Livewire\store;
 
 trait HandlesRedirects
 {
-    public function redirect($url, $navigate = null)
+    public function redirect($url, $navigate = false)
     {
         store($this)->set('redirect', $url);
 
-        if ($navigate !== null) store($this)->set('redirectUsingNavigate', $navigate);
+        if ($navigate) store($this)->set('redirectUsingNavigate', true);
 
         $shouldSkipRender = ! config('livewire.render_on_redirect', false);
 
