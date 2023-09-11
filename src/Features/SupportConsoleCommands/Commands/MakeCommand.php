@@ -154,7 +154,7 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
 
         if(
             $testSuite = select(
-                label: 'Do you want to create an test?',
+                label: 'Do you want to create a test file?',
                 options: [
                     false => 'No',
                     'phpunit' => 'PHPUnit',
