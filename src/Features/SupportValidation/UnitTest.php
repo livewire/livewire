@@ -187,6 +187,23 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function rule_attribute_supports_custom_messages_when_using_repeated_attributes()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[BaseRule('required', message: 'Please provide a post title')]
+            #[BaseRule('min:3', message: 'This title is too short')]
+            public $title = '';
+        })
+            ->set('title', '')
+            ->assertHasErrors(['title' => 'required'])
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+                $this->assertEquals('Please provide a post title', $messages['title'][0]);
+            })
+        ;
+    }
+
+    /** @test */
     public function rule_attribute_message_is_translatable()
     {
         Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
