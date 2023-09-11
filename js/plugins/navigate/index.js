@@ -1,7 +1,7 @@
 import { updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
-import { restoreScrollPosition, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
+import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, showAndStartProgressBar } from "./bar"
 import { swapCurrentPageWithNewHtml } from "./page"
@@ -68,7 +68,7 @@ export default function (Alpine) {
                 swapCurrentPageWithNewHtml(html, () => {
                     enablePersist && putPersistantElementsBack()
 
-                    restoreScroll && restoreScrollPosition()
+                    restoreScrollPositionOrScrollToTop()
 
                     fireEventForOtherLibariesToHookInto('alpine:navigated')
 
@@ -96,7 +96,7 @@ export default function (Alpine) {
             swapCurrentPageWithNewHtml(html, andThen => {
                 enablePersist && putPersistantElementsBack()
 
-                restoreScroll && restoreScrollPosition()
+                restoreScrollPositionOrScrollToTop()
 
                 fireEventForOtherLibariesToHookInto('alpine:navigated')
 
