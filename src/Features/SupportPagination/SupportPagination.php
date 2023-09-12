@@ -28,10 +28,13 @@ class SupportPagination extends ComponentHook
 
     protected $restoreOverriddenPaginationViews;
 
+    function skip()
+    {
+        return ! in_array(WithPagination::class, class_uses_recursive($this->component));
+    }
+
     function boot()
     {
-        if (! in_array(WithPagination::class, class_uses_recursive($this->component))) return;
-
         $this->setPageResolvers();
 
         $this->overrideDefaultPaginationViews();
@@ -39,8 +42,6 @@ class SupportPagination extends ComponentHook
 
     function destroy()
     {
-        if (! in_array(WithPagination::class, class_uses_recursive($this->component))) return;
-        
         ($this->restoreOverriddenPaginationViews)();
     }
 
