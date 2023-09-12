@@ -400,6 +400,33 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function livewire_navigated_event_is_fired_on_first_page_load()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/second')
+                ->assertSee('On second')
+                ->assertScript('window.foo_navigated', 'bar');
+        });
+    }
+
+    /** @test */
+    public function livewire_navigated_event_is_fired_after_redirect_without_reloading()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('window.foo_navigated', 'bar');
+        });
+    }
+
+    /** @test */
     public function navigate_is_not_triggered_on_cmd_click()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -544,6 +571,12 @@ class SecondPage extends Component
             @endpersist
 
             <script data-navigate-once>window.foo = 'bar';</script>
+            
+            <script>
+                document.addEventListener('livewire:navigated', () => { 
+                    window.foo_navigated = 'bar'
+                })
+            </script>
         </div>
         HTML;
     }

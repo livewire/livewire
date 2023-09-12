@@ -6065,7 +6065,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     setTimeout(() => {
-      fireEventForOtherLibariesToHookInto("alpine:navigated", true);
+      fireEventForOtherLibariesToHookInto("alpine:navigated");
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -6082,8 +6082,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(eventName, init = false) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true, detail: { init } }));
+  function fireEventForOtherLibariesToHookInto(eventName) {
+    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
   }
   function nowInitializeAlpineOnTheNewPage(Alpine3) {
     Alpine3.initTree(document.body, void 0, (el, skip) => {
@@ -7018,8 +7018,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/features/supportNavigate.js
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
   document.addEventListener("alpine:navigated", (e) => {
-    if (e.detail && e.detail.init)
-      return;
     document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
   });
   document.addEventListener("alpine:navigating", (e) => {

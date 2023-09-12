@@ -3,8 +3,6 @@ import { on, trigger } from "@/events"
 shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
 
 document.addEventListener('alpine:navigated', e => {
-    if (e.detail && e.detail.init) return
-
     // Forward a "livewire" version of the Alpine event...
     document.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
 })
