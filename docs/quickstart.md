@@ -25,7 +25,7 @@ php artisan make:livewire counter
 ```
 
 This command will generate two new files in your project:
-* `App/Livewire/Counter.php`
+* `app/Livewire/Counter.php`
 * `resources/views/livewire/counter.blade.php`
 
 ## Writing the class
@@ -130,6 +130,6 @@ With our component class and templates in place, our component is ready to test!
 
 Visit `/counter` in your browser, and you should see a number displayed on the screen with two buttons to increment and decrement the number.
 
-After clicking one of the buttons, you will notice that the count updates in real-time, without the page reloading. This is the magic of Livewire: dynamic frontend applications written entirely in PHP.
+After clicking one of the buttons, you will notice that the count updates in real time, without the page reloading. This is the magic of Livewire: dynamic frontend applications written entirely in PHP.
 
 We've barely scratched the surface of what Livewire is capable of. Keep reading the documentation to see everything Livewire has to offer.

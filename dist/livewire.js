@@ -393,17 +393,12 @@
   function isSynthetic(subject) {
     return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
   }
-  var csrf;
   function getCsrfToken() {
-    if (csrf)
-      return csrf;
     if (document.querySelector("[data-csrf]")) {
-      csrf = document.querySelector("[data-csrf]").getAttribute("data-csrf");
-      return csrf;
+      return document.querySelector("[data-csrf]").getAttribute("data-csrf");
     }
     if (window.livewireScriptConfig["csrf"] ?? false) {
-      csrf = window.livewireScriptConfig["csrf"];
-      return csrf;
+      return window.livewireScriptConfig["csrf"];
     }
     throw "Livewire: No CSRF token detected";
   }
@@ -4238,6 +4233,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let el = this.el;
       el.setAttribute("wire:snapshot", this.snapshotEncoded);
       let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+      if (this.originalEffects.url) {
+        effects.url = this.originalEffects.url;
+      }
       el.setAttribute("wire:effects", JSON.stringify(effects));
     }
     addCleanup(cleanup3) {
@@ -4256,7 +4254,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = new Component(el);
     if (components[component.id])
       throw "Component already registered";
-    trigger("component.init", { component });
+    let cleanup3 = (i) => component.addCleanup(i);
+    trigger("component.init", { component, cleanup: cleanup3 });
     components[component.id] = component;
     return component;
   }
@@ -5619,7 +5618,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!state.alpine)
       state.alpine = {};
     state.alpine._html = key;
-    history[method](state, document.title, url);
+    try {
+      history[method](state, document.title, url);
+    } catch (error2) {
+      if (error2 instanceof DOMException && error2.name === "SecurityError") {
+        console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
+      }
+      console.error(error2);
+    }
   }
   function fromSessionStorage(timestamp) {
     let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
@@ -5724,6 +5730,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new URL(urlString, document.baseURI);
   }
 
+  // js/plugins/navigate/teleport.js
+  function packUpPersistedTeleports(persistedEl) {
+    module_default.mutateDom(() => {
+      persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
+    });
+  }
+  function removeAnyLeftOverStaleTeleportTargets(body) {
+    module_default.mutateDom(() => {
+      body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
+    });
+  }
+  function unPackPersistedTeleports(persistedEl) {
+    module_default.walk(persistedEl, (el, skip) => {
+      if (!el._x_teleport)
+        return;
+      el._x_teleportPutBack();
+      skip();
+    });
+  }
+
   // js/plugins/navigate/scroll.js
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
@@ -5733,11 +5759,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el.setAttribute("data-scroll-y", el.scrollTop);
     });
   }
-  function restoreScrollPosition() {
+  function restoreScrollPositionOrScrollToTop() {
     let scroll = (el) => {
-      el.scrollTo(Number(el.getAttribute("data-scroll-x")), Number(el.getAttribute("data-scroll-y")));
-      el.removeAttribute("data-scroll-x");
-      el.removeAttribute("data-scroll-y");
+      if (!el.hasAttribute("data-scroll-x")) {
+        window.scrollTo(0, 0);
+      } else {
+        el.scrollTo(Number(el.getAttribute("data-scroll-x")), Number(el.getAttribute("data-scroll-y")));
+        el.removeAttribute("data-scroll-x");
+        el.removeAttribute("data-scroll-y");
+      }
     };
     queueMicrotask(() => {
       scroll(document.body);
@@ -5747,25 +5777,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/persist.js
   var els = {};
-  function storePersistantElementsForLater() {
+  function storePersistantElementsForLater(callback) {
     els = {};
     document.querySelectorAll("[x-persist]").forEach((i) => {
       els[i.getAttribute("x-persist")] = i;
+      callback(i);
       module_default.mutateDom(() => {
         i.remove();
       });
     });
   }
-  function putPersistantElementsBack() {
+  function putPersistantElementsBack(callback) {
+    let usedPersists = [];
     document.querySelectorAll("[x-persist]").forEach((i) => {
       let old = els[i.getAttribute("x-persist")];
       if (!old)
         return;
+      usedPersists.push(i.getAttribute("x-persist"));
       old._x_wasPersisted = true;
+      callback(old, i);
       module_default.mutateDom(() => {
         i.replaceWith(old);
       });
     });
+    Object.entries(els).forEach(([key, el]) => {
+      if (usedPersists.includes(key))
+        return;
+      module_default.destroyTree(el);
+    });
+    els = {};
   }
 
   // js/plugins/navigate/bar.js
@@ -5915,6 +5955,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let children = Array.from(document.head.children);
     let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
     let garbageCollector = document.createDocumentFragment();
+    let touchedHeadElements = [];
     for (let child of Array.from(newHead.children)) {
       if (isAsset(child)) {
         if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
@@ -5930,6 +5971,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           }
         } else {
           garbageCollector.appendChild(child);
+        }
+        touchedHeadElements.push(child);
+      }
+    }
+    for (let child of Array.from(document.head.children)) {
+      if (isAsset(child)) {
+        if (!touchedHeadElements.some((i) => i.outerHTML === child.outerHTML)) {
+          child.remove();
         }
       }
     }
@@ -6035,10 +6084,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         showProgressBar && finishAndHideProgressBar();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
-          enablePersist && storePersistantElementsForLater();
+          enablePersist && storePersistantElementsForLater((persistedEl) => {
+            packUpPersistedTeleports(persistedEl);
+          });
           swapCurrentPageWithNewHtml(html, () => {
-            enablePersist && putPersistantElementsBack();
-            restoreScroll && restoreScrollPosition();
+            removeAnyLeftOverStaleTeleportTargets(document.body);
+            enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+              unPackPersistedTeleports(persistedEl);
+            });
+            restoreScrollPositionOrScrollToTop();
             fireEventForOtherLibariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
             andAfterAllThis(() => {
@@ -6052,10 +6106,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     whenTheBackOrForwardButtonIsClicked((html) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
-        enablePersist && storePersistantElementsForLater();
-        swapCurrentPageWithNewHtml(html, (andThen) => {
-          enablePersist && putPersistantElementsBack();
-          restoreScroll && restoreScrollPosition();
+        enablePersist && storePersistantElementsForLater((persistedEl) => {
+          packUpPersistedTeleports(persistedEl);
+        });
+        swapCurrentPageWithNewHtml(html, () => {
+          removeAnyLeftOverStaleTeleportTargets(document.body);
+          enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+            unPackPersistedTeleports(persistedEl);
+          });
+          restoreScrollPositionOrScrollToTop();
           fireEventForOtherLibariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
@@ -6165,7 +6224,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         update(push, newValue);
       },
       pop(receiver) {
-        window.addEventListener("popstate", (e) => {
+        let handler4 = (e) => {
           if (!e.state || !e.state.alpine)
             return;
           Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
@@ -6179,7 +6238,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               lock = false;
             }
           });
-        });
+        };
+        window.addEventListener("popstate", handler4);
+        return () => window.removeEventListener("popstate", handler4);
       }
     };
   }
@@ -6916,7 +6977,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportQueryString.js
-  on("component.init", ({ component }) => {
+  on("component.init", ({ component, cleanup: cleanup3 }) => {
     let effects = component.effects;
     let queryString = effects["url"];
     if (!queryString)
@@ -6928,11 +6989,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
       if (use === "replace") {
-        module_default.effect(() => {
+        let effectReference = module_default.effect(() => {
           replace2(dataGet(component.reactive, name));
         });
+        cleanup3(() => module_default.release(effectReference));
       } else if (use === "push") {
-        on("commit", ({ component: component2, succeed }) => {
+        let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
           let beforeValue = dataGet(component2.canonical, name);
           succeed(() => {
             let afterValue = dataGet(component2.canonical, name);
@@ -6941,11 +7003,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             push2(afterValue);
           });
         });
-        pop(async (newValue) => {
+        let forgetPopHandler = pop(async (newValue) => {
           await component.$wire.set(name, newValue);
           document.querySelectorAll("input").forEach((el) => {
             el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
           });
+        });
+        cleanup3(() => {
+          forgetCommitHandler();
+          forgetPopHandler();
         });
       }
     });
