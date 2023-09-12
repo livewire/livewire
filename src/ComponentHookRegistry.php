@@ -37,20 +37,18 @@ class ComponentHookRegistry
 
         foreach (static::$componentHooks as $hook) {
             on('mount', function ($component, $params, $key, $parent) use ($hook) {
-                $hook = static::initializeHook($hook, $component);
-                
-                // If hook hasn't been initialized, then don't continue.
-                if (!$hook) return;
+                if (! $hook = static::initializeHook($hook, $component)) {
+                    return;
+                }
 
                 $hook->callBoot();
                 $hook->callMount($params, $parent);
             });
 
             on('hydrate', function ($component, $memo) use ($hook) {
-                $hook = static::initializeHook($hook, $component);
-                
-                // If hook hasn't been initialized, then don't continue.
-                if (!$hook) return;
+                if (! $hook = static::initializeHook($hook, $component)) {
+                    return;
+                }
 
                 $hook->callBoot();
                 $hook->callHydrate($memo);
@@ -89,14 +87,14 @@ class ComponentHookRegistry
         if (! isset(static::$components[$target])) static::$components[$target] = [];
 
         $hook = new $hook;
-        
+
         $hook->setComponent($target);
 
-        // If no `shouldBoot` method has been implemented, then boot the hook anyway
-        if (method_exists($hook, 'shouldBoot') && ! $hook->shouldBoot()) {
+        // If no `skip` method has been implemented, then boot the hook anyway
+        if (method_exists($hook, 'skip') && $hook->skip()) {
             return;
         }
-        
+
         static::$components[$target][] = $hook;
 
         return $hook;
