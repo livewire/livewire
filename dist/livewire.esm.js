@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
+    var require_shared_cjs_prod = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = Object.freeze({});
-        var EMPTY_ARR = Object.freeze([]);
+        var EMPTY_OBJ = {};
+        var EMPTY_ARR = [];
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_shared_cjs_prod();
         } else {
-          module2.exports = require_shared_cjs();
+          module2.exports = null;
         }
       }
     });
-    var require_reactivity_cjs = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
+    var require_reactivity_cjs_prod = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("iterate");
-        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
+        var ITERATE_KEY = Symbol("");
+        var MAP_KEY_ITERATE_KEY = Symbol("");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,14 +558,6 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
-            if (activeEffect.options.onTrack) {
-              activeEffect.options.onTrack({
-                effect: activeEffect,
-                target,
-                type,
-                key
-              });
-            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -622,17 +614,6 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
-            if (effect4.options.onTrigger) {
-              effect4.options.onTrigger({
-                effect: effect4,
-                target,
-                key,
-                type,
-                newValue,
-                oldValue,
-                oldTarget
-              });
-            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -726,7 +707,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value);
               }
             }
             return result;
@@ -734,10 +715,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          const oldValue = target[key];
+          target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
@@ -762,15 +743,9 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
-            {
-              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           },
           deleteProperty(target, key) {
-            {
-              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           }
         };
@@ -837,15 +812,13 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value);
           }
           return this;
         }
@@ -856,23 +829,20 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
-          const oldValue = get3 ? get3.call(target, key) : void 0;
+          get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
         function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
-          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0);
           }
           return result;
         }
@@ -914,10 +884,6 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
-            {
-              const key = args[0] ? `on key "${args[0]}" ` : ``;
-              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
-            }
             return type === "delete" ? false : this;
           };
         }
@@ -1022,13 +988,6 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
-        function checkIdentityKeys(target, has2, key) {
-          const rawKey = toRaw2(key);
-          if (rawKey !== key && has2.call(target, rawKey)) {
-            const type = shared.toRawType(target);
-            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-          }
-        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1067,9 +1026,6 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
-            {
-              console.warn(`value cannot be made reactive: ${String(target)}`);
-            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1143,7 +1099,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", void 0);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1181,9 +1137,6 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
-          if (!isProxy(object)) {
-            console.warn(`toRefs() expects a reactive object but received a plain one.`);
-          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1240,9 +1193,7 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = () => {
-              console.warn("Write operation failed: computed value is readonly");
-            };
+            setter = shared.NOOP;
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1281,10 +1232,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_reactivity_cjs_prod();
         } else {
-          module2.exports = require_reactivity_cjs();
+          module2.exports = null;
         }
       }
     });
@@ -1663,52 +1614,32 @@ var require_module_cjs = __commonJS({
       return closestDataStack(node.parentNode);
     }
     function mergeProxies(objects) {
-      let thisProxy = new Proxy({}, {
-        ownKeys: () => {
-          return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
-        },
-        has: (target, name) => {
-          return objects.some((obj) => obj.hasOwnProperty(name));
-        },
-        get: (target, name) => {
-          return (objects.find((obj) => {
-            if (obj.hasOwnProperty(name)) {
-              let descriptor = Object.getOwnPropertyDescriptor(obj, name);
-              if (descriptor.get && descriptor.get._x_alreadyBound || descriptor.set && descriptor.set._x_alreadyBound) {
-                return true;
-              }
-              if ((descriptor.get || descriptor.set) && descriptor.enumerable) {
-                let getter = descriptor.get;
-                let setter = descriptor.set;
-                let property = descriptor;
-                getter = getter && getter.bind(thisProxy);
-                setter = setter && setter.bind(thisProxy);
-                if (getter)
-                  getter._x_alreadyBound = true;
-                if (setter)
-                  setter._x_alreadyBound = true;
-                Object.defineProperty(obj, name, {
-                  ...property,
-                  get: getter,
-                  set: setter
-                });
-              }
-              return true;
-            }
-            return false;
-          }) || {})[name];
-        },
-        set: (target, name, value) => {
-          let closestObjectWithKey = objects.find((obj) => obj.hasOwnProperty(name));
-          if (closestObjectWithKey) {
-            closestObjectWithKey[name] = value;
-          } else {
-            objects[objects.length - 1][name] = value;
-          }
-          return true;
-        }
-      });
-      return thisProxy;
+      return new Proxy({ objects }, mergeProxyTrap);
+    }
+    var mergeProxyTrap = {
+      ownKeys({ objects }) {
+        return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
+      },
+      has({ objects }, name) {
+        if (name == Symbol.unscopables)
+          return false;
+        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+      },
+      get({ objects }, name, thisProxy) {
+        if (name == "toJSON")
+          return collapseProxies;
+        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+      },
+      set({ objects }, name, value) {
+        return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
+      }
+    };
+    function collapseProxies() {
+      let keys = Reflect.ownKeys(this);
+      return keys.reduce((acc, key) => {
+        acc[key] = Reflect.get(this, key);
+        return acc;
+      }, {});
     }
     function initInterceptors2(data2) {
       let isObject2 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
@@ -2815,7 +2746,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return obj;
     }
-    var Alpine20 = {
+    var Alpine21 = {
       get reactive() {
         return reactive;
       },
@@ -2879,7 +2810,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       data,
       bind: bind2
     };
-    var alpine_default = Alpine20;
+    var alpine_default = Alpine21;
     var import_reactivity9 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
@@ -2947,7 +2878,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
     function warnMissingPluginMagic(name, magicName, slug) {
-      magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+      magic(magicName, (el) => warn(`You can't use [$${magicName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     directive2("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let func = evaluateLater2(expression);
@@ -2985,20 +2916,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         cleanup2(releaseEntanglement);
       });
     });
-    var teleportContainerDuringClone = document.createElement("div");
     directive2("teleport", (el, { modifiers, expression }, { cleanup: cleanup2 }) => {
       if (el.tagName.toLowerCase() !== "template")
         warn("x-teleport can only be used on a <template> tag", el);
-      let target = skipDuringClone(() => {
-        return document.querySelector(expression);
-      }, () => {
-        return teleportContainerDuringClone;
-      })();
-      if (!target)
-        warn(`Cannot find x-teleport element for selector: "${expression}"`);
+      let target = getTarget(expression);
       let clone2 = el.content.cloneNode(true).firstElementChild;
       el._x_teleport = clone2;
       clone2._x_teleportBack = el;
+      el.setAttribute("data-teleport-template", true);
+      clone2.setAttribute("data-teleport-target", true);
       if (el._x_forwardEvents) {
         el._x_forwardEvents.forEach((eventName) => {
           clone2.addEventListener(eventName, (e) => {
@@ -3008,19 +2934,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       }
       addScopeToNode(clone2, {}, el);
-      mutateDom(() => {
-        if (modifiers.includes("prepend")) {
-          target.parentNode.insertBefore(clone2, target);
-        } else if (modifiers.includes("append")) {
-          target.parentNode.insertBefore(clone2, target.nextSibling);
+      let placeInDom = (clone3, target2, modifiers2) => {
+        if (modifiers2.includes("prepend")) {
+          target2.parentNode.insertBefore(clone3, target2);
+        } else if (modifiers2.includes("append")) {
+          target2.parentNode.insertBefore(clone3, target2.nextSibling);
         } else {
-          target.appendChild(clone2);
+          target2.appendChild(clone3);
         }
+      };
+      mutateDom(() => {
+        placeInDom(clone2, target, modifiers);
         initTree(clone2);
         clone2._x_ignore = true;
       });
-      cleanup2(() => clone2.remove());
+      el._x_teleportPutBack = () => {
+        let target2 = getTarget(expression);
+        mutateDom(() => {
+          placeInDom(el._x_teleport, target2, modifiers);
+        });
+      };
     });
+    var teleportContainerDuringClone = document.createElement("div");
+    function getTarget(expression) {
+      let target = skipDuringClone(() => {
+        return document.querySelector(expression);
+      }, () => {
+        return teleportContainerDuringClone;
+      })();
+      if (!target)
+        warn(`Cannot find x-teleport element for selector: "${expression}"`);
+      return target;
+    }
     var handler = () => {
     };
     handler.inline = (el, { modifiers }, { cleanup: cleanup2 }) => {
@@ -3262,9 +3207,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getInputValue(el, modifiers, event, currentValue) {
       return mutateDom(() => {
-        var _a;
         if (event instanceof CustomEvent && event.detail !== void 0)
-          return (_a = event.detail) != null ? _a : event.target.value;
+          return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
         else if (el.type === "checkbox") {
           if (Array.isArray(currentValue)) {
             let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
@@ -3612,6 +3556,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     directive2("ref", handler3);
     directive2("if", (el, { expression }, { effect: effect3, cleanup: cleanup2 }) => {
+      if (el.tagName.toLowerCase() !== "template")
+        warn("x-if can only be used on a <template> tag", el);
       let evaluate2 = evaluateLater(el, expression);
       let show = () => {
         if (el._x_currentIfEl)
@@ -3669,8 +3615,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     warnMissingPluginDirective("Intersect", "intersect", "intersect");
     warnMissingPluginDirective("Focus", "trap", "focus");
     warnMissingPluginDirective("Mask", "mask", "mask");
-    function warnMissingPluginDirective(name, directiveName2, slug) {
-      directive2(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    function warnMissingPluginDirective(name, directiveName, slug) {
+      directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity9.reactive, effect: import_reactivity9.effect, release: import_reactivity9.stop, raw: import_reactivity9.toRaw });
@@ -3679,9 +3625,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3704,8 +3650,8 @@ var require_module_cjs2 = __commonJS({
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine20) {
-      Alpine20.directive("collapse", collapse2);
+    function src_default(Alpine21) {
+      Alpine21.directive("collapse", collapse2);
       collapse2.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
@@ -3725,7 +3671,7 @@ var require_module_cjs2 = __commonJS({
         if (!el._x_isShown)
           el.style.overflow = "hidden";
         let setFunction = (el2, styles) => {
-          let revertFunction = Alpine20.setStyles(el2, styles);
+          let revertFunction = Alpine21.setStyles(el2, styles);
           return styles.height ? () => {
           } : revertFunction;
         };
@@ -3748,7 +3694,7 @@ var require_module_cjs2 = __commonJS({
             if (current === full) {
               current = floor;
             }
-            Alpine20.transition(el, Alpine20.setStyles, {
+            Alpine21.transition(el, Alpine21.setStyles, {
               during: transitionStyles,
               start: { height: current + "px" },
               end: { height: full + "px" }
@@ -3762,7 +3708,7 @@ var require_module_cjs2 = __commonJS({
           }, after = () => {
           }) {
             let full = el.getBoundingClientRect().height;
-            Alpine20.transition(el, setFunction, {
+            Alpine21.transition(el, setFunction, {
               during: transitionStyles,
               start: { height: full + "px" },
               end: { height: floor + "px" }
@@ -3799,812 +3745,688 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
-    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
-    var __getOwnPropNames2 = Object.getOwnPropertyNames;
     var __getProtoOf2 = Object.getPrototypeOf;
     var __hasOwnProp2 = Object.prototype.hasOwnProperty;
-    var __commonJS2 = (cb, mod) => function __require() {
-      return mod || (0, cb[__getOwnPropNames2(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+    var __markAsModule = (target) => __defProp2(target, "__esModule", { value: true });
+    var __commonJS2 = (callback, module2) => () => {
+      if (!module2) {
+        module2 = { exports: {} };
+        callback(module2.exports, module2);
+      }
+      return module2.exports;
     };
     var __export = (target, all2) => {
       for (var name in all2)
         __defProp2(target, name, { get: all2[name], enumerable: true });
     };
-    var __copyProps2 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+    var __exportStar = (target, module2, desc) => {
+      if (module2 && typeof module2 === "object" || typeof module2 === "function") {
+        for (let key of __getOwnPropNames2(module2))
+          if (!__hasOwnProp2.call(target, key) && key !== "default")
+            __defProp2(target, key, { get: () => module2[key], enumerable: !(desc = __getOwnPropDesc2(module2, key)) || desc.enumerable });
       }
-      return to;
+      return target;
     };
-    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
-    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_dist = __commonJS2({
-      "node_modules/tabbable/dist/index.js"(exports2) {
-        "use strict";
-        Object.defineProperty(exports2, "__esModule", { value: true });
-        var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
-        var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
-        var NoElement = typeof Element === "undefined";
-        var matches = NoElement ? function() {
-        } : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-        var getRootNode = !NoElement && Element.prototype.getRootNode ? function(element) {
-          return element.getRootNode();
-        } : function(element) {
-          return element.ownerDocument;
-        };
-        var getCandidates = function getCandidates2(el, includeContainer, filter) {
-          var candidates = Array.prototype.slice.apply(el.querySelectorAll(candidateSelector));
-          if (includeContainer && matches.call(el, candidateSelector)) {
-            candidates.unshift(el);
+    var __toModule = (module2) => {
+      return __exportStar(__markAsModule(__defProp2(module2 != null ? __create2(__getProtoOf2(module2)) : {}, "default", module2 && module2.__esModule && "default" in module2 ? { get: () => module2.default, enumerable: true } : { value: module2, enumerable: true })), module2);
+    };
+    var require_dist = __commonJS2((exports2) => {
+      "use strict";
+      Object.defineProperty(exports2, "__esModule", { value: true });
+      var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
+      var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
+      var matches = typeof Element === "undefined" ? function() {
+      } : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+      var getCandidates = function getCandidates2(el, includeContainer, filter) {
+        var candidates = Array.prototype.slice.apply(el.querySelectorAll(candidateSelector));
+        if (includeContainer && matches.call(el, candidateSelector)) {
+          candidates.unshift(el);
+        }
+        candidates = candidates.filter(filter);
+        return candidates;
+      };
+      var isContentEditable = function isContentEditable2(node) {
+        return node.contentEditable === "true";
+      };
+      var getTabindex = function getTabindex2(node) {
+        var tabindexAttr = parseInt(node.getAttribute("tabindex"), 10);
+        if (!isNaN(tabindexAttr)) {
+          return tabindexAttr;
+        }
+        if (isContentEditable(node)) {
+          return 0;
+        }
+        if ((node.nodeName === "AUDIO" || node.nodeName === "VIDEO" || node.nodeName === "DETAILS") && node.getAttribute("tabindex") === null) {
+          return 0;
+        }
+        return node.tabIndex;
+      };
+      var sortOrderedTabbables = function sortOrderedTabbables2(a, b) {
+        return a.tabIndex === b.tabIndex ? a.documentOrder - b.documentOrder : a.tabIndex - b.tabIndex;
+      };
+      var isInput = function isInput2(node) {
+        return node.tagName === "INPUT";
+      };
+      var isHiddenInput = function isHiddenInput2(node) {
+        return isInput(node) && node.type === "hidden";
+      };
+      var isDetailsWithSummary = function isDetailsWithSummary2(node) {
+        var r = node.tagName === "DETAILS" && Array.prototype.slice.apply(node.children).some(function(child) {
+          return child.tagName === "SUMMARY";
+        });
+        return r;
+      };
+      var getCheckedRadio = function getCheckedRadio2(nodes, form) {
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].checked && nodes[i].form === form) {
+            return nodes[i];
           }
-          candidates = candidates.filter(filter);
-          return candidates;
+        }
+      };
+      var isTabbableRadio = function isTabbableRadio2(node) {
+        if (!node.name) {
+          return true;
+        }
+        var radioScope = node.form || node.ownerDocument;
+        var queryRadios = function queryRadios2(name) {
+          return radioScope.querySelectorAll('input[type="radio"][name="' + name + '"]');
         };
-        var getCandidatesIteratively = function getCandidatesIteratively2(elements, includeContainer, options) {
-          var candidates = [];
-          var elementsToCheck = Array.from(elements);
-          while (elementsToCheck.length) {
-            var element = elementsToCheck.shift();
-            if (element.tagName === "SLOT") {
-              var assigned = element.assignedElements();
-              var content = assigned.length ? assigned : element.children;
-              var nestedCandidates = getCandidatesIteratively2(content, true, options);
-              if (options.flatten) {
-                candidates.push.apply(candidates, nestedCandidates);
-              } else {
-                candidates.push({
-                  scope: element,
-                  candidates: nestedCandidates
-                });
-              }
-            } else {
-              var validCandidate = matches.call(element, candidateSelector);
-              if (validCandidate && options.filter(element) && (includeContainer || !elements.includes(element))) {
-                candidates.push(element);
-              }
-              var shadowRoot = element.shadowRoot || typeof options.getShadowRoot === "function" && options.getShadowRoot(element);
-              var validShadowRoot = !options.shadowRootFilter || options.shadowRootFilter(element);
-              if (shadowRoot && validShadowRoot) {
-                var _nestedCandidates = getCandidatesIteratively2(shadowRoot === true ? element.children : shadowRoot.children, true, options);
-                if (options.flatten) {
-                  candidates.push.apply(candidates, _nestedCandidates);
-                } else {
-                  candidates.push({
-                    scope: element,
-                    candidates: _nestedCandidates
-                  });
-                }
-              } else {
-                elementsToCheck.unshift.apply(elementsToCheck, element.children);
-              }
+        var radioSet;
+        if (typeof window !== "undefined" && typeof window.CSS !== "undefined" && typeof window.CSS.escape === "function") {
+          radioSet = queryRadios(window.CSS.escape(node.name));
+        } else {
+          try {
+            radioSet = queryRadios(node.name);
+          } catch (err) {
+            console.error("Looks like you have a radio button with a name attribute containing invalid CSS selector characters and need the CSS.escape polyfill: %s", err.message);
+            return false;
+          }
+        }
+        var checked = getCheckedRadio(radioSet, node.form);
+        return !checked || checked === node;
+      };
+      var isRadio = function isRadio2(node) {
+        return isInput(node) && node.type === "radio";
+      };
+      var isNonTabbableRadio = function isNonTabbableRadio2(node) {
+        return isRadio(node) && !isTabbableRadio(node);
+      };
+      var isHidden = function isHidden2(node, displayCheck) {
+        if (getComputedStyle(node).visibility === "hidden") {
+          return true;
+        }
+        var isDirectSummary = matches.call(node, "details>summary:first-of-type");
+        var nodeUnderDetails = isDirectSummary ? node.parentElement : node;
+        if (matches.call(nodeUnderDetails, "details:not([open]) *")) {
+          return true;
+        }
+        if (!displayCheck || displayCheck === "full") {
+          while (node) {
+            if (getComputedStyle(node).display === "none") {
+              return true;
             }
+            node = node.parentElement;
           }
-          return candidates;
-        };
-        var getTabindex = function getTabindex2(node, isScope) {
-          if (node.tabIndex < 0) {
-            if ((isScope || /^(AUDIO|VIDEO|DETAILS)$/.test(node.tagName) || node.isContentEditable) && isNaN(parseInt(node.getAttribute("tabindex"), 10))) {
-              return 0;
-            }
-          }
-          return node.tabIndex;
-        };
-        var sortOrderedTabbables = function sortOrderedTabbables2(a, b) {
-          return a.tabIndex === b.tabIndex ? a.documentOrder - b.documentOrder : a.tabIndex - b.tabIndex;
-        };
-        var isInput = function isInput2(node) {
-          return node.tagName === "INPUT";
-        };
-        var isHiddenInput = function isHiddenInput2(node) {
-          return isInput(node) && node.type === "hidden";
-        };
-        var isDetailsWithSummary = function isDetailsWithSummary2(node) {
-          var r = node.tagName === "DETAILS" && Array.prototype.slice.apply(node.children).some(function(child) {
-            return child.tagName === "SUMMARY";
-          });
-          return r;
-        };
-        var getCheckedRadio = function getCheckedRadio2(nodes, form) {
-          for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].checked && nodes[i].form === form) {
-              return nodes[i];
-            }
-          }
-        };
-        var isTabbableRadio = function isTabbableRadio2(node) {
-          if (!node.name) {
-            return true;
-          }
-          var radioScope = node.form || getRootNode(node);
-          var queryRadios = function queryRadios2(name) {
-            return radioScope.querySelectorAll('input[type="radio"][name="' + name + '"]');
-          };
-          var radioSet;
-          if (typeof window !== "undefined" && typeof window.CSS !== "undefined" && typeof window.CSS.escape === "function") {
-            radioSet = queryRadios(window.CSS.escape(node.name));
-          } else {
-            try {
-              radioSet = queryRadios(node.name);
-            } catch (err) {
-              console.error("Looks like you have a radio button with a name attribute containing invalid CSS selector characters and need the CSS.escape polyfill: %s", err.message);
-              return false;
-            }
-          }
-          var checked = getCheckedRadio(radioSet, node.form);
-          return !checked || checked === node;
-        };
-        var isRadio = function isRadio2(node) {
-          return isInput(node) && node.type === "radio";
-        };
-        var isNonTabbableRadio = function isNonTabbableRadio2(node) {
-          return isRadio(node) && !isTabbableRadio(node);
-        };
-        var isZeroArea = function isZeroArea2(node) {
+        } else if (displayCheck === "non-zero-area") {
           var _node$getBoundingClie = node.getBoundingClientRect(), width = _node$getBoundingClie.width, height = _node$getBoundingClie.height;
           return width === 0 && height === 0;
-        };
-        var isHidden = function isHidden2(node, _ref) {
-          var displayCheck = _ref.displayCheck, getShadowRoot = _ref.getShadowRoot;
-          if (getComputedStyle(node).visibility === "hidden") {
-            return true;
-          }
-          var isDirectSummary = matches.call(node, "details>summary:first-of-type");
-          var nodeUnderDetails = isDirectSummary ? node.parentElement : node;
-          if (matches.call(nodeUnderDetails, "details:not([open]) *")) {
-            return true;
-          }
-          var nodeRootHost = getRootNode(node).host;
-          var nodeIsAttached = (nodeRootHost === null || nodeRootHost === void 0 ? void 0 : nodeRootHost.ownerDocument.contains(nodeRootHost)) || node.ownerDocument.contains(node);
-          if (!displayCheck || displayCheck === "full") {
-            if (typeof getShadowRoot === "function") {
-              var originalNode = node;
-              while (node) {
-                var parentElement = node.parentElement;
-                var rootNode = getRootNode(node);
-                if (parentElement && !parentElement.shadowRoot && getShadowRoot(parentElement) === true) {
-                  return isZeroArea(node);
-                } else if (node.assignedSlot) {
-                  node = node.assignedSlot;
-                } else if (!parentElement && rootNode !== node.ownerDocument) {
-                  node = rootNode.host;
-                } else {
-                  node = parentElement;
-                }
-              }
-              node = originalNode;
-            }
-            if (nodeIsAttached) {
-              return !node.getClientRects().length;
-            }
-          } else if (displayCheck === "non-zero-area") {
-            return isZeroArea(node);
-          }
-          return false;
-        };
-        var isDisabledFromFieldset = function isDisabledFromFieldset2(node) {
-          if (/^(INPUT|BUTTON|SELECT|TEXTAREA)$/.test(node.tagName)) {
-            var parentNode = node.parentElement;
-            while (parentNode) {
-              if (parentNode.tagName === "FIELDSET" && parentNode.disabled) {
-                for (var i = 0; i < parentNode.children.length; i++) {
-                  var child = parentNode.children.item(i);
-                  if (child.tagName === "LEGEND") {
-                    return matches.call(parentNode, "fieldset[disabled] *") ? true : !child.contains(node);
-                  }
-                }
-                return true;
-              }
-              parentNode = parentNode.parentElement;
-            }
-          }
-          return false;
-        };
-        var isNodeMatchingSelectorFocusable = function isNodeMatchingSelectorFocusable2(options, node) {
-          if (node.disabled || isHiddenInput(node) || isHidden(node, options) || isDetailsWithSummary(node) || isDisabledFromFieldset(node)) {
-            return false;
-          }
-          return true;
-        };
-        var isNodeMatchingSelectorTabbable = function isNodeMatchingSelectorTabbable2(options, node) {
-          if (isNonTabbableRadio(node) || getTabindex(node) < 0 || !isNodeMatchingSelectorFocusable(options, node)) {
-            return false;
-          }
-          return true;
-        };
-        var isValidShadowRootTabbable = function isValidShadowRootTabbable2(shadowHostNode) {
-          var tabIndex = parseInt(shadowHostNode.getAttribute("tabindex"), 10);
-          if (isNaN(tabIndex) || tabIndex >= 0) {
-            return true;
-          }
-          return false;
-        };
-        var sortByOrder = function sortByOrder2(candidates) {
-          var regularTabbables = [];
-          var orderedTabbables = [];
-          candidates.forEach(function(item, i) {
-            var isScope = !!item.scope;
-            var element = isScope ? item.scope : item;
-            var candidateTabindex = getTabindex(element, isScope);
-            var elements = isScope ? sortByOrder2(item.candidates) : element;
-            if (candidateTabindex === 0) {
-              isScope ? regularTabbables.push.apply(regularTabbables, elements) : regularTabbables.push(element);
-            } else {
-              orderedTabbables.push({
-                documentOrder: i,
-                tabIndex: candidateTabindex,
-                item,
-                isScope,
-                content: elements
-              });
-            }
-          });
-          return orderedTabbables.sort(sortOrderedTabbables).reduce(function(acc, sortable) {
-            sortable.isScope ? acc.push.apply(acc, sortable.content) : acc.push(sortable.content);
-            return acc;
-          }, []).concat(regularTabbables);
-        };
-        var tabbable = function tabbable2(el, options) {
-          options = options || {};
-          var candidates;
-          if (options.getShadowRoot) {
-            candidates = getCandidatesIteratively([el], options.includeContainer, {
-              filter: isNodeMatchingSelectorTabbable.bind(null, options),
-              flatten: false,
-              getShadowRoot: options.getShadowRoot,
-              shadowRootFilter: isValidShadowRootTabbable
-            });
-          } else {
-            candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
-          }
-          return sortByOrder(candidates);
-        };
-        var focusable2 = function focusable3(el, options) {
-          options = options || {};
-          var candidates;
-          if (options.getShadowRoot) {
-            candidates = getCandidatesIteratively([el], options.includeContainer, {
-              filter: isNodeMatchingSelectorFocusable.bind(null, options),
-              flatten: true,
-              getShadowRoot: options.getShadowRoot
-            });
-          } else {
-            candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorFocusable.bind(null, options));
-          }
-          return candidates;
-        };
-        var isTabbable = function isTabbable2(node, options) {
-          options = options || {};
-          if (!node) {
-            throw new Error("No node provided");
-          }
-          if (matches.call(node, candidateSelector) === false) {
-            return false;
-          }
-          return isNodeMatchingSelectorTabbable(options, node);
-        };
-        var focusableCandidateSelector = /* @__PURE__ */ candidateSelectors.concat("iframe").join(",");
-        var isFocusable2 = function isFocusable3(node, options) {
-          options = options || {};
-          if (!node) {
-            throw new Error("No node provided");
-          }
-          if (matches.call(node, focusableCandidateSelector) === false) {
-            return false;
-          }
-          return isNodeMatchingSelectorFocusable(options, node);
-        };
-        exports2.focusable = focusable2;
-        exports2.isFocusable = isFocusable2;
-        exports2.isTabbable = isTabbable;
-        exports2.tabbable = tabbable;
-      }
-    });
-    var require_focus_trap = __commonJS2({
-      "node_modules/focus-trap/dist/focus-trap.js"(exports2) {
-        "use strict";
-        Object.defineProperty(exports2, "__esModule", { value: true });
-        var tabbable = require_dist();
-        function ownKeys(object, enumerableOnly) {
-          var keys = Object.keys(object);
-          if (Object.getOwnPropertySymbols) {
-            var symbols = Object.getOwnPropertySymbols(object);
-            enumerableOnly && (symbols = symbols.filter(function(sym) {
-              return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-            })), keys.push.apply(keys, symbols);
-          }
-          return keys;
         }
-        function _objectSpread2(target) {
-          for (var i = 1; i < arguments.length; i++) {
-            var source = null != arguments[i] ? arguments[i] : {};
-            i % 2 ? ownKeys(Object(source), true).forEach(function(key) {
+        return false;
+      };
+      var isDisabledFromFieldset = function isDisabledFromFieldset2(node) {
+        if (isInput(node) || node.tagName === "SELECT" || node.tagName === "TEXTAREA" || node.tagName === "BUTTON") {
+          var parentNode = node.parentElement;
+          while (parentNode) {
+            if (parentNode.tagName === "FIELDSET" && parentNode.disabled) {
+              for (var i = 0; i < parentNode.children.length; i++) {
+                var child = parentNode.children.item(i);
+                if (child.tagName === "LEGEND") {
+                  if (child.contains(node)) {
+                    return false;
+                  }
+                  return true;
+                }
+              }
+              return true;
+            }
+            parentNode = parentNode.parentElement;
+          }
+        }
+        return false;
+      };
+      var isNodeMatchingSelectorFocusable = function isNodeMatchingSelectorFocusable2(options, node) {
+        if (node.disabled || isHiddenInput(node) || isHidden(node, options.displayCheck) || isDetailsWithSummary(node) || isDisabledFromFieldset(node)) {
+          return false;
+        }
+        return true;
+      };
+      var isNodeMatchingSelectorTabbable = function isNodeMatchingSelectorTabbable2(options, node) {
+        if (!isNodeMatchingSelectorFocusable(options, node) || isNonTabbableRadio(node) || getTabindex(node) < 0) {
+          return false;
+        }
+        return true;
+      };
+      var tabbable = function tabbable2(el, options) {
+        options = options || {};
+        var regularTabbables = [];
+        var orderedTabbables = [];
+        var candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorTabbable.bind(null, options));
+        candidates.forEach(function(candidate, i) {
+          var candidateTabindex = getTabindex(candidate);
+          if (candidateTabindex === 0) {
+            regularTabbables.push(candidate);
+          } else {
+            orderedTabbables.push({
+              documentOrder: i,
+              tabIndex: candidateTabindex,
+              node: candidate
+            });
+          }
+        });
+        var tabbableNodes = orderedTabbables.sort(sortOrderedTabbables).map(function(a) {
+          return a.node;
+        }).concat(regularTabbables);
+        return tabbableNodes;
+      };
+      var focusable2 = function focusable3(el, options) {
+        options = options || {};
+        var candidates = getCandidates(el, options.includeContainer, isNodeMatchingSelectorFocusable.bind(null, options));
+        return candidates;
+      };
+      var isTabbable = function isTabbable2(node, options) {
+        options = options || {};
+        if (!node) {
+          throw new Error("No node provided");
+        }
+        if (matches.call(node, candidateSelector) === false) {
+          return false;
+        }
+        return isNodeMatchingSelectorTabbable(options, node);
+      };
+      var focusableCandidateSelector = /* @__PURE__ */ candidateSelectors.concat("iframe").join(",");
+      var isFocusable2 = function isFocusable3(node, options) {
+        options = options || {};
+        if (!node) {
+          throw new Error("No node provided");
+        }
+        if (matches.call(node, focusableCandidateSelector) === false) {
+          return false;
+        }
+        return isNodeMatchingSelectorFocusable(options, node);
+      };
+      exports2.focusable = focusable2;
+      exports2.isFocusable = isFocusable2;
+      exports2.isTabbable = isTabbable;
+      exports2.tabbable = tabbable;
+    });
+    var require_focus_trap = __commonJS2((exports2) => {
+      "use strict";
+      Object.defineProperty(exports2, "__esModule", { value: true });
+      var tabbable = require_dist();
+      function ownKeys(object, enumerableOnly) {
+        var keys = Object.keys(object);
+        if (Object.getOwnPropertySymbols) {
+          var symbols = Object.getOwnPropertySymbols(object);
+          if (enumerableOnly) {
+            symbols = symbols.filter(function(sym) {
+              return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+            });
+          }
+          keys.push.apply(keys, symbols);
+        }
+        return keys;
+      }
+      function _objectSpread2(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i] != null ? arguments[i] : {};
+          if (i % 2) {
+            ownKeys(Object(source), true).forEach(function(key) {
               _defineProperty(target, key, source[key]);
-            }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function(key) {
+            });
+          } else if (Object.getOwnPropertyDescriptors) {
+            Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+          } else {
+            ownKeys(Object(source)).forEach(function(key) {
               Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
             });
           }
-          return target;
         }
-        function _defineProperty(obj, key, value) {
-          if (key in obj) {
-            Object.defineProperty(obj, key, {
-              value,
-              enumerable: true,
-              configurable: true,
-              writable: true
-            });
-          } else {
-            obj[key] = value;
-          }
-          return obj;
-        }
-        var activeFocusTraps = function() {
-          var trapQueue = [];
-          return {
-            activateTrap: function activateTrap(trap) {
-              if (trapQueue.length > 0) {
-                var activeTrap = trapQueue[trapQueue.length - 1];
-                if (activeTrap !== trap) {
-                  activeTrap.pause();
-                }
-              }
-              var trapIndex = trapQueue.indexOf(trap);
-              if (trapIndex === -1) {
-                trapQueue.push(trap);
-              } else {
-                trapQueue.splice(trapIndex, 1);
-                trapQueue.push(trap);
-              }
-            },
-            deactivateTrap: function deactivateTrap(trap) {
-              var trapIndex = trapQueue.indexOf(trap);
-              if (trapIndex !== -1) {
-                trapQueue.splice(trapIndex, 1);
-              }
-              if (trapQueue.length > 0) {
-                trapQueue[trapQueue.length - 1].unpause();
-              }
-            }
-          };
-        }();
-        var isSelectableInput = function isSelectableInput2(node) {
-          return node.tagName && node.tagName.toLowerCase() === "input" && typeof node.select === "function";
-        };
-        var isEscapeEvent = function isEscapeEvent2(e) {
-          return e.key === "Escape" || e.key === "Esc" || e.keyCode === 27;
-        };
-        var isTabEvent = function isTabEvent2(e) {
-          return e.key === "Tab" || e.keyCode === 9;
-        };
-        var delay = function delay2(fn) {
-          return setTimeout(fn, 0);
-        };
-        var findIndex = function findIndex2(arr, fn) {
-          var idx = -1;
-          arr.every(function(value, i) {
-            if (fn(value)) {
-              idx = i;
-              return false;
-            }
-            return true;
+        return target;
+      }
+      function _defineProperty(obj, key, value) {
+        if (key in obj) {
+          Object.defineProperty(obj, key, {
+            value,
+            enumerable: true,
+            configurable: true,
+            writable: true
           });
-          return idx;
-        };
-        var valueOrHandler = function valueOrHandler2(value) {
-          for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-            params[_key - 1] = arguments[_key];
+        } else {
+          obj[key] = value;
+        }
+        return obj;
+      }
+      var activeFocusTraps = function() {
+        var trapQueue = [];
+        return {
+          activateTrap: function activateTrap(trap) {
+            if (trapQueue.length > 0) {
+              var activeTrap = trapQueue[trapQueue.length - 1];
+              if (activeTrap !== trap) {
+                activeTrap.pause();
+              }
+            }
+            var trapIndex = trapQueue.indexOf(trap);
+            if (trapIndex === -1) {
+              trapQueue.push(trap);
+            } else {
+              trapQueue.splice(trapIndex, 1);
+              trapQueue.push(trap);
+            }
+          },
+          deactivateTrap: function deactivateTrap(trap) {
+            var trapIndex = trapQueue.indexOf(trap);
+            if (trapIndex !== -1) {
+              trapQueue.splice(trapIndex, 1);
+            }
+            if (trapQueue.length > 0) {
+              trapQueue[trapQueue.length - 1].unpause();
+            }
           }
-          return typeof value === "function" ? value.apply(void 0, params) : value;
         };
-        var getActualTarget = function getActualTarget2(event) {
-          return event.target.shadowRoot && typeof event.composedPath === "function" ? event.composedPath()[0] : event.target;
+      }();
+      var isSelectableInput = function isSelectableInput2(node) {
+        return node.tagName && node.tagName.toLowerCase() === "input" && typeof node.select === "function";
+      };
+      var isEscapeEvent = function isEscapeEvent2(e) {
+        return e.key === "Escape" || e.key === "Esc" || e.keyCode === 27;
+      };
+      var isTabEvent = function isTabEvent2(e) {
+        return e.key === "Tab" || e.keyCode === 9;
+      };
+      var delay = function delay2(fn) {
+        return setTimeout(fn, 0);
+      };
+      var findIndex = function findIndex2(arr, fn) {
+        var idx = -1;
+        arr.every(function(value, i) {
+          if (fn(value)) {
+            idx = i;
+            return false;
+          }
+          return true;
+        });
+        return idx;
+      };
+      var valueOrHandler = function valueOrHandler2(value) {
+        for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          params[_key - 1] = arguments[_key];
+        }
+        return typeof value === "function" ? value.apply(void 0, params) : value;
+      };
+      var createFocusTrap2 = function createFocusTrap3(elements, userOptions) {
+        var doc = document;
+        var config = _objectSpread2({
+          returnFocusOnDeactivate: true,
+          escapeDeactivates: true,
+          delayInitialFocus: true
+        }, userOptions);
+        var state = {
+          containers: [],
+          tabbableGroups: [],
+          nodeFocusedBeforeActivation: null,
+          mostRecentlyFocusedNode: null,
+          active: false,
+          paused: false,
+          delayInitialFocusTimer: void 0
         };
-        var createFocusTrap2 = function createFocusTrap3(elements, userOptions) {
-          var doc = (userOptions === null || userOptions === void 0 ? void 0 : userOptions.document) || document;
-          var config = _objectSpread2({
-            returnFocusOnDeactivate: true,
-            escapeDeactivates: true,
-            delayInitialFocus: true
-          }, userOptions);
-          var state = {
-            containers: [],
-            containerGroups: [],
-            tabbableGroups: [],
-            nodeFocusedBeforeActivation: null,
-            mostRecentlyFocusedNode: null,
-            active: false,
-            paused: false,
-            delayInitialFocusTimer: void 0
-          };
-          var trap;
-          var getOption = function getOption2(configOverrideOptions, optionName, configOptionName) {
-            return configOverrideOptions && configOverrideOptions[optionName] !== void 0 ? configOverrideOptions[optionName] : config[configOptionName || optionName];
-          };
-          var findContainerIndex = function findContainerIndex2(element) {
-            return state.containerGroups.findIndex(function(_ref) {
-              var container = _ref.container, tabbableNodes = _ref.tabbableNodes;
-              return container.contains(element) || tabbableNodes.find(function(node) {
-                return node === element;
-              });
-            });
-          };
-          var getNodeForOption = function getNodeForOption2(optionName) {
-            var optionValue = config[optionName];
-            if (typeof optionValue === "function") {
-              for (var _len2 = arguments.length, params = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                params[_key2 - 1] = arguments[_key2];
-              }
-              optionValue = optionValue.apply(void 0, params);
-            }
-            if (optionValue === true) {
-              optionValue = void 0;
-            }
-            if (!optionValue) {
-              if (optionValue === void 0 || optionValue === false) {
-                return optionValue;
-              }
-              throw new Error("`".concat(optionName, "` was specified but was not a node, or did not return a node"));
-            }
-            var node = optionValue;
-            if (typeof optionValue === "string") {
-              node = doc.querySelector(optionValue);
-              if (!node) {
-                throw new Error("`".concat(optionName, "` as selector refers to no known node"));
-              }
-            }
-            return node;
-          };
-          var getInitialFocusNode = function getInitialFocusNode2() {
-            var node = getNodeForOption("initialFocus");
-            if (node === false) {
-              return false;
-            }
-            if (node === void 0) {
-              if (findContainerIndex(doc.activeElement) >= 0) {
-                node = doc.activeElement;
-              } else {
-                var firstTabbableGroup = state.tabbableGroups[0];
-                var firstTabbableNode = firstTabbableGroup && firstTabbableGroup.firstTabbableNode;
-                node = firstTabbableNode || getNodeForOption("fallbackFocus");
-              }
-            }
+        var trap;
+        var getOption = function getOption2(configOverrideOptions, optionName, configOptionName) {
+          return configOverrideOptions && configOverrideOptions[optionName] !== void 0 ? configOverrideOptions[optionName] : config[configOptionName || optionName];
+        };
+        var containersContain = function containersContain2(element) {
+          return state.containers.some(function(container) {
+            return container.contains(element);
+          });
+        };
+        var getNodeForOption = function getNodeForOption2(optionName) {
+          var optionValue = config[optionName];
+          if (!optionValue) {
+            return null;
+          }
+          var node = optionValue;
+          if (typeof optionValue === "string") {
+            node = doc.querySelector(optionValue);
             if (!node) {
-              throw new Error("Your focus-trap needs to have at least one focusable element");
+              throw new Error("`".concat(optionName, "` refers to no known node"));
             }
-            return node;
-          };
-          var updateTabbableNodes = function updateTabbableNodes2() {
-            state.containerGroups = state.containers.map(function(container) {
-              var tabbableNodes = tabbable.tabbable(container, config.tabbableOptions);
-              var focusableNodes = tabbable.focusable(container, config.tabbableOptions);
+          }
+          if (typeof optionValue === "function") {
+            node = optionValue();
+            if (!node) {
+              throw new Error("`".concat(optionName, "` did not return a node"));
+            }
+          }
+          return node;
+        };
+        var getInitialFocusNode = function getInitialFocusNode2() {
+          var node;
+          if (getOption({}, "initialFocus") === false) {
+            return false;
+          }
+          if (getNodeForOption("initialFocus") !== null) {
+            node = getNodeForOption("initialFocus");
+          } else if (containersContain(doc.activeElement)) {
+            node = doc.activeElement;
+          } else {
+            var firstTabbableGroup = state.tabbableGroups[0];
+            var firstTabbableNode = firstTabbableGroup && firstTabbableGroup.firstTabbableNode;
+            node = firstTabbableNode || getNodeForOption("fallbackFocus");
+          }
+          if (!node) {
+            throw new Error("Your focus-trap needs to have at least one focusable element");
+          }
+          return node;
+        };
+        var updateTabbableNodes = function updateTabbableNodes2() {
+          state.tabbableGroups = state.containers.map(function(container) {
+            var tabbableNodes = tabbable.tabbable(container);
+            if (tabbableNodes.length > 0) {
               return {
                 container,
-                tabbableNodes,
-                focusableNodes,
-                firstTabbableNode: tabbableNodes.length > 0 ? tabbableNodes[0] : null,
-                lastTabbableNode: tabbableNodes.length > 0 ? tabbableNodes[tabbableNodes.length - 1] : null,
-                nextTabbableNode: function nextTabbableNode(node) {
-                  var forward = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : true;
-                  var nodeIdx = focusableNodes.findIndex(function(n) {
-                    return n === node;
-                  });
-                  if (nodeIdx < 0) {
-                    return void 0;
-                  }
-                  if (forward) {
-                    return focusableNodes.slice(nodeIdx + 1).find(function(n) {
-                      return tabbable.isTabbable(n, config.tabbableOptions);
-                    });
-                  }
-                  return focusableNodes.slice(0, nodeIdx).reverse().find(function(n) {
-                    return tabbable.isTabbable(n, config.tabbableOptions);
-                  });
-                }
+                firstTabbableNode: tabbableNodes[0],
+                lastTabbableNode: tabbableNodes[tabbableNodes.length - 1]
               };
+            }
+            return void 0;
+          }).filter(function(group) {
+            return !!group;
+          });
+          if (state.tabbableGroups.length <= 0 && !getNodeForOption("fallbackFocus")) {
+            throw new Error("Your focus-trap must have at least one container with at least one tabbable node in it at all times");
+          }
+        };
+        var tryFocus = function tryFocus2(node) {
+          if (node === false) {
+            return;
+          }
+          if (node === doc.activeElement) {
+            return;
+          }
+          if (!node || !node.focus) {
+            tryFocus2(getInitialFocusNode());
+            return;
+          }
+          node.focus({
+            preventScroll: !!config.preventScroll
+          });
+          state.mostRecentlyFocusedNode = node;
+          if (isSelectableInput(node)) {
+            node.select();
+          }
+        };
+        var getReturnFocusNode = function getReturnFocusNode2(previousActiveElement) {
+          var node = getNodeForOption("setReturnFocus");
+          return node ? node : previousActiveElement;
+        };
+        var checkPointerDown = function checkPointerDown2(e) {
+          if (containersContain(e.target)) {
+            return;
+          }
+          if (valueOrHandler(config.clickOutsideDeactivates, e)) {
+            trap.deactivate({
+              returnFocus: config.returnFocusOnDeactivate && !tabbable.isFocusable(e.target)
             });
-            state.tabbableGroups = state.containerGroups.filter(function(group) {
-              return group.tabbableNodes.length > 0;
-            });
-            if (state.tabbableGroups.length <= 0 && !getNodeForOption("fallbackFocus")) {
-              throw new Error("Your focus-trap must have at least one container with at least one tabbable node in it at all times");
+            return;
+          }
+          if (valueOrHandler(config.allowOutsideClick, e)) {
+            return;
+          }
+          e.preventDefault();
+        };
+        var checkFocusIn = function checkFocusIn2(e) {
+          var targetContained = containersContain(e.target);
+          if (targetContained || e.target instanceof Document) {
+            if (targetContained) {
+              state.mostRecentlyFocusedNode = e.target;
             }
-          };
-          var tryFocus = function tryFocus2(node) {
-            if (node === false) {
-              return;
-            }
-            if (node === doc.activeElement) {
-              return;
-            }
-            if (!node || !node.focus) {
-              tryFocus2(getInitialFocusNode());
-              return;
-            }
-            node.focus({
-              preventScroll: !!config.preventScroll
-            });
-            state.mostRecentlyFocusedNode = node;
-            if (isSelectableInput(node)) {
-              node.select();
-            }
-          };
-          var getReturnFocusNode = function getReturnFocusNode2(previousActiveElement) {
-            var node = getNodeForOption("setReturnFocus", previousActiveElement);
-            return node ? node : node === false ? false : previousActiveElement;
-          };
-          var checkPointerDown = function checkPointerDown2(e) {
-            var target = getActualTarget(e);
-            if (findContainerIndex(target) >= 0) {
-              return;
-            }
-            if (valueOrHandler(config.clickOutsideDeactivates, e)) {
-              trap.deactivate({
-                returnFocus: config.returnFocusOnDeactivate && !tabbable.isFocusable(target, config.tabbableOptions)
-              });
-              return;
-            }
-            if (valueOrHandler(config.allowOutsideClick, e)) {
-              return;
-            }
-            e.preventDefault();
-          };
-          var checkFocusIn = function checkFocusIn2(e) {
-            var target = getActualTarget(e);
-            var targetContained = findContainerIndex(target) >= 0;
-            if (targetContained || target instanceof Document) {
-              if (targetContained) {
-                state.mostRecentlyFocusedNode = target;
-              }
-            } else {
-              e.stopImmediatePropagation();
-              tryFocus(state.mostRecentlyFocusedNode || getInitialFocusNode());
-            }
-          };
-          var checkTab = function checkTab2(e) {
-            var target = getActualTarget(e);
-            updateTabbableNodes();
-            var destinationNode = null;
-            if (state.tabbableGroups.length > 0) {
-              var containerIndex = findContainerIndex(target);
-              var containerGroup = containerIndex >= 0 ? state.containerGroups[containerIndex] : void 0;
-              if (containerIndex < 0) {
-                if (e.shiftKey) {
-                  destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
-                } else {
-                  destinationNode = state.tabbableGroups[0].firstTabbableNode;
-                }
-              } else if (e.shiftKey) {
-                var startOfGroupIndex = findIndex(state.tabbableGroups, function(_ref2) {
-                  var firstTabbableNode = _ref2.firstTabbableNode;
-                  return target === firstTabbableNode;
-                });
-                if (startOfGroupIndex < 0 && (containerGroup.container === target || tabbable.isFocusable(target, config.tabbableOptions) && !tabbable.isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target, false))) {
-                  startOfGroupIndex = containerIndex;
-                }
-                if (startOfGroupIndex >= 0) {
-                  var destinationGroupIndex = startOfGroupIndex === 0 ? state.tabbableGroups.length - 1 : startOfGroupIndex - 1;
-                  var destinationGroup = state.tabbableGroups[destinationGroupIndex];
-                  destinationNode = destinationGroup.lastTabbableNode;
-                }
-              } else {
-                var lastOfGroupIndex = findIndex(state.tabbableGroups, function(_ref3) {
-                  var lastTabbableNode = _ref3.lastTabbableNode;
-                  return target === lastTabbableNode;
-                });
-                if (lastOfGroupIndex < 0 && (containerGroup.container === target || tabbable.isFocusable(target, config.tabbableOptions) && !tabbable.isTabbable(target, config.tabbableOptions) && !containerGroup.nextTabbableNode(target))) {
-                  lastOfGroupIndex = containerIndex;
-                }
-                if (lastOfGroupIndex >= 0) {
-                  var _destinationGroupIndex = lastOfGroupIndex === state.tabbableGroups.length - 1 ? 0 : lastOfGroupIndex + 1;
-                  var _destinationGroup = state.tabbableGroups[_destinationGroupIndex];
-                  destinationNode = _destinationGroup.firstTabbableNode;
-                }
-              }
-            } else {
-              destinationNode = getNodeForOption("fallbackFocus");
-            }
-            if (destinationNode) {
-              e.preventDefault();
-              tryFocus(destinationNode);
-            }
-          };
-          var checkKey = function checkKey2(e) {
-            if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates, e) !== false) {
-              e.preventDefault();
-              trap.deactivate();
-              return;
-            }
-            if (isTabEvent(e)) {
-              checkTab(e);
-              return;
-            }
-          };
-          var checkClick = function checkClick2(e) {
-            var target = getActualTarget(e);
-            if (findContainerIndex(target) >= 0) {
-              return;
-            }
-            if (valueOrHandler(config.clickOutsideDeactivates, e)) {
-              return;
-            }
-            if (valueOrHandler(config.allowOutsideClick, e)) {
-              return;
-            }
-            e.preventDefault();
+          } else {
             e.stopImmediatePropagation();
-          };
-          var addListeners = function addListeners2() {
-            if (!state.active) {
-              return;
-            }
-            activeFocusTraps.activateTrap(trap);
-            state.delayInitialFocusTimer = config.delayInitialFocus ? delay(function() {
-              tryFocus(getInitialFocusNode());
-            }) : tryFocus(getInitialFocusNode());
-            doc.addEventListener("focusin", checkFocusIn, true);
-            doc.addEventListener("mousedown", checkPointerDown, {
-              capture: true,
-              passive: false
+            tryFocus(state.mostRecentlyFocusedNode || getInitialFocusNode());
+          }
+        };
+        var checkTab = function checkTab2(e) {
+          updateTabbableNodes();
+          var destinationNode = null;
+          if (state.tabbableGroups.length > 0) {
+            var containerIndex = findIndex(state.tabbableGroups, function(_ref) {
+              var container = _ref.container;
+              return container.contains(e.target);
             });
-            doc.addEventListener("touchstart", checkPointerDown, {
-              capture: true,
-              passive: false
-            });
-            doc.addEventListener("click", checkClick, {
-              capture: true,
-              passive: false
-            });
-            doc.addEventListener("keydown", checkKey, {
-              capture: true,
-              passive: false
-            });
-            return trap;
-          };
-          var removeListeners = function removeListeners2() {
-            if (!state.active) {
-              return;
-            }
-            doc.removeEventListener("focusin", checkFocusIn, true);
-            doc.removeEventListener("mousedown", checkPointerDown, true);
-            doc.removeEventListener("touchstart", checkPointerDown, true);
-            doc.removeEventListener("click", checkClick, true);
-            doc.removeEventListener("keydown", checkKey, true);
-            return trap;
-          };
-          trap = {
-            get active() {
-              return state.active;
-            },
-            get paused() {
-              return state.paused;
-            },
-            activate: function activate(activateOptions) {
-              if (state.active) {
-                return this;
+            if (containerIndex < 0) {
+              if (e.shiftKey) {
+                destinationNode = state.tabbableGroups[state.tabbableGroups.length - 1].lastTabbableNode;
+              } else {
+                destinationNode = state.tabbableGroups[0].firstTabbableNode;
               }
-              var onActivate = getOption(activateOptions, "onActivate");
-              var onPostActivate = getOption(activateOptions, "onPostActivate");
-              var checkCanFocusTrap = getOption(activateOptions, "checkCanFocusTrap");
-              if (!checkCanFocusTrap) {
-                updateTabbableNodes();
-              }
-              state.active = true;
-              state.paused = false;
-              state.nodeFocusedBeforeActivation = doc.activeElement;
-              if (onActivate) {
-                onActivate();
-              }
-              var finishActivation = function finishActivation2() {
-                if (checkCanFocusTrap) {
-                  updateTabbableNodes();
-                }
-                addListeners();
-                if (onPostActivate) {
-                  onPostActivate();
-                }
-              };
-              if (checkCanFocusTrap) {
-                checkCanFocusTrap(state.containers.concat()).then(finishActivation, finishActivation);
-                return this;
-              }
-              finishActivation();
-              return this;
-            },
-            deactivate: function deactivate(deactivateOptions) {
-              if (!state.active) {
-                return this;
-              }
-              var options = _objectSpread2({
-                onDeactivate: config.onDeactivate,
-                onPostDeactivate: config.onPostDeactivate,
-                checkCanReturnFocus: config.checkCanReturnFocus
-              }, deactivateOptions);
-              clearTimeout(state.delayInitialFocusTimer);
-              state.delayInitialFocusTimer = void 0;
-              removeListeners();
-              state.active = false;
-              state.paused = false;
-              activeFocusTraps.deactivateTrap(trap);
-              var onDeactivate = getOption(options, "onDeactivate");
-              var onPostDeactivate = getOption(options, "onPostDeactivate");
-              var checkCanReturnFocus = getOption(options, "checkCanReturnFocus");
-              var returnFocus = getOption(options, "returnFocus", "returnFocusOnDeactivate");
-              if (onDeactivate) {
-                onDeactivate();
-              }
-              var finishDeactivation = function finishDeactivation2() {
-                delay(function() {
-                  if (returnFocus) {
-                    tryFocus(getReturnFocusNode(state.nodeFocusedBeforeActivation));
-                  }
-                  if (onPostDeactivate) {
-                    onPostDeactivate();
-                  }
-                });
-              };
-              if (returnFocus && checkCanReturnFocus) {
-                checkCanReturnFocus(getReturnFocusNode(state.nodeFocusedBeforeActivation)).then(finishDeactivation, finishDeactivation);
-                return this;
-              }
-              finishDeactivation();
-              return this;
-            },
-            pause: function pause() {
-              if (state.paused || !state.active) {
-                return this;
-              }
-              state.paused = true;
-              removeListeners();
-              return this;
-            },
-            unpause: function unpause() {
-              if (!state.paused || !state.active) {
-                return this;
-              }
-              state.paused = false;
-              updateTabbableNodes();
-              addListeners();
-              return this;
-            },
-            updateContainerElements: function updateContainerElements(containerElements) {
-              var elementsAsArray = [].concat(containerElements).filter(Boolean);
-              state.containers = elementsAsArray.map(function(element) {
-                return typeof element === "string" ? doc.querySelector(element) : element;
+            } else if (e.shiftKey) {
+              var startOfGroupIndex = findIndex(state.tabbableGroups, function(_ref2) {
+                var firstTabbableNode = _ref2.firstTabbableNode;
+                return e.target === firstTabbableNode;
               });
-              if (state.active) {
-                updateTabbableNodes();
+              if (startOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
+                startOfGroupIndex = containerIndex;
               }
-              return this;
+              if (startOfGroupIndex >= 0) {
+                var destinationGroupIndex = startOfGroupIndex === 0 ? state.tabbableGroups.length - 1 : startOfGroupIndex - 1;
+                var destinationGroup = state.tabbableGroups[destinationGroupIndex];
+                destinationNode = destinationGroup.lastTabbableNode;
+              }
+            } else {
+              var lastOfGroupIndex = findIndex(state.tabbableGroups, function(_ref3) {
+                var lastTabbableNode = _ref3.lastTabbableNode;
+                return e.target === lastTabbableNode;
+              });
+              if (lastOfGroupIndex < 0 && state.tabbableGroups[containerIndex].container === e.target) {
+                lastOfGroupIndex = containerIndex;
+              }
+              if (lastOfGroupIndex >= 0) {
+                var _destinationGroupIndex = lastOfGroupIndex === state.tabbableGroups.length - 1 ? 0 : lastOfGroupIndex + 1;
+                var _destinationGroup = state.tabbableGroups[_destinationGroupIndex];
+                destinationNode = _destinationGroup.firstTabbableNode;
+              }
             }
-          };
-          trap.updateContainerElements(elements);
+          } else {
+            destinationNode = getNodeForOption("fallbackFocus");
+          }
+          if (destinationNode) {
+            e.preventDefault();
+            tryFocus(destinationNode);
+          }
+        };
+        var checkKey = function checkKey2(e) {
+          if (isEscapeEvent(e) && valueOrHandler(config.escapeDeactivates) !== false) {
+            e.preventDefault();
+            trap.deactivate();
+            return;
+          }
+          if (isTabEvent(e)) {
+            checkTab(e);
+            return;
+          }
+        };
+        var checkClick = function checkClick2(e) {
+          if (valueOrHandler(config.clickOutsideDeactivates, e)) {
+            return;
+          }
+          if (containersContain(e.target)) {
+            return;
+          }
+          if (valueOrHandler(config.allowOutsideClick, e)) {
+            return;
+          }
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        };
+        var addListeners = function addListeners2() {
+          if (!state.active) {
+            return;
+          }
+          activeFocusTraps.activateTrap(trap);
+          state.delayInitialFocusTimer = config.delayInitialFocus ? delay(function() {
+            tryFocus(getInitialFocusNode());
+          }) : tryFocus(getInitialFocusNode());
+          doc.addEventListener("focusin", checkFocusIn, true);
+          doc.addEventListener("mousedown", checkPointerDown, {
+            capture: true,
+            passive: false
+          });
+          doc.addEventListener("touchstart", checkPointerDown, {
+            capture: true,
+            passive: false
+          });
+          doc.addEventListener("click", checkClick, {
+            capture: true,
+            passive: false
+          });
+          doc.addEventListener("keydown", checkKey, {
+            capture: true,
+            passive: false
+          });
           return trap;
         };
-        exports2.createFocusTrap = createFocusTrap2;
-      }
+        var removeListeners = function removeListeners2() {
+          if (!state.active) {
+            return;
+          }
+          doc.removeEventListener("focusin", checkFocusIn, true);
+          doc.removeEventListener("mousedown", checkPointerDown, true);
+          doc.removeEventListener("touchstart", checkPointerDown, true);
+          doc.removeEventListener("click", checkClick, true);
+          doc.removeEventListener("keydown", checkKey, true);
+          return trap;
+        };
+        trap = {
+          activate: function activate(activateOptions) {
+            if (state.active) {
+              return this;
+            }
+            var onActivate = getOption(activateOptions, "onActivate");
+            var onPostActivate = getOption(activateOptions, "onPostActivate");
+            var checkCanFocusTrap = getOption(activateOptions, "checkCanFocusTrap");
+            if (!checkCanFocusTrap) {
+              updateTabbableNodes();
+            }
+            state.active = true;
+            state.paused = false;
+            state.nodeFocusedBeforeActivation = doc.activeElement;
+            if (onActivate) {
+              onActivate();
+            }
+            var finishActivation = function finishActivation2() {
+              if (checkCanFocusTrap) {
+                updateTabbableNodes();
+              }
+              addListeners();
+              if (onPostActivate) {
+                onPostActivate();
+              }
+            };
+            if (checkCanFocusTrap) {
+              checkCanFocusTrap(state.containers.concat()).then(finishActivation, finishActivation);
+              return this;
+            }
+            finishActivation();
+            return this;
+          },
+          deactivate: function deactivate(deactivateOptions) {
+            if (!state.active) {
+              return this;
+            }
+            clearTimeout(state.delayInitialFocusTimer);
+            state.delayInitialFocusTimer = void 0;
+            removeListeners();
+            state.active = false;
+            state.paused = false;
+            activeFocusTraps.deactivateTrap(trap);
+            var onDeactivate = getOption(deactivateOptions, "onDeactivate");
+            var onPostDeactivate = getOption(deactivateOptions, "onPostDeactivate");
+            var checkCanReturnFocus = getOption(deactivateOptions, "checkCanReturnFocus");
+            if (onDeactivate) {
+              onDeactivate();
+            }
+            var returnFocus = getOption(deactivateOptions, "returnFocus", "returnFocusOnDeactivate");
+            var finishDeactivation = function finishDeactivation2() {
+              delay(function() {
+                if (returnFocus) {
+                  tryFocus(getReturnFocusNode(state.nodeFocusedBeforeActivation));
+                }
+                if (onPostDeactivate) {
+                  onPostDeactivate();
+                }
+              });
+            };
+            if (returnFocus && checkCanReturnFocus) {
+              checkCanReturnFocus(getReturnFocusNode(state.nodeFocusedBeforeActivation)).then(finishDeactivation, finishDeactivation);
+              return this;
+            }
+            finishDeactivation();
+            return this;
+          },
+          pause: function pause() {
+            if (state.paused || !state.active) {
+              return this;
+            }
+            state.paused = true;
+            removeListeners();
+            return this;
+          },
+          unpause: function unpause() {
+            if (!state.paused || !state.active) {
+              return this;
+            }
+            state.paused = false;
+            updateTabbableNodes();
+            addListeners();
+            return this;
+          },
+          updateContainerElements: function updateContainerElements(containerElements) {
+            var elementsAsArray = [].concat(containerElements).filter(Boolean);
+            state.containers = elementsAsArray.map(function(element) {
+              return typeof element === "string" ? doc.querySelector(element) : element;
+            });
+            if (state.active) {
+              updateTabbableNodes();
+            }
+            return this;
+          }
+        };
+        trap.updateContainerElements(elements);
+        return trap;
+      };
+      exports2.createFocusTrap = createFocusTrap2;
     });
-    var module_exports = {};
-    __export(module_exports, {
+    __markAsModule(exports);
+    __export(exports, {
       default: () => module_default
     });
-    module.exports = __toCommonJS(module_exports);
-    var import_focus_trap = __toESM2(require_focus_trap());
-    var import_tabbable = __toESM2(require_dist());
-    function src_default(Alpine20) {
+    var import_focus_trap = __toModule(require_focus_trap());
+    var import_tabbable = __toModule(require_dist());
+    function src_default(Alpine21) {
       let lastFocused;
       let currentFocused;
       window.addEventListener("focusin", () => {
         lastFocused = currentFocused;
         currentFocused = document.activeElement;
       });
-      Alpine20.magic("focus", (el) => {
+      Alpine21.magic("focus", (el) => {
         let within = el;
         return {
           __noscroll: false,
@@ -4708,7 +4530,7 @@ var require_module_cjs3 = __commonJS({
           }
         };
       });
-      Alpine20.directive("trap", Alpine20.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+      Alpine21.directive("trap", Alpine21.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
         let evaluator = evaluateLater(expression);
         let oldValue = false;
         let options = {
@@ -4796,40 +4618,28 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports) {
     var __defProp2 = Object.defineProperty;
-    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
-    var __getOwnPropNames2 = Object.getOwnPropertyNames;
-    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __markAsModule = (target) => __defProp2(target, "__esModule", { value: true });
     var __export = (target, all2) => {
       for (var name in all2)
         __defProp2(target, name, { get: all2[name], enumerable: true });
     };
-    var __copyProps2 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
-      }
-      return to;
-    };
-    var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var module_exports = {};
-    __export(module_exports, {
+    __markAsModule(exports);
+    __export(exports, {
       default: () => module_default
     });
-    module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine20) {
+    function src_default(Alpine21) {
       let persist2 = () => {
         let alias;
         let storage = localStorage;
-        return Alpine20.interceptor((initialValue, getter, setter, path, key) => {
+        return Alpine21.interceptor((initialValue, getter, setter, path, key) => {
           let lookup = alias || `_x_${path}`;
           let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
           setter(initial);
-          Alpine20.effect(() => {
+          Alpine21.effect(() => {
             let value = getter();
             storageSet(lookup, value, storage);
             setter(value);
@@ -4845,12 +4655,12 @@ var require_module_cjs4 = __commonJS({
           };
         });
       };
-      Object.defineProperty(Alpine20, "$persist", { get: () => persist2() });
-      Alpine20.magic("persist", persist2);
-      Alpine20.persist = (key, { get, set }, storage = localStorage) => {
+      Object.defineProperty(Alpine21, "$persist", { get: () => persist2() });
+      Alpine21.magic("persist", persist2);
+      Alpine21.persist = (key, { get, set }, storage = localStorage) => {
         let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
         set(initial);
-        Alpine20.effect(() => {
+        Alpine21.effect(() => {
           let value = get();
           storageSet(key, value, storage);
           set(value);
@@ -4870,9 +4680,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4895,8 +4705,8 @@ var require_module_cjs5 = __commonJS({
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine20) {
-      Alpine20.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+    function src_default(Alpine21) {
+      Alpine21.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5228,9 +5038,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5518,7 +5328,7 @@ var require_module_cjs6 = __commonJS({
       get children() {
         let children = [];
         let currentNode = this.startComment.nextSibling;
-        while (currentNode !== void 0 && currentNode !== this.endComment) {
+        while (currentNode && currentNode !== this.endComment) {
           children.push(currentNode);
           currentNode = currentNode.nextSibling;
         }
@@ -5577,16 +5387,16 @@ var require_module_cjs6 = __commonJS({
         this.setAttributeNode(attr);
       };
     }
-    function src_default(Alpine20) {
-      Alpine20.morph = morph3;
+    function src_default(Alpine21) {
+      Alpine21.morph = morph3;
     }
     var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5610,8 +5420,8 @@ var require_module_cjs7 = __commonJS({
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine20) {
-      Alpine20.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
+    function src_default(Alpine21) {
+      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -5620,7 +5430,7 @@ var require_module_cjs7 = __commonJS({
             effect(() => {
               templateFn = (input) => {
                 let result;
-                Alpine20.dontAutoEvaluateFunctions(() => {
+                Alpine21.dontAutoEvaluateFunctions(() => {
                   evaluator((value2) => {
                     result = typeof value2 === "function" ? value2(input) : value2;
                   }, { scope: {
@@ -5731,7 +5541,9 @@ var require_module_cjs7 = __commonJS({
         return "-";
       if (/^\D+$/.test(input))
         return "9";
-      thousands = thousands != null ? thousands : delimiter === "," ? "." : ",";
+      if (thousands === null || thousands === void 0) {
+        thousands = delimiter === "," ? "." : ",";
+      }
       let addThousands = (input2, thousands2) => {
         let output = "";
         let counter = 0;
@@ -5865,17 +5677,12 @@ function extractData(payload) {
 function isSynthetic(subject) {
   return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
 }
-var csrf;
 function getCsrfToken() {
-  if (csrf)
-    return csrf;
   if (document.querySelector("[data-csrf]")) {
-    csrf = document.querySelector("[data-csrf]").getAttribute("data-csrf");
-    return csrf;
+    return document.querySelector("[data-csrf]").getAttribute("data-csrf");
   }
   if (window.livewireScriptConfig["csrf"] ?? false) {
-    csrf = window.livewireScriptConfig["csrf"];
-    return csrf;
+    return window.livewireScriptConfig["csrf"];
   }
   throw "Livewire: No CSRF token detected";
 }
@@ -6683,6 +6490,9 @@ var Component = class {
     let el = this.el;
     el.setAttribute("wire:snapshot", this.snapshotEncoded);
     let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+    if (this.originalEffects.url) {
+      effects.url = this.originalEffects.url;
+    }
     el.setAttribute("wire:effects", JSON.stringify(effects));
   }
   addCleanup(cleanup2) {
@@ -6701,7 +6511,8 @@ function initComponent(el) {
   let component = new Component(el);
   if (components[component.id])
     throw "Component already registered";
-  trigger("component.init", { component });
+  let cleanup2 = (i) => component.addCleanup(i);
+  trigger("component.init", { component, cleanup: cleanup2 });
   components[component.id] = component;
   return component;
 }
@@ -6930,7 +6741,14 @@ function updateUrl(method, url, html) {
   if (!state.alpine)
     state.alpine = {};
   state.alpine._html = key;
-  history[method](state, document.title, url);
+  try {
+    history[method](state, document.title, url);
+  } catch (error2) {
+    if (error2 instanceof DOMException && error2.name === "SecurityError") {
+      console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
+    }
+    console.error(error2);
+  }
 }
 function fromSessionStorage(timestamp) {
   let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
@@ -7035,6 +6853,27 @@ function createUrlObjectFromString(urlString) {
   return new URL(urlString, document.baseURI);
 }
 
+// js/plugins/navigate/teleport.js
+var import_alpinejs5 = __toESM(require_module_cjs());
+function packUpPersistedTeleports(persistedEl) {
+  import_alpinejs5.default.mutateDom(() => {
+    persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
+  });
+}
+function removeAnyLeftOverStaleTeleportTargets(body) {
+  import_alpinejs5.default.mutateDom(() => {
+    body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
+  });
+}
+function unPackPersistedTeleports(persistedEl) {
+  import_alpinejs5.default.walk(persistedEl, (el, skip) => {
+    if (!el._x_teleport)
+      return;
+    el._x_teleportPutBack();
+    skip();
+  });
+}
+
 // js/plugins/navigate/scroll.js
 function storeScrollInformationInHtmlBeforeNavigatingAway() {
   document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
@@ -7044,11 +6883,15 @@ function storeScrollInformationInHtmlBeforeNavigatingAway() {
     el.setAttribute("data-scroll-y", el.scrollTop);
   });
 }
-function restoreScrollPosition() {
+function restoreScrollPositionOrScrollToTop() {
   let scroll = (el) => {
-    el.scrollTo(Number(el.getAttribute("data-scroll-x")), Number(el.getAttribute("data-scroll-y")));
-    el.removeAttribute("data-scroll-x");
-    el.removeAttribute("data-scroll-y");
+    if (!el.hasAttribute("data-scroll-x")) {
+      window.scrollTo(0, 0);
+    } else {
+      el.scrollTo(Number(el.getAttribute("data-scroll-x")), Number(el.getAttribute("data-scroll-y")));
+      el.removeAttribute("data-scroll-x");
+      el.removeAttribute("data-scroll-y");
+    }
   };
   queueMicrotask(() => {
     scroll(document.body);
@@ -7057,27 +6900,37 @@ function restoreScrollPosition() {
 }
 
 // js/plugins/navigate/persist.js
-var import_alpinejs5 = __toESM(require_module_cjs());
+var import_alpinejs6 = __toESM(require_module_cjs());
 var els = {};
-function storePersistantElementsForLater() {
+function storePersistantElementsForLater(callback) {
   els = {};
   document.querySelectorAll("[x-persist]").forEach((i) => {
     els[i.getAttribute("x-persist")] = i;
-    import_alpinejs5.default.mutateDom(() => {
+    callback(i);
+    import_alpinejs6.default.mutateDom(() => {
       i.remove();
     });
   });
 }
-function putPersistantElementsBack() {
+function putPersistantElementsBack(callback) {
+  let usedPersists = [];
   document.querySelectorAll("[x-persist]").forEach((i) => {
     let old = els[i.getAttribute("x-persist")];
     if (!old)
       return;
+    usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
-    import_alpinejs5.default.mutateDom(() => {
+    callback(old, i);
+    import_alpinejs6.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
+  Object.entries(els).forEach(([key, el]) => {
+    if (usedPersists.includes(key))
+      return;
+    import_alpinejs6.default.destroyTree(el);
+  });
+  els = {};
 }
 
 // js/plugins/navigate/bar.js
@@ -7227,6 +7080,7 @@ function mergeNewHead(newHead) {
   let children = Array.from(document.head.children);
   let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
   let garbageCollector = document.createDocumentFragment();
+  let touchedHeadElements = [];
   for (let child of Array.from(newHead.children)) {
     if (isAsset(child)) {
       if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
@@ -7242,6 +7096,14 @@ function mergeNewHead(newHead) {
         }
       } else {
         garbageCollector.appendChild(child);
+      }
+      touchedHeadElements.push(child);
+    }
+  }
+  for (let child of Array.from(document.head.children)) {
+    if (isAsset(child)) {
+      if (!touchedHeadElements.some((i) => i.outerHTML === child.outerHTML)) {
+        child.remove();
       }
     }
   }
@@ -7309,20 +7171,20 @@ function fetchHtml(destination, callback) {
 }
 
 // js/plugins/navigate/index.js
-var import_alpinejs6 = __toESM(require_module_cjs());
+var import_alpinejs7 = __toESM(require_module_cjs());
 var enablePersist = true;
 var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
-function navigate_default(Alpine20) {
-  Alpine20.navigate = (url) => {
+function navigate_default(Alpine21) {
+  Alpine21.navigate = (url) => {
     navigateTo(createUrlObjectFromString(url));
   };
-  Alpine20.navigate.disableProgressBar = () => {
+  Alpine21.navigate.disableProgressBar = () => {
     showProgressBar = false;
   };
-  Alpine20.addInitSelector(() => `[${Alpine20.prefixed("navigate")}]`);
-  Alpine20.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+  Alpine21.addInitSelector(() => `[${Alpine21.prefixed("navigate")}]`);
+  Alpine21.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
@@ -7347,16 +7209,21 @@ function navigate_default(Alpine20) {
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-      preventAlpineFromPickingUpDomChanges(Alpine20, (andAfterAllThis) => {
-        enablePersist && storePersistantElementsForLater();
+      preventAlpineFromPickingUpDomChanges(Alpine21, (andAfterAllThis) => {
+        enablePersist && storePersistantElementsForLater((persistedEl) => {
+          packUpPersistedTeleports(persistedEl);
+        });
         swapCurrentPageWithNewHtml(html, () => {
-          enablePersist && putPersistantElementsBack();
-          restoreScroll && restoreScrollPosition();
+          removeAnyLeftOverStaleTeleportTargets(document.body);
+          enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+            unPackPersistedTeleports(persistedEl);
+          });
+          restoreScrollPositionOrScrollToTop();
           fireEventForOtherLibariesToHookInto("alpine:navigated");
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
-            nowInitializeAlpineOnTheNewPage(Alpine20);
+            nowInitializeAlpineOnTheNewPage(Alpine21);
           });
         });
       });
@@ -7364,15 +7231,20 @@ function navigate_default(Alpine20) {
   }
   whenTheBackOrForwardButtonIsClicked((html) => {
     storeScrollInformationInHtmlBeforeNavigatingAway();
-    preventAlpineFromPickingUpDomChanges(Alpine20, (andAfterAllThis) => {
-      enablePersist && storePersistantElementsForLater();
-      swapCurrentPageWithNewHtml(html, (andThen) => {
-        enablePersist && putPersistantElementsBack();
-        restoreScroll && restoreScrollPosition();
+    preventAlpineFromPickingUpDomChanges(Alpine21, (andAfterAllThis) => {
+      enablePersist && storePersistantElementsForLater((persistedEl) => {
+        packUpPersistedTeleports(persistedEl);
+      });
+      swapCurrentPageWithNewHtml(html, () => {
+        removeAnyLeftOverStaleTeleportTargets(document.body);
+        enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+          unPackPersistedTeleports(persistedEl);
+        });
+        restoreScrollPositionOrScrollToTop();
         fireEventForOtherLibariesToHookInto("alpine:navigated");
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
-          nowInitializeAlpineOnTheNewPage(Alpine20);
+          nowInitializeAlpineOnTheNewPage(Alpine21);
         });
       });
     });
@@ -7386,10 +7258,10 @@ function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
     fetchHtml(fromDestination, callback);
   });
 }
-function preventAlpineFromPickingUpDomChanges(Alpine20, callback) {
-  Alpine20.stopObservingMutations();
+function preventAlpineFromPickingUpDomChanges(Alpine21, callback) {
+  Alpine21.stopObservingMutations();
   callback((afterAllThis) => {
-    Alpine20.startObservingMutations();
+    Alpine21.startObservingMutations();
     setTimeout(() => {
       afterAllThis();
     });
@@ -7398,8 +7270,8 @@ function preventAlpineFromPickingUpDomChanges(Alpine20, callback) {
 function fireEventForOtherLibariesToHookInto(eventName, init = false) {
   document.dispatchEvent(new CustomEvent(eventName, { bubbles: true, detail: { init } }));
 }
-function nowInitializeAlpineOnTheNewPage(Alpine20) {
-  Alpine20.initTree(document.body, void 0, (el, skip) => {
+function nowInitializeAlpineOnTheNewPage(Alpine21) {
+  Alpine21.initTree(document.body, void 0, (el, skip) => {
     if (el._x_wasPersisted)
       skip();
   });
@@ -7409,8 +7281,8 @@ function autofocusElementsWithTheAutofocusAttribute() {
 }
 
 // js/plugins/history/index.js
-function history2(Alpine20) {
-  Alpine20.magic("queryString", (el, { interceptor }) => {
+function history2(Alpine21) {
+  Alpine21.magic("queryString", (el, { interceptor }) => {
     let alias;
     let alwaysShow = false;
     let usePush = false;
@@ -7420,9 +7292,9 @@ function history2(Alpine20) {
       setter(initial);
       if (!usePush) {
         console.log(getter());
-        Alpine20.effect(() => replace2(getter()));
+        Alpine21.effect(() => replace2(getter()));
       } else {
-        Alpine20.effect(() => push2(getter()));
+        Alpine21.effect(() => push2(getter()));
         pop(async (newValue) => {
           setter(newValue);
           let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
@@ -7445,7 +7317,7 @@ function history2(Alpine20) {
       };
     });
   });
-  Alpine20.history = { track };
+  Alpine21.history = { track };
 }
 function track(name, initialSeedValue, alwaysShow = false) {
   let { has, get, set, remove } = queryStringUtils();
@@ -7478,7 +7350,7 @@ function track(name, initialSeedValue, alwaysShow = false) {
       update(push, newValue);
     },
     pop(receiver) {
-      window.addEventListener("popstate", (e) => {
+      let handler = (e) => {
         if (!e.state || !e.state.alpine)
           return;
         Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
@@ -7492,7 +7364,9 @@ function track(name, initialSeedValue, alwaysShow = false) {
             lock = false;
           }
         });
-      });
+      };
+      window.addEventListener("popstate", handler);
+      return () => window.removeEventListener("popstate", handler);
     }
   };
 }
@@ -7591,20 +7465,20 @@ function fromQueryString(search) {
 // js/lifecycle.js
 var import_morph = __toESM(require_module_cjs6());
 var import_mask = __toESM(require_module_cjs7());
-var import_alpinejs7 = __toESM(require_module_cjs());
+var import_alpinejs8 = __toESM(require_module_cjs());
 function start() {
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs7.default.plugin(import_morph.default);
-  import_alpinejs7.default.plugin(history2);
-  import_alpinejs7.default.plugin(import_intersect.default);
-  import_alpinejs7.default.plugin(import_collapse.default);
-  import_alpinejs7.default.plugin(import_focus.default);
-  import_alpinejs7.default.plugin(import_persist2.default);
-  import_alpinejs7.default.plugin(navigate_default);
-  import_alpinejs7.default.plugin(import_mask.default);
-  import_alpinejs7.default.addRootSelector(() => "[wire\\:id]");
-  import_alpinejs7.default.onAttributesAdded((el, attributes) => {
+  import_alpinejs8.default.plugin(import_morph.default);
+  import_alpinejs8.default.plugin(history2);
+  import_alpinejs8.default.plugin(import_intersect.default);
+  import_alpinejs8.default.plugin(import_collapse.default);
+  import_alpinejs8.default.plugin(import_focus.default);
+  import_alpinejs8.default.plugin(import_persist2.default);
+  import_alpinejs8.default.plugin(navigate_default);
+  import_alpinejs8.default.plugin(import_mask.default);
+  import_alpinejs8.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs8.default.onAttributesAdded((el, attributes) => {
     let component = closestComponent(el, false);
     if (!component)
       return;
@@ -7613,14 +7487,14 @@ function start() {
         return;
       let directive2 = extractDirective(el, attribute.name);
       trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-        import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
   });
-  import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+  import_alpinejs8.default.interceptInit(import_alpinejs8.default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
-      import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {
+      import_alpinejs8.default.onAttributeRemoved(el, "wire:id", () => {
         destroyComponent(component2.id);
       });
     }
@@ -7630,12 +7504,12 @@ function start() {
       let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
       directives.forEach((directive2) => {
         trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-          import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
+          import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
     }
   }));
-  import_alpinejs7.default.start();
+  import_alpinejs8.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
@@ -7645,7 +7519,7 @@ function rescan() {
 }
 
 // js/index.js
-var import_alpinejs18 = __toESM(require_module_cjs());
+var import_alpinejs19 = __toESM(require_module_cjs());
 
 // js/features/supportWireModelingNestedComponents.js
 on("commit.prepare", ({ component }) => {
@@ -7658,7 +7532,7 @@ on("commit.prepare", ({ component }) => {
 });
 
 // js/features/supportDisablingFormsDuringRequest.js
-var import_alpinejs8 = __toESM(require_module_cjs());
+var import_alpinejs9 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
 on("element.init", ({ el, component }) => {
   let directives = getDirectives(el);
@@ -7666,7 +7540,7 @@ on("element.init", ({ el, component }) => {
     return;
   el.addEventListener("submit", () => {
     cleanupStackByComponentId[component.id] = [];
-    import_alpinejs8.default.walk(component.el, (node, skip) => {
+    import_alpinejs9.default.walk(component.el, (node, skip) => {
       if (!el.contains(node))
         return;
       if (node.hasAttribute("wire:ignore"))
@@ -7733,27 +7607,27 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs9 = __toESM(require_module_cjs());
+var import_alpinejs10 = __toESM(require_module_cjs());
 on("effects", (component, effects) => {
   let js = effects.js;
   let xjs = effects.xjs;
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs9.default.evaluate(component.el, body);
+        import_alpinejs10.default.evaluate(component.el, body);
       });
     });
   }
   if (xjs) {
     xjs.forEach((expression) => {
-      import_alpinejs9.default.evaluate(component.el, expression);
+      import_alpinejs10.default.evaluate(component.el, expression);
     });
   }
 });
 
 // js/features/supportQueryString.js
-var import_alpinejs10 = __toESM(require_module_cjs());
-on("component.init", ({ component }) => {
+var import_alpinejs11 = __toESM(require_module_cjs());
+on("component.init", ({ component, cleanup: cleanup2 }) => {
   let effects = component.effects;
   let queryString = effects["url"];
   if (!queryString)
@@ -7765,11 +7639,12 @@ on("component.init", ({ component }) => {
     let initialValue = dataGet(component.ephemeral, name);
     let { initial, replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow);
     if (use === "replace") {
-      import_alpinejs10.default.effect(() => {
+      let effectReference = import_alpinejs11.default.effect(() => {
         replace2(dataGet(component.reactive, name));
       });
+      cleanup2(() => import_alpinejs11.default.release(effectReference));
     } else if (use === "push") {
-      on("commit", ({ component: component2, succeed }) => {
+      let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
         let beforeValue = dataGet(component2.canonical, name);
         succeed(() => {
           let afterValue = dataGet(component2.canonical, name);
@@ -7778,11 +7653,15 @@ on("component.init", ({ component }) => {
           push2(afterValue);
         });
       });
-      pop(async (newValue) => {
+      let forgetPopHandler = pop(async (newValue) => {
         await component.$wire.set(name, newValue);
         document.querySelectorAll("input").forEach((el) => {
           el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
         });
+      });
+      cleanup2(() => {
+        forgetCommitHandler();
+        forgetPopHandler();
       });
     }
   });
@@ -7891,7 +7770,7 @@ on("effects", (component, effects) => {
 });
 
 // js/morph.js
-var import_alpinejs11 = __toESM(require_module_cjs());
+var import_alpinejs12 = __toESM(require_module_cjs());
 function morph2(component, el, html) {
   let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
   let wrapper = document.createElement(wrapperTag);
@@ -7905,7 +7784,7 @@ function morph2(component, el, html) {
   let to = wrapper.firstElementChild;
   to.__livewire = component;
   trigger("morph", { el, toEl: to, component });
-  import_alpinejs11.default.morph(el, to, {
+  import_alpinejs12.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip) => {
       if (isntElement(el2))
         return;
@@ -7997,13 +7876,13 @@ function getChildrenRecursively(component, callback) {
 }
 
 // js/directives/wire-transition.js
-var import_alpinejs12 = __toESM(require_module_cjs());
+var import_alpinejs13 = __toESM(require_module_cjs());
 on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
-  let visibility = import_alpinejs12.default.reactive({ state: false });
-  import_alpinejs12.default.bind(el, {
+  let visibility = import_alpinejs13.default.reactive({ state: false });
+  import_alpinejs13.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {
       return visibility.state;
@@ -8039,7 +7918,7 @@ function callAndClearComponentDebounces(component, callback) {
 }
 
 // js/directives/wire-wildcard.js
-var import_alpinejs13 = __toESM(require_module_cjs());
+var import_alpinejs14 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
     return;
@@ -8047,10 +7926,10 @@ on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component 
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
     attribute = attribute + ".prevent";
   }
-  let cleanupBinding = import_alpinejs13.default.bind(el, {
+  let cleanupBinding = import_alpinejs14.default.bind(el, {
     [attribute](e) {
       callAndClearComponentDebounces(component, () => {
-        import_alpinejs13.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+        import_alpinejs14.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
       });
     }
   });
@@ -8058,14 +7937,14 @@ on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component 
 });
 
 // js/directives/wire-navigate.js
-var import_alpinejs14 = __toESM(require_module_cjs());
-import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs14.default.interceptInit(import_alpinejs14.default.skipDuringClone((el) => {
+var import_alpinejs15 = __toESM(require_module_cjs());
+import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate]`);
+import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+import_alpinejs15.default.interceptInit(import_alpinejs15.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
-    import_alpinejs14.default.bind(el, { ["x-navigate"]: true });
+    import_alpinejs15.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
-    import_alpinejs14.default.bind(el, { ["x-navigate.hover"]: true });
+    import_alpinejs15.default.bind(el, { ["x-navigate.hover"]: true });
   }
 }));
 document.addEventListener("alpine:navigating", () => {
@@ -8364,7 +8243,7 @@ function dirtyTargets(el) {
 }
 
 // js/directives/wire-model.js
-var import_alpinejs15 = __toESM(require_module_cjs());
+var import_alpinejs16 = __toESM(require_module_cjs());
 function debounce(func, wait) {
   var timeout;
   return function() {
@@ -8394,7 +8273,7 @@ directive("model", ({ el, directive: directive2, component, cleanup: cleanup2 })
   let isDebounced = modifiers.includes("debounce");
   let update = () => component.$wire.$commit();
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-  import_alpinejs15.default.bind(el, {
+  import_alpinejs16.default.bind(el, {
     ["@change"]() {
       isLazy && update();
     },
@@ -8438,14 +8317,14 @@ function componentIsMissingProperty(component, property) {
 }
 
 // js/directives/wire-init.js
-var import_alpinejs16 = __toESM(require_module_cjs());
+var import_alpinejs17 = __toESM(require_module_cjs());
 directive("init", ({ el, directive: directive2 }) => {
   let fullMethod = directive2.expression ?? "$refresh";
-  import_alpinejs16.default.evaluate(el, `$wire.${fullMethod}`);
+  import_alpinejs17.default.evaluate(el, `$wire.${fullMethod}`);
 });
 
 // js/directives/wire-poll.js
-var import_alpinejs17 = __toESM(require_module_cjs());
+var import_alpinejs18 = __toESM(require_module_cjs());
 directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -8459,7 +8338,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2) {
-  import_alpinejs17.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];
@@ -8568,30 +8447,24 @@ if (window.Livewire)
 if (window.Alpine)
   console.warn("Detected multiple instances of Alpine running");
 window.Livewire = Livewire2;
-window.Alpine = import_alpinejs18.default;
+window.Alpine = import_alpinejs19.default;
 if (window.livewireScriptConfig === void 0) {
   document.addEventListener("DOMContentLoaded", () => {
     Livewire2.start();
   });
 }
-var export_Alpine = import_alpinejs18.default;
+var export_Alpine = import_alpinejs19.default;
 export {
   export_Alpine as Alpine,
   Livewire2 as Livewire
 };
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */
-/*! Bundled license information:
-
-tabbable/dist/index.js:
-  (*!
-  * tabbable 5.3.3
-  * @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
-  *)
-
-focus-trap/dist/focus-trap.js:
-  (*!
-  * focus-trap 6.9.4
-  * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
-  *)
+/*!
+* focus-trap 6.6.1
+* @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
+*/
+/*!
+* tabbable 5.2.1
+* @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
 */
