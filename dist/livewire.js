@@ -7234,7 +7234,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/shared.js
-  function toggleBooleanStateDirective(el, directive3, isTruthy) {
+  function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
     isTruthy = directive3.modifiers.includes("remove") ? !isTruthy : isTruthy;
     if (directive3.modifiers.includes("class")) {
       let classes = directive3.expression.split(" ");
@@ -7250,7 +7250,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.removeAttribute(directive3.expression);
       }
     } else {
-      let cache = window.getComputedStyle(el, null).getPropertyValue("display");
+      let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
       let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
       display = directive3.modifiers.includes("remove") ? cache : display;
       el.style.display = isTruthy ? display : "none";
@@ -7487,8 +7487,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let targets = dirtyTargets(el);
     let dirty = Alpine.reactive({ state: false });
     let oldIsDirty = false;
+    let initialDisplay = el.style.display;
     let refreshDirtyState = (isDirty) => {
-      toggleBooleanStateDirective(el, directive3, isDirty);
+      toggleBooleanStateDirective(el, directive3, isDirty, initialDisplay);
       oldIsDirty = isDirty;
     };
     refreshDirtyStatesByComponent.add(component, refreshDirtyState);
