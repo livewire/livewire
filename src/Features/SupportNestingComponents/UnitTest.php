@@ -111,6 +111,23 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertContains($children, $component->snapshot['memo']);
     }
+
+    /** @test */
+    public function parent_renders_children_after_failed_validation()
+    {
+        app('livewire')->component('parent', ParentFormNestedStub::class);
+        app('livewire')->component('child', ChildComponentForNestingStub::class);
+        $component = app('livewire')->test('parent');
+
+        $this->assertStringContainsString('Foo', $component->html());
+
+        $component
+            ->set('name', 'f')
+            ->call('submit')
+            ->assertHasErrors();
+
+        $this->assertStringContainsString('Foo', $component->html());
+    }
 }
 
 class ParentComponentForNestingChildStub extends Component
@@ -209,5 +226,32 @@ class ParentComponentForSkipRenderStub extends Component
         return app('view')->make('show-child', [
             'child' => ['name' => 'foo'],
         ]);
+    }
+}
+
+class ParentFormNestedStub extends Component
+{
+    public $name;
+
+    public function rules()
+    {
+        return [
+            'name' => 'min:3',
+        ];
+    }
+
+    public function render()
+    {
+        return <<<'blade'
+            <form wire:submit="submit">
+                <input type="text" wire:model="name" />
+                <livewire:child name='Foo' />
+            </form>
+blade;
+    }
+
+    public function submit()
+    {
+        $this->validate();
     }
 }
