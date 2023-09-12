@@ -79,7 +79,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function back_button_works_with_teleports()
     {
-        $this->registerComponentRoutes([
+        $this->registerComponentTestRoutes([
             '/second' => new class extends Component {
                 public function render(){ return <<<'HTML'
                     <div>
