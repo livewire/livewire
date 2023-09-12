@@ -17,11 +17,15 @@ export function storePersistantElementsForLater(callback) {
 }
 
 export function putPersistantElementsBack(callback) {
+    let usedPersists = []
+
     document.querySelectorAll('[x-persist]').forEach(i => {
         let old = els[i.getAttribute('x-persist')]
 
         // There might be a brand new x-persist element...
         if (! old) return
+
+        usedPersists.push(i.getAttribute('x-persist'))
 
         old._x_wasPersisted = true
 
@@ -31,4 +35,14 @@ export function putPersistantElementsBack(callback) {
             i.replaceWith(old)
         })
     })
+
+    Object.entries(els).forEach(([key, el]) => {
+        if (usedPersists.includes(key)) return
+
+        // Destory the un-used persist DOM trees before releasing them...
+        Alpine.destroyTree(el)
+    })
+
+    // Release unused persists for garbage collection...
+    els = {}
 }

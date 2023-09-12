@@ -75,6 +75,8 @@ function mergeNewHead(newHead) {
     // Only add scripts and styles that aren't already loaded on the page.
     let garbageCollector = document.createDocumentFragment()
 
+    let touchedHeadElements = []
+
     for (let child of Array.from(newHead.children)) {
         if (isAsset(child)) {
             if (! headChildrenHtmlLookup.includes(child.outerHTML)) {
@@ -91,6 +93,17 @@ function mergeNewHead(newHead) {
                 }
             } else {
                 garbageCollector.appendChild(child)
+            }
+
+            touchedHeadElements.push(child)
+        }
+    }
+
+    // Remove any assets that aren't on the new page...
+    for (let child of Array.from(document.head.children)) {
+        if (isAsset(child)) {
+            if (! touchedHeadElements.some(i => i.outerHTML === child.outerHTML)) {
+                child.remove()
             }
         }
     }

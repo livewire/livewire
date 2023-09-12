@@ -6746,7 +6746,14 @@ function updateUrl(method, url, html) {
   if (!state.alpine)
     state.alpine = {};
   state.alpine._html = key;
-  history[method](state, document.title, url);
+  try {
+    history[method](state, document.title, url);
+  } catch (error2) {
+    if (error2 instanceof DOMException && error2.name === "SecurityError") {
+      console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
+    }
+    console.error(error2);
+  }
 }
 function fromSessionStorage(timestamp) {
   let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
@@ -6911,16 +6918,24 @@ function storePersistantElementsForLater(callback) {
   });
 }
 function putPersistantElementsBack(callback) {
+  let usedPersists = [];
   document.querySelectorAll("[x-persist]").forEach((i) => {
     let old = els[i.getAttribute("x-persist")];
     if (!old)
       return;
+    usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
     callback(old, i);
     import_alpinejs6.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
+  Object.entries(els).forEach(([key, el]) => {
+    if (usedPersists.includes(key))
+      return;
+    import_alpinejs6.default.destroyTree(el);
+  });
+  els = {};
 }
 
 // js/plugins/navigate/bar.js
@@ -7070,6 +7085,7 @@ function mergeNewHead(newHead) {
   let children = Array.from(document.head.children);
   let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
   let garbageCollector = document.createDocumentFragment();
+  let touchedHeadElements = [];
   for (let child of Array.from(newHead.children)) {
     if (isAsset(child)) {
       if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
@@ -7085,6 +7101,14 @@ function mergeNewHead(newHead) {
         }
       } else {
         garbageCollector.appendChild(child);
+      }
+      touchedHeadElements.push(child);
+    }
+  }
+  for (let child of Array.from(document.head.children)) {
+    if (isAsset(child)) {
+      if (!touchedHeadElements.some((i) => i.outerHTML === child.outerHTML)) {
+        child.remove();
       }
     }
   }
