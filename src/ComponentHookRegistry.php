@@ -45,13 +45,13 @@ class ComponentHookRegistry
                 $hook->callMount($params, $parent);
             });
 
-            on('hydrate', function ($component, $memo) use ($hook) {
+            on('hydrate', function ($component, $memo, $context) use ($hook) {
                 if (! $hook = static::initializeHook($hook, $component)) {
                     return;
                 }
 
                 $hook->callBoot();
-                $hook->callHydrate($memo);
+                $hook->callHydrate($memo, $context);
             });
         }
 

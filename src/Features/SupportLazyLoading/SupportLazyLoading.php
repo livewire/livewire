@@ -47,10 +47,12 @@ class SupportLazyLoading extends ComponentHook
         );
     }
 
-    public function hydrate($memo)
+    public function hydrate($memo, $context)
     {
         if (! isset($memo['lazyLoaded'])) return;
         if ($memo['lazyLoaded'] === true) return;
+
+        $context->mounting = true;
 
         $this->component->skipHydrate();
 
