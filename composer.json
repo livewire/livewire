@@ -23,7 +23,8 @@
     "laravel/framework": "^10.0",
     "orchestra/testbench": "^7.0|^8.0",
     "orchestra/testbench-dusk": "^7.0|^8.0",
-    "calebporzio/sushi": "^2.1"
+    "calebporzio/sushi": "^2.1",
+    "laravel/prompts": "^0.1.6"
   },
   "autoload": {
     "files": [
