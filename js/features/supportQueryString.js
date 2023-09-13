@@ -3,12 +3,17 @@ import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'
 
-on('component.init', ({ component, cleanup }) => {
-    let effects = component.effects
+on('effects', (component, effects) => {
     let queryString = effects['url']
 
     if (! queryString) return
 
+    processQueryString(component, queryString)
+})
+
+function processQueryString(component, queryString) {
+    let cleanup = (i) => component.addCleanup(i)
+    
     Object.entries(queryString).forEach(([key, value]) => {
         let { name, as, use, alwaysShow } = normalizeQueryStringEntry(key, value)
 
@@ -52,7 +57,7 @@ on('component.init', ({ component, cleanup }) => {
             })
         }
     })
-})
+}
 
 function normalizeQueryStringEntry(key, value) {
     let defaults = { use: 'replace', alwaysShow: false }
