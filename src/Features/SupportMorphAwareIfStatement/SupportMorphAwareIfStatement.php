@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
 use Livewire\ComponentHook;
-use Illuminate\Support\Facades\Blade;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
@@ -12,29 +11,34 @@ class SupportMorphAwareIfStatement extends ComponentHook
     {
         if (! config('livewire.inject_morph_markers', true)) return;
 
-        static::registerPrecompilers(
-            app('livewire')->precompiler(...)
-        );
+        static::registerPrecompilers();
     }
 
-    static function registerPrecompilers($precompile)
+    static function registerPrecompilers()
     {
         $generatePattern = function ($directives) {
             $directivesPattern = '('
                 .collect($directives)
                     // Ensure longer directives are in the pattern before shorter ones...
                     ->sortBy(fn ($directive) => strlen($directive), descending: true)
+                    // Only match directives that are an exact match and not ones that
+                    // simply start with the provided directive here...
+                    ->map(fn ($directive) => $directive.'(?![a-zA-Z])')
+                    // @empty is a special case in that it can be used as a standalone directive
+                    // and also within a @forelese statement. We only want to target when it's standalone
+                    // by enforcing @empty has an opening parenthesis after it when matching...
+                    ->map(fn ($directive) => str($directive)->startsWith('@empty') ? $directive.'[^\S\r\n]*\(' : $directive)
                     ->join('|')
             .')';
 
             $pattern = '/
-                '.$directivesPattern.'  # Blade directive
+                '.$directivesPattern.'  # Blade directives: (@if|@foreach|...)
                 (?!                     # Not followed by:
                     [^<]*               # ...
                     (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
                     >                   # A ">" character that isn\'t preceded by a "<" character (meaning it\'s outside of a tag)
                 )
-            /mUx';
+            /mUxi';
 
             return $pattern;
         };
@@ -68,13 +72,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 $original = $matches[0];
 
                 return '<!-- __BLOCK__ -->'.$original;
-            }, $entire);
+            }, $entire) ?? $entire;
 
             $entire = preg_replace_callback($generatePattern($closings), function ($matches) {
                 $original = $matches[0];
 
                 return $original.' <!-- __ENDBLOCK__ -->';
-            }, $entire);
+            }, $entire) ?? $entire;
 
             return $entire;
         });

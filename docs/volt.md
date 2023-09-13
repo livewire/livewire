@@ -27,8 +27,7 @@ $increment = fn () => $this->count++;
 To get started, install Volt into your project using the Composer package manager:
 
 ```bash
-composer require livewire/livewire "^3.0@beta" # Or ensure Livewire v3.x is installed...
-composer require livewire/volt "^1.0@beta"
+composer require livewire/volt
 ```
 
 After installing Volt, you may execute the `volt:install` Artisan command, which will install Volt's service provider file into your application. This service provider specifies the mounted directories in which Volt will search for single file components:
@@ -106,7 +105,7 @@ use App\Models\Post;
 
 new class extends Component {
     use WithPagination;
-    
+
     public function with(): array
     {
         return [
@@ -177,6 +176,20 @@ use function Livewire\Volt\{layout, state};
 state('users');
 
 layout('components.layouts.admin');
+
+// ...
+```
+
+You may also customize the title of the page using the `title` function:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title('Users');
 
 // ...
 ```
@@ -593,7 +606,7 @@ Livewire and Volt also have complete support for [pagination](/docs/pagination).
 ```php
 <?php
 
-use function Livewire\Volt\{computed, usesPagination};
+use function Livewire\Volt\{with, usesPagination};
 
 usesPagination();
 
@@ -602,11 +615,11 @@ with(fn () => ['posts' => Post::paginate(10)]);
 ?>
 
 <div>
-    @foreach ($this->posts as $post)
+    @foreach ($posts as $post)
         //
     @endforeach
 
-    {{ $this->posts->links() }}
+    {{ $posts->links() }}
 </div>
 ```
 

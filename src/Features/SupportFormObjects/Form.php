@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 
@@ -13,25 +14,47 @@ class Form implements Arrayable
         protected $propertyName
     ) {
         $this->addValidationRulesToComponent();
+        $this->addValidationAttributesToComponent();
+        $this->addMessagesToComponent();
     }
 
     public function getComponent() { return $this->component; }
     public function getPropertyName() { return $this->propertyName; }
 
-    public function addValidationRulesToComponent()
+    protected function addValidationRulesToComponent()
     {
         $rules = [];
 
         if (method_exists($this, 'rules')) $rules = $this->rules();
         else if (property_exists($this, 'rules')) $rules = $this->rules;
 
-        $rulesWithPrefixedKeys = [];
+        $this->component->addRulesFromOutside(
+            $this->getAttributesWithPrefixedKeys($rules)
+        );
+    }
 
-        foreach ($rules as $key => $value) {
-            $rulesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
-        }
+    protected function addValidationAttributesToComponent()
+    {
+        $validationAttributes = [];
 
-        $this->component->addRulesFromOutside($rulesWithPrefixedKeys);
+        if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+        else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+
+        $this->component->addValidationAttributesFromOutside(
+            $this->getAttributesWithPrefixedKeys($validationAttributes)
+        );
+    }
+
+    protected function addMessagesToComponent()
+    {
+        $messages = [];
+
+        if (method_exists($this, 'messages')) $messages = $this->messages();
+        else if (property_exists($this, 'messages')) $messages = $this->messages;
+
+        $this->component->addMessagesFromOutside(
+            $this->getAttributesWithPrefixedKeys($messages)
+        );
     }
 
     public function addError($key, $message)
@@ -63,7 +86,7 @@ class Form implements Arrayable
     {
         $results = [];
 
-        foreach ($properties as $property) {
+        foreach (is_array($properties) ? $properties : func_get_args() as $property) {
             $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
         }
 
@@ -72,7 +95,7 @@ class Form implements Arrayable
 
     public function except($properties)
     {
-        if (! is_array($properties)) $properties = [$properties];
+        $properties = is_array($properties) ? $properties : func_get_args();
 
         return array_diff_key($this->all(), array_flip($properties));
     }
@@ -93,6 +116,21 @@ class Form implements Arrayable
         return $value;
     }
 
+    public function fill($values)
+    {
+        $publicProperties = array_keys($this->all());
+
+        if ($values instanceof Model) {
+            $values = $values->toArray();
+        }
+
+        foreach ($values as $key => $value) {
+            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+                data_set($this, $key, $value);
+            }
+        }
+    }
+
     public function reset(...$properties)
     {
         $properties = count($properties) && is_array($properties[0])
@@ -111,5 +149,16 @@ class Form implements Arrayable
     public function toArray()
     {
         return Utils::getPublicProperties($this);
+    }
+
+    protected function getAttributesWithPrefixedKeys($attributes)
+    {
+        $attributesWithPrefixedKeys = [];
+
+        foreach ($attributes as $key => $value) {
+            $attributesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
+        }
+
+        return $attributesWithPrefixedKeys;
     }
 }

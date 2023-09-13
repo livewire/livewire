@@ -29,6 +29,18 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function a_wireable_can_be_updated()
+    {
+        $wireable = new WireableClass('foo', '42');
+
+        Livewire::test(ComponentWithWireablePublicProperty::class, ['wireable' => $wireable])
+            ->assertSee('foo')
+            ->call("\$set", 'wireable', ['message' => 'bar', 'embeddedWireable' => ['message' => '42']])
+            ->call("\$set", 'wireable.message', 'bar')
+            ->assertSee('bar');
+    }
+
+    /** @test */
     public function a_wireable_can_be_set_as_a_public_property_and_validates_only()
     {
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = Str::random());

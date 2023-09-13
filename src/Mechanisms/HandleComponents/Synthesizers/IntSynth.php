@@ -15,7 +15,7 @@ class IntSynth extends Synth {
     }
 
     static function hydrateFromType($type, $value) {
-        if ($value === '') return null;
+        if ($value === '' || $value === null) return null;
 
         return (int) $value;
     }

@@ -88,6 +88,9 @@ class CreatePost extends Component
 }
 ```
 
+> [!warning] Rule attributes have restrictions
+> PHP Attributes are restricted to certain syntaxes like plain strings and arrays. If you find yourself wanting to use run-time syntaxes like Laravel's rule objects (`Rule::exists(...)`) you should instead [define a `rules()` method](#defining-a-rules-method) in your component.
+
 If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validate()` method:
 
 ```php
@@ -340,6 +343,52 @@ use Livewire\Attributes\Rule;
 ])]
 public $titles = [];
 ```
+
+## Defining a `rules()` method
+
+As an alternative to Livewire's `#[Rule]` attributes, you can define a method in your component called `rules()` and return a list of fields and corresponding validation rules. This can be helpful if you are trying to use run-time syntaxes that aren't supported in PHP Attributes, for example, Laravel rule objects like `Rule::password()`.
+
+These rules will then be applied when you run `$this->validate()` inside the component.
+
+Here's an example:
+
+```php
+use Livewire\Component;
+use App\Models\Post;
+use Illuminate\Validation\Rule as ValidationRule;
+
+class CreatePost extends Component
+{
+	public $title = '';
+
+    public $content = '';
+
+    public function rules() // [tl! highlight:6]
+    {
+        return [
+            'title' => ValidationRule::exists('posts', 'title'),
+            'content' => 'required|min:3',
+        ];
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+		Post::create([
+            'title' => $this->title,
+            'content' => $this->content,
+		]);
+
+		return redirect()->to('/posts');
+    }
+
+    // ...
+}
+```
+
+> [!warning] The `rules()` method doesn't validate on data updates
+> When defining rules via the `rules()` method, Livewire will ONLY use these validation rules to validate properties when you run `$this->validate()`. This is different than standard `#[Rule]` attributes which are applied every time a field is updated via something like `wire:model`.
 
 ## Manually controlling validation errors
 

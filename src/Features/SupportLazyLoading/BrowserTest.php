@@ -263,6 +263,39 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Count: 3')
         ;
     }
+
+    /** @test */
+    public function can_access_component_parameters_in_placeholder_view()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<HTML
+            <div>
+                <livewire:child my-parameter="A Parameter Value" lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function mount() {
+                sleep(1);
+            }
+            public function placeholder(array $params = []) { 
+                return view('placeholder', $params);
+            }
+            public function render() {
+                return <<<HTML
+                <div id="child">
+                    Child!
+                </div>
+                HTML;
+            }
+        }])
+        ->waitFor('#loading')
+        ->assertSee('A Parameter Value')
+        ->assertDontSee('Child!')
+        ->waitFor('#child')
+        ->assertSee('Child!')
+        ;
+    }
+
 }
 
 class Page extends Component {

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Carbon\Carbon;
 use Livewire\WithFileUploads;
 use Livewire\Livewire;
 use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
@@ -317,6 +318,22 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['photo' => 'dimensions']);
 
         Storage::disk('avatars')->assertMissing('uploaded-avatar.png');
+    }
+
+    /** @test */
+    public function invalid_file_extension_can_validate_dimensions()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()
+            ->create('not-a-png-image.pdf', 512, 512);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUploadWithDimensions')
+            ->assertHasErrors(['photo' => 'dimensions']);
+
+        Storage::disk('avatars')->assertMissing('uploaded-not-a-png-image.png');
     }
 
     /** @test */
@@ -642,6 +659,28 @@ class UnitTest extends \Tests\TestCase
             FileUploadConfiguration::storage()->path(FileUploadConfiguration::directory()),
             $photo->getPath()
         );
+    }
+
+    /** @test */
+    public function preview_url_is_stable_over_some_time()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 01, 00));
+
+        $first_url = $photo->temporaryUrl();
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 05, 00));
+
+        $second_url = $photo->temporaryUrl();
+
+        $this->assertEquals($first_url, $second_url);
     }
 }
 

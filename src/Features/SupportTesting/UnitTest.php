@@ -482,7 +482,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
-    function it_ignores_rules_with_params(){
+    function it_ignores_rules_with_params()
+    {
         Livewire::test(ValidatesDataWithRulesHasParams::class)
             ->call('submit')
             ->assertHasErrors(['foo' => 'min'])
@@ -490,6 +491,15 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->set('foo', 'FOO')
             ->assertHasNoErrors(['foo' => 'min'])
             ->assertHasNoErrors(['foo' => 'min:2']);
+    }
+
+    /** @test */
+    function assert_response_of_calling_method()
+    {
+        Livewire::test(ComponentWithMethodThatReturnsData::class)
+            ->call('foo')
+            ->assertReturned('bar')
+            ->assertReturned(fn ($data) => $data === 'bar');
     }
 }
 
@@ -634,4 +644,17 @@ class ValidatesDataWithRulesHasParams extends Component{
 class ComponentWhichReceivesEvent extends Component
 {
 
+}
+
+class ComponentWithMethodThatReturnsData extends Component
+{
+    function foo()
+    {
+        return 'bar';
+    }
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
 }

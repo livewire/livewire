@@ -110,6 +110,11 @@ export class Component {
             ? { listeners: this.originalEffects.listeners }
             : {}
 
+        // We need to re-register any url/query-string bindings...
+        if (this.originalEffects.url) {
+            effects.url = this.originalEffects.url
+        }
+
         el.setAttribute('wire:effects', JSON.stringify(effects))
     }
 
