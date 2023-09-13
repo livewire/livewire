@@ -54,15 +54,19 @@ If you'd rather force Livewire to inject it's assets on a single page or multipl
 \Livewire\Livewire::forceAssetInjection();
 ```
 
-## Configuring Livewire's update endpoint
+## Configuring Livewire's messaging endpoints
 
 Every update in a Livewire component sends a network request to the server at the following endpoint: `https://example.com/livewire/update`
+The file upload and preview functionalities rely on two additionnal endpoints which are `https://example.com/livewire/upload-file` and `https://example.com/livewire/preview-file` by default.
 
-This can be a problem for some applications that use localization or multi-tenancy.
+This can be a problem for some applications that use localization or multi-tenancy or which have to apply constraint on their URL scheme for some reason.
 
-In those cases, you can register your own endpoint however you like, and as long as you do it inside `Livewire::setUpdateRoute()`,  Livewire will know to use this endpoint for all component updates:
+In those cases, you can register your own endpoints however you like, and as long as you do it using the provided methodes, Livewire will know to use these endpoints for all component updates, file uploads and previews:
 
+For example, for the update endpoint:
 ```php
+use Livewire\Livewire;
+
 Livewire::setUpdateRoute(function ($handle) {
 	return Route::post('/custom/livewire/update', $handle);
 });
@@ -73,11 +77,36 @@ Now, instead of using `/livewire/update`, Livewire will send component updates t
 Because Livewire allows you to register your own update route, you can declare any additional middleware you want Livewire to use directly inside `setUpdateRoute()`:
 
 ```php
+use Livewire\Livewire;
+
 Livewire::setUpdateRoute(function ($handle) {
 	return Route::post('/custom/livewire/update', $handle)
         ->middleware([...]); // [tl! highlight]
 });
 ```
+
+> [!tip] for the `update` endpoint, the Route you declare must be a `post` Route.
+
+And you can do the same for the other endpoints with:
+```php
+use Livewire\Livewire;
+
+Livewire::setUploadFileRoute(function ($handle) {
+	return Route::post('/custom/livewire/upload-file', $handle);
+});
+```
+
+> [!tip] for the `upload-file` endpoint, the Route you declare must be a `post` Route.
+
+```php
+use Livewire\Livewire;
+
+Livewire::setPreviewFileRoute(function ($handle) {
+	return Route::get('/custom/livewire/preview-file', $handle);
+});
+```
+
+> [!tip] for the `preview-file` endpoint, the Route you declare must be a `get` Route.
 
 ## Customizing the asset URL
 
@@ -102,6 +131,8 @@ Now, Livewire will load its JavaScript like so:
 ```blade
 <script src="/custom/livewire/livewire.js" ...
 ```
+
+> [!tip] Be sure to use a `get` Route when you customize the asset URL.
 
 ## Manually bundling Livewire and Alpine
 

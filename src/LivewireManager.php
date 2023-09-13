@@ -12,6 +12,8 @@ use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
+use Livewire\Features\SupportFileUploads\FileUploadController;
+use Livewire\Features\SupportFileUploads\FilePreviewController;
 
 class LivewireManager
 {
@@ -123,6 +125,18 @@ class LivewireManager
         return app(HandleRequests::class)->setUpdateRoute($callback);
     }
 
+    function setUploadFileRoute($callback)
+    {
+        $route = $callback([FileUploadController::class, 'handle']);
+        $route->name('livewire.upload-file');
+    }
+
+    function setPreviewFileRoute($callback)
+    {
+        $route = $callback([FilePreviewController::class, 'handle']);
+        $route->name('livewire.preview-file');
+    }
+
     function getUpdateUri()
     {
         return app(HandleRequests::class)->getUpdateUri();
@@ -164,9 +178,9 @@ class LivewireManager
 
     function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
     {
-         Testable::actingAs($user, $driver);
+        Testable::actingAs($user, $driver);
 
-         return $this;
+        return $this;
     }
 
     function isRunningServerless()
