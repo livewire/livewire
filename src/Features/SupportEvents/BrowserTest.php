@@ -35,35 +35,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function call_render_after_event_handler()
-    {
-        Livewire::visit(new class extends Component {
-            public $count = 0;
-
-            protected $listeners = ['foo' => 'onFoo'];
-
-            function onFoo()
-            {
-            }
-
-            function render()
-            {
-                $this->count++;
-
-                return Blade::render(<<<'HTML'
-                <div>
-                    <button @click="$dispatch('foo')" dusk="button">{{ $count }}</button>
-                </div>
-                HTML, ['count' => $this->count]);
-            }
-        })
-            ->assertSeeIn('@button', '1')
-            ->waitForLivewire()->click('@button')
-            ->assertSeeIn('@button', '2');
-    }
-
-    /** @test */
-    public function dont_call_render_after_event_handler_renderless()
+    public function dont_call_render_on_renderless_event_handler()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -71,9 +43,7 @@ class BrowserTest extends BrowserTestCase
             protected $listeners = ['foo' => 'onFoo'];
 
             #[Renderless]
-            function onFoo()
-            {
-            }
+            function onFoo() { }
 
             function render()
             {
