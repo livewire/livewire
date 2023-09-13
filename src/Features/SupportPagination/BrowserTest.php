@@ -23,7 +23,7 @@ class BrowserTest extends BrowserTestCase
             {
                 return Blade::render(
                     <<< 'HTML'
-                    <div>
+                    <div dusk="lazyComponent">
                         @foreach ($posts as $post)
                             <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
                         @endforeach
@@ -37,7 +37,8 @@ class BrowserTest extends BrowserTestCase
                 );
             }
         })
-
+            // Wait for the lazy component to load
+            ->waitFor('@lazyComponent')
             // Test that going to page 2, then back to page 1 removes "page" from the query string.
             ->assertSee('Post #1')
             ->assertSee('Post #2')
@@ -62,6 +63,7 @@ class BrowserTest extends BrowserTestCase
 
             // Test that using the next page button twice (the one at the end of the page numbers) works.
             ->refresh()
+            ->waitFor('@lazyComponent')
             ->assertSee('Post #1')
             ->assertDontSee('Post #4')
 
@@ -80,6 +82,7 @@ class BrowserTest extends BrowserTestCase
             // Test that hitting the back button takes you back to the previous page after a refresh.
             ->refresh()
             ->waitForLivewire()->back()
+            ->waitFor('@lazyComponent')
             ->assertQueryStringHas('page', '2')
             ->assertDontSee('Post #7')
             ->assertSee('Post #4')
