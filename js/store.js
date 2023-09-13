@@ -9,7 +9,9 @@ export function initComponent(el) {
 
     if (components[component.id]) throw 'Component already registered'
 
-    trigger('component.init', { component })
+    let cleanup = (i) => component.addCleanup(i)
+
+    trigger('component.init', { component, cleanup })
 
     components[component.id] = component
 

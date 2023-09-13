@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportPagination;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\WithPagination;
@@ -941,6 +942,75 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Post #7')
         ->assertSee('Post #8')
         ->assertSee('Post #9');
+    }
+
+    /** @test */
+    public function it_loads_pagination_even_when_there_are_nested_components_that_do_not_have_pagination()
+    {
+        Livewire::visit([
+            new class extends Component {
+                use WithPagination;
+
+                #[Computed]
+                public function posts()
+                {
+                    return Post::paginate(3);
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                <div>
+                        <livewire:child />
+
+                        @foreach ($this->posts as $post)
+                        <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                    @endforeach
+
+                    {{ $this->posts->links() }}
+                </div>
+                HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                        <div dusk="child">
+                            Child
+                        </div>
+                HTML;
+                }
+            },
+        ])
+            // Test that going to page 2, then back to page 1 removes "page" from the query string.
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertDontSee('Post #4')
+            ->assertPresent('@child')
+            ->assertSeeIn('@child', 'Child')
+
+            ->waitForLivewire()->click('@nextPage.before')
+
+            ->assertDontSee('Post #3')
+            ->assertSee('Post #4')
+            ->assertSee('Post #5')
+            ->assertSee('Post #6')
+            ->assertQueryStringHas('page', '2')
+            ->assertPresent('@child')
+            ->assertSeeIn('@child', 'Child')
+
+            ->waitForLivewire()->click('@previousPage.before')
+
+            ->assertDontSee('Post #6')
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertQueryStringMissing('page')
+            ->assertPresent('@child')
+            ->assertSeeIn('@child', 'Child')
+        ;
     }
 }
 

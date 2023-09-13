@@ -23,38 +23,38 @@ class Form implements Arrayable
 
     protected function addValidationRulesToComponent()
     {
-        $rules = [];
+        $this->component->addRulesFromOutside(function() {
+            $rules = [];
 
-        if (method_exists($this, 'rules')) $rules = $this->rules();
-        else if (property_exists($this, 'rules')) $rules = $this->rules;
+            if (method_exists($this, 'rules')) $rules = $this->rules();
+            else if (property_exists($this, 'rules')) $rules = $this->rules;
 
-        $this->component->addRulesFromOutside(
-            $this->getAttributesWithPrefixedKeys($rules)
-        );
+            return $this->getAttributesWithPrefixedKeys($rules);
+        });
     }
 
     protected function addValidationAttributesToComponent()
     {
-        $validationAttributes = [];
+        $this->component->addValidationAttributesFromOutside(function() {
+            $validationAttributes = [];
 
-        if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
-        else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+            if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+            else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
 
-        $this->component->addValidationAttributesFromOutside(
-            $this->getAttributesWithPrefixedKeys($validationAttributes)
-        );
+            return $this->getAttributesWithPrefixedKeys($validationAttributes);
+        });
     }
 
     protected function addMessagesToComponent()
     {
-        $messages = [];
+        $this->component->addMessagesFromOutside(function() {
+            $messages = [];
 
-        if (method_exists($this, 'messages')) $messages = $this->messages();
-        else if (property_exists($this, 'messages')) $messages = $this->messages;
+            if (method_exists($this, 'messages')) $messages = $this->messages();
+            else if (property_exists($this, 'messages')) $messages = $this->messages;
 
-        $this->component->addMessagesFromOutside(
-            $this->getAttributesWithPrefixedKeys($messages)
-        );
+            return $this->getAttributesWithPrefixedKeys($messages);
+        });
     }
 
     public function addError($key, $message)

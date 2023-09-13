@@ -38,7 +38,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
                     (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
                     >                   # A ">" character that isn\'t preceded by a "<" character (meaning it\'s outside of a tag)
                 )
-            /mUx';
+            /mUxi';
 
             return $pattern;
         };

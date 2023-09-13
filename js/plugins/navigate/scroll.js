@@ -1,5 +1,9 @@
 import Alpine from 'alpinejs'
 
+export function scrollToTop() {
+    document.body.scrollTo(0, 0)
+}
+
 export function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute('data-scroll-x', document.body.scrollLeft)
     document.body.setAttribute('data-scroll-y', document.body.scrollTop)
@@ -10,11 +14,15 @@ export function storeScrollInformationInHtmlBeforeNavigatingAway() {
     })
 }
 
-export function restoreScrollPosition() {
+export function restoreScrollPositionOrScrollToTop() {
     let scroll = el => {
-        el.scrollTo(Number(el.getAttribute('data-scroll-x')), Number(el.getAttribute('data-scroll-y')))
-        el.removeAttribute('data-scroll-x')
-        el.removeAttribute('data-scroll-y')
+        if (! el.hasAttribute('data-scroll-x')) {
+            window.scrollTo(0, 0)
+        } else {
+            el.scrollTo(Number(el.getAttribute('data-scroll-x')), Number(el.getAttribute('data-scroll-y')))
+            el.removeAttribute('data-scroll-x')
+            el.removeAttribute('data-scroll-y')
+        }
     }
 
     queueMicrotask(() => {
