@@ -38,7 +38,11 @@ trait HandlesValidation
 
     public function getErrorBag()
     {
-        return store($this)->get('errorBag', new MessageBag);
+        if (! store($this)->has('errorBag')) {
+            $this->setErrorBag([]);
+        }
+
+        return store($this)->get('errorBag');
     }
 
     public function addError($name, $message)

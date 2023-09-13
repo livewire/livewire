@@ -393,17 +393,12 @@
   function isSynthetic(subject) {
     return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
   }
-  var csrf;
   function getCsrfToken() {
-    if (csrf)
-      return csrf;
     if (document.querySelector("[data-csrf]")) {
-      csrf = document.querySelector("[data-csrf]").getAttribute("data-csrf");
-      return csrf;
+      return document.querySelector("[data-csrf]").getAttribute("data-csrf");
     }
     if (window.livewireScriptConfig["csrf"] ?? false) {
-      csrf = window.livewireScriptConfig["csrf"];
-      return csrf;
+      return window.livewireScriptConfig["csrf"];
     }
     throw "Livewire: No CSRF token detected";
   }
@@ -1106,52 +1101,32 @@
     return closestDataStack(node.parentNode);
   }
   function mergeProxies(objects) {
-    let thisProxy = new Proxy({}, {
-      ownKeys: () => {
-        return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
-      },
-      has: (target, name) => {
-        return objects.some((obj) => obj.hasOwnProperty(name));
-      },
-      get: (target, name) => {
-        return (objects.find((obj) => {
-          if (obj.hasOwnProperty(name)) {
-            let descriptor = Object.getOwnPropertyDescriptor(obj, name);
-            if (descriptor.get && descriptor.get._x_alreadyBound || descriptor.set && descriptor.set._x_alreadyBound) {
-              return true;
-            }
-            if ((descriptor.get || descriptor.set) && descriptor.enumerable) {
-              let getter = descriptor.get;
-              let setter = descriptor.set;
-              let property = descriptor;
-              getter = getter && getter.bind(thisProxy);
-              setter = setter && setter.bind(thisProxy);
-              if (getter)
-                getter._x_alreadyBound = true;
-              if (setter)
-                setter._x_alreadyBound = true;
-              Object.defineProperty(obj, name, {
-                ...property,
-                get: getter,
-                set: setter
-              });
-            }
-            return true;
-          }
-          return false;
-        }) || {})[name];
-      },
-      set: (target, name, value) => {
-        let closestObjectWithKey = objects.find((obj) => obj.hasOwnProperty(name));
-        if (closestObjectWithKey) {
-          closestObjectWithKey[name] = value;
-        } else {
-          objects[objects.length - 1][name] = value;
-        }
-        return true;
-      }
-    });
-    return thisProxy;
+    return new Proxy({ objects }, mergeProxyTrap);
+  }
+  var mergeProxyTrap = {
+    ownKeys({ objects }) {
+      return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
+    },
+    has({ objects }, name) {
+      if (name == Symbol.unscopables)
+        return false;
+      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+    },
+    get({ objects }, name, thisProxy) {
+      if (name == "toJSON")
+        return collapseProxies;
+      return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+    },
+    set({ objects }, name, value) {
+      return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
+    }
+  };
+  function collapseProxies() {
+    let keys = Reflect.ownKeys(this);
+    return keys.reduce((acc, key) => {
+      acc[key] = Reflect.get(this, key);
+      return acc;
+    }, {});
   }
   function initInterceptors2(data2) {
     let isObject22 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
@@ -2333,8 +2308,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2367,8 +2342,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2458,7 +2433,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.options.onTrack) {
+      if (false) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2522,7 +2497,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (effect3.options.onTrigger) {
+      if (false) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2659,13 +2634,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2727,7 +2702,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2746,7 +2721,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2759,7 +2734,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2804,7 +2779,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2906,13 +2881,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has2, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has2.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2945,7 +2913,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3037,7 +3005,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
   function warnMissingPluginMagic(name, magicName, slug) {
-    magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    magic(magicName, (el) => warn(`You can't use [$${magicName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
@@ -3075,20 +3043,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup22(releaseEntanglement);
     });
   });
-  var teleportContainerDuringClone = document.createElement("div");
   directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
       warn("x-teleport can only be used on a <template> tag", el);
-    let target = skipDuringClone(() => {
-      return document.querySelector(expression);
-    }, () => {
-      return teleportContainerDuringClone;
-    })();
-    if (!target)
-      warn(`Cannot find x-teleport element for selector: "${expression}"`);
+    let target = getTarget(expression);
     let clone2 = el.content.cloneNode(true).firstElementChild;
     el._x_teleport = clone2;
     clone2._x_teleportBack = el;
+    el.setAttribute("data-teleport-template", true);
+    clone2.setAttribute("data-teleport-target", true);
     if (el._x_forwardEvents) {
       el._x_forwardEvents.forEach((eventName) => {
         clone2.addEventListener(eventName, (e) => {
@@ -3098,19 +3061,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     addScopeToNode(clone2, {}, el);
-    mutateDom(() => {
-      if (modifiers.includes("prepend")) {
-        target.parentNode.insertBefore(clone2, target);
-      } else if (modifiers.includes("append")) {
-        target.parentNode.insertBefore(clone2, target.nextSibling);
+    let placeInDom = (clone3, target2, modifiers2) => {
+      if (modifiers2.includes("prepend")) {
+        target2.parentNode.insertBefore(clone3, target2);
+      } else if (modifiers2.includes("append")) {
+        target2.parentNode.insertBefore(clone3, target2.nextSibling);
       } else {
-        target.appendChild(clone2);
+        target2.appendChild(clone3);
       }
+    };
+    mutateDom(() => {
+      placeInDom(clone2, target, modifiers);
       initTree(clone2);
       clone2._x_ignore = true;
     });
-    cleanup22(() => clone2.remove());
+    el._x_teleportPutBack = () => {
+      let target2 = getTarget(expression);
+      mutateDom(() => {
+        placeInDom(el._x_teleport, target2, modifiers);
+      });
+    };
   });
+  var teleportContainerDuringClone = document.createElement("div");
+  function getTarget(expression) {
+    let target = skipDuringClone(() => {
+      return document.querySelector(expression);
+    }, () => {
+      return teleportContainerDuringClone;
+    })();
+    if (!target)
+      warn(`Cannot find x-teleport element for selector: "${expression}"`);
+    return target;
+  }
   var handler = () => {
   };
   handler.inline = (el, { modifiers }, { cleanup: cleanup22 }) => {
@@ -3353,7 +3335,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getInputValue(el, modifiers, event, currentValue) {
     return mutateDom(() => {
       if (event instanceof CustomEvent && event.detail !== void 0)
-        return event.detail ?? event.target.value;
+        return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
       else if (el.type === "checkbox") {
         if (Array.isArray(currentValue)) {
           let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
@@ -3701,6 +3683,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
   directive("ref", handler3);
   directive("if", (el, { expression }, { effect: effect3, cleanup: cleanup22 }) => {
+    if (el.tagName.toLowerCase() !== "template")
+      warn("x-if can only be used on a <template> tag", el);
     let evaluate2 = evaluateLater(el, expression);
     let show = () => {
       if (el._x_currentIfEl)
@@ -3758,8 +3742,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginDirective("Intersect", "intersect", "intersect");
   warnMissingPluginDirective("Focus", "trap", "focus");
   warnMissingPluginDirective("Mask", "mask", "mask");
-  function warnMissingPluginDirective(name, directiveName2, slug) {
-    directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+  function warnMissingPluginDirective(name, directiveName, slug) {
+    directive(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
   alpine_default.setReactivityEngine({ reactive: reactive2, effect: effect2, release: stop, raw: toRaw });
@@ -4093,7 +4077,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get(target, property) {
         if (!component)
           component = closestComponent(el);
-        if (property === "entangle") {
+        if (["$entangle", "entangle"].includes(property)) {
           return generateEntangleFunction(component, cleanup3);
         }
         return component.$wire[property];
@@ -4118,8 +4102,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
   });
-  wireProperty("$toggle", (component) => (name) => {
-    return component.$wire.set(name, !component.$wire.get(name));
+  wireProperty("$toggle", (component) => (name, live = true) => {
+    return component.$wire.set(name, !component.$wire.get(name), live);
   });
   wireProperty("$watch", (component) => (path, callback) => {
     let firstTime = true;
@@ -4147,12 +4131,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$upload", (component) => (...params) => upload(component, ...params));
   wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
   wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
-  var parentMemo;
+  var parentMemo = /* @__PURE__ */ new WeakMap();
   wireProperty("$parent", (component) => {
-    if (parentMemo)
-      return parentMemo.$wire;
+    if (parentMemo.has(component))
+      return parentMemo.get(component).$wire;
     let parent = closestComponent(component.el.parentElement);
-    parentMemo = parent;
+    parentMemo.set(component, parent);
     return parent.$wire;
   });
   var overriddenMethods = /* @__PURE__ */ new WeakMap();
@@ -4238,6 +4222,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let el = this.el;
       el.setAttribute("wire:snapshot", this.snapshotEncoded);
       let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+      if (this.originalEffects.url) {
+        effects.url = this.originalEffects.url;
+      }
       el.setAttribute("wire:effects", JSON.stringify(effects));
     }
     addCleanup(cleanup3) {
@@ -4256,7 +4243,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = new Component(el);
     if (components[component.id])
       throw "Component already registered";
-    trigger("component.init", { component });
+    let cleanup3 = (i) => component.addCleanup(i);
+    trigger("component.init", { component, cleanup: cleanup3 });
     components[component.id] = component;
     return component;
   }
@@ -4270,7 +4258,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function findComponent(id) {
     let component = components[id];
     if (!component)
-      throw "Component not found: ".id;
+      throw "Component not found: " + id;
     return component;
   }
   function closestComponent(el, strict = true) {
@@ -4309,6 +4297,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
       let handler4 = (e) => {
+        console.log("this one");
         if (e.__livewire)
           e.__livewire.receivedBy.push(component);
         component.$wire.call("__dispatch", name, e.detail || {});
@@ -4316,7 +4305,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.addEventListener(name, handler4);
       component.addCleanup(() => window.removeEventListener(name, handler4));
       component.el.addEventListener(name, (e) => {
-        if (e.__livewire && e.bubbles)
+        if (!e.__livewire)
+          return;
+        if (e.bubbles)
           return;
         if (e.__livewire)
           e.__livewire.receivedBy.push(component.id);
@@ -4408,10 +4399,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return this.directives.find((directive3) => directive3.value === value);
     }
     extractTypeModifiersAndValue() {
-      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => {
-        const [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
-        return new Directive(value, modifiers, name, this.el);
-      }));
+      return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
     }
   };
   var Directive = class {
@@ -5487,7 +5475,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!state.alpine)
       state.alpine = {};
     state.alpine._html = key;
-    history[method](state, document.title, url);
+    try {
+      history[method](state, document.title, url);
+    } catch (error2) {
+      if (error2 instanceof DOMException && error2.name === "SecurityError") {
+        console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
+      }
+      console.error(error2);
+    }
   }
   function fromSessionStorage(timestamp) {
     let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
@@ -5544,9 +5539,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/links.js
   function whenThisLinkIsPressed(el, callback) {
-    el.addEventListener("click", (e) => e.preventDefault());
+    let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+    let isNotPlainEnterKey = (e) => e.which !== 13 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+    el.addEventListener("click", (e) => {
+      if (isNotPlainLeftClick(e))
+        return;
+      e.preventDefault();
+    });
     el.addEventListener("mousedown", (e) => {
-      if (e.button !== 0)
+      if (isNotPlainLeftClick(e))
         return;
       e.preventDefault();
       callback((whenReleased) => {
@@ -5556,6 +5557,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           el.removeEventListener("mouseup", handler4);
         };
         el.addEventListener("mouseup", handler4);
+      });
+    });
+    el.addEventListener("keydown", (e) => {
+      if (isNotPlainEnterKey(e))
+        return;
+      e.preventDefault();
+      callback((whenReleased) => {
+        whenReleased();
       });
     });
   }
@@ -5578,6 +5587,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new URL(urlString, document.baseURI);
   }
 
+  // js/plugins/navigate/teleport.js
+  function packUpPersistedTeleports(persistedEl) {
+    module_default.mutateDom(() => {
+      persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
+    });
+  }
+  function removeAnyLeftOverStaleTeleportTargets(body) {
+    module_default.mutateDom(() => {
+      body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
+    });
+  }
+  function unPackPersistedTeleports(persistedEl) {
+    module_default.walk(persistedEl, (el, skip) => {
+      if (!el._x_teleport)
+        return;
+      el._x_teleportPutBack();
+      skip();
+    });
+  }
+
   // js/plugins/navigate/scroll.js
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
@@ -5587,11 +5616,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el.setAttribute("data-scroll-y", el.scrollTop);
     });
   }
-  function restoreScrollPosition() {
+  function restoreScrollPositionOrScrollToTop() {
     let scroll = (el) => {
-      el.scrollTo(Number(el.getAttribute("data-scroll-x")), Number(el.getAttribute("data-scroll-y")));
-      el.removeAttribute("data-scroll-x");
-      el.removeAttribute("data-scroll-y");
+      if (!el.hasAttribute("data-scroll-x")) {
+        window.scrollTo(0, 0);
+      } else {
+        el.scrollTo(Number(el.getAttribute("data-scroll-x")), Number(el.getAttribute("data-scroll-y")));
+        el.removeAttribute("data-scroll-x");
+        el.removeAttribute("data-scroll-y");
+      }
     };
     queueMicrotask(() => {
       scroll(document.body);
@@ -5601,25 +5634,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/persist.js
   var els = {};
-  function storePersistantElementsForLater() {
+  function storePersistantElementsForLater(callback) {
     els = {};
     document.querySelectorAll("[x-persist]").forEach((i) => {
       els[i.getAttribute("x-persist")] = i;
+      callback(i);
       module_default.mutateDom(() => {
         i.remove();
       });
     });
   }
-  function putPersistantElementsBack() {
+  function putPersistantElementsBack(callback) {
+    let usedPersists = [];
     document.querySelectorAll("[x-persist]").forEach((i) => {
       let old = els[i.getAttribute("x-persist")];
       if (!old)
         return;
+      usedPersists.push(i.getAttribute("x-persist"));
       old._x_wasPersisted = true;
+      callback(old, i);
       module_default.mutateDom(() => {
         i.replaceWith(old);
       });
     });
+    Object.entries(els).forEach(([key, el]) => {
+      if (usedPersists.includes(key))
+        return;
+      module_default.destroyTree(el);
+    });
+    els = {};
   }
 
   // js/plugins/navigate/bar.js
@@ -5769,6 +5812,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let children = Array.from(document.head.children);
     let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
     let garbageCollector = document.createDocumentFragment();
+    let touchedHeadElements = [];
     for (let child of Array.from(newHead.children)) {
       if (isAsset(child)) {
         if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
@@ -5784,6 +5828,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           }
         } else {
           garbageCollector.appendChild(child);
+        }
+        touchedHeadElements.push(child);
+      }
+    }
+    for (let child of Array.from(document.head.children)) {
+      if (isAsset(child)) {
+        if (!touchedHeadElements.some((i) => i.outerHTML === child.outerHTML)) {
+          child.remove();
         }
       }
     }
@@ -5889,10 +5941,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         showProgressBar && finishAndHideProgressBar();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
-          enablePersist && storePersistantElementsForLater();
+          enablePersist && storePersistantElementsForLater((persistedEl) => {
+            packUpPersistedTeleports(persistedEl);
+          });
           swapCurrentPageWithNewHtml(html, () => {
-            enablePersist && putPersistantElementsBack();
-            restoreScroll && restoreScrollPosition();
+            removeAnyLeftOverStaleTeleportTargets(document.body);
+            enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+              unPackPersistedTeleports(persistedEl);
+            });
+            restoreScrollPositionOrScrollToTop();
             fireEventForOtherLibariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
             andAfterAllThis(() => {
@@ -5906,10 +5963,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     whenTheBackOrForwardButtonIsClicked((html) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
-        enablePersist && storePersistantElementsForLater();
-        swapCurrentPageWithNewHtml(html, (andThen) => {
-          enablePersist && putPersistantElementsBack();
-          restoreScroll && restoreScrollPosition();
+        enablePersist && storePersistantElementsForLater((persistedEl) => {
+          packUpPersistedTeleports(persistedEl);
+        });
+        swapCurrentPageWithNewHtml(html, () => {
+          removeAnyLeftOverStaleTeleportTargets(document.body);
+          enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+            unPackPersistedTeleports(persistedEl);
+          });
+          restoreScrollPositionOrScrollToTop();
           fireEventForOtherLibariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
@@ -6019,7 +6081,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         update(push, newValue);
       },
       pop(receiver) {
-        window.addEventListener("popstate", (e) => {
+        let handler4 = (e) => {
           if (!e.state || !e.state.alpine)
             return;
           Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
@@ -6033,7 +6095,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               lock = false;
             }
           });
-        });
+        };
+        window.addEventListener("popstate", handler4);
+        return () => window.removeEventListener("popstate", handler4);
       }
     };
   }
@@ -6045,7 +6109,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     window.history.replaceState(state, "", url.toString());
   }
   function push(url, key, object) {
-    let state = { alpine: { ...window.history.state.alpine, ...{ [key]: unwrap(object) } } };
+    let state = window.history.state || {};
+    if (!state.alpine)
+      state.alpine = {};
+    state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
     window.history.pushState(state, "", url.toString());
   }
   function unwrap(object) {
@@ -6391,7 +6458,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get children() {
       let children = [];
       let currentNode = this.startComment.nextSibling;
-      while (currentNode !== void 0 && currentNode !== this.endComment) {
+      while (currentNode && currentNode !== this.endComment) {
         children.push(currentNode);
         currentNode = currentNode.nextSibling;
       }
@@ -6577,7 +6644,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return "-";
     if (/^\D+$/.test(input))
       return "9";
-    thousands = thousands ?? (delimiter === "," ? "." : ",");
+    if (thousands === null || thousands === void 0) {
+      thousands = delimiter === "," ? "." : ",";
+    }
     let addThousands = (input2, thousands2) => {
       let output = "";
       let counter = 0;
@@ -6767,7 +6836,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportQueryString.js
-  on("component.init", ({ component }) => {
+  on("component.init", ({ component, cleanup: cleanup3 }) => {
     let effects = component.effects;
     let queryString = effects["url"];
     if (!queryString)
@@ -6779,11 +6848,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let initialValue = dataGet(component.ephemeral, name);
       let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
       if (use === "replace") {
-        module_default.effect(() => {
+        let effectReference = module_default.effect(() => {
           replace2(dataGet(component.reactive, name));
         });
+        cleanup3(() => module_default.release(effectReference));
       } else if (use === "push") {
-        on("commit", ({ component: component2, succeed }) => {
+        let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
           let beforeValue = dataGet(component2.canonical, name);
           succeed(() => {
             let afterValue = dataGet(component2.canonical, name);
@@ -6792,11 +6862,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             push2(afterValue);
           });
         });
-        pop(async (newValue) => {
+        let forgetPopHandler = pop(async (newValue) => {
           await component.$wire.set(name, newValue);
           document.querySelectorAll("input").forEach((el) => {
             el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get());
           });
+        });
+        cleanup3(() => {
+          forgetCommitHandler();
+          forgetPopHandler();
         });
       }
     });
@@ -6953,8 +7027,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       added: (el2) => {
         if (isntElement(el2))
           return;
-        trigger("morph.added", el2);
         const closestComponentId = closestComponent(el2).id;
+        trigger("morph.added", { el: el2 });
         if (closestComponentId === component.id) {
         } else if (isComponentRootEl(el2)) {
           let data2;
@@ -7010,7 +7084,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-transition.js
-  on("morph.added", (el) => {
+  on("morph.added", ({ el }) => {
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {
@@ -7085,7 +7159,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/shared.js
-  function toggleBooleanStateDirective(el, directive3, isTruthy) {
+  function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
     isTruthy = directive3.modifiers.includes("remove") ? !isTruthy : isTruthy;
     if (directive3.modifiers.includes("class")) {
       let classes = directive3.expression.split(" ");
@@ -7101,7 +7175,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.removeAttribute(directive3.expression);
       }
     } else {
-      let cache = window.getComputedStyle(el, null).getPropertyValue("display");
+      let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
       let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
       display = directive3.modifiers.includes("remove") ? cache : display;
       el.style.display = isTruthy ? display : "none";
@@ -7338,8 +7412,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let targets = dirtyTargets(el);
     let dirty = Alpine.reactive({ state: false });
     let oldIsDirty = false;
+    let initialDisplay = el.style.display;
     let refreshDirtyState = (isDirty) => {
-      toggleBooleanStateDirective(el, directive3, isDirty);
+      toggleBooleanStateDirective(el, directive3, isDirty, initialDisplay);
       oldIsDirty = isDirty;
     };
     refreshDirtyStatesByComponent.add(component, refreshDirtyState);

@@ -550,7 +550,7 @@ Here is a comparison of the old hooks and their new syntaxes for you to find/rep
 
 ```js
 Livewire.hook('component.initialized', (component) => {}) // [tl! remove]
-Livewire.hook('component.init', ({ component }) => {}) // [tl! add]
+Livewire.hook('component.init', ({ component, cleanup }) => {}) // [tl! add]
 
 Livewire.hook('element.initialized', (el, component) => {}) // [tl! remove]
 Livewire.hook('element.init', ({ el, component }) => {}) // [tl! add]
@@ -570,18 +570,18 @@ Livewire.hook('message.received', (message, component) => {}) // [tl! remove]
 Livewire.hook('message.processed', (message, component) => {}) // [tl! remove]
 
 Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // [tl! add:14]
-    // Equivelant of 'message.sent'
+    // Equivalent of 'message.sent'
 
     succeed(({ snapshot, effect }) => {
-        // Equivelant of 'message.received'
+        // Equivalent of 'message.received'
 
         queueMicrotask(() => {
-            // Equivelant of 'message.processed'
+            // Equivalent of 'message.processed'
         })
     })
 
     fail(() => {
-        // Equivelant of 'message.failed'
+        // Equivalent of 'message.failed'
     })
 })
 ```

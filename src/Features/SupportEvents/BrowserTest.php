@@ -3,7 +3,10 @@
 namespace Livewire\Features\SupportEvents;
 
 use Illuminate\Support\Facades\Blade;
+<<<<<<< HEAD
 use Livewire\Attributes\Renderless;
+=======
+>>>>>>> main
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -57,6 +60,33 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->assertSeeIn('@button', '1')
+            ->waitForLivewire()->click('@button')
+            ->assertSeeIn('@button', '1');
+    }
+
+    /** @test */
+    public function dispatch_from_javascript_should_only_be_called_once()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            protected $listeners = ['foo' => 'onFoo'];
+
+            function onFoo()
+            {
+                $this->count++;
+            }
+
+            function render()
+            {
+                return Blade::render(<<<'HTML'
+                <div>
+                    <button @click="$dispatch('foo')" dusk="button">{{ $count }}</button>
+                </div>
+                HTML, ['count' => $this->count]);
+            }
+        })
+            ->assertSeeIn('@button', '0')
             ->waitForLivewire()->click('@button')
             ->assertSeeIn('@button', '1');
     }

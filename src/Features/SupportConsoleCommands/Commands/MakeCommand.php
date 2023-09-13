@@ -2,9 +2,14 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
+use Illuminate\Contracts\Console\PromptsForMissingInput;
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
 
-class MakeCommand extends FileManipulationCommand
+class MakeCommand extends FileManipulationCommand implements PromptsForMissingInput
 {
     protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--pest} {--stub= : If you have several stubs, stored in subfolders }';
 
@@ -129,6 +134,41 @@ class MakeCommand extends FileManipulationCommand
     public function isReservedClassName($name)
     {
         return array_search(strtolower($name), $this->getReservedName()) !== false;
+    }
+
+    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output)
+    {
+        if ($this->didReceiveOptions($input)) {
+            return;
+        }
+
+        if(
+            confirm(
+                label: 'Do you want to make this an inline component?',
+                default: false
+            )
+        )
+        {
+            $input->setOption('inline', true);
+        }
+
+        if(
+            $testSuite = select(
+                label: 'Do you want to create a test file?',
+                options: [
+                    false => 'No',
+                    'phpunit' => 'PHPUnit',
+                    'pest' => 'Pest',
+                ],
+            )
+        )
+        {
+            $input->setOption('test', true);
+
+            if($testSuite === 'pest') {
+                $input->setOption('pest', true);
+            }
+        }
     }
 
     private function getReservedName()

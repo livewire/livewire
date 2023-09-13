@@ -2,7 +2,7 @@ import { directive } from "@/directives"
 import { on } from '@/events'
 import Alpine from 'alpinejs'
 
-on('morph.added', el => {
+on('morph.added', ({ el }) => {
     el.__addedByMorph = true
 })
 
