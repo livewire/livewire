@@ -105,7 +105,7 @@ trait HandlesValidation
 
         $rulesFromOutside = array_merge_recursive(
             ...array_map(
-                fn($ruleFromOutside) => value($ruleFromOutside),
+                fn($i) => value($i),
                 $this->rulesFromOutside
             )
         );
@@ -122,7 +122,7 @@ trait HandlesValidation
 
         $messagesFromOutside = array_merge(
             ...array_map(
-                fn($messageFromOutside) => value($messageFromOutside),
+                fn($i) => value($i),
                 $this->messagesFromOutside
             )
         );
@@ -139,7 +139,7 @@ trait HandlesValidation
 
         $validationAttributesFromOutside = array_merge(
             ...array_map(
-                fn($validationAttributeFromOutside) => value($validationAttributeFromOutside),
+                fn($i) => value($i),
                 $this->validationAttributesFromOutside
             )
         );

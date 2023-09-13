@@ -23,44 +23,38 @@ class Form implements Arrayable
 
     protected function addValidationRulesToComponent()
     {
-        $this->component->addRulesFromOutside(
-            function() {
-                $rules = [];
+        $this->component->addRulesFromOutside(function() {
+            $rules = [];
 
-                if (method_exists($this, 'rules')) $rules = $this->rules();
-                else if (property_exists($this, 'rules')) $rules = $this->rules;
+            if (method_exists($this, 'rules')) $rules = $this->rules();
+            else if (property_exists($this, 'rules')) $rules = $this->rules;
 
-                return $this->getAttributesWithPrefixedKeys($rules);
-            }
-        );
+            return $this->getAttributesWithPrefixedKeys($rules);
+        });
     }
 
     protected function addValidationAttributesToComponent()
     {
-        $this->component->addValidationAttributesFromOutside(
-            function() {
-                $validationAttributes = [];
-        
-                if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
-                else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+        $this->component->addValidationAttributesFromOutside(function() {
+            $validationAttributes = [];
 
-                return $this->getAttributesWithPrefixedKeys($validationAttributes);
-            }
-        );
+            if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+            else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+
+            return $this->getAttributesWithPrefixedKeys($validationAttributes);
+        });
     }
 
     protected function addMessagesToComponent()
     {
-        $this->component->addMessagesFromOutside(
-            function() {
-                $messages = [];
+        $this->component->addMessagesFromOutside(function() {
+            $messages = [];
 
-                if (method_exists($this, 'messages')) $messages = $this->messages();
-                else if (property_exists($this, 'messages')) $messages = $this->messages;
+            if (method_exists($this, 'messages')) $messages = $this->messages();
+            else if (property_exists($this, 'messages')) $messages = $this->messages;
 
-                return $this->getAttributesWithPrefixedKeys($messages);
-            }
-        );
+            return $this->getAttributesWithPrefixedKeys($messages);
+        });
     }
 
     public function addError($key, $message)
