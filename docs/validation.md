@@ -355,7 +355,7 @@ Here's an example:
 ```php
 use Livewire\Component;
 use App\Models\Post;
-use Illuminate\Validaion\Rule as ValidationRule;
+use Illuminate\Validation\Rule as ValidationRule;
 
 class CreatePost extends Component
 {
