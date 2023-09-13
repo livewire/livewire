@@ -3,10 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use Illuminate\Support\Facades\Blade;
-<<<<<<< HEAD
 use Livewire\Attributes\Renderless;
-=======
->>>>>>> main
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
