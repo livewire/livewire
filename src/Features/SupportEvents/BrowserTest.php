@@ -34,7 +34,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function dispatch_from_javascript_is_called_once()
+    public function dispatch_from_javascript_should_only_be_called_once()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;

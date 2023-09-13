@@ -4297,6 +4297,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function registerListeners(component, listeners2) {
     listeners2.forEach((name) => {
       let handler4 = (e) => {
+        console.log("this one");
         if (e.__livewire)
           e.__livewire.receivedBy.push(component);
         component.$wire.call("__dispatch", name, e.detail || {});
@@ -4304,7 +4305,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.addEventListener(name, handler4);
       component.addCleanup(() => window.removeEventListener(name, handler4));
       component.el.addEventListener(name, (e) => {
-        if (e.__livewire && e.bubbles)
+        if (!e.__livewire)
+          return;
+        if (e.bubbles)
           return;
         if (e.__livewire)
           e.__livewire.receivedBy.push(component.id);
