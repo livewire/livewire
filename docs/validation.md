@@ -388,7 +388,7 @@ class CreatePost extends Component
 
     public function save()
     {
-        $this->validate($this->rules(), $this->messages(), $this->attributes());
+        $this->validate();
 
 		Post::create([
             'title' => $this->title,
