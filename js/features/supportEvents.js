@@ -12,6 +12,7 @@ function registerListeners(component, listeners) {
     listeners.forEach(name => {
         // Register a global listener...
         let handler = (e) => {
+           console.log('this one')
             if (e.__livewire) e.__livewire.receivedBy.push(component)
 
             component.$wire.call('__dispatch', name, e.detail || {})
@@ -23,7 +24,11 @@ function registerListeners(component, listeners) {
 
         // Register a listener for when "to" or "self"
         component.el.addEventListener(name, (e) => {
-            if (e.__livewire && e.bubbles) return
+            // We don't care about non-Livewire dispatches...
+            if (! e.__livewire) return
+
+            // We don't care about Livewire bubbling dispatches (only "to" and "self")...
+            if (e.bubbles) return
 
             if (e.__livewire) e.__livewire.receivedBy.push(component.id)
 

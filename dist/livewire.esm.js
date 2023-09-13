@@ -6566,6 +6566,7 @@ on("effects", (component, effects) => {
 function registerListeners(component, listeners2) {
   listeners2.forEach((name) => {
     let handler = (e) => {
+      console.log("this one");
       if (e.__livewire)
         e.__livewire.receivedBy.push(component);
       component.$wire.call("__dispatch", name, e.detail || {});
@@ -6573,7 +6574,9 @@ function registerListeners(component, listeners2) {
     window.addEventListener(name, handler);
     component.addCleanup(() => window.removeEventListener(name, handler));
     component.el.addEventListener(name, (e) => {
-      if (e.__livewire && e.bubbles)
+      if (!e.__livewire)
+        return;
+      if (e.bubbles)
         return;
       if (e.__livewire)
         e.__livewire.receivedBy.push(component.id);
