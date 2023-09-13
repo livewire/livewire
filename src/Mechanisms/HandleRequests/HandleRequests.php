@@ -26,7 +26,9 @@ class HandleRequests
 
     function getUpdateUri()
     {
-        return route($this->updateRoute->getName(), [], false);
+        return (string) str(
+            route($this->updateRoute->getName(), [], false)
+        )->start('/');
     }
 
     function skipRequestPayloadTamperingMiddleware()
