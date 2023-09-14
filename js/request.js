@@ -8,14 +8,10 @@ import { getCommits, flushCommits } from './commit'
  */
 let updateUri = document.querySelector('[data-uri]')?.getAttribute('data-uri') ?? window.livewireScriptConfig['uri'] ?? null
 
-export function triggerSend(isIsolated) {
-    if (isIsolated) {
-        sendRequestToServer(isIsolated)
-    } else {
-        bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-            sendRequestToServer()
-        })
-    }
+export function triggerSend() {
+    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+        sendRequestToServer()
+    })
 }
 
 let requestBufferTimeout
@@ -35,10 +31,10 @@ function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callb
  * the actual request to the server to update the target,
  * store a new snapshot, and handle any side effects.
  */
-async function sendRequestToServer(isIsolated) {
+async function sendRequestToServer() {
     prepareCommitPayloads()
 
-    if (isIsolated) {
+    if (isIsolated()) {
         let [payload, handleSuccess, handleFailure] = compileCommitPayloads()
 
         let options = {
@@ -310,4 +306,22 @@ async function queueNewRequestAttemptsWhile(callback) {
     sendingRequest = false
 
     while (afterSendStack.length > 0) afterSendStack.shift()()
+}
+
+let isolated = false
+
+function isIsolated() {
+    return isolated
+}
+
+export function isolateRequestsWhen(condition, callback) {
+    if (! condition) return callback()
+
+    let cache = isolated
+
+    isolated = true
+
+    callback()
+
+    isolated = cache
 }

@@ -5768,14 +5768,10 @@ function trigger(name, ...params) {
 
 // js/request.js
 var updateUri = document.querySelector("[data-uri]")?.getAttribute("data-uri") ?? window.livewireScriptConfig["uri"] ?? null;
-function triggerSend(isIsolated) {
-  if (isIsolated) {
-    sendRequestToServer(isIsolated);
-  } else {
-    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-      sendRequestToServer();
-    });
-  }
+function triggerSend() {
+  bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+    sendRequestToServer();
+  });
 }
 var requestBufferTimeout;
 function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
@@ -5786,9 +5782,9 @@ function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callb
     requestBufferTimeout = void 0;
   }, 5);
 }
-async function sendRequestToServer(isIsolated) {
+async function sendRequestToServer() {
   prepareCommitPayloads();
-  if (isIsolated) {
+  if (isIsolated()) {
     let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
     let options = {
       method: "POST",
@@ -5966,6 +5962,18 @@ async function queueNewRequestAttemptsWhile(callback) {
   while (afterSendStack.length > 0)
     afterSendStack.shift()();
 }
+var isolated = false;
+function isIsolated() {
+  return isolated;
+}
+function isolateRequestsWhen(condition, callback) {
+  if (!condition)
+    return callback();
+  let cache = isolated;
+  isolated = true;
+  callback();
+  isolated = cache;
+}
 
 // js/commit.js
 var commitQueue = [];
@@ -5986,26 +5994,10 @@ function findOrCreateCommit(component) {
   }
   return commit;
 }
-var isolating = false;
-function isolateRequestsWhen(condition, callback) {
-  if (!condition)
-    return callback();
-  let cache = isolating;
-  isolating = true;
-  callback();
-  isolating = cache;
-}
 async function requestCommit(component) {
-  if (isolating) {
-    let commit = findOrCreateCommit(component);
-    triggerSend(isolating);
-    return new Promise((resolve, reject) => {
-      commit.addResolver(resolve);
-    });
-  }
   return await waitUntilTheCurrentRequestIsFinished(() => {
     let commit = findOrCreateCommit(component);
-    triggerSend(isolating);
+    triggerSend();
     return new Promise((resolve, reject) => {
       commit.addResolver(resolve);
     });
@@ -8420,9 +8412,11 @@ directive("init", ({ el, directive: directive2 }) => {
 var import_alpinejs18 = __toESM(require_module_cjs());
 directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
-  let isolated = directive2.modifiers.includes("isolate");
+  let isolated2 = directive2.modifiers.includes("isolate");
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-    triggerComponentRequest(el, directive2, isolated);
+    isolateRequestsWhen(isolated2, () => {
+      triggerComponentRequest(el, directive2);
+    });
   }, interval);
   start2();
   throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
@@ -8431,10 +8425,8 @@ directive("poll", ({ el, directive: directive2, component }) => {
   pauseWhile(() => livewireIsOffline());
   stopWhen(() => theElementIsDisconnected(el));
 });
-function triggerComponentRequest(el, directive2, isolated) {
-  isolateRequestsWhen(isolated, function() {
-    import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
-  });
+function triggerComponentRequest(el, directive2) {
+  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];

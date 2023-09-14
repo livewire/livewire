@@ -484,14 +484,10 @@
 
   // js/request.js
   var updateUri = document.querySelector("[data-uri]")?.getAttribute("data-uri") ?? window.livewireScriptConfig["uri"] ?? null;
-  function triggerSend(isIsolated) {
-    if (isIsolated) {
-      sendRequestToServer(isIsolated);
-    } else {
-      bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-        sendRequestToServer();
-      });
-    }
+  function triggerSend() {
+    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+      sendRequestToServer();
+    });
   }
   var requestBufferTimeout;
   function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
@@ -502,9 +498,9 @@
       requestBufferTimeout = void 0;
     }, 5);
   }
-  async function sendRequestToServer(isIsolated) {
+  async function sendRequestToServer() {
     prepareCommitPayloads();
-    if (isIsolated) {
+    if (isIsolated()) {
       let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
       let options = {
         method: "POST",
@@ -682,6 +678,18 @@
     while (afterSendStack.length > 0)
       afterSendStack.shift()();
   }
+  var isolated = false;
+  function isIsolated() {
+    return isolated;
+  }
+  function isolateRequestsWhen(condition, callback) {
+    if (!condition)
+      return callback();
+    let cache = isolated;
+    isolated = true;
+    callback();
+    isolated = cache;
+  }
 
   // js/commit.js
   var commitQueue = [];
@@ -702,26 +710,10 @@
     }
     return commit;
   }
-  var isolating = false;
-  function isolateRequestsWhen(condition, callback) {
-    if (!condition)
-      return callback();
-    let cache = isolating;
-    isolating = true;
-    callback();
-    isolating = cache;
-  }
   async function requestCommit(component) {
-    if (isolating) {
-      let commit = findOrCreateCommit(component);
-      triggerSend(isolating);
-      return new Promise((resolve, reject) => {
-        commit.addResolver(resolve);
-      });
-    }
     return await waitUntilTheCurrentRequestIsFinished(() => {
       let commit = findOrCreateCommit(component);
-      triggerSend(isolating);
+      triggerSend();
       return new Promise((resolve, reject) => {
         commit.addResolver(resolve);
       });
@@ -7619,9 +7611,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-poll.js
   directive2("poll", ({ el, directive: directive3, component }) => {
     let interval = extractDurationFrom(directive3.modifiers, 2e3);
-    let isolated = directive3.modifiers.includes("isolate");
+    let isolated2 = directive3.modifiers.includes("isolate");
     let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-      triggerComponentRequest(el, directive3, isolated);
+      isolateRequestsWhen(isolated2, () => {
+        triggerComponentRequest(el, directive3);
+      });
     }, interval);
     start3();
     throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive3));
@@ -7630,10 +7624,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     pauseWhile(() => livewireIsOffline());
     stopWhen(() => theElementIsDisconnected(el));
   });
-  function triggerComponentRequest(el, directive3, isolated) {
-    isolateRequestsWhen(isolated, function() {
-      module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$commit()");
-    });
+  function triggerComponentRequest(el, directive3) {
+    module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$commit()");
   }
   function poll(callback, interval = 2e3) {
     let pauseConditions = [];

@@ -33,35 +33,11 @@ function findOrCreateCommit(component) {
     return commit
 }
 
-let isolating = false
-
-export function isolateRequestsWhen(condition, callback) {
-    if (! condition) return callback()
-
-    let cache = isolating
-
-    isolating = true
-
-    callback()
-
-    isolating = cache
-}
-
 export async function requestCommit(component) {
-    if (isolating) {
-        let commit = findOrCreateCommit(component)
-
-        triggerSend(isolating)
-
-        return new Promise((resolve, reject) => {
-            commit.addResolver(resolve)
-        })
-    }
-
     return await waitUntilTheCurrentRequestIsFinished(() => {
         let commit = findOrCreateCommit(component)
 
-        triggerSend(isolating)
+        triggerSend()
 
         return new Promise((resolve, reject) => {
             commit.addResolver(resolve)

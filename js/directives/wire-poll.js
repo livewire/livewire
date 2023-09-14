@@ -1,4 +1,4 @@
-import { isolateRequestsWhen } from "@/commit"
+import { isolateRequestsWhen } from "@/request"
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
 
@@ -8,7 +8,9 @@ directive('poll', ({ el, directive, component }) => {
     let isolated = directive.modifiers.includes('isolate')
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        triggerComponentRequest(el, directive, isolated)
+        isolateRequestsWhen(isolated, () => {
+            triggerComponentRequest(el, directive)
+        })
     }, interval)
 
     start()
@@ -20,12 +22,10 @@ directive('poll', ({ el, directive, component }) => {
     stopWhen(() => theElementIsDisconnected(el))
 })
 
-function triggerComponentRequest(el, directive, isolated) {
-    isolateRequestsWhen(isolated, function () {
-        Alpine.evaluate(el,
-            directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
-        )
-    })
+function triggerComponentRequest(el, directive) {
+    Alpine.evaluate(el,
+        directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
+    )
 }
 
 function poll(callback, interval = 2000) {
