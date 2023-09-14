@@ -13,7 +13,6 @@ export default function history(Alpine) {
             setter(initial)
 
             if (! usePush) {
-                console.log(getter())
                 Alpine.effect(() => replace(getter()))
             } else {
                 Alpine.effect(() => push(getter()))
