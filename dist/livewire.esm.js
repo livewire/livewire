@@ -5769,9 +5769,14 @@ function trigger(name, ...params) {
 // js/request.js
 var updateUri = document.querySelector("[data-uri]")?.getAttribute("data-uri") ?? window.livewireScriptConfig["uri"] ?? null;
 function triggerSend() {
-  bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-    sendRequestToServer();
-  });
+  let isolated2 = isIsolated();
+  if (isolated2) {
+    sendRequestToServer(isolated2);
+  } else {
+    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+      sendRequestToServer();
+    });
+  }
 }
 var requestBufferTimeout;
 function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
@@ -5782,75 +5787,8 @@ function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callb
     requestBufferTimeout = void 0;
   }, 5);
 }
-async function sendRequestToServer() {
+async function sendRequestToServer(isolated2) {
   prepareCommitPayloads();
-  if (isIsolated()) {
-    let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
-    let options = {
-      method: "POST",
-      body: JSON.stringify({
-        _token: getCsrfToken(),
-        components: payload
-      }),
-      headers: {
-        "Content-type": "application/json",
-        "X-Livewire": ""
-      }
-    };
-    let succeedCallbacks = [];
-    let failCallbacks = [];
-    let respondCallbacks = [];
-    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-    let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
-    let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-    let finishProfile = trigger("request.profile", options);
-    trigger("request", {
-      url: updateUri,
-      options,
-      payload: options.body,
-      respond: (i) => respondCallbacks.push(i),
-      succeed: (i) => succeedCallbacks.push(i),
-      fail: (i) => failCallbacks.push(i)
-    });
-    let response = await fetch(updateUri, options);
-    let mutableObject = {
-      status: response.status,
-      response
-    };
-    respond(mutableObject);
-    response = mutableObject.response;
-    let content = await response.text();
-    if (!response.ok) {
-      finishProfile({ content: "{}", failed: true });
-      let preventDefault = false;
-      handleFailure();
-      fail({
-        status: response.status,
-        content,
-        preventDefault: () => preventDefault = true
-      });
-      if (preventDefault)
-        return;
-      if (response.status === 419) {
-        handlePageExpiry();
-      }
-      return showFailureModal(content);
-    }
-    if (response.redirected) {
-      window.location.href = response.url;
-    }
-    if (contentIsFromDump(content)) {
-      [dump, content] = splitDumpFromContent(content);
-      showHtmlModal(dump);
-      finishProfile({ content: "{}", failed: true });
-    } else {
-      finishProfile({ content, failed: false });
-    }
-    let { components: components2 } = JSON.parse(content);
-    handleSuccess(components2);
-    succeed({ status: response.status, json: JSON.parse(content) });
-    return;
-  }
   await queueNewRequestAttemptsWhile(async () => {
     let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
     let options = {
@@ -5916,7 +5854,7 @@ async function sendRequestToServer() {
     let { components: components2 } = JSON.parse(content);
     handleSuccess(components2);
     succeed({ status: response.status, json: JSON.parse(content) });
-  });
+  }, isolated2);
 }
 function prepareCommitPayloads() {
   let commits = getCommits();
@@ -5955,7 +5893,11 @@ async function waitUntilTheCurrentRequestIsFinished(callback) {
     }
   });
 }
-async function queueNewRequestAttemptsWhile(callback) {
+async function queueNewRequestAttemptsWhile(callback, isolated2) {
+  if (isolated2) {
+    await callback();
+    return;
+  }
   sendingRequest = true;
   await callback();
   sendingRequest = false;
@@ -5967,8 +5909,9 @@ function isIsolated() {
   return isolated;
 }
 function isolateRequestsWhen(condition, callback) {
-  if (!condition)
+  if (!condition) {
     return callback();
+  }
   let cache = isolated;
   isolated = true;
   callback();
@@ -8414,6 +8357,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let isolated2 = directive2.modifiers.includes("isolate");
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+    console.log("trying to poll");
     isolateRequestsWhen(isolated2, () => {
       triggerComponentRequest(el, directive2);
     });

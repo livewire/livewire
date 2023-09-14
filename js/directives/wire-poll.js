@@ -8,10 +8,22 @@ directive('poll', ({ el, directive, component }) => {
     let isolated = directive.modifiers.includes('isolate')
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+        console.log('trying to poll')
         isolateRequestsWhen(isolated, () => {
             triggerComponentRequest(el, directive)
         })
     }, interval)
+
+    // We have 3 components polling
+    // one is isolated (A) the rest are not (B, C)
+    // Component's A & (B/C) all send at first
+    // If the (B/C) request takes too long, component A's polling is held up
+
+    // Alternatively:
+    // We have 3 components polling
+    // one is isolated (C) the rest are not (A, B)
+    // Component's (A/B) & C all send at first
+    // If the (A/B) request takes too long, component C spawns an entirely new request for A/B while the other one is held up
 
     start()
 

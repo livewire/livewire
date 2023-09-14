@@ -9,9 +9,16 @@ import { getCommits, flushCommits } from './commit'
 let updateUri = document.querySelector('[data-uri]')?.getAttribute('data-uri') ?? window.livewireScriptConfig['uri'] ?? null
 
 export function triggerSend() {
-    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-        sendRequestToServer()
-    })
+    let isolated = isIsolated()
+
+    if (isolated) {
+        // We don't want to bundle isolated request triggers with any other ones...
+        sendRequestToServer(isolated)
+    } else {
+        bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+            sendRequestToServer()
+        })
+    }
 }
 
 let requestBufferTimeout
@@ -31,112 +38,18 @@ function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callb
  * the actual request to the server to update the target,
  * store a new snapshot, and handle any side effects.
  */
-async function sendRequestToServer() {
+
+// $wire.$commit()
+// calls sendRequestToServer
+// sets "isSending" to true
+// after sending, sets isSending to false and flushes isSending queue
+
+// Isolated:
+// $wire.$commit()
+// calls sendRequestToServer
+
+async function sendRequestToServer(isolated) {
     prepareCommitPayloads()
-
-    if (isIsolated()) {
-        let [payload, handleSuccess, handleFailure] = compileCommitPayloads()
-
-        let options = {
-            method: 'POST',
-            body: JSON.stringify({
-                _token: getCsrfToken(),
-                components: payload,
-            }),
-            headers: {
-                'Content-type': 'application/json',
-                'X-Livewire': '',
-            },
-        }
-
-        let succeedCallbacks = []
-        let failCallbacks = []
-        let respondCallbacks = []
-
-        let succeed = (fwd) => succeedCallbacks.forEach(i => i(fwd))
-        let fail = (fwd) => failCallbacks.forEach(i => i(fwd))
-        let respond = (fwd) => respondCallbacks.forEach(i => i(fwd))
-
-        let finishProfile = trigger('request.profile', options)
-
-        trigger('request', {
-            url: updateUri,
-            options,
-            payload: options.body,
-            respond: i => respondCallbacks.push(i),
-            succeed: i => succeedCallbacks.push(i),
-            fail: i => failCallbacks.push(i),
-        })
-
-        let response = await fetch(updateUri, options)
-
-        let mutableObject = {
-            status: response.status,
-            response,
-        }
-
-        respond(mutableObject)
-
-        response = mutableObject.response
-
-        let content = await response.text()
-
-        // Handle error response...
-        if (! response.ok) {
-            finishProfile({ content: '{}', failed: true })
-
-            let preventDefault = false
-
-            handleFailure()
-
-            fail({
-                status: response.status,
-                content,
-                preventDefault: () => preventDefault = true,
-            })
-
-            if (preventDefault) return
-
-            if (response.status === 419) {
-                handlePageExpiry()
-            }
-
-            return showFailureModal(content)
-        }
-
-        /**
-         * Sometimes a redirect happens on the backend outside of Livewire's control,
-         * for example to a login page from a middleware, so we will just redirect
-         * to that page.
-         */
-        if (response.redirected) {
-            window.location.href = response.url
-        }
-
-        /**
-         * Sometimes a response will be prepended with html to render a dump, so we
-         * will seperate the dump html from Livewire's JSON response content and
-         * render the dump in a modal and allow Livewire to continue with the
-         * request.
-         */
-        if (contentIsFromDump(content)) {
-            [dump, content] = splitDumpFromContent(content)
-
-            showHtmlModal(dump)
-
-            finishProfile({ content: '{}', failed: true })
-        } else {
-            finishProfile({ content, failed: false })
-        }
-
-        let { components } = JSON.parse(content)
-
-        handleSuccess(components)
-
-        succeed({ status: response.status, json: JSON.parse(content) })
-
-        return
-    }
 
     await queueNewRequestAttemptsWhile(async () => {
         let [payload, handleSuccess, handleFailure] = compileCommitPayloads()
@@ -238,7 +151,7 @@ async function sendRequestToServer() {
         handleSuccess(components)
 
         succeed({ status: response.status, json: JSON.parse(content) })
-    })
+    }, isolated)
 }
 
 function prepareCommitPayloads() {
@@ -298,7 +211,15 @@ export async function waitUntilTheCurrentRequestIsFinished(callback) {
     })
 }
 
-async function queueNewRequestAttemptsWhile(callback) {
+async function queueNewRequestAttemptsWhile(callback, isolated) {
+    // We don't want isolated requests to hold up any other
+    // requests, normal, or isolated themselves...
+    if (isolated) {
+        await callback()
+
+        return
+    }
+
     sendingRequest = true
 
     await callback()
@@ -315,7 +236,9 @@ function isIsolated() {
 }
 
 export function isolateRequestsWhen(condition, callback) {
-    if (! condition) return callback()
+    if (! condition) {
+        return callback()
+    }
 
     let cache = isolated
 
