@@ -25,7 +25,7 @@ class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
             Route::prefix('/{tenant}')->group(function () {
                 Route::get('/page', function ($tenant) {
                     return (app('livewire')->new('test'))();
-                });
+                })->name('tenant.page');
             });
 
             Livewire::component('test', new class extends Component {
@@ -39,8 +39,10 @@ class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
                 public function render() {
                     return <<<'HTML'
                         <div>
-                            <h1 dusk="count">{{ $count }}</h1>
+                            <h1 dusk="count">Count: {{ $count }}</h1>
                             <button wire:click="increment" dusk="button">Increment</button>
+                            <p>Tenant: {{ request()->route()->parameter('tenant') }}</p>
+                            <p>Route: {{ request()->route()->getName() }}</p>
                         </div>
                     HTML;
                 }
@@ -51,10 +53,17 @@ class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function can_use_a_custom_update_route_with_a_uri_segment()
     {
-        $this->browse(function ($browser) {
+        $this->browse(function (\Laravel\Dusk\Browser $browser) {
             $browser
                 ->visit('/custom-tenant/page')
-                ->tinker();
+                ->assertSee('Count: 0')
+                ->assertSee('Tenant: custom-tenant')
+                ->assertSee('Route: tenant.page')
+                ->waitForLivewire()
+                ->click('button')
+                ->assertSee('Count: 1')
+                ->assertSee('Tenant: custom-tenant')
+                ->assertSee('Route: tenant.livewire.update');
         });
     }
 }
