@@ -49,12 +49,14 @@ class UnitTest extends \Tests\TestCase
      * @test
      * @dataProvider templatesProvider
      **/
-    function foo($occurances, $template)
+    function foo($occurances, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 
         $this->assertOccurrences($occurances, '__BLOCK__', $compiled);
         $this->assertOccurrences($occurances, '__ENDBLOCK__', $compiled);
+
+        $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
     }
 
     public function templatesProvider()
@@ -296,6 +298,63 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            20 => [
+                0,
+                <<<'HTML'
+                <div>
+                    @unlessfoo(true)
+                    <div class="col-span-3 text-right">
+                       toots
+                    </div>
+                    @endunlessfoo
+                </div>
+                HTML,
+                <<<'HTML'
+                <div>
+                    @unlessfoo(true)
+                    <div class="col-span-3 text-right">
+                       toots
+                    </div>
+                    @endunlessfoo
+                </div>
+                HTML
+            ],
+            // 21 => [
+            //     0,
+            //     <<<'HTML'
+            //     <div @if (0 < 1) bar="bob" @endif></div>
+            //     HTML
+            // ],
+            // 22 => [
+            //     0,
+            //     <<<'HTML'
+            //     <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
+            //     HTML
+            // ],
+            // 23 => [
+            //     0,
+            //     <<<'HTML'
+            //     <div @if (1 > 0) bar="bob" @endif></div>
+            //     HTML
+            // ],
+            24 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @empty($foo)
+                        ...
+                    @endempty
+                </div>
+                HTML
+            ],
+            25 => [
+                1,
+                <<<'HTML'
+                @IF(true)
+                    ...
+                @ENDIF
+                HTML
+            ],
         ];
     }
 
@@ -315,4 +374,3 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($expected, count(explode($needle, $haystack)) - 1);
     }
 }
-
