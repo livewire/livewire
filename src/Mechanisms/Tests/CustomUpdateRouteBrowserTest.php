@@ -5,17 +5,24 @@ namespace Livewire\Mechanisms\Tests;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 
 class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
 {
     public static function tweakApplicationHook()
     {
         return function () {
-            Route::prefix('/{tenant}')->group(function () {
-                Livewire::setUpdateRoute(function ($handle) {
-                    return Route::post('/livewire/update', $handle);
-                });
+            // This would normally be done in something like middleware
+            URL::defaults(['tenant' => 'custom-tenant']);
 
+            Livewire::setUpdateRoute(function ($handle) {
+                return Route::post('/{tenant}/livewire/update', $handle)->name('tenant.livewire.update');
+            });
+
+            // Doesn't seem to be needed in real applications, but is needed in tests
+            app('router')->getRoutes()->refreshNameLookups();
+
+            Route::prefix('/{tenant}')->group(function () {
                 Route::get('/page', function ($tenant) {
                     return (app('livewire')->new('test'))();
                 });
