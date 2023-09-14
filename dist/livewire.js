@@ -1101,52 +1101,32 @@
     return closestDataStack(node.parentNode);
   }
   function mergeProxies(objects) {
-    let thisProxy = new Proxy({}, {
-      ownKeys: () => {
-        return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
-      },
-      has: (target, name) => {
-        return objects.some((obj) => obj.hasOwnProperty(name));
-      },
-      get: (target, name) => {
-        return (objects.find((obj) => {
-          if (obj.hasOwnProperty(name)) {
-            let descriptor = Object.getOwnPropertyDescriptor(obj, name);
-            if (descriptor.get && descriptor.get._x_alreadyBound || descriptor.set && descriptor.set._x_alreadyBound) {
-              return true;
-            }
-            if ((descriptor.get || descriptor.set) && descriptor.enumerable) {
-              let getter = descriptor.get;
-              let setter = descriptor.set;
-              let property = descriptor;
-              getter = getter && getter.bind(thisProxy);
-              setter = setter && setter.bind(thisProxy);
-              if (getter)
-                getter._x_alreadyBound = true;
-              if (setter)
-                setter._x_alreadyBound = true;
-              Object.defineProperty(obj, name, {
-                ...property,
-                get: getter,
-                set: setter
-              });
-            }
-            return true;
-          }
-          return false;
-        }) || {})[name];
-      },
-      set: (target, name, value) => {
-        let closestObjectWithKey = objects.find((obj) => obj.hasOwnProperty(name));
-        if (closestObjectWithKey) {
-          closestObjectWithKey[name] = value;
-        } else {
-          objects[objects.length - 1][name] = value;
-        }
-        return true;
-      }
-    });
-    return thisProxy;
+    return new Proxy({ objects }, mergeProxyTrap);
+  }
+  var mergeProxyTrap = {
+    ownKeys({ objects }) {
+      return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
+    },
+    has({ objects }, name) {
+      if (name == Symbol.unscopables)
+        return false;
+      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+    },
+    get({ objects }, name, thisProxy) {
+      if (name == "toJSON")
+        return collapseProxies;
+      return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+    },
+    set({ objects }, name, value) {
+      return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
+    }
+  };
+  function collapseProxies() {
+    let keys = Reflect.ownKeys(this);
+    return keys.reduce((acc, key) => {
+      acc[key] = Reflect.get(this, key);
+      return acc;
+    }, {});
   }
   function initInterceptors2(data2) {
     let isObject22 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
@@ -2328,8 +2308,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2362,8 +2342,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2453,7 +2433,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (false) {
+      if (activeEffect.options.onTrack) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2517,7 +2497,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (false) {
+      if (effect3.options.onTrigger) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2654,13 +2634,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2722,7 +2702,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2741,7 +2721,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2754,7 +2734,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2799,7 +2779,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2901,6 +2881,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
+  function checkIdentityKeys(target, has2, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has2.call(target, rawKey)) {
+      const type = toRawType(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2933,7 +2920,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3025,7 +3012,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
   function warnMissingPluginMagic(name, magicName, slug) {
-    magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    magic(magicName, (el) => warn(`You can't use [$${magicName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
@@ -3063,20 +3050,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup22(releaseEntanglement);
     });
   });
-  var teleportContainerDuringClone = document.createElement("div");
   directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
       warn("x-teleport can only be used on a <template> tag", el);
-    let target = skipDuringClone(() => {
-      return document.querySelector(expression);
-    }, () => {
-      return teleportContainerDuringClone;
-    })();
-    if (!target)
-      warn(`Cannot find x-teleport element for selector: "${expression}"`);
+    let target = getTarget(expression);
     let clone2 = el.content.cloneNode(true).firstElementChild;
     el._x_teleport = clone2;
     clone2._x_teleportBack = el;
+    el.setAttribute("data-teleport-template", true);
+    clone2.setAttribute("data-teleport-target", true);
     if (el._x_forwardEvents) {
       el._x_forwardEvents.forEach((eventName) => {
         clone2.addEventListener(eventName, (e) => {
@@ -3086,19 +3068,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     addScopeToNode(clone2, {}, el);
-    mutateDom(() => {
-      if (modifiers.includes("prepend")) {
-        target.parentNode.insertBefore(clone2, target);
-      } else if (modifiers.includes("append")) {
-        target.parentNode.insertBefore(clone2, target.nextSibling);
+    let placeInDom = (clone3, target2, modifiers2) => {
+      if (modifiers2.includes("prepend")) {
+        target2.parentNode.insertBefore(clone3, target2);
+      } else if (modifiers2.includes("append")) {
+        target2.parentNode.insertBefore(clone3, target2.nextSibling);
       } else {
-        target.appendChild(clone2);
+        target2.appendChild(clone3);
       }
+    };
+    mutateDom(() => {
+      placeInDom(clone2, target, modifiers);
       initTree(clone2);
       clone2._x_ignore = true;
     });
-    cleanup22(() => clone2.remove());
+    el._x_teleportPutBack = () => {
+      let target2 = getTarget(expression);
+      mutateDom(() => {
+        placeInDom(el._x_teleport, target2, modifiers);
+      });
+    };
   });
+  var teleportContainerDuringClone = document.createElement("div");
+  function getTarget(expression) {
+    let target = skipDuringClone(() => {
+      return document.querySelector(expression);
+    }, () => {
+      return teleportContainerDuringClone;
+    })();
+    if (!target)
+      warn(`Cannot find x-teleport element for selector: "${expression}"`);
+    return target;
+  }
   var handler = () => {
   };
   handler.inline = (el, { modifiers }, { cleanup: cleanup22 }) => {
@@ -3341,7 +3342,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getInputValue(el, modifiers, event, currentValue) {
     return mutateDom(() => {
       if (event instanceof CustomEvent && event.detail !== void 0)
-        return event.detail ?? event.target.value;
+        return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
       else if (el.type === "checkbox") {
         if (Array.isArray(currentValue)) {
           let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
@@ -3689,6 +3690,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
   directive("ref", handler3);
   directive("if", (el, { expression }, { effect: effect3, cleanup: cleanup22 }) => {
+    if (el.tagName.toLowerCase() !== "template")
+      warn("x-if can only be used on a <template> tag", el);
     let evaluate2 = evaluateLater(el, expression);
     let show = () => {
       if (el._x_currentIfEl)
@@ -3746,8 +3749,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginDirective("Intersect", "intersect", "intersect");
   warnMissingPluginDirective("Focus", "trap", "focus");
   warnMissingPluginDirective("Mask", "mask", "mask");
-  function warnMissingPluginDirective(name, directiveName2, slug) {
-    directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+  function warnMissingPluginDirective(name, directiveName, slug) {
+    directive(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
   alpine_default.setReactivityEngine({ reactive: reactive2, effect: effect2, release: stop, raw: toRaw });
@@ -6785,7 +6788,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return "-";
     if (/^\D+$/.test(input))
       return "9";
-    thousands = thousands ?? (delimiter === "," ? "." : ",");
+    if (thousands === null || thousands === void 0) {
+      thousands = delimiter === "," ? "." : ",";
+    }
     let addThousands = (input2, thousands2) => {
       let output = "";
       let counter = 0;
