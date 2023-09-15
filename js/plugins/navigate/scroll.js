@@ -3,7 +3,6 @@ import Alpine from 'alpinejs'
 export function scrollToTop() {
     document.body.scrollTo(0, 0)
 }
-
 export function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute('data-scroll-x', document.body.scrollLeft)
     document.body.setAttribute('data-scroll-y', document.body.scrollTop)
@@ -17,9 +16,13 @@ export function storeScrollInformationInHtmlBeforeNavigatingAway() {
 export function restoreScrollPositionOrScrollToTop() {
     let scroll = el => {
         if (! el.hasAttribute('data-scroll-x')) {
-            window.scrollTo(0, 0)
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         } else {
-            el.scrollTo(Number(el.getAttribute('data-scroll-x')), Number(el.getAttribute('data-scroll-y')))
+            el.scrollTo({
+                top: Number(el.getAttribute('data-scroll-x')),
+                left: Number(el.getAttribute('data-scroll-y')),
+                behavior: 'instant',
+            })
             el.removeAttribute('data-scroll-x')
             el.removeAttribute('data-scroll-y')
         }

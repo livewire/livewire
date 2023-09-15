@@ -12,7 +12,6 @@ function registerListeners(component, listeners) {
     listeners.forEach(name => {
         // Register a global listener...
         let handler = (e) => {
-           console.log('this one')
             if (e.__livewire) e.__livewire.receivedBy.push(component)
 
             component.$wire.call('__dispatch', name, e.detail || {})
