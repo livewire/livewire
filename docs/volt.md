@@ -92,6 +92,26 @@ new class extends Component {
 </div>
 ```
 
+#### Class attributes
+
+Just like typical Livewire components, Volt components support class attributes. When utilizing anonymous PHP classes, class attributes should be defined after the `new` keyword:
+
+```blade
+<?php
+
+use Livewire\Attributes\{Layout, Title};
+use Livewire\Volt\Component;
+
+new
+#[Layout('layouts.guest')]
+#[Title('Login')]
+class extends Component
+{
+    public string $name = '';
+
+    // ...
+```
+
 #### View Data
 
 When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
