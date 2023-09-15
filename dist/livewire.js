@@ -730,7 +730,7 @@
     trigger("effects", target, effects);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -4443,7 +4443,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4537,7 +4537,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5482,7 +5482,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5530,7 +5530,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate2 = evaluateLater2(expression);
@@ -5752,7 +5752,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
     document.body.setAttribute("data-scroll-x", document.body.scrollLeft);
     document.body.setAttribute("data-scroll-y", document.body.scrollTop);
-    document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach((el) => {
+    document.querySelectorAll([`[${module_default.prefixed("navigate\\:scroll")}]`, "[wire\\:scroll]"]).forEach((el) => {
       el.setAttribute("data-scroll-x", el.scrollLeft);
       el.setAttribute("data-scroll-y", el.scrollTop);
     });
@@ -5773,7 +5773,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     queueMicrotask(() => {
       scroll(document.body);
-      document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+      document.querySelectorAll([`[${module_default.prefixed("navigate\\:scroll")}]`, "[wire\\:scroll]"]).forEach(scroll);
     });
   }
 
@@ -5781,8 +5781,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var els = {};
   function storePersistantElementsForLater(callback) {
     els = {};
-    document.querySelectorAll("[x-persist]").forEach((i) => {
-      els[i.getAttribute("x-persist")] = i;
+    document.querySelectorAll(`[${module_default.prefixed("persist")}]`).forEach((i) => {
+      els[i.getAttribute(module_default.prefixed("persist"))] = i;
       callback(i);
       module_default.mutateDom(() => {
         i.remove();
@@ -5791,11 +5791,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function putPersistantElementsBack(callback) {
     let usedPersists = [];
-    document.querySelectorAll("[x-persist]").forEach((i) => {
-      let old = els[i.getAttribute("x-persist")];
+    document.querySelectorAll(`[${module_default.prefixed("persist")}]`).forEach((i) => {
+      let old = els[i.getAttribute(module_default.prefixed("persist"))];
       if (!old)
         return;
-      usedPersists.push(i.getAttribute("x-persist"));
+      usedPersists.push(i.getAttribute(module_default.prefixed("persist")));
       old._x_wasPersisted = true;
       callback(old, i);
       module_default.mutateDom(() => {
@@ -6337,7 +6337,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -6602,7 +6602,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get children() {
       let children = [];
       let currentNode = this.startComment.nextSibling;
-      while (currentNode && currentNode !== this.endComment) {
+      while (currentNode !== void 0 && currentNode !== this.endComment) {
         children.push(currentNode);
         currentNode = currentNode.nextSibling;
       }
@@ -6666,7 +6666,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default7(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
       let templateFn = () => expression;
@@ -6788,9 +6788,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return "-";
     if (/^\D+$/.test(input))
       return "9";
-    if (thousands === null || thousands === void 0) {
-      thousands = delimiter === "," ? "." : ",";
-    }
+    thousands = thousands ?? (delimiter === "," ? "." : ",");
     let addThousands = (input2, thousands2) => {
       let output = "";
       let counter = 0;
@@ -7234,8 +7232,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {
     let visibility = module_default.reactive({ state: false });
     module_default.bind(el, {
-      [directive3.rawName.replace("wire:", "x-")]: "",
-      "x-show"() {
+      [directive3.rawName.replace("wire:", module_default.prefixed())]: "",
+      [module_default.prefixed("show")]() {
         return visibility.state;
       }
     });
@@ -7272,7 +7270,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on("directive.init", ({ el, directive: directive3, cleanup: cleanup3, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.value))
       return;
-    let attribute = directive3.rawName.replace("wire:", "x-on:");
+    let attribute = directive3.rawName.replace("wire:", module_default.prefixed("on:"));
     if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {
       attribute = attribute + ".prevent";
     }
@@ -7291,9 +7289,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
   module_default.interceptInit(module_default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:navigate")) {
-      module_default.bind(el, { ["x-navigate"]: true });
+      module_default.bind(el, { [module_default.prefixed("navigate")]: true });
     } else if (el.hasAttribute("wire:navigate.hover")) {
-      module_default.bind(el, { ["x-navigate.hover"]: true });
+      module_default.bind(el, { [module_default.prefixed("navigate.hover")]: true });
     }
   }));
   document.addEventListener("alpine:navigating", () => {
@@ -7629,7 +7627,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       ["@blur"]() {
         onBlur && update();
       },
-      ["x-model" + getModifierTail(modifiers)]() {
+      [module_default.prefixed("model") + getModifierTail(modifiers)]() {
         return {
           get() {
             return dataGet(component.$wire, expression);
