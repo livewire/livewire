@@ -73,7 +73,6 @@ class BrowserTest extends BrowserTestCase
             ->check('@checkbox.string.d')
             ->check('@checkbox.string.e')
             ->check('@checkbox.string.f')
-            ->pause(10000)
             ->waitForLivewireToLoad()
             ->assertSeeIn('@output', '{"d":"value_d","e":"value_e","f":"value_f"}')
         ;
