@@ -167,7 +167,10 @@ class BrowserTest extends BrowserTestCase
     }
 
 
-    /** @test */
+    /**
+     * @test
+     * @todo Remove test before merging the other failing test
+     */
     public function it_can_remove_nested_wired_values_one_by_one()
     {
         Livewire::visit(new class extends Component {
@@ -188,8 +191,10 @@ class BrowserTest extends BrowserTestCase
 
             public function remove($key)
             {
+                // Removing an item from array
                 unset($this->items[$key]);
 
+                // Resetting the array keys
                 $this->items = array_values($this->items);
             }
 
@@ -247,8 +252,10 @@ class BrowserTest extends BrowserTestCase
 
             public function remove($key)
             {
+                // Removing an item from array
                 unset($this->items[$key]);
 
+                // Resetting the array keys
                 $this->items = array_values($this->items);
             }
 
