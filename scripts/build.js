@@ -17,6 +17,15 @@ build({
     bundle: true,
     platform: 'node',
     define: { CDN: true },
+}).then(() => {
+    build({
+        entryPoints: [`src/Features/SupportNavigate/test-views/source-custom-livewire-init.js`],
+        outfile: `src/Features/SupportNavigate/test-views/compiled-custom-livewire-init.js`,
+        bundle: true,
+        minify: true,
+        platform: 'browser',
+        define: { CDN: false },
+    })
 })
 
 let hash = crypto.randomBytes(4).toString('hex');
