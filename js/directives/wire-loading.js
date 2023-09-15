@@ -54,6 +54,8 @@ function applyDelay(directive) {
         (callback) => { // Execute or abort...
             if (started) {
                 callback()
+
+                started = false
             } else {
                 clearTimeout(timeout)
             }
