@@ -94,13 +94,13 @@ new class extends Component {
 
 #### Class attributes
 
-Just like typical Livewire components, Volt components can have class attributes. In anonymous PHP classes, these class attributes are defined after the `new` keyword:
+Just like typical Livewire components, Volt components support class attributes. When utilizing anonymous PHP classes, class attributes should be defined after the `new` keyword:
 
 ```blade
 <?php
 
-use Livewire\Volt\Component;
 use Livewire\Attributes\{Layout, Title};
+use Livewire\Volt\Component;
 
 new
 #[Layout('layouts.guest')]
@@ -108,6 +108,7 @@ new
 class extends Component
 {
     public string $name = '';
+
     // ...
 ```
 
