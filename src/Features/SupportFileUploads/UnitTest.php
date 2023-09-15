@@ -424,6 +424,20 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function the_global_upload_route_middleware_is_configurable_with_an_array_of_middlware()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', [DummyMiddleware::class]);
+
+        $url = GenerateSignedUploadUrl::forLocal();
+
+        try {
+            $this->withoutExceptionHandling()->post($url);
+        } catch (\Throwable $th) {
+            $this->assertEquals('Middleware was hit!', $th->getMessage());
+        }
+    }
+
+    /** @test */
     public function can_preview_a_temporary_file_with_a_temporary_signed_url()
     {
         Storage::fake('avatars');
