@@ -168,7 +168,66 @@ class BrowserTest extends BrowserTestCase
 
 
     /** @test */
-    public function it_does_not_set_nested_entangled_value_to_null_when_it_is_removed()
+    public function it_can_remove_nested_wired_values_one_by_one()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [
+                [
+                    'id' => 1,
+                    'value' => 5_000,
+                ],
+                [
+                    'id' => 2,
+                    'value' => 10_000,
+                ],
+                [
+                    'id' => 3,
+                    'value' => 15_000,
+                ]
+            ];
+
+            public function remove($key)
+            {
+                unset($this->items[$key]);
+
+                $this->items = array_values($this->items);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        @foreach($items as $itemKey => $item)
+                            <div wire:key="item-{{ $item['id'] }}">
+                                <input
+                                    type="text"
+                                    wire:model="items.{{ $itemKey }}.value"
+                                >
+                                <button
+                                    type="button"
+                                    wire:click.prevent="remove({{ $itemKey }})"
+                                    dusk="remove{{ $itemKey }}"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        @endforeach
+
+                        <div dusk="json">
+                            {{ json_encode($items) }}
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+            ->waitForLivewire()->click('@remove2')
+            ->waitForLivewire()->click('@remove1')
+            ->waitForLivewire()->click('@remove0')
+            ->assertSeeIn('@json', '[]');
+    }
+
+    /** @test */
+    public function it_can_remove_nested_engangled_values_one_by_one()
     {
         Livewire::visit(new class extends Component {
             public array $items = [
