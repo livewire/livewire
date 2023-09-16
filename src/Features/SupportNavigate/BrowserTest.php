@@ -584,17 +584,20 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
-                ->assertScript('return document.styleSheets.length', 3)
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
                 ->click('@link.to.second')
                 ->waitFor('@link.to.first')
                 ->assertSee('On second')
                 ->assertScript('return window._lw_dusk_test')
-                ->assertScript('return document.styleSheets.length', 3)
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
                 ->click('@link.to.first')
                 ->waitFor('@link.to.second')
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
-                ->assertScript('return document.styleSheets.length', 3);
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2);
         });
     }
 
