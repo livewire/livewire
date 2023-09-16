@@ -1,5 +1,5 @@
 import { triggerSend, waitUntilTheCurrentRequestIsFinished } from "./request"
-import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObject, getCsrfToken, contentIsFromDump, splitDumpFromContent } from '@/utils'
+import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObject, contentIsFromDump, splitDumpFromContent } from '@/utils'
 import { on, trigger } from '@/events'
 
 /**

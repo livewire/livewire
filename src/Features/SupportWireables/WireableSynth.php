@@ -35,4 +35,8 @@ class WireableSynth extends Synth
 
         return $meta['class']::fromLivewire($value);
     }
+
+    function set(&$target, $key, $value) {
+        $target->{$key} = $value;
+    }
 }

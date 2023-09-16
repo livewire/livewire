@@ -187,6 +187,7 @@ Below is a complete example of testing the `UploadPhoto` component with Livewire
 
 namespace Tests\Feature\Livewire;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use App\Livewire\UploadPhoto;
 use Livewire\Livewire;
