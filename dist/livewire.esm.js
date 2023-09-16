@@ -7292,13 +7292,6 @@ function mergeNewHead(newHead) {
     }
   }
   for (let child of Array.from(document.head.children)) {
-    if (isAsset(child)) {
-      if (!touchedHeadElements.some((i) => i.outerHTML === child.outerHTML)) {
-        child.remove();
-      }
-    }
-  }
-  for (let child of Array.from(document.head.children)) {
     if (!isAsset(child))
       child.remove();
   }
