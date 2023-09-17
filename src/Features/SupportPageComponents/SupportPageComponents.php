@@ -72,6 +72,14 @@ class SupportPageComponents extends ComponentHook
 
             return $this;
         });
+
+        View::macro('response', function (callable $callback) {
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+
+            $this->layoutConfig->response = $callback;
+
+            return $this;
+        });
     }
 
     static function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)

@@ -21,6 +21,12 @@ trait HandlesPageComponents
 
         $layoutConfig->normalizeViewNameAndParamsForBladeComponents();
 
-        return SupportPageComponents::renderContentsIntoLayout($html, $layoutConfig);
+        $response = response(SupportPageComponents::renderContentsIntoLayout($html, $layoutConfig));
+
+        if (is_callable($layoutConfig->response)) {
+            call_user_func($layoutConfig->response, $response);
+        }
+
+        return $response;
     }
 }

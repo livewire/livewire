@@ -9,6 +9,7 @@ class LayoutConfig
 {
     public $slots = [];
     public $viewContext = null;
+    public $response;
 
     function __construct(
         public $type = 'component',
