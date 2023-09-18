@@ -114,6 +114,39 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertAttribute('@button', 'disabled', 'true')
         ;
     }
+
+    /** @test */
+    function wire_loading_works_normally_with_delay_argument()
+    {
+        Livewire::visit(new class extends Component {
+            public $localText = '';
+
+            public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <section>
+                            <input type="text" dusk="localInput" wire:model.live="localText">
+                            {{ $localText }}
+                        </section>
+                        <div wire:loading.delay>Loading...</div>
+                        <div wire:loading.remove>Removable</div>
+                    </div>
+                HTML;
+            }
+        })
+            ->waitForText('Removable')
+            ->assertSee('Removable')
+            ->type('@localInput', 'Text')
+            ->waitForText('Loading...')
+            ->assertSee('Loading...')
+            ->assertDontSee('Removable')
+        ;
+    }
 }
 
 class PostFormStub extends Form
