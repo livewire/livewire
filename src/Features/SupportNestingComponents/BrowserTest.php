@@ -2,9 +2,12 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportEvents\BaseOn;
 use Livewire\Livewire;
+use Sushi\Sushi;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -181,6 +184,62 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function nested_components_do_not_error_when_child_deleted_with_state()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $posts;
+
+                public function mount()
+                {
+                    $this->posts = Post::all();
+                }
+
+                #[BaseOn('postDeleted')]
+                public function setPosts() {
+                    $this->posts = Post::all();
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        @foreach($posts as $post)
+                            <livewire:child wire:key="{{ $post->id }}" :post="$post" />
+                        @endforeach
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $post;
+
+                public function delete($id)
+                {
+                    Post::find($id)->delete();
+                    $this->dispatch('postDeleted');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="post-{{ $post->id }}">
+                        {{ $post->title }}
+
+                        <button dusk="delete-{{ $post->id }}" wire:click="delete({{ $post->id }})">Delete</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertPresent('@post-1')
+            ->assertSeeIn('@post-1', 'Post #1')
+            ->waitForLivewire()->click('@delete-1')
+            ->assertNotPresent('@post-1')
+            ;
+    }
+
+    /** @test */
     public function lazy_nested_components_do_not_call_boot_method_twice()
     {
         Livewire::visit([
@@ -316,4 +375,15 @@ class NestedBootComponent extends Component
     {
         return '<div>Boot count: {{ $bootCount }}</div>';
     }
+}
+
+class Post extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'title' => 'Post #1'],
+        ['id' => 2, 'title' => 'Post #2'],
+        ['id' => 3, 'title' => 'Post #3'],
+    ];
 }
