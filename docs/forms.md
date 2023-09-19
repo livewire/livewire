@@ -786,7 +786,7 @@ If you don't have a specific option selected by default, you may want to show a 
     <option disabled>Select a state...</option>
 
     @foreach (\App\Models\State::all() as $state)
-        <option value="{{ $option->id }}">{{ $option->label }}</option>
+        <option value="{{ $state->id }}">{{ $state->label }}</option>
     @endforeach
 </select>
 ```
