@@ -634,3 +634,27 @@ class ShowPost extends Component
 ```
 
 The `$post` property will automatically be assigned to the model bound via the route's `{post}` parameter.
+
+### Modifying the response
+
+In some scenarios you might want to modify the response and set a custom response header. You can hook into the response object by calling the `response()` method on the view and use a closure to modify the response object:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Illuminate\Http\Response;
+
+class ShowPost extends Component
+{
+    public function render()
+    {
+        return view('livewire.show-post')
+            ->response(function(Response $response) {
+                $response->header('x-livewire-is-the-way', true);
+            });
+    }
+}
+```
