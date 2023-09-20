@@ -575,6 +575,32 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    /** @test */
+    public function injected_assets_such_as_nprogress_styles_are_retained_when_the_page_changes()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
+                ->click('@link.to.first')
+                ->waitFor('@link.to.second')
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2);
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

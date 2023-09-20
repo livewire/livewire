@@ -100,13 +100,14 @@ function mergeNewHead(newHead) {
     }
 
     // Remove any assets that aren't on the new page...
-    for (let child of Array.from(document.head.children)) {
-        if (isAsset(child)) {
-            if (! touchedHeadElements.some(i => i.outerHTML === child.outerHTML)) {
-                child.remove()
-            }
-        }
-    }
+    // @todo: Re-enable this code and find a better way to managed injected stylesheets. See livewire/livewire#6824
+    // for (let child of Array.from(document.head.children)) {
+    //     if (isAsset(child)) {
+    //         if (! touchedHeadElements.some(i => i.outerHTML === child.outerHTML)) {
+    //             child.remove()
+    //         }
+    //     }
+    // }
 
     // How to free up the garbage collector?
 
