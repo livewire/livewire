@@ -3762,7 +3762,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!cleanup3)
       cleanup3 = () => {
       };
-    return (name, live) => {
+    return (name, live = false) => {
       let isLive = live;
       let livewireProperty = name;
       let livewireComponent = component.$wire;

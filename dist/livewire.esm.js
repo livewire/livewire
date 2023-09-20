@@ -6205,7 +6205,7 @@ function generateEntangleFunction(component, cleanup2) {
   if (!cleanup2)
     cleanup2 = () => {
     };
-  return (name, live) => {
+  return (name, live = false) => {
     let isLive = live;
     let livewireProperty = name;
     let livewireComponent = component.$wire;
