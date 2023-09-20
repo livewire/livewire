@@ -730,7 +730,7 @@
     trigger("effects", target, effects);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -1101,32 +1101,52 @@
     return closestDataStack(node.parentNode);
   }
   function mergeProxies(objects) {
-    return new Proxy({ objects }, mergeProxyTrap);
-  }
-  var mergeProxyTrap = {
-    ownKeys({ objects }) {
-      return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
-    },
-    has({ objects }, name) {
-      if (name == Symbol.unscopables)
-        return false;
-      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
-    },
-    get({ objects }, name, thisProxy) {
-      if (name == "toJSON")
-        return collapseProxies;
-      return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
-    },
-    set({ objects }, name, value) {
-      return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
-    }
-  };
-  function collapseProxies() {
-    let keys = Reflect.ownKeys(this);
-    return keys.reduce((acc, key) => {
-      acc[key] = Reflect.get(this, key);
-      return acc;
-    }, {});
+    let thisProxy = new Proxy({}, {
+      ownKeys: () => {
+        return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
+      },
+      has: (target, name) => {
+        return objects.some((obj) => obj.hasOwnProperty(name));
+      },
+      get: (target, name) => {
+        return (objects.find((obj) => {
+          if (obj.hasOwnProperty(name)) {
+            let descriptor = Object.getOwnPropertyDescriptor(obj, name);
+            if (descriptor.get && descriptor.get._x_alreadyBound || descriptor.set && descriptor.set._x_alreadyBound) {
+              return true;
+            }
+            if ((descriptor.get || descriptor.set) && descriptor.enumerable) {
+              let getter = descriptor.get;
+              let setter = descriptor.set;
+              let property = descriptor;
+              getter = getter && getter.bind(thisProxy);
+              setter = setter && setter.bind(thisProxy);
+              if (getter)
+                getter._x_alreadyBound = true;
+              if (setter)
+                setter._x_alreadyBound = true;
+              Object.defineProperty(obj, name, {
+                ...property,
+                get: getter,
+                set: setter
+              });
+            }
+            return true;
+          }
+          return false;
+        }) || {})[name];
+      },
+      set: (target, name, value) => {
+        let closestObjectWithKey = objects.find((obj) => obj.hasOwnProperty(name));
+        if (closestObjectWithKey) {
+          closestObjectWithKey[name] = value;
+        } else {
+          objects[objects.length - 1][name] = value;
+        }
+        return true;
+      }
+    });
+    return thisProxy;
   }
   function initInterceptors2(data2) {
     let isObject22 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
@@ -3012,7 +3032,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
   function warnMissingPluginMagic(name, magicName, slug) {
-    magic(magicName, (el) => warn(`You can't use [$${magicName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   directive("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup22 }) => {
     let func = evaluateLater2(expression);
@@ -3050,15 +3070,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup22(releaseEntanglement);
     });
   });
+  var teleportContainerDuringClone = document.createElement("div");
   directive("teleport", (el, { modifiers, expression }, { cleanup: cleanup22 }) => {
     if (el.tagName.toLowerCase() !== "template")
       warn("x-teleport can only be used on a <template> tag", el);
-    let target = getTarget(expression);
+    let target = skipDuringClone(() => {
+      return document.querySelector(expression);
+    }, () => {
+      return teleportContainerDuringClone;
+    })();
+    if (!target)
+      warn(`Cannot find x-teleport element for selector: "${expression}"`);
     let clone2 = el.content.cloneNode(true).firstElementChild;
     el._x_teleport = clone2;
     clone2._x_teleportBack = el;
-    el.setAttribute("data-teleport-template", true);
-    clone2.setAttribute("data-teleport-target", true);
     if (el._x_forwardEvents) {
       el._x_forwardEvents.forEach((eventName) => {
         clone2.addEventListener(eventName, (e) => {
@@ -3068,38 +3093,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     addScopeToNode(clone2, {}, el);
-    let placeInDom = (clone3, target2, modifiers2) => {
-      if (modifiers2.includes("prepend")) {
-        target2.parentNode.insertBefore(clone3, target2);
-      } else if (modifiers2.includes("append")) {
-        target2.parentNode.insertBefore(clone3, target2.nextSibling);
-      } else {
-        target2.appendChild(clone3);
-      }
-    };
     mutateDom(() => {
-      placeInDom(clone2, target, modifiers);
+      if (modifiers.includes("prepend")) {
+        target.parentNode.insertBefore(clone2, target);
+      } else if (modifiers.includes("append")) {
+        target.parentNode.insertBefore(clone2, target.nextSibling);
+      } else {
+        target.appendChild(clone2);
+      }
       initTree(clone2);
       clone2._x_ignore = true;
     });
-    el._x_teleportPutBack = () => {
-      let target2 = getTarget(expression);
-      mutateDom(() => {
-        placeInDom(el._x_teleport, target2, modifiers);
-      });
-    };
+    cleanup22(() => clone2.remove());
   });
-  var teleportContainerDuringClone = document.createElement("div");
-  function getTarget(expression) {
-    let target = skipDuringClone(() => {
-      return document.querySelector(expression);
-    }, () => {
-      return teleportContainerDuringClone;
-    })();
-    if (!target)
-      warn(`Cannot find x-teleport element for selector: "${expression}"`);
-    return target;
-  }
   var handler = () => {
   };
   handler.inline = (el, { modifiers }, { cleanup: cleanup22 }) => {
@@ -3342,7 +3348,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getInputValue(el, modifiers, event, currentValue) {
     return mutateDom(() => {
       if (event instanceof CustomEvent && event.detail !== void 0)
-        return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
+        return event.detail ?? event.target.value;
       else if (el.type === "checkbox") {
         if (Array.isArray(currentValue)) {
           let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
@@ -3690,8 +3696,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
   directive("ref", handler3);
   directive("if", (el, { expression }, { effect: effect3, cleanup: cleanup22 }) => {
-    if (el.tagName.toLowerCase() !== "template")
-      warn("x-if can only be used on a <template> tag", el);
     let evaluate2 = evaluateLater(el, expression);
     let show = () => {
       if (el._x_currentIfEl)
@@ -3749,8 +3753,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   warnMissingPluginDirective("Intersect", "intersect", "intersect");
   warnMissingPluginDirective("Focus", "trap", "focus");
   warnMissingPluginDirective("Mask", "mask", "mask");
-  function warnMissingPluginDirective(name, directiveName, slug) {
-    directive(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+  function warnMissingPluginDirective(name, directiveName2, slug) {
+    directive(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
   }
   alpine_default.setEvaluator(normalEvaluator);
   alpine_default.setReactivityEngine({ reactive: reactive2, effect: effect2, release: stop, raw: toRaw });
@@ -3762,7 +3766,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!cleanup3)
       cleanup3 = () => {
       };
-    return (name, live) => {
+    return (name, live = false) => {
       let isLive = live;
       let livewireProperty = name;
       let livewireComponent = component.$wire;
@@ -4106,9 +4110,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
-  wireProperty("$entangle", (component) => (name, live = false) => {
-    return generateEntangleFunction(component)(name, live);
-  });
   wireProperty("$toggle", (component) => (name, live = true) => {
     return component.$wire.set(name, !component.$wire.get(name), live);
   });
@@ -4443,7 +4444,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4537,7 +4538,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5482,7 +5483,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5530,7 +5531,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate2 = evaluateLater2(expression);
@@ -6330,7 +6331,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -6595,7 +6596,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get children() {
       let children = [];
       let currentNode = this.startComment.nextSibling;
-      while (currentNode && currentNode !== this.endComment) {
+      while (currentNode !== void 0 && currentNode !== this.endComment) {
         children.push(currentNode);
         currentNode = currentNode.nextSibling;
       }
@@ -6659,7 +6660,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default7(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
       let templateFn = () => expression;
@@ -6781,9 +6782,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return "-";
     if (/^\D+$/.test(input))
       return "9";
-    if (thousands === null || thousands === void 0) {
-      thousands = delimiter === "," ? "." : ",";
-    }
+    thousands = thousands ?? (delimiter === "," ? "." : ",");
     let addThousands = (input2, thousands2) => {
       let output = "";
       let counter = 0;

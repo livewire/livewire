@@ -11,6 +11,96 @@ use Tests\BrowserTestCase;
 class BrowserTest extends BrowserTestCase
 {
     /** @test */
+    public function is_not_live_by_default()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = 'foo';
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div x-data="{ state: $wire.$entangle('foo') }">
+                        <button dusk="set" x-on:click="state = 'bar'" type="button">
+                            Set to bar
+                        </button>
+                    </div>
+
+                    <div dusk="state">{{ $foo }}</div>
+
+                    <button dusk="refresh" x-on:click="$wire.$refresh()" type="button">
+                        Refresh
+                    </button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@state', 'foo')
+            ->waitForNoLivewire()->click('@set')
+            ->assertSeeIn('@state', 'foo')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@state', 'bar');
+    }
+
+    /** @test */
+    public function can_be_forced_to_not_be_live()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = 'foo';
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div x-data="{ state: $wire.$entangle('foo', false) }">
+                        <button dusk="set" x-on:click="state = 'bar'" type="button">
+                            Set to bar
+                        </button>
+                    </div>
+
+                    <div dusk="state">{{ $foo }}</div>
+
+                    <button dusk="refresh" x-on:click="$wire.$refresh()" type="button">
+                        Refresh
+                    </button>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@state', 'foo')
+            ->waitForNoLivewire()->click('@set')
+            ->assertSeeIn('@state', 'foo')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@state', 'bar');
+    }
+
+    /** @test */
+    public function can_be_live()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = 'foo';
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div x-data="{ state: $wire.$entangle('foo', true) }">
+                        <button dusk="set" x-on:click="state = 'bar'" type="button">
+                            Set to bar
+                        </button>
+                    </div>
+
+                    <div dusk="state">{{ $foo }}</div>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@state', 'foo')
+            ->waitForLivewire()->click('@set')
+            ->assertSeeIn('@state', 'bar');
+    }
+
+    /** @test */
     public function can_remove_entangled_components_from_dom_without_side_effects()
     {
         Livewire::visit(new class extends Component {
