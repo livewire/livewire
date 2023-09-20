@@ -232,7 +232,7 @@ class DuskBrowserMacros
                 }, 'Livewire request was triggered');
             }
 
-            // If no callback is passed, make ->waitForLivewire a higher-order method.
+            // If no callback is passed, make ->waitForNoLivewire a higher-order method.
             return new class($this, $id) {
                 protected $browser;
                 protected $id;
