@@ -18,7 +18,7 @@ class BaseComputed extends Attribute
         public $persist = false,
         public $seconds = 3600, // 1 hour...
         public $cache = false,
-        public $cacheKey = null,
+        public $key = null,
     ) {}
 
     function boot()
@@ -119,7 +119,7 @@ class BaseComputed extends Attribute
 
     protected function generateCachedKey()
     {
-        if ($this->cacheKey) return $this->cacheKey;
+        if ($this->key) return $this->key;
 
         return 'lw_computed.'.$this->component->getName().'.'.$this->getName();
     }
