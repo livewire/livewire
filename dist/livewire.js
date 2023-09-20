@@ -4106,6 +4106,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
+  wireProperty("$entangle", (component) => (name, live = false) => {
+    return generateEntangleFunction(component)(name, live);
+  });
   wireProperty("$toggle", (component) => (name, live = true) => {
     return component.$wire.set(name, !component.$wire.get(name), live);
   });
