@@ -18,6 +18,26 @@ php artisan livewire:publish --config
 
 This will create a new `livewire.php` file in your Laravel application's `config` directory.
 
+## Publishing the frontend assets
+
+If you prefer the JavaScript assets to be served by your web server not through Laravel, use the `livewire:publish` command:
+
+```shell
+php artisan livewire:publish --assets
+```
+
+To keep the assets up-to-date and avoid issues in future updates, we **highly recommend** adding the command to the `post-update-cmd` scripts in your `composer.json` file:
+
+```json
+{
+    "scripts": {
+        "post-update-cmd": [
+            "@php artisan livewire:publish --assets"
+        ]
+    }
+}
+```
+
 ## Manually including Livewire's frontend assets
 
 By default, Livewire injects the JavaScript and CSS assets it needs into each page that includes a Livewire component.
