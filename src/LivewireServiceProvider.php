@@ -10,6 +10,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         $this->registerLivewireSingleton();
         $this->registerConfig();
+        $this->registerAssets();
         $this->bootEventBus();
         $this->registerMechanisms();
     }
@@ -36,6 +37,13 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->publishes([$config => base_path('config/livewire.php')], ['livewire', 'livewire:config']);
 
         $this->mergeConfigFrom($config, 'livewire');
+    }
+
+    protected function registerAssets()
+    {
+        $assets = __DIR__.'/../dist';
+
+        $this->publishes([$assets => public_path('vendor/livewire')], ['livewire', 'livewire:assets']);
     }
 
     protected function bootEventBus()
