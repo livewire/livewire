@@ -7,6 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
+use Throwable;
 
 class TemporaryUploadedFile extends UploadedFile
 {
@@ -99,6 +100,20 @@ class TemporaryUploadedFile extends UploadedFile
         return URL::temporarySignedRoute(
             'livewire.preview-file', now()->addMinutes(30)->endOfHour(), ['filename' => $this->getFilename()]
         );
+    }
+
+    public function temporarySafeUrl()
+    {
+        try {
+            return $this->temporaryUrl();
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    public function hasTemporaryUrl()
+    {
+        return $this->temporarySafeUrl() !== null;
     }
 
     public function isPreviewable()

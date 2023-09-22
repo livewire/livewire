@@ -682,6 +682,74 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals($first_url, $second_url);
     }
+
+    /** @test */
+    public function temporary_safe_url_returns_valid_temporary_url()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 01, 00));
+
+        $expected_temporary_url = $photo->temporaryUrl();
+        $safe_temporary_url = $photo->temporarySafeUrl();
+
+        // Temporary safe url should always be equal to the temporary url when temporaryUrl does not throw exception
+        $this->assertEquals($expected_temporary_url, $safe_temporary_url);
+    }
+
+    /** @test */
+    public function temporary_safe_url_returns_null_instead_of_exception()
+    {
+        $temporary_upload_file = new TemporaryUploadedFile('', '');
+
+        // Temporary safe url should return null when driver is not supported
+        $this->assertEquals(null, $temporary_upload_file->temporarySafeUrl());
+
+        // Temporary url should throw an exception when driver is not supported
+        $this->expectException(\Exception::class);
+        $temporary_upload_file->temporaryUrl();
+    }
+
+    /** @test */
+    public function has_temporary_url_returns_true_when_exists()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 01, 00));
+
+        $temporary_url = $photo->temporaryUrl();
+
+        // Temporary url is valid and returned correctly
+        $this->assertIsString($temporary_url);
+
+        // hasTemporaryUrl should return true since the temporary url exists
+        $this->assertTrue($photo->hasTemporaryUrl());
+    }
+
+    /** @test */
+    public function has_temporary_url_returns_false_when_does_not_exist()
+    {
+        $temporary_upload_file = new TemporaryUploadedFile('', '');
+
+        // Has temporary url should return false when driver is not supported
+        $this->assertFalse($temporary_upload_file->hasTemporaryUrl());
+
+        // Temporary url should throw an exception when driver is not supported
+        $this->expectException(\Exception::class);
+        $temporary_upload_file->temporaryUrl();
+    }
 }
 
 class DummyMiddleware
