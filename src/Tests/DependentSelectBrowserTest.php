@@ -7,7 +7,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;
 
-class DependentSelectTest extends BrowserTestCase
+class DependentSelectBrowserTest extends BrowserTestCase
 {
     /** @test */
     public function updates_dependent_select_options_correctly()
