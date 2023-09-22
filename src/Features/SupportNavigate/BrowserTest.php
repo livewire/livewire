@@ -601,6 +601,58 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    /** @test */
+    public function livewire_fires_on_navigate_event()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-asset')
+                ->assertSee('On first')
+                ->assertScript('return !window._lw_dusk_on_navigate')
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return window._lw_dusk_on_navigate', 1)
+            ;
+        });
+    }
+
+    /** @test */
+    public function livewire_fires_on_navigate_event_when_going_back()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-asset')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return window._lw_dusk_on_navigate', 1)
+                ->back()
+                ->waitForText('On first')
+                ->assertScript('return window._lw_dusk_on_navigate', 2)
+            ;
+        });
+    }
+
+    /** @test */
+    public function livewire_fires_on_navigate_event_when_going_forward()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first-asset')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return window._lw_dusk_on_navigate', 1)
+                ->back()
+                ->waitForText('On first')
+                ->assertScript('return window._lw_dusk_on_navigate', 2)
+                ->forward()
+                ->waitForText('On second')
+                ->assertScript('return window._lw_dusk_on_navigate', 3)
+            ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

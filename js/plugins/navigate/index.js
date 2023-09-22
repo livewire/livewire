@@ -13,6 +13,7 @@ let enablePersist = true
 let showProgressBar = true
 let restoreScroll = true
 let autofocus = false
+let onNavigationHooks = []
 
 export default function (Alpine) {
     Alpine.navigate = (url) => {
@@ -23,6 +24,10 @@ export default function (Alpine) {
 
     Alpine.navigate.disableProgressBar = () => {
         showProgressBar = false
+    }
+
+    Alpine.navigate.onNavigate = (callback) => {
+        onNavigationHooks.push(callback)
     }
 
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
@@ -68,23 +73,28 @@ export default function (Alpine) {
                     packUpPersistedTeleports(persistedEl)
                 })
 
-                swapCurrentPageWithNewHtml(html, () => {
-                    removeAnyLeftOverStaleTeleportTargets(document.body)
+                const navigation = createNavigationController()
+                navigation.callOnNavigateHooks(() => {
+                    swapCurrentPageWithNewHtml(html, () => {
+                        removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-                        unPackPersistedTeleports(persistedEl)
-                    })
+                        enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                            unPackPersistedTeleports(persistedEl)
+                        })
 
-                    restoreScrollPositionOrScrollToTop()
+                        restoreScrollPositionOrScrollToTop()
 
-                    fireEventForOtherLibariesToHookInto('alpine:navigated')
+                        navigation.fulfill()
 
-                    updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination)
+                        fireEventForOtherLibariesToHookInto('alpine:navigated')
 
-                    andAfterAllThis(() => {
-                        autofocus && autofocusElementsWithTheAutofocusAttribute()
+                        updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination)
 
-                        nowInitializeAlpineOnTheNewPage(Alpine)
+                        andAfterAllThis(() => {
+                            autofocus && autofocusElementsWithTheAutofocusAttribute()
+
+                            nowInitializeAlpineOnTheNewPage(Alpine)
+                        })
                     })
                 })
             })
@@ -102,21 +112,26 @@ export default function (Alpine) {
                 packUpPersistedTeleports(persistedEl)
             })
 
-            swapCurrentPageWithNewHtml(html, () => {
-                removeAnyLeftOverStaleTeleportTargets(document.body)
+            const navigation = createNavigationController()
+            navigation.callOnNavigateHooks(() => {
+                swapCurrentPageWithNewHtml(html, () => {
+                    removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-                    unPackPersistedTeleports(persistedEl)
-                })
+                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                        unPackPersistedTeleports(persistedEl)
+                    })
 
-                restoreScrollPositionOrScrollToTop()
+                    restoreScrollPositionOrScrollToTop()
 
-                fireEventForOtherLibariesToHookInto('alpine:navigated')
+                    navigation.fulfill()
 
-                andAfterAllThis(() => {
-                    autofocus && autofocusElementsWithTheAutofocusAttribute()
+                    fireEventForOtherLibariesToHookInto('alpine:navigated')
 
-                    nowInitializeAlpineOnTheNewPage(Alpine)
+                    andAfterAllThis(() => {
+                        autofocus && autofocusElementsWithTheAutofocusAttribute()
+
+                        nowInitializeAlpineOnTheNewPage(Alpine)
+                    })
                 })
             })
 
@@ -160,4 +175,32 @@ function nowInitializeAlpineOnTheNewPage(Alpine) {
 
 function autofocusElementsWithTheAutofocusAttribute() {
     document.querySelector('[autofocus]') && document.querySelector('[autofocus]').focus()
+}
+
+function createNavigationController() {
+    let fulfill;
+    let abort;
+
+    const hasNavigationFinished = new Promise((resolve, reject) => {
+        fulfill = resolve
+        abort = reject
+    })
+
+    function callOnNavigateHooks(andThen) {
+        Promise
+            .allSettled(
+                onNavigationHooks.map((callback) => callback({
+                    // @todo: Add `from` parameter as a URL type.
+                    // @todo: Add `to` parameter as a URL type.
+                    complete: hasNavigationFinished,
+                }))
+            )
+            .then(() => andThen())
+    }
+
+    return {
+        fulfill,
+        abort,
+        callOnNavigateHooks,
+    }
 }
