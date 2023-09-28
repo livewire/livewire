@@ -653,7 +653,7 @@ class ShowPost extends Component
     {
         return view('livewire.show-post')
             ->response(function(Response $response) {
-                $response->header('x-livewire-is-the-way', true);
+                $response->header('X-Custom-Header', true);
             });
     }
 }
