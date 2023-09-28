@@ -512,7 +512,7 @@ class Steps extends Component
 
 ```blade
 <div>
-    <livewire:dynamic-component :is="$current" />
+    <livewire:dynamic-component :is="$current" wire:key="{{ $current }}" />
 
     <button wire:click="next">Next</button>
 </div>
@@ -539,7 +539,7 @@ class StepOne extends Component
 If you prefer, you can use the alternative syntax:
 
 ```blade
-<livewire:is :component="$current" />
+<livewire:is :component="$current" wire:key="{{ $current }}" />
 ```
 
 ## Recursive components
