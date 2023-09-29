@@ -9,11 +9,19 @@ export function storeScrollInformationInHtmlBeforeNavigatingAway() {
     })
 }
 
-export function restoreScrollPosition() {
+export function restoreScrollPositionOrScrollToTop() {
     let scroll = el => {
-        el.scrollTo(Number(el.getAttribute('data-scroll-x')), Number(el.getAttribute('data-scroll-y')))
-        el.removeAttribute('data-scroll-x')
-        el.removeAttribute('data-scroll-y')
+        if (! el.hasAttribute('data-scroll-x')) {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+        } else {
+            el.scrollTo({
+                top: Number(el.getAttribute('data-scroll-x')),
+                left: Number(el.getAttribute('data-scroll-y')),
+                behavior: 'instant',
+            })
+            el.removeAttribute('data-scroll-x')
+            el.removeAttribute('data-scroll-y')
+        }
     }
 
     queueMicrotask(() => {
