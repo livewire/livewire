@@ -41,24 +41,6 @@ HTML Directives:
     wire:offline: { uri: /docs/wire-offline, file: /wire-offline.md }
     wire:ignore: { uri: /docs/wire-ignore, file: /wire-ignore.md }
     wire:stream: { uri: /docs/wire-stream, file: /wire-stream.md }
-Blade Directives:
-    "@teleport": { uri: /docs/at-teleport, file: /at-teleport.md }
-    "@persist": { uri: /docs/at-persist, file: /at-persist.md }
-    "@this": { uri: /docs/at-this, file: /at-this.md }
-    "@entangle": { uri: /docs/at-entangle, file: /at-entangle.md }
-Component Attributes:
-    "#[Computed]": { uri: /docs/attribute-computed, file: /attribute-computed.md }
-    "#[Js]": { uri: /docs/attribute-js, file: /attribute-js.md }
-    "#[Layout]": { uri: /docs/attribute-layout, file: /attribute-layout.md }
-    "#[Lazy]": { uri: /docs/attribute-lazy, file: /attribute-lazy.md }
-    "#[Locked]": { uri: /docs/attribute-locked, file: /attribute-locked.md }
-    "#[Modelable]": { uri: /docs/attribute-modelable, file: /attribute-modelable.md }
-    "#[On]": { uri: /docs/attribute-on, file: /attribute-on.md }
-    "#[Reactive]": { uri: /docs/attribute-reactive, file: /attribute-reactive.md }
-    "#[Renderless]": { uri: /docs/attribute-renderless, file: /attribute-renderless.md }
-    "#[Rule]": { uri: /docs/attribute-rule, file: /attribute-rule.md }
-    "#[Title]": { uri: /docs/attribute-title, file: /attribute-title.md }
-    "#[Url]": { uri: /docs/attribute-url, file: /attribute-url.md }
 Concepts:
     Morphing: { uri: /docs/morphing, file: /morph.md }
     Hydration: { uri: /docs/hydration, file: /hydration.md }
