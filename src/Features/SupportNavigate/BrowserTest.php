@@ -420,11 +420,6 @@ class BrowserTest extends \Tests\BrowserTestCase
 
 class FirstPage extends Component
 {
-   function mount()
-   {
-       dd(config('livewire.navigate.progress_bar_color'));
-   }
-
     public function redirectToPageTwoUsingNavigate()
     {
         return $this->redirect('/second', navigate: true);
