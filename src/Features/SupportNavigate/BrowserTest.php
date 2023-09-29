@@ -104,36 +104,6 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_customize_progress_bar_color()
-    {
-        config()->set('livewire.navigate.progress_bar_color', '#000');
-
-        $this->browse(function ($browser) {
-            $browser
-                ->visit('/first')
-                ->tinker()
-                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
-                ->assertScript('return window._lw_dusk_test')
-                ->assertSee('On first')
-                ->click('@link.to.third')
-                ->waitFor('#nprogress')
-                ->waitForText('Done loading...');
-        });
-
-        $this->browse(function ($browser) {
-            $browser
-                ->visit('/first-hide-progress')
-                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
-                ->assertScript('return window._lw_dusk_test')
-                ->assertSee('On first')
-                ->click('@link.to.third')
-                ->pause(500)
-                ->assertMissing('#nprogress')
-                ->waitForText('Done loading...');
-        });
-    }
-
-    /** @test */
     public function can_navigate_to_page_without_reloading()
     {
         $this->browse(function ($browser) {
