@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1663,52 +1663,32 @@ var require_module_cjs = __commonJS({
       return closestDataStack(node.parentNode);
     }
     function mergeProxies(objects) {
-      let thisProxy = new Proxy({}, {
-        ownKeys: () => {
-          return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
-        },
-        has: (target, name) => {
-          return objects.some((obj) => obj.hasOwnProperty(name));
-        },
-        get: (target, name) => {
-          return (objects.find((obj) => {
-            if (obj.hasOwnProperty(name)) {
-              let descriptor = Object.getOwnPropertyDescriptor(obj, name);
-              if (descriptor.get && descriptor.get._x_alreadyBound || descriptor.set && descriptor.set._x_alreadyBound) {
-                return true;
-              }
-              if ((descriptor.get || descriptor.set) && descriptor.enumerable) {
-                let getter = descriptor.get;
-                let setter = descriptor.set;
-                let property = descriptor;
-                getter = getter && getter.bind(thisProxy);
-                setter = setter && setter.bind(thisProxy);
-                if (getter)
-                  getter._x_alreadyBound = true;
-                if (setter)
-                  setter._x_alreadyBound = true;
-                Object.defineProperty(obj, name, {
-                  ...property,
-                  get: getter,
-                  set: setter
-                });
-              }
-              return true;
-            }
-            return false;
-          }) || {})[name];
-        },
-        set: (target, name, value) => {
-          let closestObjectWithKey = objects.find((obj) => obj.hasOwnProperty(name));
-          if (closestObjectWithKey) {
-            closestObjectWithKey[name] = value;
-          } else {
-            objects[objects.length - 1][name] = value;
-          }
-          return true;
-        }
-      });
-      return thisProxy;
+      return new Proxy({ objects }, mergeProxyTrap);
+    }
+    var mergeProxyTrap = {
+      ownKeys({ objects }) {
+        return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
+      },
+      has({ objects }, name) {
+        if (name == Symbol.unscopables)
+          return false;
+        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+      },
+      get({ objects }, name, thisProxy) {
+        if (name == "toJSON")
+          return collapseProxies;
+        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+      },
+      set({ objects }, name, value) {
+        return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
+      }
+    };
+    function collapseProxies() {
+      let keys = Reflect.ownKeys(this);
+      return keys.reduce((acc, key) => {
+        acc[key] = Reflect.get(this, key);
+        return acc;
+      }, {});
     }
     function initInterceptors2(data2) {
       let isObject2 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
@@ -2947,7 +2927,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
     function warnMissingPluginMagic(name, magicName, slug) {
-      magic(magicName, (el) => warn(`You can't use [$${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+      magic(magicName, (el) => warn(`You can't use [$${magicName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     directive2("modelable", (el, { expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let func = evaluateLater2(expression);
@@ -2985,20 +2965,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         cleanup2(releaseEntanglement);
       });
     });
-    var teleportContainerDuringClone = document.createElement("div");
     directive2("teleport", (el, { modifiers, expression }, { cleanup: cleanup2 }) => {
       if (el.tagName.toLowerCase() !== "template")
         warn("x-teleport can only be used on a <template> tag", el);
-      let target = skipDuringClone(() => {
-        return document.querySelector(expression);
-      }, () => {
-        return teleportContainerDuringClone;
-      })();
-      if (!target)
-        warn(`Cannot find x-teleport element for selector: "${expression}"`);
+      let target = getTarget(expression);
       let clone2 = el.content.cloneNode(true).firstElementChild;
       el._x_teleport = clone2;
       clone2._x_teleportBack = el;
+      el.setAttribute("data-teleport-template", true);
+      clone2.setAttribute("data-teleport-target", true);
       if (el._x_forwardEvents) {
         el._x_forwardEvents.forEach((eventName) => {
           clone2.addEventListener(eventName, (e) => {
@@ -3008,19 +2983,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       }
       addScopeToNode(clone2, {}, el);
-      mutateDom(() => {
-        if (modifiers.includes("prepend")) {
-          target.parentNode.insertBefore(clone2, target);
-        } else if (modifiers.includes("append")) {
-          target.parentNode.insertBefore(clone2, target.nextSibling);
+      let placeInDom = (clone3, target2, modifiers2) => {
+        if (modifiers2.includes("prepend")) {
+          target2.parentNode.insertBefore(clone3, target2);
+        } else if (modifiers2.includes("append")) {
+          target2.parentNode.insertBefore(clone3, target2.nextSibling);
         } else {
-          target.appendChild(clone2);
+          target2.appendChild(clone3);
         }
+      };
+      mutateDom(() => {
+        placeInDom(clone2, target, modifiers);
         initTree(clone2);
         clone2._x_ignore = true;
       });
-      cleanup2(() => clone2.remove());
+      el._x_teleportPutBack = () => {
+        let target2 = getTarget(expression);
+        mutateDom(() => {
+          placeInDom(el._x_teleport, target2, modifiers);
+        });
+      };
     });
+    var teleportContainerDuringClone = document.createElement("div");
+    function getTarget(expression) {
+      let target = skipDuringClone(() => {
+        return document.querySelector(expression);
+      }, () => {
+        return teleportContainerDuringClone;
+      })();
+      if (!target)
+        warn(`Cannot find x-teleport element for selector: "${expression}"`);
+      return target;
+    }
     var handler = () => {
     };
     handler.inline = (el, { modifiers }, { cleanup: cleanup2 }) => {
@@ -3262,9 +3256,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getInputValue(el, modifiers, event, currentValue) {
       return mutateDom(() => {
-        var _a;
         if (event instanceof CustomEvent && event.detail !== void 0)
-          return (_a = event.detail) != null ? _a : event.target.value;
+          return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
         else if (el.type === "checkbox") {
           if (Array.isArray(currentValue)) {
             let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
@@ -3612,6 +3605,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     directive2("ref", handler3);
     directive2("if", (el, { expression }, { effect: effect3, cleanup: cleanup2 }) => {
+      if (el.tagName.toLowerCase() !== "template")
+        warn("x-if can only be used on a <template> tag", el);
       let evaluate2 = evaluateLater(el, expression);
       let show = () => {
         if (el._x_currentIfEl)
@@ -3669,8 +3664,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     warnMissingPluginDirective("Intersect", "intersect", "intersect");
     warnMissingPluginDirective("Focus", "trap", "focus");
     warnMissingPluginDirective("Mask", "mask", "mask");
-    function warnMissingPluginDirective(name, directiveName2, slug) {
-      directive2(directiveName2, (el) => warn(`You can't use [x-${directiveName2}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
+    function warnMissingPluginDirective(name, directiveName, slug) {
+      directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
     alpine_default.setReactivityEngine({ reactive: import_reactivity9.reactive, effect: import_reactivity9.effect, release: import_reactivity9.stop, raw: import_reactivity9.toRaw });
@@ -3679,9 +3674,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3799,9 +3794,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4796,9 +4791,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../alpine/packages/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4870,9 +4865,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5228,9 +5223,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5518,7 +5513,7 @@ var require_module_cjs6 = __commonJS({
       get children() {
         let children = [];
         let currentNode = this.startComment.nextSibling;
-        while (currentNode !== void 0 && currentNode !== this.endComment) {
+        while (currentNode && currentNode !== this.endComment) {
           children.push(currentNode);
           currentNode = currentNode.nextSibling;
         }
@@ -5584,9 +5579,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5731,7 +5726,9 @@ var require_module_cjs7 = __commonJS({
         return "-";
       if (/^\D+$/.test(input))
         return "9";
-      thousands = thousands != null ? thousands : delimiter === "," ? "." : ",";
+      if (thousands === null || thousands === void 0) {
+        thousands = delimiter === "," ? "." : ",";
+      }
       let addThousands = (input2, thousands2) => {
         let output = "";
         let counter = 0;
@@ -6208,7 +6205,7 @@ function generateEntangleFunction(component, cleanup2) {
   if (!cleanup2)
     cleanup2 = () => {
     };
-  return (name, live) => {
+  return (name, live = false) => {
     let isLive = live;
     let livewireProperty = name;
     let livewireComponent = component.$wire;
@@ -7292,13 +7289,6 @@ function mergeNewHead(newHead) {
         garbageCollector.appendChild(child);
       }
       touchedHeadElements.push(child);
-    }
-  }
-  for (let child of Array.from(document.head.children)) {
-    if (isAsset(child)) {
-      if (!touchedHeadElements.some((i) => i.outerHTML === child.outerHTML)) {
-        child.remove();
-      }
     }
   }
   for (let child of Array.from(document.head.children)) {
