@@ -442,7 +442,7 @@ class CreatePostTest extends TestCase
 If you want to test that a specific validation rule has failed, you can pass an array of rules:
 
 ```php
-$this->assertHasErrors(['title', ['required']]);
+$this->assertHasErrors(['title' => ['required']]);
 ```
 
 ### Authorization
