@@ -1012,6 +1012,42 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@child', 'Child')
         ;
     }
+
+    public function test_pagination_links_scroll_to_top_by_default()
+    {
+        Livewire::visit(new class extends Component {
+            use WithPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        <div id="top">Top...</div>
+
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        <div style="min-height: 100vh">&nbsp;</div>
+
+                        {{ $posts->links() }}
+
+                        <div id="bottom">Bottom...</div>
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(),
+                    ]
+                );
+            }
+        })
+        ->scrollTo('#bottom')
+        ->assertNotInViewPort('#top')
+        ->waitForLivewire()->click('@nextPage.before')
+        ->assertInViewPort('#top')
+        ;
+    }
 }
 
 class Post extends Model
