@@ -82,6 +82,8 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
+        $progressBarColor = config('livewire.navigate.progress_bar_color', '#2299dd');
+
         $html = <<<HTML
         <!-- Livewire Styles -->
         <style {$nonce}>
@@ -99,6 +101,10 @@ class FrontendAssets
 
             [wire\:dirty]:not(textarea):not(input):not(select) {
                 display: none;
+            }
+
+            :root {
+                --livewire-progress-bar-color: {$progressBarColor};
             }
 
             [x-cloak] {
