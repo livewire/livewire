@@ -262,6 +262,17 @@ Now, when a user uploads a file, the file will never actually be stored on your 
 > php artisan livewire:publish --config
 > ```
 
+### Using DigitalOcean spaces
+
+DigitalOcean Spaces needs to be configured for CORS, you have to go to space settings then in the CORS Configurations section, click Add then configrue the followeing:
+
+    - Origin: the origin of your application (domain)
+    - Allowed Methods: GET & PUT
+    - Allowed Headers: 
+        - Content-Type 
+        - X-Amz-Acl
+
+For any additional configiruation hed to [digitalocean documentation](https://docs.digitalocean.com/products/spaces/how-to/configure-cors/)
 ### Configuring automatic file cleanup
 
 Livewire's temporary upload directory will fill up with files quickly; therefore, it's essential to configure S3 to clean up files older than 24 hours.
