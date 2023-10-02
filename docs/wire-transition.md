@@ -37,7 +37,7 @@ Because `wire:transition` has been added to the `<div>` containing the post's co
 
 By default, Livewire applies both an opacity and a scale CSS transition to elements with `wire:transtion`. Here's a visual preview:
 
-<div x-data="{ show: false }" class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
+<div x-data="{ show: false }" x-cloak class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
     <a href="#" x-on:click.prevent="show = ! show" class="py-2.5 outline-none">
         Preview transition <span x-text="show ? 'out' : 'in →'">in</span>
     </a>
@@ -51,7 +51,7 @@ By default, Livewire applies both an opacity and a scale CSS transition to eleme
                 box-shadow: inset 0px -1px 0px rgba(0, 0, 0, 0.5), inset 0px 1px 0px rgba(255, 255, 255, 0.1);
             "
         >
-            ...
+            &nbsp;
         </div>
     </div>
 </div>
@@ -84,11 +84,13 @@ Below is a list of various transition combinations that may help to better visua
 
 **Fade-only transition**
 
+By default Livewire both fades and scales the element when transitioning. You can disable scaling and only fade by adding the `.opacity` modifier. This is useful for things like transitioning a full-page overlay, where adding a scale doesn't make sense.
+
 ```html
 <div wire:transition.opacity>
 ```
 
-<div x-data="{ show: false }" class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
+<div x-data="{ show: false }" x-cloak class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
     <a href="#" x-on:click.prevent="show = ! show" class="py-2.5 outline-none">
         Preview transition <span x-text="show ? 'out' : 'in →'">in</span>
     </a>
@@ -107,38 +109,15 @@ Below is a list of various transition combinations that may help to better visua
     </div>
 </div>
 
-**Scale-only transition**
-
-```html
-<div wire:transition.scale>
-```
-
-<div x-data="{ show: false }" class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
-    <a href="#" x-on:click.prevent="show = ! show" class="py-2.5 outline-none">
-        Preview transition <span x-text="show ? 'out' : 'in →'">in</span>
-    </a>
-    <div class="hey">
-        <div
-            x-show="show"
-            x-transition.scale
-            class="inline-flex px-16 py-2.5 rounded-[10px] bg-pink-400 text-white uppercase font-medium transition focus-visible:outline-none focus-visible:!ring-1 focus-visible:!ring-white"
-            style="
-                background: linear-gradient(109.48deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.1) 100%), #EE5D99;
-                box-shadow: inset 0px -1px 0px rgba(0, 0, 0, 0.5), inset 0px 1px 0px rgba(255, 255, 255, 0.1);
-            "
-        >
-            ...
-        </div>
-    </div>
-</div>
-
 **Fade-out transition**
+
+A common transition technique is to show an element immediately when transitioning in, and fade its opacity when transitioning out. You'll notice this effect on most native MacOS dropdowns and menus. Therefore it's commonly applied on the web to dropdowns, popovers, and menus.
 
 ```html
 <div wire:transition.out.opacity.duration.200ms>
 ```
 
-<div x-data="{ show: false }" class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
+<div x-data="{ show: false }" x-cloak class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
     <a href="#" x-on:click.prevent="show = ! show" class="py-2.5 outline-none">
         Preview transition <span x-text="show ? 'out' : 'in →'">in</span>
     </a>
@@ -159,11 +138,13 @@ Below is a list of various transition combinations that may help to better visua
 
 **Origin-top transition**
 
+When using Livewire to transition an element such as a dropdown menu, it makes sense to scale in from the top of the menu as the origin, rather than center (Livewire's default). This way the menu feels visually anchored to the element that triggered it.
+
 ```html
 <div wire:transition.scale.origin.top>
 ```
 
-<div x-data="{ show: false }" class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
+<div x-data="{ show: false }" x-cloak class="border border-gray-700 rounded-xl p-6 w-full flex justify-between">
     <a href="#" x-on:click.prevent="show = ! show" class="py-2.5 outline-none">
         Preview transition <span x-text="show ? 'out' : 'in →'">in</span>
     </a>

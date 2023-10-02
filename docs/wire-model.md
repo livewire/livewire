@@ -238,5 +238,6 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
 </select>
 ```
 
-Further reading:
-* Creating custom form controls
+## Going deeper
+
+For a more complete documentation on using `wire:model` in the context of HTML forms, visit the [Livewire forms documentation page](/docs/forms).

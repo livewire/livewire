@@ -387,7 +387,7 @@ Here's an example of adding a small loading spinner to the "Save" button via `wi
 
 Now, when a user presses "Save", a small, inline spinner will show up.
 
-Livewire's `wire:loading` feature has a lot more to offer. Visit the [Loading documentation to learn more.](/docs/loading)
+Livewire's `wire:loading` feature has a lot more to offer. Visit the [Loading documentation to learn more.](/docs/wire-loading)
 
 ## Live-updating fields
 

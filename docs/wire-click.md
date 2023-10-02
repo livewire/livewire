@@ -1,7 +1,7 @@
 
-```html
-<button type="button" wire:click="foo">
-```
+Livewire provides a simple `wire:click` directive for calling component methods (aka actions) when a user clicks a specific element on the page.
+
+For example, given the `ShowInvoice` component below:
 
 ```php
 <?php
@@ -9,44 +9,37 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\Invoice;
 
-class CreatePost extends Component
+class ShowInvoice extends Component
 {
-    // ...
+    public Invoice $invoice;
 
-    public function foo()
+    public function download()
     {
-        // ...
+        return response()->download(
+            $this->invoice->file_path, 'invoice.pdf'
+        );
     }
 }
 ```
 
+You can trigger the `download()` method from the class above when a user clicks a "Download Invoice" button by adding `wire:click="download"`:
+
 ```html
-<a href="#" wire:click.prevent="foo">
+<button type="button" wire:click="download"> <!-- [tl! highlight] -->
+    Download Invoice
+</button>
 ```
 
-### Event modifiers
+## Using `wire:click` on links
 
-Livewire allows you to listen to any browser event by appending it to `wire:`. Because `wire:submit` is handled the same as any other event listener in Livewire, it accepts any of the following modifiers to customize how the event listener is registered.
+When using `wire:click` on `<a>` tags, you must append `.prevent` to prevent the default handling of a link in the browser. Otherwise, the browser will visit the provided link and update the page's URL.
 
-Here is a full list of all the available event listener modifiers and their functions:
+```html
+<a href="#" wire:click.prevent="...">
+```
 
-| Modifier         | Key                                                     |
-|------------------|---------------------------------------------------------|
-| `.prevent`       | Equivalent of calling `.preventDefault()`               |
-| `.stop`          | Equivalent of calling `.stopPropagation()`              |
-| `.window`        | Listens for event on the `window` object                 |
-| `.outside`       | Only listens for clicks "outside" the element            |
-| `.document`      | Listens for events on the `document` object              |
-| `.once`          | Ensures the listener is only called once                 |
-| `.debounce`      | Debounce the handler by 250ms as a default               |
-| `.debounce.100ms`| Debounce the handler for a specific amount of time       |
-| `.throttle`      | Throttle the handler to being called every 250ms at minimum |
-| `.throttle.100ms`| Throttle the handler at a custom duration                |
-| `.self`          | Only call listener if event originated on this element, not children |
-| `.camel`         | Converts event name to camel case (`wire:custom-event` -> "customEvent") |
-| `.dot`           | Converts event name to dot notation (`wire:custom-event` -> "custom.event") |
-| `.passive`       | `wire:touchstart.passive` won't block scroll performance |
-| `.capture`       | Listen for event in the "capturing" phase                 |
+## Going deeper
 
-Because `wire:` uses [Alpine's](https://alpinejs.dev) `x-on` directive under the hood, these modifiers are made available to you by Alpine. For more context on when you should use these modifiers, consult the [Alpine Events documentation](https://alpinejs.dev/essentials/events).
+The `wire:click` directive is just one of many different avilable event listeners in Livewire. For full documentation on its (and other event listeners) capabilities, visit [the Livewire actions documentation page](/docs/actions).

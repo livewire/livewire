@@ -17,15 +17,12 @@ Features:
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/validation, file: /validation.md }
     File Uploads: { uri: /docs/uploads, file: /uploads.md }
-    Loading States: { uri: /docs/loading, file: /loading.md }
     Pagination: { uri: /docs/pagination, file: /pagination.md }
     URL Query Parameters: { uri: /docs/url, file: /url.md }
     Computed Properties: { uri: /docs/computed-properties, file: /computed-properties.md }
     Redirecting: { uri: /docs/redirecting, file: /redirecting.md }
-    Polling: { uri: /docs/polling, file: /polling.md }
     File Downloads: { uri: /docs/downloads, file: /downloads.md }
     Locked Properties: { uri: /docs/locked, file: /locked.md }
-    Dirty States: { uri: /docs/dirty, file: /dirty.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
 HTML Directives:

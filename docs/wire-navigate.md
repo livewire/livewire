@@ -1,7 +1,7 @@
 
 Livewire's `wire:navigate` feature makes page navigate much faster, providing an SPA-like experience for your users.
 
-This page is a simple reference for the `wire:navigate` directive. Be sure to read the [page on Liveire's Navigate feature](/docs/navigate) for more complete documentation.
+This page is a simple reference for the `wire:navigate` directive. Be sure to read the [page on Livewire's Navigate feature](/docs/navigate) for more complete documentation.
 
 Below is a simple example of adding `wire:navigate` to links in a nav bar:
 
@@ -22,3 +22,7 @@ By adding the `.hover` modifier, Livewire will pre-fetch a page when a user hove
 ```blade
 <a href="/" wire:navigate.hover>Dashboard</a>
 ```
+
+## Going deeper
+
+For more complete documentation on this feature, visit [Livewire's navigate documentation page](/docs/navigate).
