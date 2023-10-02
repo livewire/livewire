@@ -52,7 +52,7 @@ Because both inputs use `wire:model`, their values will be synchronized with the
 
 By default, Livewire will only send a network request when an action is performed (like `wire:click` or `wire:submit`), NOT when a `wire:model` input is updated.
 
-This durastically improves the performance of Livewire by reducing network requests and providing a smoother experience for your users.
+This drastically improves the performance of Livewire by reducing network requests and providing a smoother experience for your users.
 
 However, there are occasions where you may want to update the server more frequently for things like real-time validation.
 
