@@ -5360,8 +5360,8 @@ var require_module_cjs6 = __commonJS({
               continue;
             }
           }
-          let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
-          let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
+          let isIf = (node) => node && node.nodeType === 8 && node.textContent === "[if gte livewire 3]> __BLOCK__ <![endif]";
+          let isEnd = (node) => node && node.nodeType === 8 && node.textContent === "[if gte livewire 3]> __ENDBLOCK__ <![endif]";
           if (isIf(currentTo) && isIf(currentFrom)) {
             let nestedIfCount = 0;
             let fromBlockStart = currentFrom;

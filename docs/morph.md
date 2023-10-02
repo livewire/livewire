@@ -133,7 +133,7 @@ Here is a visualization of the "look-ahead" algorithm in action:
 
 ### Injecting morph markers
 
-On the backend, Livewire automatically detects conditionals inside Blade templates and wraps them in markers that Livewire's JavaScript can use as a guide when morphing.
+On the backend, Livewire automatically detects conditionals inside Blade templates and wraps them in HTML comment markers that Livewire's JavaScript can use as a guide when morphing.
 
 Here's an example of the previous Blade template but with Livewire's injected markers:
 
@@ -143,11 +143,11 @@ Here's an example of the previous Blade template but with Livewire's injected ma
         <input wire:model="title">
     </div>
 
-    <!-- __BLOCK__ --> <!-- [tl! highlight] -->
+    <!--[if gte livewire 3]> __BLOCK__ <![endif]--> <!-- [tl! highlight] -->
     @if ($errors->has('title'))
         <div>Error: {{ $errors->first('title') }}</div>
     @endif
-    <!-- __ENDBLOCK__ --> <!-- [tl! highlight] -->
+    <!--[if gte livewire 3]> __ENDBLOCK__ <![endif]--> <!-- [tl! highlight] -->
 
     <div>
         <button>Save</button>
@@ -188,4 +188,3 @@ For example, here's the above Blade template rewritten with wrapping `<div>` ele
 ```
 
 Now that the conditional has been wrapped in a persistent element, Livewire will morph the two different HTML trees properly.
-
