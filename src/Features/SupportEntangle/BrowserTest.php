@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportEntangle;
 
-use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;
@@ -99,6 +97,80 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@set')
             ->assertSeeIn('@state', 'bar');
     }
+
+    /** @test */
+    public function can_send_request_after_call_a_livewire_method()
+    {
+        Livewire::visit(new class extends Component {
+            public array $items = [];
+
+            public function removeItem(int $index)
+            {
+                unset($this->items[$index]);
+        
+                $this->items = array_values($this->items);
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                    <div x-data="{
+                        list: @entangle('items').live,
+                        value: '',
+                        addValue() {
+                            if (!this.value) {
+                                return
+                            }
+
+                            this.list.push(this.value)
+                            this.value = ''
+                        },
+
+                        removeValue(value) {
+                            if (this.list.includes(value)) {
+                                this.list = this.list.filter((valueActual) => valueActual !== value)
+                                return
+                            }
+                        }
+                    }">
+                        <div dusk="state">
+                            @foreach ($items as $index => $item)
+                                <p   :key="$item">{{ $item }} <button
+                                dusk="del{{$index}}" wire:click="removeItem({{ $index }})">remove</button></p>
+                            @endforeach
+                        </div>
+                        <div>
+                            <input
+                                x-model="value"
+                                type="text"
+                                dusk="input"
+                            >
+                            <button dusk="add" x-on:click="addValue">Add value</button>
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+            ->type('@input', '1')
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@state', '1')
+            ->type('@input', '2')
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@state', '1')
+            ->assertSeeIn('@state', '2')
+            ->type('@input', '3')
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@state', '1')
+            ->assertSeeIn('@state', '2')
+            ->assertSeeIn('@state', '3')
+            ->waitForLivewire()->click('@del1')
+            ->assertDontSeeIn('@state', '2')
+            ->type('@input', '7')
+            //the request won't be send, this is the bug
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@state', '7');
+    }
+
 
     /** @test */
     public function can_remove_entangled_components_from_dom_without_side_effects()
