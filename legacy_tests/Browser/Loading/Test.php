@@ -158,9 +158,13 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, ComponentWithLoadingDelays::class)
-                ->assertVisible('@delay-none')
+                ->assertNotVisible('@delay-none')
                 ->assertNotVisible('@delay-shortest')
                 ->waitForLivewire(function (Browser $browser) {
+                    $browser->click('@load')
+                        ->assertNotVisible('@delay-shortest')
+                        ->assertVisible('@delay-none');
+                })->waitForLivewire(function (Browser $browser) {
                     $browser->click('@load')
                             ->pause(51)
                             ->assertNotVisible('@delay-shorter')
