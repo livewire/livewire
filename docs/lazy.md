@@ -86,6 +86,22 @@ class Revenue extends Component
 
 Because the above component specifies a "placeholder" by returning HTML from a `placeholder()` method, the user will see an SVG loading spinner on the page until the component is fully loaded.
 
+> [!warning] The placeholder and the component must share the same element type
+> For instance, if your placeholder's root element type is a 'div,' your component must also use a 'div' element.
+
+### Rendering a placeholder via a view
+
+For more complex loaders (such as skeletons) you can return a `view` from the `placeholder()` similar to `render()`. 
+
+```php
+public function placeholder(array $params = [])
+{
+    return view('livewire.placeholders.skeleton', $params);
+}
+```
+
+Any parameters from the component being lazy loaded will be available as an `$params` arugment passed to the `placeholder()` method.
+
 ## Lazy loading outside of the viewport
 
 By default, Lazy-loaded components aren't full loaded until they enter the browser's viewport, for example when a user scrolls to one.
@@ -207,4 +223,4 @@ If you want to set a default placeholder view for all your components you can do
 'lazy_placeholder' => 'livewire.placeholder',
 ```
 
-Now, when a component is lazy-loaded and no `placeholder()` is definied, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)
+Now, when a component is lazy-loaded and no `placeholder()` is defined, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)

@@ -71,10 +71,21 @@ class EloquentCollectionsBrowserTest extends TestCase
     }
 
     /** @test */
-    public function it_hydrate_work_property_without_rules()
+    public function hydrate_works_properly_without_rules()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutRulesComponent::class)
+                ->waitForLivewire()->click('@something')
+                ->assertSeeIn('@output', 'Ok!');
+            ;
+        });
+    }
+
+    /** @test */
+    public function hydrate_works_properly_when_collection_is_empty()
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitLivewireComponent($browser, EloquentCollectionsWithoutItemsComponent::class)
                 ->waitForLivewire()->click('@something')
                 ->assertSeeIn('@output', 'Ok!');
             ;
@@ -160,7 +171,6 @@ HTML;
     }
 }
 
-
 class EloquentCollectionsWithoutRulesComponent extends EloquentCollectionsComponent
 {
     public $output;
@@ -176,6 +186,42 @@ class EloquentCollectionsWithoutRulesComponent extends EloquentCollectionsCompon
     {
         return
         <<<'HTML'
+<div>
+      <div>
+          @foreach($authors as $author)
+              <p>{{ $author->name }}</p>
+          @endforeach
+      </div>
+      <span dusk='output'>{{ $output }}</span>
+      <button dusk='something' wire:click='something'>something</button>
+</div>
+HTML;
+
+    }
+}
+
+class EloquentCollectionsWithoutItemsComponent extends BaseComponent
+{
+    public $authors;
+
+    public $output;
+
+    protected $rules = [];
+
+    public function mount()
+    {
+        $this->authors = EloquentCollectionsWithoutItems::get();
+    }
+
+    public function something()
+    {
+        $this->output = 'Ok!';
+    }
+
+    public function render()
+    {
+        return
+            <<<'HTML'
 <div>
       <div>
           @foreach($authors as $author)
@@ -254,4 +300,14 @@ class EloquentCollectionsComment extends Model
     {
         return $this->belongsTo(EloquentCollectionsPost::class, 'eloquent_collections_post_id');
     }
+}
+
+
+class EloquentCollectionsWithoutItems extends Model
+{
+    use Sushi;
+
+    protected $guarded = [];
+
+    protected $rows = [];
 }

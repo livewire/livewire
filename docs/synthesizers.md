@@ -233,8 +233,8 @@ class AddressSynth extends Synth
         return $instance;
     }
 
-    public function get(&$target, $key)
-    { // [tl! highlight:6]
+    public function get(&$target, $key) // [tl! highlight:8]
+    {
         return $target->{$key};
     }
 

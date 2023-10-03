@@ -82,7 +82,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         get(target, property) {
             if (! component) component = closestComponent(el)
 
-            if (property === 'entangle') {
+            if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
             }
 
@@ -119,8 +119,8 @@ wireProperty('$entangle', (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live)
 })
 
-wireProperty('$toggle', (component) => (name) => {
-    return component.$wire.set(name, ! component.$wire.get(name))
+wireProperty('$toggle', (component) => (name, live = true) => {
+    return component.$wire.set(name, ! component.$wire.get(name), live)
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
@@ -161,14 +161,14 @@ wireProperty('$upload', (component) => (...params) => upload(component, ...param
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
 
-let parentMemo
+let parentMemo = new WeakMap
 
 wireProperty('$parent', component => {
-    if (parentMemo) return parentMemo.$wire
+    if (parentMemo.has(component)) return parentMemo.get(component).$wire
 
     let parent = closestComponent(component.el.parentElement)
 
-    parentMemo = parent
+    parentMemo.set(component, parent)
 
     return parent.$wire
 })

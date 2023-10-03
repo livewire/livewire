@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 
@@ -22,38 +23,38 @@ class Form implements Arrayable
 
     protected function addValidationRulesToComponent()
     {
-        $rules = [];
+        $this->component->addRulesFromOutside(function() {
+            $rules = [];
 
-        if (method_exists($this, 'rules')) $rules = $this->rules();
-        else if (property_exists($this, 'rules')) $rules = $this->rules;
+            if (method_exists($this, 'rules')) $rules = $this->rules();
+            else if (property_exists($this, 'rules')) $rules = $this->rules;
 
-        $this->component->addRulesFromOutside(
-            $this->getAttributesWithPrefixedKeys($rules)
-        );
+            return $this->getAttributesWithPrefixedKeys($rules);
+        });
     }
 
     protected function addValidationAttributesToComponent()
     {
-        $validationAttributes = [];
+        $this->component->addValidationAttributesFromOutside(function() {
+            $validationAttributes = [];
 
-        if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
-        else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
+            if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
+            else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
 
-        $this->component->addValidationAttributesFromOutside(
-            $this->getAttributesWithPrefixedKeys($validationAttributes)
-        );
+            return $this->getAttributesWithPrefixedKeys($validationAttributes);
+        });
     }
 
     protected function addMessagesToComponent()
     {
-        $messages = [];
+        $this->component->addMessagesFromOutside(function() {
+            $messages = [];
 
-        if (method_exists($this, 'messages')) $messages = $this->messages();
-        else if (property_exists($this, 'messages')) $messages = $this->messages;
+            if (method_exists($this, 'messages')) $messages = $this->messages();
+            else if (property_exists($this, 'messages')) $messages = $this->messages;
 
-        $this->component->addMessagesFromOutside(
-            $this->getAttributesWithPrefixedKeys($messages)
-        );
+            return $this->getAttributesWithPrefixedKeys($messages);
+        });
     }
 
     public function addError($key, $message)
@@ -85,7 +86,7 @@ class Form implements Arrayable
     {
         $results = [];
 
-        foreach ($properties as $property) {
+        foreach (is_array($properties) ? $properties : func_get_args() as $property) {
             $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
         }
 
@@ -94,7 +95,7 @@ class Form implements Arrayable
 
     public function except($properties)
     {
-        if (! is_array($properties)) $properties = [$properties];
+        $properties = is_array($properties) ? $properties : func_get_args();
 
         return array_diff_key($this->all(), array_flip($properties));
     }
@@ -113,6 +114,21 @@ class Form implements Arrayable
         }
 
         return $value;
+    }
+
+    public function fill($values)
+    {
+        $publicProperties = array_keys($this->all());
+
+        if ($values instanceof Model) {
+            $values = $values->toArray();
+        }
+
+        foreach ($values as $key => $value) {
+            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+                data_set($this, $key, $value);
+            }
+        }
     }
 
     public function reset(...$properties)

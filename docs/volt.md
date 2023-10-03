@@ -52,6 +52,13 @@ By adding the `--test` directive when generating a component, a corresponding te
 php artisan make:volt counter --test --pest
 ```
 
+
+By adding the `--class` directive it will generate a class-based volt component.
+
+```bash
+php artisan make:volt counter --class
+```
+
 ## API style
 
 By utilizing Volt's functional API, we can define a Livewire component's logic through imported `Livewire\Volt` functions. Volt then transforms and compiles the functional code into a conventional Livewire class, enabling us to leverage the extensive capabilities of Livewire with reduced boilerplate.
@@ -92,6 +99,26 @@ new class extends Component {
 </div>
 ```
 
+#### Class attributes
+
+Just like typical Livewire components, Volt components support class attributes. When utilizing anonymous PHP classes, class attributes should be defined after the `new` keyword:
+
+```blade
+<?php
+
+use Livewire\Attributes\{Layout, Title};
+use Livewire\Volt\Component;
+
+new
+#[Layout('layouts.guest')]
+#[Title('Login')]
+class extends Component
+{
+    public string $name = '';
+
+    // ...
+```
+
 #### View Data
 
 When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
@@ -105,7 +132,7 @@ use App\Models\Post;
 
 new class extends Component {
     use WithPagination;
-    
+
     public function with(): array
     {
         return [
@@ -176,6 +203,20 @@ use function Livewire\Volt\{layout, state};
 state('users');
 
 layout('components.layouts.admin');
+
+// ...
+```
+
+You may also customize the title of the page using the `title` function:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title('Users');
 
 // ...
 ```
@@ -592,7 +633,7 @@ Livewire and Volt also have complete support for [pagination](/docs/pagination).
 ```php
 <?php
 
-use function Livewire\Volt\{computed, usesPagination};
+use function Livewire\Volt\{with, usesPagination};
 
 usesPagination();
 
@@ -601,11 +642,11 @@ with(fn () => ['posts' => Post::paginate(10)]);
 ?>
 
 <div>
-    @foreach ($this->posts as $post)
+    @foreach ($posts as $post)
         //
     @endforeach
 
-    {{ $this->posts->links() }}
+    {{ $posts->links() }}
 </div>
 ```
 
