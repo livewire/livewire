@@ -379,7 +379,7 @@ class CreatePost extends Component
         ]
     }
     
-    public function attributes() // [tl! highlight:6]
+    public function validationAttributes() // [tl! highlight:6]
     {
         return [
             'content' => 'description',
