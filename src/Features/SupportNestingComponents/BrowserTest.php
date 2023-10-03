@@ -9,6 +9,58 @@ use Livewire\Livewire;
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
+    public function parent_renders_children_after_failed_validation()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $name;
+
+                public function rules()
+                {
+                    return [
+                        'name' => 'min:3',
+                    ];
+                }
+
+                public function render()
+                {
+                    return <<<'blade'
+                        <form wire:submit="submit">
+                            <input dusk="name-input" type="text" wire:model="name" />
+                            <livewire:child name='Foo' />
+                            <button dusk="submit">Submit</button>
+                        </form>
+                    blade;
+                }
+
+                public function submit()
+                {
+                    $this->validate();
+                }
+            },
+            'child' => new class extends Component {
+                public $name;
+
+                public function mount($name)
+                {
+                    $this->name = $name;
+                }
+
+                public function render()
+                {
+                    return '<span>{{ $this->name }}</span>';
+                }
+            }
+        ])
+            ->assertSee('Foo')
+
+            ->type('@name-input', 's')
+            ->waitForLivewire()->click('@submit')
+            ->assertSee('Foo')
+        ;
+    }
+
+    /** @test */
     public function can_add_new_components()
     {
         Livewire::visit([
