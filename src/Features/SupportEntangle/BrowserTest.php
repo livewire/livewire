@@ -359,7 +359,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@counter', '11')
         ->waitForLivewire()->click('@remove-address')
         ->assertSeeIn('@counter', '12')
-        ->waitForLivewire()->click('@remove-email')
+        ->waitForLivewire()->click('@remove-entangled')
         ->assertSeeIn('@counter', '13');
     }
 }
