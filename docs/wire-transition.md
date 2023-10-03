@@ -78,7 +78,7 @@ Modifier | Description
 `.delay.[?]s` | Customize the transtion delay in seconds
 `.opacity` | Only apply the opacity transition
 `.scale` | Only apply the scale transition
-`.origin.[top|bottom|left|right]` | Customize the scale "origin" used
+`.origin.[top]` | Customize the scale "origin" used, you can use `top`, `bottom`, `left` or `right`
 
 Below is a list of various transition combinations that may help to better visualize these customizations:
 
