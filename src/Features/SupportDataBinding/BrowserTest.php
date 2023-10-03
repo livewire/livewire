@@ -35,4 +35,43 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('Unsaved changes...')
         ;
     }
+
+    /** @test */
+    function can_add_option_and_select()
+    {
+        Livewire::visit(new class extends Component {
+            public int $customer = 2;
+
+            public array $customers = [
+                ['id' => 1, 'name' => 'Foo'],
+                ['id' => 2, 'name' => 'Bar'],
+                ['id' => 3, 'name' => 'FooBar'],
+            ];
+
+            public function addAndSelect()
+            {
+                $this->customers[] = ['id' => 4, 'name' => 'BarFoo'];
+                $this->customer = 4;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <select dusk="customer" wire:model.live="customer">
+                            @foreach ($this->customers as $customer)
+                                <option value="{{ $customer['id'] }}" wire:key="{{ $customer['id'] }}">{{ $customer['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <button dusk="addAndSelect" wire:click="addAndSelect">Button</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSelected('@customer', '2')
+            ->waitForLivewire()->click('@addAndSelect')
+            ->assertSelectHasOption('@customer', '4')
+            ->assertSelected('@customer', '4')
+        ;
+    }
 }
