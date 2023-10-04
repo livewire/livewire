@@ -57,11 +57,31 @@ export function track(name, initialSeedValue, alwaysShow = false) {
 
         let url = new URL(window.location.href)
 
+        // This block of code is what needs to be changed for this failing test to pass:
         if (! alwaysShow && ! isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
             url = remove(url, name)
         } else {
             url = set(url, name, newValue)
         }
+
+        // Right now, the above block, checks a few conditions and updates/removes an entry from the query string.
+        // The new strategy needs to be something like:
+        // - If "alwaysShow" is toggled on, then just "set" the whole thing with no deep diff
+        // - Otherwise, run a deep comparison callback (given the original value and new value).
+        //   - The callback recieves two params (leaf name and value)
+        //   - Check leaf name and value for existance in the original URL from page load. If it's there, just call "set"
+        //   - Check leaf name and value for equivelance to original name and value, if equal, call "remove", otherwise, "set"
+
+        // That code will look something like this:
+
+        // if (alwaysShow) {
+        //     set(url, name, newValue)
+        // } else {
+        //     deepCompare(name, newValue, originalValue, (leafName, leafValue) => {
+        //         // ....
+        //     })
+        // }
+
 
         strategy(url, name, { value: newValue})
     }
