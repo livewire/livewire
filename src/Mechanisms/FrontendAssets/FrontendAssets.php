@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\FrontendAssets;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use function Livewire\on;
 
 class FrontendAssets
 {
@@ -29,6 +30,13 @@ class FrontendAssets
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
+
+        on('flush-state', function () {
+            $instance = app(static::class);
+
+            $instance->hasRenderedScripts = false;
+            $instance->hasRenderedStyles = false;
+        });
     }
 
     function useScriptTagAttributes($attributes)
@@ -74,6 +82,8 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
+        $progressBarColor = config('livewire.navigate.progress_bar_color', '#2299dd');
+
         $html = <<<HTML
         <!-- Livewire Styles -->
         <style {$nonce}>
@@ -81,7 +91,7 @@ class FrontendAssets
                 display: none;
             }
 
-            [wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short], [wire\:loading\.delay\.long], [wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest] {
+            [wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short], [wire\:loading\.delay\.default], [wire\:loading\.delay\.long], [wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest] {
                 display:none;
             }
 
@@ -91,6 +101,10 @@ class FrontendAssets
 
             [wire\:dirty]:not(textarea):not(input):not(select) {
                 display: none;
+            }
+
+            :root {
+                --livewire-progress-bar-color: {$progressBarColor};
             }
 
             [x-cloak] {

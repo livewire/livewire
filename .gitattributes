@@ -22,10 +22,12 @@
 /package*.json      export-ignore
 /.prettierrc        export-ignore
 /.all-contributorsrc export-ignore
+/vercel.json        export-ignore
 /stubs              export-ignore
 /squishy            export-ignore
 /docs               export-ignore
 /js                 export-ignore
+/art                export-ignore
 /legacy_tests       export-ignore
 /scripts            export-ignore
 /src/**/Tests       export-ignore

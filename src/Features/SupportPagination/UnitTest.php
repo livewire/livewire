@@ -2,9 +2,12 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use Illuminate\Database\Eloquent\Model;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\WithPagination;
+use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -48,6 +51,70 @@ class UnitTest extends \Tests\TestCase
             ->call('gotoPage', 2.5)
             ->assertSet('paginators.page', 2);
     }
+
+    /** @test */
+    public function can_set_a_custom_links_theme_in_component()
+    {
+        Livewire::test(new class extends Component {
+            use WithPagination;
+
+            function paginationView()
+            {
+                return 'custom-pagination-theme';
+            }
+
+            #[Computed]
+            function posts()
+            {
+                return PaginatorPostTestModel::paginate();
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @foreach ($this->posts as $post)
+                    @endforeach
+
+                    {{ $this->posts->links() }}
+                </div>
+                HTML;
+            }
+        })->assertSee('Custom pagination theme');
+    }
+
+    public function test_calling_pagination_getPage_before_paginate_method_resolve_the_correct_page_number_in_first_visit_or_after_reload()
+    {
+        Livewire::withQueryParams(['page' => 5])->test(new class extends Component {
+            use WithPagination;
+
+            public int $page = 1;
+
+            #[Computed]
+            function posts()
+            {
+                $this->page = $this->getPage();
+                return PaginatorPostTestModel::paginate();
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @foreach ($this->posts as $post)
+                    @endforeach
+
+                    {{ $this->posts->links() }}
+                </div>
+                HTML;
+            }
+        })
+            ->assertSet('page', 5)
+            ->assertSet('paginators.page', 5)
+            ->call('gotoPage', 3)
+            ->assertSet('page', 3)
+            ->assertSet('paginators.page', 3);
+    }
 }
 
 class ComponentWithPaginationStub extends Component
@@ -58,4 +125,11 @@ class ComponentWithPaginationStub extends Component
     {
         return '<div></div>';
     }
+}
+
+class PaginatorPostTestModel extends Model
+{
+    use Sushi;
+
+    protected $rows = [];
 }

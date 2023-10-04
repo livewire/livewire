@@ -57,7 +57,7 @@ For more information, see [Laravel's documentation on rendering validation error
 
 If you prefer to co-locate your component's validation rules with the properties directly, you can use Livewire's `#[Rule]` attribute.
 
-By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. This frees you from needing to run `$this->validate()` manually:
+By associating validation rules with properties using `#[Rule]`, Livewire will automatically run the properties validation rules before each update. However, you should still run `$this->validate()` before persisting data to a database so that properties that haven't been updated are also validated.
 
 ```php
 use Livewire\Attributes\Rule;
@@ -74,6 +74,8 @@ class CreatePost extends Component
 
     public function save()
     {
+        $this->validate();
+
 		Post::create([
             'title' => $this->title,
             'content' => $this->content,
@@ -86,7 +88,10 @@ class CreatePost extends Component
 }
 ```
 
-If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validated()` method:
+> [!warning] Rule attributes have restrictions
+> PHP Attributes are restricted to certain syntaxes like plain strings and arrays. If you find yourself wanting to use run-time syntaxes like Laravel's rule objects (`Rule::exists(...)`) you should instead [define a `rules()` method](#defining-a-rules-method) in your component.
+
+If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Rule]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validate()` method:
 
 ```php
 use Livewire\Attributes\Rule;
@@ -145,6 +150,17 @@ If you wish to add different messages for different rules, you can simply provid
 ```php
 #[Rule('required', message: 'Please provide a post title')]
 #[Rule('min:3', message: 'This title is too short')]
+public $title;
+```
+
+### Opting out of localization
+
+By default, Livewire rule messages and attributes are localized using Laravel's translate helper: `trans()`.
+
+You can opt-out of locaization by passing the `translate: false` parameter to the Rule attribute:
+
+```php
+#[Rule('required', message: 'Please provide a post title', translate: false)]
 public $title;
 ```
 
@@ -328,6 +344,67 @@ use Livewire\Attributes\Rule;
 public $titles = [];
 ```
 
+## Defining a `rules()` method
+
+As an alternative to Livewire's `#[Rule]` attributes, you can define a method in your component called `rules()` and return a list of fields and corresponding validation rules. This can be helpful if you are trying to use run-time syntaxes that aren't supported in PHP Attributes, for example, Laravel rule objects like `Rule::password()`.
+
+These rules will then be applied when you run `$this->validate()` inside the component. You also can define the `messages()` and `attributes()` functions.
+
+Here's an example:
+
+```php
+use Livewire\Component;
+use App\Models\Post;
+use Illuminate\Validation\Rule as ValidationRule;
+
+class CreatePost extends Component
+{
+	public $title = '';
+
+    public $content = '';
+
+    public function rules() // [tl! highlight:6]
+    {
+        return [
+            'title' => ValidationRule::exists('posts', 'title'),
+            'content' => 'required|min:3',
+        ];
+    }
+    
+    public function messages() // [tl! highlight:6]
+    {
+        return [
+            'content.required' => 'The :attribute are missing.',
+            'content.min' => 'The :attribute is too short.',
+        ]
+    }
+    
+    public function validationAttributes() // [tl! highlight:6]
+    {
+        return [
+            'content' => 'description',
+        ];
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+		Post::create([
+            'title' => $this->title,
+            'content' => $this->content,
+		]);
+
+		return redirect()->to('/posts');
+    }
+
+    // ...
+}
+```
+
+> [!warning] The `rules()` method doesn't validate on data updates
+> When defining rules via the `rules()` method, Livewire will ONLY use these validation rules to validate properties when you run `$this->validate()`. This is different than standard `#[Rule]` attributes which are applied every time a field is updated via something like `wire:model`.
+
 ## Manually controlling validation errors
 
 Livewire's validation utilities should handle most common validation scenarios; however, there are times when you may want full control over the validation messages in your component.
@@ -341,7 +418,7 @@ Method | Description
 `$this->getErrorBag()` | Retrieve the underlying Laravel error bag used in the Livewire component
 
 > [!info] Using `$this->addError()` with Form Objects
-> When manually adding errors using `$this->addError` inside of a form object the key will automatically be prefixed with the name of the property the form is assigned to in the parent component. For example, if in your Component you assign the form to a property called `$data`, key will become `data.key`. 
+> When manually adding errors using `$this->addError` inside of a form object the key will automatically be prefixed with the name of the property the form is assigned to in the parent component. For example, if in your Component you assign the form to a property called `$data`, key will become `data.key`.
 
 ## Accessing the validator instance
 
@@ -391,7 +468,7 @@ If you wish to use your own validation system in Livewire, that isn't a problem.
 Below is an example of the `CreatePost` component, but instead of using Livewire's validation features, a completely custom validator is being created and applied to the component properties:
 
 ```php
-use Illuminate\Validation\Validator;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use App\Models\Post;
 

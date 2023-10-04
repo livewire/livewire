@@ -25,7 +25,7 @@ class Testable
         protected ComponentState $lastState,
     ) {}
 
-    static function create($name, $params = [], $fromQueryString = [])
+    static function create($name, $params = [], $fromQueryString = [], $cookies = [])
     {
         $name = static::normalizeAndRegisterComponentName($name);
 
@@ -36,6 +36,7 @@ class Testable
             $name,
             $params,
             $fromQueryString,
+            $cookies,
         );
 
         return new static($requestBroker, $initialState);
@@ -183,7 +184,7 @@ class Testable
         // This methhod simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
         $this->call(
-            'startUpload',
+            '_startUpload',
             $name,
             collect($files)->map(function ($file) {
                 return [
@@ -202,7 +203,7 @@ class Testable
         try {
             $fileHashes = (new \Livewire\Features\SupportFileUploads\FileUploadController)->validateAndStore($files, \Livewire\Features\SupportFileUploads\FileUploadConfiguration::disk());
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->call('uploadErrored', $name, json_encode(['errors' => $e->errors()]), $isMultiple);
+            $this->call('_uploadErrored', $name, json_encode(['errors' => $e->errors()]), $isMultiple);
 
             return $this;
         }
@@ -219,7 +220,7 @@ class Testable
 
         // Now we finish the upload with a final call to the Livewire component
         // with the temporarily uploaded file path.
-        $this->call('finishUpload', $name, $newFileHashes, $isMultiple);
+        $this->call('_finishUpload', $name, $newFileHashes, $isMultiple);
 
         return $this;
     }

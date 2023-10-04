@@ -1,5 +1,3 @@
-> [!warning] Livewire 3 is still in beta
-> While we attempt to keep breaking changes to a minimum, they are still possible while Livewire 3 remains in beta. Therefore, we recommend testing your application thoroughly before using Livewire 3 in production.
 
 To begin your Livewire journey, we will create a simple "counter" component and render it in the browser. This example is a great way to experience Livewire for the first time as it demonstrates Livewire's _liveness_ in the simplest way possible.
 
@@ -7,7 +5,7 @@ To begin your Livewire journey, we will create a simple "counter" component and 
 
 Before we start, make sure you have the following installed:
 
-- Laravel version 9 or later
+- Laravel version 10 or later
 - PHP version 8.1 or later
 
 ## Install Livewire
@@ -15,7 +13,7 @@ Before we start, make sure you have the following installed:
 From the root directory of your Laravel app, run the following [Composer](https://getcomposer.org/) command:
 
 ```shell
-composer require livewire/livewire "^3.0@beta"
+composer require livewire/livewire
 ```
 
 ## Create a Livewire component
@@ -27,7 +25,7 @@ php artisan make:livewire counter
 ```
 
 This command will generate two new files in your project:
-* `App/Livewire/Counter.php`
+* `app/Livewire/Counter.php`
 * `resources/views/livewire/counter.blade.php`
 
 ## Writing the class
@@ -132,6 +130,6 @@ With our component class and templates in place, our component is ready to test!
 
 Visit `/counter` in your browser, and you should see a number displayed on the screen with two buttons to increment and decrement the number.
 
-After clicking one of the buttons, you will notice that the count updates in real-time, without the page reloading. This is the magic of Livewire: dynamic frontend applications written entirely in PHP.
+After clicking one of the buttons, you will notice that the count updates in real time, without the page reloading. This is the magic of Livewire: dynamic frontend applications written entirely in PHP.
 
 We've barely scratched the surface of what Livewire is capable of. Keep reading the documentation to see everything Livewire has to offer.

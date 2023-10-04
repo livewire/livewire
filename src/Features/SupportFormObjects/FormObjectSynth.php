@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
+use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Features\SupportAttributes\AttributeCollection;
 
@@ -31,15 +32,23 @@ class FormObjectSynth extends Synth {
         static::bootFormObject($this->context->component, $form, $this->path);
 
         foreach ($data as $key => $child) {
+            if ($child === null && Utils::propertyIsTypedAndUninitialized($form, $key)) {
+                continue;
+            }
+
             $form->$key = $hydrateChild($key, $child);
         }
 
         return $form;
     }
 
-    function set(&$target, $key, $value,)
+    function set(&$target, $key, $value)
     {
-        $target->$key = $value;
+        if ($value === null && Utils::propertyIsTyped($target, $key)) {
+            unset($target->$key);
+        } else {
+            $target->$key = $value;
+        }
     }
 
     public static function bootFormObject($component, $form, $path)

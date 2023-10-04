@@ -4,10 +4,12 @@
 By appending the `--test` flag to the `make:livewire` command, you can generate a test file along with a component:
 
 ```shell
-artisan make:livewire create-post --test
+php artisan make:livewire create-post --test
 ```
 
 In addition to generating the component files themselves, the above command will generate the following test file `tests/Feature/Livewire/CreatePostTest.php`:
+
+If you would like to create a [Pest PHP](https://pestphp.com/) test, you may provide the `--pest` option to the make:livewire command:
 
 ```php
 <?php
@@ -317,6 +319,57 @@ class SearchPostsTest extends TestCase
 }
 ```
 
+### Setting cookies
+
+If your Livewire component depends on cookies, you can use the `withCookie()` or `withCookies()` methods to set the cookies manually for your test.
+
+Below is a basic `Cart` component that loads a discount token from a cookie on mount:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\With\Url;
+use App\Models\Post;
+
+class Cart extends Component
+{
+    public $discountToken;
+
+    public mount()
+    {
+        $this->discountToken = request()->cookie('discountToken');
+    }
+}
+```
+
+As you can see, the `$discountToken` property above gets its value from a cookie in the request.
+
+Below is an example of how you would simulate the scenario of loading this component on a page with cookies:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\Cart;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CartTest extends TestCase
+{
+    /** @test */
+    public function can_load_discount_token_from_a_cookie()
+    {
+        Livewire::withCookies(['discountToken' => 'CALEB2023'])
+            ->test(Cart::class)
+            ->assertSet('discountToken', 'CALEB2023');
+    }
+}
+```
+
 ## Calling actions
 
 Livewire actions are typically called from the frontend using something like `wire:click`.
@@ -389,7 +442,7 @@ class CreatePostTest extends TestCase
 If you want to test that a specific validation rule has failed, you can pass an array of rules:
 
 ```php
-$this->assertHasErrors(['title', ['required']]);
+$this->assertHasErrors(['title' => ['required']]);
 ```
 
 ### Authorization
@@ -585,11 +638,15 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `Livewire::test(UpdatePost::class, ['post' => $post])`                      | Test the `UpdatePost` component with the `post` parameter (To be received through the `mount()` method) |
 | `Livewire::actingAs($user)`                      | Set the provided user as the session's authenticated user |
 | `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) |
+| `Livewire::withCookie('color', 'blue')`                      | Set the test's `color` cookie to the provided value (`blue`). |
+| `Livewire::withCookies(['color' => 'blue', 'name' => 'Taylor])`                      | Set the test's `color` and `name` cookies to the provided values (`blue`, `Taylor`). |
+
 
 ### Interacting with components
 | Method                                                  | Description                                                                                                      |
 |---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `set('title', '...')`                      | Set the `title` property to the provided value |
+| `set(['title' => '...', ...])`                      | Set multiple component properties using an associative array |
 | `toggle('sortAsc')`                      | Toggle the `sortAsc` property between `true` and `false`  |
 | `call('save')`                      | Call the `save` action / method |
 | `call('remove', $post->id)`                      | Call the `remove` method and pass the `$post->id` as the first parameter (Accepts subsequent parameters as well) |
@@ -602,6 +659,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 |-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `assertSet('title', '...')`                           | Assert that the `title` property is set to the provided value                                                                                                                        |
 | `assertNotSet('title', '...')`                        | Assert that the `title` property is not set to the provided value                                                                                                                    |
+| `assertReturned('...')`                               | Assert that the previous `->call(...)` returned a given value
 | `assertCount('posts', 3)`                             | Assert that the `posts` property is an array-like value with `3` items in it                                                                                                         |
 | `assertSnapshotSet('date', '08/26/1990')`             | Assert that the `date` property's raw / dehydrated value (from JSON) is set to `08/26/1990`. Alternative to asserting against the hydrated `DateTime` instance in the case of `date` |
 | `assertSnapshotNotSet('date', '08/26/1990')`          | Assert that `date`'s raw / dehydrated value is not equal to the provided value                                                                                                       |
@@ -614,7 +672,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertDispatched('post-created')`                    | Assert that the given event has been dispatched by the component                                                                                                                     |
 | `assertNotDispatched('post-created')`                 | Assert that the given event has not been dispatched by the component                                                                                                                 |
 | `assertHasErrors('title')`                            | Assert that validation has failed for the `title` property                                                                                                                           |
-| `assertHasErrors(['title', ['required', 'min:6']])`   | Assert that the provided validation rules failed for the `title` property                                                                                                            |
+| `assertHasErrors(['title' => ['required', 'min:6']])`   | Assert that the provided validation rules failed for the `title` property                                                                                                            |
 | `assertHasNoErrors('title')`                          | Assert that there are no validation errors for the `title` property                                                                                                                  |
 | `assertHasNoErrors(['title', ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
 | `assertRedirect()`                                    | Assert that a redirect has been triggered from within the component                                                                                                                  |

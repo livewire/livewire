@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportAttributes;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\ComponentHook;
+use Livewire\Drawer\Utils;
 
 class SupportAttributes extends ComponentHook
 {
@@ -49,7 +50,13 @@ class SupportAttributes extends ComponentHook
             ->getAttributes()
             ->whereInstanceOf(LivewireAttribute::class)
             ->filter(fn ($attr) => $attr->getLevel() === AttributeLevel::PROPERTY)
-            ->filter(fn ($attr) => $attr->getName() === $fullPath)
+            // Call "update" on the root property attribute even if it's a deep update...
+            ->filter(function ($attr) use ($fullPath) {
+                $attributeRoot = (string) str($attr->getName())->before('.');
+                $updatePathRoot = (string) str($fullPath)->before('.');
+
+                return $attributeRoot === $updatePathRoot;
+            })
             ->map(function ($attribute) use ($fullPath, $newValue) {
                 if (method_exists($attribute, 'update')) {
                     return $attribute->update($fullPath, $newValue);

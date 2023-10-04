@@ -16,6 +16,7 @@ class StubCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->stubsPath('livewire.inline.stub')));
         $this->assertTrue(File::exists($this->stubsPath('livewire.view.stub')));
         $this->assertTrue(File::exists($this->stubsPath('livewire.test.stub')));
+        $this->assertTrue(File::exists($this->stubsPath('livewire.pest.stub')));
     }
 
     /** @test */

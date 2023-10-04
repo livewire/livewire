@@ -38,11 +38,15 @@ class ReplaceEmitWithDispatch extends UpgradeStep
             title: '$this->emitTo() is now $this->dispatch()->to().',
             before: '$this->emitTo(\'foo\', \'post-created\');',
             after: '$this->dispatch(\'post-created\')->to(\'foo\')',
-            pattern: '/\$this->emitTo\((["\']\w*["\']),\s?([|"\']\w*["\']),\s\s?(.*)\);/',
+            pattern: '/\$this->emitTo\((["\'][a-z0-9-.]*["\']),\s?([|"\'][a-zA-Z0-9-.]*["\'])(?:[,])?\s?(.*)\);/',
             replacement: function($matches) {
                 $component = $matches[1];
                 $eventName = $matches[2];
                 $eventData = $matches[3];
+
+                if (empty($eventData)) {
+                    return "\$this->dispatch({$eventName})->to($component);";
+                }
 
                 return "\$this->dispatch({$eventName}, $eventData)->to($component);";
             },
@@ -109,7 +113,7 @@ class ReplaceEmitWithDispatch extends UpgradeStep
 
         $this->manualUpgradeWarning(
             console: $console,
-            warning: 'The concept of `emitUp` has been removed entirely. Events are not dispatched as actual browser events and therefore "bubble up" by default.',
+            warning: 'The concept of `emitUp` has been removed entirely. Events are now dispatched as actual browser events and therefore "bubble up" by default.',
             before: ['$this->emitUp(\'post-created\');', '$emitUp(\'post-created\', 1)'],
             after: ['<removed>', '<removed>'],
         );

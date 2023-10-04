@@ -2,8 +2,10 @@ import { findComponent } from "../store";
 import { on } from '@/events'
 import Alpine from 'alpinejs'
 
-export function generateEntangleFunction(component) {
-    return (name, live) => {
+export function generateEntangleFunction(component, cleanup) {
+    if (! cleanup) cleanup = () => {}
+
+    return (name, live = false) => {
         let isLive = live
         let livewireProperty = name
         let livewireComponent = component.$wire
@@ -13,12 +15,12 @@ export function generateEntangleFunction(component) {
             // Check to see if the Livewire property exists and if not log a console error
             // and return so everything else keeps running.
             if (typeof livewirePropertyValue === 'undefined') {
-                console.error(`Livewire Entangle Error: Livewire property '${livewireProperty}' cannot be found`)
+                console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`)
                 return
             }
 
             queueMicrotask(() => {
-                Alpine.entangle({
+                let release = Alpine.entangle({
                     // Outer scope...
                     get() {
                         return livewireComponent.get(name)
@@ -35,6 +37,8 @@ export function generateEntangleFunction(component) {
                         setter(value)
                     }
                 })
+
+                cleanup(() => release())
             })
 
             return livewireComponent.get(name)

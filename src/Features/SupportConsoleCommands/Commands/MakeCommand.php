@@ -2,11 +2,16 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
+use Illuminate\Contracts\Console\PromptsForMissingInput;
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
 
-class MakeCommand extends FileManipulationCommand
+class MakeCommand extends FileManipulationCommand implements PromptsForMissingInput
 {
-    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--stub= : If you have several stubs, stored in subfolders }';
+    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--pest} {--stub= : If you have several stubs, stored in subfolders }';
 
     protected $description = 'Create a new Livewire component';
 
@@ -35,7 +40,8 @@ class MakeCommand extends FileManipulationCommand
 
         $force = $this->option('force');
         $inline = $this->option('inline');
-        $test = $this->option('test');
+        $test = $this->option('test') || $this->option('pest');
+        $testType = $this->option('test') ? 'phpunit' : 'pest';
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 
@@ -43,7 +49,7 @@ class MakeCommand extends FileManipulationCommand
         $view = $this->createView($force, $inline);
 
         if ($test) {
-            $test = $this->createTest($force);
+            $test = $this->createTest($force, $testType);
         }
 
         if($class || $view) {
@@ -102,7 +108,7 @@ class MakeCommand extends FileManipulationCommand
         return $viewPath;
     }
 
-    protected function createTest($force = false)
+    protected function createTest($force = false, $testType = 'phpunit')
     {
         $testPath = $this->parser->testPath();
 
@@ -115,7 +121,7 @@ class MakeCommand extends FileManipulationCommand
 
         $this->ensureDirectoryExists($testPath);
 
-        File::put($testPath, $this->parser->testContents());
+        File::put($testPath, $this->parser->testContents($testType));
 
         return $testPath;
     }
@@ -128,6 +134,41 @@ class MakeCommand extends FileManipulationCommand
     public function isReservedClassName($name)
     {
         return array_search(strtolower($name), $this->getReservedName()) !== false;
+    }
+
+    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output)
+    {
+        if ($this->didReceiveOptions($input)) {
+            return;
+        }
+
+        if(
+            confirm(
+                label: 'Do you want to make this an inline component?',
+                default: false
+            )
+        )
+        {
+            $input->setOption('inline', true);
+        }
+
+        if(
+            $testSuite = select(
+                label: 'Do you want to create a test file?',
+                options: [
+                    false => 'No',
+                    'phpunit' => 'PHPUnit',
+                    'pest' => 'Pest',
+                ],
+            )
+        )
+        {
+            $input->setOption('test', true);
+
+            if($testSuite === 'pest') {
+                $input->setOption('pest', true);
+            }
+        }
     }
 
     private function getReservedName()

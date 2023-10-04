@@ -1,6 +1,6 @@
-import { Component } from "./component";
-import { trigger } from "./events";
-import { deepClone } from "./utils"
+import { Component } from "@/component";
+import { trigger } from "@/events";
+import { deepClone } from "@/utils"
 
 let components = {}
 
@@ -9,7 +9,9 @@ export function initComponent(el) {
 
     if (components[component.id]) throw 'Component already registered'
 
-    trigger('component.init', { component })
+    let cleanup = (i) => component.addCleanup(i)
+
+    trigger('component.init', { component, cleanup })
 
     components[component.id] = component
 
@@ -21,6 +23,8 @@ export function destroyComponent(id) {
 
     if (! component) return
 
+    component.cleanup()
+
     delete components[id]
 }
 
@@ -31,7 +35,7 @@ export function hasComponent(id) {
 export function findComponent(id) {
     let component = components[id]
 
-    if (! component) throw 'Component not found: '.id
+    if (! component) throw 'Component not found: ' + id
 
     return component
 }

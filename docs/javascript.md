@@ -42,7 +42,7 @@ let component = Livewire.first()
 let component = Livewire.find(id)
 
 // Retrieve an array of component `$wire` objects by name...
-let components = Livewire.getByName()
+let components = Livewire.getByName(name)
 
 // Retrieve $wire objects for every component on the page...
 let components = Livewire.all()
@@ -55,7 +55,7 @@ let components = Livewire.all()
 
 ### Interacting with events
 
-In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you interact with [Livewire's event system](/docs/events) from anywhere in your application:
+In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you to interact with [Livewire's event system](/docs/events) from anywhere in your application:
 
 ```js
 // Dispatch an event to any Livewire components listening...
@@ -76,7 +76,7 @@ Livewire allows you to hook into various parts of its internal lifecycle using `
 
 ```js
 // Register a callback to execute on a given internal Livewire hook...
-Livewire.hook('component.init', ({ component }) => {
+Livewire.hook('component.init', ({ component, cleanup }) => {
     // ...
 })
 ```
@@ -110,7 +110,7 @@ Livewire.directive('confirm', ({ el, directive, component, cleanup }) => {
     let onClick = e => {
         if (! confirm(content)) {
             e.preventDefault()
-            e.stopPropagation()
+            e.stopImmediatePropagation()
         }
     }
 
@@ -133,7 +133,7 @@ In general, you shouldn't need to manually start or stop Livewire, however, if y
 // Start Livewire on a page that doesn't have Livewire running...
 Livewire.start()
 
-// Stop Livewire and teardown it's JavaScript runtime
+// Stop Livewire and teardown its JavaScript runtime
 // (remove event listeners and such)...
 Livewire.stop()
 
@@ -195,10 +195,10 @@ let $wire = {
 
     // Set a property on the component by name...
     // Usage: $wire.$set('count', 5)
-    $set(name, value) { ... },
+    $set(name, value, live = true) { ... },
 
     // Toggle the value of a boolean property...
-    $toggle(name) { ... },
+    $toggle(name, live = true) { ... },
 
     // Call the method
     // Usage: $wire.$call('increment')
@@ -225,7 +225,7 @@ let $wire = {
     $on(event, callback) { ... },
 
     // Dispatch an event from this component...
-    // Usage: $wire.$dispatchTo('post-created', { postId: 2 })
+    // Usage: $wire.$dispatch('post-created', { postId: 2 })
     $dispatch(event, params = {}) { ... },
 
     // Dispatch an event onto another component...
@@ -283,7 +283,7 @@ let snapshot = {
         // to subsequent component update requests (commits)...
         path: '/',
         method: 'GET',
-        locale: "en",
+        locale: 'en',
 
         // A list of any nested "child" components. Keyed by
         // internal template ID with the component ID as the values...
@@ -392,7 +392,7 @@ For advanced users, Livewire exposes its internal client-side "hook" system. You
 Every time a new component is discovered by Livewire — whether on the initial page load or later on — the `component.init` event is triggered. You can hook into `component.init` to intercept or initialize anything related to the new component:
 
 ```js
-Livewire.hook('component.init', ({ component }) => {
+Livewire.hook('component.init', ({ component, cleanup }) => {
     //
 })
 ```
@@ -408,6 +408,36 @@ This can be used to provide custom Livewire HTML attributes within your applicat
 ```js
 Livewire.hook('element.init', ({ component, el }) => {
     //
+})
+```
+
+### DOM Morph hooks
+
+During the DOM morphing phase—which occurs after Livewire completes a network roundtrip—Livewire triggers a series of events for every element that is mutated.
+
+```js
+Livewire.hook('morph.updating',  ({ el, component, toEl, skip, childrenOnly }) => {
+	//
+})
+
+Livewire.hook('morph.updated', ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.removing', ({ el, component, skip }) => {
+	//
+})
+
+Livewire.hook('morph.removed', ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.adding',  ({ el, component }) => {
+	//
+})
+
+Livewire.hook('morph.added',  ({ el }) => {
+	//
 })
 ```
 

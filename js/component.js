@@ -20,12 +20,13 @@ export class Component {
         this.snapshot = JSON.parse(this.snapshotEncoded)
 
         if (! this.snapshot) {
-            throw new `Snapshot missing on Livewire component with id: ` + this.id
+            throw `Snapshot missing on Livewire component with id: ` + this.id
         }
 
         this.name = this.snapshot.memo.name
 
         this.effects = JSON.parse(el.getAttribute('wire:effects'))
+        this.originalEffects = deepClone(this.effects)
 
         // "canonical" data represents the last known server state.
         this.canonical = extractData(deepClone(this.snapshot.data))
@@ -36,6 +37,8 @@ export class Component {
 
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
+
+        this.cleanups = []
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
         processEffects(this, this.effects)
@@ -95,5 +98,33 @@ export class Component {
         let childIds = Object.values(meta.children).map(i => i[1])
 
         return childIds.map(id => findComponent(id))
+    }
+
+    inscribeSnapshotAndEffectsOnElement() {
+        let el = this.el
+
+        el.setAttribute('wire:snapshot', this.snapshotEncoded)
+
+        // We need to re-register any event listeners that were originally registered...
+        let effects = this.originalEffects.listeners
+            ? { listeners: this.originalEffects.listeners }
+            : {}
+
+        // We need to re-register any url/query-string bindings...
+        if (this.originalEffects.url) {
+            effects.url = this.originalEffects.url
+        }
+
+        el.setAttribute('wire:effects', JSON.stringify(effects))
+    }
+
+    addCleanup(cleanup) {
+        this.cleanups.push(cleanup)
+    }
+
+    cleanup() {
+        while (this.cleanups.length > 0) {
+            this.cleanups.pop()()
+        }
     }
 }

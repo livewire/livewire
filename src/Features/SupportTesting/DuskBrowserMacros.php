@@ -101,6 +101,38 @@ class DuskBrowserMacros
         };
     }
 
+    public function assertNotInViewPort()
+    {
+        return function ($selector) {
+            /** @var \Laravel\Dusk\Browser $this */
+            return $this->assertInViewPort($selector, invert: true);
+        };
+    }
+
+    public function assertInViewPort()
+    {
+        return function ($selector, $invert = false) {
+            /** @var \Laravel\Dusk\Browser $this */
+
+            $fullSelector = $this->resolver->format($selector);
+
+            $result = $this->script(
+                'const rect = document.querySelector(\''.$fullSelector.'\').getBoundingClientRect();
+                 return (
+                     rect.top >= 0 &&
+                     rect.left >= 0 &&
+                     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                 );',
+                 $selector
+            )[0];
+
+            PHPUnit::assertEquals($invert ? false : true, $result);
+
+            return $this;
+        };
+    }
+
     public function assertClassMissing()
     {
         return function ($selector, $className) {
@@ -167,6 +199,52 @@ class DuskBrowserMacros
                         $browser->waitUsing(6, 25, function () use ($browser) {
                             return $browser->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$this->id} === undefined");
                         }, 'Livewire request was never triggered');
+                    });
+                }
+            };
+        };
+    }
+
+    public function waitForNoLivewire()
+    {
+        return function ($callback = null) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $id = str()->random();
+
+            $this->script([
+                "window.duskIsWaitingForLivewireRequest{$id} = true",
+                "window.Livewire.hook('request', ({ respond }) => {
+                    window.duskIsWaitingForLivewireRequest{$id} = true
+
+                    respond(() => {
+                        queueMicrotask(() => {
+                            delete window.duskIsWaitingForLivewireRequest{$id}
+                        })
+                    })
+                })",
+            ]);
+
+            if ($callback) {
+                $callback($this);
+
+                return $this->waitUsing(6, 25, function () use ($id) {
+                    return $this->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$id}");
+                }, 'Livewire request was triggered');
+            }
+
+            // If no callback is passed, make ->waitForNoLivewire a higher-order method.
+            return new class($this, $id) {
+                protected $browser;
+                protected $id;
+
+                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
+
+                public function __call($method, $params)
+                {
+                    return tap($this->browser->{$method}(...$params), function ($browser) {
+                        $browser->waitUsing(6, 25, function () use ($browser) {
+                            return $browser->driver->executeScript("return window.duskIsWaitingForLivewireRequest{$this->id}");
+                        }, 'Livewire request was triggered');
                     });
                 }
             };
@@ -278,6 +356,8 @@ class DuskBrowserMacros
             }
 
             PHPUnit::assertTrue($containsError, "Console log error message \"{$expectedMessage}\" not found");
+
+            return $this;
         };
     }
 
@@ -298,6 +378,8 @@ class DuskBrowserMacros
             }
 
             PHPUnit::assertFalse($containsError, "Console log error message \"{$expectedMessage}\" was found");
+
+            return $this;
         };
     }
 }

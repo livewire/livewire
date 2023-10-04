@@ -10,14 +10,14 @@ class InitialRender extends Render
         protected RequestBroker $requestBroker,
     ) {}
 
-    static function make($requestBroker, $name, $params = [], $fromQueryString = [])
+    static function make($requestBroker, $name, $params = [], $fromQueryString = [], $cookies = [])
     {
         $instance = new static($requestBroker);
 
-        return $instance->makeInitialRequest($name, $params, $fromQueryString);
+        return $instance->makeInitialRequest($name, $params, $fromQueryString, $cookies);
     }
 
-    function makeInitialRequest($name, $params, $fromQueryString = []) {
+    function makeInitialRequest($name, $params, $fromQueryString = [], $cookies = []) {
         $uri = '/livewire-unit-test-endpoint/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($uri, function () use ($name, $params) {
@@ -27,15 +27,18 @@ class InitialRender extends Render
             ]);
         });
 
-        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $fromQueryString) {
-            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $fromQueryString) {
-                return $requestBroker->call('GET', $uri, $fromQueryString);
+        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $fromQueryString, $cookies) {
+            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $fromQueryString, $cookies) {
+                return $requestBroker->call('GET', $uri, $fromQueryString, $cookies);
             });
         });
 
         app('livewire')->flushState();
 
         $html = $response->getContent();
+
+        // Set "original" to Blade view for assertions like "assertViewIs()"...
+        $response->original = $componentView;
 
         $snapshot = Utils::extractAttributeDataFromHtml($html, 'wire:snapshot');
         $effects = Utils::extractAttributeDataFromHtml($html, 'wire:effects');

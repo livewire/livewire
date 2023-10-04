@@ -1,3 +1,0 @@
-<div>
-    {{ $enum->value }}
-</div>

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Carbon\Carbon;
 use Livewire\WithFileUploads;
 use Livewire\Livewire;
 use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
@@ -60,7 +61,7 @@ class UnitTest extends \Tests\TestCase
 
         $tmpFilename = $component->viewData('photo')->getFilename();
 
-        $component->call('removeUpload', 'photo', $tmpFilename)
+        $component->call('_removeUpload', 'photo', $tmpFilename)
             ->assertDispatched('upload:removed', name: 'photo', tmpFilename: $tmpFilename)
             ->assertSet('photo', null);
     }
@@ -74,7 +75,7 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(FileUploadComponent::class)
             ->set('photo', $file);
 
-        $component->call('removeUpload', 'photo', 'mismatched-filename.png')
+        $component->call('_removeUpload', 'photo', 'mismatched-filename.png')
             ->assertNotDispatched('upload:removed', name: 'photo', tmpFilename: 'mismatched-filename.png')
             ->assertNotSet('photo', null);
 
@@ -91,7 +92,7 @@ class UnitTest extends \Tests\TestCase
 
         $tmpFiles = $component->viewData('photos');
 
-        $component->call('removeUpload', 'photos', $tmpFiles[1]->getFilename())
+        $component->call('_removeUpload', 'photos', $tmpFiles[1]->getFilename())
             ->assertDispatched('upload:removed', name: 'photos', tmpFilename: $tmpFiles[1]->getFilename());
 
         $tmpFiles = $component->call('$refresh')->viewData('photos');
@@ -320,6 +321,22 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function invalid_file_extension_can_validate_dimensions()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()
+            ->create('not-a-png-image.pdf', 512, 512);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUploadWithDimensions')
+            ->assertHasErrors(['photo' => 'dimensions']);
+
+        Storage::disk('avatars')->assertMissing('uploaded-not-a-png-image.png');
+    }
+
+    /** @test */
     public function temporary_files_older_than_24_hours_are_cleaned_up_on_every_new_upload()
     {
         Storage::fake('avatars');
@@ -434,12 +451,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function cant_preview_a_non_image_temporary_file_with_a_temporary_signed_url()
     {
-        if (version_compare(app()->version(), '9.2.0', '<')) {
-            // Laravel 9.2 added support for faking temporary URLs PR#41113
-            // so will no longer throw an exception
-            $this->expectException(RuntimeException::class);
-        }
-
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->create('avatar.pdf');
@@ -649,6 +660,28 @@ class UnitTest extends \Tests\TestCase
             $photo->getPath()
         );
     }
+
+    /** @test */
+    public function preview_url_is_stable_over_some_time()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 01, 00));
+
+        $first_url = $photo->temporaryUrl();
+
+        Carbon::setTestNow(Carbon::today()->setTime(10, 05, 00));
+
+        $second_url = $photo->temporaryUrl();
+
+        $this->assertEquals($first_url, $second_url);
+    }
 }
 
 class DummyMiddleware
@@ -737,7 +770,7 @@ class FileUploadComponent extends Component
 
     public function uploadError($name)
     {
-        $this->uploadErrored($name, null, false);
+        $this->_uploadErrored($name, null, false);
     }
 
     public function render() { return app('view')->make('null-view'); }

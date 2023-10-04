@@ -38,7 +38,7 @@ class EloquentCollectionSynth extends Synth
 
         $rules = $this->getRules($this->context);
 
-        if (empty($rules)) return [[], []];
+        if (empty($rules)) return [[], $meta];
 
         $data = $this->getDataFromCollection($target, $rules);
 
@@ -145,7 +145,7 @@ class EloquentCollectionSynth extends Synth
 
     protected function loadCollection($meta)
     {
-        if (isset($meta['keys']) && count($meta['keys']) >= 0) {
+        if (isset($meta['keys']) && count($meta['keys']) >= 0 && ! empty($meta['modelClass'])) {
             $model = new $meta['modelClass'];
 
             if (isset($meta['connection'])) {

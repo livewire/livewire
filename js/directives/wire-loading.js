@@ -7,8 +7,6 @@ directive('loading', ({ el, directive, component }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    toggleBooleanStateDirective(el, directive, false)
-
     whenTargetsArePartOfRequest(component, targets, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
@@ -21,7 +19,7 @@ directive('loading', ({ el, directive, component }) => {
 })
 
 function applyDelay(directive) {
-    if (! directive.modifiers.includes('delay')) return [i => i(), i => i()]
+    if (! directive.modifiers.includes('delay') || directive.modifiers.includes('none')) return [i => i(), i => i()]
 
     let duration = 200
 
@@ -29,6 +27,7 @@ function applyDelay(directive) {
         'shortest': 50,
         'shorter': 100,
         'short': 150,
+        'default': 200,
         'long': 300,
         'longer': 500,
         'longest': 1000,
@@ -111,13 +110,17 @@ function containsTargets(payload, targets) {
 
     return targets.some(({ target, params }) => {
         if (params) {
-            return calls.some(({ method, params: methodParams}) => {
+            return calls.some(({ method, params: methodParams }) => {
                 return target === method
                     && params === quickHash(JSON.stringify(methodParams))
             })
         }
 
-        if (Object.keys(updates).map(i => i.split('.')[0]).includes(target)) return true
+        let hasMatchingUpdate = Object.keys(updates).some(property => {
+            return property.startsWith(target)
+        })
+
+        if (hasMatchingUpdate) return true
 
         if (calls.map(i => i.method).includes(target)) return true
     })

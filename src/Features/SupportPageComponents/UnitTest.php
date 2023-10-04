@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportPageComponents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -191,7 +192,7 @@ class UnitTest extends \Tests\TestCase
 
         Route::get('/foo', ComponentWithCustomSection::class);
 
-        $this->get('/foo')->assertSee('baz');
+        $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
     /** @test */
@@ -298,10 +299,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function route_supports_laravels_missing_fallback_function(): void
     {
-        if (! method_exists(\Illuminate\Routing\Route::class, 'missing')) {
-            $this->markTestSkipped('Need Laravel >= 8');
-        }
-
         Route::get('awesome-js/{framework}', ComponentWithModel::class)
              ->missing(function (Request $request) {
                  $this->assertEquals(request(), $request);
@@ -398,6 +395,16 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_modify_response()
+    {
+        Route::get('/configurable-layout', ComponentWithCustomResponseHeaders::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertHeader('x-livewire', 'awesome');
+    }
+
+    /** @test */
     public function can_configure_title_in_render_method_and_layout_using_layout_attribute()
     {
         Route::get('/configurable-layout', ComponentWithClassBasedComponentTitleAndLayoutAttribute::class);
@@ -406,6 +413,78 @@ class UnitTest extends \Tests\TestCase
             ->withoutExceptionHandling()
             ->get('/configurable-layout')
             ->assertSee('some-title');
+    }
+
+    /** @test */
+    public function can_push_to_stacks()
+    {
+        Route::get('/layout-with-stacks', ComponentWithStacks::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/layout-with-stacks')
+            ->assertSee('I am a style')
+            ->assertSee('I am a script 1')
+            ->assertDontSee('I am a script 2');
+    }
+
+    /** @test */
+    public function can_use_multiple_slots_with_same_name()
+    {
+        Route::get('/slots', ComponentWithTwoHeaderSlots::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/slots')
+            ->assertSee('No Header')
+            ->assertSee('The component header');
+    }
+
+    public function can_access_route_parameters_without_mount_method()
+    {
+        Route::get('/route-with-params/{myId}', ComponentForRouteWithoutMountParametersTest::class);
+
+        $this->get('/route-with-params/123')->assertSeeText('123');
+    }
+
+    /** @test */
+    public function can_access_route_parameters_with_mount_method()
+    {
+        Route::get('/route-with-params/{myId}', ComponentForRouteWithMountParametersTest::class);
+
+        $this->get('/route-with-params/123')->assertSeeText('123');
+    }
+}
+
+class ComponentForRouteWithoutMountParametersTest extends Component
+{
+    public $myId;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $myId }}
+        </div>
+        HTML;
+    }
+}
+
+class ComponentForRouteWithMountParametersTest extends Component
+{
+    public $myId;
+
+    public function mount()
+    {
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ $myId }}
+        </div>
+        HTML;
     }
 }
 
@@ -466,7 +545,6 @@ class ComponentForConfigurableLayoutTestWithCustomAttributes extends Component
         ]);
     }
 }
-
 
 class ComponentWithExtendsLayout extends Component
 {
@@ -582,6 +660,14 @@ class ComponentWithCustomParamsAndLayout extends Component
     }
 }
 
+class ComponentWithCustomResponseHeaders extends Component
+{
+    public function render()
+    {
+        return view('null-view')->response(fn(Response $response) => $response->header('x-livewire', 'awesome'));
+    }
+}
+
 class FrameworkModel extends Model
 {
     public function resolveRouteBinding($value, $field = null)
@@ -606,14 +692,14 @@ class ComponentForRenderLayoutAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+    #[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
     public function render()
     {
         return view('show-name');
     }
 }
 
-#[Layout('layouts.app-with-bar', ['bar' => 'baz'])]
+#[BaseLayout('layouts.app-with-bar', ['bar' => 'baz'])]
 class ComponentForClassLayoutAttribute extends Component
 {
     public $name = 'bob';
@@ -628,8 +714,8 @@ class ComponentForTitleAttribute extends Component
 {
     public $name = 'bob';
 
-    #[Title('some-title')]
-    #[Layout('layouts.app-with-title')]
+    #[BaseTitle('some-title')]
+    #[BaseLayout('layouts.app-with-title')]
     public function render()
     {
         return view('show-name');
@@ -646,17 +732,51 @@ class ComponentWithMultipleLayoutSlots extends Component
     }
 }
 
+class ComponentWithTwoHeaderSlots extends Component
+{
+    public function render()
+    {
+        return view('show-double-header-slot')
+            ->layout('layouts.app-layout-with-slots');
+    }
+}
+
 class ComponentWithModel extends Component
 {
     public FrameworkModel $framework;
 }
 
-#[Layout('layouts.app-with-title')]
+#[BaseLayout('layouts.app-with-title')]
 class ComponentWithClassBasedComponentTitleAndLayoutAttribute extends Component
 {
     public function render()
     {
         return view('null-view')
             ->title('some-title');
+    }
+}
+
+#[BaseLayout('layouts.app-layout-with-stacks')]
+class ComponentWithStacks extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                Contents
+            </div>
+
+            @push('styles')
+            <div>I am a style</div>
+            @endpush
+
+            @foreach([1, 2] as $attempt)
+                @once
+                    @push('scripts')
+                    <div>I am a script {{ $attempt }}</div>
+                    @endpush
+                @endonce
+            @endforeach
+        HTML;
     }
 }

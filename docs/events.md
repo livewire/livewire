@@ -77,6 +77,56 @@ class ShowPost extends Component
 
 If the above `$post` model had an ID of `3`, the `refreshPost()` method would only be triggered by an event named: `post-updated.3`.
 
+## Using events within inline scripts
+
+You can dispatch and listen to events from inline scripts within your component's template.
+
+### Listening for Livewire events in script tags
+
+For example, we may easily listen for the `post-created` event using:
+
+```html
+<script>
+    document.addEventListener('livewire:initialized', () => {
+       @this.on('post-created', (event) => {
+           //
+       });
+    });
+</script>
+```
+
+The above snippet would listen for the `post-created` from the component its registered within.
+
+### Dispatching Livewire events from script tags
+
+Any event dispatched from an inline script is capable of being intercepted by any Livewire component on the page.
+
+For example:
+
+```html
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        @this.on('post-created', (event) => {
+            @this.dispatch('refresh-posts'); // [tl! highlight]
+        });
+    });
+</script>
+```
+
+The above snippet would dispatch a "refresh-posts" event after a "post-created" event was triggered from this component.
+
+Like Livewire's `dispatch()` method, you can pass additional data along with the event by passing the data as the second parameter to the method:
+
+```js
+@this.dispatch('notify', { message: 'New post added.' });
+```
+
+To dispatch the event only to the component where the script resides and not other components on the page, you can use `dispatchSelf()`:
+
+```js
+@this.dispatchSelf('refresh-posts');
+```
+
 ## Events in Alpine
 
 Because Livewire events are plain browser events under the hood, you can use Alpine to listen for them or even dispatch them.
@@ -182,6 +232,16 @@ You can dispatch events directly from your Blade templates using the `$dispatch`
 
 In this example, when the button is clicked, the `show-post-modal` event will be dispatched with the specified data.
 
+If you want to dispatch an event directly to another component you can use the `$dispatchTo()` JavaScript function:
+
+```blade
+<button wire:click="$dispatchTo('posts', 'show-post-modal', { id: {{ $post->id }} })">
+    EditPost
+</button>
+```
+
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched directly to the `Posts` component.
+
 ## Testing dispatched events
 
 To test events dispatched by your component, use the `assertDispatched()` method in your Livewire test. This method checks that a specific event has been dispatched during the component's lifecycle:
@@ -261,11 +321,12 @@ use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class OrderShipped implements ShouldBroadcast
 {
-    use InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public Order $order;
 
@@ -349,6 +410,28 @@ class OrderTracker extends Component
     }
 
     // ...
+}
+```
+
+Or, if you prefer, you can use the dynamic event name syntax:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder()
+{
+    $this->showNewOrderNotification = true;
+}
+```
+
+If you need to access the event payload, you can do so via the passed in `$event` parameter:
+
+```php
+#[On('echo:orders.{order.id},OrderShipped')]
+public function notifyNewOrder($event)
+{
+    $order = Order::find($event['orderId']);
+
+    //
 }
 ```
 

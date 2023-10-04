@@ -194,10 +194,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     function can_assert_see_livewire_on_test_view()
     {
-        if(! class_exists(TestView::class)) {
-            self::markTestSkipped('Need Laravel >= 8');
-        }
-
         Artisan::call('make:livewire', ['name' => 'foo']);
 
         $testView = new TestView(view('render-component', [
@@ -210,10 +206,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     function can_assert_see_livewire_on_test_view_refering_by_subfolder_without_dot_index()
     {
-        if(! class_exists(TestView::class)) {
-            self::markTestSkipped('Need Laravel >= 8');
-        }
-
         Artisan::call('make:livewire', ['name' => 'bar.index']);
 
         $testView = new TestView(view('render-component', [
@@ -226,10 +218,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     function can_assert_dont_see_livewire_on_test_view()
     {
-        if(! class_exists(TestView::class)) {
-            self::markTestSkipped('Need Laravel >= 8');
-        }
-
         Artisan::call('make:livewire', ['name' => 'foo']);
 
         $testView = new TestView(view('null-view'));
@@ -494,7 +482,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
-    function it_ignores_rules_with_params(){
+    function it_ignores_rules_with_params()
+    {
         Livewire::test(ValidatesDataWithRulesHasParams::class)
             ->call('submit')
             ->assertHasErrors(['foo' => 'min'])
@@ -502,6 +491,39 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->set('foo', 'FOO')
             ->assertHasNoErrors(['foo' => 'min'])
             ->assertHasNoErrors(['foo' => 'min:2']);
+    }
+
+    /** @test */
+    function assert_response_of_calling_method()
+    {
+        Livewire::test(ComponentWithMethodThatReturnsData::class)
+            ->call('foo')
+            ->assertReturned('bar')
+            ->assertReturned(fn ($data) => $data === 'bar');
+    }
+    /** @test */
+    public function can_set_cookies_for_use_with_testing()
+    {
+        // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
+        Livewire::withCookies(['colour' => 'blue'])
+            ->withCookie('name', 'Taylor')
+            ->test(new class extends Component {
+                public $colourCookie = '';
+                public $nameCookie = '';
+                public function mount()
+                {
+                    $this->colourCookie = request()->cookie('colour');
+                    $this->nameCookie = request()->cookie('name');
+                }
+
+                public function render()
+                {
+                    return '<div></div>';
+                }
+            })
+            ->assertSet('colourCookie', 'blue')
+            ->assertSet('nameCookie', 'Taylor')
+            ;
     }
 }
 
@@ -646,4 +668,17 @@ class ValidatesDataWithRulesHasParams extends Component{
 class ComponentWhichReceivesEvent extends Component
 {
 
+}
+
+class ComponentWithMethodThatReturnsData extends Component
+{
+    function foo()
+    {
+        return 'bar';
+    }
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
 }

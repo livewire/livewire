@@ -1,7 +1,4 @@
 
-> [!warning] Livewire 3 is still in beta
-> While we attempt to keep breaking changes to a minimum, they are still possible while Livewire 3 remains in beta. Therefore, we recommend testing your application thoroughly before using Livewire 3 in production.
-
 ## Automated upgrade tool
 
 To save you time upgrading, we've included an Artisan command to automate as many parts of the upgrade process as possible.
@@ -26,23 +23,8 @@ Livewire now requires that your application is running on PHP version 8.1 or gre
 Run the following composer command to upgrade your application's Livewire dependency from version 2 to 3:
 
 ```shell
-composer require livewire/livewire "3.0.0-beta.4"
+composer require livewire/livewire "^3.0"
 ```
-
-The above command will lock you to the current beta version. If you want to receive more frequent updates, you can switch to the more flexible version constraint:
-
-```shell
-composer require livewire/livewire "^3.0@beta"
-```
-
-<!-- @todo after launch:
-### Update composer dependancies
-
-Any other packages in your application that depends on Livewire will need to be upgraded to a version that supports v3.
-
-Below is a list of dependancies and their corresponding version with support for v3:
-
-* `spatie/laravel-ignition` - ? -->
 
 > [!warning] Livewire 3 package compatibility
 > Most of the major third-party Livewire packages either currently support Livewire 3 or are working on supporting it soon. However, there will inevitably be packages that take longer to release support for Livewire 3.
@@ -58,9 +40,6 @@ php artisan view:clear
 ## Merge new configuration
 
 Livewire 3 has changed multiple configuration options. If your application has a published configuration file (`config/livewire.php`), you will need to update it to account for the following changes.
-
-<!-- @todo after launch:
-If you'd rather view the changes in a more visual way, you can reference [the GitHub file comparison](???). -->
 
 ### New configuration
 
@@ -259,9 +238,6 @@ Alpine.start()
 
 You can remove them entirely, because Livewire includes Alpine and many popular Alpine plugins by default.
 
-> [!warning] "Livewire V3 (beta) with Laravel Breeze or Laravel Jetstream"
-> If you are trying the Livewire V3 beta with the Laravel Breeze or Laravel JetStream, you will need to unload the Alpine as demonstrated above. Also, you can remove Alpine and any other Alpine plugins from your NPM dependencies as well. The Laravel Breeze and Laravel JetStream are not ready for Livewire V3 yet by default.
-
 #### Accessing Alpine via JS bundle
 
 If you are registering custom Alpine plugins or components inside your application's JavaScript bundle like so:
@@ -373,7 +349,7 @@ class Dashboard extends Component
 
 The three main changes from Livewire 2 are:
 
-1. `emit()` has been renamed to `dispatch()`
+1. `emit()` has been renamed to `dispatch()` (Likewise `emitTo()` and `emitSelf()` are now `dispatchTo()` and `dispatchSelf()`)
 1. `dispatchBrowserEvent()` has been renamed to `dispatch()`
 2. All event parameters must be named
 
@@ -407,6 +383,9 @@ $this->dispatch('post-created', postId: $post->id); // [tl! add]
 
 <button wire:click="$emit('post-created', 1)">...</button> <!-- [tl! remove] -->
 <button wire:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
+
+<button wire:click="$emitTo('foo', post-created', 1)">...</button> <!-- [tl! remove] -->
+<button wire:click="$dispatchTo('foo', 'post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
 
 <button x-on:click="$wire.emit('post-created', 1)">...</button> <!-- [tl! remove] -->
 <button x-on:click="$dispatch('post-created', { postId: 1 })">...</button> <!-- [tl! add] -->
@@ -489,7 +468,7 @@ $this->setPage(2);
 
 ### `wire:click.prefetch`
 
-Livewire's prefetching feature (`wire:click.prefetching`) has been removed entirely. If you depended on this feature, your application will still work, it will just be slightly less performant in the instances where you were previously benefiting from `.prefetch`.
+Livewire's prefetching feature (`wire:click.prefetch`) has been removed entirely. If you depended on this feature, your application will still work, it will just be slightly less performant in the instances where you were previously benefiting from `.prefetch`.
 
 ```html
 <button wire:click.prefetch=""> <!-- [tl! remove] -->
@@ -571,7 +550,7 @@ Here is a comparison of the old hooks and their new syntaxes for you to find/rep
 
 ```js
 Livewire.hook('component.initialized', (component) => {}) // [tl! remove]
-Livewire.hook('component.init', ({ component }) => {}) // [tl! add]
+Livewire.hook('component.init', ({ component, cleanup }) => {}) // [tl! add]
 
 Livewire.hook('element.initialized', (el, component) => {}) // [tl! remove]
 Livewire.hook('element.init', ({ el, component }) => {}) // [tl! add]
@@ -591,27 +570,23 @@ Livewire.hook('message.received', (message, component) => {}) // [tl! remove]
 Livewire.hook('message.processed', (message, component) => {}) // [tl! remove]
 
 Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // [tl! add:14]
-    // Equivelant of 'message.sent'
+    // Equivalent of 'message.sent'
 
     succeed(({ snapshot, effect }) => {
-        // Equivelant of 'message.received'
+        // Equivalent of 'message.received'
 
         queueMicrotask(() => {
-            // Equivelant of 'message.processed'
+            // Equivalent of 'message.processed'
         })
     })
 
     fail(() => {
-        // Equivelant of 'message.failed'
+        // Equivalent of 'message.failed'
     })
 })
 ```
 
 You may consult the new [JavaScript hook documentation](/docs/javascript) for a more thorough understanding of the new hook system.
-
-### @this.on() deprecated
-
-While in Livewire 2 you could register JavaScript callbacks for component events using `@this.on('event-name', callbackFn)` in your Blade template, in Livewire 3 this has been deprecated. Instead, you should take advantage of Alpine's inclusion, and use the `x-on:event-name="callbackCode"` pattern.
 
 ## Localization
 

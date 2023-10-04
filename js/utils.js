@@ -166,11 +166,19 @@ export function isSynthetic(subject) {
  * along with the payload. Here, we'll try and locate one.
  */
 export function getCsrfToken() {
+    // Purposely not caching. Fetching it fresh every time ensures we're
+    // not depending on a stale session's CSRF token...
+
+    if (document.querySelector('meta[name="csrf-token"]')) {
+        return document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    }
+
     if (document.querySelector('[data-csrf]')) {
         return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }
-    if(window.livewireScriptConfig['csrf'] ?? false) {
-        return window.livewireScriptConfig['csrf'];
+
+    if (window.livewireScriptConfig['csrf'] ?? false) {
+        return window.livewireScriptConfig['csrf']
     }
 
     throw 'Livewire: No CSRF token detected'

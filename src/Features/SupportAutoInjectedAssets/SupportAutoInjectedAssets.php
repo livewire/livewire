@@ -20,9 +20,8 @@ class SupportAutoInjectedAssets extends ComponentHook
             static::$forceAssetInjection = false;
         });
 
-        if (config('livewire.inject_assets', true) === false) return;
-
         app('events')->listen(RequestHandled::class, function ($handled) {
+            if (! static::$forceAssetInjection && config('livewire.inject_assets', true) === false) return;
             if (! str($handled->response->headers->get('content-type'))->contains('text/html')) return;
             if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) return;
             if ((! static::$hasRenderedAComponentThisRequest) && (! static::$forceAssetInjection)) return;
@@ -48,9 +47,9 @@ class SupportAutoInjectedAssets extends ComponentHook
 
         $html = str($html);
 
-        if ($html->test('/<\s*head(?:\s|\s[^>])*>/i') && $html->test('/<\s*\/\s*body\s*>/i')) {
+        if ($html->test('/<\s*\/\s*head\s*>/i') && $html->test('/<\s*\/\s*body\s*>/i')) {
             return $html
-                ->replaceMatches('/(<\s*head(?:\s|\s[^>])*>)/i', '$1'.$livewireStyles)
+                ->replaceMatches('/(<\s*\/\s*head\s*>)/i', $livewireStyles.'$1')
                 ->replaceMatches('/(<\s*\/\s*body\s*>)/i', $livewireScripts.'$1')
                 ->toString();
         }

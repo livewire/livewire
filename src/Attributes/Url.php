@@ -2,7 +2,7 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportQueryString\Url as BaseUrl;
+use Livewire\Features\SupportQueryString\BaseUrl;
 
 #[\Attribute]
 class Url extends BaseUrl

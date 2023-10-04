@@ -15,9 +15,7 @@ class CompileLivewireTags extends ComponentTagCompiler
 
     public function boot()
     {
-        app('blade.compiler')->precompiler(function ($string) {
-            return $this->compileLivewireSelfClosingTags($string);
-        });
+        app('blade.compiler')->precompiler($this->compileLivewireSelfClosingTags(...));
     }
 
     protected function compileLivewireSelfClosingTags($value)
@@ -27,11 +25,11 @@ class CompileLivewireTags extends ComponentTagCompiler
         return preg_replace_callback($pattern, function (array $matches) {
             $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
 
-            // This is only for Laracon and makes :todos="$todos" work...
             $keys = array_keys($attributes);
             $values = array_values($attributes);
+            $attributesCount = count($attributes);
 
-            for ($i=0; $i < count($keys); $i++) {
+            for ($i=0; $i < $attributesCount; $i++) {
                 if ($keys[$i] === ':' && $values[$i] === 'true') {
                     if (isset($values[$i + 1]) && $values[$i + 1] === 'true') {
                         $attributes[$keys[$i + 1]] = '$'.$keys[$i + 1];
@@ -62,23 +60,14 @@ class CompileLivewireTags extends ComponentTagCompiler
             if ($component === 'styles') return '@livewireStyles';
             if ($component === 'scripts') return '@livewireScripts';
             if ($component === 'dynamic-component' || $component === 'is') {
-                if(! isset($attributes['component'])) {
-                    $dynamicComponentExists = rescue(function() use ($component, $attributes) {
-                        // Need to run this in rescue otherwise running this during a test causes Livewire directory not found exception
-                        return $component === 'dynamic-component' && app('livewire')->getClass('dynamic-component');
-                    });
-
-                    if($dynamicComponentExists) {
-                        return $this->componentString("'{$component}'", $attributes);
-                    }
-
+                if (! isset($attributes['component']) && ! isset($attributes['is'])) {
                     throw new ComponentAttributeMissingOnDynamicComponentException;
                 }
 
                 // Does not need quotes as resolved with quotes already.
-                $component = $attributes['component'];
+                $component = $attributes['component'] ?? $attributes['is'];
 
-                unset($attributes['component']);
+                unset($attributes['component'], $attributes['is']);
             } else {
                 // Add single quotes to the component name to compile it as string in quotes
                 $component = "'{$component}'";

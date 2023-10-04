@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
 {
@@ -38,6 +40,20 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
         $component = Livewire::test(ForbiddenComponent::class);
 
         $component->assertForbidden();
+    }
+
+    /** @test */
+    function can_assert_a_403_status_code_when_an_exception_is_encountered_on_an_action()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public function someAction() {
+                throw new \Illuminate\Auth\Access\AuthorizationException;
+            }
+        });
+
+        $component
+            ->call('someAction')
+            ->assertForbidden();
     }
 
     /** @test */

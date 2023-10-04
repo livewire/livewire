@@ -97,7 +97,7 @@ In situations where the same action is triggered with different parameters from 
 ```blade
 <div>
     @foreach ($posts as $post)
-        <div>
+        <div wire:key="{{ $post->id }}">
             <h2>{{ $post->title }}</h2>
 
             <button wire:click="remove({{ $post->id }})">Remove</button>
@@ -171,10 +171,12 @@ The above element will only appear if the request takes over 200 milliseconds. T
 To customize the amount of time to delay the loading indicator, you can use one of Livewire's helpful interval aliases:
 
 ```blade
+<div wire:loading.delay.none>...</div>     <!-- 0ms -->
 <div wire:loading.delay.shortest>...</div> <!-- 50ms -->
 <div wire:loading.delay.shorter>...</div>  <!-- 100ms -->
 <div wire:loading.delay.short>...</div>    <!-- 150ms -->
 <div wire:loading.delay>...</div>          <!-- 200ms -->
+<div wire:loading.delay.default>...</div>  <!-- 200ms -->
 <div wire:loading.delay.long>...</div>     <!-- 300ms -->
 <div wire:loading.delay.longer>...</div>   <!-- 500ms -->
 <div wire:loading.delay.longest>...</div>  <!-- 1000ms -->

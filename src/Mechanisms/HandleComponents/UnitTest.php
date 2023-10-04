@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\HandleComponents;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
 use Livewire\Component;
+use Livewire\Form;
 use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
@@ -52,61 +53,105 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function livewire_request_data_doesnt_get_manipulated()
+    public function uninitialized_integer_can_be_set_to_empty_string()
     {
-        // This test is better done as a Laravel dusk test now.
-        $this->markTestSkipped();
+        Livewire::test(new class extends Component {
+            public int $count;
 
-        // LivewireManager::$isLivewireRequestTestingOverride = true;
-
-        // $this->refreshApplication();
-
-        // $component = app(LivewireManager::class)->test(ComponentWithStringPropertiesStub::class);
-
-        // $this->withHeader('X-Livewire', 'true')->post("/livewire/message/{$component->componentName}", [
-        //     'updateQueue' => [],
-        //     'name' => $component->componentName,
-        //     'children' => $component->payload['children'],
-        //     'data' => $component->payload['data'],
-        //     'meta' => $component->payload['meta'],
-        //     'id' => $component->payload['id'],
-        //     'checksum' => $component->payload['checksum'],
-        //     'locale' => $component->payload['locale'],
-        //     'fromPrefetch' => [],
-        // ])->assertJson(['data' => [
-        //     'emptyString' => '',
-        //     'oneSpace' => ' ',
-        // ]]);
-
-        // LivewireManager::$isLivewireRequestTestingOverride = null;
-
-        // $this->refreshApplication();
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <h1 dusk="count">count: {{ $count }};</h1>
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSee('count: ;')
+            ->set('count', 1)
+            ->assertSee('count: 1;')
+            ->set('count', '')
+            ->assertSee('count: ;')
+        ;
     }
 
     /** @test */
-    public function non_livewire_requests_do_get_manipulated()
+    public function uninitialized_integer_in_a_form_object_can_be_set_to_empty_string()
     {
-        // This test is better done as a Laravel dusk test now.
-        $this->markTestSkipped();
+        Livewire::test(new class extends Component {
+            public CountForm $form;
 
-        // $this->expectException(CorruptComponentPayloadException::class);
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <!--  -->
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSet('form.count', null)
+            ->set('form.count', 1)
+            ->assertSet('form.count', 1)
+            ->set('form.count', '')
+            ->assertSet('form.count', null)
+        ;
+    }
 
-        // $component = app(LivewireManager::class)->test(ComponentWithStringPropertiesStub::class);
+    /** @test */
+    public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public ?UnitSuit $selected;
 
-        // $this->withMiddleware()->post("/livewire/message/{$component->componentName}", [
-        //     'updateQueue' => [],
-        //     'name' => $component->componentName,
-        //     'children' => $component->payload['children'],
-        //     'data' => $component->payload['data'],
-        //     'meta' => $component->payload['meta'],
-        //     'id' => $component->payload['id'],
-        //     'checksum' => $component->payload['checksum'],
-        //     'locale' => $component->payload['locale'],
-        //     'fromPrefetch' => [],
-        // ])->assertJson(['data' => [
-        //     'emptyString' => null,
-        //     'oneSpace' => null,
-        // ]]);
+            #[\Livewire\Attributes\Computed]
+            public function cases()
+            {
+                return UnitSuit::cases();
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <select wire:model.live="selected" dusk="selectInput">
+                        @foreach($this->cases() as $suit)
+                            <option value="{{ $suit->value }}">{{ $suit }}</option>
+                        @endforeach
+                    </select>
+
+                    <span dusk="selected">{{ $selected }}</span>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSet('selected', null)
+        ->set('selected', 'D')
+        ->assertSet('selected', UnitSuit::Diamonds)
+        ->set('selected', null)
+        ->assertSet('selected', null)
+        ;
+    }
+
+    /** @test */
+    public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null_inside_form_object()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public SuitForm $form;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <!--  -->
+                </div>
+                HTML;
+            }
+        })
+        ->assertSet('form.selected', null)
+        ->set('form.selected', 'D')
+        ->assertSet('form.selected', UnitSuit::Diamonds)
+        ->set('form.selected', null)
+        ->assertSet('form.selected', null)
+        ;
     }
 }
 
@@ -129,4 +174,25 @@ class ComponentWithStringPropertiesStub extends Component
     {
         return app('view')->make('null-view');
     }
+}
+
+enum UnitSuit: string
+{
+    case Hearts = 'H';
+
+    case Diamonds = 'D';
+
+    case Clubs = 'C';
+
+    case Spades = 'S';
+}
+
+class CountForm extends Form
+{
+    public int $count;
+}
+
+class SuitForm extends Form
+{
+    public UnitSuit $selected;
 }

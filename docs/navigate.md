@@ -90,6 +90,17 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
+## Updating the page before navigating away
+
+Livewire dispatches a useful event called `livewire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
+
+This is useful for scenarios like modifying the contents of the current page before it is stored and reloaded as the back-button cache HTML.
+
+```js
+document.addEventListener('livewire:navigating', () => {
+    // Mutate the HTML before the page is navigated away...
+})
+```
 
 ## Script evaluation
 
@@ -185,6 +196,9 @@ If you are using [Laravel's Vite plug-in](https://laravel.com/docs/vite#loading-
 
 Livewire will automatically inject `data-navigate-track` onto the rendered HTML tags.
 
+> [!warning] Only query string changes are tracked
+> Livewire will only reload a page if a `[data-navigate-track]` element's query string (`?id="456"`) changes, not the URI itself (`/app.js`).
+
 ### Scripts in the `<body>` are re-evaluated
 
 Because Livewire replaces the entire contents of the `<body>` on every new page, all `<script>` tags on the new page will be run:
@@ -213,3 +227,15 @@ If you have a `<script>` tag in the body that you only want to be run once, you 
 </script>
 ```
 
+## Customizing the progress bar
+
+When a page takes longer than 150ms to load, Livewirew will show a progress bar at the top of the page.
+
+You can customize the color of this bar or disable it all together inside Livewire's config file (`config/livewire.php`):
+
+```php
+'navigate' => [
+    'show_progress_bar' => false,
+    'progress_bar_color' => '#2299dd',
+],
+```
