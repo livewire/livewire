@@ -56,6 +56,7 @@ Livewire supports a variety of event listeners, allowing you to respond to vario
 | `wire:click`    | Triggered when an element is clicked      |
 | `wire:submit`   | Triggered when a form is submitted        |
 | `wire:keydown`  | Triggered when a key is pressed down      |
+| `wire:keyup`  | Triggered when a key is released
 | `wire:mouseenter`| Triggered when the mouse enters an element |
 | `wire:*`| Whatever text follows `wire:` will be used as the event name of the listener |
 
