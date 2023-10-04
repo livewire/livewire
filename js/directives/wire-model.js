@@ -36,7 +36,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     }
 
     let isLive = modifiers.includes('live')
-    let isLazy = modifiers.includes('lazy')
+    let isLazy = modifiers.includes('lazy') || modifiers.includes('change')
     let onBlur = modifiers.includes('blur')
     let isDebounced = modifiers.includes('debounce')
 

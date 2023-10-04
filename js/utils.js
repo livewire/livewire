@@ -168,6 +168,11 @@ export function isSynthetic(subject) {
 export function getCsrfToken() {
     // Purposely not caching. Fetching it fresh every time ensures we're
     // not depending on a stale session's CSRF token...
+
+    if (document.querySelector('meta[name="csrf-token"]')) {
+        return document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    }
+
     if (document.querySelector('[data-csrf]')) {
         return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }

@@ -348,7 +348,7 @@ public $titles = [];
 
 As an alternative to Livewire's `#[Rule]` attributes, you can define a method in your component called `rules()` and return a list of fields and corresponding validation rules. This can be helpful if you are trying to use run-time syntaxes that aren't supported in PHP Attributes, for example, Laravel rule objects like `Rule::password()`.
 
-These rules will then be applied when you run `$this->validate()` inside the component.
+These rules will then be applied when you run `$this->validate()` inside the component. You also can define the `messages()` and `attributes()` functions.
 
 Here's an example:
 
@@ -368,6 +368,21 @@ class CreatePost extends Component
         return [
             'title' => ValidationRule::exists('posts', 'title'),
             'content' => 'required|min:3',
+        ];
+    }
+    
+    public function messages() // [tl! highlight:6]
+    {
+        return [
+            'content.required' => 'The :attribute are missing.',
+            'content.min' => 'The :attribute is too short.',
+        ]
+    }
+    
+    public function attributes() // [tl! highlight:6]
+    {
+        return [
+            'content' => 'description',
         ];
     }
 

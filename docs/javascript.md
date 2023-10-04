@@ -55,7 +55,7 @@ let components = Livewire.all()
 
 ### Interacting with events
 
-In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you interact with [Livewire's event system](/docs/events) from anywhere in your application:
+In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you to interact with [Livewire's event system](/docs/events) from anywhere in your application:
 
 ```js
 // Dispatch an event to any Livewire components listening...

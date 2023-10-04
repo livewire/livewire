@@ -187,6 +187,23 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function rule_attribute_supports_custom_messages_when_using_repeated_attributes()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[BaseRule('required', message: 'Please provide a post title')]
+            #[BaseRule('min:3', message: 'This title is too short')]
+            public $title = '';
+        })
+            ->set('title', '')
+            ->assertHasErrors(['title' => 'required'])
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+                $this->assertEquals('Please provide a post title', $messages['title'][0]);
+            })
+        ;
+    }
+
+    /** @test */
     public function rule_attribute_message_is_translatable()
     {
         Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
@@ -826,6 +843,31 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors('customCollection.0.amount')
             ;
     }
+
+    /** @test */
+    public function adding_validation_error_inside_mount_method()
+    {
+        Livewire::test(AddErrorInMount::class)
+            ->call('addErrors')
+            ->assertSee('first error')
+            ->assertSee('second error')
+            ->assertSee('third error')
+            ->assertHasErrors(['first', 'second', 'third'])
+            ->call('addFilterErrors')
+            ->assertSee('first error')
+            ->assertSee('second error')
+            ->assertHasErrors(['first', 'second']);
+
+        Livewire::test(AddErrorInMount::class)
+            ->assertSee('first error')
+            ->assertSee('second error')
+            ->assertSee('third error')
+            ->assertHasErrors(['first', 'second', 'third'])
+            ->call('addFilterErrors')
+            ->assertSee('first error')
+            ->assertSee('second error')
+            ->assertHasErrors(['first', 'second']);
+    }
 }
 
 class ComponentWithRulesProperty extends Component
@@ -1333,5 +1375,33 @@ class CustomWireableValidationDTO implements Wireable
         return new static(
             $value['amount']
         );
+    }
+}
+
+class AddErrorInMount extends Component
+{
+    public function mount()
+    {
+        $this->addErrors();
+    }
+
+    public function addErrors(): void
+    {
+        $this->addError('first', 'first error');
+        $this->addError('second', 'second error');
+        $this->addError('third', 'third error');
+    }
+
+    public function addFilterErrors(): void
+    {
+        $this->resetErrorBag();
+
+        $this->addError('first', 'first error');
+        $this->addError('second', 'second error');
+    }
+
+    public function render()
+    {
+        return view('show-errors');
     }
 }

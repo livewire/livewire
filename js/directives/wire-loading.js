@@ -19,7 +19,7 @@ directive('loading', ({ el, directive, component }) => {
 })
 
 function applyDelay(directive) {
-    if (! directive.modifiers.includes('delay')) return [i => i(), i => i()]
+    if (! directive.modifiers.includes('delay') || directive.modifiers.includes('none')) return [i => i(), i => i()]
 
     let duration = 200
 
@@ -27,6 +27,7 @@ function applyDelay(directive) {
         'shortest': 50,
         'shorter': 100,
         'short': 150,
+        'default': 200,
         'long': 300,
         'longer': 500,
         'longest': 1000,

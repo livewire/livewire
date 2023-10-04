@@ -501,6 +501,30 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertReturned('bar')
             ->assertReturned(fn ($data) => $data === 'bar');
     }
+    /** @test */
+    public function can_set_cookies_for_use_with_testing()
+    {
+        // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
+        Livewire::withCookies(['colour' => 'blue'])
+            ->withCookie('name', 'Taylor')
+            ->test(new class extends Component {
+                public $colourCookie = '';
+                public $nameCookie = '';
+                public function mount()
+                {
+                    $this->colourCookie = request()->cookie('colour');
+                    $this->nameCookie = request()->cookie('name');
+                }
+
+                public function render()
+                {
+                    return '<div></div>';
+                }
+            })
+            ->assertSet('colourCookie', 'blue')
+            ->assertSet('nameCookie', 'Taylor')
+            ;
+    }
 }
 
 class HasMountArguments extends Component
