@@ -6445,8 +6445,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             continue;
           }
         }
-        let isIf = (node) => node && node.nodeType === 8 && node.textContent === "[if gte livewire 3]> __BLOCK__ <![endif]";
-        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === "[if gte livewire 3]> __ENDBLOCK__ <![endif]";
+        let isIf = (node) => node && node.nodeType === 8 && node.textContent === "[if BLOCK]><![endif]";
+        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === "[if ENDBLOCK]><![endif]";
         if (isIf(currentTo) && isIf(currentFrom)) {
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;

@@ -143,11 +143,11 @@ Here's an example of the previous Blade template but with Livewire's injected ma
         <input wire:model="title">
     </div>
 
-    <!--[if gte livewire 3]> __BLOCK__ <![endif]--> <!-- [tl! highlight] -->
+    <!--[if BLOCK]><![endif]--> <!-- [tl! highlight] -->
     @if ($errors->has('title'))
         <div>Error: {{ $errors->first('title') }}</div>
     @endif
-    <!--[if gte livewire 3]> __ENDBLOCK__ <![endif]--> <!-- [tl! highlight] -->
+    <!--[if ENDBLOCK]><![endif]--> <!-- [tl! highlight] -->
 
     <div>
         <button>Save</button>
