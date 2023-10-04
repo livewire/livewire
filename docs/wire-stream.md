@@ -86,7 +86,7 @@ class ChatBot extends Component
 
     function ask()
     {
-        $this->answer = ChatBot::ask($this->question, function ($partial) {
+        $this->answer = OpenAI::ask($this->question, function ($partial) {
             $this->stream(to: 'answer', content: $partial); // [tl! highlight]
         });
     }
