@@ -1,7 +1,7 @@
 
 ## Basic usage
 
-Showing or hiding content in Livewire is as simple as using one of Blade's conditional directives like `@if`. To enhance this experience for your users, Liveiwre provides a `wire:transition` directive that allows you to transition conditional elements smoothly in and out of the page.
+Showing or hiding content in Livewire is as simple as using one of Blade's conditional directives like `@if`. To enhance this experience for your users, Livewire provides a `wire:transition` directive that allows you to transition conditional elements smoothly in and out of the page.
 
 For example, below is a `ShowPost` component with the ability to toggle viewing comments on and off:
 
