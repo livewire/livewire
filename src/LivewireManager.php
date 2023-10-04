@@ -140,6 +140,8 @@ class LivewireManager
 
     protected $queryParamsForTesting = [];
 
+    protected $cookiesForTesting = [];
+
     function withUrlParams($params)
     {
         return $this->withQueryParams($params);
@@ -152,9 +154,23 @@ class LivewireManager
         return $this;
     }
 
+    function withCookie($name, $value)
+    {
+        $this->cookiesForTesting[$name] = $value;
+
+        return $this;
+    }
+
+    function withCookies($cookies)
+    {
+        $this->cookiesForTesting = array_merge($this->cookiesForTesting, $cookies);
+
+        return $this;
+    }
+
     function test($name, $params = [])
     {
-        return Testable::create($name, $params, $this->queryParamsForTesting);
+        return Testable::create($name, $params, $this->queryParamsForTesting, $this->cookiesForTesting);
     }
 
     function visit($name)

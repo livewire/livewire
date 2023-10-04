@@ -10,7 +10,6 @@ use function Livewire\wrap;
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_ALL)]
 class BaseRule extends LivewireAttribute
 {
-    // @todo: support custom messages...
     function __construct(
         public $rule,
         protected $attribute = null,
@@ -68,7 +67,14 @@ class BaseRule extends LivewireAttribute
 
                 $this->component->addMessagesFromOutside($messages);
             } else {
-                $this->component->addMessagesFromOutside([$this->getName() => $this->translate ? trans($this->message) : $this->message]);
+                // If a single message was provided, apply it to the first given rule.
+                // There should have only been one rule provided in this case anyways...
+                $rule = head(array_values($rules));
+
+                // In the case of "min:5" or something, we only want "min"...
+                $rule = (string) str($rule)->before(':');
+
+                $this->component->addMessagesFromOutside([$this->getName().'.'.$rule => $this->translate ? trans($this->message) : $this->message]);
             }
         }
 

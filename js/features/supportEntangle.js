@@ -5,7 +5,7 @@ import Alpine from 'alpinejs'
 export function generateEntangleFunction(component, cleanup) {
     if (! cleanup) cleanup = () => {}
 
-    return (name, live) => {
+    return (name, live = false) => {
         let isLive = live
         let livewireProperty = name
         let livewireComponent = component.$wire

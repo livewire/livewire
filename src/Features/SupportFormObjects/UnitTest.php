@@ -7,6 +7,7 @@ use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use PHPUnit\Framework\Assert;
 use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
@@ -203,6 +204,32 @@ class UnitTest extends \Tests\TestCase
         ->assertHasNoErrors()
         ->assertSet('form.title', '')
         ->assertSet('form.content', '')
+        ;
+    }
+
+    /** @test */
+    function all_properties_are_available_in_rules_method()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormWithRulesStub $form;
+
+            public function mount()
+            {
+                $this->form->setPost(42);
+            }
+
+            function save() {
+                $this->form->validate();
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.post', 42)
+        ->call('save')
+        ->assertSet('form.post', 42)
+        ->assertHasErrors()
         ;
     }
 
@@ -406,6 +433,28 @@ class PostFormStub extends Form
     public $title = '';
 
     public $content = '';
+}
+
+class PostFormWithRulesStub extends Form
+{
+    public ?int $post = null;
+    public $title = '';
+    public $content = '';
+
+    public function setPost($model)
+    {
+        $this->post = $model;
+    }
+
+    public function rules()
+    {
+        Assert::assertEquals(42, $this->post, 'post should be available to run more complex rules');
+
+        return [
+            'title' => 'required',
+            'content' => 'required',
+        ];
+    }
 }
 
 class PostFormValidateStub extends Form

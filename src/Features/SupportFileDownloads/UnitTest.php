@@ -66,6 +66,38 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_download_with_custom_japanese_filename()
+    {
+        Livewire::test(FileDownloadComponent::class)
+                ->call('download', 'ダウンロード.csv')
+                ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.');
+    }
+
+    /** @test */
+    public function can_download_a_file_as_stream_with_custom_japanese_filename()
+    {
+        Livewire::test(FileDownloadComponent::class)
+                ->call('streamDownload', 'ダウンロード.csv')
+                ->assertFileDownloaded('ダウンロード.csv', 'alpinejs');
+    }
+
+    /** @test */
+    public function can_download_with_custom_japanese_filename_and_headers()
+    {
+        Livewire::test(FileDownloadComponent::class)
+                ->call('download', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
+                ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.', 'text/csv');
+    }
+
+    /** @test */
+    public function can_download_a_file_as_stream_with_custom_japanese_filename_and_headers()
+    {
+        Livewire::test(FileDownloadComponent::class)
+                ->call('streamDownload', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
+                ->assertFileDownloaded('ダウンロード.csv', 'alpinejs', 'text/csv');
+    }
+
+    /** @test */
     public function it_refreshes_html_after_download()
     {
         Livewire::test(FileDownloadComponent::class)

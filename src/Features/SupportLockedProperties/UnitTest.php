@@ -48,4 +48,21 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('foo.count', 1)
         ->set('foo.count', 2);
     }
+
+    /** @test */
+    function can_update_locked_property_with_similar_name()
+    {
+        Livewire::test(new class extends Component {
+            #[BaseLocked]
+            public $count = 1;
+
+            public $count2 = 1;
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('count2', 1)
+        ->set('count2', 2);
+    }
 }
