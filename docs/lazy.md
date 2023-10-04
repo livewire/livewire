@@ -86,6 +86,9 @@ class Revenue extends Component
 
 Because the above component specifies a "placeholder" by returning HTML from a `placeholder()` method, the user will see an SVG loading spinner on the page until the component is fully loaded.
 
+> [!warning] The placeholder and the component must share the same element type
+> For instance, if your placeholder's root element type is a 'div,' your component must also use a 'div' element.
+
 ### Rendering a placeholder via a view
 
 For more complex loaders (such as skeletons) you can return a `view` from the `placeholder()` similar to `render()`. 
