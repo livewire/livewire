@@ -258,6 +258,22 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_navigate_to_page_without_reloading_by_manually_triggering_the_click_event()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@redirect.to.second.with.click.event')
+                ->waitFor('@link.to.first', 30)
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    /** @test */
     public function navigate_is_not_triggered_on_cmd_and_enter()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -664,9 +680,10 @@ class FirstPage extends Component
         <div>
             <div>On first</div>
 
-            <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
+            <a href="/second" wire:navigate.hover dusk="link.to.second" x-ref="link">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
+            <button type="button" @click="$refs.link.click()" dusk="redirect.to.second.with.click.event">Redirect to second page with click event</button>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
             <livewire:first-page-child />

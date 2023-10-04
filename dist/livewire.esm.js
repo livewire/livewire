@@ -6870,6 +6870,9 @@ function whenThisLinkIsPressed(el, callback) {
     if (isNotPlainLeftClick(e))
       return;
     e.preventDefault();
+    callback((whenReleased) => {
+      whenReleased();
+    });
   });
   el.addEventListener("mousedown", (e) => {
     if (isNotPlainLeftClick(e))
