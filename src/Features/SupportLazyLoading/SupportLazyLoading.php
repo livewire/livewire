@@ -11,6 +11,11 @@ use Illuminate\Routing\Route;
 
 class SupportLazyLoading extends ComponentHook
 {
+    // New strategy:
+    // - render the placeholder purely with wire:lazy  directive filled with custom list of props, id, querystring, etc... and checksummed all of it
+    // - update on same or custom endpoint
+    // - vwala
+    // Note: this is just an exploration PR because the tradeoff of complexity might not justify this move...
     static function provide()
     {
         static::registerRouteMacro();
