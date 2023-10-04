@@ -8072,7 +8072,7 @@ on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
-  let visibility = import_alpinejs13.default.reactive({ state: false });
+  let visibility = import_alpinejs13.default.reactive({ state: el.__addedByMorph ? false : true });
   import_alpinejs13.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {

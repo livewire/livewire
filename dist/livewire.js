@@ -7233,7 +7233,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {
-    let visibility = module_default.reactive({ state: false });
+    let visibility = module_default.reactive({ state: el.__addedByMorph ? false : true });
     module_default.bind(el, {
       [directive3.rawName.replace("wire:", "x-")]: "",
       "x-show"() {
