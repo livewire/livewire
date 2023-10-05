@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportModels;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Component;
 use Livewire\Features\SupportEvents\BaseOn;
 use Livewire\Livewire;
@@ -10,14 +11,11 @@ use Sushi\Sushi;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function parent_component_with_eloquent_collection_property_does_not_error_when_child_deletes_a_model_contained_within_it()
     {
-        // Ensure sushi has all models each time
-        Post::firstOrCreate(['id' => 1], ['title' => 'Post #1']);
-        Post::firstOrCreate(['id' => 2], ['title' => 'Post #2']);
-        Post::firstOrCreate(['id' => 3], ['title' => 'Post #3']);
-
         Livewire::visit([
             new class extends Component {
                 public $posts;
@@ -81,9 +79,11 @@ class Post extends Model
 
     protected $guarded = [];
 
-    protected $rows = [
-        ['id' => 1, 'title' => 'Post #1'],
-        ['id' => 2, 'title' => 'Post #2'],
-        ['id' => 3, 'title' => 'Post #3'],
-    ];
+    public function getRows() {
+        return [
+            ['id' => 1, 'title' => 'Post #1'],
+            ['id' => 2, 'title' => 'Post #2'],
+            ['id' => 3, 'title' => 'Post #3'],
+        ];
+    }
 }
