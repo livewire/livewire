@@ -186,6 +186,11 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function nested_components_do_not_error_when_child_deleted_with_state()
     {
+        // Ensure sushi has all models each time
+        Post::firstOrCreate(['id' => 1, 'title' => 'Post #1']);
+        Post::firstOrCreate(['id' => 2, 'title' => 'Post #2']);
+        Post::firstOrCreate(['id' => 3, 'title' => 'Post #3']);
+
         Livewire::visit([
             new class extends Component {
                 public $posts;
@@ -205,7 +210,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                     return <<<'HTML'
                     <div>
                         @foreach($posts as $post)
-                            <livewire:child wire:key="{{ $post->id }}" :post="$post" />
+                            <div wire:key="parent-post-{{ $post->id }}">
+                                <livewire:child wire:key="{{ $post->id }}" :post="$post" />
+                            </div>
                         @endforeach
                     </div>
                     HTML;
@@ -232,10 +239,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
+            ->waitForLivewireToLoad()
             ->assertPresent('@post-1')
             ->assertSeeIn('@post-1', 'Post #1')
             ->waitForLivewire()->click('@delete-1')
-            ->assertNotPresent('@post-1')
+            ->assertNotPresent('@parent-post-1')
             ;
     }
 
@@ -380,6 +388,8 @@ class NestedBootComponent extends Component
 class Post extends Model
 {
     use Sushi;
+
+    protected $guarded = [];
 
     protected $rows = [
         ['id' => 1, 'title' => 'Post #1'],

@@ -10,6 +10,7 @@ class SupportModels extends ComponentHook
     {
         app('livewire')->propertySynthesizer([
             ModelSynth::class,
+            EloquentCollectionSynth::class,
         ]);
     }
 }
