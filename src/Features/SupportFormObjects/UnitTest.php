@@ -352,8 +352,9 @@ class UnitTest extends \Tests\TestCase
                 $this->form->validate();
             }
 
-            public function render() {
-                return '<div></div>';
+            public function render()
+            {
+                return '<div>{{ $errors }}</div>';
             }
         })
             ->set('form.title', 'foo')
@@ -362,6 +363,13 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors()
             ->call('save')
             ->assertHasErrors('form.content')
+            ->assertHasErrors('form.contentWithRuleAttribute')
+            ->assertHasErrors('form.contentWithArrayRuleAttribute')
+            ->assertHasErrors('form.contentWithAssocArrayRuleAttribute')
+            ->assertSee('The content field is required when title is foo.')
+            ->assertSee('The contentWithRuleAttribute field is required when title is foo.')
+            ->assertSee('The contentWithArrayRuleAttribute field is required when title is foo.')
+            ->assertSee('The contentWithAssocArrayRuleAttribute field is required when title is foo.')
         ;
     }
 
@@ -377,7 +385,7 @@ class UnitTest extends \Tests\TestCase
             }
 
             public function render() {
-                return '<div></div>';
+                return '<div>{{ $errors }}</div>';
             }
         })
             ->set('form.title', 'foo')
@@ -388,6 +396,13 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors()
             ->call('save')
             ->assertHasErrors('form.content')
+            ->assertHasErrors('form.contentWithRuleAttribute')
+            ->assertHasErrors('form.contentWithArrayRuleAttribute')
+            ->assertHasErrors('form.contentWithAssocArrayRuleAttribute')
+            ->assertSee('The content field is required when title \/ sub title are present.')
+            ->assertSee('The contentWithRuleAttribute field is required whentitle \/ sub title are present.')
+            ->assertSee('The contentWithArrayRuleAttribute field is required whentitle \/ sub title are present.')
+            ->assertSee('The contentWithAssocArrayRuleAttribute field is required whentitle \/ sub title are present.')
         ;
     }
 }
@@ -417,6 +432,15 @@ class PostFormValidateWithFieldDependencyStub extends Form
 
     public $content = '';
 
+    #[Rule('required_if:title,foo')]
+    public $contentWithRuleAttribute ='';
+
+    #[Rule(['required_if:title,foo'])]
+    public $contentWithArrayRuleAttribute ='';
+
+    #[Rule(['contentWithAssocArrayRuleAttribute' => 'required_if:title,foo'])]
+    public $contentWithAssocArrayRuleAttribute ='';
+
     protected $rules = [
         'title' => 'required',
         'content' => 'required_if:title,foo',
@@ -429,6 +453,15 @@ class PostFormValidateWithFieldMultiDependencyStub extends Form
     public $subTitle = '';
 
     public $content = '';
+
+    #[Rule('required_with_all:title,subTitle')]
+    public $contentWithRuleAttribute ='';
+
+    #[Rule(['required_with_all:title,subTitle'])]
+    public $contentWithArrayRuleAttribute ='';
+
+    #[Rule(['contentWithAssocArrayRuleAttribute' => 'required_with_all:title,subTitle'])]
+    public $contentWithAssocArrayRuleAttribute ='';
 
     protected $rules = [
         'title' => 'required',
