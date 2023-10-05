@@ -71,6 +71,29 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function unpersisted_models_can_be_assigned_but_no_data_is_persisted_between_requests()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Post $post;
+
+            public function mount() {
+                $this->post = new Post();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>{{ $post->title }}</div>
+            HTML; }
+        })
+        ->call('$refresh')
+        ->assertSet('post', new Post())
+        ;
+        
+        $data = $component->getData();
+
+        $this->assertNull($data['post']);
+    }
+
+    /** @test */
     public function model_properties_are_lazy_loaded()
     {
         $this->markTestSkipped(); // @todo: probably not going to go this route...

@@ -17,23 +17,25 @@ class ModelSynth extends Synth {
     }
 
     function dehydrate($target) {
-        if (! $target->exists) {
-            throw new \Exception('Can\'t set model as property if it hasn\'t been persisted yet');
-        }
-
         // If no alias is found, this just returns the class name
         $alias = $target->getMorphClass();
 
-        $serializedModel = (array) $this->getSerializedPropertyValue($target);
+        $serializedModel = $target->exists
+            ? (array) $this->getSerializedPropertyValue($target)
+            : null;
+
+        $data = ['class' => $alias];
+
+        if ($serializedModel) $data['key'] = $serializedModel['id'];
+        
 
         return [
             null,
-            ['class' => $alias, 'key' => $serializedModel['id']],
+            $data,
         ];
     }
 
     function hydrate($data, $meta) {
-        $key = $meta['key'];
         $class = $meta['class'];
 
         // If no alias found, this returns `null`
@@ -42,6 +44,12 @@ class ModelSynth extends Synth {
         if (! is_null($aliasClass)) {
             $class = $aliasClass;
         }
+
+        if (! array_key_exists('key', $meta)) {
+            return new $class;
+        }
+
+        $key = $meta['key'];
 
         $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
 
