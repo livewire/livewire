@@ -23,6 +23,10 @@ class BaseRule extends LivewireAttribute
 
     function boot()
     {
+        /**
+         * Determine if this attribute is being used in a FormObject and what the property name
+         * is that the FormObject is assigned to.
+         */
         $formPropertyName = null;
         if (str_contains(str($this->getName()), '.')) {
             $propertyName = explode('.', str($this->getName()))[0];
@@ -30,21 +34,23 @@ class BaseRule extends LivewireAttribute
                 $formPropertyName = $propertyName;
             }
         }
+
         $rules = [];
 
-        // Support setting rules by key-value for this and other properties:
-        // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
-        if (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
-            if ($formPropertyName) {
+        /**
+         * If the rule attribute is being used inside a FormObject, process the rules to ensure
+         * that any rules with dependant fields get the field names prefixed with the name of
+         * the property the FormObject is assigned to.
+         */
+        if ($formPropertyName) {
+            // Support setting rules by key-value for this and other properties:
+            // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
+            if (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
                 foreach ($this->rule as $field => $rule) {
                     if (!str_starts_with($field, "{$formPropertyName}.")) $field = "{$formPropertyName}.{$field}";
                     $rules[$field] = Form::getFixedRule($formPropertyName, $rule);
                 }
             } else {
-                $rules = $this->rule;
-            }
-        } else {
-            if($formPropertyName) {
                 if (is_array($this->rule)) {
                     $rules[$this->getName()] = [];
                     foreach ($this->rule as $rule) {
@@ -53,10 +59,29 @@ class BaseRule extends LivewireAttribute
                 } else {
                     $rules[$this->getName()] = Form::getFixedRule($formPropertyName, $this->rule);
                 }
+            }
+        } else {
+            // Support setting rules by key-value for this and other properties:
+            // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
+            if (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
+                $rules = $this->rule;
             } else {
                 $rules[$this->getName()] = $this->rule;
             }
         }
+
+        /**
+         * This section ensures that any 'form.title' attributes are shortened to 'title' and added
+         * to the attribute bag.
+         *
+         * @todo: This needs to be reenabled and updated to also get the fields from the dependant rules, and do
+         * the same thing. And fix the custom attributes method being overridden.
+         */
+        // if ($formPropertyName) {
+        //     $name = (string) str($this->getName())->after("{$formPropertyName}.");
+
+        //     $this->component->addValidationAttributesFromOutside([$this->getName() => $name]);
+        // }
 
         if ($this->attribute) {
             if (is_array($this->attribute)) {
