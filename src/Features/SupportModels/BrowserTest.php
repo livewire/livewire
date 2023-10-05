@@ -14,9 +14,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function parent_component_with_eloquent_collection_property_does_not_error_when_child_deletes_a_model_contained_within_it()
     {
         // Ensure sushi has all models each time
-        Post::firstOrCreate(['id' => 1, 'title' => 'Post #1']);
-        Post::firstOrCreate(['id' => 2, 'title' => 'Post #2']);
-        Post::firstOrCreate(['id' => 3, 'title' => 'Post #3']);
+        Post::firstOrCreate(['id' => 1], ['title' => 'Post #1']);
+        Post::firstOrCreate(['id' => 2], ['title' => 'Post #2']);
+        Post::firstOrCreate(['id' => 3], ['title' => 'Post #3']);
 
         Livewire::visit([
             new class extends Component {
