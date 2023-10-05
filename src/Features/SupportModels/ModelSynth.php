@@ -24,14 +24,14 @@ class ModelSynth extends Synth {
             ? (array) $this->getSerializedPropertyValue($target)
             : null;
 
-        $data = ['class' => $alias];
+        $meta = ['class' => $alias];
 
-        if ($serializedModel) $data['key'] = $serializedModel['id'];
+        if ($serializedModel) $meta['key'] = $serializedModel['id'];
         
 
         return [
             null,
-            $data,
+            $meta,
         ];
     }
 
