@@ -26,6 +26,8 @@ class ModelSynth extends Synth {
 
         $meta = ['class' => $alias];
 
+        // If the model doesn't exist as it's an empty model or has been
+        // recently deleted, then we don't want to include any key.
         if ($serializedModel) $meta['key'] = $serializedModel['id'];
         
 
@@ -45,6 +47,7 @@ class ModelSynth extends Synth {
             $class = $aliasClass;
         }
 
+        // If no key is provided then an empty model is returned
         if (! array_key_exists('key', $meta)) {
             return new $class;
         }

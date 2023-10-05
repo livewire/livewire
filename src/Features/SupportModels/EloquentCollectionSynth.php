@@ -64,6 +64,9 @@ class EloquentCollectionSynth extends Synth {
             return new $class();
         }
 
+        // We are using Laravel's method here for restoring the collection, which ensures
+        // that all models in the collection are restored in one query, preventing n+1
+        // issues and also only restores models that exist.
         $collection = (new $modelClass)->newQueryForRestoration($keys)->useWritePdo()->get();
 
         return $collection;
