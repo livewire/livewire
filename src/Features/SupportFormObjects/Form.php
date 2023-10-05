@@ -135,6 +135,11 @@ class Form implements Arrayable
         return Utils::getPublicProperties($this);
     }
 
+    /**
+     * This method can be used to prefix rules, attributes, and messages, so if we are processing rules we need to handle
+     * it slightly different to ensure that any validation rules that rely on another field still work, by also adding
+     * the form property name prefix to the fields specified in the rules.
+     */
     protected function getAttributesWithPrefixedKeys($attributes, $areRules = false)
     {
         $attributesWithPrefixedKeys = [];
@@ -146,6 +151,11 @@ class Form implements Arrayable
         return $attributesWithPrefixedKeys;
     }
 
+    /**
+     * This method contains a list of Laravel validation rules that accept one or more other fields as parameters to
+     * run the validation. If the supplied rule is in either list, then the rule is split into it's parts and prefix any
+     * field names with the form property name.
+     */
     public static function getFixedRule($propertyName, $value){
         $rulesWithField = [
             'required_if',
@@ -169,6 +179,7 @@ class Form implements Arrayable
             'prohibited_unless',
             'prohibits',
         ];
+
         $rulesWithMultipleFields = [
             'required_with',
             'required_with_all',
@@ -184,9 +195,11 @@ class Form implements Arrayable
         if ($rule && $ruleValue) {
             if (in_array($rule, $rulesWithField)) {
                 $field = explode(',', $ruleValue)[0] ?? null;
+
                 if ($field) $value = str_replace($field, $propertyName . '.' . $field, $value);
             } else if (in_array($rule, $rulesWithMultipleFields)) {
                 $fields = array_unique(explode(',', $ruleValue));
+
                 foreach ($fields as $field) {
                     $value = str_replace($field, $propertyName . '.' . $field, $value);
                 }
