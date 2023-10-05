@@ -376,7 +376,7 @@ class CreatePost extends Component
         return [
             'content.required' => 'The :attribute are missing.',
             'content.min' => 'The :attribute is too short.',
-        ]
+        ];
     }
     
     public function validationAttributes() // [tl! highlight:6]
