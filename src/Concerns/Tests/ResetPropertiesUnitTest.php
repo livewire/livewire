@@ -82,6 +82,19 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
 
         $this->assertFalse(isset($component->notSet));
     }
+
+    /** @test */
+    public function can_reset_null_properties()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->set('nullProp', 1)
+            ->assertSet('nullProp', 1)
+            // Reset only nullProp.
+            ->call('resetKeys', 'nullProp')
+            ->assertSet('nullProp', null);
+
+        $this->assertTrue(is_null($component->nullProp));
+    }
 }
 
 class ResetPropertiesComponent extends Component
@@ -93,6 +106,8 @@ class ResetPropertiesComponent extends Component
     public $mwa = 'hah';
 
     public int $notSet;
+
+    public ?int $nullProp = null;
 
     public function resetAll()
     {

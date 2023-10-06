@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportPageComponents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -394,6 +395,16 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_modify_response()
+    {
+        Route::get('/configurable-layout', ComponentWithCustomResponseHeaders::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertHeader('x-livewire', 'awesome');
+    }
+
+    /** @test */
     public function can_configure_title_in_render_method_and_layout_using_layout_attribute()
     {
         Route::get('/configurable-layout', ComponentWithClassBasedComponentTitleAndLayoutAttribute::class);
@@ -418,6 +429,17 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_use_multiple_slots_with_same_name()
+    {
+        Route::get('/slots', ComponentWithTwoHeaderSlots::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/slots')
+            ->assertSee('No Header')
+            ->assertSee('The component header');
+    }
+
     public function can_access_route_parameters_without_mount_method()
     {
         Route::get('/route-with-params/{myId}', ComponentForRouteWithoutMountParametersTest::class);
@@ -523,7 +545,6 @@ class ComponentForConfigurableLayoutTestWithCustomAttributes extends Component
         ]);
     }
 }
-
 
 class ComponentWithExtendsLayout extends Component
 {
@@ -639,6 +660,14 @@ class ComponentWithCustomParamsAndLayout extends Component
     }
 }
 
+class ComponentWithCustomResponseHeaders extends Component
+{
+    public function render()
+    {
+        return view('null-view')->response(fn(Response $response) => $response->header('x-livewire', 'awesome'));
+    }
+}
+
 class FrameworkModel extends Model
 {
     public function resolveRouteBinding($value, $field = null)
@@ -700,6 +729,15 @@ class ComponentWithMultipleLayoutSlots extends Component
         return view('show-layout-slots', [
             'bar' => 'foo',
         ])->layout('layouts.app-layout-with-slots');
+    }
+}
+
+class ComponentWithTwoHeaderSlots extends Component
+{
+    public function render()
+    {
+        return view('show-double-header-slot')
+            ->layout('layouts.app-layout-with-slots');
     }
 }
 

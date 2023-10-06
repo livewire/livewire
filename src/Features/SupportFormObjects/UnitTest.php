@@ -2,10 +2,13 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use PHPUnit\Framework\Assert;
+use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -19,12 +22,12 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
-            ->set('form.title', 'Some Title')
-            ->set('form.content', 'Some content...')
-            ->assertSet('form.title', 'Some Title')
-            ->assertSet('form.content', 'Some content...')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ->set('form.title', 'Some Title')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some Title')
+        ->assertSet('form.content', 'Some content...')
         ;
     }
 
@@ -68,12 +71,12 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
-            ->assertHasNoErrors()
-            ->call('save')
-            ->assertHasErrors('form.title')
-            ->assertHasErrors('form.content')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.title')
+        ->assertHasErrors('form.content')
         ;
     }
 
@@ -91,11 +94,11 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
-            ->assertHasNoErrors()
-            ->call('save')
-            ->assertHasErrors('form.status')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.status')
         ;
     }
 
@@ -114,16 +117,16 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
-            ->assertHasNoErrors()
-            ->call('save')
-            ->assertHasErrors('form.title')
-            ->assertHasErrors('form.content')
-            ->set('form.title', 'title...')
-            ->set('form.content', 'content...')
-            ->assertHasNoErrors()
-            ->call('save')
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.title')
+        ->assertHasErrors('form.content')
+        ->set('form.title', 'title...')
+        ->set('form.content', 'content...')
+        ->assertHasNoErrors()
+        ->call('save')
         ;
     }
 
@@ -167,14 +170,14 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->set('form.title', 'Some title...')
-            ->set('form.content', 'Some content...')
-            ->assertSet('form.title', 'Some title...')
-            ->assertSet('form.content', 'Some content...')
-            ->call('save')
-            ->assertHasNoErrors()
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', 'Some content...')
+        ->set('form.title', 'Some title...')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', 'Some content...')
         ;
     }
 
@@ -193,14 +196,40 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->set('form.title', 'Some title...')
-            ->set('form.content', 'Some content...')
-            ->assertSet('form.title', 'Some title...')
-            ->assertSet('form.content', 'Some content...')
-            ->call('save')
-            ->assertHasNoErrors()
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
+        ->set('form.title', 'Some title...')
+        ->set('form.content', 'Some content...')
+        ->assertSet('form.title', 'Some title...')
+        ->assertSet('form.content', 'Some content...')
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSet('form.title', '')
+        ->assertSet('form.content', '')
+        ;
+    }
+
+    /** @test */
+    function all_properties_are_available_in_rules_method()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormWithRulesStub $form;
+
+            public function mount()
+            {
+                $this->form->setPost(42);
+            }
+
+            function save() {
+                $this->form->validate();
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.post', 42)
+        ->call('save')
+        ->assertSet('form.post', 42)
+        ->assertHasErrors()
         ;
     }
 
@@ -405,6 +434,63 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The contentWithAssocArrayRuleAttribute field is required whentitle \/ sub title are present.')
         ;
     }
+
+    /** @test */
+    public function can_fill_a_form_object_from_model()
+    {
+        Livewire::test(new class extends Component {
+            public PostForFormObjectTesting $post;
+            public PostFormStub $form;
+
+            public function mount()
+            {
+                $this->post = PostForFormObjectTesting::first();
+            }
+
+            public function fillForm()
+            {
+                $this->form->fill($this->post);
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->call('fillForm')
+            ->assertSet('form.title', 'A Title')
+            ->assertSet('form.content', 'Some content')
+        ;
+    }
+
+    /** @test */
+    public function can_fill_a_form_object_from_array()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormStub $form;
+
+            public function fillForm()
+            {
+                $this->form->fill([
+                    'title' => 'Title from array',
+                    'content' => 'Content from array',
+                ]);
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
+            ->call('fillForm')
+            ->assertSet('form.title', 'Title from array')
+            ->assertSet('form.content', 'Content from array')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -412,6 +498,28 @@ class PostFormStub extends Form
     public $title = '';
 
     public $content = '';
+}
+
+class PostFormWithRulesStub extends Form
+{
+    public ?int $post = null;
+    public $title = '';
+    public $content = '';
+
+    public function setPost($model)
+    {
+        $this->post = $model;
+    }
+
+    public function rules()
+    {
+        Assert::assertEquals(42, $this->post, 'post should be available to run more complex rules');
+
+        return [
+            'title' => 'required',
+            'content' => 'required',
+        ];
+    }
 }
 
 class PostFormValidateStub extends Form
@@ -546,4 +654,16 @@ class PostFormDynamicMessagesAndAttributesStub extends Form
             'content' => ':attribute is must to fill',
         ];
     }
+}
+
+class PostForFormObjectTesting extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        [
+            'title' => 'A Title',
+            'content' => 'Some content',
+        ],
+    ];
 }

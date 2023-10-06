@@ -3,7 +3,7 @@ import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'
 
-on('component.init', ({ component }) => {
+on('component.init', ({ component, cleanup }) => {
     let effects = component.effects
     let queryString = effects['url']
 
@@ -19,11 +19,13 @@ on('component.init', ({ component }) => {
         let { initial, replace, push, pop } = track(as, initialValue, alwaysShow)
 
         if (use === 'replace') {
-            Alpine.effect(() => {
+            let effectReference = Alpine.effect(() => {
                 replace(dataGet(component.reactive, name))
             })
+
+            cleanup(() => Alpine.release(effectReference))
         } else if (use === 'push') {
-            on('commit', ({ component, succeed }) => {
+            let forgetCommitHandler = on('commit', ({ component, succeed }) => {
                 let beforeValue = dataGet(component.canonical, name)
 
                 succeed(() => {
@@ -35,13 +37,18 @@ on('component.init', ({ component }) => {
                 })
             })
 
-            pop(async newValue => {
+            let forgetPopHandler = pop(async newValue => {
                 await component.$wire.set(name, newValue)
 
                 // @todo: this is the absolute worst thing ever I'm so sorry this needs to be refactored stat:
                 document.querySelectorAll('input').forEach(el => {
                     el._x_forceModelUpdate && el._x_forceModelUpdate(el._x_model.get())
                 })
+            })
+
+            cleanup(() => {
+                forgetCommitHandler()
+                forgetPopHandler()
             })
         }
     })
