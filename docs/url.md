@@ -181,6 +181,22 @@ class ShowUsers extends Component
 }
 ```
 
+You can also disable query string functionality by returning NULL.
+
+```php
+use Livewire\Component;
+
+class ShowUsers extends Component
+{
+    // ...
+
+    protected function queryString()
+    {
+        return null;
+    }
+}
+```
+
 ## Trait hooks
 
 Livewire offers [hooks](/docs/lifecycle-hooks) for query strings as well.
