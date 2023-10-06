@@ -82,6 +82,8 @@ class SupportPagination extends ComponentHook
 
         $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
 
+        if ($this->getQueryString() === null) return;
+
         $this->addUrlHook($pageName, $queryStringDetails);
     }
 

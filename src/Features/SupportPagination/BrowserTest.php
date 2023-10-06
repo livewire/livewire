@@ -1048,6 +1048,49 @@ class BrowserTest extends BrowserTestCase
         ->assertInViewPort('#top')
         ;
     }
+
+    public function test_pagination_query_string_disabled()
+    {
+        Livewire::visit(new class extends Component {
+            use WithPagination;
+
+            protected function queryString()
+            {
+                return null;
+            }
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        })
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertDontSee('Post #4')
+
+            ->waitForLivewire()->click('@nextPage.before')
+
+            ->assertDontSee('Post #3')
+            ->assertSee('Post #4')
+            ->assertSee('Post #5')
+            ->assertSee('Post #6')
+            ->assertQueryStringMissing('page')
+        ;
+    }
 }
 
 class Post extends Model

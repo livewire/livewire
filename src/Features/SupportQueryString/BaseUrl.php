@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportQueryString;
 
+use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
@@ -28,7 +29,7 @@ class BaseUrl extends LivewireAttribute
 
     public function dehydrate($context)
     {
-        if (! $context->mounting) return;
+        if (!$context->mounting || $this->getQueryString() === null) return;
 
         $queryString = [
             'as' => $this->as,
@@ -42,6 +43,13 @@ class BaseUrl extends LivewireAttribute
     public function urlName()
     {
         return $this->as ?? $this->getName();
+    }
+
+    protected function getQueryString()
+    {
+        $supportQueryStringHook = ComponentHookRegistry::getHook($this->component, SupportQueryString::class);
+
+        return $supportQueryStringHook->getQueryString();
     }
 }
 
