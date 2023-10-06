@@ -225,6 +225,7 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         })
+            ->tinker()
             ->waitForLivewire()->click('@remove2')
             ->waitForLivewire()->click('@remove1')
             ->waitForLivewire()->click('@remove0')
@@ -268,7 +269,7 @@ class BrowserTest extends BrowserTestCase
                                 <input
                                     type="text"
                                     x-data="{ value: @entangle('items.'.$itemKey.'.value') }"
-                                    x-bind:value="value"
+                                    x-model="value"
                                 >
                                 <button
                                     type="button"
@@ -287,6 +288,7 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         })
+            ->tinker()
             ->waitForLivewire()->click('@remove2')
             ->waitForLivewire()->click('@remove1')
             ->waitForLivewire()->click('@remove0')

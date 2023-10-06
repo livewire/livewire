@@ -37,6 +37,7 @@ let aliases = {
 }
 
 export function generateWireObject(component, state) {
+    console.log('generateWireObject')
     return new Proxy({}, {
         get(target, property) {
             if (property === '__instance') return component
@@ -71,6 +72,7 @@ function getFallback(component) {
 }
 
 Alpine.magic('wire', (el, { cleanup }) => {
+    console.log('wire', cleanup)
     // Purposely initializing an empty variable here is a "memo"
     // so that a component is lazy-loaded when using $wire from Alpine...
     let component
@@ -116,7 +118,10 @@ wireProperty('$call', (component) => async (method, ...params) => {
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
-    return generateEntangleFunction(component)(name, live)
+    // This doesn't work I think as el is the component element, not the element
+    // that the x-data is on for the effect clean up to work properly.
+    let [utilities, cleanup] = Alpine.getElementBoundUtilities(component.el)
+    return generateEntangleFunction(component, cleanup)(name, live)
 })
 
 wireProperty('$toggle', (component) => (name, live = true) => {
