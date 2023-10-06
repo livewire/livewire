@@ -396,9 +396,9 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors('form.contentWithArrayRuleAttribute')
             ->assertHasErrors('form.contentWithAssocArrayRuleAttribute')
             ->assertSee('The content field is required when title is foo.')
-            ->assertSee('The contentWithRuleAttribute field is required when title is foo.')
-            ->assertSee('The contentWithArrayRuleAttribute field is required when title is foo.')
-            ->assertSee('The contentWithAssocArrayRuleAttribute field is required when title is foo.')
+            ->assertSee('The content with rule attribute field is required when title is foo.')
+            ->assertSee('The content with array rule attribute field is required when title is foo.')
+            ->assertSee('The content with assoc array rule attribute field is required when title is foo.')
         ;
     }
 
@@ -429,9 +429,9 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors('form.contentWithArrayRuleAttribute')
             ->assertHasErrors('form.contentWithAssocArrayRuleAttribute')
             ->assertSee('The content field is required when title \/ sub title are present.')
-            ->assertSee('The contentWithRuleAttribute field is required whentitle \/ sub title are present.')
-            ->assertSee('The contentWithArrayRuleAttribute field is required whentitle \/ sub title are present.')
-            ->assertSee('The contentWithAssocArrayRuleAttribute field is required whentitle \/ sub title are present.')
+            ->assertSee('The content with rule attribute field is required when title \/ sub title are present.')
+            ->assertSee('The content with array rule attribute field is required when title \/ sub title are present.')
+            ->assertSee('The content with assoc array rule attribute field is required when title \/ sub title are present.')
         ;
     }
 

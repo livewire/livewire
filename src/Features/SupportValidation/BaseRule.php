@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportValidation;
 
 use Attribute;
+use Illuminate\Support\Str;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use Livewire\Form;
@@ -35,6 +36,8 @@ class BaseRule extends LivewireAttribute
         }
 
         $rules = [];
+        $attributesFromRules = [];
+        $componentAttributes = $this->component->getValidationAttributes();
 
         /**
          * If the rule attribute is being used inside a FormObject, process the rules to ensure
@@ -48,16 +51,30 @@ class BaseRule extends LivewireAttribute
                 foreach ($this->rule as $field => $rule) {
                     if (!str_starts_with($field, "{$formPropertyName}.")) $field = "{$formPropertyName}.{$field}";
                     $rules[$field] = Form::getFixedRule($formPropertyName, $rule);
+                    $attributesFromRules = array_merge($attributesFromRules, Form::getAttributesWithPrefixedKeysFromRule($formPropertyName, $rule));
                 }
             } else {
                 if (is_array($this->rule)) {
                     $rules[$this->getName()] = [];
                     foreach ($this->rule as $rule) {
                         $rules[$this->getName()][] = Form::getFixedRule($formPropertyName, $rule);
+                        $attributesFromRules = array_merge($attributesFromRules, Form::getAttributesWithPrefixedKeysFromRule($formPropertyName, $rule));
                     }
                 } else {
                     $rules[$this->getName()] = Form::getFixedRule($formPropertyName, $this->rule);
+                    $attributesFromRules = array_merge($attributesFromRules, Form::getAttributesWithPrefixedKeysFromRule($formPropertyName, $this->rule));
                 }
+            }
+
+            /**
+             * This section ensures that any 'form.title' attributes are shortened to 'title' and added
+             * to the attribute bag.
+             */
+            $this->component->addValidationAttributesFromOutside(array_filter($attributesFromRules, fn($key) => !isset($componentAttributes[$key]), ARRAY_FILTER_USE_KEY));
+
+            if(!isset($componentAttributes[$this->getName()])){
+                $name = (string)str($this->getName())->after("{$formPropertyName}.");
+                $this->component->addValidationAttributesFromOutside([$this->getName() => Str::snake($name,' ')]);
             }
         } else {
             // Support setting rules by key-value for this and other properties:
@@ -68,19 +85,6 @@ class BaseRule extends LivewireAttribute
                 $rules[$this->getName()] = $this->rule;
             }
         }
-
-        /**
-         * This section ensures that any 'form.title' attributes are shortened to 'title' and added
-         * to the attribute bag.
-         *
-         * @todo: This needs to be reenabled and updated to also get the fields from the dependant rules, and do
-         * the same thing. And fix the custom attributes method being overridden.
-         */
-        // if ($formPropertyName) {
-        //     $name = (string) str($this->getName())->after("{$formPropertyName}.");
-
-        //     $this->component->addValidationAttributesFromOutside([$this->getName() => $name]);
-        // }
 
         if ($this->attribute) {
             if (is_array($this->attribute)) {
@@ -128,8 +132,8 @@ class BaseRule extends LivewireAttribute
     {
         if ($this->onUpdate === false) return;
 
-        return function () {
-            wrap($this->component)->validateOnly($this->getName());
+        return function () use ($fullPath) {
+            wrap($this->component)->validateOnly($fullPath);
         };
     }
 }

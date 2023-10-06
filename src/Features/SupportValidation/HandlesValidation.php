@@ -134,7 +134,7 @@ trait HandlesValidation
         return array_merge($messages, $messagesFromOutside);
     }
 
-    protected function getValidationAttributes()
+    public function getValidationAttributes()
     {
         $validationAttributes = [];
 

@@ -4,11 +4,46 @@ namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 
 class Form implements Arrayable
 {
+    protected static $rulesWithField = [
+        'required_if',
+        'required_unless',
+        'accepted_if',
+        'declined_if',
+        'different',
+        'same',
+        'exclude_if',
+        'exclude_unless',
+        'exclude_with',
+        'exclude_without',
+        'gt',
+        'gte',
+        'lt',
+        'lte',
+        'in_array',
+        'missing_if',
+        'missing_unless',
+        'prohibited_if',
+        'prohibited_unless',
+        'prohibits',
+    ];
+
+    protected static $rulesWithMultipleFields = [
+        'required_with',
+        'required_with_all',
+        'required_without',
+        'required_without_all',
+        'missing_with',
+        'missing_with_all',
+    ];
+
+    protected $prefixedAttributesFromRules = [];
+
     function __construct(
         protected Component $component,
         protected $propertyName
@@ -29,7 +64,7 @@ class Form implements Arrayable
             if (method_exists($this, 'rules')) $rules = $this->rules();
             else if (property_exists($this, 'rules')) $rules = $this->rules;
 
-            return $this->getAttributesWithPrefixedKeys($rules);
+            return $this->getAttributesWithPrefixedKeys($rules, true);
         });
     }
 
@@ -41,7 +76,7 @@ class Form implements Arrayable
             if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
             else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
 
-            return $this->getAttributesWithPrefixedKeys($validationAttributes);
+            return array_merge($this->prefixedAttributesFromRules, $this->getAttributesWithPrefixedKeys($validationAttributes));
         });
     }
 
@@ -162,6 +197,10 @@ class Form implements Arrayable
 
         foreach ($attributes as $key => $value) {
             $attributesWithPrefixedKeys[$this->propertyName . '.' . $key] = $areRules ? self::getFixedRule($this->propertyName, $value) : $value;
+            if ($areRules) {
+                $this->prefixedAttributesFromRules[$this->propertyName . '.' . $key] = Str::snake($key, ' ');
+                $this->prefixedAttributesFromRules = array_merge($this->prefixedAttributesFromRules, self::getAttributesWithPrefixedKeysFromRule($this->propertyName, $value));
+            }
         }
 
         return $attributesWithPrefixedKeys;
@@ -172,48 +211,17 @@ class Form implements Arrayable
      * run the validation. If the supplied rule is in either list, then the rule is split into it's parts and prefix any
      * field names with the form property name.
      */
-    public static function getFixedRule($propertyName, $value){
-        $rulesWithField = [
-            'required_if',
-            'required_unless',
-            'accepted_if',
-            'declined_if',
-            'different',
-            'same',
-            'exclude_if',
-            'exclude_unless',
-            'exclude_with',
-            'exclude_without',
-            'gt',
-            'gte',
-            'lt',
-            'lte',
-            'in_array',
-            'missing_if',
-            'missing_unless',
-            'prohibited_if',
-            'prohibited_unless',
-            'prohibits',
-        ];
-
-        $rulesWithMultipleFields = [
-            'required_with',
-            'required_with_all',
-            'required_without',
-            'required_without_all',
-            'missing_with',
-            'missing_with_all',
-        ];
-
+    public static function getFixedRule($propertyName, $value)
+    {
         $rule = explode(':', $value)[0] ?? null;
         $ruleValue = explode(':', $value)[1] ?? null;
 
         if ($rule && $ruleValue) {
-            if (in_array($rule, $rulesWithField)) {
+            if (in_array($rule, self::$rulesWithField)) {
                 $field = explode(',', $ruleValue)[0] ?? null;
 
                 if ($field) $value = str_replace($field, $propertyName . '.' . $field, $value);
-            } else if (in_array($rule, $rulesWithMultipleFields)) {
+            } else if (in_array($rule, self::$rulesWithMultipleFields)) {
                 $fields = array_unique(explode(',', $ruleValue));
 
                 foreach ($fields as $field) {
@@ -223,5 +231,29 @@ class Form implements Arrayable
         }
 
         return $value;
+    }
+
+    public static function getAttributesWithPrefixedKeysFromRule($propertyName, $value)
+    {
+        $rule = explode(':', $value)[0] ?? null;
+        $ruleValue = explode(':', $value)[1] ?? null;
+
+        $attributes = [];
+
+        if ($rule && $ruleValue) {
+            if (in_array($rule, self::$rulesWithField)) {
+                $field = explode(',', $ruleValue)[0] ?? null;
+
+                $attributes[$propertyName . '.' . $field] = Str::snake($field, ' ');
+            } else if (in_array($rule, self::$rulesWithMultipleFields)) {
+                $fields = array_unique(explode(',', $ruleValue));
+
+                foreach ($fields as $field) {
+                    $attributes[$propertyName . '.' . $field] = Str::snake($field, ' ');
+                }
+            }
+        }
+
+        return $attributes;
     }
 }
