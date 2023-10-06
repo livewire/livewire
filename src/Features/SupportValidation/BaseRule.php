@@ -130,10 +130,10 @@ class BaseRule extends LivewireAttribute
 
     function update($fullPath, $newValue)
     {
-        if ($this->onUpdate === false) return;
+        if ($this->onUpdate === false || $fullPath !== $this->getName()) return;
 
-        return function () use ($fullPath) {
-            wrap($this->component)->validateOnly($fullPath);
+        return function () {
+            wrap($this->component)->validateOnly($this->getName());
         };
     }
 }
