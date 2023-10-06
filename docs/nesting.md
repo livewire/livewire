@@ -498,7 +498,7 @@ class Steps extends Component
 
     public function next()
     {
-        $currentIndex = array_search($this->steps, $this->current);
+        $currentIndex = array_search($this->current, $this->steps);
 
         $this->current = $this->steps[$currentIndex + 1];
     }

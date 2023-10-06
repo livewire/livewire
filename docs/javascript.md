@@ -55,7 +55,7 @@ let components = Livewire.all()
 
 ### Interacting with events
 
-In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you interact with [Livewire's event system](/docs/events) from anywhere in your application:
+In addition to dispatching and listening for events from individual components in PHP, the global `Livewire` object allows you to interact with [Livewire's event system](/docs/events) from anywhere in your application:
 
 ```js
 // Dispatch an event to any Livewire components listening...
@@ -76,7 +76,7 @@ Livewire allows you to hook into various parts of its internal lifecycle using `
 
 ```js
 // Register a callback to execute on a given internal Livewire hook...
-Livewire.hook('component.init', ({ component }) => {
+Livewire.hook('component.init', ({ component, cleanup }) => {
     // ...
 })
 ```
@@ -392,7 +392,7 @@ For advanced users, Livewire exposes its internal client-side "hook" system. You
 Every time a new component is discovered by Livewire — whether on the initial page load or later on — the `component.init` event is triggered. You can hook into `component.init` to intercept or initialize anything related to the new component:
 
 ```js
-Livewire.hook('component.init', ({ component }) => {
+Livewire.hook('component.init', ({ component, cleanup }) => {
     //
 })
 ```

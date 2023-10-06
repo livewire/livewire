@@ -56,6 +56,7 @@ Livewire supports a variety of event listeners, allowing you to respond to vario
 | `wire:click`    | Triggered when an element is clicked      |
 | `wire:submit`   | Triggered when a form is submitted        |
 | `wire:keydown`  | Triggered when a key is pressed down      |
+| `wire:keyup`  | Triggered when a key is released
 | `wire:mouseenter`| Triggered when the mouse enters an element |
 | `wire:*`| Whatever text follows `wire:` will be used as the event name of the listener |
 
@@ -226,7 +227,7 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 </form>
 ```
 
-`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/loading).
+`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/wire-loading).
 
 ## Passing parameters
 

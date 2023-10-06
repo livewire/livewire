@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportPageComponents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -394,6 +395,16 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_modify_response()
+    {
+        Route::get('/configurable-layout', ComponentWithCustomResponseHeaders::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertHeader('x-livewire', 'awesome');
+    }
+
+    /** @test */
     public function can_configure_title_in_render_method_and_layout_using_layout_attribute()
     {
         Route::get('/configurable-layout', ComponentWithClassBasedComponentTitleAndLayoutAttribute::class);
@@ -535,7 +546,6 @@ class ComponentForConfigurableLayoutTestWithCustomAttributes extends Component
     }
 }
 
-
 class ComponentWithExtendsLayout extends Component
 {
     public function render()
@@ -647,6 +657,14 @@ class ComponentWithCustomParamsAndLayout extends Component
         return view('null-view')->layout('layouts.data-test')->layoutData([
             'title' => 'livewire',
         ]);
+    }
+}
+
+class ComponentWithCustomResponseHeaders extends Component
+{
+    public function render()
+    {
+        return view('null-view')->response(fn(Response $response) => $response->header('x-livewire', 'awesome'));
     }
 }
 
