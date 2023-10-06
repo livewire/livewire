@@ -19,7 +19,6 @@ export function generateEntangleFunction(component, cleanup) {
                 return
             }
 
-            queueMicrotask(() => {
                 let release = Alpine.entangle({
                     // Outer scope...
                     get() {
@@ -39,7 +38,6 @@ export function generateEntangleFunction(component, cleanup) {
                 })
 
                 cleanup(() => release())
-            })
 
             return livewireComponent.get(name)
         }, obj => {
