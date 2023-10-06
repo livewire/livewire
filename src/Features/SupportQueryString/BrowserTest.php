@@ -10,6 +10,7 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
+    /** @test */
     public function test_query_string()
     {
         Livewire::visit(new class extends Component {
@@ -44,6 +45,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    /** @test */
     public function test_query_string_disabled()
     {
         Livewire::visit(new class extends Component {
@@ -74,7 +76,6 @@ class BrowserTest extends BrowserTestCase
                 );
             }
         })
-
             ->assertQueryStringMissing('count')
             ->assertSeeIn('@count', '0')
             ->waitForLivewire()->click('@increment')

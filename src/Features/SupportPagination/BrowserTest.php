@@ -1049,6 +1049,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    /** @test */
     public function test_pagination_query_string_disabled()
     {
         Livewire::visit(new class extends Component {
