@@ -467,6 +467,37 @@ public function render()
 }
 ```
 
+Alternatively, Livewire supports using traditional Blade layout files with `@extends`.
+
+Given the following layout file:
+
+```blade
+<body>
+    @yield('content')
+</body>
+```
+
+You can configure Livewire to reference it using `->extends()` instead of `->layout()`:
+
+```php
+public function render()
+{
+    return view('livewire.show-posts')
+        ->extends('layouts.app'); // [tl! highlight]
+}
+```
+
+If you need to configure the `@section` for the component to use, you can configure that as well with the `->section()` method:
+
+```php
+public function render()
+{
+    return view('livewire.show-posts')
+        ->extends('layouts.app')
+        ->section('body'); // [tl! highlight]
+}
+```
+
 ### Setting the page title
 
 Assigning unique page titles to each page in your application is helpful for both users and search engines.
