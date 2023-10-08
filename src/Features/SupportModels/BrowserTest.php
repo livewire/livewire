@@ -18,8 +18,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function parent_component_with_eloquent_collection_property_does_not_error_when_child_deletes_a_model_contained_within_it()
     {
         Livewire::visit([
-            new class extends Component
-            {
+            new class extends Component {
                 public $posts;
 
                 public function mount()
@@ -28,8 +27,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
 
                 #[BaseOn('postDeleted')]
-                public function setPosts()
-                {
+                public function setPosts() {
                     $this->posts = Post::all();
                 }
 
@@ -46,8 +44,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     HTML;
                 }
             },
-            'child' => new class extends Component
-            {
+            'child' => new class extends Component {
                 public $post;
 
                 public function delete($id)
@@ -72,7 +69,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertPresent('@post-1')
             ->assertSeeIn('@post-1', 'Post #1')
             ->waitForLivewire()->click('@delete-1')
-            ->assertNotPresent('@parent-post-1');
+            ->assertNotPresent('@parent-post-1')
+            ;
     }
 
     /** @test */
@@ -97,7 +95,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 {
                     return <<<'HTML'
                     <div>
-                        <div dusk="refresh" wire:click="refresh">Foo</div>
+                        <button dusk="refresh" wire:click="refresh">Foo</button>
                     </div>
                     HTML;
                 }
@@ -116,8 +114,7 @@ class Post extends Model
 
     protected $guarded = [];
 
-    public function getRows()
-    {
+    public function getRows() {
         return [
             ['id' => 1, 'title' => 'Post #1'],
             ['id' => 2, 'title' => 'Post #2'],
