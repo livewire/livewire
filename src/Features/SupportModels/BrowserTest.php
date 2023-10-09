@@ -81,9 +81,14 @@ class BrowserTest extends \Tests\BrowserTestCase
             {
                 public $posts;
 
+                public Collection $typedPostsNotInitialized;
+
+                public Collection $typedPostsInitialized;
+
                 public function mount()
                 {
                     $this->posts = new Collection();
+                    $this->typedPostsInitialized = new Collection();
                 }
 
                 function refresh()
@@ -95,7 +100,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 {
                     return <<<'HTML'
                     <div>
-                        <button dusk="refresh" wire:click="refresh">Foo</button>
+                        <button dusk="refresh" wire:click="refresh">Placeholder</button>
                     </div>
                     HTML;
                 }
@@ -104,7 +109,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
             ->waitForLivewireToLoad()
             ->waitForLivewire()->click('@refresh')
-            ->assertSeeIn('@refresh', 'Foo');
+            ->assertSeeIn('@refresh', 'Placeholder');
     }
 }
 
