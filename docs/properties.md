@@ -195,6 +195,11 @@ Supported PHP types:
 | Carbon | `Carbon\Carbon` |
 | Stringable | `Illuminate\Support\Stringable` |
 
+> [!warning] Eloquent Collections and Models
+> When storing Eloquent Collections and Models in Livewire properties, additional query constraints like select(...) will not be re-applied on subsequent requests.
+>
+> See [Eloquent constraints aren't preserved between requests](#eloquent-constraints-arent-preserved-between-requests) for more details
+
 Here's a quick example of setting properties as these various types:
 
 ```php
