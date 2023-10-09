@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportModels;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Component;
@@ -69,6 +70,59 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@post-1', 'Post #1')
             ->waitForLivewire()->click('@delete-1')
             ->assertNotPresent('@parent-post-1')
+            ;
+    }
+
+    /** @test */
+    public function empty_eloquent_collection_property_is_dehydrated_without_errors()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public $placeholder = 'Original text';
+
+                public $posts;
+
+                public EloquentCollection $typedPostsNotInitialized;
+
+                public EloquentCollection $typedPostsInitialized;
+
+                public function mount()
+                {
+                    $this->posts = new EloquentCollection();
+                    $this->typedPostsInitialized = new EloquentCollection();
+                }
+
+                function changePlaceholder()
+                {
+                    $this->placeholder = 'New text';
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button dusk="changePlaceholder" wire:click="changePlaceholder">Change placeholder</button>
+                        <span dusk="placeholder">{{ $placeholder }}</span>
+                        <span dusk="postsIsEloquentCollection">{{ $posts instanceof \Illuminate\Database\Eloquent\Collection ? 'true' : 'false'  }}</span>
+                        <span dusk="typedPostsNotInitializedIsEloquentCollection">{{ $typedPostsNotInitialized instanceof \Illuminate\Database\Eloquent\Collection ? 'true' : 'false' }}</span>
+                        <span dusk="typedPostsInitializedIsEloquentCollection">{{ $typedPostsInitialized instanceof \Illuminate\Database\Eloquent\Collection ? 'true' : 'false' }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+
+        ])
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@placeholder', 'Original text')
+            ->assertSeeIn('@postsIsEloquentCollection', 'true')
+            ->assertSeeIn('@typedPostsNotInitializedIsEloquentCollection', 'false')
+            ->assertSeeIn('@typedPostsInitializedIsEloquentCollection', 'true')
+            ->waitForLivewire()->click('@changePlaceholder')
+            ->assertSeeIn('@placeholder', 'New text')
+            ->assertSeeIn('@postsIsEloquentCollection', 'true')
+            ->assertSeeIn('@typedPostsNotInitializedIsEloquentCollection', 'false')
+            ->assertSeeIn('@typedPostsInitializedIsEloquentCollection', 'true')
             ;
     }
 }
