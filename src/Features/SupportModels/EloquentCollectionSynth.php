@@ -29,7 +29,7 @@ class EloquentCollectionSynth extends Synth {
          *
          * If no alias is found, this just returns the class name
          */
-        $modelAlias = (new $modelClass)->getMorphClass();
+        $modelAlias = $modelClass ? (new $modelClass)->getMorphClass() : null;
 
         $meta = [];
 
