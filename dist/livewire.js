@@ -7402,18 +7402,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   async function interceptStreamAndReturnFinalResponse(response, callback) {
     let reader = response.body.getReader();
-    let finalResponse = "";
+    let remainingResponse = "";
     while (true) {
       let { done, value: chunk } = await reader.read();
       let decoder = new TextDecoder();
       let output = decoder.decode(chunk);
-      let [streams, remaining] = extractStreamObjects(output);
+      let [streams, remaining] = extractStreamObjects(remainingResponse + output);
       streams.forEach((stream) => {
         callback(stream);
       });
-      finalResponse = finalResponse + remaining;
+      remainingResponse = remaining;
       if (done)
-        return finalResponse;
+        return remainingResponse;
     }
   }
   function extractStreamObjects(raw2) {
