@@ -195,6 +195,44 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function back_button_works_with_x_for()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render(){ return <<<'HTML'
+                    <div>
+                        On second page
+                    </div>
+                HTML; }
+            },
+        ]);
+
+        $browser = Livewire::visit(new class extends Component {
+            public function render(){
+                return <<<'HTML'
+                    <div x-data="{ items: ['item 1', 'item 2', 'item 3'] }">
+                        <div dusk="target">
+                            <template x-for="item in items" :key="item">
+                                <div class='item' x-text="item"></div>
+                            </template>
+                        </div>
+
+                        <a href="/second" wire:navigate dusk="link">Go to second page</a>
+                    </div>
+                HTML;
+            }
+        })->assertSeeIn('@target', 'item 1')
+            ->tap(fn(Browser $browser) => $this->assertCount(3, $browser->elements('.item')))
+            ->click('@link')
+            ->waitForText('On second page')
+            ->back()
+            ->assertDontSee('On second page')
+            ->assertSeeIn('@target', 'item 1')
+            ->tap(fn(Browser $browser) => $this->assertCount(3, $browser->elements('.item')))
+        ;
+    }
+
+    /** @test */
     public function can_configure_progress_bar()
     {
         $this->browse(function ($browser) {
