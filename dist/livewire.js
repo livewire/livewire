@@ -7518,12 +7518,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function extractStreamObjects(raw2) {
-    let regex = /({"stream":true.*?"endStream":true})/g;
+    let regex = /({"stream":true[\s\S]*?"endStream":true})/g;
     let matches2 = raw2.match(regex);
     let parsed = [];
     if (matches2) {
       for (let i = 0; i < matches2.length; i++) {
-        parsed.push(JSON.parse(matches2[i]).body);
+        parsed.push(JSON.parse(matches2[i].replace(/[\n|\r]/g, "\\n")).body);
       }
     }
     let remaining = raw2.replace(regex, "");

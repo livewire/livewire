@@ -67,7 +67,7 @@ async function interceptStreamAndReturnFinalResponse(response, callback) {
 }
 
 function extractStreamObjects(raw) {
-    let regex = /({"stream":true.*?"endStream":true})/g
+    let regex = /({"stream":true[\s\S]*?"endStream":true})/g
 
     let matches = raw.match(regex)
 
@@ -75,7 +75,7 @@ function extractStreamObjects(raw) {
 
     if (matches) {
         for (let i = 0; i < matches.length; i++) {
-            parsed.push(JSON.parse(matches[i]).body)
+            parsed.push(JSON.parse(matches[i].replace(/[\n|\r]/g, '\\n')).body)
         }
     }
 
