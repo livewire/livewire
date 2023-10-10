@@ -70,7 +70,6 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         })
-        ->tinker()
         ->click('@button')
         ->assertDontSee('Confirmed!')
         ->click('@button')
