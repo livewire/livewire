@@ -63,15 +63,13 @@ class BrowserTest extends BrowserTestCase
             public function render() { return <<<'HTML'
             <div>
                 <button type="button" dusk="button" wire:click="someAction"
-                    wire:confirm.prompt="Are you sure you want to delete this post?\n\nType DELETE to delete|DELETE"
+                    wire:confirm.prompt="Type foobar|foobar"
                 >Confirm</button>
 
                 @if ($confirmed) <span dusk="success">Confirmed!</span> @endif
             </div>
             HTML; }
         })
-        ->click('@button')
-        ->assertDontSee('Confirmed!')
         ->click('@button')
         ->assertDialogOpened('Type foobar')
         ->dismissDialog()
