@@ -47,6 +47,26 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
+## Confirming an action
+
+When allowing users to perform dangerous actions—such as deleting a post from the database—you may want to show them a confirmation alert to verify that they wish to perform that action.
+
+Livewire makes this easy by providing a simple directive called `wire:confirm`:
+
+```blade
+<button
+    type="button"
+    wire:click="delete"
+    wire:confirm="Are you sure you want to delete this post?"
+>
+    Delete post
+</button>
+```
+
+When `wire:confirm` is added to an element containing a Livewire action, when a user tries to trigger that action, they will be presented with a confirmation dialog containing the provided message. They can either press "OK" to confirm the action, or press "Cancel" or hit the escape key.
+
+For more information, visit the [`wire:confirm` documentation page](/docs/wire-confirm).
+
 ## Event listeners
 
 Livewire supports a variety of event listeners, allowing you to respond to various types of user interactions:
@@ -163,7 +183,6 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 >    x-on:trix-change="$wire.content = $event.target.value"
 >></trix-editor>
 > ```
-
 
 ### Listening for dispatched custom events
 
