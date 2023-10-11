@@ -43,7 +43,6 @@ class Component extends BaseComponent
 <div>
 
 	<input type='text' wire:model='form.foo' />
-	<button wire:click='submit()' />
 </div>
 HTML;
 	}
