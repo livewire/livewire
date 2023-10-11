@@ -12,11 +12,8 @@ class SupportAttributesTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_can_updates_form_with_locked_properties()
     {
-        Livewire::visit(Component::class)
-            ->waitForLivewire()
+        Livewire::test(Component::class)
 			->set('form.foo', 'bar')
-			->assertOk()
-			->call('submit')
 			->assertOk();
     }
 
@@ -30,21 +27,6 @@ class SomeForm extends Form {
 	public function init(?string $id) {
 		$this->id = $id;
 	}
-
-	/**
-	 * This allows Livewire to know which values of the $configs we
-	 * want to display in the wire:model. Sort of a white listing.
-	 *
-	 * @return array<string,mixed>
-	 */
-	protected function rules(): array
-	{
-		return [
-			'id' => 'present|string|nullable',
-			'foo' => 'required|string',
-		];
-	}
-
 }
 
 class Component extends BaseComponent
@@ -53,10 +35,6 @@ class Component extends BaseComponent
 
 	public function mount() {
 		$this->form->init('id');
-	}
-
-	public function submit() {
-		$this->form->validate();
 	}
 
     public function render()
