@@ -146,6 +146,31 @@ new class extends Component {
 </div>
 ```
 
+### View Instance
+
+Sometimes, you may wish to interact with the view instance directly, for example, to set the view's title using a translated string. To achieve this, you may use the `rendering` method:
+
+```blade
+<?php
+
+use Illuminate\View\View;
+use Livewire\Volt\Component;
+
+class extends Component
+{
+    public function rendering(View $view): View
+    {
+        $view->title('Create Post');
+
+        // ...
+
+        return $view;
+    }
+
+    // ...
+```
+
+
 ## Rendering and mounting components
 
 Just like a typical Livewire component, Volt components may be rendered using Livewire's tag syntax or the `@livewire` Blade directive:
