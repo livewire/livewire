@@ -27,7 +27,7 @@ Livewire provides a helpful `.prompt` modifier, that when applied to `wire:confi
 <button
     type="button"
     wire:click="delete"
-    wire:confirm.prompt="Are you sure you sure?\n\nType DELETE to confirm|DELETE"
+    wire:confirm.prompt="Are you sure?\n\nType DELETE to confirm|DELETE"
 >
     Delete account <!-- [tl! highlight:-2,1] -->
 </button>
