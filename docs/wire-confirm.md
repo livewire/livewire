@@ -11,7 +11,7 @@ Here's an example of adding a confirmation dialog to a "Delete post" button:
     wire:click="delete"
     wire:confirm="Are you sure you want to delete this post?"
 >
-    Delete post
+    Delete post <!-- [tl! highlight:-2,1] -->
 </button>
 ```
 
@@ -29,7 +29,7 @@ Livewire provides a helpful `.prompt` modifier, that when applied to `wire:confi
     wire:click="delete"
     wire:confirm.prompt="Are you sure you sure?\n\nType DELETE to confirm|DELETE"
 >
-    Delete account
+    Delete account <!-- [tl! highlight:-2,1] -->
 </button>
 ```
 

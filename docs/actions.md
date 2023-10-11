@@ -59,7 +59,7 @@ Livewire makes this easy by providing a simple directive called `wire:confirm`:
     wire:click="delete"
     wire:confirm="Are you sure you want to delete this post?"
 >
-    Delete post
+    Delete post <!-- [tl! highlight:-2,1] -->
 </button>
 ```
 
