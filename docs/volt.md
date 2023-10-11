@@ -170,7 +170,6 @@ class extends Component
     // ...
 ```
 
-
 ## Rendering and mounting components
 
 Just like a typical Livewire component, Volt components may be rendered using Livewire's tag syntax or the `@livewire` Blade directive:
