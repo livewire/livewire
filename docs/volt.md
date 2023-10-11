@@ -119,7 +119,7 @@ class extends Component
     // ...
 ```
 
-#### Adding additional view data
+#### Providing additional view data
 
 When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method. This data will be passed to the view in addition to the component's public properties:
 
