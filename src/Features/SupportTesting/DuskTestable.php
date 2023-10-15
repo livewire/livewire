@@ -120,7 +120,7 @@ class DuskTestable
 
             $components = null;
 
-            try { (new $testClass)->$method(); } catch (\Exception $e) {
+            try { (new $testClass($method))->$method(); } catch (\Exception $e) {
                 if (! $e->isDuskShortcircuit) throw $e;
                 $components = $e->components;
             }
