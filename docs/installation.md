@@ -8,6 +8,17 @@ composer require livewire/livewire
 
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
+## Note about 404 `/livewire.js`
+
+Once this file is served by Livewire. Nginx can’t find it, so it responds with a 404 error. Add this config, which will prevent Nginx from interfering with this specific location.
+
+```
+location = /livewire/livewire.js {
+    expires off;
+    try_files $uri $uri/ /index.php?$query_string;
+}
+```
+
 ## Publishing the configuration file
 
 Livewire is "zero-config", meaning you can use it by following conventions, without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
