@@ -8,9 +8,9 @@ composer require livewire/livewire
 
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
-## Note about 404 `/livewire.js`
+## Note about NGINX 404 `/livewire.js`
 
-Once this file is served by Livewire, Nginx can’t find it, so it responds with a 404 error. Add this config, which will prevent Nginx from interfering with this specific location.
+Once this file is served by Livewire, Nginx can’t find it and responds with a 404 error. Add the following config, which will prevent Nginx from interfering with this specific location.
 
 ```
 location = /livewire/livewire.js {
