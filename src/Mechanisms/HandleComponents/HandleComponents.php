@@ -3,6 +3,8 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use function Livewire\{ invade, store, trigger, wrap };
+
+use Illuminate\Support\Facades\Config;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
@@ -94,6 +96,10 @@ class HandleComponents
     {
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
+        
+        Config::set('livewire.class_namespace', $memo['namespace']);
+        Config::set('livewire.view_path', base_path($memo['view_path']));
+        Config::set('livewire.layout', $memo['layout']);
 
         if (config('app.debug')) $start = microtime(true);
         [ $component, $context ] = $this->fromSnapshot($snapshot);
@@ -156,6 +162,9 @@ class HandleComponents
             'memo' => [
                 'id' => $component->getId(),
                 'name' => $component->getName(),
+                'namespace' => $component->getNamespace(),
+                'layout' => $component->getLayout(),
+                'view_path' => $component->getViewPath(),
                 ...$context->memo,
             ],
         ];

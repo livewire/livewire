@@ -18,7 +18,9 @@ use BadMethodCallException;
 
 abstract class Component
 {
-    use Macroable { __call as macroCall; }
+    use Macroable {
+        __call as macroCall;
+    }
 
     use AuthorizesRequests;
     use InteractsWithProperties;
@@ -33,6 +35,9 @@ abstract class Component
 
     protected $__id;
     protected $__name;
+    protected $__namespace;
+    protected $__view_path;
+    protected $__layout;
 
     function id()
     {
@@ -49,9 +54,39 @@ abstract class Component
         return $this->__id;
     }
 
+    function setNamespace($name)
+    {
+        $this->__namespace = $name;
+    }
+
+    function setViewPath($name)
+    {
+        $this->__view_path = str($name)->replace(base_path('/'), '');
+    }
+
+    function setLayout($name)
+    {
+        $this->__layout = $name;
+    }
+
     function setName($name)
     {
         $this->__name = $name;
+    }
+
+    function getNamespace()
+    {
+        return $this->__namespace;
+    }
+
+    function getViewPath()
+    {
+        return $this->__view_path;
+    }
+
+    function getLayout()
+    {
+        return $this->__layout;
     }
 
     function getName()
@@ -82,7 +117,8 @@ abstract class Component
             if (isset($value)) {
                 return true;
             }
-        } catch(PropertyNotFoundException $ex) {}
+        } catch (PropertyNotFoundException $ex) {
+        }
 
         return false;
     }
@@ -132,7 +168,9 @@ abstract class Component
         }
 
         throw new BadMethodCallException(sprintf(
-            'Method %s::%s does not exist.', static::class, $method
+            'Method %s::%s does not exist.',
+            static::class,
+            $method
         ));
     }
 }
