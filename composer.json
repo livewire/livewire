@@ -24,7 +24,8 @@
     "orchestra/testbench": "^8.0",
     "orchestra/testbench-dusk": "^8.0",
     "calebporzio/sushi": "^2.1",
-    "laravel/prompts": "^0.1.6"
+    "laravel/prompts": "^0.1.6",
+    "laravel/pint": "^1.13"
   },
   "autoload": {
     "files": [
