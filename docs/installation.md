@@ -8,16 +8,8 @@ composer require livewire/livewire
 
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
-## Note about Nginx 404 `/livewire.js`
-
-Once this file is served by Livewire, Nginx can’t find it and responds with a 404 error. Add the following config, which will prevent Nginx from interfering with this specific location.
-
-```
-location = /livewire/livewire.js {
-    expires off;
-    try_files $uri $uri/ /index.php?$query_string;
-}
-```
+> [!warning] `/livewire/livewire.js` returning a 404 status code
+> By default, Livewire exposes a route in your application to serve its JavaScript assets from: `/livewire/livewire.js`. This is fine for most applications, however, if you are using Nginx with a custom configuration, you may receive a 404 from this endpoint. To fix this issue, you can either [compile Livewire's JavaScript assets yourself](#manually-bundling-livewire-and-alpine), or [configure Nginx to allow for this](https://benjamincrozat.com/livewire-js-404-not-found).
 
 ## Publishing the configuration file
 
