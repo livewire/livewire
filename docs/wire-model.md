@@ -52,7 +52,7 @@ Because both inputs use `wire:model`, their values will be synchronized with the
 
 By default, Livewire will only send a network request when an action is performed (like `wire:click` or `wire:submit`), NOT when a `wire:model` input is updated.
 
-This drastically improves the performance of Livewire by reducing network requests and providing a smoother experience for your users.
+This drastically improves the performance of Livewire by reducing network requests and provides a smoother experience for your users.
 
 However, there are occasions where you may want to update the server more frequently for things like real-time validation.
 
@@ -106,7 +106,7 @@ Modifier | Description
 `.blur` | Only send updates on the `blur` event
 `.change` | Only send updates on the the `change` event
 `.lazy` | An alias for `.change`
-`.debounce.[?]ms` | Debounce the sending of updates by specified millisecond delay
+`.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay
 `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
 `.number` | Cast the text value of an input to `int` on the server
 `.fill` | Use the initial value provided by a "value" HTML attribute on page-load
