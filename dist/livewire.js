@@ -6162,7 +6162,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       Object.entries(data3).forEach(([iKey, iValue]) => {
         let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
         if (!isObjecty2(iValue)) {
-          entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+");
+          entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+").replaceAll("%2C", ",");
         } else {
           entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
         }
