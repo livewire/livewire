@@ -2,8 +2,8 @@
 
 namespace Livewire;
 
-use WeakMap;
 use Livewire\Drawer\Utils;
+use WeakMap;
 
 class ComponentHookRegistry
 {
@@ -11,27 +11,35 @@ class ComponentHookRegistry
 
     protected static $componentHooks = [];
 
-    static function register($hook)
+    public static function register($hook)
     {
-        if (method_exists($hook, 'provide')) $hook::provide();
+        if (method_exists($hook, 'provide')) {
+            $hook::provide();
+        }
 
-        if (in_array($hook, static::$componentHooks)) return;
+        if (in_array($hook, static::$componentHooks)) {
+            return;
+        }
 
         static::$componentHooks[] = $hook;
     }
 
-    static function getHook($component, $hook)
+    public static function getHook($component, $hook)
     {
-        if (! isset(static::$components[$component])) return;
+        if (! isset(static::$components[$component])) {
+            return;
+        }
 
         $componentHooks = static::$components[$component];
 
         foreach ($componentHooks as $componentHook) {
-            if ($componentHook instanceof $hook) return $componentHook;
+            if ($componentHook instanceof $hook) {
+                return $componentHook;
+            }
         }
     }
 
-    static function boot()
+    public static function boot()
     {
         static::$components = new WeakMap;
 
@@ -82,9 +90,11 @@ class ComponentHookRegistry
         });
     }
 
-    static public function initializeHook($hook, $target)
+    public static function initializeHook($hook, $target)
     {
-        if (! isset(static::$components[$target])) static::$components[$target] = [];
+        if (! isset(static::$components[$target])) {
+            static::$components[$target] = [];
+        }
 
         $hook = new $hook;
 
@@ -100,7 +110,8 @@ class ComponentHookRegistry
         return $hook;
     }
 
-    static function proxyCallToHooks($target, $method) {
+    public static function proxyCallToHooks($target, $method)
+    {
         return function (...$params) use ($target, $method) {
             $callbacks = [];
 

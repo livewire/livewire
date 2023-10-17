@@ -2,19 +2,21 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Livewire\Livewire;
 use Livewire\ComponentHook;
+use Livewire\Livewire;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
-        if (! config('livewire.inject_morph_markers', true)) return;
+        if (! config('livewire.inject_morph_markers', true)) {
+            return;
+        }
 
         static::registerPrecompilers();
     }
 
-    static function registerPrecompilers()
+    public static function registerPrecompilers()
     {
         $generatePattern = function ($directives) {
             $directivesPattern = '('

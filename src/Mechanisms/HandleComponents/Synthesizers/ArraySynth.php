@@ -2,14 +2,17 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-class ArraySynth extends Synth {
+class ArraySynth extends Synth
+{
     public static $key = 'arr';
 
-    static function match($target) {
+    public static function match($target)
+    {
         return is_array($target);
     }
 
-    function dehydrate($target, $dehydrateChild) {
+    public function dehydrate($target, $dehydrateChild)
+    {
         foreach ($target as $key => $child) {
             $target[$key] = $dehydrateChild($key, $child);
         }
@@ -17,7 +20,8 @@ class ArraySynth extends Synth {
         return [$target, []];
     }
 
-    function hydrate($value, $meta, $hydrateChild) {
+    public function hydrate($value, $meta, $hydrateChild)
+    {
         // If we are "hydrating" a value about to be used in an update,
         // Let's make sure it's actually an array before try to set it.
         // This is most common in the case of "__rm__" values, but also
@@ -33,11 +37,13 @@ class ArraySynth extends Synth {
         return $value;
     }
 
-    function set(&$target, $key, $value) {
+    public function set(&$target, $key, $value)
+    {
         $target[$key] = $value;
     }
 
-    function unset(&$target, $key) {
+    public function unset(&$target, $key)
+    {
         unset($target[$key]);
     }
 }

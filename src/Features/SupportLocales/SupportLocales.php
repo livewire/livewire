@@ -6,12 +6,14 @@ use Livewire\ComponentHook;
 
 class SupportLocales extends ComponentHook
 {
-    function hydrate($memo)
+    public function hydrate($memo)
     {
-        if ($locale = $memo['locale']) app()->setLocale($locale);
+        if ($locale = $memo['locale']) {
+            app()->setLocale($locale);
+        }
     }
 
-    function dehydrate($context)
+    public function dehydrate($context)
     {
         $context->addMemo('locale', app()->getLocale());
     }

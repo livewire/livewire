@@ -68,7 +68,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->call('save')
             ->call('refreshModels')
             ->assertSet('models.3.title', 'boo');
-        ;
+
     }
 
     /** @test */
@@ -163,6 +163,7 @@ class ModelWithCustomCollectionForBinding extends Model
 class ComponentWithModelCollectionProperty extends Component
 {
     public $models;
+
     public $modelsType;
 
     protected $rules = [

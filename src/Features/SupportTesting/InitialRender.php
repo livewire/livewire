@@ -6,18 +6,20 @@ use Livewire\Drawer\Utils;
 
 class InitialRender extends Render
 {
-    function __construct(
+    public function __construct(
         protected RequestBroker $requestBroker,
-    ) {}
+    ) {
+    }
 
-    static function make($requestBroker, $name, $params = [], $fromQueryString = [], $cookies = [])
+    public static function make($requestBroker, $name, $params = [], $fromQueryString = [], $cookies = [])
     {
         $instance = new static($requestBroker);
 
         return $instance->makeInitialRequest($name, $params, $fromQueryString, $cookies);
     }
 
-    function makeInitialRequest($name, $params, $fromQueryString = [], $cookies = []) {
+    public function makeInitialRequest($name, $params, $fromQueryString = [], $cookies = [])
+    {
         $uri = '/livewire-unit-test-endpoint/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($uri, function () use ($name, $params) {

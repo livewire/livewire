@@ -3,29 +3,28 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Support\Traits\Macroable;
-use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
-use Livewire\Features\SupportValidation\TestsValidation;
-use Livewire\Features\SupportRedirects\TestsRedirects;
 use Livewire\Features\SupportEvents\TestsEvents;
+use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
+use Livewire\Features\SupportRedirects\TestsRedirects;
+use Livewire\Features\SupportValidation\TestsValidation;
 
 /** @mixin \Illuminate\Testing\TestResponse */
-
 class Testable
 {
+    use Macroable { Macroable::__call as macroCall; }
     use MakesAssertions,
         TestsEvents,
+        TestsFileDownloads,
         TestsRedirects,
-        TestsValidation,
-        TestsFileDownloads;
-
-    use Macroable { Macroable::__call as macroCall; }
+        TestsValidation;
 
     protected function __construct(
         protected RequestBroker $requestBroker,
         protected ComponentState $lastState,
-    ) {}
+    ) {
+    }
 
-    static function create($name, $params = [], $fromQueryString = [], $cookies = [])
+    public static function create($name, $params = [], $fromQueryString = [], $cookies = [])
     {
         $name = static::normalizeAndRegisterComponentName($name);
 
@@ -42,7 +41,7 @@ class Testable
         return new static($requestBroker, $initialState);
     }
 
-    static function normalizeAndRegisterComponentName($name)
+    public static function normalizeAndRegisterComponentName($name)
     {
         if (is_array($otherComponents = $name)) {
             $name = array_shift($otherComponents);
@@ -67,7 +66,7 @@ class Testable
         return $name;
     }
 
-    static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
+    public static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
     {
         if (isset($user->wasRecentlyCreated) && $user->wasRecentlyCreated) {
             $user->wasRecentlyCreated = false;
@@ -78,26 +77,27 @@ class Testable
         auth()->shouldUse($driver);
     }
 
-    function id() {
+    public function id()
+    {
         return $this->lastState->getComponent()->getId();
     }
 
-    function get($key)
+    public function get($key)
     {
         return data_get($this->lastState->getComponent(), $key);
     }
 
-    function html($stripInitialData = false)
+    public function html($stripInitialData = false)
     {
         return $this->lastState->getHtml($stripInitialData);
     }
 
-    function updateProperty($name, $value = null)
+    public function updateProperty($name, $value = null)
     {
         return $this->set($name, $value);
     }
 
-    function fill($values)
+    public function fill($values)
     {
         foreach ($values as $name => $value) {
             $this->set($name, $value);
@@ -106,12 +106,12 @@ class Testable
         return $this;
     }
 
-    function toggle($name)
+    public function toggle($name)
     {
         return $this->set($name, ! $this->get($name));
     }
 
-    function set($name, $value = null)
+    public function set($name, $value = null)
     {
         if (is_array($name)) {
             foreach ($name as $key => $value) {
@@ -124,7 +124,7 @@ class Testable
         return $this;
     }
 
-    function setProperty($name, $value)
+    public function setProperty($name, $value)
     {
         if ($value instanceof \Illuminate\Http\UploadedFile) {
             return $this->upload($name, [$value]);
@@ -135,12 +135,12 @@ class Testable
         return $this->update(updates: [$name => $value]);
     }
 
-    function runAction($method, ...$params)
+    public function runAction($method, ...$params)
     {
         return $this->call($method, ...$params);
     }
 
-    function call($method, ...$params)
+    public function call($method, ...$params)
     {
         if ($method === '$refresh') {
             return $this->commit();
@@ -155,16 +155,16 @@ class Testable
                 'method' => $method,
                 'params' => $params,
                 'path' => '',
-            ]
+            ],
         ]);
     }
 
-    function commit()
+    public function commit()
     {
         return $this->update();
     }
 
-    function update($calls = [], $updates = [])
+    public function update($calls = [], $updates = [])
     {
         $newState = SubsequentRender::make(
             $this->requestBroker,
@@ -179,7 +179,7 @@ class Testable
     }
 
     /** @todo Move me outta here and into the file upload folder somehow... */
-    function upload($name, $files, $isMultiple = false)
+    public function upload($name, $files, $isMultiple = false)
     {
         // This methhod simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
@@ -225,50 +225,56 @@ class Testable
         return $this;
     }
 
-    function viewData($key)
+    public function viewData($key)
     {
         return $this->lastState->getView()->getData()[$key];
     }
 
-    function getData()
+    public function getData()
     {
         return $this->lastState->getSnapshotData();
     }
 
-    function instance()
+    public function instance()
     {
         return $this->lastState->getComponent();
     }
 
-    function dump()
+    public function dump()
     {
         dump($this->lastState->getHtml());
 
         return $this;
     }
 
-    function dd()
+    public function dd()
     {
         dd($this->lastState->getHtml());
     }
 
-    function tap($callback)
+    public function tap($callback)
     {
         $callback($this);
 
         return $this;
     }
 
-    function __get($property)
+    public function __get($property)
     {
-        if ($property === 'effects') return $this->lastState->getEffects();
-        if ($property === 'snapshot') return $this->lastState->getSnapshot();
-        if ($property === 'target') return $this->lastState->getComponent();
+        if ($property === 'effects') {
+            return $this->lastState->getEffects();
+        }
+        if ($property === 'snapshot') {
+            return $this->lastState->getSnapshot();
+        }
+        if ($property === 'target') {
+            return $this->lastState->getComponent();
+        }
 
         return $this->instance()->$property;
     }
 
-    function __call($method, $params)
+    public function __call($method, $params)
     {
         if (static::hasMacro($method)) {
             return $this->macroCall($method, $params);

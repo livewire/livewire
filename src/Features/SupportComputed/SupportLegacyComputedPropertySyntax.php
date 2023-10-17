@@ -11,7 +11,7 @@ use function Livewire\wrap;
 
 class SupportLegacyComputedPropertySyntax extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
         on('__get', function ($target, $property, $returnValue) {
             if (static::hasComputedProperty($target, $property)) {
@@ -44,7 +44,7 @@ class SupportLegacyComputedPropertySyntax extends ComponentHook
 
         store($target)->push(
             'computedProperties',
-            $value = store($target)->find('computedProperties', $property, fn() => wrap($target)->$method()),
+            $value = store($target)->find('computedProperties', $property, fn () => wrap($target)->$method()),
             $property,
         );
 

@@ -35,8 +35,8 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentWithWireablePublicProperty::class, ['wireable' => $wireable])
             ->assertSee('foo')
-            ->call("\$set", 'wireable', ['message' => 'bar', 'embeddedWireable' => ['message' => '42']])
-            ->call("\$set", 'wireable.message', 'bar')
+            ->call('$set', 'wireable', ['message' => 'bar', 'embeddedWireable' => ['message' => '42']])
+            ->call('$set', 'wireable.message', 'bar')
             ->assertSee('bar');
     }
 
@@ -224,7 +224,7 @@ class ComponentWithWireablePublicProperty extends Component
 
     public $rules = [
         'wireable.message' => 'string|required',
-        'wireable.embeddedWireable.message' => 'string|required'
+        'wireable.embeddedWireable.message' => 'string|required',
     ];
 
     public function mount($wireable)
@@ -283,9 +283,9 @@ class CustomWireableCollection extends Collection implements Wireable
     public static function fromLivewire($value)
     {
         return static::wrap($value)
-        ->mapWithKeys(function ($dto, $key) {
-            return [$key => CustomWireableDTO::fromLivewire($dto)];
-        });
+            ->mapWithKeys(function ($dto, $key) {
+                return [$key => CustomWireableDTO::fromLivewire($dto)];
+            });
     }
 }
 
@@ -301,7 +301,7 @@ class CustomWireableDTO implements Wireable
     public function toLivewire()
     {
         return [
-            'amount' => $this->amount
+            'amount' => $this->amount,
         ];
     }
 

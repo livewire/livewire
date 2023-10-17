@@ -8,9 +8,12 @@ use function Livewire\on;
 
 class SupportMultipleRootElementDetection extends ComponentHook
 {
-    static function provide() {
+    public static function provide()
+    {
         on('mount', function ($component) {
-            if (! config('app.debug')) return;
+            if (! config('app.debug')) {
+                return;
+            }
 
             return function ($html) use ($component) {
                 (new static)->warnAgainstMoreThanOneRootElement($component, $html);
@@ -19,7 +22,7 @@ class SupportMultipleRootElementDetection extends ComponentHook
         });
     }
 
-    function warnAgainstMoreThanOneRootElement($component, $html)
+    public function warnAgainstMoreThanOneRootElement($component, $html)
     {
         $count = $this->getRootElementCount($html);
 
@@ -28,7 +31,7 @@ class SupportMultipleRootElementDetection extends ComponentHook
         }
     }
 
-    function getRootElementCount($html)
+    public function getRootElementCount($html)
     {
         $dom = new \DOMDocument();
 
@@ -40,7 +43,9 @@ class SupportMultipleRootElementDetection extends ComponentHook
 
         foreach ($body->childNodes as $child) {
             if ($child->nodeType == XML_ELEMENT_NODE) {
-                if ($child->tagName === 'script') continue;
+                if ($child->tagName === 'script') {
+                    continue;
+                }
 
                 $count++;
             }

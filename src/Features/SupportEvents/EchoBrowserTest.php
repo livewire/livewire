@@ -4,10 +4,10 @@ namespace Livewire\Features\SupportEvents;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Attributes\On;
-use Livewire\Drawer\Utils;
-use Tests\BrowserTestCase;
 use Livewire\Component;
+use Livewire\Drawer\Utils;
 use Livewire\Livewire;
+use Tests\BrowserTestCase;
 
 class EchoBrowserTest extends BrowserTestCase
 {
@@ -18,15 +18,17 @@ class EchoBrowserTest extends BrowserTestCase
             return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
         });
 
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $count = 0;
 
             #[On('echo:orders,OrderShipped')]
-            function foo() {
+            public function foo()
+            {
                 $this->count++;
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -37,11 +39,11 @@ class EchoBrowserTest extends BrowserTestCase
                 HTML;
             }
         })
-        ->assertSeeIn('@count', '0')
-        ->waitForLivewire(function ($b) {
-            $b->script("window.Echo.fakeTrigger({ channel: 'orders', event: 'OrderShipped' })");
-        })
-        ->assertSeeIn('@count', '1');
+            ->assertSeeIn('@count', '0')
+            ->waitForLivewire(function ($b) {
+                $b->script("window.Echo.fakeTrigger({ channel: 'orders', event: 'OrderShipped' })");
+            })
+            ->assertSeeIn('@count', '1');
     }
 
     /** @test */
@@ -51,15 +53,17 @@ class EchoBrowserTest extends BrowserTestCase
             return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
         });
 
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $orderId = 0;
 
             #[On('echo:orders,OrderShipped')]
-            function foo($event) {
+            public function foo($event)
+            {
                 $this->orderId = $event['order_id'];
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -70,10 +74,10 @@ class EchoBrowserTest extends BrowserTestCase
                 HTML;
             }
         })
-        ->assertSeeIn('@orderId', '0')
-        ->waitForLivewire(function ($b) {
-            $b->script("window.Echo.fakeTrigger({ channel: 'orders', event: 'OrderShipped', payload: { order_id : 1234 }})");
-        })
-        ->assertSeeIn('@orderId', '1234');
+            ->assertSeeIn('@orderId', '0')
+            ->waitForLivewire(function ($b) {
+                $b->script("window.Echo.fakeTrigger({ channel: 'orders', event: 'OrderShipped', payload: { order_id : 1234 }})");
+            })
+            ->assertSeeIn('@orderId', '1234');
     }
 }

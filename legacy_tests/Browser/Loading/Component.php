@@ -21,8 +21,13 @@ class Component extends BaseComponent
         throw new \Exception;
     }
 
-    public function foo() {}
-    public function bar() {}
+    public function foo()
+    {
+    }
+
+    public function bar()
+    {
+    }
 
     public function render()
     {

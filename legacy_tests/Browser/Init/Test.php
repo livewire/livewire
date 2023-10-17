@@ -10,7 +10,8 @@ class Test extends BrowserTestCase
 {
     public function test_wire_init(): void
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $output = '';
 
             public function setOutputToFoo()
@@ -31,7 +32,6 @@ class Test extends BrowserTestCase
              * wire:init runs on page load.
              */
             ->waitForText('foo')
-            ->assertSee('foo')
-        ;
+            ->assertSee('foo');
     }
 }

@@ -34,7 +34,7 @@ class AttributeCommand extends GeneratorCommand
      */
     public function getStub()
     {
-        return __DIR__ . '/livewire.attribute.stub';
+        return __DIR__.'/livewire.attribute.stub';
     }
 
     /**
@@ -45,6 +45,6 @@ class AttributeCommand extends GeneratorCommand
      */
     public function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace . '\Livewire\Attributes';
+        return $rootNamespace.'\Livewire\Attributes';
     }
 }

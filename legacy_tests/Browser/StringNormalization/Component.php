@@ -8,12 +8,19 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $string = 'â';
+
     public $number = 0;
+
     public $array = ['â'];
+
     public $recursiveArray = ['â', ['â']];
+
     public $collection;
+
     public $recursiveCollection;
+
     public $model;
+
     public $modelCollection;
 
     public function mount()

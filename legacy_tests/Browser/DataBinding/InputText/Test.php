@@ -2,9 +2,9 @@
 
 namespace LegacyTests\Browser\DataBinding\InputText;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
 
 class Test extends TestCase
 {
@@ -35,7 +35,9 @@ class Test extends TestCase
                  */
                 ->waitForLivewire(function ($b) {
                     $b->click('@foo')
-                    ->tap(function ($b) { $b->script('window.Livewire.first().updateFooTo("changed-again")'); });
+                        ->tap(function ($b) {
+                            $b->script('window.Livewire.first().updateFooTo("changed-again")');
+                        });
                 })
                 ->assertInputValue('@foo', 'changed-again')
 
@@ -76,8 +78,7 @@ class Test extends TestCase
                 ->pause(150) // Pause for upper-bound of most round-trip lengths.
                 ->assertDontSeeIn('@bob.output', 'deferred')
                 ->waitForLivewire()->click('@refresh')
-                ->assertSeeIn('@bob.output', 'deferred')
-                ;
+                ->assertSeeIn('@bob.output', 'deferred');
         });
     }
 
@@ -86,8 +87,7 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EmptyWireModelComponent::class)
-                ->assertConsoleLogHasWarning('Livewire: [wire:model] is missing a value.')
-                ;
+                ->assertConsoleLogHasWarning('Livewire: [wire:model] is missing a value.');
         });
     }
 }

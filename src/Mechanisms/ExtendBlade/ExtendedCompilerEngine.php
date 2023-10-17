@@ -4,10 +4,13 @@ namespace Livewire\Mechanisms\ExtendBlade;
 
 use function Livewire\trigger;
 
-class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
+class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine
+{
     public function get($path, array $data = [])
     {
-        if (! ExtendBlade::isRenderingLivewireComponent()) return parent::get($path, $data);
+        if (! ExtendBlade::isRenderingLivewireComponent()) {
+            return parent::get($path, $data);
+        }
 
         $currentComponent = ExtendBlade::currentRendering();
 
@@ -64,7 +67,7 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
     {
         $uses = array_flip(class_uses_recursive($e));
 
-        return (
+        return
             // Don't wrap "abort(403)".
             $e instanceof \Illuminate\Auth\Access\AuthorizationException
             // Don't wrap "abort(404)".
@@ -72,7 +75,6 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
             // Don't wrap "abort(500)".
             || $e instanceof \Symfony\Component\HttpKernel\Exception\HttpException
             // Don't wrap most Livewire exceptions.
-            || isset($uses[\Livewire\Exceptions\BypassViewHandler::class])
-        );
+            || isset($uses[\Livewire\Exceptions\BypassViewHandler::class]);
     }
 }

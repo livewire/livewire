@@ -2,8 +2,8 @@
 
 namespace LegacyTests\Browser\FileDownloads;
 
-use LegacyTests\Browser\TestCase;
 use Illuminate\Support\Facades\Storage;
+use LegacyTests\Browser\TestCase;
 use Livewire\Component;
 
 class Test extends TestCase
@@ -174,7 +174,6 @@ class Test extends TestCase
             /**
              * Trigger download with a response return.
              */
-
             $this->visitLivewireComponent($browser, DownloadComponent::class)
                 ->tap(function ($b) {
                     $b->script([
@@ -223,7 +222,7 @@ class Test extends TestCase
 class DownloadComponent extends Component
 {
     protected $listeners = [
-        'download'
+        'download',
     ];
 
     public function download()

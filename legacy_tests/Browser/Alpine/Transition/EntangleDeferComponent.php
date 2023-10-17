@@ -7,6 +7,7 @@ use Livewire\Component as BaseComponent;
 class EntangleDeferComponent extends BaseComponent
 {
     public $show = true;
+
     public $changeDom = false;
 
     public function render()

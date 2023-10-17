@@ -2,21 +2,24 @@
 
 namespace Livewire\Features\SupportModels;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
-class ModelSynth extends Synth {
+class ModelSynth extends Synth
+{
     use SerializesAndRestoresModelIdentifiers;
 
     public static $key = 'mdl';
 
-    static function match($target) {
+    public static function match($target)
+    {
         return $target instanceof Model;
     }
 
-    function dehydrate($target) {
+    public function dehydrate($target)
+    {
         // If no alias is found, this just returns the class name
         $alias = $target->getMorphClass();
 
@@ -28,8 +31,9 @@ class ModelSynth extends Synth {
 
         // If the model doesn't exist as it's an empty model or has been
         // recently deleted, then we don't want to include any key.
-        if ($serializedModel) $meta['key'] = $serializedModel['id'];
-        
+        if ($serializedModel) {
+            $meta['key'] = $serializedModel['id'];
+        }
 
         return [
             null,
@@ -37,7 +41,8 @@ class ModelSynth extends Synth {
         ];
     }
 
-    function hydrate($data, $meta) {
+    public function hydrate($data, $meta)
+    {
         $class = $meta['class'];
 
         // If no alias found, this returns `null`
@@ -59,15 +64,18 @@ class ModelSynth extends Synth {
         return $model;
     }
 
-    function get(&$target, $key) {
+    public function get(&$target, $key)
+    {
         throw new \Exception('Can\'t access model properties directly');
     }
 
-    function set(&$target, $key, $value, $pathThusFar, $fullPath) {
+    public function set(&$target, $key, $value, $pathThusFar, $fullPath)
+    {
         throw new \Exception('Can\'t set model properties directly');
     }
 
-    function call($target, $method, $params, $addEffect) {
+    public function call($target, $method, $params, $addEffect)
+    {
         throw new \Exception('Can\'t call model methods directly');
     }
 }

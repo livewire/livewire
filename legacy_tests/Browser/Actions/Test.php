@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Actions;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -129,8 +128,7 @@ class Test extends TestCase
                 ->keys('@bap', 'x')
                 ->pause(50)
                 ->waitForLivewire()->assertDontSeeIn('@output', 'bap')
-                ->assertSeeIn('@output', 'bap')
-            ;
+                ->assertSeeIn('@output', 'bap');
         });
     }
 }

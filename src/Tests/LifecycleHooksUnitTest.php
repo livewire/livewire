@@ -2,14 +2,13 @@
 
 namespace Livewire\Tests;
 
+use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
-use Illuminate\Support\Stringable;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 class LifecycleHooksUnitTest extends \Tests\TestCase
 {
-
     /** @test */
     public function refresh_magic_method()
     {
@@ -47,7 +46,7 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
                 ]],
                 'updatingFoo' => ['bar'],
                 'updatedFoo' => ['bar'],
-            ]
+            ],
         ]);
 
         $component->call('$set', 'foo', 'bar');

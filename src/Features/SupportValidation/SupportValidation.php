@@ -2,21 +2,21 @@
 
 namespace Livewire\Features\SupportValidation;
 
-use Livewire\Drawer\Utils;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\Validation\ValidationException;
 use Livewire\ComponentHook;
+use Livewire\Drawer\Utils;
 
 class SupportValidation extends ComponentHook
 {
-    function hydrate($memo)
+    public function hydrate($memo)
     {
         $this->component->setErrorBag(
             $memo['errors'] ?? []
         );
     }
 
-    function render($view, $data)
+    public function render($view, $data)
     {
         $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
 
@@ -29,7 +29,7 @@ class SupportValidation extends ComponentHook
         };
     }
 
-    function dehydrate($context)
+    public function dehydrate($context)
     {
         $errors = $this->component->getErrorBag()->toArray();
 
@@ -43,9 +43,11 @@ class SupportValidation extends ComponentHook
         );
     }
 
-    function exception($e, $stopPropagation)
+    public function exception($e, $stopPropagation)
     {
-        if (! $e instanceof ValidationException) return;
+        if (! $e instanceof ValidationException) {
+            return;
+        }
 
         $this->component->setErrorBag($e->validator->errors());
 

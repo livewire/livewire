@@ -50,15 +50,16 @@ class UnitTest extends \Tests\TestCase
     {
         Route::get('/test', TriggersRedirectStub::class);
 
-        Livewire::test(new class extends TestComponent {
-            function triggerRedirect()
+        Livewire::test(new class extends TestComponent
+        {
+            public function triggerRedirect()
             {
                 $this->redirect(TriggersRedirectStub::class);
             }
         })
-        ->call('triggerRedirect')
-        ->assertRedirect(TriggersRedirectStub::class)
-        ->assertRedirect('/test');
+            ->call('triggerRedirect')
+            ->assertRedirect(TriggersRedirectStub::class)
+            ->assertRedirect('/test');
     }
 
     /** @test */
@@ -215,7 +216,7 @@ class TriggersRedirectStub extends Component
     public function triggerRedirectHelperUsingArrayWith()
     {
         return redirect('foo')->with([
-            'success' => 'livewire-is-awesome'
+            'success' => 'livewire-is-awesome',
         ]);
     }
 
@@ -277,9 +278,10 @@ HTML;
 
 class RenderOnRedirectWithSkipRenderMethod extends Component
 {
-    function triggerRedirect()
+    public function triggerRedirect()
     {
         $this->skipRender();
+
         return $this->redirect('/local');
     }
 

@@ -11,14 +11,18 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_teleport_dom_via_blade_directive()
     {
-        Livewire::visit(new class extends Component {
-            public function render() { return <<<'HTML'
+        Livewire::visit(new class extends Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
             <div dusk="component">
                 @teleport('body')
                     <span>teleportedbar</span>
                 @endteleport
             </div>
-            HTML; }
+            HTML;
+            }
         })
             ->assertDontSeeIn('@component', 'teleportedbar')
             ->assertSee('teleportedbar');
@@ -27,7 +31,8 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_teleport_dom_via_blade_directive_then_change_it()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = 'bar';
 
             public function setFoo()
@@ -35,7 +40,9 @@ class BrowserTest extends BrowserTestCase
                 $this->foo = 'baz';
             }
 
-            public function render() { return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
             <div dusk="component">
                 <button dusk="setFoo" type="button" wire:click="setFoo">
                     Set foo
@@ -45,7 +52,8 @@ class BrowserTest extends BrowserTestCase
                     <span>teleported{{ $foo }}</span>
                 @endteleport
             </div>
-            HTML; }
+            HTML;
+            }
         })
             ->assertDontSeeIn('@component', 'teleportedbar')
             ->assertSee('teleportedbar')

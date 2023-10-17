@@ -14,11 +14,16 @@ class Test extends TestCase
 {
     public function test_date_support(): void
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public $native;
+
             public $nativeImmutable;
+
             public $carbon;
+
             public $carbonImmutable;
+
             public $illuminate;
 
             public function mount()

@@ -8,6 +8,7 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $step;
+
     public $showHelp = false;
 
     protected $queryString = ['showHelp'];

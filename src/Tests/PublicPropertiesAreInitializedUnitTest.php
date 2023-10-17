@@ -28,8 +28,7 @@ class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
         $propertyValue = Livewire::test(InitializedPublicPropertyComponent::class)
             ->set('some_id', null)
             ->set('message', 'whatever')
-            ->get('some_id')
-        ;
+            ->get('some_id');
 
         $this->assertEquals(null, $propertyValue);
     }
@@ -77,6 +76,7 @@ class UninitializedPublicPropertyComponent extends Component
 class InitializedPublicPropertyComponent extends Component
 {
     public $message = 'Non-typed Properties are boring';
+
     public $some_id = 3;
 
     public function render()
@@ -97,7 +97,7 @@ class UninitializedPublicTypedPropertyComponent extends Component
 
 class UninitializedPublicUnionTypedPropertyComponent extends Component
 {
-    public string | Stringable $message;
+    public string|Stringable $message;
 
     public function render()
     {

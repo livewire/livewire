@@ -9,6 +9,7 @@ use Livewire\Livewire;
 class Component extends BaseComponent
 {
     public $message = 'foo';
+
     public $foo = 'hey';
 
     public $disableBackButtonCache = true;
@@ -53,7 +54,7 @@ class Component extends BaseComponent
         // $this->foo->update(['name' => 'bar']);
         $this->foo = 'bar';
 
-        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc&disableBackButtonCache='. ($this->disableBackButtonCache ? 'true' : 'false'));
+        return $this->redirect('/livewire-dusk/Tests%5CBrowser%5CRedirects%5CComponent?abc&disableBackButtonCache='.($this->disableBackButtonCache ? 'true' : 'false'));
     }
 
     public function render()

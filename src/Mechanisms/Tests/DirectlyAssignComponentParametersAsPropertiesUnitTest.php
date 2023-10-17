@@ -28,6 +28,7 @@ class DirectlyAssignComponentParametersAsPropertiesUnitTest extends \Tests\TestC
 class ComponentWithDirectlyAssignedProperties extends \Livewire\Component
 {
     public $foo;
+
     public $baz;
 
     public function render()
@@ -41,8 +42,11 @@ class ComponentWithDirectlyAssignedProperties extends \Livewire\Component
 class ComponentWithDirectlyAssignedPropertiesAndMountMethod extends \Livewire\Component
 {
     public $foo;
+
     public $baz;
+
     public $fooFromMount;
+
     public $bazFromMount;
 
     public function mount($foo, $baz)

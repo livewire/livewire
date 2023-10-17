@@ -11,10 +11,12 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function component_with_custom_directive_keeps_state_after_cloning()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public int $counter = 0;
 
-            function render() {
+            public function render()
+            {
                 return <<<'HTML'
                 <div>
                     <div x-counter wire:model.live='counter'>
@@ -49,15 +51,16 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewire()->click('@increment')
-            ->assertInputValue('@counter', '1')
-        ;
+            ->assertInputValue('@counter', '1');
     }
 
     /** @test */
     public function deep_alpine_state_is_preserved_when_morphing_with_uninitialized_livewire_html()
     {
-        Livewire::visit(new class extends Component {
-            function render() {
+        Livewire::visit(new class extends Component
+        {
+            public function render()
+            {
                 return <<<'HTML'
                 <div>
                     <div x-data="{ showCounter: false }">
@@ -86,6 +89,6 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
             ->waitForLivewire()->click('@refresh')
             ->assertVisible('@count')
             ->assertSeeIn('@count', '1');
-        ;
+
     }
 }

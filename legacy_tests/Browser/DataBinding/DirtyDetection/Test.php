@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\DirtyDetection;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 
@@ -26,8 +25,7 @@ class Test extends TestCase
                 ->type('@bar.input', 'changed')
                 ->pause(250)
                 ->waitForLivewire()->click('@bar.button')
-                ->assertValue('@bar.input', '')
-            ;
+                ->assertValue('@bar.input', '');
         });
     }
 }

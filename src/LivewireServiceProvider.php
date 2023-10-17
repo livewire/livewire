@@ -1,6 +1,7 @@
 <?php
 
 namespace Livewire;
+
 use Composer\InstalledVersions;
 use Illuminate\Foundation\Console\AboutCommand;
 
@@ -80,7 +81,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function bootFeatures()
     {
-        foreach([
+        foreach ([
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportMultipleRootElementDetection\SupportMultipleRootElementDetection::class,
             \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
@@ -122,5 +123,3 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         ComponentHookRegistry::boot();
     }
 }
-
-

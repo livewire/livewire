@@ -18,7 +18,8 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    protected function getEnvironmentSetUp($app) {
+    protected function getEnvironmentSetUp($app)
+    {
         parent::getEnvironmentSetUp($app);
 
         $app['config']->set('auth.providers.users.model', User::class);
@@ -29,8 +30,9 @@ class BrowserTest extends BrowserTestCase
         $app->singleton(\Illuminate\Contracts\Http\Kernel::class, HttpKernel::class);
     }
 
-    public static function tweakApplicationHook() {
-        return function() {
+    public static function tweakApplicationHook()
+    {
+        return function () {
             Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
 
             // Overwrite the default route for these tests, so the middleware is included
@@ -67,6 +69,7 @@ class BrowserTest extends BrowserTestCase
             })->middleware(['web', 'auth', 'can:update,post']);
         };
     }
+
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
     {
         // @todo: Copy implementation from V2 for persistent middleware and ensure localisation and subdirectory hosting are supported. https://github.com/livewire/livewire/pull/5490
@@ -89,8 +92,7 @@ class BrowserTest extends BrowserTestCase
 
             // Make sure they are still applied when stand-alone requests are made to that component.
             ->assertSeeIn('@middleware', json_encode([AllowListedMiddleware::class]))
-            ->assertSeeIn('@nested-middleware', json_encode([AllowListedMiddleware::class]))
-            ;
+            ->assertSeeIn('@nested-middleware', json_encode([AllowListedMiddleware::class]));
     }
 
     public function test_that_authentication_middleware_is_re_applied()
@@ -141,7 +143,7 @@ JS;
             })
             ->waitForText('response-ready: ')
             ->assertDontSee('Protected Content');
-        ;
+
     }
 
     public function test_that_authorization_middleware_is_re_applied()
@@ -185,8 +187,7 @@ JS;
                 $b->script($script);
             })
             ->waitForText('response-ready: ')
-            ->assertDontSee('Protected Content')
-        ;
+            ->assertDontSee('Protected Content');
     }
 }
 
@@ -268,7 +269,9 @@ class Component extends BaseComponent
     public static $loggedMiddleware = [];
 
     public $middleware = [];
+
     public $showNested = false;
+
     public $changeProtected = false;
 
     public function showNestedComponent()

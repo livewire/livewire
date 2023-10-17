@@ -2,24 +2,30 @@
 
 namespace Livewire;
 
-use ReflectionClass;
 use Illuminate\Support\Str;
+use ReflectionClass;
 
 function str($string = null)
 {
-    if (is_null($string)) return new class {
-        public function __call($method, $params) {
-            return Str::$method(...$params);
-        }
-    };
+    if (is_null($string)) {
+        return new class
+        {
+            public function __call($method, $params)
+            {
+                return Str::$method(...$params);
+            }
+        };
+    }
 
     return Str::of($string);
 }
 
 function invade($obj)
 {
-    return new class($obj) {
+    return new class($obj)
+    {
         public $obj;
+
         public $reflected;
 
         public function __construct($obj)
@@ -66,7 +72,9 @@ function once($fn)
     $hasRun = false;
 
     return function (...$params) use ($fn, &$hasRun) {
-        if ($hasRun) return;
+        if ($hasRun) {
+            return;
+        }
 
         $hasRun = true;
 
@@ -88,48 +96,58 @@ function revert(&$variable)
     };
 }
 
-function wrap($subject) {
+function wrap($subject)
+{
     return new Wrapped($subject);
 }
 
-function pipe($subject) {
+function pipe($subject)
+{
     return new Pipe($subject);
 }
 
-function trigger($name, ...$params) {
+function trigger($name, ...$params)
+{
     return app(\Livewire\EventBus::class)->trigger($name, ...$params);
 }
 
-function on($name, $callback) {
+function on($name, $callback)
+{
     return app(\Livewire\EventBus::class)->on($name, $callback);
 }
 
-function after($name, $callback) {
+function after($name, $callback)
+{
     return app(\Livewire\EventBus::class)->after($name, $callback);
 }
 
-function before($name, $callback) {
+function before($name, $callback)
+{
     return app(\Livewire\EventBus::class)->before($name, $callback);
 }
 
-function off($name, $callback) {
+function off($name, $callback)
+{
     return app(\Livewire\EventBus::class)->off($name, $callback);
 }
 
-function memoize($target) {
+function memoize($target)
+{
     static $memo = new \WeakMap;
 
-    return new class ($target, $memo) {
-        function __construct(
+    return new class($target, $memo)
+    {
+        public function __construct(
             protected $target,
             protected &$memo,
-        ) {}
+        ) {
+        }
 
-        function __call($method, $params)
+        public function __call($method, $params)
         {
             $this->memo[$this->target] ??= [];
 
-            $signature = $method . crc32(json_encode($params));
+            $signature = $method.crc32(json_encode($params));
 
             return $this->memo[$this->target][$signature]
                ??= $this->target->$method(...$params);
@@ -139,30 +157,37 @@ function memoize($target) {
 
 function store($instance = null)
 {
-    if (! $instance) $instance = app(\Livewire\Mechanisms\DataStore::class);
+    if (! $instance) {
+        $instance = app(\Livewire\Mechanisms\DataStore::class);
+    }
 
-    return new class ($instance) {
-        function __construct(protected $instance) {}
+    return new class($instance)
+    {
+        public function __construct(protected $instance)
+        {
+        }
 
-        function get($key, $default = null) {
+        public function get($key, $default = null)
+        {
             return app(\Livewire\Mechanisms\DataStore::class)->get($this->instance, $key, $default);
         }
 
-        function set($key, $value) {
+        public function set($key, $value)
+        {
             return app(\Livewire\Mechanisms\DataStore::class)->set($this->instance, $key, $value);
         }
 
-        function push($key, $value, $iKey = null)
+        public function push($key, $value, $iKey = null)
         {
             return app(\Livewire\Mechanisms\DataStore::class)->push($this->instance, $key, $value, $iKey);
         }
 
-        function find($key, $iKey = null, $default = null)
+        public function find($key, $iKey = null, $default = null)
         {
             return app(\Livewire\Mechanisms\DataStore::class)->find($this->instance, $key, $iKey, $default);
         }
 
-        function has($key, $iKey = null)
+        public function has($key, $iKey = null)
         {
             return app(\Livewire\Mechanisms\DataStore::class)->has($this->instance, $key, $iKey);
         }

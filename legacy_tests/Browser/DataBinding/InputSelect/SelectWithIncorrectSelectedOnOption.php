@@ -2,12 +2,12 @@
 
 namespace LegacyTests\Browser\DataBinding\InputSelect;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class SelectWithIncorrectSelectedOnOption extends BaseComponent
 {
     public $selectedOption = '3';
+
     public $showOtherSelected = false;
 
     public function render()

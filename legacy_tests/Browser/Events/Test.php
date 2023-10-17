@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Events;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -14,11 +13,13 @@ class Test extends TestCase
                 /**
                  * receive event from global fire
                  */
-                ->waitForLivewire()->tap(function ($browser) { $browser->script('window.Livewire.dispatch("foo", { value: "bar" })'); })
+                ->waitForLivewire()->tap(function ($browser) {
+                    $browser->script('window.Livewire.dispatch("foo", { value: "bar" })');
+                })
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertSeeIn('@lastEventForParent', 'bar')
-                             ->assertSeeIn('@lastEventForChildA', 'bar')
-                             ->assertSeeIn('@lastEventForChildB', 'bar');
+                        ->assertSeeIn('@lastEventForChildA', 'bar')
+                        ->assertSeeIn('@lastEventForChildB', 'bar');
                 })
 
                 /**
@@ -27,17 +28,19 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@dispatch.baz')
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertSeeIn('@lastEventForParent', 'baz')
-                                   ->assertSeeIn('@lastEventForChildA', 'baz')
-                                   ->assertSeeIn('@lastEventForChildB', 'baz');
+                        ->assertSeeIn('@lastEventForChildA', 'baz')
+                        ->assertSeeIn('@lastEventForChildB', 'baz');
                 })
 
                 /**
                  * receive event from component fire, and make sure global listener receives event too
                  */
-                ->tap(function ($b) { $b->script([
-                    "window.lastFooEventValue = ''",
-                    "window.Livewire.on('foo', ({ value }) => { lastFooEventValue = value })",
-                ]);})
+                ->tap(function ($b) {
+                    $b->script([
+                        "window.lastFooEventValue = ''",
+                        "window.Livewire.on('foo', ({ value }) => { lastFooEventValue = value })",
+                    ]);
+                })
                 ->waitForLivewire()->click('@dispatch.bob')
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertScript('window.lastFooEventValue', 'bob');
@@ -49,9 +52,9 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@dispatch.law')
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertSeeIn('@lastEventForParent', 'law')
-                                   ->assertSeeIn('@lastEventForChildA', 'bob')
-                                   ->assertSeeIn('@lastEventForChildB', 'bob')
-                                   ->assertScript('window.lastFooEventValue', 'bob');
+                        ->assertSeeIn('@lastEventForChildA', 'bob')
+                        ->assertSeeIn('@lastEventForChildB', 'bob')
+                        ->assertScript('window.lastFooEventValue', 'bob');
                 })
 
                 /**
@@ -60,11 +63,10 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@dispatch.blog')
                 ->waitUsing(5, 75, function () use ($browser) {
                     return $browser->assertSeeIn('@lastEventForParent', 'law')
-                                   ->assertSeeIn('@lastEventForChildA', 'bob')
-                                   ->assertSeeIn('@lastEventForChildB', 'blog')
-                                   ->assertScript('window.lastFooEventValue', 'bob');
-                })
-            ;
+                        ->assertSeeIn('@lastEventForChildA', 'bob')
+                        ->assertSeeIn('@lastEventForChildB', 'blog')
+                        ->assertScript('window.lastFooEventValue', 'bob');
+                });
         });
     }
 }

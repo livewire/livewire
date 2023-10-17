@@ -7,7 +7,9 @@ use Livewire\Component as BaseComponent;
 class RenderContextComponent extends BaseComponent
 {
     public $one = 'Blade 1';
+
     public $two = 'Blade 2';
+
     public $three = 'Blade 3';
 
     public function render()

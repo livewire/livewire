@@ -3,8 +3,6 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use Livewire\Attributes\Computed;
-use Illuminate\View\ViewException;
-use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -12,7 +10,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function corrupt_component_payload_exception_is_no_longer_thrown_from_data_incompatible_with_javascript()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component
+        {
             public $subsequentRequest = false;
 
             public $negativeZero = -0;
@@ -26,7 +25,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             public $unorderedNumericArray = [
                 3 => 'three',
                 1 => 'one',
-                2 => 'two'
+                2 => 'two',
             ];
 
             public $integerLargerThanJavascriptsMaxSafeInteger = 999_999_999_999_999_999;
@@ -63,16 +62,16 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->assertSee('Initial request')
-        ->waitForLivewire()->click('@refresh')
-        ->assertSee('Subsequent request')
-        ;
+            ->assertSee('Initial request')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSee('Subsequent request');
     }
 
     /** @test */
     public function it_converts_empty_strings_to_null_for_integer_properties()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component
+        {
             public ?int $number = 5;
 
             public function render()
@@ -85,16 +84,16 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->assertSeeIn('@number', 5)
-        ->waitForLivewire()->keys('@numberInput', '{backspace}')
-        ->assertSeeNothingIn('@number', '')
-        ;
+            ->assertSeeIn('@number', 5)
+            ->waitForLivewire()->keys('@numberInput', '{backspace}')
+            ->assertSeeNothingIn('@number', '');
     }
 
     /** @test */
     public function it_uses_the_synthesizers_for_multiple_types_property_updates()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component
+        {
             public string|int $localValue = 15;
 
             public function render()
@@ -108,19 +107,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForText(15)
-        ->assertSee(15)
-
-        ->type('@localInput', 25)
-        ->waitForText(25)
-        ->assertSee(25)
-        ;
+            ->waitForText(15)
+            ->assertSee(15)
+            ->type('@localInput', 25)
+            ->waitForText(25)
+            ->assertSee(25);
     }
 
     /** @test */
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component
+        {
             public Suit $selected;
 
             #[Computed]
@@ -144,10 +142,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->assertSeeNothingIn('@selected')
-        ->waitForLivewire()->select('@selectInput', 'D')
-        ->assertSeeIn('@selected', 'D')
-        ;
+            ->assertSeeNothingIn('@selected')
+            ->waitForLivewire()->select('@selectInput', 'D')
+            ->assertSeeIn('@selected', 'D');
     }
 }
 
@@ -161,4 +158,3 @@ enum Suit: string
 
     case Spades = 'S';
 }
-

@@ -8,6 +8,7 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $email = '';
+
     public $password = '';
 
     public function render()

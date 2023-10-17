@@ -4,7 +4,7 @@ namespace Livewire\Drawer;
 
 class Regexes
 {
-    static $livewireOpeningTag = "
+    public static $livewireOpeningTag = "
         <
             \s*
             livewire[-\:]([\w\-\:\.]*)
@@ -41,7 +41,7 @@ class Regexes
         >
     ";
 
-    static $livewireOpeningTagOrSelfClosingTag = "
+    public static $livewireOpeningTagOrSelfClosingTag = "
         <
             \s*
             livewire[-\:]([\w\-\:\.]*)
@@ -81,7 +81,7 @@ class Regexes
         \/?>
     ";
 
-    static $livewireSelfClosingTag = "
+    public static $livewireSelfClosingTag = "
         <
             \s*
                 livewire[-\:]([\w\-\:\.]*)
@@ -118,9 +118,9 @@ class Regexes
         \/>
     ";
 
-    static $livewireClosingTag = "<\/\s*livewire[-\:][\w\-\:\.]*\s*>";
+    public static $livewireClosingTag = "<\/\s*livewire[-\:][\w\-\:\.]*\s*>";
 
-    static $slotOpeningTag = "
+    public static $slotOpeningTag = "
         <
             \s*
             x[\-\:]slot
@@ -159,11 +159,12 @@ class Regexes
         >
     ";
 
-    static $slotClosingTag = "<\/\s*x[\-\:]slot[^>]*>";
+    public static $slotClosingTag = "<\/\s*x[\-\:]slot[^>]*>";
 
-    static $bladeDirective = "\B@(@?\w+(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?";
+    public static $bladeDirective = "\B@(@?\w+(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?";
 
-    static function specificBladeDirective($directive) {
+    public static function specificBladeDirective($directive)
+    {
         return "(@?$directive(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))";
     }
 }

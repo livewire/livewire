@@ -8,6 +8,7 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $foo = 'initial';
+
     public $bar = [];
 
     public function changeFoo()

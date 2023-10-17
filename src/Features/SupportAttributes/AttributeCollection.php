@@ -8,7 +8,7 @@ use ReflectionObject;
 
 class AttributeCollection extends Collection
 {
-    static function fromComponent($component, $subTarget = null, $propertyNamePrefix = '')
+    public static function fromComponent($component, $subTarget = null, $propertyNamePrefix = '')
     {
         $instance = new static;
 
@@ -23,7 +23,7 @@ class AttributeCollection extends Collection
         foreach ($reflected->getMethods() as $method) {
             foreach ($method->getAttributes(Attribute::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
                 $instance->push(tap($attribute->newInstance(), function ($attribute) use ($component, $method, $propertyNamePrefix) {
-                    $attribute->__boot($component, AttributeLevel::METHOD, $propertyNamePrefix . $method->getName());
+                    $attribute->__boot($component, AttributeLevel::METHOD, $propertyNamePrefix.$method->getName());
                 }));
             }
         }
@@ -31,7 +31,7 @@ class AttributeCollection extends Collection
         foreach ($reflected->getProperties() as $property) {
             foreach ($property->getAttributes(Attribute::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
                 $instance->push(tap($attribute->newInstance(), function ($attribute) use ($component, $property, $propertyNamePrefix) {
-                    $attribute->__boot($component, AttributeLevel::PROPERTY, $propertyNamePrefix . $property->getName());
+                    $attribute->__boot($component, AttributeLevel::PROPERTY, $propertyNamePrefix.$property->getName());
                 }));
             }
         }

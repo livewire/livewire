@@ -4,8 +4,10 @@ namespace Livewire\Mechanisms\HandleComponents;
 
 use function Livewire\trigger;
 
-class Checksum {
-    static function verify($snapshot) {
+class Checksum
+{
+    public static function verify($snapshot)
+    {
         $checksum = $snapshot['checksum'];
 
         unset($snapshot['checksum']);
@@ -19,7 +21,8 @@ class Checksum {
         }
     }
 
-    static function generate($snapshot) {
+    public static function generate($snapshot)
+    {
         $hashKey = app('encrypter')->getKey();
 
         $checksum = hash_hmac('sha256', json_encode($snapshot), $hashKey);

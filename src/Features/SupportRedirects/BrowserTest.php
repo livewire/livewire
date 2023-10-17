@@ -2,30 +2,33 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Tests\BrowserTestCase;
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
+use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
     /** @test */
     public function can_redirect()
     {
-        Livewire::visit([new class extends Component {
+        Livewire::visit([new class extends Component
+        {
             public function redirectToWebsite()
             {
                 $this->redirect('https://livewire.laravel.com');
             }
 
-            public function render() { return <<<HTML
+            public function render()
+            {
+                return <<<'HTML'
             <div>
                 <button type="button" dusk="button" wire:click="redirectToWebsite">Redirect to Livewire</button>
             </div>
-            HTML; }
+            HTML;
+            }
         }])
-        ->waitForText('Redirect to Livewire')
-        ->waitForLivewire()->click('@button')
-        ->assertUrlIs('https://livewire.laravel.com/')
-        ;
+            ->waitForText('Redirect to Livewire')
+            ->waitForLivewire()->click('@button')
+            ->assertUrlIs('https://livewire.laravel.com/');
     }
 }

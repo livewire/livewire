@@ -10,11 +10,16 @@ class Test extends BrowserTestCase
 {
     public function test_wire_ignore()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = false;
+
             public $bar = false;
+
             public $baz = false;
+
             public $bob = false;
+
             public $lob = false;
 
             public function render()
@@ -68,7 +73,9 @@ class Test extends BrowserTestCase
             /**
              * adding .__livewire_ignore to element ignores updates to children
              */
-            ->tap(function ($b) { $b->script("document.querySelector('[dusk=\"bob\"]').__livewire_ignore = true"); })
+            ->tap(function ($b) {
+                $b->script("document.querySelector('[dusk=\"bob\"]').__livewire_ignore = true");
+            })
             ->assertSeeIn('@bob.output', 'old')
             ->waitForLivewire()->click('@bob')
             ->assertSeeIn('@bob.output', 'old')
@@ -76,12 +83,13 @@ class Test extends BrowserTestCase
             /**
              * adding .__livewire_ignore_self to element ignores updates to self, but not children
              */
-            ->tap(function ($b) { $b->script("document.querySelector('[dusk=\"lob\"]').__livewire_ignore_self = true"); })
+            ->tap(function ($b) {
+                $b->script("document.querySelector('[dusk=\"lob\"]').__livewire_ignore_self = true");
+            })
             ->assertSeeIn('@lob.output', 'old')
             ->assertAttributeMissing('@lob', 'some-new-attribute')
             ->waitForLivewire()->click('@lob')
             ->assertAttributeMissing('@lob', 'some-new-attribute')
-            ->assertSeeIn('@lob.output', 'new')
-        ;
+            ->assertSeeIn('@lob.output', 'new');
     }
 }

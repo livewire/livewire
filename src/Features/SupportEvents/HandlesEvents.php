@@ -8,7 +8,8 @@ trait HandlesEvents
 {
     protected $listeners = [];
 
-    protected function getListeners() {
+    protected function getListeners()
+    {
         return $this->listeners;
     }
 

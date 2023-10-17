@@ -23,7 +23,8 @@ abstract class Render
 
         $result = $callback();
 
-        $offA(); $offB();
+        $offA();
+        $offB();
 
         return [$result, $instance, $extractedView];
     }

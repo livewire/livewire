@@ -7,11 +7,15 @@ use Livewire\Component;
 class ComponentWithAlpineEntangle extends Component
 {
     public $page = 1;
+
     public $foo = 'bar';
 
     protected $queryString = ['page'];
 
-    public function nextPage() { $this->page++; }
+    public function nextPage()
+    {
+        $this->page++;
+    }
 
     public function render()
     {

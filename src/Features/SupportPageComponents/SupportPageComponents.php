@@ -2,25 +2,29 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
-use function Livewire\{invade, on, off, once};
-use Livewire\Drawer\ImplicitRouteBinding;
-use Livewire\ComponentHook;
-use Illuminate\View\View;
-use Illuminate\View\AnonymousComponent;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\View\View;
+use Livewire\ComponentHook;
+use Livewire\Drawer\ImplicitRouteBinding;
+
+use function Livewire\off;
+use function Livewire\on;
+use function Livewire\once;
 
 class SupportPageComponents extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
         static::registerLayoutViewMacros();
     }
 
-    static function registerLayoutViewMacros()
+    public static function registerLayoutViewMacros()
     {
         View::macro('layoutData', function ($data = []) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = new PageComponentConfig;
+            }
 
             $this->layoutConfig->mergeParams($data);
 
@@ -28,7 +32,9 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('section', function ($section) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = new PageComponentConfig;
+            }
 
             $this->layoutConfig->slotOrSection = $section;
 
@@ -36,7 +42,9 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('title', function ($title) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = new PageComponentConfig;
+            }
 
             $this->layoutConfig->mergeParams(['title' => $title]);
 
@@ -44,7 +52,9 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('slot', function ($slot) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = new PageComponentConfig;
+            }
 
             $this->layoutConfig->slotOrSection = $slot;
 
@@ -52,7 +62,9 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('extends', function ($view, $params = []) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = new PageComponentConfig;
+            }
 
             $this->layoutConfig->type = 'extends';
             $this->layoutConfig->slotOrSection = 'content';
@@ -63,7 +75,9 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('layout', function ($view, $params = []) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = new PageComponentConfig;
+            }
 
             $this->layoutConfig->type = 'component';
             $this->layoutConfig->slotOrSection = 'slot';
@@ -74,7 +88,9 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('response', function (callable $callback) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+            if (! isset($this->layoutConfig)) {
+                $this->layoutConfig = new PageComponentConfig;
+            }
 
             $this->layoutConfig->response = $callback;
 
@@ -82,7 +98,7 @@ class SupportPageComponents extends ComponentHook
         });
     }
 
-    static function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
+    public static function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
     {
         $layoutConfig = null;
         $slots = [];
@@ -103,7 +119,7 @@ class SupportPageComponents extends ComponentHook
 
             $layoutConfig = $view->layoutConfig ?? new PageComponentConfig;
 
-            return function ($html, $replace, $viewContext) use ($view, $layoutConfig) {
+            return function ($html, $replace, $viewContext) use ($layoutConfig) {
                 // Gather up any slots and sections declared in the component template and store them
                 // to be later forwarded into the layout component itself...
                 $layoutConfig->viewContext = $viewContext;
@@ -119,19 +135,21 @@ class SupportPageComponents extends ComponentHook
         return $layoutConfig;
     }
 
-    static function gatherMountMethodParamsFromRouteParameters($component)
+    public static function gatherMountMethodParamsFromRouteParameters($component)
     {
         // This allows for route parameters like "slug" in /post/{slug},
         // to be passed into a Livewire component's mount method...
         $route = request()->route();
 
-        if (! $route) return [];
+        if (! $route) {
+            return [];
+        }
 
         try {
             $params = (new ImplicitRouteBinding(app()))
                 ->resolveAllParameters($route, new $component);
         } catch (ModelNotFoundException $exception) {
-            if (method_exists($route,'getMissing') && $route->getMissing()) {
+            if (method_exists($route, 'getMissing') && $route->getMissing()) {
                 abort(
                     $route->getMissing()(request())
                 );
@@ -143,7 +161,7 @@ class SupportPageComponents extends ComponentHook
         return $params;
     }
 
-    static function renderContentsIntoLayout($content, $layoutConfig)
+    public static function renderContentsIntoLayout($content, $layoutConfig)
     {
         try {
             if ($layoutConfig->type === 'component') {

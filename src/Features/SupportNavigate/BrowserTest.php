@@ -2,12 +2,12 @@
 
 namespace Livewire\Features\SupportNavigate;
 
-use Laravel\Dusk\Browser;
-use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use Laravel\Dusk\Browser;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\Drawer\Utils;
@@ -18,7 +18,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public static function tweakApplicationHook()
     {
         return function () {
-            View::addNamespace('test-views', __DIR__ . '/test-views');
+            View::addNamespace('test-views', __DIR__.'/test-views');
 
             Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
@@ -56,7 +56,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second-tracked-asset', SecondTrackedAssetPage::class)->middleware('web');
 
             Route::get('/test-navigate-asset.js', function () {
-                return Utils::pretendResponseIsFile(__DIR__ . '/test-views/test-navigate-asset.js');
+                return Utils::pretendResponseIsFile(__DIR__.'/test-views/test-navigate-asset.js');
             });
 
             Route::get('/parent', ParentComponent::class)->middleware('web');
@@ -80,17 +80,23 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function back_button_works_with_teleports()
     {
         $this->registerComponentTestRoutes([
-            '/second' => new class extends Component {
-                public function render(){ return <<<'HTML'
+            '/second' => new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
                     <div>
                         On second page
                     </div>
-                HTML; }
+                HTML;
+                }
             },
         ]);
 
-        Livewire::visit(new class extends Component {
-            public function render(){
+        Livewire::visit(new class extends Component
+        {
+            public function render()
+            {
                 return <<<'HTML'
                     <div x-data="{ outerScopeCount: 0 }">
                         Livewire component...
@@ -107,30 +113,32 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->assertSeeIn('@target', '0')
-        ->click('@button')
-        ->assertSeeIn('@target', '1')
-        ->click('@link')
-        ->waitForText('On second page')
-        ->back()
-        ->assertDontSee('On second page')
-        ->assertSeeIn('@target', '0')
-        ->click('@button')
-        ->assertSeeIn('@target', '1')
-        ->forward()
-        ->back()
-        ->assertSeeIn('@target', '0')
-        ->click('@button')
-        ->assertSeeIn('@target', '1')
-        ;
+            ->assertSeeIn('@target', '0')
+            ->click('@button')
+            ->assertSeeIn('@target', '1')
+            ->click('@link')
+            ->waitForText('On second page')
+            ->back()
+            ->assertDontSee('On second page')
+            ->assertSeeIn('@target', '0')
+            ->click('@button')
+            ->assertSeeIn('@target', '1')
+            ->forward()
+            ->back()
+            ->assertSeeIn('@target', '0')
+            ->click('@button')
+            ->assertSeeIn('@target', '1');
     }
 
     /** @test */
     public function back_button_works_with_teleports_inside_persist()
     {
         $this->registerComponentTestRoutes([
-            '/second' => new class extends Component {
-                public function render(){ return <<<'HTML'
+            '/second' => new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
                     <div>
                         <div>
                             On second page
@@ -147,12 +155,15 @@ class BrowserTest extends \Tests\BrowserTestCase
                             </div>
                         @endpersist
                     </div>
-                HTML; }
+                HTML;
+                }
             },
         ]);
 
-        Livewire::visit(new class extends Component {
-            public function render(){
+        Livewire::visit(new class extends Component
+        {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <div>
@@ -175,23 +186,22 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->assertSeeIn('@target', '0')
-        ->click('@button')
-        ->assertSeeIn('@target', '1')
-        ->click('@link')
-        ->waitForText('On second page')
-        ->assertSeeIn('@target', '1')
-        ->click('@button')
-        ->assertSeeIn('@target', '2')
-        ->back()
-        ->assertSeeIn('@target', '2')
-        ->click('@button')
-        ->assertSeeIn('@target', '3')
-        ->forward()
-        ->assertSeeIn('@target', '3')
-        ->click('@button')
-        ->assertSeeIn('@target', '4')
-        ;
+            ->assertSeeIn('@target', '0')
+            ->click('@button')
+            ->assertSeeIn('@target', '1')
+            ->click('@link')
+            ->waitForText('On second page')
+            ->assertSeeIn('@target', '1')
+            ->click('@button')
+            ->assertSeeIn('@target', '2')
+            ->back()
+            ->assertSeeIn('@target', '2')
+            ->click('@button')
+            ->assertSeeIn('@target', '3')
+            ->forward()
+            ->assertSeeIn('@target', '3')
+            ->click('@button')
+            ->assertSeeIn('@target', '4');
     }
 
     /** @test */
@@ -470,8 +480,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->back()
                 ->assertInViewPort('@first-target')
                 ->forward()
-                ->assertInViewPort('@second-target')
-            ;
+                ->assertInViewPort('@second-target');
         });
     }
 
@@ -493,8 +502,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->back()
                 ->waitFor('@page-with-link-away')
                 ->assertSee('Link to page without Livewire component')
-                ->assertDontSee('This is a page without a livewire component')
-            ;
+                ->assertDontSee('This is a page without a livewire component');
         });
     }
 
@@ -512,8 +520,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('On first')
                 ->click('@link.to.second')
                 ->waitFor('@link.to.first')
-                ->assertSee('On second')
-                ;
+                ->assertSee('On second');
         });
     }
 
@@ -566,8 +573,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 })
                 ->pause(500) // Let navigate run if it was going to (it should not)
                 ->assertSee('On first')
-                ->assertScript('return window._lw_dusk_test')
-            ;
+                ->assertScript('return window._lw_dusk_test');
 
             $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
         });
@@ -597,8 +603,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForTextIn('@text-parent', 'test')
                 ->waitForLivewire()->type('@text-input', 'testing')
                 ->waitForTextIn('@text-child', 'testing')
-                ->waitForTextIn('@text-parent', 'testing')
-                ;
+                ->waitForTextIn('@text-parent', 'testing');
         });
     }
 

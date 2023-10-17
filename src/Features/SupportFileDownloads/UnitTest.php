@@ -13,88 +13,89 @@ class UnitTest extends \Tests\TestCase
     public function can_download_a_file()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('download')
-                ->assertFileDownloaded()
-                ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
+            ->call('download')
+            ->assertFileDownloaded()
+            ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
     /** @test */
     public function can_download_a_file_as_stream()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('streamDownload', 'download.txt')
-                ->assertFileDownloaded('download.txt', 'alpinejs');
+            ->call('streamDownload', 'download.txt')
+            ->assertFileDownloaded('download.txt', 'alpinejs');
     }
 
-    public function can_download_a_responsable(){
+    public function can_download_a_responsable()
+    {
         Livewire::test(FileDownloadComponent::class)
-                ->call('responsableDownload')
-                ->assertFileDownloaded()
-                ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
+            ->call('responsableDownload')
+            ->assertFileDownloaded()
+            ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
     /** @test */
     public function can_download_with_custom_filename()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('download', 'download.csv')
-                ->assertFileDownloaded('download.csv', 'I\'m the file you should download.');
+            ->call('download', 'download.csv')
+            ->assertFileDownloaded('download.csv', 'I\'m the file you should download.');
     }
 
     /** @test */
     public function can_download_a_file_as_stream_with_custom_filename()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('streamDownload', 'download.csv')
-                ->assertFileDownloaded('download.csv', 'alpinejs');
+            ->call('streamDownload', 'download.csv')
+            ->assertFileDownloaded('download.csv', 'alpinejs');
     }
 
     /** @test */
     public function can_download_with_custom_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('download', 'download.csv', ['Content-Type' => 'text/csv'])
-                ->assertFileDownloaded('download.csv', 'I\'m the file you should download.', 'text/csv');
+            ->call('download', 'download.csv', ['Content-Type' => 'text/csv'])
+            ->assertFileDownloaded('download.csv', 'I\'m the file you should download.', 'text/csv');
     }
 
     /** @test */
     public function can_download_a_file_as_stream_with_custom_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('streamDownload', 'download.csv', ['Content-Type' => 'text/csv'])
-                ->assertFileDownloaded('download.csv', 'alpinejs', 'text/csv');
+            ->call('streamDownload', 'download.csv', ['Content-Type' => 'text/csv'])
+            ->assertFileDownloaded('download.csv', 'alpinejs', 'text/csv');
     }
 
     /** @test */
     public function can_download_with_custom_japanese_filename()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('download', 'ダウンロード.csv')
-                ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.');
+            ->call('download', 'ダウンロード.csv')
+            ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.');
     }
 
     /** @test */
     public function can_download_a_file_as_stream_with_custom_japanese_filename()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('streamDownload', 'ダウンロード.csv')
-                ->assertFileDownloaded('ダウンロード.csv', 'alpinejs');
+            ->call('streamDownload', 'ダウンロード.csv')
+            ->assertFileDownloaded('ダウンロード.csv', 'alpinejs');
     }
 
     /** @test */
     public function can_download_with_custom_japanese_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('download', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
-                ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.', 'text/csv');
+            ->call('download', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
+            ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.', 'text/csv');
     }
 
     /** @test */
     public function can_download_a_file_as_stream_with_custom_japanese_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
-                ->call('streamDownload', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
-                ->assertFileDownloaded('ダウンロード.csv', 'alpinejs', 'text/csv');
+            ->call('streamDownload', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
+            ->assertFileDownloaded('ダウンロード.csv', 'alpinejs', 'text/csv');
     }
 
     /** @test */
@@ -114,12 +115,14 @@ class FileDownloadComponent extends Component
     public function download($filename = null, $headers = [])
     {
         $this->downloaded = true;
+
         return Storage::disk('unit-downloads')->download('download.txt', $filename, $headers);
     }
 
     public function streamDownload($filename = null, $headers = [])
     {
         $this->downloaded = true;
+
         return response()->streamDownload(function () {
             echo 'alpinejs';
         }, $filename, $headers);
@@ -129,7 +132,6 @@ class FileDownloadComponent extends Component
     {
         return new DownloadableResponse();
     }
-
 
     public function render()
     {
@@ -147,7 +149,6 @@ class DownloadableResponse implements Responsable
 {
     public function toResponse($request)
     {
-        return  Storage::disk('unit-downloads')->download('download.txt');
+        return Storage::disk('unit-downloads')->download('download.txt');
     }
 }
-

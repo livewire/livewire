@@ -2,26 +2,28 @@
 
 namespace Livewire\Mechanisms;
 
-use Livewire\Exceptions\ComponentNotFoundException;
 use Livewire\Component;
+use Livewire\Exceptions\ComponentNotFoundException;
 
 class ComponentRegistry
 {
     protected $missingComponentResolvers = [];
+
     protected $nonAliasedClasses = [];
+
     protected $aliases = [];
 
-    function register()
+    public function register()
     {
         app()->singleton($this::class);
     }
 
-    function boot()
+    public function boot()
     {
         //
     }
 
-    function component($name, $class = null)
+    public function component($name, $class = null)
     {
         if (is_null($class)) {
             $this->nonAliasedClasses[] = $name;
@@ -30,7 +32,7 @@ class ComponentRegistry
         }
     }
 
-    function new($nameOrClass, $id = null)
+    public function new($nameOrClass, $id = null)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClass);
 
@@ -53,7 +55,7 @@ class ComponentRegistry
         return $component;
     }
 
-    function isDiscoverable($classOrName)
+    public function isDiscoverable($classOrName)
     {
         if (is_object($classOrName)) {
             $classOrName = get_class($classOrName);
@@ -72,21 +74,21 @@ class ComponentRegistry
         return false;
     }
 
-    function getName($nameOrClassOrComponent)
+    public function getName($nameOrClassOrComponent)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);
 
         return $name;
     }
 
-    function getClass($nameOrClassOrComponent)
+    public function getClass($nameOrClassOrComponent)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);
 
         return $class;
     }
 
-    function resolveMissingComponent($resolver)
+    public function resolveMissingComponent($resolver)
     {
         $this->missingComponentResolvers[] = $resolver;
     }
@@ -99,16 +101,16 @@ class ComponentRegistry
         // If a component class was passed in, use that...
         if (class_exists($nameOrClass)) {
             $class = $nameOrClass;
-        // Otherwise, assume it was a simple name...
+            // Otherwise, assume it was a simple name...
         } else {
             $class = $this->nameToClass($nameOrClass);
 
             // If class can't be found, see if there is an index component in a subfolder...
-            if(! class_exists($class)) {
-                $class = $class . '\\Index';
+            if (! class_exists($class)) {
+                $class = $class.'\\Index';
             }
 
-            if(! class_exists($class)) {
+            if (! class_exists($class)) {
                 foreach ($this->missingComponentResolvers as $resolve) {
                     if ($resolved = $resolve($nameOrClass)) {
                         $this->component($nameOrClass, $resolved);
@@ -138,7 +140,9 @@ class ComponentRegistry
     {
         // Check the aliases...
         if (isset($this->aliases[$name])) {
-            if (is_object($this->aliases[$name])) return $this->aliases[$name]::class;
+            if (is_object($this->aliases[$name])) {
+                return $this->aliases[$name]::class;
+            }
 
             return $this->aliases[$name];
         }
@@ -159,7 +163,9 @@ class ComponentRegistry
         // Check the aliases...
         $resolvedAliases = array_map(fn ($i) => is_object($i) ? get_class($i) : $i, $this->aliases);
 
-        if ($name = array_search($class, $resolvedAliases)) return $name;
+        if ($name = array_search($class, $resolvedAliases)) {
+            return $name;
+        }
 
         // Check existance in non-aliased classes and hash...
         foreach ($this->nonAliasedClasses as $oneOff) {
@@ -180,7 +186,7 @@ class ComponentRegistry
             ->map(fn ($segment) => (string) str($segment)->studly())
             ->join('\\');
 
-        return '\\' . $rootNamespace . '\\' . $class;
+        return '\\'.$rootNamespace.'\\'.$class;
     }
 
     protected function generateNameFromClass($class)

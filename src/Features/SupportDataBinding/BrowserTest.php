@@ -9,9 +9,10 @@ use Tests\BrowserTestCase;
 class BrowserTest extends BrowserTestCase
 {
     /** @test */
-    function can_use_wire_dirty()
+    public function can_use_wire_dirty()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $prop = false;
 
             public function render()
@@ -32,7 +33,6 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Unsaved changes...')
             ->uncheck('@checkbox')
             ->assertSee('The data is in-sync...')
-            ->assertDontSee('Unsaved changes...')
-        ;
+            ->assertDontSee('Unsaved changes...');
     }
 }

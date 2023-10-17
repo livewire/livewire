@@ -46,7 +46,7 @@ EOT
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
         $this->assertStringContainsString(
-            <<<EOT
+            <<<'EOT'
 <!-- Test comment <div>Commented out code</div> -->
 <span wire:snapshot
 EOT
@@ -61,7 +61,7 @@ EOT
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
         $this->assertStringContainsString(
-            <<<EOT
+            <<<'EOT'
 <!-- Test comment <div>Commented out code</div> -->
 <span wire:snapshot
 EOT
@@ -86,10 +86,15 @@ EOT
 class ComponentRootHasIdAndDataStub extends Component
 {
     public $string = 'foo';
+
     public $array = ['foo'];
+
     public $object = ['foo' => 'bar'];
+
     public $number = 1;
+
     public $quote = '"';
+
     public $singleQuote = "'";
 
     public function render()

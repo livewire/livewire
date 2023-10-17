@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Livewire\Livewire;
-use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Component;
+use Livewire\Livewire;
 
 class ModelsCanBeFilledUnitTest extends \Tests\TestCase
 {

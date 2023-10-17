@@ -8,7 +8,7 @@ $__version = '';
 
 class AppServiceProvider extends \Illuminate\Support\ServiceProvider
 {
-    function boot()
+    public function boot()
     {
         foreach ($GLOBALS['__commands'] as $command) {
             app(\Illuminate\Contracts\Console\Kernel::class)->registerCommand($command);
@@ -24,8 +24,12 @@ $root = sys_get_temp_dir().'/__lwcmdcache';
 $cacheDir = $root.'/cache';
 $cacheDir = $root.'/cache';
 $viewsDir = $cacheDir.'/views';
-if (! file_exists($cacheDir)) mkdir($cacheDir);
-if (! file_exists($viewsDir)) mkdir($viewsDir);
+if (! file_exists($cacheDir)) {
+    mkdir($cacheDir);
+}
+if (! file_exists($viewsDir)) {
+    mkdir($viewsDir);
+}
 $packagesCache = $cacheDir.'/packages.php';
 file_put_contents($packagesCache, '<?php return [];');
 $servicesCache = $cacheDir.'/services.php';
@@ -43,7 +47,8 @@ $app->singleton(Illuminate\Contracts\Console\Kernel::class, \Illuminate\Foundati
 $app->singleton(Illuminate\Contracts\Debug\ExceptionHandler::class, Illuminate\Foundation\Exceptions\Handler::class);
 
 $app->bind(\Illuminate\Foundation\Bootstrap\LoadConfiguration::class, function () {
-    return new class extends \Illuminate\Foundation\Bootstrap\LoadConfiguration {
+    return new class extends \Illuminate\Foundation\Bootstrap\LoadConfiguration
+    {
         protected function loadConfigurationFiles($app, $repository)
         {
             $appConfig = [
@@ -97,11 +102,11 @@ $app->bind(\Illuminate\Foundation\Bootstrap\LoadConfiguration::class, function (
                 'default' => 'sqlite',
                 'connections' => [
                     'sqlite' => [
-                        'driver'   => 'sqlite',
+                        'driver' => 'sqlite',
                         'database' => ':memory:',
-                        'prefix'   => '',
+                        'prefix' => '',
                     ],
-                ]
+                ],
             ]);
         }
     };
@@ -134,8 +139,10 @@ return [
 
 function invade($obj)
 {
-    return new class($obj) {
+    return new class($obj)
+    {
         public $obj;
+
         public $reflected;
 
         public function __construct($obj)
@@ -172,5 +179,3 @@ function invade($obj)
         }
     };
 }
-
-

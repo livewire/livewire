@@ -2,20 +2,22 @@
 
 namespace Livewire\Features\SupportComputed;
 
-use Tests\TestComponent;
-use Tests\TestCase;
-use Livewire\Livewire;
-use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Livewire\Component;
+use Livewire\Livewire;
+use Tests\TestCase;
+use Tests\TestComponent;
 
 class UnitTest extends TestCase
 {
     /** @test */
-    function can_make_method_a_computed()
+    public function can_make_method_a_computed()
     {
-        Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent
+        {
             #[Computed]
-            function foo() {
+            public function foo()
+            {
                 return 'bar';
             }
         })
@@ -23,15 +25,18 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function can_access_computed_properties_inside_views()
+    public function can_access_computed_properties_inside_views()
     {
-        Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent
+        {
             #[Computed]
-            function foo() {
+            public function foo()
+            {
                 return 'bar';
             }
 
-            function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>foo{{ $this->foo }}</div>
                 HTML;
@@ -41,19 +46,22 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function computed_properties_only_get_accessed_once_per_request()
+    public function computed_properties_only_get_accessed_once_per_request()
     {
-        Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent
+        {
             public $count = 0;
 
             #[Computed]
-            function foo() {
+            public function foo()
+            {
                 $this->count++;
 
                 return 'bar';
             }
 
-            function render() {
+            public function render()
+            {
                 $noop = $this->foo;
                 $noop = $this->foo;
                 $noop = $this->foo;
@@ -70,19 +78,22 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function can_bust_computed_cache_using_unset()
+    public function can_bust_computed_cache_using_unset()
     {
-        Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent
+        {
             public $count = 0;
 
             #[Computed]
-            function foo() {
+            public function foo()
+            {
                 $this->count++;
 
                 return 'bar';
             }
 
-            function render() {
+            public function render()
+            {
                 $noop = $this->foo;
                 unset($this->foo);
                 $noop = $this->foo;
@@ -99,17 +110,20 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function cant_call_a_computed_directly()
+    public function cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);
 
-        Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent
+        {
             #[Computed]
-            function foo() {
+            public function foo()
+            {
                 return 'bar';
             }
 
-            function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>foo{{ $this->foo }}</div>
                 HTML;
@@ -119,28 +133,31 @@ class UnitTest extends TestCase
             ->call('foo');
     }
 
-
     /** @test */
-    function can_use_multiple_computed_properties_for_different_properties()
+    public function can_use_multiple_computed_properties_for_different_properties()
     {
-        Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent
+        {
             public $count = 0;
 
             #[Computed]
-            function foo() {
+            public function foo()
+            {
                 $this->count++;
 
                 return 'bar';
             }
 
             #[Computed]
-            function bob() {
+            public function bob()
+            {
                 $this->count++;
 
                 return 'lob';
             }
 
-            function render() {
+            public function render()
+            {
                 $noop = $this->foo;
                 $noop = $this->foo;
                 $noop = $this->bob;
@@ -162,14 +179,26 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function parses_computed_properties()
+    public function parses_computed_properties()
     {
         $this->assertEquals(
             ['foo' => 'bar', 'bar' => 'baz', 'bobLobLaw' => 'blog'],
-            SupportLegacyComputedPropertySyntax::getComputedProperties(new class {
-                public function getFooProperty() { return 'bar'; }
-                public function getBarProperty() { return 'baz'; }
-                public function getBobLobLawProperty() { return 'blog'; }
+            SupportLegacyComputedPropertySyntax::getComputedProperties(new class
+            {
+                public function getFooProperty()
+                {
+                    return 'bar';
+                }
+
+                public function getBarProperty()
+                {
+                    return 'baz';
+                }
+
+                public function getBobLobLawProperty()
+                {
+                    return 'blog';
+                }
             })
         );
     }
@@ -236,7 +265,8 @@ class ComputedPropertyStub extends Component
     }
 }
 
-class FooDependency {
+class FooDependency
+{
     public $baz = 'bar';
 }
 
@@ -279,7 +309,8 @@ class MemoizedComputedPropertyStub extends Component
     }
 }
 
-class IssetComputedPropertyStub extends Component{
+class IssetComputedPropertyStub extends Component
+{
     public $upperCasedFoo = 'FOO_BAR';
 
     public function getFooBarProperty()
@@ -297,7 +328,8 @@ class IssetComputedPropertyStub extends Component{
     }
 }
 
-class FalseIssetComputedPropertyStub extends Component{
+class FalseIssetComputedPropertyStub extends Component
+{
     public $upperCasedFoo = 'FOO_BAR';
 
     public function getFooBarProperty()
@@ -315,7 +347,8 @@ class FalseIssetComputedPropertyStub extends Component{
     }
 }
 
-class NullIssetComputedPropertyStub extends Component{
+class NullIssetComputedPropertyStub extends Component
+{
     public $upperCasedFoo = 'FOO_BAR';
 
     public function getFooProperty()

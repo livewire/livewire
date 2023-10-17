@@ -8,9 +8,11 @@ use function Livewire\store;
 
 class SupportJsEvaluation extends ComponentHook
 {
-    function dehydrate($context)
+    public function dehydrate($context)
     {
-        if (! store($this->component)->has('js')) return;
+        if (! store($this->component)->has('js')) {
+            return;
+        }
 
         $context->addEffect('xjs', store($this->component)->get('js'));
     }

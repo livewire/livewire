@@ -10,15 +10,19 @@ class Test extends BrowserTestCase
 {
     public function test_wire_dirty()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = '';
+
             public $bar = '';
+
             public $baz = '';
+
             public $bob = '';
 
             public function render()
             {
-                return <<<HTML
+                return <<<'HTML'
                     <div>
                         <input wire:model.lazy="foo" wire:dirty.class="foo-dirty" dusk="foo">
                         <input wire:model.lazy="bar" wire:dirty.class.remove="bar-dirty" class="bar-dirty" dusk="bar">
@@ -71,7 +75,6 @@ class Test extends BrowserTestCase
             ->pause(150)
             ->waitForLivewire()->click('@dummy')
             ->pause(25)
-            ->assertMissing('@bob.target')
-        ;
+            ->assertMissing('@bob.target');
     }
 }

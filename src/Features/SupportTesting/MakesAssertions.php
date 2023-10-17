@@ -2,17 +2,17 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Illuminate\Support\Arr;
 use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
-use Illuminate\Support\Arr;
 
 trait MakesAssertions
 {
-    function assertSee($values, $escape = true, $stripInitialData = true)
+    public function assertSee($values, $escape = true, $stripInitialData = true)
     {
         foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringContainsString(
-                $escape ? e($value): $value,
+                $escape ? e($value) : $value,
                 $this->html($stripInitialData)
             );
         }
@@ -20,11 +20,11 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertDontSee($values, $escape = true, $stripInitialData = true)
+    public function assertDontSee($values, $escape = true, $stripInitialData = true)
     {
         foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringNotContainsString(
-                $escape ? e($value): $value,
+                $escape ? e($value) : $value,
                 $this->html($stripInitialData)
             );
         }
@@ -32,7 +32,7 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertSeeHtml($values)
+    public function assertSeeHtml($values)
     {
         foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringContainsString(
@@ -44,7 +44,7 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertSeeHtmlInOrder($values)
+    public function assertSeeHtmlInOrder($values)
     {
         PHPUnit::assertThat(
             $values,
@@ -54,7 +54,7 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertDontSeeHtml($values)
+    public function assertDontSeeHtml($values)
     {
         foreach (Arr::wrap($values) as $value) {
             PHPUnit::assertStringNotContainsString(
@@ -66,7 +66,7 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertSeeText($value, $escape = true)
+    public function assertSeeText($value, $escape = true)
     {
         $value = Arr::wrap($value);
 
@@ -83,7 +83,7 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertSet($name, $value, $strict = false)
+    public function assertSet($name, $value, $strict = false)
     {
         $actual = $this->get($name);
 
@@ -96,7 +96,7 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertNotSet($name, $value, $strict = false)
+    public function assertNotSet($name, $value, $strict = false)
     {
         $actual = $this->get($name);
 
@@ -105,14 +105,14 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertCount($name, $value)
+    public function assertCount($name, $value)
     {
         PHPUnit::assertCount($value, $this->get($name));
 
         return $this;
     }
 
-    function assertSnapshotSet($name, $value, $strict = false)
+    public function assertSnapshotSet($name, $value, $strict = false)
     {
         $data = $this->lastState->getSnapshotData();
 
@@ -125,7 +125,7 @@ trait MakesAssertions
         return $this;
     }
 
-    function assertSnapshotNotSet($name, $value, $strict = false)
+    public function assertSnapshotNotSet($name, $value, $strict = false)
     {
         $data = $this->lastState->getSnapshotData();
 

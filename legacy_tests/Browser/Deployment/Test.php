@@ -2,8 +2,8 @@
 
 namespace LegacyTests\Browser\Deployment;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
 
 class Test extends TestCase
 {
@@ -20,8 +20,7 @@ class Test extends TestCase
                 ->waitForDialog()
                 ->assertDialogOpened("This page has expired.\nWould you like to refresh the page?")
                 // Dismiss dialog so next tests run
-                ->dismissDialog()
-            ;
+                ->dismissDialog();
         });
     }
 
@@ -38,8 +37,7 @@ class Test extends TestCase
                 ->waitForDialog()
                 ->assertDialogOpened("This page has expired.\nWould you like to refresh the page?")
                 // Dismiss dialog so next tests run
-                ->dismissDialog()
-            ;
+                ->dismissDialog();
         });
     }
 }

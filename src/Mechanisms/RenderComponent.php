@@ -7,25 +7,26 @@ use Illuminate\Support\Str;
 
 class RenderComponent
 {
-    function register()
+    public function register()
     {
         app()->singleton($this::class);
     }
 
-    function boot()
+    public function boot()
     {
         Blade::directive('livewire', [static::class, 'livewire']);
     }
 
     public static function livewire($expression)
     {
-        $key = "'" . Str::random(7) . "'";
+        $key = "'".Str::random(7)."'";
 
         $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
 
         $expression = preg_replace_callback($pattern, function ($match) use (&$key) {
             $key = trim($match[1]) ?: $key;
-            return "";
+
+            return '';
         }, $expression);
 
         // If we are inside a Livewire component, we know we're rendering a child.

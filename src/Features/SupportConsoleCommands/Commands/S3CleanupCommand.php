@@ -2,9 +2,10 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
-use function Livewire\invade;
-use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Illuminate\Console\Command;
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
+
+use function Livewire\invade;
 
 class S3CleanupCommand extends Command
 {

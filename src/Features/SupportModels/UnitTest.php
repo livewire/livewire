@@ -14,20 +14,25 @@ class UnitTest extends \Tests\TestCase
     {
         (new Post)::resolveConnection()->enableQueryLog();
 
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component
+        {
             public Post $post;
 
-            public function mount() {
+            public function mount()
+            {
                 $this->post = Post::first();
             }
 
-            public function render() { return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
                 <div>{{ $post->title }}</div>
-            HTML; }
+            HTML;
+            }
         })
-        ->assertSee('First')
-        ->call('$refresh')
-        ->assertSee('First');
+            ->assertSee('First')
+            ->call('$refresh')
+            ->assertSee('First');
 
         $this->assertCount(2, Post::resolveConnection()->getQueryLog());
     }
@@ -37,34 +42,44 @@ class UnitTest extends \Tests\TestCase
     {
         $this->expectExceptionMessage("Can't set model properties directly");
 
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component
+        {
             public Post $post;
 
-            public function mount() {
+            public function mount()
+            {
                 $this->post = Post::first();
             }
 
-            public function render() { return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
                 <div>{{ $post->title }}</div>
-            HTML; }
+            HTML;
+            }
         })
-        ->assertSee('First')
-        ->set('post.title', 'bar');
+            ->assertSee('First')
+            ->set('post.title', 'bar');
     }
 
     /** @test */
     public function cant_view_model_data_in_javascript()
     {
-        $data = Livewire::test(new class extends \Livewire\Component {
+        $data = Livewire::test(new class extends \Livewire\Component
+        {
             public Post $post;
 
-            public function mount() {
+            public function mount()
+            {
                 $this->post = Post::first();
             }
 
-            public function render() { return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
                 <div>{{ $post->title }}</div>
-            HTML; }
+            HTML;
+            }
         })->getData();
 
         $this->assertNull($data['post']);
@@ -73,21 +88,25 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function unpersisted_models_can_be_assigned_but_no_data_is_persisted_between_requests()
     {
-        $component = Livewire::test(new class extends \Livewire\Component {
+        $component = Livewire::test(new class extends \Livewire\Component
+        {
             public Post $post;
 
-            public function mount() {
+            public function mount()
+            {
                 $this->post = new Post();
             }
 
-            public function render() { return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
                 <div>{{ $post->title }}</div>
-            HTML; }
+            HTML;
+            }
         })
-        ->call('$refresh')
-        ->assertSet('post', new Post())
-        ;
-        
+            ->call('$refresh')
+            ->assertSet('post', new Post());
+
         $data = $component->getData();
 
         $this->assertNull($data['post']);
@@ -99,11 +118,13 @@ class UnitTest extends \Tests\TestCase
         $this->markTestSkipped(); // @todo: probably not going to go this route...
         (new Post)::resolveConnection()->enableQueryLog();
 
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component
+        {
             #[Lazy]
             public Post $post;
 
-            public function mount() {
+            public function mount()
+            {
                 $this->post = Post::first();
             }
 
@@ -112,16 +133,18 @@ class UnitTest extends \Tests\TestCase
                 $this->post->save();
             }
 
-            public function render() { return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
                 <div></div>
-            HTML; }
+            HTML;
+            }
         })
-        ->call('$refresh')
-        ->call('save');
+            ->call('$refresh')
+            ->call('save');
 
         $this->assertCount(2, Post::resolveConnection()->getQueryLog());
     }
-
 
     /** @test */
     public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
@@ -130,7 +153,7 @@ class UnitTest extends \Tests\TestCase
             'post' => Post::class,
         ]);
 
-        $component =  Livewire::test(PostComponent::class);
+        $component = Livewire::test(PostComponent::class);
 
         $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
     }
@@ -148,11 +171,11 @@ class UnitTest extends \Tests\TestCase
             ->call('$refresh')
             ->assertSet('post', $post);
     }
-
 }
 
 #[\Attribute]
-class Lazy {
+class Lazy
+{
     //
 }
 

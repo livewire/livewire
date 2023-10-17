@@ -2,23 +2,25 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
     public function blade_conditionals_are_handled_properly_by_morphdom()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $show = true;
 
-            function toggle()
+            public function toggle()
             {
                 $this->show = ! $this->show;
             }
 
-            function render() {
+            public function render()
+            {
                 return <<<'HTML'
                 <div>
                     <button wire:click="toggle" dusk="toggle">Toggle</button>
@@ -34,34 +36,34 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->type('@bar', 'Hey!')
-        ->waitForLivewire()->click('@toggle')
-        ->assertInputValue('@bar', 'Hey!')
-        ->assertNotPresent('@foo')
-        ->waitForLivewire()->click('@toggle')
-        ->assertInputValue('@bar', 'Hey!')
-        ->assertVisible('@foo')
-        ;
+            ->type('@bar', 'Hey!')
+            ->waitForLivewire()->click('@toggle')
+            ->assertInputValue('@bar', 'Hey!')
+            ->assertNotPresent('@foo')
+            ->waitForLivewire()->click('@toggle')
+            ->assertInputValue('@bar', 'Hey!')
+            ->assertVisible('@foo');
     }
 
     /** @test */
     public function blade_conditional_actions_are_handled_properly_by_morphdom()
     {
-        Livewire::visit(new class extends Component {
-
+        Livewire::visit(new class extends Component
+        {
             public $enabled = true;
 
-            function enable()
+            public function enable()
             {
                 $this->enabled = true;
             }
 
-            function disable()
+            public function disable()
             {
                 $this->enabled = false;
             }
 
-            function render() {
+            public function render()
+            {
                 return <<<'HTML'
                 <div>
                     <div>
@@ -75,13 +77,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForLivewire()->click('@disable')
-        ->assertNotPresent('@disable')
-        ->assertVisible('@enable')
-        ->waitForLivewire()->click('@enable')
-        ->assertNotPresent('@enable')
-        ->assertVisible('@disable')
-        ;
+            ->waitForLivewire()->click('@disable')
+            ->assertNotPresent('@disable')
+            ->assertVisible('@enable')
+            ->waitForLivewire()->click('@enable')
+            ->assertNotPresent('@enable')
+            ->assertVisible('@disable');
     }
 }
-

@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Stacks;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -38,8 +37,7 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@refresh-child')
                 ->assertScript('JSON.stringify(window.stack_output)', json_encode([
                     'parent-scripts', 'child-scripts', 'child-blade-scripts', 'child-blade-scripts-no-once', 'child-blade-scripts-no-once',
-                ]))
-            ;
+                ]));
         });
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class MoveCommandUnitTest extends \Tests\TestCase
 {
@@ -39,10 +39,11 @@ class MoveCommandUnitTest extends \Tests\TestCase
 
         $this->assertFalse(File::exists($this->livewireClassesPath('Bob.php')));
     }
+
     /** @test */
     public function component_with_test_is_renamed_by_move_command()
     {
-        Artisan::call('make:livewire', ['name' => 'bob','--test'=>true]);
+        Artisan::call('make:livewire', ['name' => 'bob', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
@@ -59,6 +60,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireTestsPath('BobTest.php')));
 
     }
+
     /** @test */
     public function component_is_renamed_by_mv_command()
     {
@@ -79,7 +81,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
     /** @test */
     public function nested_component_is_renamed_by_move_command()
     {
-        Artisan::call('make:livewire', ['name' => 'bob.lob','--test'=>true]);
+        Artisan::call('make:livewire', ['name' => 'bob.lob', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Bob/Lob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('bob/lob.blade.php')));
@@ -100,7 +102,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
     /** @test */
     public function multiword_component_is_renamed_by_move_command()
     {
-        Artisan::call('make:livewire', ['name' => 'bob-lob','--test'=>true]);
+        Artisan::call('make:livewire', ['name' => 'bob-lob', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('BobLob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob.blade.php')));
@@ -121,7 +123,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
     /** @test */
     public function pascal_case_component_is_automatically_converted_by_move_command()
     {
-        Artisan::call('make:livewire', ['name' => 'BobLob.BobLob','--test'=>true]);
+        Artisan::call('make:livewire', ['name' => 'BobLob.BobLob', '--test' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('BobLob/BobLob.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('bob-lob/bob-lob.blade.php')));

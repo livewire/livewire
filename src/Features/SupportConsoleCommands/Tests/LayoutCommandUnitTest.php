@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class LayoutCommandUnitTest extends \Tests\TestCase
 {

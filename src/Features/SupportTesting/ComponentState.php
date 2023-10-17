@@ -6,45 +6,48 @@ use Livewire\Drawer\Utils;
 
 class ComponentState
 {
-    function __construct(
+    public function __construct(
         protected $component,
         protected $response,
         protected $view,
         protected $html,
         protected $snapshot,
         protected $effects,
-    ) {}
+    ) {
+    }
 
-    function getComponent() {
+    public function getComponent()
+    {
         return $this->component;
     }
 
-    function getSnapshot()
+    public function getSnapshot()
     {
         return $this->snapshot;
     }
 
-    function getSnapshotData()
+    public function getSnapshotData()
     {
         return $this->untupleify($this->snapshot['data']);
     }
 
-    function getEffects()
+    public function getEffects()
     {
         return $this->effects;
     }
 
-    function getView()
+    public function getView()
     {
         return $this->view;
     }
 
-    function getResponse()
+    public function getResponse()
     {
         return $this->response;
     }
 
-    function untupleify($payload) {
+    public function untupleify($payload)
+    {
         $value = Utils::isSyntheticTuple($payload) ? $payload[0] : $payload;
 
         if (is_array($value)) {
@@ -56,7 +59,7 @@ class ComponentState
         return $value;
     }
 
-    function getHtml($stripInitialData = false)
+    public function getHtml($stripInitialData = false)
     {
         $html = $this->html;
 

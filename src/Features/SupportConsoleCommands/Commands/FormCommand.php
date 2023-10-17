@@ -34,7 +34,7 @@ class FormCommand extends GeneratorCommand
      */
     public function getStub()
     {
-        return __DIR__ . '/livewire.form.stub';
+        return __DIR__.'/livewire.form.stub';
     }
 
     /**
@@ -45,6 +45,6 @@ class FormCommand extends GeneratorCommand
      */
     public function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace . '\Livewire\Forms';
+        return $rootNamespace.'\Livewire\Forms';
     }
 }

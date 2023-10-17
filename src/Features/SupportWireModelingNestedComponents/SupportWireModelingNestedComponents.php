@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
+
 use function Livewire\on;
 use function Livewire\store;
 
@@ -13,14 +14,16 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
     public static function provide()
     {
-        on('flush-state', fn() => static::$outersByComponentId = []);
+        on('flush-state', fn () => static::$outersByComponentId = []);
 
         // On a subsequent request, a parent encounters a child component
         // with wire:model on it, and that child has already been mounted
         // in a previous request, capture the value being passed in so we
         // can later set the child's property if it exists in this request.
         on('mount.stub', function ($tag, $id, $params, $parent, $key) {
-            if (! isset($params['wire:model'])) return;
+            if (! isset($params['wire:model'])) {
+                return;
+            }
 
             $outer = $params['wire:model'];
 
@@ -30,7 +33,9 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
     public function hydrate($memo)
     {
-        if (! isset($memo['bindings'])) return;
+        if (! isset($memo['bindings'])) {
+            return;
+        }
 
         $bindings = $memo['bindings'];
 
@@ -39,7 +44,9 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
         // If this child's parent already rendered its stub, retrieve
         // the memo'd value and set it.
-        if (! isset(static::$outersByComponentId[$memo['id']])) return;
+        if (! isset(static::$outersByComponentId[$memo['id']])) {
+            return;
+        }
 
         $outers = static::$outersByComponentId[$memo['id']];
 
@@ -55,7 +62,9 @@ class SupportWireModelingNestedComponents extends ComponentHook
         return function ($html, $replaceHtml) {
             $bindings = store($this->component)->get('bindings', false);
 
-            if (! $bindings) return;
+            if (! $bindings) {
+                return;
+            }
 
             // Currently we can only support a single wire:model bound value,
             // so we'll just get the first one. But in the future we will
@@ -77,7 +86,9 @@ class SupportWireModelingNestedComponents extends ComponentHook
     {
         $bindings = store($this->component)->get('bindings', false);
 
-        if (! $bindings) return;
+        if (! $bindings) {
+            return;
+        }
 
         // Add the bindings metadata to the paylad for later reference...
         $context->addMemo('bindings', $bindings);

@@ -3,12 +3,15 @@
 namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
+
 use function Livewire\store;
 
 #[\Attribute]
 class BaseReactive extends LivewireAttribute
 {
-    function __construct() {}
+    public function __construct()
+    {
+    }
 
     protected $originalValueHash;
 

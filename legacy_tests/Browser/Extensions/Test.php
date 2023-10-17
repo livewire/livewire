@@ -11,7 +11,8 @@ class Test extends BrowserTestCase
 {
     public function test_custom_wire_directive(): void
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $count = 0;
 
             public function render()
@@ -29,7 +30,7 @@ class Test extends BrowserTestCase
                 HTML;
             }
         })
-            ->tap(fn(Browser $browser) => $browser->script([
+            ->tap(fn (Browser $browser) => $browser->script([
                 'window.renameMe = false',
                 "window.Livewire.directive('foo', ({ el, directive, component }) => {
                     window.renameMe = true
@@ -37,7 +38,6 @@ class Test extends BrowserTestCase
             ]))
             ->assertScript('window.renameMe', false)
             ->waitForLivewire()->click('@refresh')
-            ->assertScript('window.renameMe', true)
-        ;
+            ->assertScript('window.renameMe', true);
     }
 }

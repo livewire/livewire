@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\Defer;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -32,8 +31,7 @@ class Test extends TestCase
                 ->pause(150)
                 ->assertDontSeeIn('@bar.output', $expectation = '["a","b"]')
                 ->waitForLivewire()->click('@refresh')
-                ->assertSeeIn('@bar.output', $expectation)
-            ;
+                ->assertSeeIn('@bar.output', $expectation);
         });
     }
 }

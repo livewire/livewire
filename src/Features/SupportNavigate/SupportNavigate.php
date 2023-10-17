@@ -2,13 +2,13 @@
 
 namespace Livewire\Features\SupportNavigate;
 
-use Livewire\ComponentHook;
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Vite;
+use Livewire\ComponentHook;
 
 class SupportNavigate extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
         Blade::directive('persist', function ($expression) {
             return '<?php app("livewire")->forceAssetInjection(); ?><div x-persist="<?php echo e('.$expression.'); ?>">';

@@ -4,21 +4,23 @@ namespace Livewire\Features\SupportEvents;
 
 use Illuminate\Support\Facades\Blade;
 use Livewire\Attributes\Renderless;
-use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
+use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
     /** @test */
     public function can_listen_for_component_event_with_this_on_in_javascript()
     {
-        Livewire::visit(new class extends Component {
-            function foo() {
+        Livewire::visit(new class extends Component
+        {
+            public function foo()
+            {
                 $this->dispatch('foo');
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -29,23 +31,26 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         })
-        ->assertDontSeeIn('@target', 'bar')
-        ->waitForLivewire()->click('@button')
-        ->assertSeeIn('@target', 'bar');
+            ->assertDontSeeIn('@target', 'bar')
+            ->waitForLivewire()->click('@button')
+            ->assertSeeIn('@target', 'bar');
     }
 
     /** @test */
     public function dont_call_render_on_renderless_event_handler()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $count = 0;
 
             protected $listeners = ['foo' => 'onFoo'];
 
             #[Renderless]
-            function onFoo() { }
+            public function onFoo()
+            {
+            }
 
-            function render()
+            public function render()
             {
                 $this->count++;
 
@@ -64,17 +69,18 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function dispatch_from_javascript_should_only_be_called_once()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $count = 0;
 
             protected $listeners = ['foo' => 'onFoo'];
 
-            function onFoo()
+            public function onFoo()
             {
                 $this->count++;
             }
 
-            function render()
+            public function render()
             {
                 return Blade::render(<<<'HTML'
                 <div>

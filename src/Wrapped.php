@@ -6,18 +6,22 @@ class Wrapped
 {
     protected $fallback;
 
-    function __construct(public $target) {}
+    public function __construct(public $target)
+    {
+    }
 
-    function withFallback($fallback)
+    public function withFallback($fallback)
     {
         $this->fallback = $fallback;
 
         return $this;
     }
 
-    function __call($method, $params)
+    public function __call($method, $params)
     {
-        if (! method_exists($this->target, $method)) return value($this->fallback);
+        if (! method_exists($this->target, $method)) {
+            return value($this->fallback);
+        }
 
         try {
             return ImplicitlyBoundMethod::call(app(), [$this->target, $method], $params);
@@ -34,7 +38,3 @@ class Wrapped
         }
     }
 }
-
-
-
-

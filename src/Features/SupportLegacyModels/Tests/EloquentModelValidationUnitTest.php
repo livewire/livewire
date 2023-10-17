@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Sushi\Sushi;
-use Livewire\Livewire;
-use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Component;
+use Livewire\Livewire;
+use Sushi\Sushi;
 
 class EloquentModelValidationUnitTest extends \Tests\TestCase
 {

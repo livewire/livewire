@@ -10,7 +10,8 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function receive_event_with_attribute()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends Component
+        {
             public $foo = 'bar';
 
             #[BaseOn('bar')]
@@ -19,7 +20,10 @@ class UnitTest extends \Tests\TestCase
                 $this->foo = $param;
             }
 
-            public function render() { return '<div></div>'; }
+            public function render()
+            {
+                return '<div></div>';
+            }
         });
 
         $component->dispatch('bar', 'baz');
@@ -30,7 +34,8 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function listen_for_dynamic_event_name()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends Component
+        {
             public $post = ['id' => 2];
 
             public $foo = 'bar';
@@ -41,7 +46,10 @@ class UnitTest extends \Tests\TestCase
                 $this->foo = $param;
             }
 
-            public function render() { return '<div></div>'; }
+            public function render()
+            {
+                return '<div></div>';
+            }
         });
 
         $component->dispatch('bar.2', 'baz');
@@ -52,16 +60,20 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function listens_for_event_with_named_params()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends Component
+        {
             public $foo = 'bar';
 
             #[BaseOn('bar')]
             public function onBar($name, $game)
             {
-                $this->foo = $name . $game;
+                $this->foo = $name.$game;
             }
 
-            public function render() { return '<div></div>'; }
+            public function render()
+            {
+                return '<div></div>';
+            }
         });
 
         $component->dispatch('bar', game: 'shmaz', name: 'baz');
@@ -72,13 +84,17 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function dispatches_event_with_named_params()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public function dispatchFoo()
             {
                 $this->dispatch('foo', name: 'bar', game: 'baz');
             }
 
-            public function render() { return '<div></div>'; }
+            public function render()
+            {
+                return '<div></div>';
+            }
         })
             ->call('dispatchFoo')
             ->assertDispatched('foo')
@@ -86,14 +102,14 @@ class UnitTest extends \Tests\TestCase
             ->assertDispatched('foo', name: 'bar', game: 'baz')
             ->assertDispatched('foo', game: 'baz', name: 'bar')
             ->assertNotDispatched('foo', games: 'baz')
-            ->assertNotDispatched('foo', name: 'baz')
-        ;
+            ->assertNotDispatched('foo', name: 'baz');
     }
 
     /** @test */
     public function it_can_register_multiple_listeners_via_attribute(): void
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public $counter = 0;
 
             #[BaseOn('foo'), BaseOn('bar')]
@@ -102,7 +118,10 @@ class UnitTest extends \Tests\TestCase
                 $this->counter++;
             }
 
-            public function render() { return '<div></div>'; }
+            public function render()
+            {
+                return '<div></div>';
+            }
         })
             ->dispatch('foo')
             ->assertSet('counter', 1)
@@ -113,7 +132,8 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function it_can_register_multiple_listeners_via_attribute_userland(): void
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public $counter = 0;
 
             #[\Livewire\Attributes\On('foo'), \Livewire\Attributes\On('bar')]
@@ -122,7 +142,10 @@ class UnitTest extends \Tests\TestCase
                 $this->counter++;
             }
 
-            public function render() { return '<div></div>'; }
+            public function render()
+            {
+                return '<div></div>';
+            }
         })
             ->dispatch('foo')
             ->assertSet('counter', 1)
@@ -192,8 +215,8 @@ class UnitTest extends \Tests\TestCase
     public function component_can_set_dynamic_listeners()
     {
         Livewire::test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob'])
-                ->dispatch('bob', 'lob')
-                ->assertSet('foo', 'lob');
+            ->dispatch('bob', 'lob')
+            ->assertSet('foo', 'lob');
     }
 
     /** @test */
@@ -264,6 +287,7 @@ class ReceivesEventsWithSingleValueListener extends Component
 class ReceivesEventsWithDynamicListeners extends Component
 {
     public $listener;
+
     public $foo = '';
 
     public function mount($listener)
@@ -292,7 +316,7 @@ class ItCanReceiveEventUsingClassname extends Component
     public $bar;
 
     public $listeners = [
-        'foo' => 'bar'
+        'foo' => 'bar',
     ];
 
     public function onBar($value)

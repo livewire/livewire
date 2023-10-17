@@ -8,7 +8,7 @@ use Livewire\Livewire;
 class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
 {
     /** @test */
-    function can_assert_a_redirect_without_a_uri()
+    public function can_assert_a_redirect_without_a_uri()
     {
         $component = Livewire::test(RedirectComponent::class);
 
@@ -18,7 +18,7 @@ class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_a_redirect_with_a_uri()
+    public function can_assert_a_redirect_with_a_uri()
     {
         $component = Livewire::test(RedirectComponent::class);
 
@@ -28,7 +28,7 @@ class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_detect_failed_redirect()
+    public function can_detect_failed_redirect()
     {
         $component = Livewire::test(RedirectComponent::class);
 
@@ -40,12 +40,12 @@ class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
 
 class RedirectComponent extends Component
 {
-    function performRedirect()
+    public function performRedirect()
     {
         $this->redirect('/some');
     }
 
-    function render()
+    public function render()
     {
         return view('null-view');
     }

@@ -2,38 +2,38 @@
 
 namespace LegacyTests\Browser;
 
-use function Livewire\str;
-use Throwable;
-use Sushi\Sushi;
-use Psy\Shell;
-use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
-use Orchestra\Testbench\Dusk\Options as DuskOptions;
-use Livewire\LivewireServiceProvider;
-use Livewire\Livewire;
-use Livewire\Component;
-use Laravel\Dusk\Browser;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Foundation\Auth\User as AuthUser;
-use Illuminate\Database\Eloquent\Model;
-use Facebook\WebDriver\Remote\RemoteWebDriver;
-use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Facebook\WebDriver\Chrome\ChromeOptions;
-use Exception;
 use Closure;
+use Exception;
+use Facebook\WebDriver\Chrome\ChromeOptions;
+use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as AuthUser;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
+use Laravel\Dusk\Browser;
+use Livewire\Component;
+use Livewire\Livewire;
+use Livewire\LivewireServiceProvider;
+use Orchestra\Testbench\Dusk\Options as DuskOptions;
+use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
+use Psy\Shell;
+use Sushi\Sushi;
+use Throwable;
+
+use function Livewire\str;
 
 class TestCase extends BaseTestCase
 {
     use SupportsSafari;
 
     public static $useSafari = false;
+
     public static $useAlpineV3 = false;
 
-    function visitLivewireComponent($browser, $classes, $queryString = '')
+    public function visitLivewireComponent($browser, $classes, $queryString = '')
     {
         $classes = (array) $classes;
 
@@ -44,16 +44,16 @@ class TestCase extends BaseTestCase
         return $browser->visit($url)->waitForLivewireToLoad();
     }
 
-    function registerComponentForNextTest($components)
+    public function registerComponentForNextTest($components)
     {
-        $tmp = __DIR__ . '/_runtime_components.json';
+        $tmp = __DIR__.'/_runtime_components.json';
 
         file_put_contents($tmp, json_encode($components, JSON_PRETTY_PRINT));
     }
 
-    function wipeRuntimeComponentRegistration()
+    public function wipeRuntimeComponentRegistration()
     {
-        $tmp = __DIR__ . '/_runtime_components.json';
+        $tmp = __DIR__.'/_runtime_components.json';
 
         file_exists($tmp) && unlink($tmp);
     }
@@ -80,8 +80,8 @@ class TestCase extends BaseTestCase
 
         $isUsingAlpineV3 = static::$useAlpineV3;
 
-        $this->tweakApplication(function () use ($isUsingAlpineV3) {
-            $tmp = __DIR__ . '/_runtime_components.json';
+        $this->tweakApplication(function () {
+            $tmp = __DIR__.'/_runtime_components.json';
             if (file_exists($tmp)) {
                 // We can't just "require" this file because of race conditions...
                 $components = json_decode(file_get_contents($tmp));
@@ -149,7 +149,7 @@ class TestCase extends BaseTestCase
 
             Route::middleware('web')->get('/entangle-turbo', function () {
                 return view('turbo', [
-                    'link' => '/livewire-dusk/' . urlencode(\LegacyTests\Browser\Alpine\Entangle\ToggleEntangledTurbo::class),
+                    'link' => '/livewire-dusk/'.urlencode(\LegacyTests\Browser\Alpine\Entangle\ToggleEntangledTurbo::class),
                 ]);
             })->name('entangle-turbo');
 
@@ -174,8 +174,13 @@ class TestCase extends BaseTestCase
     }
 
     // We don't want to deal with screenshots or console logs.
-    protected function storeConsoleLogsFor($browsers) {}
-    protected function captureFailuresFor($browsers) {}
+    protected function storeConsoleLogsFor($browsers)
+    {
+    }
+
+    protected function captureFailuresFor($browsers)
+    {
+    }
 
     public function makeACleanSlate()
     {
@@ -205,9 +210,9 @@ class TestCase extends BaseTestCase
 
         $app['config']->set('database.default', 'testbench');
         $app['config']->set('database.connections.testbench', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => '',
+            'prefix' => '',
         ]);
 
         $app['config']->set('auth.providers.users.model', User::class);
@@ -264,11 +269,15 @@ class TestCase extends BaseTestCase
             try {
                 $callback(...$browsers);
             } catch (Exception $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI()) {
+                    $this->breakIntoATinkerShell($browsers, $e);
+                }
 
                 throw $e;
             } catch (Throwable $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
+                if (DuskOptions::hasUI()) {
+                    $this->breakIntoATinkerShell($browsers, $e);
+                }
 
                 throw $e;
             }

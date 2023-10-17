@@ -2,10 +2,9 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Livewire;
-use Livewire\Component;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Livewire\Component;
+use Livewire\Livewire;
 
 class WorksOnLoadBalancersUnitTest extends \Tests\TestCase
 {

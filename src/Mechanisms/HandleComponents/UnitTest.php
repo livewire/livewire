@@ -21,26 +21,37 @@ class UnitTest extends \Tests\TestCase
 
         // Then make a standard laravel test and ensure that the input has
         // had trim strings re-applied
-        Route::post('laravel', function() {
-            return 'laravel' . request()->input('name') . 'laravel';
+        Route::post('laravel', function () {
+            return 'laravel'.request()->input('name').'laravel';
         });
 
         $this->post('laravel', ['name' => '    aaa    '])
-        ->assertSee('laravelaaalaravel');
+            ->assertSee('laravelaaalaravel');
     }
 
     /** @test */
     public function synthesized_property_types_are_preserved_after_update()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public $foo;
+
             public $isStringable;
-            public function mount() { $this->foo = str('bar'); }
+
+            public function mount()
+            {
+                $this->foo = str('bar');
+            }
+
             public function checkStringable()
             {
                 $this->isStringable = $this->foo instanceof Stringable;
             }
-            public function render() { return '<div></div>'; }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
         })
             ->assertSet('foo', 'bar')
             ->call('checkStringable')
@@ -48,17 +59,18 @@ class UnitTest extends \Tests\TestCase
             ->set('foo', 'baz')
             ->assertSet('foo', 'baz')
             ->call('checkStringable')
-            ->assertSet('isStringable', true)
-        ;
+            ->assertSet('isStringable', true);
     }
 
     /** @test */
     public function uninitialized_integer_can_be_set_to_empty_string()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public int $count;
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <h1 dusk="count">count: {{ $count }};</h1>
@@ -70,17 +82,18 @@ class UnitTest extends \Tests\TestCase
             ->set('count', 1)
             ->assertSee('count: 1;')
             ->set('count', '')
-            ->assertSee('count: ;')
-        ;
+            ->assertSee('count: ;');
     }
 
     /** @test */
     public function uninitialized_integer_in_a_form_object_can_be_set_to_empty_string()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public CountForm $form;
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <!--  -->
@@ -92,14 +105,14 @@ class UnitTest extends \Tests\TestCase
             ->set('form.count', 1)
             ->assertSet('form.count', 1)
             ->set('form.count', '')
-            ->assertSet('form.count', null)
-        ;
+            ->assertSet('form.count', null);
     }
 
     /** @test */
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component
+        {
             public ?UnitSuit $selected;
 
             #[\Livewire\Attributes\Computed]
@@ -123,18 +136,18 @@ class UnitTest extends \Tests\TestCase
                 HTML;
             }
         })
-        ->assertSet('selected', null)
-        ->set('selected', 'D')
-        ->assertSet('selected', UnitSuit::Diamonds)
-        ->set('selected', null)
-        ->assertSet('selected', null)
-        ;
+            ->assertSet('selected', null)
+            ->set('selected', 'D')
+            ->assertSet('selected', UnitSuit::Diamonds)
+            ->set('selected', null)
+            ->assertSet('selected', null);
     }
 
     /** @test */
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null_inside_form_object()
     {
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component
+        {
             public SuitForm $form;
 
             public function render()
@@ -146,12 +159,11 @@ class UnitTest extends \Tests\TestCase
                 HTML;
             }
         })
-        ->assertSet('form.selected', null)
-        ->set('form.selected', 'D')
-        ->assertSet('form.selected', UnitSuit::Diamonds)
-        ->set('form.selected', null)
-        ->assertSet('form.selected', null)
-        ;
+            ->assertSet('form.selected', null)
+            ->set('form.selected', 'D')
+            ->assertSet('form.selected', UnitSuit::Diamonds)
+            ->set('form.selected', null)
+            ->assertSet('form.selected', null);
     }
 }
 
@@ -168,6 +180,7 @@ class BasicComponent extends Component
 class ComponentWithStringPropertiesStub extends Component
 {
     public $emptyString = '';
+
     public $oneSpace = ' ';
 
     public function render()

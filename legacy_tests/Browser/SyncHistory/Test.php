@@ -2,14 +2,13 @@
 
 namespace LegacyTests\Browser\SyncHistory;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
-use LegacyTests\Browser\TestCase;
 use LegacyTests\Browser\DataBinding\Defer\Component as DeferComponent;
+use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -34,12 +33,12 @@ class Test extends TestCase
 
     public function test_route_bound_properties_are_synced_with_browser_history_when_no_query_string_is_present()
     {
-        $this->browse(function(Browser $browser) {
-            $browser->visit(route('sync-history-without-query-string', [ 'step' => 1 ], false))->waitForText('Step 1 Active');
+        $this->browse(function (Browser $browser) {
+            $browser->visit(route('sync-history-without-query-string', ['step' => 1], false))->waitForText('Step 1 Active');
 
-            $browser->waitForLivewire()->click('@step-2')->assertRouteIs('sync-history-without-query-string', [ 'step' => 2 ]);
+            $browser->waitForLivewire()->click('@step-2')->assertRouteIs('sync-history-without-query-string', ['step' => 2]);
 
-            $browser->back()->assertRouteIs('sync-history-without-query-string', [ 'step' => 1 ]);
+            $browser->back()->assertRouteIs('sync-history-without-query-string', ['step' => 1]);
         });
     }
 
@@ -83,7 +82,7 @@ class Test extends TestCase
                 ->assertQueryStringHas('showHelp', 'true');
 
             $browser->waitForLivewire()->click('@toggle-help')
-               ->assertQueryStringHas('showHelp', 'false');
+                ->assertQueryStringHas('showHelp', 'false');
 
             $browser->back()
                 ->waitForText('Help is currently enabled')
@@ -96,8 +95,8 @@ class Test extends TestCase
                 ->assertQueryStringHas('showHelp', 'true');
 
             $browser->back()
-               ->waitForText('Help is currently disabled')
-               ->assertQueryStringHas('showHelp', 'false');
+                ->waitForText('Help is currently disabled')
+                ->assertQueryStringHas('showHelp', 'false');
         });
     }
 
@@ -171,8 +170,7 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, DeferComponent::class)
-                ->assertScript('history.state', null)
-            ;
+                ->assertScript('history.state', null);
         });
     }
 
@@ -206,8 +204,7 @@ class Test extends TestCase
                 ->back()
                 ->assertRadioNotSelected('@foo.baz', 'baz')
                 ->assertRadioNotSelected('@foo.bar', 'bar')
-                ->assertQueryStringMissing('foo')
-            ;
+                ->assertQueryStringMissing('foo');
         });
     }
 
@@ -223,19 +220,18 @@ class Test extends TestCase
                 ->assertSeeIn('@alpine.output', 'baz')
                 ->back()
                 ->assertSeeIn('@blade.output', '1')
-                ->assertSeeIn('@alpine.output', 'bar')
-            ;
+                ->assertSeeIn('@alpine.output', 'bar');
         });
     }
 
     public function test_optional_route_bound_properties_are_synced_with_browser_history()
     {
-        $this->browse(function(Browser $browser) {
+        $this->browse(function (Browser $browser) {
             $browser->visit(route('sync-history-with-optional-parameter', [], false))
                 ->waitForText('Activate Step 1')
                 ->waitForLivewire()
                 ->click('@step-1')
-                ->assertRouteIs('sync-history-with-optional-parameter', [ 'step' => 1 ])
+                ->assertRouteIs('sync-history-with-optional-parameter', ['step' => 1])
                 ->back()
                 ->assertRouteIs('sync-history-with-optional-parameter', []);
         });

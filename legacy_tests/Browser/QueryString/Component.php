@@ -8,8 +8,11 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $foo = 'bar';
+
     public $bar = 'baz';
+
     public $bob = ['foo', 'bar'];
+
     public $qux = [
         'hyphen' => 'quux-quuz',
         'comma' => 'quux,quuz',
@@ -17,7 +20,7 @@ class Component extends BaseComponent
         'space' => 'quux quuz',
         'array' => [
             'quux',
-            'quuz'
+            'quuz',
         ],
     ];
 

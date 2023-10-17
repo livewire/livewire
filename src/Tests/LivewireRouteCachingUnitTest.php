@@ -28,7 +28,7 @@ class LivewireRouteCachingUnitTest extends TestCase
     protected function getRoute(string $uri): Route
     {
         $route = collect(\Illuminate\Support\Facades\Route::getRoutes())
-            ->firstWhere(fn(Route $route) => $route->uri() === $uri);
+            ->firstWhere(fn (Route $route) => $route->uri() === $uri);
 
         if ($route === null) {
             $this->fail("Route '$uri' not found.");

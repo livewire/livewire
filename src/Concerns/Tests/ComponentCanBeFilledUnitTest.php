@@ -2,10 +2,10 @@
 
 namespace Livewire\Concerns\Tests;
 
-use Livewire\Component;
-use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Component;
+use Livewire\Livewire;
 
 class ComponentCanBeFilledUnitTest extends \Tests\TestCase
 {
@@ -75,28 +75,35 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
     }
 }
 
-class User {
+class User
+{
     public $publicProperty = 'Caleb';
+
     public $protectedProperty = 'Caleb';
+
     public $privateProperty = 'Caleb';
 }
 
-class UserModel extends Model {
+class UserModel extends Model
+{
     public $appends = [
         'publicProperty',
         'protectedProperty',
-        'privateProperty'
+        'privateProperty',
     ];
 
-    public function getPublicPropertyAttribute() {
+    public function getPublicPropertyAttribute()
+    {
         return 'Caleb';
     }
 
-    public function getProtectedPropertyAttribute() {
+    public function getProtectedPropertyAttribute()
+    {
         return 'protected';
     }
 
-    public function getPrivatePropertyAttribute() {
+    public function getPrivatePropertyAttribute()
+    {
         return 'private';
     }
 }
@@ -104,7 +111,9 @@ class UserModel extends Model {
 class ComponentWithFillableProperties extends Component
 {
     public $publicProperty = 'public';
+
     protected $protectedProperty = 'protected';
+
     private $privateProperty = 'private';
 
     public $dotProperty = [];

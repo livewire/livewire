@@ -18,8 +18,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForDialog()
             ->assertDialogOpened("This page has expired.\nWould you like to refresh the page?")
             // Dismiss dialog so next tests run
-            ->dismissDialog()
-        ;
+            ->dismissDialog();
     }
 
     /** @test */
@@ -34,14 +33,14 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForDialog()
             ->assertDialogOpened('Page Expired - Error Response')
             // Dismiss dialog so next tests run
-            ->dismissDialog()
-        ;
+            ->dismissDialog();
     }
 }
 
 class Component extends BaseComponent
 {
     public $useCustomPageExpiredHook = false;
+
     public $useCustomErrorResponseHook = false;
 
     protected $queryString = [

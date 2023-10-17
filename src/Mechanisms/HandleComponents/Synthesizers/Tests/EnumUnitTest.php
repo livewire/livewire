@@ -9,6 +9,7 @@ class EnumUnitTest extends \Tests\TestCase
 {
     /**
      * @test
+     *
      * @requires PHP >= 8.1
      */
     public function public_properties_can_be_cast()
@@ -28,6 +29,7 @@ enum TestingEnum: string
 class ComponentWithPublicEnumCasters extends Component
 {
     public $typeOf;
+
     public $enum;
 
     public function hydrate()

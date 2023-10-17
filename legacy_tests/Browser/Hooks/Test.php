@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Hooks;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 
@@ -24,10 +23,13 @@ class Test extends TestCase
                         })",
                     ]);
                 })
-                ->tap(function ($b) { $this->assertEquals('', $b->value('@output')); })
+                ->tap(function ($b) {
+                    $this->assertEquals('', $b->value('@output'));
+                })
                 ->waitForLivewire()->click('@button')
-                ->tap(function ($b) { $this->assertEquals('before_after', $b->value('@output')); })
-            ;
+                ->tap(function ($b) {
+                    $this->assertEquals('before_after', $b->value('@output'));
+                });
         });
     }
 }

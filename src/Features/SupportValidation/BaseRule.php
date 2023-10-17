@@ -10,16 +10,17 @@ use function Livewire\wrap;
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_ALL)]
 class BaseRule extends LivewireAttribute
 {
-    function __construct(
+    public function __construct(
         public $rule,
         protected $attribute = null,
         protected $as = null,
         protected $message = null,
         protected $onUpdate = true,
         protected bool $translate = true
-    ) {}
+    ) {
+    }
 
-    function boot()
+    public function boot()
     {
         $rules = [];
 
@@ -81,9 +82,11 @@ class BaseRule extends LivewireAttribute
         $this->component->addRulesFromOutside($rules);
     }
 
-    function update($fullPath, $newValue)
+    public function update($fullPath, $newValue)
     {
-        if ($this->onUpdate === false) return;
+        if ($this->onUpdate === false) {
+            return;
+        }
 
         return function () {
             wrap($this->component)->validateOnly($this->getName());

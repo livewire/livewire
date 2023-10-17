@@ -3,9 +3,9 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
 class EloquentModelSynth extends Synth
 {
@@ -40,7 +40,9 @@ class EloquentModelSynth extends Synth
 
         $rules = $this->getRules($this->context);
 
-        if (empty($rules)) return [[], $meta];
+        if (empty($rules)) {
+            return [[], $meta];
+        }
 
         $data = $this->getDataFromModel($target, $rules);
 
@@ -62,8 +64,10 @@ class EloquentModelSynth extends Synth
         }
 
         if (isset($meta['relations'])) {
-            foreach($meta['relations'] as $relationKey) {
-                if (! isset($data[$relationKey])) continue;
+            foreach ($meta['relations'] as $relationKey) {
+                if (! isset($data[$relationKey])) {
+                    continue;
+                }
 
                 $data[$relationKey][1]['__child_from_parent'] = $model->getRelation($relationKey);
 
@@ -113,7 +117,9 @@ class EloquentModelSynth extends Synth
     {
         $key = $this->path ?? null;
 
-        if (is_null($key)) return [];
+        if (is_null($key)) {
+            return [];
+        }
 
         if ($context->component) {
             return SupportLegacyModels::getRulesFor($this->context->component, $key);
@@ -133,12 +139,14 @@ class EloquentModelSynth extends Synth
         $attributes = $model->attributesToArray();
 
         foreach ($model->getCasts() as $key => $cast) {
-            if (! class_exists($cast)) continue;
+            if (! class_exists($cast)) {
+                continue;
+            }
 
             if (
                 in_array(CastsAttributes::class, class_implements($cast))
                 && isset($attributes[$key])
-                ) {
+            ) {
                 $attributes[$key] = $model->getAttributes()[$key];
             }
         }

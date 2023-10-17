@@ -8,7 +8,7 @@ use Livewire\Livewire;
 class TestableLivewireCanAssertNoRedirectUnitTest extends \Tests\TestCase
 {
     /** @test */
-    function can_assert_no_redirect()
+    public function can_assert_no_redirect()
     {
         $component = Livewire::test(NoRedirectComponent::class);
 
@@ -18,7 +18,7 @@ class TestableLivewireCanAssertNoRedirectUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_no_redirect_will_fail_if_redirected()
+    public function can_assert_no_redirect_will_fail_if_redirected()
     {
         $component = Livewire::test(NoRedirectComponent::class);
 
@@ -29,7 +29,7 @@ class TestableLivewireCanAssertNoRedirectUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_no_redirect_on_plain_component()
+    public function can_assert_no_redirect_on_plain_component()
     {
         $component = Livewire::test(PlainRenderingComponent::class);
         $component->assertNoRedirect();
@@ -38,7 +38,7 @@ class TestableLivewireCanAssertNoRedirectUnitTest extends \Tests\TestCase
 
 class PlainRenderingComponent extends Component
 {
-    function render()
+    public function render()
     {
         return view('null-view');
     }
@@ -46,17 +46,17 @@ class PlainRenderingComponent extends Component
 
 class NoRedirectComponent extends Component
 {
-    function performRedirect()
+    public function performRedirect()
     {
         $this->redirect('/some');
     }
 
-    function performNoRedirect()
+    public function performNoRedirect()
     {
         $this->dispatch('noRedirect');
     }
 
-    function render()
+    public function render()
     {
         return view('null-view');
     }

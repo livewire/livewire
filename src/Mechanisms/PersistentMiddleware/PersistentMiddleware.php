@@ -2,10 +2,11 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
-use function Livewire\on;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+
+use function Livewire\on;
 
 class PersistentMiddleware
 {
@@ -21,14 +22,15 @@ class PersistentMiddleware
     ];
 
     protected $path;
+
     protected $method;
 
-    function register()
+    public function register()
     {
         app()->singleton($this::class, fn () => $this);
     }
 
-    function boot()
+    public function boot()
     {
         on('dehydrate', function ($component, $context) {
             [$path, $method] = $this->extractPathAndMethodFromRequest();
@@ -39,31 +41,33 @@ class PersistentMiddleware
 
         on('snapshot-verified', function ($snapshot) {
             // Only apply middleware to requests hitting the Livewire update endpoint, and not any fake requests such as a test.
-            if (! app(HandleRequests::class)->isLivewireRoute()) return;
+            if (! app(HandleRequests::class)->isLivewireRoute()) {
+                return;
+            }
 
             $this->extractPathAndMethodFromSnapshot($snapshot);
 
             $this->applyPersistentMiddleware();
         });
 
-        on('flush-state', function() {
+        on('flush-state', function () {
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
         });
     }
 
-    function addPersistentMiddleware($middleware)
+    public function addPersistentMiddleware($middleware)
     {
         static::$persistentMiddleware = array_merge(static::$persistentMiddleware, (array) $middleware);
     }
 
-    function setPersistentMiddleware($middleware)
+    public function setPersistentMiddleware($middleware)
     {
         static::$persistentMiddleware = (array) $middleware;
     }
 
-    function getPersistentMiddleware()
+    public function getPersistentMiddleware()
     {
         return static::$persistentMiddleware;
     }
@@ -82,7 +86,9 @@ class PersistentMiddleware
         if (
             ! isset($snapshot['memo']['path'])
             || ! isset($snapshot['memo']['method'])
-        ) return;
+        ) {
+            return;
+        }
 
         // Store these locally, so dynamically added child components can use this data.
         $this->path = $snapshot['memo']['path'];
@@ -96,7 +102,9 @@ class PersistentMiddleware
         $middleware = $this->getApplicablePersistentMiddleware($request);
 
         // Only send through pipeline if there are middleware found
-        if (is_null($middleware)) return;
+        if (is_null($middleware)) {
+            return;
+        }
 
         Utils::applyMiddleware($request, $middleware);
     }
@@ -133,14 +141,16 @@ class PersistentMiddleware
 
     protected function formatPath($path)
     {
-        return '/' . ltrim($path, '/');
+        return '/'.ltrim($path, '/');
     }
 
     protected function getApplicablePersistentMiddleware($request)
     {
         $route = $this->getRouteFromRequest($request);
 
-        if (! $route) return [];
+        if (! $route) {
+            return [];
+        }
 
         $middleware = app('router')->gatherRouteMiddleware($route);
 
@@ -151,7 +161,7 @@ class PersistentMiddleware
     {
         $route = app('router')->getRoutes()->match($request);
 
-        $request->setRouteResolver(fn() => $route);
+        $request->setRouteResolver(fn () => $route);
 
         return $route;
     }
@@ -164,9 +174,11 @@ class PersistentMiddleware
 
         return $middleware
             ->filter(function ($value, $key) use ($persistentMiddleware) {
-                return $persistentMiddleware->contains(function($iValue, $iKey) use ($value) {
+                return $persistentMiddleware->contains(function ($iValue, $iKey) use ($value) {
                     // Some middlewares can be closures.
-                    if (! is_string($value)) return false;
+                    if (! is_string($value)) {
+                        return false;
+                    }
 
                     // Ensure any middleware arguments aren't included in the comparison
                     return Str::before($value, ':') == $iValue;

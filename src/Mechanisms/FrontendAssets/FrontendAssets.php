@@ -2,14 +2,16 @@
 
 namespace Livewire\Mechanisms\FrontendAssets;
 
-use Livewire\Drawer\Utils;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
+use Livewire\Drawer\Utils;
+
 use function Livewire\on;
 
 class FrontendAssets
 {
     public $hasRenderedScripts = false;
+
     public $hasRenderedStyles = false;
 
     public $javaScriptRoute;
@@ -39,12 +41,12 @@ class FrontendAssets
         });
     }
 
-    function useScriptTagAttributes($attributes)
+    public function useScriptTagAttributes($attributes)
     {
         $this->scriptTagAttributes = array_merge($this->scriptTagAttributes, $attributes);
     }
 
-    function setScriptRoute($callback)
+    public function setScriptRoute($callback)
     {
         $route = $callback([self::class, 'returnJavaScriptAsFile']);
 

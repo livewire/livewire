@@ -6,8 +6,10 @@ use function Livewire\trigger;
 
 class BrowserTestCase extends TestCase
 {
-    public static function tweakApplicationHook() {
-        return function () {};
+    public static function tweakApplicationHook()
+    {
+        return function () {
+        };
     }
 
     public function setUp(): void

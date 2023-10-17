@@ -51,7 +51,7 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('foo', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
         $this->assertStringNotContainsString('foo', $component->html());
@@ -69,11 +69,11 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('foo', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
         $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html() );
+        $this->assertStringContainsString('bar', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
         $this->assertStringNotContainsString('foo', $component->html());
@@ -87,11 +87,11 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('foo', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
         $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html() );
+        $this->assertStringContainsString('bar', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
         $this->assertStringNotContainsString('foo', $component->html());

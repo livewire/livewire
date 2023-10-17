@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Alpine\Dispatch;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -24,8 +23,7 @@ class Test extends TestCase
                 ->assertDontSee('Dispatch to worked')
                 ->waitForLivewire()
                 ->click('@dispatchTo')
-                ->assertSee('Dispatch to worked')
-            ;
+                ->assertSee('Dispatch to worked');
         });
     }
 }

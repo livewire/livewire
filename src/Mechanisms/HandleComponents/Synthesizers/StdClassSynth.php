@@ -4,14 +4,17 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use stdClass;
 
-class StdClassSynth extends Synth {
+class StdClassSynth extends Synth
+{
     public static $key = 'std';
 
-    static function match($target) {
+    public static function match($target)
+    {
         return $target instanceof stdClass;
     }
 
-    function dehydrate($target, $dehydrateChild) {
+    public function dehydrate($target, $dehydrateChild)
+    {
         $data = (array) $target;
 
         foreach ($target as $key => $child) {
@@ -21,7 +24,8 @@ class StdClassSynth extends Synth {
         return [$data, []];
     }
 
-    function hydrate($value, $meta, $hydrateChild) {
+    public function hydrate($value, $meta, $hydrateChild)
+    {
         $obj = new stdClass;
 
         foreach ($value as $key => $child) {
@@ -31,7 +35,8 @@ class StdClassSynth extends Synth {
         return $obj;
     }
 
-    function set(&$target, $key, $value) {
+    public function set(&$target, $key, $value)
+    {
         $target->$key = $value;
     }
 }

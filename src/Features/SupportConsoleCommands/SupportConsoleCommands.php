@@ -7,9 +7,11 @@ use Livewire\ComponentHook;
 
 class SupportConsoleCommands extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
-        if (! app()->runningInConsole()) return;
+        if (! app()->runningInConsole()) {
+            return;
+        }
 
         static::commands([
             \Livewire\Features\SupportConsoleCommands\Commands\MakeLivewireCommand::class, // make:livewire
@@ -31,10 +33,10 @@ class SupportConsoleCommands extends ComponentHook
         ]);
     }
 
-    static function commands($commands)
+    public static function commands($commands)
     {
         $commands = is_array($commands) ? $commands : func_get_args();
 
-        Artisan::starting(fn(Artisan $artisan) => $artisan->resolveCommands($commands));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands($commands));
     }
 }

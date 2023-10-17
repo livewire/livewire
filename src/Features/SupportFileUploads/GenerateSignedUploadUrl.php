@@ -43,7 +43,7 @@ class GenerateSignedUploadUrl
 
         $signedRequest = $client->createPresignedRequest(
             $command,
-            '+' . FileUploadConfiguration::maxUploadTime() . ' minutes'
+            '+'.FileUploadConfiguration::maxUploadTime().' minutes'
         );
 
         return [
@@ -58,7 +58,7 @@ class GenerateSignedUploadUrl
         return array_merge(
             $signedRequest->getHeaders(),
             [
-                'Content-Type' => $fileType ?: 'application/octet-stream'
+                'Content-Type' => $fileType ?: 'application/octet-stream',
             ]
         );
     }

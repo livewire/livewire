@@ -14,15 +14,15 @@ class ChangeForgetComputedToUnset extends UpgradeStep
             before: '$this->forgetComputed(\'title\')',
             after: 'unset($this->title)',
             pattern: '/\$this->forgetComputed\((.*?)\);/',
-            replacement: function($matches) {
+            replacement: function ($matches) {
                 $replacement = '';
 
-                if(isset($matches[1])) {
+                if (isset($matches[1])) {
                     preg_match_all('/(?:\'|")(.*?)(?:\'|")/', $matches[1], $keys);
 
                     $replacement .= 'unset(';
-                    foreach($keys[1] ?? [] as $key) {
-                        $replacement .= '$this->' . $key . ', ';
+                    foreach ($keys[1] ?? [] as $key) {
+                        $replacement .= '$this->'.$key.', ';
                     }
                     $replacement = rtrim($replacement, ', ');
                     $replacement .= ');';

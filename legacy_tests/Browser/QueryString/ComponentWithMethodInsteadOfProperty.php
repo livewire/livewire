@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\QueryString;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class ComponentWithMethodInsteadOfProperty extends BaseComponent

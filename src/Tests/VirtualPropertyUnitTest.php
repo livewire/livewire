@@ -35,19 +35,24 @@ class ComponentWithPublicVirtualproperty extends Component
     {
         $data = parent::getPublicPropertiesDefinedBySubClass();
         $data[PROPERTY_NAME] = $this->name;
+
         return $data;
     }
 
     public function __get($property)
     {
-        if($property == PROPERTY_NAME) return $this->name;
+        if ($property == PROPERTY_NAME) {
+            return $this->name;
+        }
+
         return parent::__get($property);
     }
 
     public function __set($property, $value)
     {
-        if($property == PROPERTY_NAME) {
+        if ($property == PROPERTY_NAME) {
             $this->name = $value;
+
             return;
         }
         parent::__set($property, $value);
@@ -55,7 +60,10 @@ class ComponentWithPublicVirtualproperty extends Component
 
     public function propertyIsPublicAndNotDefinedOnBaseClass($propertyName)
     {
-        if($propertyName == PROPERTY_NAME) return true;
+        if ($propertyName == PROPERTY_NAME) {
+            return true;
+        }
+
         return parent::propertyIsPublicAndNotDefinedOnBaseClass($propertyName);
     }
 }

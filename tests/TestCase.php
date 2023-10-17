@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 {
@@ -48,9 +48,9 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
 
         $app['config']->set('database.default', 'testbench');
         $app['config']->set('database.connections.testbench', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => '',
+            'prefix' => '',
         ]);
 
         $app['config']->set('filesystems.disks.unit-downloads', [

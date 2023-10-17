@@ -2,8 +2,9 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use function Livewire\invade;
 use Livewire\ComponentHook;
+
+use function Livewire\invade;
 
 class SupportQueryString extends ComponentHook
 {
@@ -12,9 +13,11 @@ class SupportQueryString extends ComponentHook
     /**
      * Note: this is support for the legacy syntax...
      */
-    function mount()
+    public function mount()
     {
-        if (! $queryString = $this->getQueryString()) return;
+        if (! $queryString = $this->getQueryString()) {
+            return;
+        }
 
         foreach ($queryString as $key => $value) {
             $key = is_string($key) ? $key : $value;
@@ -28,18 +31,23 @@ class SupportQueryString extends ComponentHook
 
     public function getQueryString()
     {
-        if (isset($this->queryString)) return $this->queryString;
+        if (isset($this->queryString)) {
+            return $this->queryString;
+        }
 
         $component = $this->component;
 
         $componentQueryString = [];
 
-        if (method_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString();
-        elseif (property_exists($component, 'queryString')) $componentQueryString = invade($component)->queryString;
+        if (method_exists($component, 'queryString')) {
+            $componentQueryString = invade($component)->queryString();
+        } elseif (property_exists($component, 'queryString')) {
+            $componentQueryString = invade($component)->queryString;
+        }
 
         return $this->queryString = collect(class_uses_recursive($class = $component::class))
             ->map(function ($trait) use ($class, $component) {
-                $member = 'queryString' . class_basename($trait);
+                $member = 'queryString'.class_basename($trait);
 
                 if (method_exists($class, $member)) {
                     return invade($component)->{$member}();

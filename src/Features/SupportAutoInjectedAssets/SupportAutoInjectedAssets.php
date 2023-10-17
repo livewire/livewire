@@ -10,10 +10,11 @@ use function Livewire\on;
 
 class SupportAutoInjectedAssets extends ComponentHook
 {
-    static $hasRenderedAComponentThisRequest = false;
-    static $forceAssetInjection = false;
+    public static $hasRenderedAComponentThisRequest = false;
 
-    static function provide()
+    public static $forceAssetInjection = false;
+
+    public static function provide()
     {
         on('flush-state', function () {
             static::$hasRenderedAComponentThisRequest = false;
@@ -21,11 +22,21 @@ class SupportAutoInjectedAssets extends ComponentHook
         });
 
         app('events')->listen(RequestHandled::class, function ($handled) {
-            if (! static::$forceAssetInjection && config('livewire.inject_assets', true) === false) return;
-            if (! str($handled->response->headers->get('content-type'))->contains('text/html')) return;
-            if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) return;
-            if ((! static::$hasRenderedAComponentThisRequest) && (! static::$forceAssetInjection)) return;
-            if (app(FrontendAssets::class)->hasRenderedScripts) return;
+            if (! static::$forceAssetInjection && config('livewire.inject_assets', true) === false) {
+                return;
+            }
+            if (! str($handled->response->headers->get('content-type'))->contains('text/html')) {
+                return;
+            }
+            if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) {
+                return;
+            }
+            if ((! static::$hasRenderedAComponentThisRequest) && (! static::$forceAssetInjection)) {
+                return;
+            }
+            if (app(FrontendAssets::class)->hasRenderedScripts) {
+                return;
+            }
 
             $html = $handled->response->getContent();
 
@@ -40,7 +51,7 @@ class SupportAutoInjectedAssets extends ComponentHook
         static::$hasRenderedAComponentThisRequest = true;
     }
 
-    static function injectAssets($html)
+    public static function injectAssets($html)
     {
         $livewireStyles = FrontendAssets::styles();
         $livewireScripts = FrontendAssets::scripts();

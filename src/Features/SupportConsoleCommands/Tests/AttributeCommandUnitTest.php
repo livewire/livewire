@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class AttributeCommandUnitTest extends \Tests\TestCase
 {
@@ -18,7 +18,6 @@ class AttributeCommandUnitTest extends \Tests\TestCase
 
         $this->assertTrue(str(File::get($filePath))->contains('namespace App\Livewire\Attributes;'));
     }
-
 
     /** @test */
     public function attribute_is_created_in_subdirectory_by_attribute_command()

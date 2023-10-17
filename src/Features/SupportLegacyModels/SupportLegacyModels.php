@@ -13,27 +13,30 @@ class SupportLegacyModels extends ComponentHook
 {
     protected static $rules;
 
-    static function provide()
+    public static function provide()
     {
         // Only enable this feature if config option is set to `true`.
-        if (config('livewire.legacy_model_binding', false) !== true) return;
+        if (config('livewire.legacy_model_binding', false) !== true) {
+            return;
+        }
 
         app('livewire')->propertySynthesizer([
             EloquentModelSynth::class,
             EloquentCollectionSynth::class,
         ]);
 
-        on('flush-state', function() {
+        on('flush-state', function () {
             static::flushRules();
         });
     }
 
-    static function flushRules()
+    public static function flushRules()
     {
         static::$rules = null;
     }
 
-    static function hasRuleFor($component, $path) {
+    public static function hasRuleFor($component, $path)
+    {
         $path = str($path)->explode('.');
 
         $has = false;
@@ -46,27 +49,31 @@ class SupportLegacyModels extends ComponentHook
                 throw new \LogicException('Something went wrong');
             }
 
-            if (!is_numeric($segment) && array_key_exists($segment, $segmentRules)) {
+            if (! is_numeric($segment) && array_key_exists($segment, $segmentRules)) {
                 $segmentRules = $segmentRules[$segment];
                 $has = true;
+
                 continue;
             }
 
             if (is_numeric($segment) && array_key_exists('*', $segmentRules)) {
                 $segmentRules = $segmentRules['*'];
                 $has = true;
+
                 continue;
             }
 
             if (is_numeric($segment) && in_array('*', $segmentRules, true)) {
                 $has = true;
                 $end = true;
+
                 continue;
             }
 
             if (in_array($segment, $segmentRules, true)) {
                 $has = true;
                 $end = true;
+
                 continue;
             }
 
@@ -76,15 +83,17 @@ class SupportLegacyModels extends ComponentHook
         return $has;
     }
 
-    static function missingRuleFor($component, $path) {
+    public static function missingRuleFor($component, $path)
+    {
         return ! static::hasRuleFor($component, $path);
     }
 
-    static function getRules($component) {
+    public static function getRules($component)
+    {
         return static::$rules[$component->getId()] ??= static::processRules($component);
     }
 
-    static function getRulesFor($component, $key)
+    public static function getRulesFor($component, $key)
     {
         $rules = static::getRules($component);
 
@@ -97,7 +106,7 @@ class SupportLegacyModels extends ComponentHook
         );
     }
 
-    static function dataGetWithoutWildcardSupport($array, $key, $default)
+    public static function dataGetWithoutWildcardSupport($array, $key, $default)
     {
         $segments = explode('.', $key);
 
@@ -116,7 +125,7 @@ class SupportLegacyModels extends ComponentHook
         return $value;
     }
 
-    static function ruleWithNumbersReplacedByStars($dotNotatedProperty)
+    public static function ruleWithNumbersReplacedByStars($dotNotatedProperty)
     {
         // Convert foo.0.bar.1 -> foo.*.bar.*
         return (string) str($dotNotatedProperty)
@@ -151,7 +160,7 @@ class SupportLegacyModels extends ComponentHook
         foreach ($rules as $key => $value) {
             $value = str($value);
 
-            if (!$value->contains('.')) {
+            if (! $value->contains('.')) {
                 $singleRules[] = (string) $value;
 
                 continue;

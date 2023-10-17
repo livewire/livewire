@@ -3,9 +3,9 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Support\Facades\Storage;
-use Livewire\WithFileUploads;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\WithFileUploads;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -14,22 +14,25 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         Storage::persistentFake('tmp-for-tests');
 
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             use WithFileUploads;
 
             public $photo;
 
-            function mount()
+            public function mount()
             {
                 Storage::disk('tmp-for-tests')->deleteDirectory('photos');
             }
 
-            function save()
+            public function save()
             {
                 $this->photo->storeAs('photos', 'photo.png');
             }
 
-            function render() { return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
             <div>
                 <input type="file" wire:model="photo" dusk="upload">
 
@@ -45,20 +48,20 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 <button wire:click="save" dusk="save">Save</button>
             </div>
-            HTML; }
+            HTML;
+            }
         })
-        ->assertMissing('@preview')
-        ->attach('@upload', __DIR__ . '/browser_test_image.png')
-        ->pause(250)
-        ->assertVisible('@preview')
-        ->tap(function () {
-            Storage::disk('tmp-for-tests')->assertMissing('photos/photo.png');
-        })
-        ->waitForLivewire()
-        ->click('@save')
-        ->tap(function () {
-            Storage::disk('tmp-for-tests')->assertExists('photos/photo.png');
-        })
-        ;
+            ->assertMissing('@preview')
+            ->attach('@upload', __DIR__.'/browser_test_image.png')
+            ->pause(250)
+            ->assertVisible('@preview')
+            ->tap(function () {
+                Storage::disk('tmp-for-tests')->assertMissing('photos/photo.png');
+            })
+            ->waitForLivewire()
+            ->click('@save')
+            ->tap(function () {
+                Storage::disk('tmp-for-tests')->assertExists('photos/photo.png');
+            });
     }
 }

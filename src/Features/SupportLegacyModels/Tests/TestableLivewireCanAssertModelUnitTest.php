@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Sushi\Sushi;
-use Livewire\Livewire;
-use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Component;
+use Livewire\Livewire;
+use Sushi\Sushi;
 
 class TestableLivewireCanAssertModelUnitTest extends \Tests\TestCase
 {
@@ -13,8 +13,8 @@ class TestableLivewireCanAssertModelUnitTest extends \Tests\TestCase
     public function can_assert_model_property_value()
     {
         Livewire::test(PropertyTestingComponent::class, [
-                'model' => ModelForPropertyTesting::first(),
-            ])
+            'model' => ModelForPropertyTesting::first(),
+        ])
             ->assertSet('model.foo.bar', 'baz');
     }
 }

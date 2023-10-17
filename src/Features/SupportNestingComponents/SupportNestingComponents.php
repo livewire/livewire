@@ -2,15 +2,16 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
-use function Livewire\trigger;
-use function Livewire\store;
-use function Livewire\on;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 
+use function Livewire\on;
+use function Livewire\store;
+use function Livewire\trigger;
+
 class SupportNestingComponents extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
         on('pre-mount', function ($name, $params, $key, $parent, $hijack) {
             // If this has already been rendered spoof it...
@@ -29,13 +30,17 @@ class SupportNestingComponents extends ComponentHook
 
         on('mount', function ($component, $params, $key, $parent) {
             $start = null;
-            if ($parent && config('app.debug')) $start = microtime(true);
+            if ($parent && config('app.debug')) {
+                $start = microtime(true);
+            }
 
             static::setParametersToMatchingProperties($component, $params);
 
             return function ($html) use ($component, $key, $parent, $start) {
                 if ($parent) {
-                    if (config('app.debug')) trigger('profile', 'child:'.$component->getId(), $parent->getId(), [$start, microtime(true)]);
+                    if (config('app.debug')) {
+                        trigger('profile', 'child:'.$component->getId(), $parent->getId(), [$start, microtime(true)]);
+                    }
 
                     preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
                     $tag = $matches[1][0];
@@ -45,42 +50,60 @@ class SupportNestingComponents extends ComponentHook
         });
     }
 
-    function hydrate($memo)
+    public function hydrate($memo)
     {
         $children = $memo['children'];
 
         static::setPreviouslyRenderedChildren($this->component, $children);
     }
 
-    function dehydrate($context)
+    public function dehydrate($context)
     {
         $skipRender = $this->storeGet('skipRender');
 
-        if ($skipRender) $this->keepRenderedChildren();
+        if ($skipRender) {
+            $this->keepRenderedChildren();
+        }
 
         $context->addMemo('children', $this->getChildren());
     }
 
-    function getChildren() { return $this->storeGet('children', []); }
-    function setChild($key, $tag, $id) { $this->storePush('children', [$tag, $id], $key); }
+    public function getChildren()
+    {
+        return $this->storeGet('children', []);
+    }
 
-    static function setParentChild($parent, $key, $tag, $id) { store($parent)->push('children', [$tag, $id], $key); }
-    static function setPreviouslyRenderedChildren($component, $children) { store($component)->set('previousChildren', $children); }
-    static function hasPreviouslyRenderedChild($parent, $key) {
+    public function setChild($key, $tag, $id)
+    {
+        $this->storePush('children', [$tag, $id], $key);
+    }
+
+    public static function setParentChild($parent, $key, $tag, $id)
+    {
+        store($parent)->push('children', [$tag, $id], $key);
+    }
+
+    public static function setPreviouslyRenderedChildren($component, $children)
+    {
+        store($component)->set('previousChildren', $children);
+    }
+
+    public static function hasPreviouslyRenderedChild($parent, $key)
+    {
         return array_key_exists($key, store($parent)->get('previousChildren', []));
     }
 
-    static function getPreviouslyRenderedChild($parent, $key)
+    public static function getPreviouslyRenderedChild($parent, $key)
     {
         return store($parent)->get('previousChildren')[$key];
     }
 
-    function keepRenderedChildren()
+    public function keepRenderedChildren()
     {
         $this->storeSet('children', $this->storeGet('previousChildren'));
     }
 
-    static function setParametersToMatchingProperties($component, $params)
+    public static function setParametersToMatchingProperties($component, $params)
     {
         // Assign all public component properties that have matching parameters.
         collect(array_intersect_key($params, Utils::getPublicPropertiesDefinedOnSubclass($component)))

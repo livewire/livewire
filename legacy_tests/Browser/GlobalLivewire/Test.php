@@ -2,8 +2,8 @@
 
 namespace LegacyTests\Browser\GlobalLivewire;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
 
 class Test extends TestCase
 {
@@ -17,7 +17,9 @@ class Test extends TestCase
                  * Event listeners are removed on teardown.
                  **/
                 ->pause(250)
-                ->tap(function ($b) { $b->script('window.Livewire.stop()'); })
+                ->tap(function ($b) {
+                    $b->script('window.Livewire.stop()');
+                })
                 ->click('@foo')
                 ->pause(100)
                 ->assertDontSeeIn('@output', 'foo')
@@ -26,7 +28,9 @@ class Test extends TestCase
                 /**
                  * Rescanned components dont register twice.
                  **/
-                ->tap(function ($b) { $b->script("window.Livewire.rescan()"); })
+                ->tap(function ($b) {
+                    $b->script('window.Livewire.rescan()');
+                })
                 ->waitForLivewire()->click('@foo')
                 ->assertSeeIn('@output', 'foo')
                 ->refresh()
@@ -39,8 +43,7 @@ class Test extends TestCase
                 /**
                  * livewire:load DOM event is fired after start
                  */
-                ->assertScript('window.loadEventWasFired', true)
-            ;
+                ->assertScript('window.loadEventWasFired', true);
         });
     }
 }

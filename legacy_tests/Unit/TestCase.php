@@ -2,10 +2,10 @@
 
 namespace LegacyTests\Unit;
 
-use Orchestra\Testbench\TestCase as BaseTestCase;
-use Livewire\LivewireServiceProvider;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Livewire\LivewireServiceProvider;
+use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
@@ -50,9 +50,9 @@ class TestCase extends BaseTestCase
 
         $app['config']->set('database.default', 'testbench');
         $app['config']->set('database.connections.testbench', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => '',
+            'prefix' => '',
         ]);
 
         $app['config']->set('filesystems.disks.unit-downloads', [

@@ -300,10 +300,11 @@ class UnitTest extends \Tests\TestCase
     public function route_supports_laravels_missing_fallback_function(): void
     {
         Route::get('awesome-js/{framework}', ComponentWithModel::class)
-             ->missing(function (Request $request) {
-                 $this->assertEquals(request(), $request);
-                 return redirect()->to('awesome-js/alpine');
-             });
+            ->missing(function (Request $request) {
+                $this->assertEquals(request(), $request);
+
+                return redirect()->to('awesome-js/alpine');
+            });
 
         $this->get('/awesome-js/jquery')->assertRedirect('/awesome-js/alpine');
     }
@@ -541,7 +542,7 @@ class ComponentForConfigurableLayoutTestWithCustomAttributes extends Component
         return view('show-name')->layoutData([
             'attributes' => [
                 'class' => 'foo',
-            ]
+            ],
         ]);
     }
 }
@@ -551,7 +552,7 @@ class ComponentWithExtendsLayout extends Component
     public function render()
     {
         return view('null-view')->extends('layouts.app-extends', [
-            'bar' => 'baz'
+            'bar' => 'baz',
         ]);
     }
 }
@@ -571,7 +572,7 @@ class ComponentWithCustomLayout extends Component
     public function render()
     {
         return view('null-view')->layout('layouts.app-with-bar', [
-            'bar' => 'baz'
+            'bar' => 'baz',
         ]);
     }
 }
@@ -591,7 +592,7 @@ class ComponentWithClassBasedComponentLayout extends Component
     public function render()
     {
         return view('null-view')->layout(\LegacyTests\AppLayout::class, [
-            'bar' => 'baz'
+            'bar' => 'baz',
         ]);
     }
 }
@@ -601,7 +602,7 @@ class ComponentWithClassBasedComponentLayoutAndParams extends Component
     public function render()
     {
         return view('null-view')->layout(\LegacyTests\AppLayoutWithConstructor::class, [
-            'bar' => 'baz'
+            'bar' => 'baz',
         ]);
     }
 }
@@ -623,7 +624,7 @@ class ComponentWithAnonymousComponentLayout extends Component
     public function render()
     {
         return view('null-view')->layout('layouts.app-anonymous-component', [
-            'bar' => 'baz'
+            'bar' => 'baz',
         ]);
     }
 }
@@ -645,7 +646,7 @@ class ComponentWithCustomParams extends Component
     public function render()
     {
         return view('null-view')->layout('layouts.old-app')->layoutData([
-            'customParam' => 'foo'
+            'customParam' => 'foo',
         ]);
     }
 }
@@ -664,7 +665,7 @@ class ComponentWithCustomResponseHeaders extends Component
 {
     public function render()
     {
-        return view('null-view')->response(fn(Response $response) => $response->header('x-livewire', 'awesome'));
+        return view('null-view')->response(fn (Response $response) => $response->header('x-livewire', 'awesome'));
     }
 }
 

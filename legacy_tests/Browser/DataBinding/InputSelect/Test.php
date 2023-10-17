@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\InputSelect;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 
@@ -69,8 +68,7 @@ class Test extends TestCase
                 ->assertSelected('@select-input', '3')
                 ->waitForLivewire()->select('@select-input', '4')
                 ->assertSeeIn('@output', '4')
-                ->assertSelected('@select-input', '4')
-                ;
+                ->assertSelected('@select-input', '4');
         });
     }
 

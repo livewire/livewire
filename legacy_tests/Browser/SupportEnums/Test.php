@@ -11,7 +11,8 @@ class Test extends TestCase
 {
     public function test()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             public $enum;
 
             public function mount()
@@ -28,7 +29,6 @@ class Test extends TestCase
                 HTML;
             }
         })
-            ->assertSee('Be excellent to each other')
-        ;
+            ->assertSee('Be excellent to each other');
     }
 }

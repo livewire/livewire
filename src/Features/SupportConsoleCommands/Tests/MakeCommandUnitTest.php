@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class MakeCommandUnitTest extends \Tests\TestCase
 {
@@ -169,6 +169,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireClassesPath('List.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('list.blade.php')));
     }
+
     /** @test */
     public function a_component_is_not_created_with_a_invalid_class_name()
     {

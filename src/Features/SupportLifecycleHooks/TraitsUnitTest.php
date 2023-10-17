@@ -31,7 +31,7 @@ class TraitsUnitTest extends \Tests\TestCase
                 'mount', 'secondMount',
                 'rendering', 'secondRendering',
                 'rendered:show-name', 'secondRendered:show-name',
-                'dehydrate', 'secondDehydrate'
+                'dehydrate', 'secondDehydrate',
             ])
             ->set('foo', 'bar')
             ->assertSet('hooksFromTrait', [
@@ -41,7 +41,7 @@ class TraitsUnitTest extends \Tests\TestCase
                 'updated:foobar', 'secondUpdated:foobar',
                 'rendering', 'secondRendering',
                 'rendered:show-name', 'secondRendered:show-name',
-                'dehydrate', 'secondDehydrate'
+                'dehydrate', 'secondDehydrate',
             ]);
     }
 
@@ -51,7 +51,7 @@ class TraitsUnitTest extends \Tests\TestCase
         ComponentForTestMethodsStub::$hooksFromTrait = [];
         $test = Livewire::test(ComponentForTestMethodsStub::class);
         $this->assertEquals(
-            ['initialized', 'mount', 'rendering', 'rendered:show-name', 'dehydrate',],
+            ['initialized', 'mount', 'rendering', 'rendered:show-name', 'dehydrate'],
             ComponentForTestMethodsStub::$hooksFromTrait
         );
 
@@ -221,12 +221,11 @@ trait SecondTraitForComponent
     {
         $this->hooksFromTrait[] = 'secondInitialized';
     }
-
 }
 
 class ComponentWithTwoTraitsStub extends ComponentWithTraitStub
 {
-    use TraitForComponent, SecondTraitForComponent;
+    use SecondTraitForComponent, TraitForComponent;
 }
 
 trait TraitForComponentForTestMethods
@@ -343,7 +342,8 @@ trait TraitForComponentWithComponentHooks
     }
 
     public function initializeTraitForComponentWithComponentHooks()
-    {$this->hooks[] = 'initializedtrait';
+    {
+        $this->hooks[] = 'initializedtrait';
     }
 }
 

@@ -12,7 +12,9 @@ class UnitTest extends \Tests\TestCase
     {
         $this->markTestSkipped(); // @todo: Josh Hanley?
 
-        Route::get('test-route-without-livewire-component', function () { return 'ok'; });
+        Route::get('test-route-without-livewire-component', function () {
+            return 'ok';
+        });
 
         $response = $this->get('test-route-without-livewire-component');
 
@@ -46,4 +48,3 @@ class DisableBrowserCache extends Component
         return app('view')->make('null-view');
     }
 }
-

@@ -2,12 +2,11 @@
 
 namespace LegacyTests\Browser\QueryString;
 
-use Sushi\Sushi;
-use Livewire\Livewire;
-use LegacyTests\Browser\TestCase;
-use LegacyTests\Browser\QueryString\NestedComponent;
-use Laravel\Dusk\Browser;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Dusk\Browser;
+use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
+use Sushi\Sushi;
 
 class Test extends TestCase
 {
@@ -78,8 +77,7 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@bob.modify')
                 ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
                 ->refresh()
-                ->assertSeeIn('@bob.output', '["foo","bar","baz"]')
-            ;
+                ->assertSeeIn('@bob.output', '["foo","bar","baz"]');
         });
     }
 
@@ -92,8 +90,7 @@ class Test extends TestCase
                 ->assertInputValue('@input', 'foo bar')
                 ->assertQueryStringHas('foo', 'foo bar')
                 ->assertScript('return !! window.location.search.match(/foo=foo\+bar/)')
-                ->assertScript('return !! window.location.search.match(/quux%26quuz/)')
-            ;
+                ->assertScript('return !! window.location.search.match(/quux%26quuz/)');
         });
     }
 
@@ -107,8 +104,7 @@ class Test extends TestCase
                 ->assertSeeIn('@qux.comma', 'quux,quuz')
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
                 ->assertSeeIn('@qux.space', 'quux quuz')
-                ->assertSeeIn('@qux.array', '["quux","quuz"]')
-            ;
+                ->assertSeeIn('@qux.array', '["quux","quuz"]');
         });
     }
 
@@ -122,8 +118,7 @@ class Test extends TestCase
                 ->assertSeeIn('@qux.comma', 'quux,quuz')
                 ->assertSeeIn('@qux.ampersand', 'quux&quuz')
                 ->assertSeeIn('@qux.space', 'quux quuz')
-                ->assertSeeIn('@qux.array', '["quux","quuz"]')
-            ;
+                ->assertSeeIn('@qux.array', '["quux","quuz"]');
         });
     }
 
@@ -135,8 +130,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class, $queryString)
                 ->assertSeeIn('@output', 'bar&quux&quuz')
                 ->refresh()
-                ->assertSeeIn('@output', 'bar&quux&quuz')
-            ;
+                ->assertSeeIn('@output', 'bar&quux&quuz');
         });
     }
 
@@ -156,8 +150,7 @@ class Test extends TestCase
 
                 // Interact with the page again to make sure everything still works.
                 ->waitForLivewire()->type('@baz-input', 'bar')
-                ->assertSeeIn('@baz-output', 'bar')
-            ;
+                ->assertSeeIn('@baz-output', 'bar');
         });
     }
 
@@ -193,8 +186,7 @@ class Test extends TestCase
                 ->forward()
                 ->back()
                 ->waitFor('@input')
-                ->assertInputValue('@input', 'foo')
-            ;
+                ->assertInputValue('@input', 'foo');
         });
     }
 
@@ -202,8 +194,7 @@ class Test extends TestCase
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, ComponentWithMethodInsteadOfProperty::class)
-                ->assertQueryStringHas('foo', 'bar')
-            ;
+                ->assertQueryStringHas('foo', 'bar');
         });
     }
 
@@ -216,8 +207,7 @@ class Test extends TestCase
 
                 // assert the path hasn't change to /livewire/message
                 ->assertPathBeginsWith('/livewire-dusk')
-                ->assertQueryStringHas('baz', 'bop')
-            ;
+                ->assertQueryStringHas('baz', 'bop');
         });
     }
 
@@ -232,8 +222,7 @@ class Test extends TestCase
                 ->pause(200)
                 // assert the path has changed to new component path
                 ->assertPathBeginsWith('/livewire-dusk/LegacyTests%5CBrowser%5CQueryString%5CNestedComponent')
-                ->assertQueryStringHas('baz', 'bop')
-            ;
+                ->assertQueryStringHas('baz', 'bop');
         });
     }
 
@@ -256,8 +245,7 @@ class Test extends TestCase
                 // Search for posts where title contains "42".
                 ->waitForLivewire()->type('@search', '42')
                 ->assertSee('Post #42')
-                ->assertQueryStringHas('search', '42')
-            ;
+                ->assertQueryStringHas('search', '42');
         });
     }
 
@@ -273,8 +261,7 @@ class Test extends TestCase
                 // Search for posts where title contains "qwerty".
                 ->waitForLivewire()->type('@search', 'qwerty')
                 ->assertQueryStringHas('s', 'qwerty')
-                ->assertInputValue('@search', 'qwerty')
-            ;
+                ->assertInputValue('@search', 'qwerty');
         });
     }
 }

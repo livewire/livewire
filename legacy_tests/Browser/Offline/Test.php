@@ -61,7 +61,6 @@ class Test extends BrowserTestCase
             ->online()
             ->assertAttribute('@withoutAttribute', 'disabled', 'true')
             ->offline()
-            ->assertAttributeMissing('@withoutAttribute', 'disabled')
-        ;
+            ->assertAttributeMissing('@withoutAttribute', 'disabled');
     }
 }

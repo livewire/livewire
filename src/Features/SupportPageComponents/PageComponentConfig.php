@@ -8,10 +8,12 @@ use Livewire\Mechanisms\HandleComponents\ViewContext;
 class PageComponentConfig
 {
     public $slots = [];
+
     public $viewContext = null;
+
     public $response;
 
-    function __construct(
+    public function __construct(
         public $type = 'component',
         public $view = '',
         public $slotOrSection = 'slot',
@@ -21,12 +23,12 @@ class PageComponentConfig
         $this->viewContext = new ViewContext;
     }
 
-    function mergeParams($toMerge)
+    public function mergeParams($toMerge)
     {
         $this->params = array_merge($toMerge, $this->params);
     }
 
-    function normalizeViewNameAndParamsForBladeComponents()
+    public function normalizeViewNameAndParamsForBladeComponents()
     {
         // If a user passes the class name of a Blade component to the
         // layout macro (or uses inside their config), we need to
@@ -52,7 +54,9 @@ class PageComponentConfig
         $this->params = $params;
 
         // Remove default slot if present...
-        if (isset($this->slots['default'])) unset($this->slots['default']);
+        if (isset($this->slots['default'])) {
+            unset($this->slots['default']);
+        }
 
         return $this;
     }

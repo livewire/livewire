@@ -4,9 +4,8 @@ namespace LegacyTests\Browser\Redirects;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
-use Sushi\Sushi;
 use LegacyTests\Browser\TestCase;
+use Sushi\Sushi;
 
 class Test extends TestCase
 {
@@ -30,8 +29,7 @@ class Test extends TestCase
                 ->click('@redirect-with-flash')->waitForReload()
                 ->assertPresent('@flash.message')
                 ->waitForLivewire()->click('@refresh')
-                ->assertNotPresent('@flash.message')
-            ;
+                ->assertNotPresent('@flash.message');
         });
     }
 }

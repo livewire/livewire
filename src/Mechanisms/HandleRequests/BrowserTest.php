@@ -11,7 +11,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function can_register_a_custom_update_endpoint()
     {
         Livewire::setUpdateRoute(function ($handle) {
-            return Route::post('/custom/update', function () use ($handle) {
+            return Route::post('/custom/update', function () {
                 $response = app(HandleRequests::class)->handleUpdate();
 
                 // Override normal Livewire and force the updated count to be "5" instead of 2...
@@ -24,19 +24,27 @@ class BrowserTest extends \Tests\BrowserTestCase
             });
         });
 
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends \Livewire\Component
+        {
             public $count = 1;
-            function inc() { $this->count++; }
-            function render() { return <<<'HTML'
+
+            public function inc()
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
             <div>
                 <button wire:click="inc" dusk="target">+</button>
                 <span dusk="output">{{ $count }}</span>
             </div>
-            HTML; }
+            HTML;
+            }
         })
-        ->assertSeeIn('@output', 1)
-        ->waitForLivewire()->click('@target')
-        ->assertSeeIn('@output', 5)
-        ;
+            ->assertSeeIn('@output', 1)
+            ->waitForLivewire()->click('@target')
+            ->assertSeeIn('@output', 5);
     }
 }

@@ -2,11 +2,11 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Tests\TestComponent;
-use Tests\TestCase;
-use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Tests\TestCase;
+use Tests\TestComponent;
 
 class UnitTest extends TestCase
 {
@@ -144,7 +144,9 @@ class UnitTest extends TestCase
         config()->set('livewire.inject_assets', false);
 
         Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
+            return (new class extends TestComponent
+            {
+            })();
         });
 
         Route::get('/without-livewire', function () {
@@ -161,7 +163,9 @@ class UnitTest extends TestCase
         config()->set('livewire.inject_assets', false);
 
         Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
+            return (new class extends TestComponent
+            {
+            })();
         });
 
         Route::get('/without-livewire', function () {
@@ -180,7 +184,9 @@ class UnitTest extends TestCase
     public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
         Route::get('/with-livewire', function () {
-            return (new class Extends TestComponent {})();
+            return (new class extends TestComponent
+            {
+            })();
         });
 
         Route::get('/without-livewire', function () {

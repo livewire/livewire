@@ -4,18 +4,22 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
 use Illuminate\Support\Stringable;
 
-class StringableSynth extends Synth {
+class StringableSynth extends Synth
+{
     public static $key = 'str';
 
-    static function match($target) {
+    public static function match($target)
+    {
         return $target instanceof Stringable;
     }
 
-    function dehydrate($target) {
+    public function dehydrate($target)
+    {
         return [$target->__toString(), []];
     }
 
-    function hydrate($value) {
+    public function hydrate($value)
+    {
         return str($value);
     }
 }

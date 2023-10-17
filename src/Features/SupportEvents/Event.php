@@ -7,8 +7,11 @@ use Livewire\Mechanisms\ComponentRegistry;
 class Event
 {
     protected $name;
+
     protected $params;
+
     protected $self;
+
     protected $component;
 
     public function __construct($name, $params)
@@ -43,8 +46,12 @@ class Event
             'params' => $this->params,
         ];
 
-        if ($this->self) $output['self'] = true;
-        if ($this->component) $output['to'] = app(ComponentRegistry::class)->getName($this->component);
+        if ($this->self) {
+            $output['self'] = true;
+        }
+        if ($this->component) {
+            $output['to'] = app(ComponentRegistry::class)->getName($this->component);
+        }
 
         return $output;
     }

@@ -35,10 +35,10 @@ class FileManipulationCommand extends Command
 <fg=magenta>|_\ /_|</>  <fg=cyan> || || \\\// /_\ \\\ // || |~~ /_\   </>
 <fg=magenta> <fg=cyan>|</>`<fg=cyan>|</>`<fg=cyan>|</> </>  <fg=cyan> || ||  \/  \\\_  \^/  || ||  \\\_   </>
 EOT;
-//     _._
+        //     _._
         //   / /o\ \   || ()                ()  __
         //   |_\ /_|   || || \\\// /_\ \\\ // || |~~ /_\
-//    |`|`|    || ||  \/  \\\_  \^/  || ||  \\\_
+        //    |`|`|    || ||  \/  \\\_  \^/  || ||  \\\_
         $this->line("\n".$asciiLogo."\n");
         $this->line("\n<options=bold>Congratulations, you've created your first Livewire component!</> 🎉🎉🎉\n");
     }

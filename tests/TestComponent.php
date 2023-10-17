@@ -6,7 +6,7 @@ use Livewire\Component;
 
 class TestComponent extends Component
 {
-    function render()
+    public function render()
     {
         return '<div></div>';
     }

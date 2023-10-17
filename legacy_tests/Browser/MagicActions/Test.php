@@ -22,8 +22,7 @@ class Test extends BrowserTestCase
             ->waitForLivewire()->click('@toggleNested')
             ->assertSeeIn('@outputNested', 'true')
             ->waitForLivewire()->click('@toggleNested')
-            ->assertSeeIn('@outputNested', 'false')
-        ;
+            ->assertSeeIn('@outputNested', 'false');
     }
 
     public function test_magic_event_works()
@@ -31,15 +30,16 @@ class Test extends BrowserTestCase
         Livewire::visit(Component::class)
             ->assertDontSeeIn('@outputEvent', 'baz')
             ->waitForLivewire()->click('@fillBar')
-            ->assertSeeIn('@outputEvent', 'baz')
-        ;
+            ->assertSeeIn('@outputEvent', 'baz');
     }
 }
 
 class Component extends \Livewire\Component
 {
     public $active = false;
+
     public $foo = ['bar' => ['baz' => false]];
+
     public $bar = '';
 
     public function setBar($bar)

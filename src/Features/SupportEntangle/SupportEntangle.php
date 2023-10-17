@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportEntangle;
 
-use Livewire\ComponentHook;
 use Illuminate\Support\Facades\Blade;
+use Livewire\ComponentHook;
 
 class SupportEntangle extends ComponentHook
 {

@@ -2,47 +2,54 @@
 
 namespace Livewire\Features\SupportReactiveProps;
 
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
     /** @test */
-    function can_pass_prop_to_child_component()
+    public function can_pass_prop_to_child_component()
     {
-        Livewire::test([new class extends Component {
+        Livewire::test([new class extends Component
+        {
             public $foo = 'bar';
 
-            public function render() {
+            public function render()
+            {
                 return '<div><livewire:child :oof="$foo" /></div>';
             }
-        }, 'child' => new class extends Component {
+        }, 'child' => new class extends Component
+        {
             public $oof;
 
-            public function render() {
+            public function render()
+            {
                 return '<div>{{ $oof }}</div>';
             }
-
         }])
-        ->assertSee('bar');
+            ->assertSee('bar');
     }
 
     /** @test */
-    function can_change_reactive_prop_in_child_component()
+    public function can_change_reactive_prop_in_child_component()
     {
         $this->markTestSkipped('Unit testing child components isnt supported yet');
 
-        $component = Livewire::test([new class extends Component {
+        $component = Livewire::test([new class extends Component
+        {
             public $todos = [];
 
-            public function render() {
+            public function render()
+            {
                 return '<div><livewire:child :todos="$todos" /></div>';
             }
-        }, 'child' => new class extends Component {
+        }, 'child' => new class extends Component
+        {
             #[Prop(reactive: true)]
             public $todos;
 
-            public function render() {
+            public function render()
+            {
                 return '<div>Count: {{ count($todos) }}.</div>';
             }
         }]);
@@ -56,4 +63,3 @@ class UnitTest extends \Tests\TestCase
         $component->assertSee('Count: 3.');
     }
 }
-

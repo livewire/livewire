@@ -2,9 +2,9 @@
 
 namespace LegacyTests\Browser\DataBinding\InputTextarea;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
 
 class Test extends TestCase
 {
@@ -68,8 +68,7 @@ class Test extends TestCase
                 ->pause(150) // Pause for upper-bound of most round-trip lengths.
                 ->assertDontSeeIn('@bob.output', 'deferred')
                 ->waitForLivewire()->click('@refresh')
-                ->assertSeeIn('@bob.output', 'deferred')
-                ;
+                ->assertSeeIn('@bob.output', 'deferred');
         });
     }
 }

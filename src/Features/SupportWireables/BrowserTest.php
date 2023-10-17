@@ -11,7 +11,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function it_can_update_a_custom_wireable_object()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class() extends \Livewire\Component
+        {
             public Person $person;
 
             public function mount(): void
@@ -29,15 +30,16 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->assertSee('42')
-        ->waitForLivewire()->click('@button')
-        ->assertSee('43');
+            ->assertSee('42')
+            ->waitForLivewire()->click('@button')
+            ->assertSee('43');
     }
 
     /** @test */
     public function it_can_update_a_custom_wireable_via_inputs()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class() extends \Livewire\Component
+        {
             public Person $person;
 
             public function mount(): void
@@ -55,11 +57,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForText('42')
-        ->assertSee('42')
-        ->type('@age', '43')
-        ->waitForText('43')
-        ->assertSee('43');
+            ->waitForText('42')
+            ->assertSee('42')
+            ->type('@age', '43')
+            ->waitForText('43')
+            ->assertSee('43');
     }
 }
 
@@ -71,6 +73,7 @@ class Person implements Wireable
     ) {
 
     }
+
     public function toLivewire()
     {
         return ['name' => $this->name, 'age' => $this->age];

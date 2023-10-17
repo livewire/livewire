@@ -2,10 +2,10 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
-use Illuminate\Support\Arr;
 use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 
 abstract class UpgradeStep
@@ -20,7 +20,7 @@ abstract class UpgradeStep
 
     public function publishConfigIfMissing($console): bool
     {
-        if($this->filesystem()->missing('config/livewire.php')) {
+        if ($this->filesystem()->missing('config/livewire.php')) {
             $console->line('Publishing Livewire config file...');
             $console->newLine();
 
@@ -54,8 +54,8 @@ abstract class UpgradeStep
         $console->table(
             [$title],
             [
-                array_map(fn($line) => "<fg=red>- {$line}</>", Arr::wrap($before)),
-                array_map(fn($line) => "<fg=green>+ {$line}</>", Arr::wrap($after))
+                array_map(fn ($line) => "<fg=red>- {$line}</>", Arr::wrap($before)),
+                array_map(fn ($line) => "<fg=green>+ {$line}</>", Arr::wrap($after)),
             ],
         );
     }
@@ -70,19 +70,18 @@ abstract class UpgradeStep
 
         $this->beforeAfterView($console, $before, $after);
 
-        $confirm = $console->confirm("Would you like to apply these changes?", true);
+        $confirm = $console->confirm('Would you like to apply these changes?', true);
 
         if ($confirm) {
             $console->newLine();
 
             $replacements = $this->patternReplacement($pattern, $replacement, $directories);
 
-            if($replacements->isEmpty())
-            {
-                $console->line("No occurrences of were found.");
+            if ($replacements->isEmpty()) {
+                $console->line('No occurrences of were found.');
             }
 
-            if($replacements->isNotEmpty()) {
+            if ($replacements->isNotEmpty()) {
                 $console->table(['File', 'Occurrences'], $replacements);
             }
         }
@@ -98,8 +97,8 @@ abstract class UpgradeStep
         $mode = 'auto')
     {
         // If the mode is auto, we'll just get all the files in the directories
-        if($mode == 'auto') {
-            $files = collect(Arr::wrap($directories))->map(function($directory) {
+        if ($mode == 'auto') {
+            $files = collect(Arr::wrap($directories))->map(function ($directory) {
                 return collect($this->filesystem()->allFiles($directory))->map(function ($path) {
                     return [
                         'path' => $path,
@@ -110,8 +109,8 @@ abstract class UpgradeStep
         }
 
         // If the mode is manual, we'll just use the files passed in
-        if($mode == 'manual') {
-            $files = collect(Arr::wrap($files))->map(function($path) {
+        if ($mode == 'manual') {
+            $files = collect(Arr::wrap($files))->map(function ($path) {
                 return [
                     'path' => $path,
                     'content' => $this->filesystem()->get($path),
@@ -119,8 +118,8 @@ abstract class UpgradeStep
             });
         }
 
-        return $files->map(function($file) use ($pattern, $replacement) {
-            if($replacement instanceof Closure) {
+        return $files->map(function ($file) use ($pattern, $replacement) {
+            if ($replacement instanceof Closure) {
                 $file['content'] = preg_replace_callback($pattern, $replacement, $file['content'], -1, $count);
             } else {
                 $file['content'] = preg_replace($pattern, $replacement, $file['content'], -1, $count);
@@ -129,14 +128,14 @@ abstract class UpgradeStep
 
             return $count > 0 ? $file : null;
         })
-        ->filter()
-        ->values()
-        ->map(function($file) {
-            $this->filesystem()->put($file['path'], $file['content']);
+            ->filter()
+            ->values()
+            ->map(function ($file) {
+                $this->filesystem()->put($file['path'], $file['content']);
 
-            return [
-                $file['path'], $file['occurrences'],
-            ];
-        });
+                return [
+                    $file['path'], $file['occurrences'],
+                ];
+            });
     }
 }

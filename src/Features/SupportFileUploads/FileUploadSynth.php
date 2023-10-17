@@ -2,17 +2,20 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Http\UploadedFile;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
-class FileUploadSynth extends Synth {
+class FileUploadSynth extends Synth
+{
     public static $key = 'fil';
 
-    static function match($target) {
+    public static function match($target)
+    {
         return $target instanceof UploadedFile;
     }
 
-    function dehydrate($target) {
+    public function dehydrate($target)
+    {
         return [$this->dehydratePropertyFromWithFileUploads($target), []];
     }
 
@@ -23,14 +26,14 @@ class FileUploadSynth extends Synth {
         }
 
         if ($value instanceof TemporaryUploadedFile) {
-            return  $value->serializeForLivewireResponse();
+            return $value->serializeForLivewireResponse();
         }
 
         if (is_array($value) && isset(array_values($value)[0])) {
             $isValid = true;
 
             foreach ($value as $key => $arrayValue) {
-                if (!($arrayValue instanceof TemporaryUploadedFile) || !is_numeric($key)) {
+                if (! ($arrayValue instanceof TemporaryUploadedFile) || ! is_numeric($key)) {
                     $isValid = false;
                     break;
                 }
@@ -58,7 +61,8 @@ class FileUploadSynth extends Synth {
         return $value;
     }
 
-    function hydrate($value) {
+    public function hydrate($value)
+    {
         if (TemporaryUploadedFile::canUnserialize($value)) {
             return TemporaryUploadedFile::unserializeFromLivewireRequest($value);
         }

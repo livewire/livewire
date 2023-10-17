@@ -9,19 +9,22 @@ use Livewire\Livewire;
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
-    function can_wire_target_to_a_form_object_property()
+    public function can_wire_target_to_a_form_object_property()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public PostFormStub $form;
 
             public $localText = '';
 
-            public function updating() {
+            public function updating()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 usleep(500000);
             }
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <section>
@@ -58,36 +61,37 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForText('Loaded localText')
-        ->assertSee('Loaded localText')
-        ->type('@localInput', 'Text')
-        ->waitUntilMissingText('Loaded localText')
-        ->assertDontSee('Loaded localText')
-        ->waitForText('Loaded localText')
-        ->assertSee('Loaded localText')
-
-        ->waitForText('Loaded form.text')
-        ->assertSee('Loaded form.text')
-        ->type('@formInput', 'Text')
-        ->waitUntilMissingText('Loaded form.text')
-        ->assertDontSee('Loaded form.text')
-        ->waitForText('Loaded form.text')
-        ->assertSee('Loaded form.text')
-        ;
+            ->waitForText('Loaded localText')
+            ->assertSee('Loaded localText')
+            ->type('@localInput', 'Text')
+            ->waitUntilMissingText('Loaded localText')
+            ->assertDontSee('Loaded localText')
+            ->waitForText('Loaded localText')
+            ->assertSee('Loaded localText')
+            ->waitForText('Loaded form.text')
+            ->assertSee('Loaded form.text')
+            ->type('@formInput', 'Text')
+            ->waitUntilMissingText('Loaded form.text')
+            ->assertDontSee('Loaded form.text')
+            ->waitForText('Loaded form.text')
+            ->assertSee('Loaded form.text');
     }
 
     /** @test */
-    function wire_loading_attr_doesnt_conflict_with_exist_one()
+    public function wire_loading_attr_doesnt_conflict_with_exist_one()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $localText = '';
 
-            public function updating() {
+            public function updating()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 usleep(250000);
             }
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <section>
@@ -105,14 +109,13 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForText('Submit')
-        ->assertSee('Submit')
-        ->assertAttribute('@button', 'disabled', 'true')
-        ->type('@localInput', 'Text')
-        ->assertAttribute('@button', 'disabled', 'true')
-        ->waitForText('Text')
-        ->assertAttribute('@button', 'disabled', 'true')
-        ;
+            ->waitForText('Submit')
+            ->assertSee('Submit')
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->type('@localInput', 'Text')
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->waitForText('Text')
+            ->assertAttribute('@button', 'disabled', 'true');
     }
 }
 

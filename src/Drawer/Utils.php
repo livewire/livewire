@@ -8,7 +8,8 @@ use function Livewire\invade;
 
 class Utils extends BaseUtils
 {
-    static function insertAttributesIntoHtmlRoot($html, $attributes) {
+    public static function insertAttributesIntoHtmlRoot($html, $attributes)
+    {
         $attributesFormattedForHtmlElement = static::stringifyHtmlAttributes($attributes);
 
         preg_match('/(?:\n\s*|^\s*)<([a-zA-Z0-9\-]+)/', $html, $matches, PREG_OFFSET_CAPTURE);
@@ -30,7 +31,7 @@ class Utils extends BaseUtils
         );
     }
 
-    static function stringifyHtmlAttributes($attributes)
+    public static function stringifyHtmlAttributes($attributes)
     {
         return collect($attributes)
             ->mapWithKeys(function ($value, $key) {
@@ -40,16 +41,16 @@ class Utils extends BaseUtils
             })->implode(' ');
     }
 
-    static function escapeStringForHtml($subject)
+    public static function escapeStringForHtml($subject)
     {
         if (is_string($subject) || is_numeric($subject)) {
-            return htmlspecialchars($subject, ENT_QUOTES|ENT_SUBSTITUTE);
+            return htmlspecialchars($subject, ENT_QUOTES | ENT_SUBSTITUTE);
         }
 
-        return htmlspecialchars(json_encode($subject), ENT_QUOTES|ENT_SUBSTITUTE);
+        return htmlspecialchars(json_encode($subject), ENT_QUOTES | ENT_SUBSTITUTE);
     }
 
-    static function pretendResponseIsFile($file, $mimeType = 'application/javascript')
+    public static function pretendResponseIsFile($file, $mimeType = 'application/javascript')
     {
         $expires = strtotime('+1 year');
         $lastModified = filemtime($file);
@@ -76,44 +77,44 @@ class Utils extends BaseUtils
         return response()->file($file, $headers);
     }
 
-    static function matchesCache($lastModified)
+    public static function matchesCache($lastModified)
     {
         $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
 
         return @strtotime($ifModifiedSince) === $lastModified;
     }
 
-    static function httpDate($timestamp)
+    public static function httpDate($timestamp)
     {
         return sprintf('%s GMT', gmdate('D, d M Y H:i:s', $timestamp));
     }
 
-    static function containsDots($subject)
+    public static function containsDots($subject)
     {
         return str_contains($subject, '.');
     }
 
-    static function dotSegments($subject)
+    public static function dotSegments($subject)
     {
         return explode('.', $subject);
     }
 
-    static function beforeFirstDot($subject)
+    public static function beforeFirstDot($subject)
     {
         return head(explode('.', $subject));
     }
 
-    static function afterFirstDot($subject) : string
+    public static function afterFirstDot($subject): string
     {
         return str($subject)->after('.');
     }
 
-    static public function hasProperty($target, $property)
+    public static function hasProperty($target, $property)
     {
         return property_exists($target, static::beforeFirstDot($property));
     }
 
-    static public function shareWithViews($name, $value)
+    public static function shareWithViews($name, $value)
     {
         $old = app('view')->shared($name, 'notfound');
 
@@ -128,7 +129,7 @@ class Utils extends BaseUtils
         };
     }
 
-    static function generateBladeView($subject, $data = [])
+    public static function generateBladeView($subject, $data = [])
     {
         if (! is_string($subject)) {
             return tap($subject)->with($data);
@@ -154,22 +155,22 @@ class Utils extends BaseUtils
         return $view;
     }
 
-    static function applyMiddleware(\Illuminate\Http\Request $request, $middleware = [])
+    public static function applyMiddleware(\Illuminate\Http\Request $request, $middleware = [])
     {
         return (new \Illuminate\Pipeline\Pipeline(app()))
             ->send($request)
             ->through($middleware)
-            ->then(function() {
+            ->then(function () {
                 return new \Illuminate\Http\Response();
             });
     }
 
-    static function extractAttributeDataFromHtml($html, $attribute)
+    public static function extractAttributeDataFromHtml($html, $attribute)
     {
         $data = (string) str($html)->betweenFirst($attribute.'="', '"');
 
         return json_decode(
-            htmlspecialchars_decode($data, ENT_QUOTES|ENT_SUBSTITUTE),
+            htmlspecialchars_decode($data, ENT_QUOTES | ENT_SUBSTITUTE),
             associative: true,
         );
     }

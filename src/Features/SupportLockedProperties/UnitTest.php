@@ -2,69 +2,81 @@
 
 namespace Livewire\Features\SupportLockedProperties;
 
-use Livewire\Livewire;
 use Livewire\Component as BaseComponent;
 use Livewire\Form;
+use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
     /** @test */
-    function cant_update_locked_property()
+    public function cant_update_locked_property()
     {
         $this->expectExceptionMessage(
             'Cannot update locked property: [count]'
         );
 
-        Livewire::test(new class extends BaseComponent {
+        Livewire::test(new class extends BaseComponent
+        {
             #[BaseLocked]
             public $count = 1;
 
-            function increment() { $this->count++; }
+            public function increment()
+            {
+                $this->count++;
+            }
 
-            public function render() {
+            public function render()
+            {
                 return '<div></div>';
             }
         })
-        ->assertSet('count', 1)
-        ->set('count', 2);
+            ->assertSet('count', 1)
+            ->set('count', 2);
     }
 
     /** @test */
-    function cant_deeply_update_locked_property()
+    public function cant_deeply_update_locked_property()
     {
         $this->expectExceptionMessage(
             'Cannot update locked property: [foo]'
         );
 
-        Livewire::test(new class extends BaseComponent {
+        Livewire::test(new class extends BaseComponent
+        {
             #[BaseLocked]
             public $foo = ['count' => 1];
 
-            function increment() { $this->foo['count']++; }
+            public function increment()
+            {
+                $this->foo['count']++;
+            }
 
-            public function render() {
+            public function render()
+            {
                 return '<div></div>';
             }
         })
-        ->assertSet('foo.count', 1)
-        ->set('foo.count', 2);
+            ->assertSet('foo.count', 1)
+            ->set('foo.count', 2);
     }
 
     /** @test */
-    function can_update_locked_property_with_similar_name()
+    public function can_update_locked_property_with_similar_name()
     {
-        Livewire::test(new class extends BaseComponent {
+        Livewire::test(new class extends BaseComponent
+        {
             #[BaseLocked]
             public $count = 1;
 
             public $count2 = 1;
 
-            public function render() {
+            public function render()
+            {
                 return '<div></div>';
             }
         })
-        ->assertSet('count2', 1)
-        ->set('count2', 2);
+            ->assertSet('count2', 1)
+            ->set('count2', 2);
     }
 
     /** @test */
@@ -76,13 +88,16 @@ class UnitTest extends \Tests\TestCase
             ->assertOk();
     }
 }
-    
-class SomeForm extends Form {
+
+class SomeForm extends Form
+{
     #[BaseLocked]
     public ?string $id = null;
+
     public string $foo = '';
 
-    public function init(?string $id) {
+    public function init(?string $id)
+    {
         $this->id = $id;
     }
 }
@@ -91,7 +106,8 @@ class Component extends BaseComponent
 {
     public SomeForm $form;
 
-    public function mount() {
+    public function mount()
+    {
         $this->form->init('id');
     }
 

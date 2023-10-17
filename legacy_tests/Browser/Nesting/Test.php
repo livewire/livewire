@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Nesting;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -32,8 +31,7 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@button.changeKey')
                 ->assertDontSeeIn('@output.nested', 'foo')
                 ->waitForLivewire()->click('@button.nested')
-                ->assertSeeIn('@output.nested', 'foo')
-            ;
+                ->assertSeeIn('@output.nested', 'foo');
         });
     }
 
@@ -45,8 +43,7 @@ class Test extends TestCase
                 ->assertSeeIn('@output.blade-component1', 'Blade 1')
                 ->assertSeeIn('@output.blade-component2', 'Blade 2')
                 ->assertSeeIn('@output.nested', 'Sub render')
-                ->assertSeeIn('@output.blade-component3', 'Blade 3')
-            ;
+                ->assertSeeIn('@output.blade-component3', 'Blade 3');
         });
     }
 }

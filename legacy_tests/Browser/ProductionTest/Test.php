@@ -11,7 +11,8 @@ class Test extends BrowserTestCase
     /** @test */
     public function ensure_livewire_runs_when_app_debug_is_set_to_false(): void
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = 'squishy';
 
             public function mount()
@@ -32,7 +33,6 @@ class Test extends BrowserTestCase
              * Just need to check input is filled to ensure Livewire has started properly.
              * Have set app.debug to false inside mount method in component
              */
-            ->assertInputValue('@foo', 'squishy')
-        ;
+            ->assertInputValue('@foo', 'squishy');
     }
 }

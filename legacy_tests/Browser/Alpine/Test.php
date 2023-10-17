@@ -2,8 +2,8 @@
 
 namespace LegacyTests\Browser\Alpine;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
 
 class Test extends TestCase
 {
@@ -126,8 +126,7 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@zorp.button')
                 ->assertSeeIn('@zorp.output', 'after')
                 ->waitForLivewire()->click('@zorp.button.empty')
-                ->assertSeeNothingIn('@zorp.output')
-            ;
+                ->assertSeeNothingIn('@zorp.output');
         });
     }
 
@@ -137,8 +136,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, SmallComponent::class)
                 ->assertSeeIn('@output', '0')
                 ->waitForLivewire()->click('@button')
-                ->assertSeeIn('@output', '1')
-            ;
+                ->assertSeeIn('@output', '1');
         });
     }
 
@@ -150,8 +148,7 @@ class Test extends TestCase
                 ->waitForLivewire()->click('@button')
                 ->assertAttribute('@span', '@click', 'hey')
                 ->waitForLivewire()->click('@button')
-                ->assertAttributeMissing('@span', '@click', 'hey')
-            ;
+                ->assertAttributeMissing('@span', '@click', 'hey');
         });
     }
 
@@ -171,8 +168,7 @@ class Test extends TestCase
                 ->click('@componentClick')
                 ->assertSeeIn('@alpineComponentClicksFired', 2)
                 ->click('@componentClick')
-                ->assertSeeIn('@alpineComponentClicksFired', 3)
-            ;
+                ->assertSeeIn('@alpineComponentClicksFired', 3);
         });
     }
 
@@ -184,8 +180,7 @@ class Test extends TestCase
                 ->assertDontSeeIn('@bar', 'bar')
                 ->waitForLivewire()->click('@update-foo-and-bar')
                 ->assertSeeIn('@foo', 'foo')
-                ->assertSeeIn('@bar', 'bar')
-            ;
+                ->assertSeeIn('@bar', 'bar');
         });
     }
 }

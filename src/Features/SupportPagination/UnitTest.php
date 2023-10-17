@@ -55,21 +55,22 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function can_set_a_custom_links_theme_in_component()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends Component
+        {
             use WithPagination;
 
-            function paginationView()
+            public function paginationView()
             {
                 return 'custom-pagination-theme';
             }
 
             #[Computed]
-            function posts()
+            public function posts()
             {
                 return PaginatorPostTestModel::paginate();
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -85,19 +86,21 @@ class UnitTest extends \Tests\TestCase
 
     public function test_calling_pagination_getPage_before_paginate_method_resolve_the_correct_page_number_in_first_visit_or_after_reload()
     {
-        Livewire::withQueryParams(['page' => 5])->test(new class extends Component {
+        Livewire::withQueryParams(['page' => 5])->test(new class extends Component
+        {
             use WithPagination;
 
             public int $page = 1;
 
             #[Computed]
-            function posts()
+            public function posts()
             {
                 $this->page = $this->getPage();
+
                 return PaginatorPostTestModel::paginate();
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>

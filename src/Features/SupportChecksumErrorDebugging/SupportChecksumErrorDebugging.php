@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 
 class SupportChecksumErrorDebugging
 {
-    function boot()
+    public function boot()
     {
         // @todo: dont write to this file unless the command is running...
         return;
@@ -38,7 +38,9 @@ class SupportChecksumErrorDebugging
         on('checksum.fail', function ($checksum, $comparitor, $tamperedSnapshot) use ($file) {
             $cache = json_decode(File::get($file), true);
 
-            if (! isset($cache['checksums'][$checksum])) return;
+            if (! isset($cache['checksums'][$checksum])) {
+                return;
+            }
 
             $canonicalSnapshot = $cache['checksums'][$checksum];
 
@@ -60,19 +62,21 @@ class SupportChecksumErrorDebugging
     }
 
     // https://www.php.net/manual/en/function.array-diff-assoc.php#111675
-    function array_diff_assoc_recursive($array1, $array2) {
-        $difference=array();
+    public function array_diff_assoc_recursive($array1, $array2)
+    {
+        $difference = [];
 
-        foreach($array1 as $key => $value) {
-            if( is_array($value) ) {
-                if( !isset($array2[$key]) || !is_array($array2[$key]) ) {
+        foreach ($array1 as $key => $value) {
+            if (is_array($value)) {
+                if (! isset($array2[$key]) || ! is_array($array2[$key])) {
                     $difference[$key] = $value;
                 } else {
                     $new_diff = $this->array_diff_assoc_recursive($value, $array2[$key]);
-                    if( !empty($new_diff) )
+                    if (! empty($new_diff)) {
                         $difference[$key] = $new_diff;
+                    }
                 }
-            } else if( !array_key_exists($key,$array2) || $array2[$key] !== $value ) {
+            } elseif (! array_key_exists($key, $array2) || $array2[$key] !== $value) {
                 $difference[$key] = $value;
             }
         }

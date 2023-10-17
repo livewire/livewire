@@ -73,6 +73,7 @@ trait InteractsWithProperties
             // Handle resetting properties that are not initialized by default.
             if (! $isInitialized) {
                 data_forget($this, (string) $property);
+
                 continue;
             }
 

@@ -2,24 +2,24 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithExceptionHandling;
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Contracts\Debug\ExceptionHandler;
 
 class RequestBroker
 {
-    use MakesHttpRequests, InteractsWithExceptionHandling;
+    use InteractsWithExceptionHandling, MakesHttpRequests;
 
     protected $app;
 
-    function __construct($app)
+    public function __construct($app)
     {
         $this->app = $app;
     }
 
-    function temporarilyDisableExceptionHandlingAndMiddleware($callback)
+    public function temporarilyDisableExceptionHandlingAndMiddleware($callback)
     {
         $cachedHandler = app(ExceptionHandler::class);
 
@@ -38,9 +38,8 @@ class RequestBroker
         return $result;
     }
 
-    function withoutHandling($except = [])
+    public function withoutHandling($except = [])
     {
         return $this->withoutExceptionHandling($except);
     }
 }
-

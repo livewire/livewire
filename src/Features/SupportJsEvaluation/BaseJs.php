@@ -7,7 +7,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 #[\Attribute]
 class BaseJs extends LivewireAttribute
 {
-    function dehydrate($context)
+    public function dehydrate($context)
     {
         $name = $this->getName();
 
@@ -16,7 +16,3 @@ class BaseJs extends LivewireAttribute
         $context->pushEffect('js', $stringifiedMethod, $name);
     }
 }
-
-
-
-

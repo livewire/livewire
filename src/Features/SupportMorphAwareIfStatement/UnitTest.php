@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 
 class UnitTest extends \Tests\TestCase
@@ -11,8 +11,10 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
-        Livewire::component('foo', new class extends \Livewire\Component {
-            public function render() {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
                 return '<div>@if (true) <div @if (true) @endif></div> @endif</div>';
             }
         });
@@ -47,9 +49,10 @@ class UnitTest extends \Tests\TestCase
 
     /**
      * @test
+     *
      * @dataProvider templatesProvider
      **/
-    function foo($occurances, $template, $expectedCompiled = null)
+    public function foo($occurances, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 

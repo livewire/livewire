@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Headers;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -18,8 +17,7 @@ class Test extends TestCase
                  */
                 ->waitForLivewire()->click('@foo')
                 ->assertSeeIn('@output', 'Bar')
-                ->assertSeeIn('@altoutput', 'Bazz')
-            ;
+                ->assertSeeIn('@altoutput', 'Bazz');
         });
     }
 }

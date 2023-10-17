@@ -2,16 +2,15 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Illuminate\Auth\Access\AuthorizationException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Livewire\Component;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestComponent;
 
 class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
 {
     /** @test */
-    function can_assert_a_status_code_when_an_exception_is_encountered()
+    public function can_assert_a_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(NotFoundComponent::class);
 
@@ -19,7 +18,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_a_404_status_code_when_an_exception_is_encountered()
+    public function can_assert_a_404_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(NotFoundComponent::class);
 
@@ -27,7 +26,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_a_401_status_code_when_an_exception_is_encountered()
+    public function can_assert_a_401_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(UnauthorizedComponent::class);
 
@@ -35,7 +34,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_a_403_status_code_when_an_exception_is_encountered()
+    public function can_assert_a_403_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(ForbiddenComponent::class);
 
@@ -43,10 +42,12 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_a_403_status_code_when_an_exception_is_encountered_on_an_action()
+    public function can_assert_a_403_status_code_when_an_exception_is_encountered_on_an_action()
     {
-        $component = Livewire::test(new class extends TestComponent {
-            public function someAction() {
+        $component = Livewire::test(new class extends TestComponent
+        {
+            public function someAction()
+            {
                 throw new \Illuminate\Auth\Access\AuthorizationException;
             }
         });
@@ -57,7 +58,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    function can_assert_status_and_continue_making_livewire_assertions()
+    public function can_assert_status_and_continue_making_livewire_assertions()
     {
         Livewire::test(NormalComponent::class)
             ->assertStatus(200)
@@ -68,7 +69,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
 
 class NotFoundComponent extends Component
 {
-    function render()
+    public function render()
     {
         throw new HttpException(404);
     }
@@ -76,7 +77,7 @@ class NotFoundComponent extends Component
 
 class UnauthorizedComponent extends Component
 {
-    function render()
+    public function render()
     {
         throw new HttpException(401);
     }
@@ -84,7 +85,7 @@ class UnauthorizedComponent extends Component
 
 class ForbiddenComponent extends Component
 {
-    function render()
+    public function render()
     {
         throw new HttpException(403);
     }
@@ -92,7 +93,7 @@ class ForbiddenComponent extends Component
 
 class NormalComponent extends Component
 {
-    function render()
+    public function render()
     {
         return '<example>Hello!</example>';
     }

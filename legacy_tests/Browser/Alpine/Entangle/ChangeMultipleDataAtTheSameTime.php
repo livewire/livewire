@@ -6,7 +6,7 @@ use Livewire\Component as BaseComponent;
 
 class ChangeMultipleDataAtTheSameTime extends BaseComponent
 {
-    public $livewireList = [1,2,3,4];
+    public $livewireList = [1, 2, 3, 4];
 
     public $livewireSearch;
 
@@ -17,7 +17,7 @@ class ChangeMultipleDataAtTheSameTime extends BaseComponent
 
     public function change()
     {
-        $this->livewireList = [5,6,7,8];
+        $this->livewireList = [5, 6, 7, 8];
     }
 
     public function render()

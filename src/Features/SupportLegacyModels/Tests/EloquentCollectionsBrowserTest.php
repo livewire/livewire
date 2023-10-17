@@ -26,8 +26,7 @@ class EloquentCollectionsBrowserTest extends TestCase
                 ->assertValue('@authors.0.posts.0.comments.1.author.name', 'John')
                 ->assertValue('@authors.0.posts.1.title', 'Post 2')
                 ->assertValue('@authors.1.name', 'John')
-                ->assertValue('@authors.1.email', 'john@john.com')
-            ;
+                ->assertValue('@authors.1.email', 'john@john.com');
         });
     }
 
@@ -51,8 +50,7 @@ class EloquentCollectionsBrowserTest extends TestCase
                 ->waitForLivewire()->click('@save')
 
                 ->waitForLivewire()->type('@authors.1.name', 'Taylor')
-                ->assertSeeIn('@output.authors.1.name', 'Taylor')
-            ;
+                ->assertSeeIn('@output.authors.1.name', 'Taylor');
         });
 
         $author = EloquentCollectionsAuthor::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
@@ -77,7 +75,7 @@ class EloquentCollectionsBrowserTest extends TestCase
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutRulesComponent::class)
                 ->waitForLivewire()->click('@something')
                 ->assertSeeIn('@output', 'Ok!');
-            ;
+
         });
     }
 
@@ -88,7 +86,7 @@ class EloquentCollectionsBrowserTest extends TestCase
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutItemsComponent::class)
                 ->waitForLivewire()->click('@something')
                 ->assertSeeIn('@output', 'Ok!');
-            ;
+
         });
     }
 }
@@ -301,7 +299,6 @@ class EloquentCollectionsComment extends Model
         return $this->belongsTo(EloquentCollectionsPost::class, 'eloquent_collections_post_id');
     }
 }
-
 
 class EloquentCollectionsWithoutItems extends Model
 {

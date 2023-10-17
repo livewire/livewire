@@ -2,138 +2,139 @@
 
 namespace Livewire;
 
-use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
-use Livewire\Mechanisms\HandleComponents\HandleComponents;
-use Livewire\Mechanisms\HandleComponents\ComponentContext;
-use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use Livewire\Mechanisms\ComponentRegistry;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Features\SupportTesting\DuskTestable;
 use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
+use Livewire\Features\SupportTesting\DuskTestable;
+use Livewire\Features\SupportTesting\Testable;
+use Livewire\Mechanisms\ComponentRegistry;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
+use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 
 class LivewireManager
 {
     protected LivewireServiceProvider $provider;
 
-    function setProvider(LivewireServiceProvider $provider)
+    public function setProvider(LivewireServiceProvider $provider)
     {
         $this->provider = $provider;
     }
 
-    function provide($callback)
+    public function provide($callback)
     {
         \Closure::bind($callback, $this->provider, $this->provider::class)();
     }
 
-    function component($name, $class = null)
+    public function component($name, $class = null)
     {
         app(ComponentRegistry::class)->component($name, $class);
     }
 
-    function componentHook($hook)
+    public function componentHook($hook)
     {
         ComponentHookRegistry::register($hook);
     }
 
-    function propertySynthesizer($synth)
+    public function propertySynthesizer($synth)
     {
         app(HandleComponents::class)->registerPropertySynthesizer($synth);
     }
 
-    function directive($name, $callback)
+    public function directive($name, $callback)
     {
         app(ExtendBlade::class)->livewireOnlyDirective($name, $callback);
     }
 
-    function precompiler($callback)
+    public function precompiler($callback)
     {
         app(ExtendBlade::class)->livewireOnlyPrecompiler($callback);
     }
 
-    function new($name, $id = null)
+    public function new($name, $id = null)
     {
         return app(ComponentRegistry::class)->new($name, $id);
     }
 
-    function isDiscoverable($componentNameOrClass)
+    public function isDiscoverable($componentNameOrClass)
     {
         return app(ComponentRegistry::class)->isDiscoverable($componentNameOrClass);
     }
 
-    function resolveMissingComponent($resolver)
+    public function resolveMissingComponent($resolver)
     {
         return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
     }
 
-    function mount($name, $params = [], $key = null)
+    public function mount($name, $params = [], $key = null)
     {
         return app(HandleComponents::class)->mount($name, $params, $key);
     }
 
-    function snapshot($component)
+    public function snapshot($component)
     {
         return app(HandleComponents::class)->snapshot($component);
     }
 
-    function fromSnapshot($snapshot)
+    public function fromSnapshot($snapshot)
     {
         return app(HandleComponents::class)->fromSnapshot($snapshot);
     }
 
-    function listen($eventName, $callback) {
+    public function listen($eventName, $callback)
+    {
         return on($eventName, $callback);
     }
 
-    function current()
+    public function current()
     {
         return last(app(HandleComponents::class)::$componentStack);
     }
 
-    function update($snapshot, $diff, $calls)
+    public function update($snapshot, $diff, $calls)
     {
         return app(HandleComponents::class)->update($snapshot, $diff, $calls);
     }
 
-    function updateProperty($component, $path, $value)
+    public function updateProperty($component, $path, $value)
     {
         $dummyContext = new ComponentContext($component, false);
 
         return app(HandleComponents::class)->updateProperty($component, $path, $value, $dummyContext);
     }
 
-    function isLivewireRequest()
+    public function isLivewireRequest()
     {
         return app(HandleRequests::class)->isLivewireRequest();
     }
 
-    function componentHasBeenRendered()
+    public function componentHasBeenRendered()
     {
         return SupportAutoInjectedAssets::$hasRenderedAComponentThisRequest;
     }
 
-    function forceAssetInjection()
+    public function forceAssetInjection()
     {
         SupportAutoInjectedAssets::$forceAssetInjection = true;
     }
 
-    function setUpdateRoute($callback)
+    public function setUpdateRoute($callback)
     {
         return app(HandleRequests::class)->setUpdateRoute($callback);
     }
 
-    function getUpdateUri()
+    public function getUpdateUri()
     {
         return app(HandleRequests::class)->getUpdateUri();
     }
 
-    function setScriptRoute($callback)
+    public function setScriptRoute($callback)
     {
         return app(FrontendAssets::class)->setScriptRoute($callback);
     }
 
-    function useScriptTagAttributes($attributes)
+    public function useScriptTagAttributes($attributes)
     {
         return app(FrontendAssets::class)->useScriptTagAttributes($attributes);
     }
@@ -142,50 +143,50 @@ class LivewireManager
 
     protected $cookiesForTesting = [];
 
-    function withUrlParams($params)
+    public function withUrlParams($params)
     {
         return $this->withQueryParams($params);
     }
 
-    function withQueryParams($params)
+    public function withQueryParams($params)
     {
         $this->queryParamsForTesting = $params;
 
         return $this;
     }
 
-    function withCookie($name, $value)
+    public function withCookie($name, $value)
     {
         $this->cookiesForTesting[$name] = $value;
 
         return $this;
     }
 
-    function withCookies($cookies)
+    public function withCookies($cookies)
     {
         $this->cookiesForTesting = array_merge($this->cookiesForTesting, $cookies);
 
         return $this;
     }
 
-    function test($name, $params = [])
+    public function test($name, $params = [])
     {
         return Testable::create($name, $params, $this->queryParamsForTesting, $this->cookiesForTesting);
     }
 
-    function visit($name)
+    public function visit($name)
     {
         return DuskTestable::create($name, $params = [], $this->queryParamsForTesting);
     }
 
-    function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
+    public function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
     {
-         Testable::actingAs($user, $driver);
+        Testable::actingAs($user, $driver);
 
-         return $this;
+        return $this;
     }
 
-    function isRunningServerless()
+    public function isRunningServerless()
     {
         return in_array($_ENV['SERVER_SOFTWARE'] ?? null, [
             'vapor',
@@ -193,27 +194,27 @@ class LivewireManager
         ]);
     }
 
-    function addPersistentMiddleware($middleware)
+    public function addPersistentMiddleware($middleware)
     {
         app(PersistentMiddleware::class)->addPersistentMiddleware($middleware);
     }
 
-    function setPersistentMiddleware($middleware)
+    public function setPersistentMiddleware($middleware)
     {
         app(PersistentMiddleware::class)->setPersistentMiddleware($middleware);
     }
 
-    function getPersistentMiddleware()
+    public function getPersistentMiddleware()
     {
         return app(PersistentMiddleware::class)->getPersistentMiddleware();
     }
 
-    function flushState()
+    public function flushState()
     {
         trigger('flush-state');
     }
 
-    function originalUrl()
+    public function originalUrl()
     {
         if ($this->isLivewireRequest()) {
             return url()->to($this->originalPath());
@@ -222,7 +223,7 @@ class LivewireManager
         return url()->current();
     }
 
-    function originalPath()
+    public function originalPath()
     {
         if ($this->isLivewireRequest()) {
             $snapshot = json_decode(request('components.0.snapshot'), true);
@@ -233,7 +234,7 @@ class LivewireManager
         return request()->path();
     }
 
-    function originalMethod()
+    public function originalMethod()
     {
         if ($this->isLivewireRequest()) {
             $snapshot = json_decode(request('components.0.snapshot'), true);

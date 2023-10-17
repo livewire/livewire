@@ -7,7 +7,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 #[\Attribute]
 class BaseRenderless extends LivewireAttribute
 {
-    function call()
+    public function call()
     {
         $this->component->skipRender();
     }

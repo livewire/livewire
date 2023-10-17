@@ -37,7 +37,7 @@ class UnitTest extends \Tests\TestCase
     public function livewire_only_precompilers_apply_to_livewire_components_and_not_normal_blade()
     {
         Livewire::precompiler(function ($string) {
-            return preg_replace_callback('/@foo/sm',  function ($matches) {
+            return preg_replace_callback('/@foo/sm', function ($matches) {
                 return 'bar';
             }, $string);
         });
@@ -208,7 +208,6 @@ class PublicPropertiesInViewWithoutThisStub extends Component
         return app('view')->make('show-name');
     }
 }
-
 
 class ProtectedPropertiesInViewWithThisStub extends Component
 {

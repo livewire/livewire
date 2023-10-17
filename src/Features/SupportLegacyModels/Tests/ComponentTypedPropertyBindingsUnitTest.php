@@ -66,6 +66,7 @@ class PropBoundModel extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         $this->value = "via-route:$value";
+
         return $this;
     }
 
@@ -129,7 +130,9 @@ class ComponentWithPropBindingsAndMountMethod extends Component
 class ComponentWithDependentMountBindings extends Component
 {
     public $parent;
+
     public $child;
+
     public $name;
 
     public function mount(PropBoundModel $parent, PropBoundModel $child)

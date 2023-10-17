@@ -64,11 +64,15 @@ class FileUploadConfiguration
 
     protected static function s3Root()
     {
-        if (! static::isUsingS3()) return '';
+        if (! static::isUsingS3()) {
+            return '';
+        }
 
         $diskConfig = static::diskConfig();
 
-        if (! is_array($diskConfig)) return '';
+        if (! is_array($diskConfig)) {
+            return '';
+        }
 
         $root = $diskConfig['root'] ?? null;
 
@@ -100,9 +104,13 @@ class FileUploadConfiguration
     {
         $rules = config('livewire.temporary_file_upload.rules');
 
-        if (is_null($rules)) return ['required', 'file', 'max:12288'];
+        if (is_null($rules)) {
+            return ['required', 'file', 'max:12288'];
+        }
 
-        if (is_array($rules)) return $rules;
+        if (is_array($rules)) {
+            return $rules;
+        }
 
         return explode('|', $rules);
     }

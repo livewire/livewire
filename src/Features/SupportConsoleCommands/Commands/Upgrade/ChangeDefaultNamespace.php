@@ -10,9 +10,8 @@ class ChangeDefaultNamespace extends UpgradeStep
 {
     public function handle(UpgradeCommand $console, \Closure $next)
     {
-        if($this->hasOldNamespace())
-        {
-            $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> The Livewire namespace has changed. </>");
+        if ($this->hasOldNamespace()) {
+            $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> The Livewire namespace has changed. </>');
             $console->newLine();
 
             $console->line('The <options=underscore>App\\Http\\Livewire</> namespace was detected and is no longer the default in Livewire v3. Livewire v3 now uses the <options=underscore>App\\Livewire</> namespace.');
@@ -22,7 +21,7 @@ class ChangeDefaultNamespace extends UpgradeStep
                 'keep',
             ], 'migrate');
 
-            if($choice === 'keep') {
+            if ($choice === 'keep') {
                 $console->line('Keeping the old namespace...');
 
                 $this->publishConfigIfMissing($console);
@@ -39,44 +38,44 @@ class ChangeDefaultNamespace extends UpgradeStep
             $componentNames = [];
 
             $results = collect($this->filesystem()->allFiles('app/Http/Livewire'))
-                ->filter(function($file) {
+                ->filter(function ($file) {
                     return str($file)->endsWith('.php');
                 })
-                ->map(function($file) {
-                return str($file)->after('app/Http/Livewire/')->before('.php')->__toString();
-            })->map(function($component) use (&$componentNames) {
+                ->map(function ($file) {
+                    return str($file)->after('app/Http/Livewire/')->before('.php')->__toString();
+                })->map(function ($component) use (&$componentNames) {
 
-                // Track component names to update namespace references later on.
-                $componentNames[] = $component;
+                    // Track component names to update namespace references later on.
+                    $componentNames[] = $component;
 
-                $parser = new ComponentParser(
-                    'App\\Http\\Livewire',
-                    config('livewire.view_path'),
-                    $component,
-                );
+                    $parser = new ComponentParser(
+                        'App\\Http\\Livewire',
+                        config('livewire.view_path'),
+                        $component,
+                    );
 
-                $newParser = new ComponentParserFromExistingComponent(
-                    'App\\Livewire',
-                    config('livewire.view_path'),
-                    $component,
-                    $parser
-                );
+                    $newParser = new ComponentParserFromExistingComponent(
+                        'App\\Livewire',
+                        config('livewire.view_path'),
+                        $component,
+                        $parser
+                    );
 
-                if ($this->filesystem()->exists($newParser->relativeClassPath())) {
-                    return ['Skipped', $component, 'Already exists'];
-                }
+                    if ($this->filesystem()->exists($newParser->relativeClassPath())) {
+                        return ['Skipped', $component, 'Already exists'];
+                    }
 
-                if($this->filesystem()->directoryMissing(dirname($newParser->relativeClassPath()))) {
-                    $this->filesystem()->createDirectory(dirname($newParser->relativeClassPath()));
-                }
+                    if ($this->filesystem()->directoryMissing(dirname($newParser->relativeClassPath()))) {
+                        $this->filesystem()->createDirectory(dirname($newParser->relativeClassPath()));
+                    }
 
-                $this->filesystem()->put($newParser->relativeClassPath(), $newParser->classContents());
-                $this->filesystem()->delete($parser->relativeClassPath());
+                    $this->filesystem()->put($newParser->relativeClassPath(), $newParser->classContents());
+                    $this->filesystem()->delete($parser->relativeClassPath());
 
-                return ['Migrated', $component];
-            });
+                    return ['Migrated', $component];
+                });
 
-            foreach($componentNames as $name) {
+            foreach ($componentNames as $name) {
                 $name = str($name)->replace('/', '\\\\')->toString();
 
                 // Update any namespace references

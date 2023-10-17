@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -13,9 +12,10 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function livewire_styles_take_preference_over_other_styles()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             #[Layout('layouts.app-with-styles')]
-            function render()
+            public function render()
             {
 
                 return <<<'HTML'
@@ -27,9 +27,8 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         })
-        ->assertNotVisible('@loading')
-        ->waitForLivewire()->click('@refresh')
-        ->assertNotVisible('@loading')
-        ;
+            ->assertNotVisible('@loading')
+            ->waitForLivewire()->click('@refresh')
+            ->assertNotVisible('@loading');
     }
 }

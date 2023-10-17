@@ -17,9 +17,11 @@ class SupportStreaming extends ComponentHook
 
     public static function ensureStreamResponseStarted()
     {
-        if (static::$response) return;
+        if (static::$response) {
+            return;
+        }
 
-        static::$response = response()->stream(null , 200, [
+        static::$response = response()->stream(null, 200, [
             'Cache-Control' => 'no-cache',
             'Content-Type' => 'text/event-stream',
             'X-Accel-Buffering' => 'no',

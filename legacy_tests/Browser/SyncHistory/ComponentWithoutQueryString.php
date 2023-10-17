@@ -21,6 +21,6 @@ class ComponentWithoutQueryString extends BaseComponent
 
     public function render()
     {
-        return View::file(__DIR__.'/view-without-subcomponent.blade.php')->with([ 'id' => $this->id]);
+        return View::file(__DIR__.'/view-without-subcomponent.blade.php')->with(['id' => $this->id]);
     }
 }

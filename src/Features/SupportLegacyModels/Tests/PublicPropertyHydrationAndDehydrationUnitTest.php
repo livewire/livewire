@@ -2,11 +2,11 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use Livewire\Livewire;
-use Livewire\Component;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Schema;
+use Livewire\Component;
+use Livewire\Livewire;
 
 class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 {
@@ -123,15 +123,14 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->set('model.posts.0.description', 'Description 1 Post')
             ->set('model.posts.0.content', 'Content 1 Post')
             ->set('model.posts.0.comments.1.comment', '2 Comment')
-            ->set('model.posts.0.comments.1.author.name', 'gniht')
-            ;
+            ->set('model.posts.0.comments.1.author.name', 'gniht');
 
         $updatedModel = $component->get('model');
 
         $this->assertEquals('oof', $updatedModel->title);
         $this->assertEquals('rab', $updatedModel->name);
         $this->assertEquals('zab', $updatedModel->email);
-        $this->assertEquals('1 Post', $updatedModel->posts[0]->title, );
+        $this->assertEquals('1 Post', $updatedModel->posts[0]->title);
         $this->assertEquals('Description 1 Post', $updatedModel->posts[0]->description);
         $this->assertEquals('Content 1 Post', $updatedModel->posts[0]->content);
         $this->assertEquals('2 Comment', $updatedModel->posts[0]->comments[1]->comment);
@@ -164,15 +163,14 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->set('model.posts.0.content', 'Content 1 Post')
             ->set('model.posts.0.comments.1.comment', '2 Comment')
             ->set('model.posts.0.comments.1.author.name', 'gniht')
-            ->set('model.posts.0.otherComments.1.comment', '2 Other Comment')
-            ;
+            ->set('model.posts.0.otherComments.1.comment', '2 Other Comment');
 
         $updatedModel = $component->get('model');
 
         $this->assertEquals('oof', $updatedModel->title);
         $this->assertEquals('rab', $updatedModel->name);
         $this->assertEquals('zab', $updatedModel->email);
-        $this->assertEquals('1 Post', $updatedModel->posts[0]->title, );
+        $this->assertEquals('1 Post', $updatedModel->posts[0]->title);
         $this->assertEquals('Description 1 Post', $updatedModel->posts[0]->description);
         $this->assertEquals('Content 1 Post', $updatedModel->posts[0]->content);
         $this->assertEquals('2 Comment', $updatedModel->posts[0]->comments[1]->comment);
@@ -186,8 +184,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $model = new Author();
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model])
-            ->set('model.name', [])
-            ;
+            ->set('model.name', []);
 
         $updatedModel = $component->get('model');
 
@@ -248,13 +245,13 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
                         [
                             'comment' => 'Comment 1',
                             'author' => [
-                                'name' => 'bar'
+                                'name' => 'bar',
                             ],
                         ],
                         [
                             'comment' => 'Comment 2',
                             'author' => [
-                                'name' => 'thing'
+                                'name' => 'thing',
                             ],
                         ],
                     ],
@@ -316,13 +313,13 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
                         [
                             'comment' => 'Comment 1',
                             'author' => [
-                                'name' => 'bar'
+                                'name' => 'bar',
                             ],
                         ],
                         [
                             'comment' => 'Comment 2',
                             'author' => [
-                                'name' => 'thing'
+                                'name' => 'thing',
                             ],
                         ],
                     ],
@@ -330,13 +327,13 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
                         [
                             'comment' => 'Other Comment 1',
                             'author' => [
-                                'name' => 'bar'
+                                'name' => 'bar',
                             ],
                         ],
                         [
                             'comment' => 'Other Comment 2',
                             'author' => [
-                                'name' => 'thing'
+                                'name' => 'thing',
                             ],
                         ],
                     ],
@@ -550,13 +547,13 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
                             [
                                 'comment' => 'Comment 1',
                                 'author' => [
-                                    'name' => 'bar'
+                                    'name' => 'bar',
                                 ],
                             ],
                             [
                                 'comment' => 'Comment 2',
                                 'author' => [
-                                    'name' => 'thing'
+                                    'name' => 'thing',
                                 ],
                             ],
                         ],
@@ -631,13 +628,13 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
                             [
                                 'comment' => 'Comment 1',
                                 'author' => [
-                                    'name' => 'bar'
+                                    'name' => 'bar',
                                 ],
                             ],
                             [
                                 'comment' => 'Comment 2',
                                 'author' => [
-                                    'name' => 'thing'
+                                    'name' => 'thing',
                                 ],
                             ],
                         ],
@@ -645,13 +642,13 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
                             [
                                 'comment' => 'Other Comment 1',
                                 'author' => [
-                                    'name' => 'bar'
+                                    'name' => 'bar',
                                 ],
                             ],
                             [
                                 'comment' => 'Other Comment 2',
                                 'author' => [
-                                    'name' => 'thing'
+                                    'name' => 'thing',
                                 ],
                             ],
                         ],
@@ -724,13 +721,13 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
                             [
                                 'comment' => 'Comment 1',
                                 'author' => [
-                                    'name' => 'bar'
+                                    'name' => 'bar',
                                 ],
                             ],
                             [
                                 'comment' => 'Comment 2',
                                 'author' => [
-                                    'name' => 'thing'
+                                    'name' => 'thing',
                                 ],
                             ],
                         ],
@@ -895,6 +892,7 @@ class PostComponent extends Component
 class ModelsComponent extends Component
 {
     public $model;
+
     public $models;
 
     public $_rules = [
@@ -933,6 +931,7 @@ class ModelsComponent extends Component
 class Author extends Model
 {
     protected $connection = 'testbench';
+
     protected $guarded = [];
 
     public function posts()
@@ -954,6 +953,7 @@ class Author extends Model
 class Post extends Model
 {
     protected $connection = 'testbench';
+
     protected $guarded = [];
 
     public function author()
@@ -975,6 +975,7 @@ class Post extends Model
 class Comment extends Model
 {
     protected $connection = 'testbench';
+
     protected $guarded = [];
 
     public function author()
@@ -991,6 +992,7 @@ class Comment extends Model
 class OtherComment extends Model
 {
     protected $connection = 'testbench';
+
     protected $guarded = [];
 
     public function author()

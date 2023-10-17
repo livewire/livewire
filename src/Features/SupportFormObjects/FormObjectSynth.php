@@ -3,18 +3,19 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Livewire\Drawer\Utils;
-use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Features\SupportAttributes\AttributeCollection;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
-class FormObjectSynth extends Synth {
+class FormObjectSynth extends Synth
+{
     public static $key = 'form';
 
-    static function match($target)
+    public static function match($target)
     {
         return $target instanceof Form;
     }
 
-    function dehydrate($target, $dehydrateChild)
+    public function dehydrate($target, $dehydrateChild)
     {
         $data = $target->toArray();
 
@@ -25,7 +26,7 @@ class FormObjectSynth extends Synth {
         return [$data, ['class' => get_class($target)]];
     }
 
-    function hydrate($data, $meta, $hydrateChild)
+    public function hydrate($data, $meta, $hydrateChild)
     {
         $form = new $meta['class']($this->context->component, $this->path);
 
@@ -42,7 +43,7 @@ class FormObjectSynth extends Synth {
         return $form;
     }
 
-    function set(&$target, $key, $value)
+    public function set(&$target, $key, $value)
     {
         if ($value === null && Utils::propertyIsTyped($target, $key)) {
             unset($target->$key);
@@ -54,8 +55,7 @@ class FormObjectSynth extends Synth {
     public static function bootFormObject($component, $form, $path)
     {
         $component->mergeOutsideAttributes(
-            AttributeCollection::fromComponent($component, $form, $path . '.')
+            AttributeCollection::fromComponent($component, $form, $path.'.')
         );
     }
 }
-

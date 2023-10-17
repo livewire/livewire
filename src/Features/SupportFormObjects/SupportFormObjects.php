@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use ReflectionClass;
 use Livewire\ComponentHook;
+use ReflectionClass;
 use ReflectionNamedType;
 
 class SupportFormObjects extends ComponentHook
@@ -15,7 +15,7 @@ class SupportFormObjects extends ComponentHook
         );
     }
 
-    function boot()
+    public function boot()
     {
         $this->initializeFormObjects();
     }
@@ -24,18 +24,26 @@ class SupportFormObjects extends ComponentHook
     {
         foreach ((new ReflectionClass($this->component))->getProperties() as $property) {
             // Public properties only...
-            if ($property->isPublic() !== true) continue;
+            if ($property->isPublic() !== true) {
+                continue;
+            }
             // Uninitialized properties only...
-            if ($property->isInitialized($this->component)) continue;
+            if ($property->isInitialized($this->component)) {
+                continue;
+            }
 
             $type = $property->getType();
 
-            if (! $type instanceof ReflectionNamedType) continue;
+            if (! $type instanceof ReflectionNamedType) {
+                continue;
+            }
 
             $typeName = $type->getName();
 
             // "Form" object property types only...
-            if (! is_subclass_of($typeName, Form::class)) continue;
+            if (! is_subclass_of($typeName, Form::class)) {
+                continue;
+            }
 
             $form = new $typeName(
                 $this->component,

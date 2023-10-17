@@ -2,79 +2,79 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
-use Livewire\Features\SupportPageComponents\HandlesPageComponents;
-use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
-use Livewire\Features\SupportAttributes\HandlesAttributes;
-use Livewire\Features\SupportValidation\HandlesValidation;
-use Livewire\Features\SupportStreaming\HandlesStreaming;
-use Livewire\Features\SupportRedirects\HandlesRedirects;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Livewire\Features\SupportEvents\HandlesEvents;
-use Livewire\Exceptions\PropertyNotFoundException;
-use Livewire\Concerns\InteractsWithProperties;
-use Illuminate\Support\Traits\Macroable;
 use BadMethodCallException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Traits\Macroable;
+use Livewire\Concerns\InteractsWithProperties;
+use Livewire\Exceptions\PropertyNotFoundException;
+use Livewire\Features\SupportAttributes\HandlesAttributes;
+use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportEvents\HandlesEvents;
+use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
+use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportRedirects\HandlesRedirects;
+use Livewire\Features\SupportStreaming\HandlesStreaming;
+use Livewire\Features\SupportValidation\HandlesValidation;
 
 abstract class Component
 {
-    use Macroable { __call as macroCall; }
-
     use AuthorizesRequests;
-    use InteractsWithProperties;
-    use HandlesEvents;
-    use HandlesRedirects;
-    use HandlesStreaming;
     use HandlesAttributes;
-    use HandlesValidation;
+    use HandlesDisablingBackButtonCache;
+    use HandlesEvents;
     use HandlesJsEvaluation;
     use HandlesPageComponents;
-    use HandlesDisablingBackButtonCache;
+    use HandlesRedirects;
+    use HandlesStreaming;
+    use HandlesValidation;
+    use InteractsWithProperties;
+    use Macroable { __call as macroCall; }
 
     protected $__id;
+
     protected $__name;
 
-    function id()
+    public function id()
     {
         return $this->getId();
     }
 
-    function setId($id)
+    public function setId($id)
     {
         $this->__id = $id;
     }
 
-    function getId()
+    public function getId()
     {
         return $this->__id;
     }
 
-    function setName($name)
+    public function setName($name)
     {
         $this->__name = $name;
     }
 
-    function getName()
+    public function getName()
     {
         return $this->__name;
     }
 
-    function skipRender($html = null)
+    public function skipRender($html = null)
     {
         store($this)->set('skipRender', $html ?: true);
     }
 
-    function skipMount()
+    public function skipMount()
     {
         store($this)->set('skipMount', true);
     }
 
-    function skipHydrate()
+    public function skipHydrate()
     {
         store($this)->set('skipHydrate', true);
     }
 
-    function __isset($property)
+    public function __isset($property)
     {
         try {
             $value = $this->__get($property);
@@ -82,12 +82,13 @@ abstract class Component
             if (isset($value)) {
                 return true;
             }
-        } catch(PropertyNotFoundException $ex) {}
+        } catch (PropertyNotFoundException $ex) {
+        }
 
         return false;
     }
 
-    function __get($property)
+    public function __get($property)
     {
         $value = 'noneset';
 
@@ -106,12 +107,12 @@ abstract class Component
         return $value;
     }
 
-    function __unset($property)
+    public function __unset($property)
     {
         trigger('__unset', $this, $property);
     }
 
-    function __call($method, $params)
+    public function __call($method, $params)
     {
         $value = 'noneset';
 

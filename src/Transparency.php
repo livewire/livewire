@@ -8,32 +8,32 @@ trait Transparency
 {
     public $target;
 
-    function __toString()
+    public function __toString()
     {
         return (string) $this->target;
     }
 
-    function offsetExists(mixed $offset): bool
+    public function offsetExists(mixed $offset): bool
     {
         return isset($this->target[$offset]);
     }
 
-    function offsetGet(mixed $offset): mixed
+    public function offsetGet(mixed $offset): mixed
     {
         return $this->target[$offset];
     }
 
-    function offsetSet(mixed $offset, mixed $value): void
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         $this->target[$offset] = $value;
     }
 
-    function offsetUnset(mixed $offset): void
+    public function offsetUnset(mixed $offset): void
     {
         unset($this->target[$offset]);
     }
 
-    function getIterator(): Traversable
+    public function getIterator(): Traversable
     {
         return (function () {
             foreach ($this->target as $key => $value) {

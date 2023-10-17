@@ -6,14 +6,15 @@ use function Livewire\invade;
 
 class ViewContext
 {
-    function __construct(
+    public function __construct(
         public $slots = [],
         public $pushes = [],
         public $prepends = [],
         public $sections = [],
-    ) {}
+    ) {
+    }
 
-    function extractFromEnvironment($__env)
+    public function extractFromEnvironment($__env)
     {
         $factory = invade($__env);
 
@@ -23,7 +24,7 @@ class ViewContext
         $this->sections = $factory->sections;
     }
 
-    function mergeIntoNewEnvironment($__env)
+    public function mergeIntoNewEnvironment($__env)
     {
         $factory = invade($__env);
 

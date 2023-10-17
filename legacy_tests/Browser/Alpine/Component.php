@@ -8,7 +8,9 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $count = 0;
+
     public $special = 'abc';
+
     public $zorp = 'before';
 
     public $nested = [
@@ -42,7 +44,9 @@ class Component extends BaseComponent
 
     public function updatingCount()
     {
-        if ($this->count === 100) throw new \Exception('"count" shouldnt already be "100". This means @entangle made an extra request after Livewire set the data.');
+        if ($this->count === 100) {
+            throw new \Exception('"count" shouldnt already be "100". This means @entangle made an extra request after Livewire set the data.');
+        }
     }
 
     public function render()

@@ -2,11 +2,9 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
-use Livewire\Exceptions\PublicPropertyNotFoundException;
-use Livewire\Exceptions\NonPublicComponentMethodCall;
-use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Component;
+use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
 class ComponentsAreSecureUnitTest extends \Tests\TestCase
 {
@@ -106,6 +104,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
 class SecurityTargetStub extends Component
 {
     public $publicProperty = 'foo';
+
     protected $protectedProperty = 'bar';
 
     public function publicMethod()

@@ -6,7 +6,7 @@ use Livewire\ComponentHook;
 
 class SupportModels extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
         app('livewire')->propertySynthesizer([
             ModelSynth::class,

@@ -3,8 +3,8 @@
 namespace Livewire\Tests;
 
 use Illuminate\Support\Str;
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 {
@@ -12,7 +12,7 @@ class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
     public function public_properties_can_be_cast()
     {
         $this->markTestSkipped('This test needs to be split, so each property type is tested as part of their dedicated Synth');
-        
+
         Livewire::test(ComponentWithPublicPropertyCasters::class)
             ->call('storeTypeOfs')
             ->assertSet('typeOfs.date', 'Carbon\Carbon')
@@ -34,10 +34,15 @@ class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 class ComponentWithPublicPropertyCasters extends Component
 {
     public $date;
+
     public $dateWithFormat;
+
     public $collection;
+
     public $allCaps;
+
     public $typeOfs;
+
     public $stringable;
 
     public function updatedDateWithFormat($value)

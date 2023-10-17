@@ -2,32 +2,42 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-class EnumSynth extends Synth {
+class EnumSynth extends Synth
+{
     public static $key = 'enm';
 
-    static function match($target) {
+    public static function match($target)
+    {
         return is_object($target) && is_subclass_of($target, 'BackedEnum');
     }
 
-    static function matchByType($type) {
+    public static function matchByType($type)
+    {
         return is_subclass_of($type, 'BackedEnum');
     }
 
-    static function hydrateFromType($type, $value) {
-        if ($value === '') return null;
+    public static function hydrateFromType($type, $value)
+    {
+        if ($value === '') {
+            return null;
+        }
 
         return $type::from($value);
     }
 
-    function dehydrate($target) {
+    public function dehydrate($target)
+    {
         return [
             $target->value,
-            ['class' => get_class($target)]
+            ['class' => get_class($target)],
         ];
     }
 
-    function hydrate($value, $meta) {
-        if ($value === null) return null;
+    public function hydrate($value, $meta)
+    {
+        if ($value === null) {
+            return null;
+        }
 
         $class = $meta['class'];
 

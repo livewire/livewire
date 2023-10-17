@@ -2,11 +2,12 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
-use function Livewire\invade;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
+
+use function Livewire\invade;
 
 class ModelValidationUnitTest extends \Tests\TestCase
 {
@@ -86,9 +87,10 @@ class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions ext
 {
     public $foo;
 
-    protected function rules() {
+    protected function rules()
+    {
         return [
-            'foo.email' => 'unique:foo-connection.foo_model_for_uniqueness_validations,email,'.$this->foo->id
+            'foo.email' => 'unique:foo-connection.foo_model_for_uniqueness_validations,email,'.$this->foo->id,
         ];
     }
 

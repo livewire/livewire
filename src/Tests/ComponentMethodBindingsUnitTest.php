@@ -113,6 +113,7 @@ class ModelToBeBound extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         $this->value = $value;
+
         return $this;
     }
 }

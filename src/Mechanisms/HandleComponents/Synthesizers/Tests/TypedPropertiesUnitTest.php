@@ -18,7 +18,8 @@ class TypedPropertiesUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithUninitializedTypedProperty extends Component {
+class ComponentWithUninitializedTypedProperty extends Component
+{
     public string $message;
 
     public function render()

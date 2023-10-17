@@ -12,7 +12,7 @@ class Model extends BaseModel
     protected $rows = [
         [
             'id' => 1,
-            'name' => 'â'
-        ]
+            'name' => 'â',
+        ],
     ];
 }

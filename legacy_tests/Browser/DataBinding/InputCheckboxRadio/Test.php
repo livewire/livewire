@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\InputCheckboxRadio;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 
@@ -32,16 +31,15 @@ class Test extends TestCase
                 ->assertSeeIn('@bar.output', '["b"]')
                 ->waitForLivewire()->check('@bar.c')
                 ->assertNotChecked('@bar.a')->assertChecked('@bar.b')->assertChecked('@bar.c')
-                ->assertSeeIn('@bar.output', '["b","c"]')
+                ->assertSeeIn('@bar.output', '["b","c"]');
 
-                /**
-                 * Can set value from a number
-                 */
-                // @note: Not sure why someone would want to bind a non-boolean value to a checkbox.
-                // Because V3 uses Alpine's x-model under the hood, this breaks. If it's considered
-                // breaking and people need it, we can see about matching the behavior of V2...
-                // ->assertChecked('@baz')
-                ;
+            /**
+             * Can set value from a number
+             */
+            // @note: Not sure why someone would want to bind a non-boolean value to a checkbox.
+            // Because V3 uses Alpine's x-model under the hood, this breaks. If it's considered
+            // breaking and people need it, we can see about matching the behavior of V2...
+            // ->assertChecked('@baz')
         });
     }
 
@@ -71,8 +69,7 @@ class Test extends TestCase
 
                 ->assertNotChecked('@int1')
                 ->assertChecked('@int2')
-                ->assertNotChecked('@int3')
-                ;
+                ->assertNotChecked('@int3');
         });
     }
 }

@@ -13,15 +13,18 @@ class BrowserTest extends \Tests\BrowserTestCase
         $isBlock = 'getComputedStyle(document.querySelector(\'[dusk="target"]\')).display === "block"';
 
         Livewire::visit(
-            new class extends \Livewire\Component {
+            new class extends \Livewire\Component
+            {
                 public $show = false;
 
-                function toggle()
+                public function toggle()
                 {
                     $this->show = ! $this->show;
                 }
 
-                public function render() { return <<<'HTML'
+                public function render()
+                {
+                    return <<<'HTML'
                 <div>
                     <button wire:click="toggle" dusk="toggle">Toggle</button>
 
@@ -31,29 +34,30 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </div>
                     @endif
                 </div>
-                HTML; }
-        })
-        ->assertDontSee('@target')
-        ->waitForLivewire()->click('@toggle')
-        ->waitFor('@target')
-        ->waitUntil($isBlock)
-        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
-        ->waitUntil("$opacity === 1") // Now it's done.
-        ->assertScript($opacity, 1) // Assert that it's done.
-        ->waitForLivewire()->click('@toggle')
-        ->assertPresent('@target')
-        ->assertScript($isBlock, true) // That should not have changed yet.
-        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
-        ->waitUntilMissing('@target')
-        ->assertMissing('@target')
-        ;
+                HTML;
+                }
+            })
+            ->assertDontSee('@target')
+            ->waitForLivewire()->click('@toggle')
+            ->waitFor('@target')
+            ->waitUntil($isBlock)
+            ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
+            ->waitUntil("$opacity === 1") // Now it's done.
+            ->assertScript($opacity, 1) // Assert that it's done.
+            ->waitForLivewire()->click('@toggle')
+            ->assertPresent('@target')
+            ->assertScript($isBlock, true) // That should not have changed yet.
+            ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
+            ->waitUntilMissing('@target')
+            ->assertMissing('@target');
     }
 
     /** @test */
     public function elements_the_contain_transition_are_displayed_on_page_load()
     {
         Livewire::visit(
-            new class extends \Livewire\Component {
+            new class extends \Livewire\Component
+            {
                 public $messages = [
                     'message 1',
                     'message 2',
@@ -63,7 +67,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function addMessage()
                 {
-                    $this->messages[] = 'message ' . count($this->messages) + 1;
+                    $this->messages[] = 'message '.count($this->messages) + 1;
                 }
 
                 public function render()
@@ -82,10 +86,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             }
         )
-        ->assertVisible('@message-1')
-        ->assertVisible('@message-2')
-        ->assertVisible('@message-3')
-        ->assertVisible('@message-4')
-        ;
+            ->assertVisible('@message-1')
+            ->assertVisible('@message-2')
+            ->assertVisible('@message-3')
+            ->assertVisible('@message-4');
     }
 }

@@ -7,6 +7,7 @@ use Livewire\Component as BaseComponent;
 class LazyInputsWithUpdatesDisplayedComponent extends BaseComponent
 {
     public $name;
+
     public $description;
 
     public $is_active = false;
@@ -23,7 +24,7 @@ class LazyInputsWithUpdatesDisplayedComponent extends BaseComponent
         $this->updateUpdates();
     }
 
-    function updateUpdates()
+    public function updateUpdates()
     {
         // To keep the test from V2, I'm going to massage the V3 schema update data
         // back into the V2 schema here...

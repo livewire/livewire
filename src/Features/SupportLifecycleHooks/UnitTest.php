@@ -104,6 +104,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(5, $componentWithFooBar->bar);
         $this->assertSame(null, data_get($componentWithOnlyFoo->instance(), 'bar'));
     }
+
     /** @test */
     public function mount_hook()
     {
@@ -141,7 +142,7 @@ class UnitTest extends \Tests\TestCase
                 ]],
                 'updatingFoo' => ['bar'],
                 'updatedFoo' => ['bar'],
-            ]
+            ],
         ])->set('foo', 'bar');
 
         $this->assertEquals([
@@ -169,24 +170,24 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
                 'updating' => [
-                    ['bar.foo' => 'baz',],
+                    ['bar.foo' => 'baz'],
                     ['bar.cocktail.soft' => 'Shirley Ginger'],
-                    ['bar.cocktail.soft' => 'Shirley Cumin']
+                    ['bar.cocktail.soft' => 'Shirley Cumin'],
                 ],
                 'updated' => [
-                    ['bar.foo' => 'baz',],
+                    ['bar.foo' => 'baz'],
                     ['bar.cocktail.soft' => 'Shirley Ginger'],
-                    ['bar.cocktail.soft' => 'Shirley Cumin']
+                    ['bar.cocktail.soft' => 'Shirley Cumin'],
                 ],
                 'updatingBar' => [
                     ['foo' => [null, 'baz']],
                     ['cocktail.soft' => [null, 'Shirley Ginger']],
-                    ['cocktail.soft' => ['Shirley Ginger', 'Shirley Cumin']]
+                    ['cocktail.soft' => ['Shirley Ginger', 'Shirley Cumin']],
                 ],
                 'updatedBar' => [
                     ['foo' => 'baz'],
                     ['cocktail.soft' => 'Shirley Ginger'],
-                    ['cocktail.soft' => 'Shirley Cumin']
+                    ['cocktail.soft' => 'Shirley Cumin'],
                 ],
             ],
         ]);
@@ -239,7 +240,7 @@ class UnitTest extends \Tests\TestCase
                 'updatedBarBaz' => [
                     ['baz' => 'bop'],
                 ],
-            ]
+            ],
         ]);
 
         $component->set('bar.baz', 'bop');
@@ -322,6 +323,7 @@ class ComponentWithBootMethod extends Component
     // Use protected property to record all memo's
     // as hydrating memo wipes out changes from boot
     protected $_memo = '';
+
     public $memo = '';
 
     public function boot()
@@ -359,6 +361,7 @@ class ComponentWithBootTrait extends Component
     // Use protected property to record all memo's
     // as hydrating memo wipes out changes from boot
     protected $_memo = '';
+
     public $memo = '';
 
     public function boot()
@@ -427,6 +430,7 @@ class ComponentWithBootMethodDI extends Component
     // Use protected property to record all memo's
     // as hydrating memo wipes out changes from boot
     protected $_memo = '';
+
     public $memo = '';
 
     public function boot(Stringable $string)
@@ -450,6 +454,7 @@ class ComponentWithBootMethodDI extends Component
 class ComponentWithOptionalParameters extends Component
 {
     public $foo;
+
     public $bar;
 
     public function mount($foo = null, $bar = [])
@@ -488,7 +493,6 @@ class ComponentWithoutMount extends Component
         return view('null-view');
     }
 }
-
 
 class ForLifecycleHooks extends Component
 {

@@ -12,7 +12,7 @@ class EntangleNestedParentComponent extends BaseComponent
 
     public function addList()
     {
-        $this->list[] = ['id' => (count($this->list) + 1), 'name' => 'test' . (count($this->list) + 1)];
+        $this->list[] = ['id' => (count($this->list) + 1), 'name' => 'test'.(count($this->list) + 1)];
     }
 
     public function removeList()

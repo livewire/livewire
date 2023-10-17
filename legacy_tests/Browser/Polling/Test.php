@@ -10,8 +10,10 @@ class Test extends BrowserTestCase
 {
     public function test_wire_poll()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $enabled = false;
+
             public $count = 0;
 
             public function render()
@@ -39,9 +41,11 @@ class Test extends BrowserTestCase
             ->assertSeeIn('@output', '1')
             ->waitForLivewire()->click('@enable')
             ->assertSeeIn('@output', '2')
-            ->waitForLivewire(function () {}) // Wait for the next Livewire roundtrip
+            ->waitForLivewire(function () {
+            }) // Wait for the next Livewire roundtrip
             ->assertSeeIn('@output', '3')
-            ->waitForLivewire(function () {})
+            ->waitForLivewire(function () {
+            })
             ->assertSeeIn('@output', '4')
 
             /**
@@ -57,14 +61,15 @@ class Test extends BrowserTestCase
              */
             ->waitForLivewire()->click('@enable')
             ->assertSeeIn('@output', '6')
-            ->waitForLivewire(function () {})
+            ->waitForLivewire(function () {
+            })
             ->assertSeeIn('@output', '7')
             ->offline()
             ->pause('500')
             ->assertSeeIn('@output', '7')
             ->online()
-            ->waitForLivewire(function () {})
-            ->assertSeeIn('@output', '8')
-        ;
+            ->waitForLivewire(function () {
+            })
+            ->assertSeeIn('@output', '8');
     }
 }

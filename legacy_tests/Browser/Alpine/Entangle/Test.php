@@ -2,10 +2,8 @@
 
 namespace LegacyTests\Browser\Alpine\Entangle;
 
-use Livewire\Livewire;
-use LegacyTests\Browser\Alpine\Entangle\Component;
-use LegacyTests\Browser\Alpine\Entangle\EntangleConsecutiveActions;
 use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
 
 class Test extends TestCase
 {
@@ -34,8 +32,7 @@ class Test extends TestCase
                 ->assertSeeIn('@bob.blade', 'before')
                 ->waitForLivewire()->click('@bob.button')
                 ->assertSeeIn('@bob.alpine', 'after')
-                ->assertSeeIn('@bob.blade', 'after')
-            ;
+                ->assertSeeIn('@bob.blade', 'after');
         });
     }
 
@@ -59,8 +56,7 @@ class Test extends TestCase
                 ->assertSeeIn('@output.livewire', 5)
                 ->assertSeeIn('@output.livewire', 6)
                 ->assertSeeIn('@output.livewire', 7)
-                ->assertSeeIn('@output.livewire', 8)
-            ;
+                ->assertSeeIn('@output.livewire', 8);
         });
     }
 
@@ -75,8 +71,7 @@ class Test extends TestCase
                 ->assertSeeIn('@output.livewire', 'true')
                 ->waitForLivewire()->click('@toggle')
                 ->assertSeeIn('@output.alpine', 'false')
-                ->assertSeeIn('@output.livewire', 'false')
-            ;
+                ->assertSeeIn('@output.livewire', 'false');
         });
     }
 
@@ -91,8 +86,7 @@ class Test extends TestCase
                 ->append('@input', 's')
                 ->waitForLivewire()->click('@submit')
                 ->assertSeeIn('@output.alpine', 'ss')
-                ->assertSeeIn('@output.livewire', 'ss')
-            ;
+                ->assertSeeIn('@output.livewire', 'ss');
         });
     }
 
@@ -107,8 +101,7 @@ class Test extends TestCase
                 ->assertSeeIn('@output.livewire', 'guest')
                 ->waitForLivewire()->click('@submit')
                 ->assertSeeIn('@output.alpine', 'guest')
-                ->assertSeeIn('@output.livewire', 'guest')
-            ;
+                ->assertSeeIn('@output.livewire', 'guest');
         });
     }
 
@@ -118,12 +111,11 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, EntangleNestedArray::class)
                 ->waitForLivewire()->click('@add')
                 ->waitForLivewire()->click('@add')
-                ->assertSeeIn('@output', "Item0")
-                ->assertSeeIn('@output', "Item1")
+                ->assertSeeIn('@output', 'Item0')
+                ->assertSeeIn('@output', 'Item1')
                 ->waitForLivewire()->click('@remove')
-                ->assertSeeIn('@output', "Item0")
-                ->assertDontSeeIn('@output', "Item1")
-            ;
+                ->assertSeeIn('@output', 'Item0')
+                ->assertDontSeeIn('@output', 'Item1');
         });
     }
 
@@ -131,12 +123,11 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, [EntangleNestedParentComponent::class, EntangleNestedChildComponent::class])
-                ->assertSeeIn('@livewire-output-test1', "test1")
-                ->assertSeeIn('@alpine-output-test1', "test1")
+                ->assertSeeIn('@livewire-output-test1', 'test1')
+                ->assertSeeIn('@alpine-output-test1', 'test1')
                 ->waitForLivewire()->click('@add')
-                ->assertSeeIn('@livewire-output-test2', "test2")
-                ->assertSeeIn('@alpine-output-test2', "test2")
-            ;
+                ->assertSeeIn('@livewire-output-test2', 'test2')
+                ->assertSeeIn('@alpine-output-test2', 'test2');
         });
     }
 
@@ -144,10 +135,9 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, EntangleResponseCheck::class)
-                ->assertSeeIn('@output', "false")
+                ->assertSeeIn('@output', 'false')
                 ->waitForLivewire()->click('@add')
-                ->assertSeeIn('@output', "false")
-            ;
+                ->assertSeeIn('@output', 'false');
         });
     }
 
@@ -164,7 +154,7 @@ class Test extends TestCase
                 ->assertDontSeeIn('@livewireOutput', 1)
                 ->assertDontSeeIn('@livewireOutput', 2)
 
-                ->waitForLivewire()->click('@alpineAdd' )
+                ->waitForLivewire()->click('@alpineAdd')
                 ->assertSeeIn('@alpineOutput', 0)
                 ->assertSeeIn('@alpineOutput', 1)
                 ->assertDontSeeIn('@alpineOutput', 2)
@@ -179,7 +169,6 @@ class Test extends TestCase
                 ->assertSeeIn('@livewireOutput', 0)
                 ->assertSeeIn('@livewireOutput', 1)
                 ->assertSeeIn('@livewireOutput', 2)
-
 
                 // Trigger some consecutive livewire changes
                 ->waitForLivewire()->click('@livewireAdd')
@@ -204,8 +193,7 @@ class Test extends TestCase
                 ->assertSeeIn('@alpineOutput', 5)
                 ->assertSeeIn('@livewireOutput', 0)
                 ->assertSeeIn('@livewireOutput', 4)
-                ->assertSeeIn('@livewireOutput', 5)
-            ;
+                ->assertSeeIn('@livewireOutput', 5);
         });
     }
 

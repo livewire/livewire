@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportEntangle;
 
-use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;
@@ -13,7 +11,8 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_persist_entangled_data()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $input;
 
             public function render()
@@ -30,17 +29,17 @@ class BrowserTest extends BrowserTestCase
             ->type('@input', 'Hello World')
             ->assertScript('localStorage.getItem("_x_value") == \'"Hello World"\'')
             ->tap(fn ($b) => $b->refresh())
-            ->assertScript("localStorage.getItem('_x_value')", '"Hello World"')
-            ;
+            ->assertScript("localStorage.getItem('_x_value')", '"Hello World"');
     }
 
     /** @test */
     public function is_not_live_by_default()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = 'foo';
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -69,10 +68,11 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_be_forced_to_not_be_live()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = 'foo';
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -101,10 +101,11 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_be_live()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = 'foo';
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -127,7 +128,8 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_remove_entangled_components_from_dom_without_side_effects()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $items = [];
 
             public function add()
@@ -142,7 +144,7 @@ class BrowserTest extends BrowserTestCase
                 unset($this->items[$key]);
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -205,7 +207,8 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_remove_dollar_sign_entangled_components_from_dom_without_side_effects()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $items = [];
 
             public function add()
@@ -220,7 +223,7 @@ class BrowserTest extends BrowserTestCase
                 unset($this->items[$key]);
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -283,7 +286,8 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_removed_nested_items_without_multiple_requests_when_entangled_items_are_present()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $components = [];
 
             public $filters = [
@@ -325,7 +329,7 @@ class BrowserTest extends BrowserTestCase
                 ];
             }
 
-            function render()
+            public function render()
             {
                 return <<<'HTML'
                 <div>
@@ -360,30 +364,30 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         })
-        ->assertSeeIn('@counter', '1')
-        ->waitForLivewire()->click('@remove-name')
-        ->assertSeeIn('@counter', '2')
-        ->waitForLivewire()->click('@remove-phone')
-        ->assertSeeIn('@counter', '3')
-        ->waitForLivewire()->click('@remove-address')
-        ->assertSeeIn('@counter', '4')
-        ->waitForLivewire()->click('@add-back-filters-without-entangled')
-        ->assertSeeIn('@counter', '5')
-        ->waitForLivewire()->click('@remove-name')
-        ->assertSeeIn('@counter', '6')
-        ->waitForLivewire()->click('@remove-phone')
-        ->assertSeeIn('@counter', '7')
-        ->waitForLivewire()->click('@remove-address')
-        ->assertSeeIn('@counter', '8')
-        ->waitForLivewire()->click('@add-back-filters-with-entangled')
-        ->assertSeeIn('@counter', '9')
-        ->waitForLivewire()->click('@remove-name')
-        ->assertSeeIn('@counter', '10') // This test will fail here since there will be duplicate requests
-        ->waitForLivewire()->click('@remove-phone')
-        ->assertSeeIn('@counter', '11')
-        ->waitForLivewire()->click('@remove-address')
-        ->assertSeeIn('@counter', '12')
-        ->waitForLivewire()->click('@remove-entangled')
-        ->assertSeeIn('@counter', '13');
+            ->assertSeeIn('@counter', '1')
+            ->waitForLivewire()->click('@remove-name')
+            ->assertSeeIn('@counter', '2')
+            ->waitForLivewire()->click('@remove-phone')
+            ->assertSeeIn('@counter', '3')
+            ->waitForLivewire()->click('@remove-address')
+            ->assertSeeIn('@counter', '4')
+            ->waitForLivewire()->click('@add-back-filters-without-entangled')
+            ->assertSeeIn('@counter', '5')
+            ->waitForLivewire()->click('@remove-name')
+            ->assertSeeIn('@counter', '6')
+            ->waitForLivewire()->click('@remove-phone')
+            ->assertSeeIn('@counter', '7')
+            ->waitForLivewire()->click('@remove-address')
+            ->assertSeeIn('@counter', '8')
+            ->waitForLivewire()->click('@add-back-filters-with-entangled')
+            ->assertSeeIn('@counter', '9')
+            ->waitForLivewire()->click('@remove-name')
+            ->assertSeeIn('@counter', '10') // This test will fail here since there will be duplicate requests
+            ->waitForLivewire()->click('@remove-phone')
+            ->assertSeeIn('@counter', '11')
+            ->waitForLivewire()->click('@remove-address')
+            ->assertSeeIn('@counter', '12')
+            ->waitForLivewire()->click('@remove-entangled')
+            ->assertSeeIn('@counter', '13');
     }
 }

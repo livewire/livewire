@@ -2,12 +2,10 @@
 
 namespace LegacyTests\Browser\ScriptTag;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
 {
-
     public function test()
     {
         $this->markTestSkipped(); // @todo: should we support this in V3?
@@ -16,8 +14,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, Component::class)
                 ->assertScript('window.scriptTagWasCalled === undefined')
                 ->waitForLivewire()->click('@button')
-                ->assertScript('window.scriptTagWasCalled === true')
-            ;
+                ->assertScript('window.scriptTagWasCalled === true');
         });
     }
 }

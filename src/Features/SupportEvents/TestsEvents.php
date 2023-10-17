@@ -73,7 +73,7 @@ trait TestsEvents
         }
 
         return [
-            'test'            => $test,
+            'test' => $test,
             'assertionSuffix' => $assertionSuffix,
         ];
     }

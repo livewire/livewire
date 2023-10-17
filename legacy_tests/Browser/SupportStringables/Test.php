@@ -10,7 +10,8 @@ class Test extends TestCase
 {
     public function test_stringable_support()
     {
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends \Livewire\Component
+        {
             public $string;
 
             public function mount()
@@ -27,7 +28,6 @@ class Test extends TestCase
                 HTML;
             }
         })
-            ->assertSee('Be excellent to each other')
-        ;
+            ->assertSee('Be excellent to each other');
     }
 }

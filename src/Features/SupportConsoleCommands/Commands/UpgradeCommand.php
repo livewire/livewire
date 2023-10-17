@@ -8,6 +8,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToE
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\AddLiveModifierToWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultLayoutView;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeDefaultNamespace;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeForgetComputedToUnset;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeLazyToBlurModifierOnWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeTestAssertionMethods;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeWireLoadDirectiveToWireInit;
@@ -16,13 +17,12 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifie
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigation;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ThirdPartyUpgradeNotice;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
-use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroduction;
-use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeForgetComputedToUnset;
 
 class UpgradeCommand extends Command
 {
@@ -60,18 +60,18 @@ class UpgradeCommand extends Command
             UpgradeAlpineInstructions::class,
 
             // Third-party steps
-            ... static::$thirdPartyUpgradeSteps,
+            ...static::$thirdPartyUpgradeSteps,
 
             ClearViewCache::class,
-        ])->when($this->option('run-only'), function($collection) {
-            return $collection->filter(fn($step) => str($step)->afterLast('\\')->kebab()->is($this->option('run-only')));
+        ])->when($this->option('run-only'), function ($collection) {
+            return $collection->filter(fn ($step) => str($step)->afterLast('\\')->kebab()->is($this->option('run-only')));
         })->toArray())
-        ->thenReturn();
+            ->thenReturn();
     }
 
     public static function addThirdPartyUpgradeStep($step)
     {
-        if(empty(static::$thirdPartyUpgradeSteps)) {
+        if (empty(static::$thirdPartyUpgradeSteps)) {
             static::$thirdPartyUpgradeSteps[] = ThirdPartyUpgradeNotice::class;
         }
 

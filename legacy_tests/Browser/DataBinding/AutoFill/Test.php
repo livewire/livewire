@@ -2,8 +2,8 @@
 
 namespace LegacyTests\Browser\DataBinding\AutoFill;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
+use Livewire\Livewire;
 
 class Test extends TestCase
 {

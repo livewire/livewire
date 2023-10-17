@@ -9,7 +9,7 @@ class ReplaceEmitWithDispatch extends UpgradeStep
     public function handle(Command $console, \Closure $next)
     {
         $console->newLine(2);
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> Partial Manual Upgrade: Event dispatching </>");
+        $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> Partial Manual Upgrade: Event dispatching </>');
         $console->newLine();
         $console->line('In v2 you could use the emit() and dispatchBrowserEvent() methods in PHP.');
         $console->line('For version 3, Livewire has unified these two methods into a single method: dispatch()');
@@ -39,7 +39,7 @@ class ReplaceEmitWithDispatch extends UpgradeStep
             before: '$this->emitTo(\'foo\', \'post-created\');',
             after: '$this->dispatch(\'post-created\')->to(\'foo\')',
             pattern: '/\$this->emitTo\((["\'][a-z0-9-.]*["\']),\s?([|"\'][a-zA-Z0-9-.]*["\'])(?:[,])?\s?(.*)\);/',
-            replacement: function($matches) {
+            replacement: function ($matches) {
                 $component = $matches[1];
                 $eventName = $matches[2];
                 $eventData = $matches[3];
@@ -118,8 +118,7 @@ class ReplaceEmitWithDispatch extends UpgradeStep
             after: ['<removed>', '<removed>'],
         );
 
-        if($console->confirm('Continue?', true))
-        {
+        if ($console->confirm('Continue?', true)) {
             return $next($console);
         }
     }

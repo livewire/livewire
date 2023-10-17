@@ -8,7 +8,6 @@ class ToggleEntangled extends BaseComponent
 {
     public $active = false;
 
-
     public function render()
     {
         return

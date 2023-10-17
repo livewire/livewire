@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class DeleteCommandUnitTest extends \Tests\TestCase
 {
@@ -44,7 +44,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
     /** @test */
     public function component_with_test_is_removed_by_delete_command()
     {
-        Artisan::call('make:livewire', ['name' => 'foo','--test'=>true]);
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
 
         $classPath = $this->livewireClassesPath('Foo.php');
         $viewPath = $this->livewireViewsPath('foo.blade.php');
@@ -54,16 +54,17 @@ class DeleteCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($viewPath));
         $this->assertTrue(File::exists($testPath));
 
-        Artisan::call('livewire:delete', ['name' => 'foo', '--force' => true,'--test'=>true]);
+        Artisan::call('livewire:delete', ['name' => 'foo', '--force' => true, '--test' => true]);
 
         $this->assertFalse(File::exists($classPath));
         $this->assertFalse(File::exists($viewPath));
         $this->assertFalse(File::exists($testPath));
     }
+
     /** @test */
     public function component_is_removed_by_rm_command()
     {
-        Artisan::call('make:livewire', ['name' => 'foo','--test'=>true]);
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
 
         $classPath = $this->livewireClassesPath('Foo.php');
         $viewPath = $this->livewireViewsPath('foo.blade.php');
@@ -73,7 +74,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($viewPath));
         $this->assertTrue(File::exists($testPath));
 
-        Artisan::call('livewire:rm', ['name' => 'foo', '--force' => true,'--test'=>true]);
+        Artisan::call('livewire:rm', ['name' => 'foo', '--force' => true, '--test' => true]);
 
         $this->assertFalse(File::exists($classPath));
         $this->assertFalse(File::exists($viewPath));
@@ -83,7 +84,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
     /** @test */
     public function component_is_removed_without_confirmation_if_forced()
     {
-        Artisan::call('make:livewire', ['name' => 'foo','--test'=>true]);
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
 
         $classPath = $this->livewireClassesPath('Foo.php');
         $viewPath = $this->livewireViewsPath('foo.blade.php');
@@ -93,7 +94,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($viewPath));
         $this->assertTrue(File::exists($testPath));
 
-        Artisan::call('livewire:delete', ['name' => 'foo', '--force' => true,'--test'=>true]);
+        Artisan::call('livewire:delete', ['name' => 'foo', '--force' => true, '--test' => true]);
 
         $this->assertFalse(File::exists($classPath));
         $this->assertFalse(File::exists($viewPath));

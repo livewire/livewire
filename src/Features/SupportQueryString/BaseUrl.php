@@ -11,13 +11,16 @@ class BaseUrl extends LivewireAttribute
         public $as = null,
         public $history = false,
         public $keep = false,
-    ) {}
+    ) {
+    }
 
     public function mount()
     {
         $initialValue = request()->query($this->urlName(), 'noexist');
 
-        if ($initialValue === 'noexist') return;
+        if ($initialValue === 'noexist') {
+            return;
+        }
 
         $decoded = is_array($initialValue)
             ? json_decode(json_encode($initialValue), true)
@@ -28,7 +31,9 @@ class BaseUrl extends LivewireAttribute
 
     public function dehydrate($context)
     {
-        if (! $context->mounting) return;
+        if (! $context->mounting) {
+            return;
+        }
 
         $queryString = [
             'as' => $this->as,
@@ -44,4 +49,3 @@ class BaseUrl extends LivewireAttribute
         return $this->as ?? $this->getName();
     }
 }
-

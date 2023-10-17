@@ -10,6 +10,7 @@ class DirtyDataComponent extends BaseComponent
     protected $queryString = ['page' => ['history' => true]];
 
     public $page = 1;
+
     public $foo = ['bar' => ''];
 
     public function nextPage()

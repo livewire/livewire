@@ -11,15 +11,18 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function can_register_a_custom_javascript_endpoint()
     {
         Livewire::setScriptRoute(function ($handle) {
-            return Route::get('/custom/livewire.js', function () use ($handle) {
+            return Route::get('/custom/livewire.js', function () {
                 return "alert('hi mom')";
             });
         });
 
-        Livewire::visit(new class extends \Livewire\Component {
-            function render() { return '<div></div>'; }
+        Livewire::visit(new class extends \Livewire\Component
+        {
+            public function render()
+            {
+                return '<div></div>';
+            }
         })
-        ->assertDialogOpened('hi mom')
-        ;
+            ->assertDialogOpened('hi mom');
     }
 }

@@ -6,19 +6,19 @@ trait HandlesAttributes
 {
     protected AttributeCollection $attributes;
 
-    function getAttributes()
+    public function getAttributes()
     {
         return $this->attributes ??= AttributeCollection::fromComponent($this);
     }
 
-    function setPropertyAttribute($property, $attribute)
+    public function setPropertyAttribute($property, $attribute)
     {
         $attribute->__boot($this, AttributeLevel::PROPERTY, $property);
 
         $this->mergeOutsideAttributes(new AttributeCollection([$attribute]));
     }
 
-    function mergeOutsideAttributes(AttributeCollection $attributes)
+    public function mergeOutsideAttributes(AttributeCollection $attributes)
     {
         $this->attributes = $this->getAttributes()->concat($attributes);
     }

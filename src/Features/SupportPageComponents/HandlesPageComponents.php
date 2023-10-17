@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportPageComponents;
 
 trait HandlesPageComponents
 {
-    function __invoke()
+    public function __invoke()
     {
         // Here's we're hooking into the "__invoke" method being called on a component.
         // This way, users can pass Livewire components into Routes as if they were

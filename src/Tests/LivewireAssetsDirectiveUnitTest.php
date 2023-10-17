@@ -2,12 +2,12 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\View;
+use Livewire\Livewire;
 
 class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
 {
-    function setUp(): void
+    public function setUp(): void
     {
         $this->markTestSkipped('not sure exactly how we want to handle all this asset stuff for v3 so holding off on this...');
     }

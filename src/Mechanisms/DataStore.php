@@ -6,24 +6,24 @@ use WeakMap;
 
 class DataStore
 {
-    function register()
+    public function register()
     {
         app()->singleton($this::class);
     }
 
-    function boot()
+    public function boot()
     {
         //
     }
 
     protected $lookup;
 
-    function __construct()
+    public function __construct()
     {
         $this->lookup = new WeakMap;
     }
 
-    function set($instance, $key, $value)
+    public function set($instance, $key, $value)
     {
         if (! isset($this->lookup[$instance])) {
             $this->lookup[$instance] = [];
@@ -32,7 +32,8 @@ class DataStore
         $this->lookup[$instance][$key] = $value;
     }
 
-    function has($instance, $key, $iKey = null) {
+    public function has($instance, $key, $iKey = null)
+    {
         if (! isset($this->lookup[$instance])) {
             return false;
         }
@@ -42,13 +43,13 @@ class DataStore
         }
 
         if ($iKey !== null) {
-            return !! $this->lookup[$instance][$key][$iKey] ?? false;
+            return (bool) $this->lookup[$instance][$key][$iKey] ?? false;
         }
 
         return true;
     }
 
-    function get($instance, $key, $default = null)
+    public function get($instance, $key, $default = null)
     {
         if (! isset($this->lookup[$instance])) {
             return value($default);
@@ -61,7 +62,7 @@ class DataStore
         return $this->lookup[$instance][$key];
     }
 
-    function find($instance, $key, $iKey = null, $default = null)
+    public function find($instance, $key, $iKey = null, $default = null)
     {
         if (! isset($this->lookup[$instance])) {
             return value($default);
@@ -80,7 +81,7 @@ class DataStore
             : $this->lookup[$instance][$key];
     }
 
-    function push($instance, $key, $value, $iKey = null)
+    public function push($instance, $key, $value, $iKey = null)
     {
         if (! isset($this->lookup[$instance])) {
             $this->lookup[$instance] = [];

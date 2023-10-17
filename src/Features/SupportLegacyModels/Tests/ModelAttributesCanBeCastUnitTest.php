@@ -380,8 +380,8 @@ class ModelForAttributeCasting extends \Illuminate\Database\Eloquent\Model
                 'json_list' => json_encode([1, 2, 3]),
                 'collected_list' => json_encode([true, false]),
                 'object_value' => json_encode(['name' => 'Marian', 'email' => 'marian@likes.pizza']),
-                'custom_caster' => 'dumb answer'
-            ]
+                'custom_caster' => 'dumb answer',
+            ],
         ];
     }
 }
@@ -457,10 +457,11 @@ class ComponentForModelAttributeCasting extends Component
         'model.object_value' => ['required'],
         'model.object_value.name' => ['required'],
         'model.object_value.email' => ['required', 'email'],
-        'model.custom_caster' => ['required']
+        'model.custom_caster' => ['required'],
     ];
 
-    public function mount() {
+    public function mount()
+    {
         $this->model = ModelForAttributeCasting::first();
     }
 

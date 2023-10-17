@@ -22,7 +22,6 @@ class ComponentWithNullableInt extends Component
 {
     public ?int $intField = null;
 
-
     public function render()
     {
         return view('null-view');

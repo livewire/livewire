@@ -8,8 +8,8 @@ class MultipleRootElementsDetectedException extends \Exception
 {
     use BypassViewHandler;
 
-    function __construct($component)
+    public function __construct($component)
     {
-        parent::__construct('Livewire only supports one HTML element per component. Multiple root elements detected for component: [' . $component->getName() . ']');
+        parent::__construct('Livewire only supports one HTML element per component. Multiple root elements detected for component: ['.$component->getName().']');
     }
 }

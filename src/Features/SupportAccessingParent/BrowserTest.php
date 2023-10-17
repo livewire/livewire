@@ -15,8 +15,7 @@ class BrowserTest extends TestCase
                 ->assertSeeIn('@output', '1')
                 ->waitForLivewire()->click('@button')
                 ->waitForTextIn('@output', '2')
-                ->assertSeeIn('@output', '2')
-            ;
+                ->assertSeeIn('@output', '2');
         });
     }
 }
@@ -25,7 +24,7 @@ class ParentCounter extends Component
 {
     public $count = 1;
 
-    function increment()
+    public function increment()
     {
         $this->count++;
     }

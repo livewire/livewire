@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\SupportCollections;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -19,8 +18,7 @@ class Test extends TestCase
                 ->assertSeeIn('@things', 'bar')
                 ->assertSeeIn('@unordered', 'foo')
                 ->assertSeeIn('@unordered', 'bar')
-                ->assertSeeIn('@unordered', 'baz')
-            ;
+                ->assertSeeIn('@unordered', 'baz');
         });
     }
 }

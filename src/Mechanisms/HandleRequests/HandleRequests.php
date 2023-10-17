@@ -10,12 +10,12 @@ class HandleRequests
 {
     protected $updateRoute;
 
-    function register()
+    public function register()
     {
         app()->singleton($this::class);
     }
 
-    function boot()
+    public function boot()
     {
         app($this::class)->setUpdateRoute(function ($handle) {
             return Route::post('/livewire/update', $handle)->middleware('web');
@@ -24,14 +24,14 @@ class HandleRequests
         $this->skipRequestPayloadTamperingMiddleware();
     }
 
-    function getUpdateUri()
+    public function getUpdateUri()
     {
         return (string) str(
             route($this->updateRoute->getName(), [], false)
         )->start('/');
     }
 
-    function skipRequestPayloadTamperingMiddleware()
+    public function skipRequestPayloadTamperingMiddleware()
     {
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::skipWhen(function () {
             return $this->isLivewireRequest();
@@ -42,7 +42,7 @@ class HandleRequests
         });
     }
 
-    function setUpdateRoute($callback)
+    public function setUpdateRoute($callback)
     {
         $route = $callback([self::class, 'handleUpdate']);
 
@@ -54,17 +54,19 @@ class HandleRequests
         $this->updateRoute = $route;
     }
 
-    function isLivewireRequest()
+    public function isLivewireRequest()
     {
         return request()->hasHeader('X-Livewire');
     }
 
-    function isLivewireRoute()
+    public function isLivewireRoute()
     {
         // @todo: Rename this back to `isLivewireRequest` once the need for it in tests has been fixed.
         $route = request()->route();
 
-        if (! $route) return false;
+        if (! $route) {
+            return false;
+        }
 
         /*
          * Check to see if route name ends with `livewire.update`, as if
@@ -75,7 +77,7 @@ class HandleRequests
         return $route->named('*livewire.update');
     }
 
-    function handleUpdate()
+    public function handleUpdate()
     {
         $components = request('components');
 
@@ -86,7 +88,7 @@ class HandleRequests
             $updates = $component['updates'];
             $calls = $component['calls'];
 
-            [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            [$snapshot, $effects] = app('livewire')->update($snapshot, $updates, $calls);
 
             $responses[] = [
                 'snapshot' => json_encode($snapshot),

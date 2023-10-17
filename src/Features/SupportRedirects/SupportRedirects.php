@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Livewire\Mechanisms\HandleRequests\HandleRequests;
-use Livewire\ComponentHook;
 use Livewire\Component;
+use Livewire\ComponentHook;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class SupportRedirects extends ComponentHook
 {

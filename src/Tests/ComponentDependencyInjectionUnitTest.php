@@ -2,9 +2,9 @@
 
 namespace Livewire\Tests;
 
+use Illuminate\Routing\UrlGenerator;
 use Livewire\Component;
 use Livewire\Livewire;
-use Illuminate\Routing\UrlGenerator;
 
 class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
 {
@@ -121,6 +121,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
 
     /**
      * @test
+     *
      * @requires PHP >= 8.0
      */
     public function component_mount_action_with_primitive_union_types()
@@ -140,6 +141,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
 class ComponentWithDependencyInjection extends Component
 {
     public $foo;
+
     public $bar;
 
     public function mount(UrlGenerator $generator, $id = 123)
@@ -198,7 +200,7 @@ class CustomComponent extends Component
     public function render(CustomService $service)
     {
         return view('show-property-value', [
-            'message' => $service->results()
+            'message' => $service->results(),
         ]);
     }
 }
@@ -214,22 +216,23 @@ class CustomService
 class ComponentWithUnionTypes extends Component
 {
     public $foo;
+
     public $bar;
 
     public function mount(UrlGenerator $generator, string|int $id = 123)
     {
-        $this->foo = $generator->to("/some-url", $id);
+        $this->foo = $generator->to('/some-url', $id);
         $this->bar = $id;
     }
 
     public function injection(UrlGenerator $generator, $bar)
     {
-        $this->foo = $generator->to("/");
+        $this->foo = $generator->to('/');
         $this->bar = $bar;
     }
 
     public function render()
     {
-        return view("null-view");
+        return view('null-view');
     }
 }

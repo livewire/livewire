@@ -8,6 +8,7 @@ class FileManipulationCommandParserUnitTest extends \Tests\TestCase
 {
     /**
      * @test
+     *
      * @dataProvider classPathProvider
      */
     public function something($input, $component, $namespace, $classPath, $viewName, $viewPath)

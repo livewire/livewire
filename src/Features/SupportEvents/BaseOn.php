@@ -10,7 +10,9 @@ use function Livewire\store;
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
 class BaseOn extends LivewireAttribute
 {
-    public function __construct(public $event) {}
+    public function __construct(public $event)
+    {
+    }
 
     public function boot()
     {

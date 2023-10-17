@@ -6,7 +6,7 @@ use Livewire\ComponentHook;
 
 class SupportWireables extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
         app('livewire')->propertySynthesizer(WireableSynth::class);
     }

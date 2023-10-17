@@ -7,7 +7,8 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 #[\Attribute]
 class BaseTitle extends LivewireAttribute
 {
-    function __construct(
+    public function __construct(
         public $content,
-    ) {}
+    ) {
+    }
 }

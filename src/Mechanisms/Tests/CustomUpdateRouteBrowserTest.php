@@ -2,10 +2,10 @@
 
 namespace Livewire\Mechanisms\Tests;
 
-use Livewire\Livewire;
-use Livewire\Component;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Livewire\Component;
+use Livewire\Livewire;
 
 class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
 {
@@ -28,15 +28,17 @@ class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
                 })->name('tenant.page');
             });
 
-            Livewire::component('test', new class extends Component {
+            Livewire::component('test', new class extends Component
+            {
                 public $count = 0;
 
-                function increment()
+                public function increment()
                 {
                     $this->count++;
                 }
 
-                public function render() {
+                public function render()
+                {
                     return <<<'HTML'
                         <div>
                             <h1 dusk="count">Count: {{ $count }}</h1>

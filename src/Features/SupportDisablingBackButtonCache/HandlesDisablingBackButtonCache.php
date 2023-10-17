@@ -4,12 +4,12 @@ namespace Livewire\Features\SupportDisablingBackButtonCache;
 
 trait HandlesDisablingBackButtonCache
 {
-    function disableBackButtonCache()
+    public function disableBackButtonCache()
     {
         SupportDisablingBackButtonCache::$disableBackButtonCache = true;
     }
 
-    function enableBackButtonCache()
+    public function enableBackButtonCache()
     {
         SupportDisablingBackButtonCache::$disableBackButtonCache = false;
     }

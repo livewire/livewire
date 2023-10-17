@@ -4,19 +4,21 @@ namespace Livewire\Features\SupportTesting;
 
 class SubsequentRender extends Render
 {
-    function __construct(
+    public function __construct(
         protected RequestBroker $requestBroker,
         protected ComponentState $lastState,
-    ) {}
+    ) {
+    }
 
-    static function make($requestBroker, $lastState, $calls = [], $updates = [])
+    public static function make($requestBroker, $lastState, $calls = [], $updates = [])
     {
         $instance = new static($requestBroker, $lastState);
 
         return $instance->makeSubsequentRequest($calls, $updates);
     }
 
-    function makeSubsequentRequest($calls = [], $updates = []) {
+    public function makeSubsequentRequest($calls = [], $updates = [])
+    {
         $uri = app('livewire')->getUpdateUri();
 
         $encodedSnapshot = json_encode($this->lastState->getSnapshot());

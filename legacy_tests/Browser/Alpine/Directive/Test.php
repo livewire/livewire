@@ -13,8 +13,7 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, DirectiveComponent::class)
                 ->waitForLivewire()
                 ->click('@button')
-                ->assertConsoleLogMissingWarning('value is not defined')
-            ;
+                ->assertConsoleLogMissingWarning('value is not defined');
         });
     }
 }

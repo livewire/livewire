@@ -2,8 +2,8 @@
 
 namespace Livewire\Concerns\Tests;
 
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
 {
@@ -13,12 +13,12 @@ class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
         Livewire::test(ComponentWithProperties::class)
             ->call('setAllProperties')
             ->assertSet('allProperties', [
-                 'onlyProperties' => [],
-                 'exceptProperties' => [],
-                 'allProperties' => [],
-                 'foo' => 'Foo',
-                 'bar' => 'Bar',
-                 'baz' => 'Baz',
+                'onlyProperties' => [],
+                'exceptProperties' => [],
+                'allProperties' => [],
+                'foo' => 'Foo',
+                'bar' => 'Bar',
+                'baz' => 'Baz',
             ])
             ->call('setOnlyProperties', ['foo', 'bar'])
             ->assertSet('onlyProperties', [
@@ -27,8 +27,8 @@ class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
             ])
             ->call('setExceptProperties', ['foo', 'onlyProperties', 'exceptProperties', 'allProperties'])
             ->assertSet('exceptProperties', [
-                 'bar' => 'Bar',
-                 'baz' => 'Baz',
+                'bar' => 'Bar',
+                'baz' => 'Baz',
             ]);
     }
 }

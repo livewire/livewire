@@ -46,16 +46,16 @@ class LayoutCommand extends FileManipulationCommand
         $stubName = 'livewire.layout.stub';
 
         if (! empty($stubSubDirectory) && str($stubSubDirectory)->startsWith('..')) {
-            $stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..' . DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR) . '/';
+            $stubDirectory = rtrim(str($stubSubDirectory)->replaceFirst('..'.DIRECTORY_SEPARATOR, ''), DIRECTORY_SEPARATOR).'/';
         } else {
-            $stubDirectory = rtrim('stubs' . DIRECTORY_SEPARATOR . $stubSubDirectory, DIRECTORY_SEPARATOR) . '/';
+            $stubDirectory = rtrim('stubs'.DIRECTORY_SEPARATOR.$stubSubDirectory, DIRECTORY_SEPARATOR).'/';
         }
 
-        if (File::exists($stubPath = base_path($stubDirectory . $stubName))) {
+        if (File::exists($stubPath = base_path($stubDirectory.$stubName))) {
             return $stubPath;
         }
 
-        return __DIR__ . DIRECTORY_SEPARATOR . $stubName;
+        return __DIR__.DIRECTORY_SEPARATOR.$stubName;
     }
 
     protected function layoutPath($baseViewPath, $layout)
@@ -64,7 +64,7 @@ class LayoutCommand extends FileManipulationCommand
 
         $name = Str::kebab($directories->pop());
 
-        return $baseViewPath . DIRECTORY_SEPARATOR . collect()
+        return $baseViewPath.DIRECTORY_SEPARATOR.collect()
             ->concat($directories)
             ->map([Str::class, 'kebab'])
             ->push("{$name}.blade.php")
@@ -73,6 +73,6 @@ class LayoutCommand extends FileManipulationCommand
 
     protected function relativeLayoutPath($layoutPath)
     {
-        return (string) str($layoutPath)->replaceFirst(base_path() . '/', '');
+        return (string) str($layoutPath)->replaceFirst(base_path().'/', '');
     }
 }

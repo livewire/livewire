@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\Lazy;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -23,8 +22,7 @@ class Test extends TestCase
                 ->assertSeeIn('@totalNumberUpdates', 2)
                 ->assertDontSeeIn('@updatesList', 'syncInput - name')
                 ->assertSeeIn('@updatesList', 'syncInput - description')
-                ->assertSeeIn('@updatesList', 'callMethod - submit')
-            ;
+                ->assertSeeIn('@updatesList', 'callMethod - submit');
         });
     }
 
@@ -36,8 +34,7 @@ class Test extends TestCase
                 ->waitForLivewire()->check('@is_active')
                 ->assertSeeIn('@totalNumberUpdates', 2)
                 ->assertSeeIn('@updatesList', 'syncInput - name')
-                ->assertSeeIn('@updatesList', 'syncInput - is_active')
-            ;
+                ->assertSeeIn('@updatesList', 'syncInput - is_active');
         });
     }
 }

@@ -3,15 +3,17 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Validation\ValidationException;
-use Livewire\Mechanisms\ComponentRegistry;
-use Livewire\ComponentHook;
 use Livewire\Component;
+use Livewire\ComponentHook;
+use Livewire\Mechanisms\ComponentRegistry;
 
 class SupportTesting extends ComponentHook
 {
-    static function provide()
+    public static function provide()
     {
-        if (! app()->environment('testing')) return;
+        if (! app()->environment('testing')) {
+            return;
+        }
 
         if (class_exists('Laravel\Dusk\Browser')) {
             DuskTestable::provide();
@@ -20,7 +22,7 @@ class SupportTesting extends ComponentHook
         static::registerTestingMacros();
     }
 
-    function dehydrate($context)
+    public function dehydrate($context)
     {
         $target = $this->component;
 
@@ -31,13 +33,16 @@ class SupportTesting extends ComponentHook
         }
     }
 
-    function hydrate()
+    public function hydrate()
     {
         $this->storeSet('testing.validator', null);
     }
 
-    function exception($e, $stopPropagation) {
-        if (! $e instanceof ValidationException) return;
+    public function exception($e, $stopPropagation)
+    {
+        if (! $e instanceof ValidationException) {
+            return;
+        }
 
         $this->storeSet('testing.validator', $e->validator);
     }

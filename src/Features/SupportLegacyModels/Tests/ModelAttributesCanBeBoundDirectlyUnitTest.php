@@ -46,7 +46,6 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
             ->assertSet('model.title', 'bar');
     }
 
-
     /** @test */
     public function a_non_existant_eloquent_model_can_be_set()
     {
@@ -93,6 +92,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 class ModelForAttributeBinding extends Model
 {
     protected $connection = 'testbench';
+
     protected $guarded = [];
 }
 
@@ -151,7 +151,9 @@ class ComponentWithModelsProperty extends Component
         $this->models = $models;
     }
 
-    public function refresh() {}
+    public function refresh()
+    {
+    }
 
     public function render()
     {

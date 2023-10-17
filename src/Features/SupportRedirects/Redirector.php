@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Livewire\Component;
 use Illuminate\Routing\Redirector as BaseRedirector;
+use Livewire\Component;
 
 class Redirector extends BaseRedirector
 {
