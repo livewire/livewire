@@ -155,7 +155,7 @@ wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
-wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
+wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
