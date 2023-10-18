@@ -24,7 +24,7 @@
     "orchestra/testbench": "^8.0|^9.0",
     "orchestra/testbench-dusk": "^8.0|^9.0",
     "calebporzio/sushi": "^2.1",
-    "laravel/prompts": "^0.1.6|dev-symfony7"
+    "laravel/prompts": "^0.1.6|dev-main"
   },
   "repositories": [
     {
