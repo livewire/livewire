@@ -37,10 +37,10 @@ export async function requestCommit(component) {
     return await waitUntilTheCurrentRequestIsFinished(() => {
         let commit = findOrCreateCommit(component)
 
-        triggerSend()
-
         return new Promise((resolve, reject) => {
             commit.addResolver(resolve)
+            let isolate = (component.snapshot.memo.isolate === true)
+            triggerSend(isolate)
         })
     })
 }
@@ -49,10 +49,11 @@ export async function requestCall(component, method, params) {
     return await waitUntilTheCurrentRequestIsFinished(() => {
         let commit = findOrCreateCommit(component)
 
-        triggerSend()
-
         return new Promise((resolve, reject) => {
             commit.addCall(method, params, value => resolve(value))
+
+            let isolate = (component.snapshot.memo.isolate === true)
+            triggerSend(isolate)
         })
     })
 }

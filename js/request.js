@@ -8,10 +8,15 @@ import { getCommits, flushCommits } from './commit'
  */
 let updateUri = document.querySelector('[data-uri]')?.getAttribute('data-uri') ?? window.livewireScriptConfig['uri'] ?? null
 
-export function triggerSend() {
-    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-        sendRequestToServer()
-    })
+export function triggerSend(isolated = false) {
+    if (isolated) {
+        // We don't want to bundle isolated request triggers with any other ones...
+        sendRequestToServer(isolated)
+    } else {
+        bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
+            sendRequestToServer()
+        })
+    }
 }
 
 let requestBufferTimeout
@@ -31,7 +36,7 @@ function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callb
  * the actual request to the server to update the target,
  * store a new snapshot, and handle any side effects.
  */
-async function sendRequestToServer() {
+async function sendRequestToServer(isolated = false) {
     prepareCommitPayloads()
 
     await queueNewRequestAttemptsWhile(async () => {
@@ -134,7 +139,7 @@ async function sendRequestToServer() {
         handleSuccess(components)
 
         succeed({ status: response.status, json: JSON.parse(content) })
-    })
+    }, isolated)
 }
 
 function prepareCommitPayloads() {
@@ -194,7 +199,15 @@ export async function waitUntilTheCurrentRequestIsFinished(callback) {
     })
 }
 
-async function queueNewRequestAttemptsWhile(callback) {
+async function queueNewRequestAttemptsWhile(callback, isolated = false) {
+    // We don't want isolated requests to hold up any other
+    // requests, normal, or isolated themselves...
+    if (isolated) {
+        await callback()
+
+        return
+    }
+
     sendingRequest = true
 
     await callback()
