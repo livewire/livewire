@@ -1679,8 +1679,12 @@ var require_module_cjs = __commonJS({
           return collapseProxies;
         return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
       },
-      set({ objects }, name, value) {
-        return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
+      set({ objects }, name, value, thisProxy) {
+        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+        const descriptor = Object.getOwnPropertyDescriptor(target, name);
+        if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
+          return Reflect.set(target, name, value, thisProxy);
+        return Reflect.set(target, name, value);
       }
     };
     function collapseProxies() {
@@ -2010,7 +2014,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
       return ({ name, value }) => {
         let typeMatch = name.match(alpineAttributeRegex());
-        let valueMatch = name.match(/:([a-zA-Z0-9\-:]+)/);
+        let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
         let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
         let original = originalAttributeOverride || transformedAttributeMap[name] || name;
         return {
@@ -2683,34 +2687,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
       let firstRun = true;
-      let outerHash, innerHash, outerHashLatest, innerHashLatest;
+      let outerHash;
       let reference = effect(() => {
-        let outer, inner;
+        const outer = outerGet();
+        const inner = innerGet();
         if (firstRun) {
-          outer = outerGet();
-          innerSet(JSON.parse(JSON.stringify(outer)));
-          inner = innerGet();
+          innerSet(cloneIfObject(outer));
           firstRun = false;
+          outerHash = JSON.stringify(outer);
         } else {
-          outer = outerGet();
-          inner = innerGet();
-          outerHashLatest = JSON.stringify(outer);
-          innerHashLatest = JSON.stringify(inner);
+          const outerHashLatest = JSON.stringify(outer);
           if (outerHashLatest !== outerHash) {
-            inner = innerGet();
-            innerSet(outer);
-            inner = outer;
+            innerSet(cloneIfObject(outer));
+            outerHash = outerHashLatest;
           } else {
-            outerSet(JSON.parse(innerHashLatest != null ? innerHashLatest : null));
-            outer = inner;
+            outerSet(cloneIfObject(inner));
+            outerHash = JSON.stringify(inner);
           }
         }
-        outerHash = JSON.stringify(outer);
-        innerHash = JSON.stringify(inner);
+        JSON.stringify(innerGet());
+        JSON.stringify(outerGet());
       });
       return () => {
         release(reference);
       };
+    }
+    function cloneIfObject(value) {
+      return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
     }
     function plugin(callback) {
       let callbacks = Array.isArray(callback) ? callback : [callback];
@@ -5414,8 +5417,6 @@ var require_module_cjs6 = __commonJS({
     function getNextSibling(parent, reference) {
       if (reference._x_teleport) {
         return reference._x_teleport;
-      } else if (reference.teleportBack) {
-        return reference.teleportBack;
       }
       let next;
       if (parent instanceof Block) {
