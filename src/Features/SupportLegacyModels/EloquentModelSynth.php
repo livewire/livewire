@@ -25,7 +25,10 @@ class EloquentModelSynth extends Synth
 
         $meta = [];
 
-        $meta['key'] = $target->getKey();
+        if ($target->exists) {
+            $meta['key'] = $target->getKey();
+        }
+
         $meta['class'] = $alias;
 
         if ($target->getConnectionName() !== $class::make()->getConnectionName()) {
