@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportEntangle;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -385,5 +386,89 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@counter', '12')
         ->waitForLivewire()->click('@remove-entangled')
         ->assertSeeIn('@counter', '13');
+    }
+
+    /** @test */
+    public function can_remove_entangled_blade_components_from_dom_without_side_effects()
+    {
+        Blade::component(new class extends \Illuminate\View\Component {
+            public function render()
+            {
+                return <<<'blade'
+                    <div x-data="{ value: @entangle($attributes->wire('model')) }">
+                        <input type="text" />
+                    </div>
+                blade;
+            }
+        }, 'item');
+
+        Livewire::visit(new class extends Component {
+            public $items = [];
+
+            public function add()
+            {
+                $this->items[] = [
+                    'value' => null,
+                ];
+            }
+
+            public function remove($key)
+            {
+                unset($this->items[$key]);
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <ul>
+                        @foreach ($items as $itemKey => $item)
+                            <li dusk="item{{ $itemKey }}" wire:key="{{ $itemKey }}">
+                                <x-item wire:model="items.{{ $itemKey }}.value" wire:key="item-{{ $itemKey }}" />
+
+                                {{ $itemKey }}
+
+                                <button type="button" dusk="remove{{ $itemKey }}" wire:click="remove('{{ $itemKey }}')">
+                                    Remove
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <button dusk="add" type="button" wire:click="add">
+                        Add
+                    </button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@item0', '0')
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@item1', '1')
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@item2', '2')
+            ->waitForLivewire()->click('@add')
+            ->assertSeeIn('@item3', '3')
+            ->waitForLivewire()->click('@remove3')
+            ->assertPresent('@item0')
+            ->assertPresent('@item1')
+            ->assertPresent('@item2')
+            ->assertMissing('@item3')
+            ->waitForLivewire()->click('@remove2')
+            ->assertPresent('@item0')
+            ->assertPresent('@item1')
+            ->assertMissing('@item2')
+            ->assertMissing('@item3')
+            ->waitForLivewire()->click('@remove1')
+            ->assertPresent('@item0')
+            ->assertMissing('@item1')
+            ->assertMissing('@item2')
+            ->assertMissing('@item3')
+            ->waitForLivewire()->click('@remove0')
+            ->assertMissing('@item0')
+            ->assertMissing('@item1')
+            ->assertMissing('@item2')
+            ->assertMissing('@item3');
     }
 }
