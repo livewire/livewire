@@ -158,13 +158,11 @@ use Livewire\Volt\Component;
 
 class extends Component
 {
-    public function rendering(View $view): View
+    public function rendering(View $view): void
     {
         $view->title('Create Post');
 
         // ...
-
-        return $view;
     }
 
     // ...
