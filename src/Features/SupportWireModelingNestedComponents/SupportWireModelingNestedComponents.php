@@ -64,6 +64,18 @@ class SupportWireModelingNestedComponents extends ComponentHook
             $outer = array_keys($bindings)[0];
             $inner = array_values($bindings)[0];
 
+            // We need to look through the dot notation parts of the outer
+            // variable name and check for any numerical values and replace
+            // them with [{num}].
+            $outer = trim(
+                array_reduce(
+                    explode(".", $outer),
+                    function($carry, $part) { return $carry.( ctype_digit($part) ?  "[$part]" : ".$part" ); },
+                    '',
+                ),
+                '.'
+            );
+
             // Attach the necessary Alpine directives so that the child and
             // parent's JS, ephemeral, values are bound.
             $replaceHtml(Utils::insertAttributesIntoHtmlRoot($html, [
