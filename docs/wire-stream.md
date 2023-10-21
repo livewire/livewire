@@ -12,7 +12,7 @@ class CountDown extends Component
 
     public function begin()
     {
-        while ($start >= 0) {
+        while ($this->start >= 0) {
             // Stream the current count to the browser...
             $this->stream(  // [tl! highlight:4]
                 to: 'count',
@@ -128,7 +128,7 @@ Here's what's going on in the above example:
 * A network request is sent to the server, sets the message to the `$question` property, and clears the `$prompt` property.
 * The response is sent back to the browser and the input is cleared. Because `$this->js('...')` was called, a new request is triggered to the server calling the `ask()` method.
 * The `ask()` method calls on the ChatBot API and receives streamed response partials via the `$partial` parameter in the callback.
-* Each `$partial` get's streamed to the browser into the `wire:stream="answer"` element on the page, showing the answer progressively reveal itself to the user.
+* Each `$partial` gets streamed to the browser into the `wire:stream="answer"` element on the page, showing the answer progressively reveal itself to the user.
 * When the entire response is received, the Livewire request finishes and the user receives the full response.
 
 ## Replace vs. append
