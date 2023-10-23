@@ -10,16 +10,24 @@ class BaseModelable extends LivewireAttribute
 {
     public function mount($params, $parent)
     {
-        if ($parent && isset($params['wire:model'])) {
-            $outer = $params['wire:model'];
+        $outer = null;
+        
+        foreach ($params as $paramName => $paramValue) {
+            if (str_starts_with($paramName, 'wire:model')) {
+                $outer = $paramValue;
+                break;
+            }
+        }
+        
+        if ($parent && isset($outer)) {
             $inner = $this->getName();
-
+            
             store($this->component)->push('bindings', $inner, $outer);
-
+            
             $this->setValue(data_get($parent, $outer));
         }
     }
-
+    
     // This update hook is for the following scenario:
     // An modelable value has changed in the browser.
     // A network request is triggered from the parent.
@@ -35,7 +43,7 @@ class BaseModelable extends LivewireAttribute
     {
         if (store($this->component)->get('hasBeenSeeded', false)) {
             $oldValue = $this->getValue();
-
+            
             return function () use ($oldValue) {
                 $this->setValue($oldValue);
             };

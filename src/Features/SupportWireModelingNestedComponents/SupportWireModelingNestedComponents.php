@@ -19,10 +19,18 @@ class SupportWireModelingNestedComponents extends ComponentHook
         // with wire:model on it, and that child has already been mounted
         // in a previous request, capture the value being passed in so we
         // can later set the child's property if it exists in this request.
+        // Checks for wire:model modifiers too.
         on('mount.stub', function ($tag, $id, $params, $parent, $key) {
-            if (! isset($params['wire:model'])) return;
-
-            $outer = $params['wire:model'];
+            $outer = null;
+            
+            foreach ($params as $paramName => $paramValue) {
+                if (str_starts_with($paramName, 'wire:model')) {
+                    $outer = $paramValue;
+                    break;
+                }
+            }
+            
+            if (! isset($outer)) return;
 
             static::$outersByComponentId[$id] = [$outer => data_get($parent, $outer)];
         });
