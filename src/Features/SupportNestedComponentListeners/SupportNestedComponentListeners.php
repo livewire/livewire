@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\Features\SupportNestedComponentEvents;
+namespace Livewire\Features\SupportNestedComponentListeners;
 
 use function Livewire\store;
 use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 
-class SupportNestedComponentEvents extends ComponentHook
+class SupportNestedComponentListeners extends ComponentHook
 {
     public function mount($params, $parent)
     {

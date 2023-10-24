@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportNestedComponentEvents;
+namespace Livewire\Features\SupportNestedComponentListeners;
 
 use Livewire\Livewire;
 use Livewire\Component as BaseComponent;
