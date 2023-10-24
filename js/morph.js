@@ -71,29 +71,6 @@ export function morph(component, el, html) {
             const closestComponentId = closestComponent(el).id
 
             trigger('morph.added', { el })
-
-            if (closestComponentId === component.id) {
-                // @todo
-                // if (nodeInitializer.initialize(el, component) === false) {
-                //     return skip()
-                // }
-            } else if (isComponentRootEl(el)) {
-                let data
-
-                if (message.fingerprint && closestComponentId == message.fingerprint.id) {
-                    data = {
-                        fingerprint: message.fingerprint,
-                        serverMemo: message.response.serverMemo,
-                        effects: message.response.effects
-                    }
-                }
-
-                // store.addComponent(new Component(el, this.connection, data))
-
-                // We don't need to initialize children, the
-                // new Component constructor will do that for us.
-                el.skipAddingChildren = true
-            }
         },
 
         key: (el) => {
