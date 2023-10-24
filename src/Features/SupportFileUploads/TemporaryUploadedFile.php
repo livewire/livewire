@@ -83,21 +83,19 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function temporaryUrl()
     {
-        if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
-            return $this->storage->temporaryUrl(
-                $this->path,
-                now()->addDay()->endOfHour(),
-                ['ResponseContentDisposition' => 'attachment; filename="' . $this->getClientOriginalName() . '"']
-            );
+        $expiration = now()->addMinutes(30)->endOfHour();
+
+        $temporaryUrlOptions = [];
+        if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS())) {
+            $temporaryUrlOptions = ['ResponseContentDisposition' => 'attachment; filename="' . $this->getClientOriginalName() . '"'];
         }
 
-        if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl') || ! $this->isPreviewable()) {
-            // This will throw an error because it's not used with S3.
-            return $this->storage->temporaryUrl($this->path, now()->addDay());
+        if ($this->storage->providesTemporaryUrls() && !app()->runningUnitTests()) {
+            return $this->storage->temporaryUrl($this->path, $expiration, $temporaryUrlOptions);
         }
 
         return URL::temporarySignedRoute(
-            'livewire.preview-file', now()->addMinutes(30)->endOfHour(), ['filename' => $this->getFilename()]
+            'livewire.preview-file', $expiration, ['filename' => $this->getFilename()]
         );
     }
 
