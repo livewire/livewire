@@ -57,9 +57,9 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@unset')
         ->assertSeeIn('@count', '2')
         ->waitForLivewire()->click('@refresh')
-        ->assertSeeIn('@count', '2');
+        ->assertSeeIn('@count', '2')
         ->waitForLivewire()->click('@deleteCachedTags')
-        ->assertSeeIn('@count', Cache::supportsTags()?'3':'2')
+        ->assertSeeIn('@count', Cache::supportsTags()?'3':'2');
     }
 
     /** @test */

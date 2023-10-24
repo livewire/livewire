@@ -88,9 +88,9 @@ class BaseComputed extends Attribute
         $closure = fn () => $this->evaluateComputed();
 
         return match(Cache::supportsTags() && !empty($this->tags)) {
-            true: Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
-            default: Cache::remember($key, $this->seconds, $closure)
-        }
+            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
+            default => Cache::remember($key, $this->seconds, $closure)
+        };
     }
 
     protected function handleCachedGet()
@@ -100,9 +100,9 @@ class BaseComputed extends Attribute
         $closure = fn () => $this->evaluateComputed();
 
         return match(Cache::supportsTags() && !empty($this->tags)) {
-            true: Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
-            default: Cache::remember($key, $this->seconds, $closure)
-        }
+            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
+            default => Cache::remember($key, $this->seconds, $closure)
+        };
     }
 
     protected function handlePersistedUnset()
