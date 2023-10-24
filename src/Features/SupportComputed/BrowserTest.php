@@ -6,7 +6,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;
-use Illuminate\Support\Facades\Cache;
 
 class BrowserTest extends BrowserTestCase
 {
@@ -18,17 +17,11 @@ class BrowserTest extends BrowserTestCase
 
             protected $thing = 'hey';
 
-            #[Computed(persist: true, tags: ['foo'])]
+            #[Computed(persist: true)]
             public function foo() {
                 $this->count++;
 
                 return 'bar';
-            }
-
-            function deleteCachedTags() {
-                if (Cache::supportsTags()) {
-                    Cache::tags(['foo'])->flush();
-                }
             }
 
             function unset()
@@ -44,7 +37,6 @@ class BrowserTest extends BrowserTestCase
                 <div>
                     <button wire:click="$refresh" dusk="refresh">refresh</button>
                     <button wire:click="unset" dusk="unset">unset</button>
-                    <button wire:click="deleteCachedTags" dusk="deleteCachedTags">deleteCachedTags</button>
 
                     <div dusk="count">{{ $count }}</div>
                 </div>
@@ -57,9 +49,7 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@unset')
         ->assertSeeIn('@count', '2')
         ->waitForLivewire()->click('@refresh')
-        ->assertSeeIn('@count', '2')
-        ->waitForLivewire()->click('@deleteCachedTags')
-        ->assertSeeIn('@count', Cache::supportsTags()?'3':'2');
+        ->assertSeeIn('@count', '2');
     }
 
     /** @test */
@@ -68,16 +58,9 @@ class BrowserTest extends BrowserTestCase
         Livewire::visit(new class extends Component {
             public $count = 0;
 
-            #[Computed(cache: true, tags: ['foo'])]
+            #[Computed(cache: true)]
             public function foo() {
                 return $this->count;
-            }
-
-            function deleteCachedTags() {
-                $this->count++;
-                if (Cache::supportsTags()) {
-                    Cache::tags(['foo'])->flush();
-                }
             }
 
             function increment()
@@ -94,7 +77,6 @@ class BrowserTest extends BrowserTestCase
                 <div>
                     <button wire:click="$refresh" dusk="refresh">refresh</button>
                     <button wire:click="increment" dusk="increment">unset</button>
-                    <button wire:click="deleteCachedTags" dusk="deleteCachedTags">deleteCachedTags</button>
 
                     <div dusk="count">{{ $this->foo }}</div>
                 </div>
@@ -105,8 +87,6 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@increment')
         ->assertSeeIn('@count', '1')
         ->refresh()
-        ->assertSeeIn('@count', '1')
-        ->waitForLivewire()->click('@deleteCachedTags')
-        ->assertSeeIn('@count', Cache::supportsTags()?'2':'1');
+        ->assertSeeIn('@count', '1');
     }
 }
