@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportTesting;
 use Illuminate\Support\Facades\Route;
 use Laravel\Dusk\Browser;
 use function Livewire\{ invade, on };
+use function Orchestra\Testbench\phpunit_version_compare;
 use Illuminate\Support\Arr;
 use Tests\TestCase;
 
@@ -28,8 +29,8 @@ class DuskTestable
 
             $tweakApplication = $testCase::tweakApplicationHook();
 
-            invade($testCase)->tweakApplication(function () use ($tweakApplication) {
-                config()->set('app.debug', true);
+            invade($testCase)->beforeServingApplication(function ($app, $config) use ($tweakApplication) {
+                $config->set('app.debug', true);
 
                 if (is_callable($tweakApplication)) $tweakApplication();
 
@@ -120,7 +121,13 @@ class DuskTestable
 
             $components = null;
 
-            try { (new $testClass)->$method(); } catch (\Exception $e) {
+            try {
+                if (phpunit_version_compare('10.0', '>=')) {
+                    (new $testClass($method))->$method();
+                } else {
+                    (new $testClass)->$method();
+                }
+            } catch (\Exception $e) {
                 if (! $e->isDuskShortcircuit) throw $e;
                 $components = $e->components;
             }

@@ -37,7 +37,7 @@ class TestCase extends \Orchestra\Testbench\Dusk\TestCase
         ];
     }
 
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app)
     {
         $app['config']->set('view.paths', [
             __DIR__.'/views',
