@@ -691,6 +691,61 @@ use App\Concerns\WithSorting;
 uses([Sorting::class, WithSorting::class]);
 ```
 
+### Overriding methods
+
+You may override methods added through traits by creating an action with the same name as the method:
+
+```php
+use \Illuminate\Support\Facades\Log;
+
+trait WithLogging
+{
+    public function log(string $message): void
+    {
+        Log::info($message);
+    }
+}
+```
+
+```php
+use function Livewire\Volt\{uses};
+
+use App\Concerns\WithLogging;
+
+uses([WithLogging::class]);
+
+$log = function (string $message): void {
+    Log::info("Logging differently: $message");
+};
+```
+
+This works for protected methods as well:
+
+```php
+use \Illuminate\Support\Facades\Log;
+
+trait WithLogging
+{
+    protected function log(string $message): void
+    {
+        Log::info($message);
+    }
+}
+```
+
+```php
+use function Livewire\Volt\{uses, protect};
+
+use App\Concerns\WithLogging;
+
+uses([WithLogging::class]);
+
+$log = protect(function (string $message): void {
+    Log::info("Logging differently: $message");
+});
+```
+
+
 ## Anonymous components
 
 Sometimes, you may want to convert a small portion of a page into a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
