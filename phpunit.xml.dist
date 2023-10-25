@@ -4,23 +4,21 @@
          stopOnFailure="false"
          backupGlobals="false"
          processIsolation="false"
-         backupStaticAttributes="false"
          bootstrap="vendor/autoload.php"
-         convertDeprecationsToExceptions="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.4/phpunit.xsd"
+         cacheDirectory=".phpunit.cache"
+         backupStaticProperties="false">
   <coverage/>
   <testsuites>
     <testsuite name="Unit">
         <directory suffix="UnitTest.php">./src</directory>
     </testsuite>
     <testsuite name="Browser">
-        <directory suffix="BrowserTest.php">./src</directory>
+         <directory suffix="BrowserTest.php">./src</directory>
     </testsuite>
     <testsuite name="LegacyBrowser">
         <directory suffix="Test.php">./legacy_tests/Browser</directory>
     </testsuite>
   </testsuites>
+  <source/>
 </phpunit>
