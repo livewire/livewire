@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportTesting;
 use Illuminate\Support\Facades\Route;
 use Laravel\Dusk\Browser;
 use function Livewire\{ invade, on };
-use function Orchestra\Testbench\phpunit_version_compare;
 use Illuminate\Support\Arr;
 use Tests\TestCase;
 
@@ -122,7 +121,7 @@ class DuskTestable
             $components = null;
 
             try {
-                if (phpunit_version_compare('10.0', '>=')) {
+                if (\Orchestra\Testbench\phpunit_version_compare('10.0', '>=')) {
                     (new $testClass($method))->$method();
                 } else {
                     (new $testClass)->$method();
