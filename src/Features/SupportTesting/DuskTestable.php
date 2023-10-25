@@ -120,7 +120,13 @@ class DuskTestable
 
             $components = null;
 
-            try { (new $testClass($method))->$method(); } catch (\Exception $e) {
+            try { 
+                if (\Orchestra\Testbench\phpunit_version_compare('10.0', '>=')) {
+                    (new $testClass($method))->$method(); 
+                } else {
+                    (new $testClass())->$method(); 
+                }
+            } catch (\Exception $e) {
                 if (! $e->isDuskShortcircuit) throw $e;
                 $components = $e->components;
             }
