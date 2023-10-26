@@ -124,7 +124,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 {
                     return <<<'HTML'
                 <div>
-                    <span dusk='parent'>Parent: {{ $foo['bar'] }}</span>
+                    <span dusk='parent'>Parent: {{ $foo[0] }}</span>
                     <span x-text="$wire.foo[0]" dusk='parent.ephemeral'></span>
 
                     <livewire:child wire:model='foo.0' />
