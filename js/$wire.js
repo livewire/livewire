@@ -185,7 +185,8 @@ wireProperty('$parent', component => {
 wireProperty('$live', component => {
     live = true
 
-    // Reset before the next tick so that properties that aren't 
+    // Reset before the next tick so that properties that
+    // aren't meant to be live, don't get updated live.
     queueMicrotask(() => live = false)
 
     return component.$wire
