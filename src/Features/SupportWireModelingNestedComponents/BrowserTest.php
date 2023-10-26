@@ -114,6 +114,60 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_bind_a_property_from_parent_array_using_a_numeric_index_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = ['baz'];
+
+                public function render()
+                {
+                    return <<<'HTML'
+                <div>
+                    <span dusk='parent'>Parent: {{ $foo['bar'] }}</span>
+                    <span x-text="$wire.foo[0]" dusk='parent.ephemeral'></span>
+
+                    <livewire:child wire:model='foo.0' />
+
+                    <button wire:click='$refresh' dusk='refresh'>refresh</button>
+                </div>
+                HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                <div>
+                    <span dusk='child'>Child: {{ $bar }}</span>
+                    <span x-text='$wire.bar' dusk='child.ephemeral'></span>
+                    <input type='text' wire:model='bar' dusk='child.input' />
+                </div>
+                HTML;
+                }
+            },
+        ])
+        ->assertDontSee('Property [$foo.0] not found')
+        ->assertSeeIn('@parent', 'Parent: baz')
+        ->assertSeeIn('@child', 'Child: baz')
+        ->assertSeeIn('@parent.ephemeral', 'baz')
+        ->assertSeeIn('@child.ephemeral', 'baz')
+        ->type('@child.input', 'qux')
+        ->assertSeeIn('@parent', 'Parent: baz')
+        ->assertSeeIn('@child', 'Child: baz')
+        ->assertSeeIn('@parent.ephemeral', 'qux')
+        ->assertSeeIn('@child.ephemeral', 'qux')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@parent', 'Parent: qux')
+        ->assertSeeIn('@child', 'Child: qux')
+        ->assertSeeIn('@parent.ephemeral', 'qux')
+        ->assertSeeIn('@child.ephemeral', 'qux');
+    }
+
+    /** @test */
     public function can_bind_a_property_from_parent_form_to_property_from_child()
     {
         Livewire::visit([
