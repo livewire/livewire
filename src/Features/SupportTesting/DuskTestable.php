@@ -28,8 +28,8 @@ class DuskTestable
 
             $tweakApplication = $testCase::tweakApplicationHook();
 
-            invade($testCase)->tweakApplication(function () use ($tweakApplication) {
-                config()->set('app.debug', true);
+            invade($testCase)->beforeServingApplication(function ($app, $config) use ($tweakApplication) {
+                $config->set('app.debug', true);
 
                 if (is_callable($tweakApplication)) $tweakApplication();
 
@@ -120,11 +120,11 @@ class DuskTestable
 
             $components = null;
 
-            try { 
+            try {
                 if (\Orchestra\Testbench\phpunit_version_compare('10.0', '>=')) {
-                    (new $testClass($method))->$method(); 
+                    (new $testClass($method))->$method();
                 } else {
-                    (new $testClass())->$method(); 
+                    (new $testClass())->$method();
                 }
             } catch (\Exception $e) {
                 if (! $e->isDuskShortcircuit) throw $e;

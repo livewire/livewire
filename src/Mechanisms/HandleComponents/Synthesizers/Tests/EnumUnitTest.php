@@ -4,13 +4,11 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class EnumUnitTest extends \Tests\TestCase
 {
-    /**
-     * @test
-     * @requires PHP >= 8.1
-     */
+    #[Test]
     public function public_properties_can_be_cast()
     {
         Livewire::test(ComponentWithPublicEnumCasters::class)
