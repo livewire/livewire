@@ -64,6 +64,11 @@ class SupportWireModelingNestedComponents extends ComponentHook
             $outer = array_keys($bindings)[0];
             $inner = array_values($bindings)[0];
 
+            // Convert dot notation to array syntax as javascript doesn't support
+            // dot notation for integer indexes.
+            $outer = $this->convertDotNotationIntegerIndexesToArraySyntax($outer);
+            $inner = $this->convertDotNotationIntegerIndexesToArraySyntax($inner);
+
             // Attach the necessary Alpine directives so that the child and
             // parent's JS, ephemeral, values are bound.
             $replaceHtml(Utils::insertAttributesIntoHtmlRoot($html, [
@@ -81,5 +86,19 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
         // Add the bindings metadata to the paylad for later reference...
         $context->addMemo('bindings', $bindings);
+    }
+
+    public function convertDotNotationIntegerIndexesToArraySyntax($value)
+    {
+        $parts = explode('.', $value);
+        $newValue = array_shift($parts);
+
+        for($i = 0; $i < count($parts); $i++) {
+            $newValue .= is_numeric($parts[$i])
+                ? '['.$parts[$i].']'
+                : '.'.$parts[$i];
+        }
+
+        return $newValue;
     }
 }
