@@ -58,6 +58,49 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child.ephemeral', '1')
         ;
     }
+    
+    /** @test */
+    public function can_bind_a_live_property_from_parent_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = 0;
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.live="foo" />
+
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar;
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="child">Child: {{ $bar }}</span>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
+                    <button wire:click="bar++; $refresh()" dusk="increment">increment</button>
+                </div>
+                HTML; }
+            },
+        ])
+        ->assertSeeIn('@parent', 'Parent: 0')
+        ->assertSeeIn('@child', 'Child: 0')
+        ->assertSeeIn('@parent.ephemeral', '0')
+        ->assertSeeIn('@child.ephemeral', '0')
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@parent', 'Parent: 1')
+        ->assertSeeIn('@child', 'Child: 1')
+        ->assertSeeIn('@parent.ephemeral', '1')
+        ->assertSeeIn('@child.ephemeral', '1')
+        ;
+    }
 
     /** @test */
     public function can_bind_a_property_from_parent_array_to_property_from_child()
