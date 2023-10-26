@@ -19,6 +19,7 @@ class BaseComputed extends Attribute
         public $seconds = 3600, // 1 hour...
         public $cache = false,
         public $key = null,
+        public $tags = null,
     ) {}
 
     function boot()
@@ -84,18 +85,24 @@ class BaseComputed extends Attribute
     {
         $key = $this->generatePersistedKey();
 
-        return Cache::remember($key, $this->seconds, function () {
-            return $this->evaluateComputed();
-        });
+        $closure = fn () => $this->evaluateComputed();
+
+        return match(Cache::supportsTags() && !empty($this->tags)) {
+            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
+            default => Cache::remember($key, $this->seconds, $closure)
+        };
     }
 
     protected function handleCachedGet()
     {
         $key = $this->generateCachedKey();
 
-        return Cache::remember($key, $this->seconds, function () {
-            return $this->evaluateComputed();
-        });
+        $closure = fn () => $this->evaluateComputed();
+
+        return match(Cache::supportsTags() && !empty($this->tags)) {
+            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
+            default => Cache::remember($key, $this->seconds, $closure)
+        };
     }
 
     protected function handlePersistedUnset()

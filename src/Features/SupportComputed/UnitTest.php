@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use Illuminate\Support\Facades\Cache;
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Livewire;
@@ -96,6 +97,78 @@ class UnitTest extends TestCase
             ->assertSet('count', 2)
             ->call('$refresh')
             ->assertSet('count', 4);
+    }
+
+    /** @test */
+    function can_tag_cached_computed_property()
+    {
+        // need to set a cache driver, which can handle tags
+        Cache::setDefaultDriver('array');
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(cache: true, tags: ['foo'])]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function deleteCachedTags() {
+                if (Cache::supportsTags()) {
+                    Cache::tags(['foo'])->flush();
+                }
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSet('count', 1)
+            ->call('deleteCachedTags')
+            ->assertSet('count', 2);
+    }
+
+    /** @test */
+    function can_tag_persisten_computed_property()
+    {
+        // need to set a cache driver, which can handle tags
+        Cache::setDefaultDriver('array');
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(persist: true, tags: ['foo'])]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function deleteCachedTags() {
+                if (Cache::supportsTags()) {
+                    Cache::tags(['foo'])->flush();
+                }
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSet('count', 1)
+            ->call('deleteCachedTags')
+            ->assertSet('count', 2);
     }
 
     /** @test */
