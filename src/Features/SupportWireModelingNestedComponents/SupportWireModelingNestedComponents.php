@@ -54,6 +54,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
     {
         return function ($html, $replaceHtml) {
             $bindings = store($this->component)->get('bindings', false);
+            $bindingsAreLive = store($this->component)->get('bindingsAreLive', false);
 
             if (! $bindings) return;
 
@@ -67,7 +68,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
             // Attach the necessary Alpine directives so that the child and
             // parent's JS, ephemeral, values are bound.
             $replaceHtml(Utils::insertAttributesIntoHtmlRoot($html, [
-                'x-model' => '$wire.$parent.'.$outer,
+                'x-model' => $bindingsAreLive ? '$wire.$parent.$live.'.$outer : '$wire.$parent.'.$outer,
                 'x-modelable' => '$wire.'.$inner,
             ]));
         };

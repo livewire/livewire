@@ -25,6 +25,7 @@ let aliases = {
     'get': '$get',
     'set': '$set',
     'call': '$call',
+    'live': '$live',
     'commit': '$commit',
     'watch': '$watch',
     'entangle': '$entangle',
@@ -35,6 +36,8 @@ let aliases = {
     'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
 }
+
+let live = false;
 
 export function generateWireObject(component, state) {
     return new Proxy({}, {
@@ -57,9 +60,15 @@ export function generateWireObject(component, state) {
                 state[property] = value
             }
 
+            if (live) requestCommit(component)
+
             return true
         },
     })
+}
+
+function getLive() {
+    return live
 }
 
 function getProperty(component, name) {
@@ -171,6 +180,15 @@ wireProperty('$parent', component => {
     parentMemo.set(component, parent)
 
     return parent.$wire
+})
+
+wireProperty('$live', component => {
+    live = true
+
+    // Reset before the next tick so that properties that aren't 
+    queueMicrotask(() => live = false)
+
+    return component.$wire
 })
 
 

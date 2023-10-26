@@ -10,8 +10,14 @@ class BaseModelable extends LivewireAttribute
 {
     public function mount($params, $parent)
     {
-        if ($parent && isset($params['wire:model'])) {
-            $outer = $params['wire:model'];
+        if ($parent && (isset($params['wire:model.live']) || isset($params['wire:model']))) {
+            if (isset($params['wire:model.live'])) {
+                $outer = $params['wire:model.live'];
+                store($this->component)->push('bindingsAreLive', true);
+            } elseif (isset($params['wire:model'])) {
+                $outer = $params['wire:model'];
+                store($this->component)->push('bindingsAreLive', false);
+            }
             $inner = $this->getName();
 
             store($this->component)->push('bindings', $inner, $outer);
