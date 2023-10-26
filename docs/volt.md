@@ -156,8 +156,7 @@ Sometimes, you may wish to interact with the view instance directly, for example
 use Illuminate\View\View;
 use Livewire\Volt\Component;
 
-class extends Component
-{
+new class extends Component {
     public function rendering(View $view): void
     {
         $view->title('Create Post');
