@@ -178,7 +178,7 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
-        $progressBar = config('livewire.navigate.show_progress_bar', true);
+        $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',
