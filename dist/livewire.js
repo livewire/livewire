@@ -4079,8 +4079,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (property === "__live") {
           this.live = value;
           return true;
-        }
-        if (property in state) {
+        } else if (property in state) {
           state[property] = value;
         }
         if (this.live === true)
@@ -4165,6 +4164,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$live", (component) => {
     return new Proxy({}, {
+      get(target, property) {
+        return component.$wire[property];
+      },
       set(target, property, value) {
         component.$wire.__live = true;
         component.$wire[property] = value;

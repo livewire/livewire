@@ -57,11 +57,8 @@ export function generateWireObject(component, state) {
         set(target, property, value) {
             if (property === '__live') {
                 this.live = value
-                
                 return true
-            }
-            
-            if (property in state) {
+            } else if (property in state) {
                 state[property] = value
             }
 
@@ -185,6 +182,10 @@ wireProperty('$parent', component => {
 
 wireProperty('$live', component => {
     return new Proxy({}, {
+        get(target, property) {
+            return component.$wire[property]
+        },
+
         set(target, property, value) {
             component.$wire.__live = true
 
