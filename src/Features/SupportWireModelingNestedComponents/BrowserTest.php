@@ -58,7 +58,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child.ephemeral', '1')
         ;
     }
-    
+
     /** @test */
     public function can_bind_a_live_property_from_parent_to_property_from_child()
     {
@@ -85,7 +85,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <span dusk="child">Child: {{ $bar }}</span>
                     <span x-text="$wire.bar" dusk="child.ephemeral"></span>
-                    <button wire:click="bar++; $refresh()" dusk="increment">increment</button>
+                    <button wire:click="bar++;" dusk="increment">increment</button>
                 </div>
                 HTML; }
             },

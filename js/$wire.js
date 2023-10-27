@@ -25,7 +25,6 @@ let aliases = {
     'get': '$get',
     'set': '$set',
     'call': '$call',
-    'live': '$live',
     'commit': '$commit',
     'watch': '$watch',
     'entangle': '$entangle',
@@ -39,7 +38,6 @@ let aliases = {
 
 export function generateWireObject(component, state) {
     return new Proxy({}, {
-        live: false,
         get(target, property) {
             if (property === '__instance') return component
 
@@ -55,17 +53,9 @@ export function generateWireObject(component, state) {
         },
 
         set(target, property, value) {
-            if (property === '__live') {
-                this.live = value
-
-                return true
-            }
-
             if (property in state) {
                 state[property] = value
             }
-
-            if (this.live === true) requestCommit(component)
 
             return true
         },
@@ -182,23 +172,6 @@ wireProperty('$parent', component => {
 
     return parent.$wire
 })
-
-wireProperty('$live', component => {
-    return new Proxy({}, {
-        get(target, property) {
-            return component.$wire[property]
-        },
-
-        set(target, property, value) {
-            component.$wire.__live = true
-
-            component.$wire[property] = value
-
-            component.$wire.__live = false
-        }
-    })
-})
-
 
 let overriddenMethods = new WeakMap
 
