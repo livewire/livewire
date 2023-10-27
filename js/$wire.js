@@ -37,10 +37,9 @@ let aliases = {
     'removeUpload': '$removeUpload',
 }
 
-let live = false;
-
 export function generateWireObject(component, state) {
     return new Proxy({}, {
+        live: false,
         get(target, property) {
             if (property === '__instance') return component
 
@@ -56,19 +55,18 @@ export function generateWireObject(component, state) {
         },
 
         set(target, property, value) {
-            if (property in state) {
+            if (property === '__live') {
+                this.live = value
+                return true
+            } else if (property in state) {
                 state[property] = value
             }
 
-            if (live) requestCommit(component)
+            if (this.live === true) requestCommit(component)
 
             return true
         },
     })
-}
-
-function getLive() {
-    return live
 }
 
 function getProperty(component, name) {
@@ -183,13 +181,19 @@ wireProperty('$parent', component => {
 })
 
 wireProperty('$live', component => {
-    live = true
+    return new Proxy({}, {
+        get(target, property) {
+            return component.$wire[property]
+        },
 
-    // Reset before the next tick so that properties that
-    // aren't meant to be live, don't get updated live.
-    queueMicrotask(() => live = false)
+        set(target, property, value) {
+            component.$wire.__live = true
 
-    return component.$wire
+            component.$wire[property] = value
+
+            component.$wire.__live = false
+        }
+    })
 })
 
 
