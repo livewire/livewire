@@ -57,8 +57,11 @@ export function generateWireObject(component, state) {
         set(target, property, value) {
             if (property === '__live') {
                 this.live = value
+                
                 return true
-            } else if (property in state) {
+            }
+            
+            if (property in state) {
                 state[property] = value
             }
 
