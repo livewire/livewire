@@ -733,7 +733,7 @@
     trigger("effects", target, effects);
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -1120,8 +1120,12 @@
         return collapseProxies;
       return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
     },
-    set({ objects }, name, value) {
-      return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
+    set({ objects }, name, value, thisProxy) {
+      const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+      const descriptor = Object.getOwnPropertyDescriptor(target, name);
+      if (descriptor?.set && descriptor?.get)
+        return Reflect.set(target, name, value, thisProxy);
+      return Reflect.set(target, name, value);
     }
   };
   function collapseProxies() {
@@ -1451,7 +1455,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
     return ({ name, value }) => {
       let typeMatch = name.match(alpineAttributeRegex());
-      let valueMatch = name.match(/:([a-zA-Z0-9\-:]+)/);
+      let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
       let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
       let original = originalAttributeOverride || transformedAttributeMap[name] || name;
       return {
@@ -1731,7 +1735,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el._x_hidePromise = el._x_transition ? new Promise((resolve, reject) => {
       el._x_transition.out(() => {
       }, () => resolve(hide));
-      el._x_transitioning.beforeCancel(() => reject({ isFromCancelledTransition: true }));
+      el._x_transitioning && el._x_transitioning.beforeCancel(() => reject({ isFromCancelledTransition: true }));
     }) : Promise.resolve(hide);
     queueMicrotask(() => {
       let closest = closestHide(el);
@@ -2124,34 +2128,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
     let firstRun = true;
-    let outerHash, innerHash, outerHashLatest, innerHashLatest;
+    let outerHash;
     let reference = effect(() => {
-      let outer, inner;
+      const outer = outerGet();
+      const inner = innerGet();
       if (firstRun) {
-        outer = outerGet();
-        innerSet(JSON.parse(JSON.stringify(outer)));
-        inner = innerGet();
+        innerSet(cloneIfObject(outer));
         firstRun = false;
+        outerHash = JSON.stringify(outer);
       } else {
-        outer = outerGet();
-        inner = innerGet();
-        outerHashLatest = JSON.stringify(outer);
-        innerHashLatest = JSON.stringify(inner);
+        const outerHashLatest = JSON.stringify(outer);
         if (outerHashLatest !== outerHash) {
-          inner = innerGet();
-          innerSet(outer);
-          inner = outer;
+          innerSet(cloneIfObject(outer));
+          outerHash = outerHashLatest;
         } else {
-          outerSet(JSON.parse(innerHashLatest ?? null));
-          outer = inner;
+          outerSet(cloneIfObject(inner));
+          outerHash = JSON.stringify(inner);
         }
       }
-      outerHash = JSON.stringify(outer);
-      innerHash = JSON.stringify(inner);
+      JSON.stringify(innerGet());
+      JSON.stringify(outerGet());
     });
     return () => {
       release(reference);
     };
+  }
+  function cloneIfObject(value) {
+    return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
   }
   function plugin(callback) {
     let callbacks = Array.isArray(callback) ? callback : [callback];
@@ -2253,7 +2256,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.1",
+    version: "3.13.2",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3770,8 +3773,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!cleanup3)
       cleanup3 = () => {
       };
-    return (name, live2 = false) => {
-      let isLive = live2;
+    return (name, live = false) => {
+      let isLive = live;
       let livewireProperty = name;
       let livewireComponent = component.$wire;
       let livewirePropertyValue = livewireComponent.get(livewireProperty);
@@ -4056,9 +4059,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "uploadMultiple": "$uploadMultiple",
     "removeUpload": "$removeUpload"
   };
-  var live = false;
   function generateWireObject(component, state) {
     return new Proxy({}, {
+      live: false,
       get(target, property) {
         if (property === "__instance")
           return component;
@@ -4073,10 +4076,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       },
       set(target, property, value) {
-        if (property in state) {
+        if (property === "__live") {
+          this.live = value;
+          return true;
+        } else if (property in state) {
           state[property] = value;
         }
-        if (live)
+        if (this.live === true)
           requestCommit(component);
         return true;
       }
@@ -4109,18 +4115,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("__instance", (component) => component);
   wireProperty("$get", (component) => (property, reactive3 = true) => dataGet(reactive3 ? component.reactive : component.ephemeral, property));
-  wireProperty("$set", (component) => async (property, value, live2 = true) => {
+  wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
-    return live2 ? await requestCommit(component) : Promise.resolve();
+    return live ? await requestCommit(component) : Promise.resolve();
   });
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
-  wireProperty("$entangle", (component) => (name, live2 = false) => {
-    return generateEntangleFunction(component)(name, live2);
+  wireProperty("$entangle", (component) => (name, live = false) => {
+    return generateEntangleFunction(component)(name, live);
   });
-  wireProperty("$toggle", (component) => (name, live2 = true) => {
-    return component.$wire.set(name, !component.$wire.get(name), live2);
+  wireProperty("$toggle", (component) => (name, live = true) => {
+    return component.$wire.set(name, !component.$wire.get(name), live);
   });
   wireProperty("$watch", (component) => (path, callback) => {
     let firstTime = true;
@@ -4157,9 +4163,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return parent.$wire;
   });
   wireProperty("$live", (component) => {
-    live = true;
-    queueMicrotask(() => live = false);
-    return component.$wire;
+    return new Proxy({}, {
+      get(target, property) {
+        return component.$wire[property];
+      },
+      set(target, property, value) {
+        component.$wire.__live = true;
+        component.$wire[property] = value;
+        component.$wire.__live = false;
+      }
+    });
   });
   var overriddenMethods = /* @__PURE__ */ new WeakMap();
   function overrideMethod(component, method, callback) {
@@ -4458,7 +4471,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4552,7 +4565,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5497,11 +5510,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
-      let storage = localStorage;
+      let storage;
+      try {
+        storage = localStorage;
+      } catch (e) {
+        console.error(e);
+        console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
+        let dummy = /* @__PURE__ */ new Map();
+        storage = {
+          getItem: dummy.get.bind(dummy),
+          setItem: dummy.set.bind(dummy)
+        };
+      }
       return Alpine3.interceptor((initialValue, getter, setter, path, key) => {
         let lookup = alias || `_x_${path}`;
         let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
@@ -5545,7 +5569,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate2 = evaluateLater2(expression);
@@ -6345,7 +6369,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -6452,8 +6476,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             continue;
           }
         }
-        let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
-        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
+        let isIf = (node) => node && node.nodeType === 8 && node.textContent === "[if BLOCK]><![endif]";
+        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === "[if ENDBLOCK]><![endif]";
         if (isIf(currentTo) && isIf(currentFrom)) {
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
@@ -6642,8 +6666,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getNextSibling(parent, reference) {
     if (reference._x_teleport) {
       return reference._x_teleport;
-    } else if (reference.teleportBack) {
-      return reference.teleportBack;
     }
     let next;
     if (parent instanceof Block) {
@@ -6674,7 +6696,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default7(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
       let templateFn = () => expression;

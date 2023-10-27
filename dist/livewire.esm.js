@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1679,8 +1679,12 @@ var require_module_cjs = __commonJS({
           return collapseProxies;
         return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
       },
-      set({ objects }, name, value) {
-        return Reflect.set(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1], name, value);
+      set({ objects }, name, value, thisProxy) {
+        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+        const descriptor = Object.getOwnPropertyDescriptor(target, name);
+        if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
+          return Reflect.set(target, name, value, thisProxy);
+        return Reflect.set(target, name, value);
       }
     };
     function collapseProxies() {
@@ -2010,7 +2014,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function toParsedDirectives(transformedAttributeMap, originalAttributeOverride) {
       return ({ name, value }) => {
         let typeMatch = name.match(alpineAttributeRegex());
-        let valueMatch = name.match(/:([a-zA-Z0-9\-:]+)/);
+        let valueMatch = name.match(/:([a-zA-Z0-9\-_:]+)/);
         let modifiers = name.match(/\.[^.\]]+(?=[^\]]*$)/g) || [];
         let original = originalAttributeOverride || transformedAttributeMap[name] || name;
         return {
@@ -2290,7 +2294,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_hidePromise = el._x_transition ? new Promise((resolve, reject) => {
         el._x_transition.out(() => {
         }, () => resolve(hide));
-        el._x_transitioning.beforeCancel(() => reject({ isFromCancelledTransition: true }));
+        el._x_transitioning && el._x_transitioning.beforeCancel(() => reject({ isFromCancelledTransition: true }));
       }) : Promise.resolve(hide);
       queueMicrotask(() => {
         let closest = closestHide(el);
@@ -2683,34 +2687,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
       let firstRun = true;
-      let outerHash, innerHash, outerHashLatest, innerHashLatest;
+      let outerHash;
       let reference = effect(() => {
-        let outer, inner;
+        const outer = outerGet();
+        const inner = innerGet();
         if (firstRun) {
-          outer = outerGet();
-          innerSet(JSON.parse(JSON.stringify(outer)));
-          inner = innerGet();
+          innerSet(cloneIfObject(outer));
           firstRun = false;
+          outerHash = JSON.stringify(outer);
         } else {
-          outer = outerGet();
-          inner = innerGet();
-          outerHashLatest = JSON.stringify(outer);
-          innerHashLatest = JSON.stringify(inner);
+          const outerHashLatest = JSON.stringify(outer);
           if (outerHashLatest !== outerHash) {
-            inner = innerGet();
-            innerSet(outer);
-            inner = outer;
+            innerSet(cloneIfObject(outer));
+            outerHash = outerHashLatest;
           } else {
-            outerSet(JSON.parse(innerHashLatest != null ? innerHashLatest : null));
-            outer = inner;
+            outerSet(cloneIfObject(inner));
+            outerHash = JSON.stringify(inner);
           }
         }
-        outerHash = JSON.stringify(outer);
-        innerHash = JSON.stringify(inner);
+        JSON.stringify(innerGet());
+        JSON.stringify(outerGet());
       });
       return () => {
         release(reference);
       };
+    }
+    function cloneIfObject(value) {
+      return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
     }
     function plugin(callback) {
       let callbacks = Array.isArray(callback) ? callback : [callback];
@@ -2812,7 +2815,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.1",
+      version: "3.13.2",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3679,9 +3682,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3799,9 +3802,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4796,9 +4799,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../alpine/packages/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4824,7 +4827,18 @@ var require_module_cjs4 = __commonJS({
     function src_default(Alpine21) {
       let persist2 = () => {
         let alias;
-        let storage = localStorage;
+        let storage;
+        try {
+          storage = localStorage;
+        } catch (e) {
+          console.error(e);
+          console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
+          let dummy = /* @__PURE__ */ new Map();
+          storage = {
+            getItem: dummy.get.bind(dummy),
+            setItem: dummy.set.bind(dummy)
+          };
+        }
         return Alpine21.interceptor((initialValue, getter, setter, path, key) => {
           let lookup = alias || `_x_${path}`;
           let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
@@ -4870,9 +4884,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5228,9 +5242,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5360,8 +5374,8 @@ var require_module_cjs6 = __commonJS({
               continue;
             }
           }
-          let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
-          let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
+          let isIf = (node) => node && node.nodeType === 8 && node.textContent === "[if BLOCK]><![endif]";
+          let isEnd = (node) => node && node.nodeType === 8 && node.textContent === "[if ENDBLOCK]><![endif]";
           if (isIf(currentTo) && isIf(currentFrom)) {
             let nestedIfCount = 0;
             let fromBlockStart = currentFrom;
@@ -5550,8 +5564,6 @@ var require_module_cjs6 = __commonJS({
     function getNextSibling(parent, reference) {
       if (reference._x_teleport) {
         return reference._x_teleport;
-      } else if (reference.teleportBack) {
-        return reference.teleportBack;
       }
       let next;
       if (parent instanceof Block) {
@@ -5584,9 +5596,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6213,8 +6225,8 @@ function generateEntangleFunction(component, cleanup2) {
   if (!cleanup2)
     cleanup2 = () => {
     };
-  return (name, live2 = false) => {
-    let isLive = live2;
+  return (name, live = false) => {
+    let isLive = live;
     let livewireProperty = name;
     let livewireComponent = component.$wire;
     let livewirePropertyValue = livewireComponent.get(livewireProperty);
@@ -6502,9 +6514,9 @@ var aliases = {
   "uploadMultiple": "$uploadMultiple",
   "removeUpload": "$removeUpload"
 };
-var live = false;
 function generateWireObject(component, state) {
   return new Proxy({}, {
+    live: false,
     get(target, property) {
       if (property === "__instance")
         return component;
@@ -6519,10 +6531,13 @@ function generateWireObject(component, state) {
       }
     },
     set(target, property, value) {
-      if (property in state) {
+      if (property === "__live") {
+        this.live = value;
+        return true;
+      } else if (property in state) {
         state[property] = value;
       }
-      if (live)
+      if (this.live === true)
         requestCommit(component);
       return true;
     }
@@ -6555,18 +6570,18 @@ import_alpinejs2.default.magic("wire", (el, { cleanup: cleanup2 }) => {
 });
 wireProperty("__instance", (component) => component);
 wireProperty("$get", (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property));
-wireProperty("$set", (component) => async (property, value, live2 = true) => {
+wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
-  return live2 ? await requestCommit(component) : Promise.resolve();
+  return live ? await requestCommit(component) : Promise.resolve();
 });
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
 });
-wireProperty("$entangle", (component) => (name, live2 = false) => {
-  return generateEntangleFunction(component)(name, live2);
+wireProperty("$entangle", (component) => (name, live = false) => {
+  return generateEntangleFunction(component)(name, live);
 });
-wireProperty("$toggle", (component) => (name, live2 = true) => {
-  return component.$wire.set(name, !component.$wire.get(name), live2);
+wireProperty("$toggle", (component) => (name, live = true) => {
+  return component.$wire.set(name, !component.$wire.get(name), live);
 });
 wireProperty("$watch", (component) => (path, callback) => {
   let firstTime = true;
@@ -6603,9 +6618,16 @@ wireProperty("$parent", (component) => {
   return parent.$wire;
 });
 wireProperty("$live", (component) => {
-  live = true;
-  queueMicrotask(() => live = false);
-  return component.$wire;
+  return new Proxy({}, {
+    get(target, property) {
+      return component.$wire[property];
+    },
+    set(target, property, value) {
+      component.$wire.__live = true;
+      component.$wire[property] = value;
+      component.$wire.__live = false;
+    }
+  });
 });
 var overriddenMethods = /* @__PURE__ */ new WeakMap();
 function overrideMethod(component, method, callback) {
