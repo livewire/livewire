@@ -538,7 +538,7 @@ public function cant_create_post_with_title_shorter_than_3_characters()
         ->set('title', 'Sa')
         ->set('content', 'Sample content...')
         ->call('save')
-        ->assertHasErrors(['title', ['min:3']]);
+        ->assertHasErrors(['title' => ['min:3']]);
 }
 ```
 
