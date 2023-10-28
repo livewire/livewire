@@ -66,7 +66,7 @@ class DataBindingModelsBrowserTest extends TestCase
     }
 
     /** @test */
-    public function it_enables_changing_model_attributes_that_have_not_been_initialized()
+    public function it_enables_changing_model_attributes_that_have_not_been_initialized_using_entangle()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, DataBindingComponent::class)
@@ -150,9 +150,9 @@ class DataBindingComponent extends BaseComponent
 
     <button wire:click="save" type="button" dusk="save">Save</button>
 
-    <div>
+    <div x-data="{ title: @entangle('post.title').live }">
         Post Title
-        <input dusk='post.title' wire:model.live='post.title' />
+        <input dusk='post.title' x-model='title' />
         <span dusk='output.post.title'>{{ $post->title }}</span>
     </div>
 </div>
