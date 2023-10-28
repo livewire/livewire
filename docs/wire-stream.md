@@ -34,7 +34,7 @@ class CountDown extends Component
         <div>
             <button wire:click="begin">Start count-down</button>
 
-            <h1>Count: <span wire:stream="count">{{ $start }}</span></h1> <!-- [tl! highlight] -->
+            <h1>Count: <span wire:stream="count">{{ $this->start }}</span></h1> <!-- [tl! highlight] -->
         </div>
         HTML;
     }
