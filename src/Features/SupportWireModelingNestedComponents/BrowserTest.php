@@ -113,7 +113,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
     
     /** @test */
-    public function can_bind_a_property_from_parent_array_to_property_from_child_with_nested_array()
+    public function can_bind_a_property_from_parent_array_with_nested_array_to_property_from_child()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
@@ -335,7 +335,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
     
     /** @test */
-    public function can_bind_a_property_from_parent_array_to_property_from_child_with_nested_array_ignoring_modifiers()
+    public function can_bind_a_property_from_parent_array_with_nested_array_to_property_from_child_ignoring_modifiers()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
