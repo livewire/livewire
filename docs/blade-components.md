@@ -48,33 +48,18 @@
 ```blade
 @php $key = str()->uuid(); @endphp
 
-<input type="text" id="{{ $key }}">
+<div>
+    <input type="text" id="{{ $key }}">
+</div>
 
-@headAssets(once: true)
+@assets
 <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
-@endheadAssets
+@endassets
 
-@bodyAssets
+@script
 <script>
     new Pikaday({ field: document.getElementById({{ $key }}) });
 </script>
-@endbodyAssets
-```
-
-```blade
-@php $key = str()->uuid(); @endphp
-
-<input type="text" id="{{ $key }}">
-
-@headAssets(once: true)
-<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
-@endheadAssets
-
-@bodyAssets
-<script>
-    new Pikaday({ field: document.getElementById({{ $key }}) });
-</script>
-@endbodyAssets
+@endscript
 ```

@@ -1,4 +1,80 @@
 
+
+# Using JavaScript inside Livewire components
+
+### Executing scripts
+
+```blade
+<div>
+    ...
+</div>
+
+@script
+<script>
+    // This Javascript will get executed every time this component is loaded onto the page...
+</script>
+@endscript
+```
+
+// Registering a one-off Alpine component
+```blade
+<div>
+    Counter component in Alpine:
+
+    <div x-data="counter">
+        <h1 x-text="count"></h1>
+        <button x-on:click="increment">+</button>
+    </div>
+</div>
+
+@script
+<script>
+    Alpine.data('counter', () => {
+        return {
+            count: 0,
+            increment() {
+                this.count++
+            },
+        }
+    })
+</script>
+@endscript
+```
+
+// Assets
+```blade
+<div>
+    ...
+</div>
+
+@assets
+    <script src="">
+    <link href="">
+@endassets
+```
+
+// Using a third-party library
+```blade
+@php $key = str()->uuid(); @endphp
+
+<div>
+    <input type="text" id="{{ $key }}">
+</div>
+
+@assets
+<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+@endassets
+
+@script
+<script>
+    new Pikaday({ field: document.getElementById({{ $key }}) });
+</script>
+@endscript
+```
+
+# Extending Livewire's Javascript
+
 Livewire provides plenty of JavaScript extension points for advanced users who want to use Livewire in deeper ways or extend Livewire's features with custom APIs.
 
 ## Global Livewire events
