@@ -1,23 +1,9 @@
-import { debounceByComponent } from '@/debounce'
 import { directive } from '@/directives'
 import { on } from '@/events'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { closestComponent } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
-
-function debounce(func, wait) {
-    var timeout;
-    return function() {
-      var context = this, args = arguments;
-      var later = function() {
-        timeout = null;
-        func.apply(context, args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
 
 directive('model', ({ el, directive, component, cleanup }) => {
     let { expression, modifiers } = directive
@@ -41,13 +27,14 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let isDebounced = modifiers.includes('debounce')
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
-    let update = () => component.$wire.$commit()
+    let update = expression.startsWith('$parent')
+        ? () => component.$wire.$parent.$commit()
+        : () => component.$wire.$commit()
 
     // If a plain wire:model is added to a text input, debounce the
     // trigerring of network requests.
     let debouncedUpdate = isTextInput(el) && ! isDebounced && isLive
         ? debounce(update, 150)
-        // ? debounceByComponent(component, update, 150)
         : update
 
     Alpine.bind(el, {
@@ -109,4 +96,22 @@ function componentIsMissingProperty(component, property) {
     let baseProperty = property.split('.')[0]
 
     return ! Object.keys(component.canonical).includes(baseProperty)
+}
+
+function debounce(func, wait) {
+    var timeout;
+
+    return function() {
+      var context = this, args = arguments;
+
+      var later = function() {
+            timeout = null
+
+            func.apply(context, args)
+      }
+
+      clearTimeout(timeout)
+
+      timeout = setTimeout(later, wait)
+    }
 }

@@ -173,7 +173,6 @@ wireProperty('$parent', component => {
     return parent.$wire
 })
 
-
 let overriddenMethods = new WeakMap
 
 export function overrideMethod(component, method, callback) {
