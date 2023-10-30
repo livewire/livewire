@@ -105,6 +105,24 @@ trait MakesAssertions
         return $this;
     }
 
+    function assertSetModel($name, $value)
+    {
+        $actual = $this->get($name);
+
+        PHPUnit::assertTrue($value->is($actual));
+
+        return $this;
+    }
+
+    function assertNotSetModel($name, $value)
+    {
+        $actual = $this->get($name);
+
+        PHPUnit::assertFalse($value->is($actual));
+
+        return $this;
+    }
+
     function assertCount($name, $value)
     {
         PHPUnit::assertCount($value, $this->get($name));
