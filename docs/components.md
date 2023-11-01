@@ -561,6 +561,38 @@ public function render()
 }
 ```
 
+### Setting additional layout file slots
+
+If your [layout file](#layout-files) has any named slots in addition to `$slot`, you can set their content in your Blade view by defining `<x-slot>`s outside your root element. For example, if you want to be able to set the page language for each component individually, you can add a dynamic `$lang` slot into the opening HTML tag in your layout file:
+
+```blade
+<!-- resources/views/components/layouts/app.blade.php -->
+
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', $lang ?? app()->getLocale()) }}"> // [tl! highlight]
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        {{ $slot }}
+    </body>
+</html>
+```
+
+Then, in your component view, define an `<x-slot>` element outside the root element:
+
+```blade
+<x-slot:lang>fr</x-slot> // This component is in French [!tl highlight]
+
+<div>
+    // French content goes here...
+</div>
+```
+
+
 ### Accessing route parameters
 
 When working with full-page components, you may need to access route parameters within your Livewire component.
