@@ -51,7 +51,7 @@ class SupportAttributes extends ComponentHook
             ->whereInstanceOf(LivewireAttribute::class)
             ->filter(fn ($attr) => $attr->getLevel() === AttributeLevel::PROPERTY)
             // Call "update" on the root property attribute even if it's a deep update...
-            ->filter(fn ($attr) => str($fullPath)->startsWith($attr->getName()))
+            ->filter(fn ($attr) => str($fullPath)->startsWith($attr->getName() . '.') || $fullPath === $attr->getName())
             ->map(function ($attribute) use ($fullPath, $newValue) {
                 if (method_exists($attribute, 'update')) {
                     return $attribute->update($fullPath, $newValue);

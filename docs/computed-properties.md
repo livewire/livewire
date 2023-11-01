@@ -183,6 +183,46 @@ public function posts()
 
 In the above example, until the cache expires or is busted, every instance of this component in your application will share the same cached value for `$this->posts`.
 
+If you need to manually clear the cache for a computed property, you may set a custom cache key using the `key` parameter:
+
+```php
+use Livewire\Attributes\Computed;
+use App\Models\Post;
+
+#[Computed(cache: true, key: 'homepage-posts')]
+public function posts()
+{
+    return Post::all();
+}
+```
+
+Instead of the `key` parameter, you can also use 'tags'.
+
+
+```php
+use Livewire\Attributes\Computed;
+use App\Models\Post;
+
+#[Computed(cache: true, tags: ['foo', 'bar'])]
+public function posts()
+{
+    return Post::all();
+}
+```
+
+
+Then somewhere else in your app, you may clear the cache for that property:
+
+```php
+Cache::forget('homepage-posts');
+```
+
+or clear the entire tag:
+
+```php
+Cache::tags('foo')->flush();
+```
+
 ## When to use computed properties?
 
 In addition to offering performance advantages, there are a few other scenarios where computed properties are helpful.
@@ -324,4 +364,3 @@ class ShowPosts extends Component
     @endforeach
 </div>
 ```
-

@@ -16,6 +16,9 @@ From the root directory of your Laravel app, run the following [Composer](https:
 composer require livewire/livewire
 ```
 
+> [!warning] Make sure Alpine isn't already installed
+> If the application you are using already has AlpineJS installed, you will need to remove it for Livewire to work properly; otherwise, Alpine will be loaded twice and Livewire won't function. For example, if you installed the Laravel Breeze "Blade with Alpine" starter kit, you will need to remove Alpine from `resources/js/app.js`.
+
 ## Create a Livewire component
 
 Livewire provides a convenient Artisan command to generate new components quickly. Run the following command to make a new `Counter` component:

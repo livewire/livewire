@@ -47,6 +47,26 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
+## Confirming an action
+
+When allowing users to perform dangerous actions—such as deleting a post from the database—you may want to show them a confirmation alert to verify that they wish to perform that action.
+
+Livewire makes this easy by providing a simple directive called `wire:confirm`:
+
+```blade
+<button
+    type="button"
+    wire:click="delete"
+    wire:confirm="Are you sure you want to delete this post?"
+>
+    Delete post <!-- [tl! highlight:-2,1] -->
+</button>
+```
+
+When `wire:confirm` is added to an element containing a Livewire action, when a user tries to trigger that action, they will be presented with a confirmation dialog containing the provided message. They can either press "OK" to confirm the action, or press "Cancel" or hit the escape key.
+
+For more information, visit the [`wire:confirm` documentation page](/docs/wire-confirm).
+
 ## Event listeners
 
 Livewire supports a variety of event listeners, allowing you to respond to various types of user interactions:
@@ -56,6 +76,7 @@ Livewire supports a variety of event listeners, allowing you to respond to vario
 | `wire:click`    | Triggered when an element is clicked      |
 | `wire:submit`   | Triggered when a form is submitted        |
 | `wire:keydown`  | Triggered when a key is pressed down      |
+| `wire:keyup`  | Triggered when a key is released
 | `wire:mouseenter`| Triggered when the mouse enters an element |
 | `wire:*`| Whatever text follows `wire:` will be used as the event name of the listener |
 
@@ -163,7 +184,6 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 >></trix-editor>
 > ```
 
-
 ### Listening for dispatched custom events
 
 If your application dispatches custom events from Alpine, you can also listen for those using Livewire:
@@ -226,7 +246,7 @@ Livewire provides a `wire:loading` directive that makes it trivial to show and h
 </form>
 ```
 
-`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/loading).
+`wire:loading` is a powerful feature with a variety of more powerful features. [Check out the full loading documentation for more information](/docs/wire-loading).
 
 ## Passing parameters
 

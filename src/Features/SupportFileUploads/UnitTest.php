@@ -419,7 +419,22 @@ class UnitTest extends \Tests\TestCase
         try {
             $this->withoutExceptionHandling()->post($url);
         } catch (\Throwable $th) {
-            $this->assertEquals('Middleware was hit!', $th->getMessage());
+            $this->assertStringContainsString(DummyMiddleware::class, $th->getMessage());
+        }
+    }
+
+    /** @test */
+    public function the_global_upload_route_middleware_supports_multiple_middleware()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1', DummyMiddleware::class]);
+
+        $url = GenerateSignedUploadUrl::forLocal();
+
+        try {
+            $this->withoutExceptionHandling()->post($url);
+        } catch (\Throwable $th) {
+            $this->assertStringContainsString('throttle:60,1', $th->getMessage());
+            $this->assertStringContainsString(DummyMiddleware::class, $th->getMessage());
         }
     }
 
@@ -688,7 +703,7 @@ class DummyMiddleware
 {
     public function handle($request, $next)
     {
-        throw new \Exception('Middleware was hit!');
+        throw new \Exception(implode(',', $request->route()->computedMiddleware));
     }
 }
 

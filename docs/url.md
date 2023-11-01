@@ -158,3 +158,44 @@ class ShowUsers extends Component
 ```
 
 In the example above, when a user changes the search value from "bob" to "frank" and then clicks the browser's back button, the search value (and the URL) will be set back to "bob" instead of navigating to the previously visited page.
+
+## Using the queryString method
+
+The query string can also be defined as a method on the component. This can be useful if some properties have dynamic options.
+
+```php
+use Livewire\Component;
+
+class ShowUsers extends Component
+{
+    // ...
+
+    protected function queryString()
+    {
+        return [
+            'search' => [
+                'as' => 'q',
+            ],
+        ];
+    }
+}
+```
+
+## Trait hooks
+
+Livewire offers [hooks](/docs/lifecycle-hooks) for query strings as well.
+
+```php
+trait WithSorting
+{
+    // ...
+
+    protected function queryStringWithSorting()
+    {
+        return [
+            'sortBy' => ['as' => 'sort'],
+            'sortDirection' => ['as' => 'direction'],
+        ];
+    }
+}
+```

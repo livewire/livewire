@@ -873,6 +873,19 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $this->assertArrayNotHasKey('name', $results);
     }
+
+    /** @test */
+    public function it_ignores_the_key_if_the_model_does_not_exist()
+    {
+        $this->expectNotToPerformAssertions();
+
+        $model = Author::make();
+
+        $model->id = 123;
+
+        Livewire::test(ModelsComponent::class, ['model' => $model])
+            ->call('$refresh');
+    }
 }
 
 class PostComponent extends Component

@@ -22,8 +22,8 @@ class UnitTest extends \Tests\TestCase
             <livewire:foo />
         ');
 
-        $this->assertCount(2, explode('__BLOCK__', $output));
-        $this->assertCount(2, explode('__ENDBLOCK__', $output));
+        $this->assertCount(2, explode('<!--[if BLOCK]><![endif]-->', $output));
+        $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
 
     /** @test */
@@ -41,8 +41,8 @@ class UnitTest extends \Tests\TestCase
         </div>
         HTML);
 
-        $this->assertOccurrences(1, '__BLOCK__', $output);
-        $this->assertOccurrences(1, '__ENDBLOCK__', $output);
+        $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
+        $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
     /**
@@ -53,8 +53,8 @@ class UnitTest extends \Tests\TestCase
     {
         $compiled = $this->compile($template);
 
-        $this->assertOccurrences($occurances, '__BLOCK__', $compiled);
-        $this->assertOccurrences($occurances, '__ENDBLOCK__', $compiled);
+        $this->assertOccurrences($occurances, '<!--[if BLOCK]><![endif]-->', $compiled);
+        $this->assertOccurrences($occurances, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
 
         $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
     }

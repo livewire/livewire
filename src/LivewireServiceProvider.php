@@ -84,6 +84,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
             \Livewire\Features\SupportMultipleRootElementDetection\SupportMultipleRootElementDetection::class,
             \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
+            \Livewire\Features\SupportNestedComponentListeners\SupportNestedComponentListeners::class,
             \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             \Livewire\Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,

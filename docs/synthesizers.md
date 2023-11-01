@@ -10,7 +10,7 @@ Therefore, Livewire provides a point of extension called "Synthesizers" that all
 
 ## Understanding Synthesizers
 
-Before exploring the creation of custom Synthesizers, let's first look at the internal Synthesizer that Livewire uses to support [Laravel Stringables](https://laravel.com/docs/helpers#method-str).
+Before exploring the creation of custom Synthesizers, let's first look at the internal Synthesizer that Livewire uses to support [Laravel Stringables](https://laravel.com/docs/strings).
 
 Suppose your application contained the following `CreatePost` component:
 

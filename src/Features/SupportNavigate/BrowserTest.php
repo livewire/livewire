@@ -299,7 +299,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_redirect_without_reloading_from_a_page_that_was_loaded_by_wire_navigate()
+    public function can_redirect_with_reloading_from_a_page_that_was_loaded_by_wire_navigate()
     {
         $this->browse(function ($browser) {
             $browser
@@ -313,7 +313,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
                 ->click('@redirect.to.first')
                 ->waitFor('@link.to.second')
-                ->assertScript('return window._lw_dusk_test')
+                ->assertScript('return window._lw_dusk_test', false)
                 ->assertSee('On first');
         });
     }
@@ -518,6 +518,33 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function livewire_navigated_event_is_fired_on_first_page_load()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/second')
+                ->assertSee('On second')
+                ->assertScript('window.foo_navigated', 'bar');
+        });
+    }
+
+    /** @test */
+    public function livewire_navigated_event_is_fired_after_redirect_without_reloading()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('window.foo_navigated', 'bar');
+        });
+    }
+
+    /** @test */
     public function navigate_is_not_triggered_on_cmd_click()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -572,6 +599,32 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForTextIn('@text-child', 'testing')
                 ->waitForTextIn('@text-parent', 'testing')
                 ;
+        });
+    }
+
+    /** @test */
+    public function injected_assets_such_as_nprogress_styles_are_retained_when_the_page_changes()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
+                ->click('@link.to.first')
+                ->waitFor('@link.to.second')
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2);
         });
     }
 
@@ -677,6 +730,12 @@ class SecondPage extends Component
             @endpersist
 
             <script data-navigate-once>window.foo = 'bar';</script>
+            
+            <script>
+                document.addEventListener('livewire:navigated', () => { 
+                    window.foo_navigated = 'bar'
+                })
+            </script>
         </div>
         HTML;
     }

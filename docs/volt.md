@@ -52,6 +52,13 @@ By adding the `--test` directive when generating a component, a corresponding te
 php artisan make:volt counter --test --pest
 ```
 
+
+By adding the `--class` directive it will generate a class-based volt component.
+
+```bash
+php artisan make:volt counter --class
+```
+
 ## API style
 
 By utilizing Volt's functional API, we can define a Livewire component's logic through imported `Livewire\Volt` functions. Volt then transforms and compiles the functional code into a conventional Livewire class, enabling us to leverage the extensive capabilities of Livewire with reduced boilerplate.
@@ -92,9 +99,29 @@ new class extends Component {
 </div>
 ```
 
-#### View Data
+#### Class attributes
 
-When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
+Just like typical Livewire components, Volt components support class attributes. When utilizing anonymous PHP classes, class attributes should be defined after the `new` keyword:
+
+```blade
+<?php
+
+use Livewire\Attributes\{Layout, Title};
+use Livewire\Volt\Component;
+
+new
+#[Layout('layouts.guest')]
+#[Title('Login')]
+class extends Component
+{
+    public string $name = '';
+
+    // ...
+```
+
+#### Providing additional view data
+
+When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method. This data will be passed to the view in addition to the component's public properties:
 
 ```blade
 <?php
@@ -117,6 +144,27 @@ new class extends Component {
 <div>
     <!-- ... -->
 </div>
+```
+
+#### Modifying the view instance
+
+Sometimes, you may wish to interact with the view instance directly, for example, to set the view's title using a translated string. To achieve this, you may define a `rendering` method on your component:
+
+```blade
+<?php
+
+use Illuminate\View\View;
+use Livewire\Volt\Component;
+
+new class extends Component {
+    public function rendering(View $view): void
+    {
+        $view->title('Create Post');
+
+        // ...
+    }
+
+    // ...
 ```
 
 ## Rendering and mounting components
