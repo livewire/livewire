@@ -80,7 +80,7 @@ class DataBindingComponent extends BaseComponent
 {
     public $author;
 
-    public ?DataBindingPost $post;
+    public ?DataBindingPost $thepost;
 
     protected $rules = [
         'author.name' => '',
@@ -88,14 +88,14 @@ class DataBindingComponent extends BaseComponent
         'author.posts.*.title' => '',
         'author.posts.*.comments.*.comment' => '',
         'author.posts.*.comments.*.author.name' => '',
-        'post.title' => '',
+        'thepost.title' => '',
     ];
 
     public function mount()
     {
         $this->author = DataBindingAuthor::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
 
-        $this->post = new DataBindingPost();
+        $this->thepost = new DataBindingPost();
     }
 
     public function save()
@@ -150,10 +150,10 @@ class DataBindingComponent extends BaseComponent
 
     <button wire:click="save" type="button" dusk="save">Save</button>
 
-    <div x-data="{ title: @entangle('post.title').live }">
+    <div x-data="{ title: @entangle('thepost.title').live }">
         Post Title
         <input dusk='post.title' x-model='title' />
-        <span dusk='output.post.title'>{{ $post->title }}</span>
+        <span dusk='output.post.title'>{{ $thepost->title }}</span>
     </div>
 </div>
 HTML;
