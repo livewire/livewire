@@ -153,10 +153,10 @@ class EloquentModelSynth extends Synth
     {
         $filteredAttributes = [];
 
-        foreach($rules as $rule) {
-            // If the rule is an array, it's for a relationship, so we can skip it.
+        foreach($rules as $key => $rule) {
+            // If the rule is an array, take the key instead
             if (is_array($rule)) {
-                continue;
+                $rule = $key;
             }
 
             // If someone has created an empty model, the attribute may not exist
