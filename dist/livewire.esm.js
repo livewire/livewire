@@ -6178,7 +6178,7 @@ var require_module_cjs6 = __commonJS({
         let positions = ["top", "top-start", "top-end", "right", "right-start", "right-end", "bottom", "bottom-start", "bottom-end", "left", "left-start", "left-end"];
         let placement = positions.find((i) => modifiers.includes(i));
         let offsetValue = 0;
-        let unstyled = modifiers.includes("unstyled");
+        let unstyled = modifiers.includes("no-style");
         if (modifiers.includes("offset")) {
           let idx = modifiers.findIndex((i) => i === "offset");
           offsetValue = modifiers[idx + 1] !== void 0 ? Number(modifiers[idx + 1]) : offsetValue;
