@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidationRuleException;
 use Livewire\Livewire;
@@ -16,13 +17,29 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 {
     use Concerns\EnableLegacyModels;
 
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        Schema::create('model_for_bindings', function ($table) {
+            $table->bigIncrements('id');
+            $table->string('title');
+            $table->timestamps();
+        });
+
+        ModelForBinding::create(['title' => 'foo']);
+        ModelForBinding::create(['title' => 'bar']);
+        ModelForBinding::create(['title' => 'baz']);
+    }
+
+    public function tearDown(): void
+    {
+        ModelForBinding::truncate();
+    }
+
     /** @test */
     public function can_set_a_model_attribute_inside_a_models_collection_and_save()
     {
-        // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
-        (new ModelForBinding)->migrate();
-
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->assertSet('models.0.title', 'foo')
             ->assertSnapshotSet('models.0.title', 'foo')
@@ -42,10 +59,6 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     /** @test */
     public function can_set_non_persisted_models_in_model_collection()
     {
-        // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
-        (new ModelForBinding)->migrate();
-
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->assertSet('models.2.title', 'baz')
             ->assertSet('models.3', null)
@@ -72,12 +85,20 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     }
 
     /** @test */
+    public function can_set_non_persisted_models_in_empty_model_collection()
+    {
+        ModelForBinding::truncate();
+
+        Livewire::test(ComponentWithModelCollectionProperty::class)
+            ->call('addModelWithNullConnection')
+            ->set('models.0.title', 'foo')
+            ->assertOk()
+        ;
+    }
+
+    /** @test */
     public function can_use_a_custom_model_collection_and_bind_to_values()
     {
-        // Reset Sushi model.
-        (new ModelWithCustomCollectionForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelWithCustomCollectionForBinding)->getTable());
-        (new ModelWithCustomCollectionForBinding)->migrate();
-
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->call('setModelsToCustomCollection')
             ->assertSet('models.0.title', 'foo')
@@ -100,10 +121,6 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     /** @test */
     public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {
-        // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
-        (new ModelForBinding)->migrate();
-
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
@@ -114,10 +131,6 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     /** @test */
     public function an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
     {
-        // Reset Sushi model.
-        (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
-        (new ModelForBinding)->migrate();
-
         $this->expectException(CorruptComponentPayloadException::class);
 
         $component = Livewire::test(ComponentWithModelCollectionProperty::class);
@@ -130,13 +143,14 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 
 class ModelForBinding extends Model
 {
-    use Sushi;
+    protected $connection = 'testbench';
+    protected $guarded = [];
 
-    protected $rows = [
-        ['title' => 'foo'],
-        ['title' => 'bar'],
-        ['title' => 'baz'],
-    ];
+    // New models don't have a connection name, so we need to mimic that.
+    public function mimicNewModel()
+    {
+        $this->connection = null;
+    }
 }
 
 class CustomCollection extends EloquentCollection
@@ -177,6 +191,13 @@ class ComponentWithModelCollectionProperty extends Component
     public function addModel()
     {
         $this->models->push(new ModelForBinding);
+    }
+
+    public function addModelWithNullConnection()
+    {
+        $model = new ModelForBinding;
+        $model->mimicNewModel();
+        $this->models->push($model);
     }
 
     public function setModelsToCustomCollection()
