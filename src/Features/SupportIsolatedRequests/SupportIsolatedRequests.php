@@ -8,20 +8,6 @@ use Illuminate\Routing\Route;
 
 class SupportIsolatedRequests extends ComponentHook
 {
-    static function provide()
-    {
-        static::registerRouteMacro();
-    }
-
-    static function registerRouteMacro()
-    {
-        Route::macro('isolate', function ($enabled = true) {
-            $this->defaults['isolate'] = $enabled;
-
-            return $this;
-        });
-    }
-
     public function mount($params)
     {
         if ($params['isolate'] ?? false) {

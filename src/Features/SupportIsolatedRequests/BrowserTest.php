@@ -11,7 +11,6 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     public function can_interact_with_fast_component_while_slow_loads()
     {
-        return;
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
                 <div>
