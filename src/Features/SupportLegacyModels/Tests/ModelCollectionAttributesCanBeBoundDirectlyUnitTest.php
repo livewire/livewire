@@ -35,6 +35,8 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
     public function tearDown(): void
     {
         ModelForBinding::truncate();
+
+        parent::tearDown();
     }
 
     /** @test */
