@@ -18,7 +18,7 @@ class HandleRequests
     function boot()
     {
         app($this::class)->setUpdateRoute(function ($handle) {
-            return Route::post('/livewire/update', $handle)->middleware('web');
+            return Route::post('/livewire/update', $handle)->middleware(config('livewire.guard', 'web'));
         });
 
         $this->skipRequestPayloadTamperingMiddleware();
