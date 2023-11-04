@@ -20,7 +20,7 @@ class DuskTestable
             $class = urldecode($component);
 
             return app()->call(app('livewire')->new($class));
-        })->middleware(config('livewire.guard'));
+        })->middleware(config('livewire.middleware'));
 
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
