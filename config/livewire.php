@@ -29,6 +29,19 @@ return [
     'view_path' => resource_path('views/livewire'),
 
     /*
+    |--------------------------------------------------------------------------
+    | Livewire Guard
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the authentication guard Livewire will use while
+    | authenticating users. This value should correspond with one of your
+    | guards that is already present in your "auth" configuration file.
+    |
+    */
+
+    'guard' => 'web',
+
+    /*
     |---------------------------------------------------------------------------
     | Layout
     |---------------------------------------------------------------------------
