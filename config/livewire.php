@@ -30,16 +30,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Livewire Guard
+    | Livewire Route Middleware
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the authentication guard Livewire will use while
-    | authenticating users. This value should correspond with one of your
-    | guards that is already present in your "auth" configuration file.
+    | Here you may specify which middleware Livewire will assign to the routes
+    | that it registers with the application. When necessary, you may modify
+    | these middleware; however, this default value is usually sufficient.
     |
     */
 
-    'guard' => 'web',
+    'middleware' => 'web',
 
     /*
     |---------------------------------------------------------------------------
