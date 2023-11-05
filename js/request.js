@@ -6,7 +6,7 @@ import { getCommits, flushCommits } from './commit'
 /**
  * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
-let updateUri = document.querySelector('[data-uri]')?.getAttribute('data-livewire_uri') ?? window.livewireScriptConfig['uri'] ?? null
+let updateUri = document.querySelector('[data-update-uri]')?.getAttribute('data-update-uri') ?? window.livewireScriptConfig['uri'] ?? null
 
 export function triggerSend() {
     bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
