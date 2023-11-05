@@ -7201,7 +7201,7 @@ function trigger(name, ...params) {
 }
 
 // js/request.js
-var updateUri = document.querySelector("[data-uri]")?.getAttribute("data-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+var updateUri = document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
 function triggerSend() {
   bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
     sendRequestToServer();
