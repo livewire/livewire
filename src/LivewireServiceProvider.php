@@ -89,6 +89,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             \Livewire\Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,
             \Livewire\Features\SupportNestingComponents\SupportNestingComponents::class,
+            \Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets::class,
             \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
             \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,

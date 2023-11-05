@@ -53,6 +53,18 @@
 @endassets
 ```
 
+// Assets
+```blade
+<div>
+    ...
+</div>
+
+@assets
+    <script src="">
+    <link href="">
+@endassets
+```
+
 // Using a third-party library
 ```blade
 @php $key = str()->uuid(); @endphp
