@@ -464,6 +464,8 @@ class UpdatePost extends Component
     public function mount(Post $post)
     {
         $this->post = $post;
+        $this->title = $post->title; 
+        $this->content = $post->content;
     }
 
     public function updated($name, $value)
