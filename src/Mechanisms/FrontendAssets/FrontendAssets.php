@@ -108,7 +108,7 @@ class FrontendAssets
             }
 
             [x-cloak] {
-                display: none;
+                display: none !important;
             }
         </style>
         HTML;
