@@ -30,7 +30,7 @@ class CountDown extends Component
 
     public function render()
     {
-        return <<<HTML
+        return <<<'HTML'
         <div>
             <button wire:click="begin">Start count-down</button>
 

@@ -10,14 +10,25 @@ class BaseModelable extends LivewireAttribute
 {
     public function mount($params, $parent)
     {
-        if ($parent && isset($params['wire:model'])) {
-            $outer = $params['wire:model'];
-            $inner = $this->getName();
+        if (! $parent) return;
 
-            store($this->component)->push('bindings', $inner, $outer);
+        $outer = null;
 
-            $this->setValue(data_get($parent, $outer));
+        foreach ($params as $key => $value) {
+            if (str($key)->startsWith('wire:model')) {
+                $outer = $value;
+                store($this->component)->push('bindings-directives', $key, $value);
+                break;
+            }
         }
+
+        if ($outer === null) return;
+
+        $inner = $this->getName();
+
+        store($this->component)->push('bindings', $inner, $outer);
+
+        $this->setValue(data_get($parent, $outer));
     }
 
     // This update hook is for the following scenario:

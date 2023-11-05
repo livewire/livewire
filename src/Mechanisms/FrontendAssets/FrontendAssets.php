@@ -108,7 +108,7 @@ class FrontendAssets
             }
 
             [x-cloak] {
-                display: none;
+                display: none !important;
             }
         </style>
         HTML;
@@ -168,7 +168,7 @@ class FrontendAssets
         );
 
         return <<<HTML
-        <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
+        <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 

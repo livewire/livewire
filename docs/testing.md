@@ -447,7 +447,7 @@ $this->assertHasErrors(['title' => ['required']]);
 
 ### Authorization
 
-Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides an `assertUnauthorized()` method to ensure that an authorization check has failed:
+Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
 
 ```php
 <?php
@@ -475,6 +475,12 @@ class UpdatePostTest extends TestCase
             ->set('title', 'Living the lavender life')
             ->call('save')
             ->assertUnauthorized();
+
+        Livewire::actingAs($user)
+            ->test(UpdatePost::class, ['post' => $post])
+            ->set('title', 'Living the lavender life')
+            ->call('save')
+            ->assertForbidden();
     }
 }
 ```
@@ -482,7 +488,8 @@ class UpdatePostTest extends TestCase
 If you prefer, you can also test for explicit status codes that an action in your component may have triggered using `assertStatus()`:
 
 ```php
-->assertStatus(403);
+->assertStatus(401); // Unauthorized
+->assertStatus(403); // Forbidden
 ```
 
 ### Redirects
