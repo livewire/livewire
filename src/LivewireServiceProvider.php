@@ -40,7 +40,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 
     protected function bootEventBus()
     {
-        (new \Livewire\EventBus)->boot();
+        app(\Livewire\EventBus::class)->boot();
     }
 
     protected function getMechanisms()
@@ -61,7 +61,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function registerMechanisms()
     {
         foreach ($this->getMechanisms() as $mechanism) {
-            (new $mechanism)->register($this);
+            app($mechanism)->register($this);
         }
     }
 
@@ -74,7 +74,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         }
 
         foreach ($this->getMechanisms() as $mechanism) {
-            (new $mechanism)->boot($this);
+            app($mechanism)->boot($this);
         }
     }
 
