@@ -2,30 +2,107 @@
 
 namespace Livewire\Features\SupportScriptsAndAssets;
 
-use function Livewire\store;
-
-use Livewire\ComponentHook;
 use Illuminate\Support\Facades\Blade;
+use function Livewire\store;
+use Livewire\ComponentHook;
+use function Livewire\on;
 
 class SupportScriptsAndAssets extends ComponentHook
 {
+    public static $alreadyRunAssetKeys = [];
+
     static function provide()
     {
-        Blade::directive('script', function () {
-            return <<<PHP
+        on('flush-state', function () {
+            static::$alreadyRunAssetKeys = [];
+        });
 
+        Blade::directive('script', function () {
+            $key = str()->random(10);
+
+            return <<<PHP
+                <?php
+                    \$__scriptKey = '$key';
+                    ob_start();
+                ?>
+            PHP;
+        });
+
+        Blade::directive('endscript', function () {
+            return <<<PHP
+                <?php
+                    \$__output = ob_get_clean();
+
+                    \Livewire\store(\$this)->push('scripts', \$__output, \$__scriptKey)
+                ?>
             PHP;
         });
 
         Blade::directive('assets', function () {
-            //
+            $key = str()->random(10);
+
+            return <<<PHP
+                <?php
+                    \$__assetKey = '$key';
+
+                    ob_start();
+                ?>
+            PHP;
         });
+
+        Blade::directive('endassets', function () {
+            return <<<PHP
+                <?php
+                    \$__output = ob_get_clean();
+
+                    // If the asset has already been loaded anywhere during this request, skip it...
+                    if (in_array(\$__assetKey, \Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets::\$alreadyRunAssetKeys)) {
+                        // Skip it...
+                    } else {
+                        \Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets::\$alreadyRunAssetKeys[] = \$__assetKey;
+                        \Livewire\store(\$this)->push('assets', \$__output, \$__assetKey);
+                    }
+                ?>
+            PHP;
+        });
+    }
+
+    function hydrate($memo) {
+        // Store the "scripts" and "assets" memos so they can be re-added later (persisted between requests)...
+        if (isset($memo['scripts'])) {
+            store($this->component)->set('forwardScriptsToDehydrateMemo', $memo['scripts']);
+        }
+
+        if (isset($memo['assets'])) {
+            store($this->component)->set('forwardAssetsToDehydrateMemo', $memo['assets']);
+        }
     }
 
     function dehydrate($context)
     {
-        if (! store($this->component)->has('js')) return;
+        $alreadyRunScriptKeys = store($this->component)->get('forwardScriptsToDehydrateMemo', []);
 
-        $context->addEffect('xjs', store($this->component)->get('js'));
+        // Add any scripts to the payload that haven't been run yet for this component....
+        foreach (store($this->component)->get('scripts', []) as $key => $script) {
+            if (! in_array($key, $alreadyRunScriptKeys)) {
+                $context->pushEffect('scripts', $script, $key);
+                $alreadyRunScriptKeys[] = $key;
+            }
+        }
+
+        $context->addMemo('scripts', $alreadyRunScriptKeys);
+
+        // Add any assets to the payload that haven't been run yet for the entire page...
+
+        $alreadyRunAssetKeys = store($this->component)->get('forwardAssetsToDehydrateMemo', []);
+
+        foreach (store($this->component)->get('assets', []) as $key => $assets) {
+            if (! in_array($key, $alreadyRunAssetKeys)) {
+                $context->pushEffect('assets', $assets, $key);
+                $alreadyRunAssetKeys[] = $key;
+            }
+        }
+
+        $context->addMemo('assets', $alreadyRunAssetKeys);
     }
 }

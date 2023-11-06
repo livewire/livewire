@@ -8186,6 +8186,79 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
+  // js/features/supportScriptsAndAssets.js
+  on("effects", (component, effects) => {
+    let scripts = effects.scripts;
+    if (scripts) {
+      Object.entries(scripts).forEach(([key, content]) => {
+        onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
+          let scriptContent = extractScriptTagContent(content);
+          module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        });
+      });
+    }
+  });
+  on("effects", (component, effects) => {
+    let assets = effects.assets;
+    if (assets) {
+      Object.entries(assets).forEach(([key, content]) => {
+        onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
+          addAssetsToHeadTagOfPage(content);
+        });
+      });
+    }
+  });
+  var executedScripts = /* @__PURE__ */ new WeakMap();
+  function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
+    if (executedScripts.has(component)) {
+      let alreadyRunKeys2 = executedScripts.get(component);
+      if (alreadyRunKeys2.includes(key))
+        return;
+    }
+    callback();
+    if (!executedScripts.has(component))
+      executedScripts.set(component, []);
+    let alreadyRunKeys = executedScripts.get(component);
+    alreadyRunKeys.push(key);
+    executedScripts.set(component, alreadyRunKeys);
+  }
+  function extractScriptTagContent(rawHtml) {
+    let scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gm;
+    let matches2 = scriptRegex.exec(rawHtml);
+    let innards = matches2 && matches2[1] ? matches2[1].trim() : "";
+    return innards;
+  }
+  var executedAssets = /* @__PURE__ */ new Set();
+  function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
+    if (executedAssets.has(key))
+      return;
+    callback();
+    executedAssets.add(key);
+  }
+  function addAssetsToHeadTagOfPage(rawHtml) {
+    let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
+    let newHead = document.adoptNode(newDocument.head);
+    for (let child of newHead.children) {
+      if (isScript2(child)) {
+        document.head.appendChild(cloneScriptTag2(child));
+      } else {
+        document.head.appendChild(child);
+      }
+    }
+  }
+  function isScript2(el) {
+    return el.tagName.toLowerCase() === "script";
+  }
+  function cloneScriptTag2(el) {
+    let script = document.createElement("script");
+    script.textContent = el.textContent;
+    script.async = el.async;
+    for (let attr of el.attributes) {
+      script.setAttribute(attr.name, attr.value);
+    }
+    return script;
+  }
+
   // js/features/supportFileDownloads.js
   on("commit", ({ component, succeed }) => {
     succeed(({ effects }) => {
