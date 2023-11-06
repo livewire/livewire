@@ -1,8 +1,15 @@
 
+## Using JavaScript in Livewire components
 
-# Using JavaScript inside Livewire components
+Livewire and Alpine provide plenty of utilities for building dynamic components directly in your HTML, however, there are times where it's helpful to break out of the HTML and execute plain JavaScript for your component. Livewire's `@script` and `@assets` directive allow you to do this in a predictable, maintainable way.
 
 ### Executing scripts
+
+To execute bespoke JavaScript in your Livewire component, simply wrap a `<script>` element with `@script` and `@endscript`. This will tell Livewire to handle the execution of this JavaScript.
+
+Because scripts inside `@script` are handled by Livewire, they are executed at the perfect time after the page has loaded, but before the Livewire component has rendered. This means you no longer need to wrap your scripts in `document.addEventListener('...')` to load them properly.
+
+This also means that lazilly or conditionally loaded Livewire components are still able to execute JavaScript after the page has intiailized.
 
 ```blade
 <div>
@@ -16,7 +23,8 @@
 @endscript
 ```
 
-// Registering a one-off Alpine component
+Here's a more full example where you can do something like register a one-off Alpine component that is used in your Livewire component.
+
 ```blade
 <div>
     Counter component in Alpine:
@@ -41,36 +49,33 @@
 @endscript
 ```
 
-// Assets
-```blade
-<div>
-    ...
-</div>
+### Using `$wire` from scripts
 
-@assets
-    <script src="">
-    <link href="">
-@endassets
+Another helpful feature of using `@script` for your JavaScript is that you automatically have access to your Liveiwre component's `$wire` object.
+
+Here's an example of using a simple `setInterval` to refresh the component every 2 seconds (You could easily do this with [`wire:poll`](/docs/wire-poll), but it's a simple way to demonstrate the point):
+
+You can learn more about `$wire` on the [`$wire` documentation](#the-wire-object).
+
+```blade
+@script
+<script>
+    setInterval(() => {
+        $wire.$refresh()
+    }, 2000)
+</script>
+@endscript
 ```
 
-// Assets
+### Loading assets
+
+The `@script` directive is useful for executing a bit of JavaScript every time a Livewire component loads, however, there are times you might want to load entire script and style assets on the page along with the component.
+
+Here is an example of using `@assets` to load a date picker library called [Pikaday](https://github.com/Pikaday/Pikaday) and initialize it inside your component using `@script`:
+
 ```blade
 <div>
-    ...
-</div>
-
-@assets
-    <script src="">
-    <link href="">
-@endassets
-```
-
-// Using a third-party library
-```blade
-@php $key = str()->uuid(); @endphp
-
-<div>
-    <input type="text" id="{{ $key }}">
+    <input type="text" data-picker>
 </div>
 
 @assets
@@ -80,18 +85,16 @@
 
 @script
 <script>
-    new Pikaday({ field: document.getElementById({{ $key }}) });
+    new Pikaday({ field: $wire.$el.querySelector('[data-picker]') });
 </script>
 @endscript
 ```
 
-# Extending Livewire's Javascript
-
-Livewire provides plenty of JavaScript extension points for advanced users who want to use Livewire in deeper ways or extend Livewire's features with custom APIs.
+When this component loads, Livewire will make sure any `@assets` are loaded on that page before evaluating `@script`s. In addition, it will ensure the provided `@assets` are only loaded once per page no matter how many instances of this component there are, unlike `@script`, which will evaluate for every component instance on the page.
 
 ## Global Livewire events
 
-Livewire dispatches two helpful browser events for you to register any custom extension points:
+Livewire dispatches two helpful browser events for you to register any custom extension points from outside scripts:
 
 ```html
 <script>
@@ -112,7 +115,7 @@ Livewire dispatches two helpful browser events for you to register any custom ex
 
 ## The `Livewire` global object
 
-Livewire's global object is the best starting point for interacting with Livewire in JavaScript.
+Livewire's global object is the best starting point for interacting with Livewire from external scripts.
 
 You can access the global `Livewire` JavaScript object on `window` from anywhere inside your client-side code.
 
@@ -158,9 +161,9 @@ Livewire.on('post-created', ({ postId }) => {
 })
 ```
 
-### Accessing hooks
+### Using lifecycle hooks
 
-Livewire allows you to hook into various parts of its internal lifecycle using `Livewire.hook()`:
+Livewire allows you to hook into various parts of its global lifecycle using `Livewire.hook()`:
 
 ```js
 // Register a callback to execute on a given internal Livewire hook...
@@ -213,22 +216,6 @@ Livewire.directive('confirm', ({ el, directive, component, cleanup }) => {
 })
 ```
 
-### Controlling Livewire's initialization
-
-In general, you shouldn't need to manually start or stop Livewire, however, if you find yourself needing this behavior, Livewire makes it available to you via the following methods:
-
-```js
-// Start Livewire on a page that doesn't have Livewire running...
-Livewire.start()
-
-// Stop Livewire and teardown its JavaScript runtime
-// (remove event listeners and such)...
-Livewire.stop()
-
-// Force Livewire to scan the DOM for any components it may have missed...
-Livewire.rescan()
-```
-
 ## Object schemas
 
 When extending Livewire's JavaScript system, it's important to understand the different objects you might encounter.
@@ -276,6 +263,12 @@ let $wire = {
 
     // Access the `$wire` object of the parent component if one exists...
     $parent,
+
+    // Access the root DOM element of the Livewire component...
+    $el,
+
+    // Access the ID of the current Livewire component...
+    $id,
 
     // Get the value of a property by name...
     // Usage: $wire.$get('count')

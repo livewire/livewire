@@ -11,7 +11,6 @@ Essentials:
     Events: { uri: /docs/events, file: /events.md }
     Lifecycle Hooks: { uri: /docs/lifecycle-hooks, file: /lifecycle-hooks.md }
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
-    Blade Components: { uri: /docs/blade-components, file: /blade-components.md }
     Testing: { uri: /docs/testing, file: /testing.md }
 Features:
     Navigate: { uri: /docs/navigate, file: /navigate.md }
