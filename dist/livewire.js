@@ -4047,6 +4047,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var aliases = {
     "on": "$on",
+    "el": "$el",
+    "id": "$id",
     "get": "$get",
     "set": "$set",
     "call": "$call",
@@ -4110,6 +4112,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("__instance", (component) => component);
   wireProperty("$get", (component) => (property, reactive3 = true) => dataGet(reactive3 ? component.reactive : component.ephemeral, property));
+  wireProperty("$el", (component) => {
+    return component.el;
+  });
+  wireProperty("$id", (component) => {
+    return component.id;
+  });
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     return live ? await requestCommit(component) : Promise.resolve();
