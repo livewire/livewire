@@ -11,14 +11,35 @@ class SupportScriptsAndAssets extends ComponentHook
 {
     public static $alreadyRunAssetKeys = [];
 
+    public static $countersByViewPath = [];
+
+    public static function getUniqueBladeCompileTimeKey()
+    {
+        // Rather than using random strings as compile-time keys for blade directives,
+        // we want something more detereminstic to protect against problems that arise
+        // from using load-balancers and such.
+        // Therefore, we create a key based on the currently compiling view path and
+        // number of already compiled directives here...
+        $viewPath = crc32(app('blade.compiler')->getPath());
+
+        if (! isset(static::$countersByViewPath[$viewPath])) static::$countersByViewPath[$viewPath] = 0;
+
+        $key = $viewPath.'-'.static::$countersByViewPath[$viewPath];
+
+        static::$countersByViewPath[$viewPath]++;
+
+        return $key;
+    }
+
     static function provide()
     {
         on('flush-state', function () {
             static::$alreadyRunAssetKeys = [];
+            static::$countersByViewPath = [];
         });
 
         Blade::directive('script', function () {
-            $key = str()->random(10);
+            $key = static::getUniqueBladeCompileTimeKey();
 
             return <<<PHP
                 <?php
@@ -39,7 +60,7 @@ class SupportScriptsAndAssets extends ComponentHook
         });
 
         Blade::directive('assets', function () {
-            $key = str()->random(10);
+            $key = static::getUniqueBladeCompileTimeKey();
 
             return <<<PHP
                 <?php
