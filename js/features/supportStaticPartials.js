@@ -1,10 +1,10 @@
 import { on } from '@/events'
 import Alpine from 'alpinejs'
 
-let staticCache = []
+let staticPartials = []
 
 on('effects', (component, effects) => {
-    let renderedStatics = effects.renderedStatics
+    let bypassedStatics = effects.bypassedStatics
     let newStatics = effects.newStatics
     let html = effects.html
 
@@ -12,49 +12,51 @@ on('effects', (component, effects) => {
     // We want to store these "pre-initialization" so that we swap them in on future
     // requests and simulate what the server-side HTML would be...
     if (newStatics) {
+        // Create a temporary element from pre-initialized HTML to easily find static elements...
         let container = html ? createElement(html) : component.el.cloneNode(true)
 
-        newStatics.forEach((key) => {
-            let eligableStaticEls = container.querySelectorAll('[wire\\:static="'+key+'"]')
+        newStatics.forEach((hash) => {
+            // Grap the static partial out of the pre-initialized HTML...
+            let el = container.querySelector('[wire\\:static="'+hash+'"]')
 
-            let el
+            if (! el) throw new 'Cannot locate a matching static on page for key: '+hash
 
-            for (let i of eligableStaticEls) {
-                if (i.__lw_alreadyUsed) continue
-
-                el = i
-
-                el.__lw_alreadyUsed = true
-
-                break;
-            }
-
-            if (! el) throw new 'Cannot locate a matching static on page for key: '+key
-
-            staticCache[key] = el.outerHTML
+            // Store it in a cache for future reference...
+            staticPartials[hash] = el.outerHTML
         })
     }
 
-    // "renderedStatics" is already in order from deeply nested out, so we can simply
+    // "bypassedStatics" is already in order from deeply nested out, so we can simply
     // iterate through it and non-greedily look for matches and everything should work.
-    if (renderedStatics && html) {
+    if (bypassedStatics && html) {
         let runningHtml = html
 
-        renderedStatics.forEach((key) => {
-            let staticContent = staticCache[key]
-            if (! staticContent) throw new 'Cannot find cached static for: '+key
+        bypassedStatics.forEach((hash) => {
+            let staticContent = staticPartials[hash]
 
-            let regex = new RegExp(`\\[STATICSTART:${key}\\](.*?)\\[STATICEND:${key}\\]`, 's')
+            if (! staticContent) throw new 'Cannot find cached static for: '+hash
 
+            let regex = new RegExp(`\\[static:${hash}\\](.*?)\\[endstatic:${hash}\\]`, 's')
+
+            // Replace a static placeholder with the cached HTML and inject slotted/dynamic content...
             runningHtml = runningHtml.replace(regex, (match, group) => {
+                // Create a temporary element for slotting...
                 let preSlottedHtmlEl = createElement(staticContent)
-                let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:dynamic="'+key+'"]')
-                regex = new RegExp(`\\[DYNAMICSTART:${key}\\](.*?)\\[DYNAMICEND:${key}\\]`, 'gs')
+
+                // Find all the slots inside the static partial...
+                let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:dynamic="'+hash+'"]')
+
+                // Extract all the slot placeholders for re-injection...
+                regex = new RegExp(`\\[dynamic:${hash}\\](.*?)\\[enddynamic:${hash}\\]`, 'gs')
+
                 let matches = [...group.matchAll(regex)]
+
                 let slotContents = matches.map(match => match[1])
 
+                // Ensure there aren't any more or less slots provided than we have a place for in the cached partial...
                 if (slotContents.length !== slotEls.length) throw new 'Number of static slots doesnt match runtime slots'
 
+                // Replace all temp slot elements with fresh slot markup ...
                 slotEls.forEach((el, idx) => {
                     el.outerHTML = slotContents[idx]
                 })
@@ -63,12 +65,15 @@ on('effects', (component, effects) => {
             })
         })
 
+        // Override the HTML from the server for future hooks including morphdom...
         effects.html = runningHtml
     }
 })
 
 function createElement(html) {
     const template = document.createElement('template')
+
     template.innerHTML = html
+
     return template.content.firstElementChild
 }

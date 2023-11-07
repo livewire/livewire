@@ -9,28 +9,6 @@ use function Livewire\on;
 
 class SupportStaticPartials extends ComponentHook
 {
-    public static $alreadyRunAssetKeys = [];
-
-    public static $countersByViewPath = [];
-
-    public static function getUniqueBladeCompileTimeKey()
-    {
-        // Rather than using random strings as compile-time keys for blade directives,
-        // we want something more detereminstic to protect against problems that arise
-        // from using load-balancers and such.
-        // Therefore, we create a key based on the currently compiling view path and
-        // number of already compiled directives here...
-        $viewPath = crc32(app('blade.compiler')->getPath());
-
-        if (! isset(static::$countersByViewPath[$viewPath])) static::$countersByViewPath[$viewPath] = 0;
-
-        $key = $viewPath.'-'.static::$countersByViewPath[$viewPath];
-
-        static::$countersByViewPath[$viewPath]++;
-
-        return $key;
-    }
-
     static $isEnabled = true;
 
     static function enable()
@@ -43,13 +21,11 @@ class SupportStaticPartials extends ComponentHook
         if (! static::$isEnabled) return;
 
         on('flush-state', function () {
-            static::$alreadyRunAssetKeys = [];
-            static::$countersByViewPath = [];
             static::$isEnabled = false;
         });
 
         Blade::directive('static', function () {
-            $key = static::getUniqueBladeCompileTimeKey();
+            $key = str()->random(10);
 
             return "<?php \$this->startStatic('$key'); ?>";
         });
@@ -68,7 +44,7 @@ class SupportStaticPartials extends ComponentHook
     }
 
     function hydrate($memo) {
-        // Store the "statics" memos so they can be re-added later (persisted between requests)...
+        // Store previously rendered statics so they can be bypassed when rendering this time...
         if (isset($memo['statics'])) {
             $this->component->setPreviousStatics($memo['statics']);
         }
@@ -76,50 +52,13 @@ class SupportStaticPartials extends ComponentHook
 
     function dehydrate($context)
     {
+        // Store "statics" for referencing on the next request...
         $context->addMemo('statics', $this->component->getAllStatics());
+
+        // Log any "new statics" so JavaScript can cache them for the future...
         $context->addEffect('newStatics', $this->component->getNewStatics());
-        $context->addEffect('renderedStatics', $this->component->getRenderedStatics());
-        return;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        $alreadyRunScriptKeys = store($this->component)->get('forwardScriptsToDehydrateMemo', []);
-
-        // Add any scripts to the payload that haven't been run yet for this component....
-        foreach (store($this->component)->get('scripts', []) as $key => $script) {
-            if (! in_array($key, $alreadyRunScriptKeys)) {
-                $context->pushEffect('scripts', $script, $key);
-                $alreadyRunScriptKeys[] = $key;
-            }
-        }
-
-        $context->addMemo('scripts', $alreadyRunScriptKeys);
-
-        // Add any assets to the payload that haven't been run yet for the entire page...
-
-        $alreadyRunAssetKeys = store($this->component)->get('forwardAssetsToDehydrateMemo', []);
-
-        foreach (store($this->component)->get('assets', []) as $key => $assets) {
-            if (! in_array($key, $alreadyRunAssetKeys)) {
-                $context->pushEffect('assets', $assets, $key);
-                $alreadyRunAssetKeys[] = $key;
-            }
-        }
-
-        $context->addMemo('assets', $alreadyRunAssetKeys);
+        // Log "renderedStatics" so they can be re-injected by JavaScript before morphing...
+        $context->addEffect('bypassedStatics', $this->component->getBypassedStatics());
     }
 }

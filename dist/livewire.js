@@ -8275,39 +8275,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportStaticPartials.js
-  var staticCache = [];
+  var staticPartials = [];
   on("effects", (component, effects) => {
-    let renderedStatics = effects.renderedStatics;
+    let bypassedStatics = effects.bypassedStatics;
     let newStatics = effects.newStatics;
     let html = effects.html;
     if (newStatics) {
       let container = html ? createElement2(html) : component.el.cloneNode(true);
-      newStatics.forEach((key) => {
-        let eligableStaticEls = container.querySelectorAll('[wire\\:static="' + key + '"]');
-        let el;
-        for (let i of eligableStaticEls) {
-          if (i.__lw_alreadyUsed)
-            continue;
-          el = i;
-          el.__lw_alreadyUsed = true;
-          break;
-        }
+      newStatics.forEach((hash) => {
+        let el = container.querySelector('[wire\\:static="' + hash + '"]');
         if (!el)
-          throw new "Cannot locate a matching static on page for key: "() + key;
-        staticCache[key] = el.outerHTML;
+          throw new "Cannot locate a matching static on page for key: "() + hash;
+        staticPartials[hash] = el.outerHTML;
       });
     }
-    if (renderedStatics && html) {
+    if (bypassedStatics && html) {
       let runningHtml = html;
-      renderedStatics.forEach((key) => {
-        let staticContent = staticCache[key];
+      bypassedStatics.forEach((hash) => {
+        let staticContent = staticPartials[hash];
         if (!staticContent)
-          throw new "Cannot find cached static for: "() + key;
-        let regex = new RegExp(`\\[STATICSTART:${key}\\](.*?)\\[STATICEND:${key}\\]`, "s");
+          throw new "Cannot find cached static for: "() + hash;
+        let regex = new RegExp(`\\[static:${hash}\\](.*?)\\[endstatic:${hash}\\]`, "s");
         runningHtml = runningHtml.replace(regex, (match, group) => {
           let preSlottedHtmlEl = createElement2(staticContent);
-          let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:dynamic="' + key + '"]');
-          regex = new RegExp(`\\[DYNAMICSTART:${key}\\](.*?)\\[DYNAMICEND:${key}\\]`, "gs");
+          let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:dynamic="' + hash + '"]');
+          regex = new RegExp(`\\[dynamic:${hash}\\](.*?)\\[enddynamic:${hash}\\]`, "gs");
           let matches2 = [...group.matchAll(regex)];
           let slotContents = matches2.map((match2) => match2[1]);
           if (slotContents.length !== slotEls.length)
