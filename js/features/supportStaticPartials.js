@@ -48,8 +48,8 @@ on('effects', (component, effects) => {
 
             runningHtml = runningHtml.replace(regex, (match, group) => {
                 let preSlottedHtmlEl = createElement(staticContent)
-                let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:static-slot="'+key+'"]')
-                regex = new RegExp(`\\[STATICSLOTSTART:${key}\\](.*?)\\[STATICSLOTEND:${key}\\]`, 'gs')
+                let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:dynamic="'+key+'"]')
+                regex = new RegExp(`\\[DYNAMICSTART:${key}\\](.*?)\\[DYNAMICEND:${key}\\]`, 'gs')
                 let matches = [...group.matchAll(regex)]
                 let slotContents = matches.map(match => match[1])
 

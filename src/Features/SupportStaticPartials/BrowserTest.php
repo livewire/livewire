@@ -25,17 +25,19 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <h1 dusk="dynamic">{{ $count }}</h1>
 
                     @static
-                    <h2 dusk="static">{{ $count }}</h2>
+                    <h2 dusk="static">foo</h2>
                     @endstatic
                 </div>
                 HTML;
             }
         })
+        ->tap($this->startListeningForFetchedHtml(...))
         ->assertSeeIn('@dynamic', '1')
-        ->assertSeeIn('@static', '1')
+        ->assertSeeIn('@static', 'foo')
         ->waitForLivewire()->click('@button')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
         ->assertSeeIn('@dynamic', '2')
-        ->assertSeeIn('@static', '1')
+        ->assertSeeIn('@static', 'foo')
         ;
     }
 
@@ -56,21 +58,24 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     @if ($count > 1)
                     @static
-                    <h2 dusk="static">{{ $count }}</h2>
+                    <h2 dusk="static">foo</h2>
                     @endstatic
                     @endif
                 </div>
                 HTML;
             }
         })
+        ->tap($this->startListeningForFetchedHtml(...))
         ->assertSeeIn('@dynamic', '1')
         ->assertMissing('@static')
         ->waitForLivewire()->click('@button')
         ->assertSeeIn('@dynamic', '2')
-        ->assertSeeIn('@static', '2')
+        ->assertSeeIn('@static', 'foo')
+        ->tap($this->assertFetchedHtmlContains('foo'))
         ->waitForLivewire()->click('@button')
         ->assertSeeIn('@dynamic', '3')
-        ->assertSeeIn('@static', '2')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
+        ->assertSeeIn('@static', 'foo')
         ;
     }
 
@@ -91,10 +96,10 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     @static
                     <div>
-                        <h2 dusk="nested-static-1">{{ $count }}</h2>
+                        <h2 dusk="nested-static-1">foo</h2>
 
                         @static
-                            <h2 dusk="nested-static-2">{{ $count }}</h2>
+                            <h2 dusk="nested-static-2">bar</h2>
                         @endstatic
                     </div>
                     @endstatic
@@ -102,18 +107,21 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
+        ->tap($this->startListeningForFetchedHtml(...))
         ->assertSeeIn('@dynamic', '1')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '1')
+        ->assertSeeIn('@nested-static-1', 'foo')
+        ->assertSeeIn('@nested-static-2', 'bar')
         ->waitForLivewire()->click('@button')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
+        ->tap($this->assertFetchedHtmlIsMissing('bar'))
         ->assertSeeIn('@dynamic', '2')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '1')
+        ->assertSeeIn('@nested-static-1', 'foo')
+        ->assertSeeIn('@nested-static-2', 'bar')
         ;
     }
 
     /** @test */
-    public function statics_can_have_slots()
+    public function statics_can_have_dynamic_slots()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public $count = 0;
@@ -125,28 +133,30 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <button dusk="button" wire:click="$refresh">refresh</button>
 
-                    <h1 dusk="dynamic">{{ $count }}</h1>
+                    <h1 dusk="raw">{{ $count }}</h1>
 
                     @static
                     <div>
-                        <h2 dusk="nested-static-1">{{ $count }}</h2>
+                        <h2 dusk="static">foo</h2>
 
-                        @staticSlot
-                            <h2 dusk="nested-static-2">{{ $count }}</h2>
-                        @endstaticSlot
+                        @dynamic
+                            <h2 dusk="dynamic">{{ $count }}</h2>
+                        @enddynamic
                     </div>
                     @endstatic
                 </div>
                 HTML;
             }
         })
+        ->tap($this->startListeningForFetchedHtml(...))
+        ->assertSeeIn('@raw', '1')
+        ->assertSeeIn('@static', 'foo')
         ->assertSeeIn('@dynamic', '1')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '1')
         ->waitForLivewire()->click('@button')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
+        ->assertSeeIn('@raw', '2')
+        ->assertSeeIn('@static', 'foo')
         ->assertSeeIn('@dynamic', '2')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '2')
         ;
     }
 
@@ -163,48 +173,52 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <button dusk="button" wire:click="$refresh">refresh</button>
 
-                    <h1 dusk="dynamic">{{ $count }}</h1>
+                    <h1 dusk="raw">{{ $count }}</h1>
 
                     @static
                     <div>
-                        <h2 dusk="nested-static-1">{{ $count }}</h2>
+                        <h2 dusk="static-1">foo</h2>
 
-                        @staticSlot
+                        @dynamic
                             @static
                             <div>
-                                <h2 dusk="nested-static-2">{{ $count }}</h2>
+                                <h2 dusk="static-2">bar</h2>
 
-                                @staticSlot
-                                    <h2 dusk="nested-static-3">{{ $count }}</h2>
-                                @endstaticSlot
+                                @dynamic
+                                    <h2 dusk="dynamic-1">{{ $count }}</h2>
+                                @enddynamic
 
-                                <h2 dusk="nested-static-4">{{ $count }}</h2>
+                                <h2 dusk="static-3">baz</h2>
 
-                                @staticSlot
-                                    <h2 dusk="nested-static-5">{{ $count }}</h2>
-                                @endstaticSlot
+                                @dynamic
+                                    <h2 dusk="dynamic-2">{{ $count }}</h2>
+                                @enddynamic
                             </div>
                             @endstatic
-                        @endstaticSlot
+                        @enddynamic
                     </div>
                     @endstatic
                 </div>
                 HTML;
             }
         })
-        ->assertSeeIn('@dynamic', '1')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '1')
-        ->assertSeeIn('@nested-static-3', '1')
-        ->assertSeeIn('@nested-static-4', '1')
-        ->assertSeeIn('@nested-static-5', '1')
+        ->tap($this->startListeningForFetchedHtml(...))
+        ->assertSeeIn('@raw', '1')
+        ->assertSeeIn('@static-1', 'foo')
+        ->assertSeeIn('@static-2', 'bar')
+        ->assertSeeIn('@dynamic-1', '1')
+        ->assertSeeIn('@static-3', 'baz')
+        ->assertSeeIn('@dynamic-2', '1')
         ->waitForLivewire()->click('@button')
-        ->assertSeeIn('@dynamic', '2')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '1')
-        ->assertSeeIn('@nested-static-3', '2')
-        ->assertSeeIn('@nested-static-4', '1')
-        ->assertSeeIn('@nested-static-5', '2')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
+        ->tap($this->assertFetchedHtmlIsMissing('bar'))
+        ->tap($this->assertFetchedHtmlIsMissing('baz'))
+        ->assertSeeIn('@raw', '2')
+        ->assertSeeIn('@static-1', 'foo')
+        ->assertSeeIn('@static-2', 'bar')
+        ->assertSeeIn('@dynamic-1', '2')
+        ->assertSeeIn('@static-3', 'baz')
+        ->assertSeeIn('@dynamic-2', '2')
         ;
     }
 
@@ -223,24 +237,27 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <button dusk="button" wire:click="$refresh">refresh</button>
 
-                    <h1 dusk="dynamic">{{ $count }}</h1>
+                    <h1 dusk="raw">{{ $count }}</h1>
 
                     <x-test :$count />
                 </div>
                 HTML;
             }
         })
-        ->assertSeeIn('@dynamic', '1')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '1')
-        ->assertSeeIn('@nested-static-3', '1')
-        ->assertSeeIn('@nested-static-4', '1')
+        ->tap($this->startListeningForFetchedHtml(...))
+        ->assertSeeIn('@raw', '1')
+        ->assertSeeIn('@static-1', 'foo')
+        ->assertSeeIn('@static-2', 'bar')
+        ->assertSeeIn('@dynamic-1', '1')
+        ->assertSeeIn('@dynamic-2', '1')
         ->waitForLivewire()->click('@button')
-        ->assertSeeIn('@dynamic', '2')
-        ->assertSeeIn('@nested-static-1', '1')
-        ->assertSeeIn('@nested-static-2', '2')
-        ->assertSeeIn('@nested-static-3', '1')
-        ->assertSeeIn('@nested-static-4', '2')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
+        ->tap($this->assertFetchedHtmlIsMissing('bar'))
+        ->assertSeeIn('@raw', '2')
+        ->assertSeeIn('@static-1', 'foo')
+        ->assertSeeIn('@static-2', 'bar')
+        ->assertSeeIn('@dynamic-1', '2')
+        ->assertSeeIn('@dynamic-2', '2')
         ;
     }
 
@@ -272,24 +289,27 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
+        ->tap($this->startListeningForFetchedHtml(...))
         ->assertSeeIn('h1', '1')
-        ->assertSeeIn('@nested-component-1 h2', '1')
+        ->assertSeeIn('@nested-component-1 h2', 'foo')
         ->assertSeeIn('@nested-component-1 h3', '1')
-        ->assertSeeIn('@nested-component-1 h4', '1')
+        ->assertSeeIn('@nested-component-1 h4', 'bar')
         ->assertSeeIn('@nested-component-1 h5', '1')
-        ->assertSeeIn('@nested-component-2 h2', '1')
+        ->assertSeeIn('@nested-component-2 h2', 'foo')
         ->assertSeeIn('@nested-component-2 h3', '1')
-        ->assertSeeIn('@nested-component-2 h4', '1')
+        ->assertSeeIn('@nested-component-2 h4', 'bar')
         ->assertSeeIn('@nested-component-2 h5', '1')
         ->waitForLivewire()->click('@button')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
+        ->tap($this->assertFetchedHtmlIsMissing('bar'))
         ->assertSeeIn('h1', '2')
-        ->assertSeeIn('@nested-component-1 h2', '1')
+        ->assertSeeIn('@nested-component-1 h2', 'foo')
         ->assertSeeIn('@nested-component-1 h3', '2')
-        ->assertSeeIn('@nested-component-1 h4', '1')
+        ->assertSeeIn('@nested-component-1 h4', 'bar')
         ->assertSeeIn('@nested-component-1 h5', '2')
-        ->assertSeeIn('@nested-component-2 h2', '1')
+        ->assertSeeIn('@nested-component-2 h2', 'foo')
         ->assertSeeIn('@nested-component-2 h3', '2')
-        ->assertSeeIn('@nested-component-2 h4', '1')
+        ->assertSeeIn('@nested-component-2 h4', 'bar')
         ->assertSeeIn('@nested-component-2 h5', '2')
         ;
     }
@@ -322,26 +342,58 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->tinker()
+        ->tap($this->startListeningForFetchedHtml(...))
         ->assertSeeIn('h1', '1')
-        ->assertSeeIn('@nested-component-1 h2', '1')
+        ->assertSeeIn('@nested-component-1 h2', 'foo')
         ->assertSeeIn('@nested-component-1 h3', '1')
-        ->assertSeeIn('@nested-component-1 h4', '1')
+        ->assertSeeIn('@nested-component-1 h4', 'bar')
         ->assertSeeIn('@nested-component-1 h5', '1')
-        ->assertSeeIn('@nested-component-2 h2', '2')
+        ->assertSeeIn('@nested-component-2 h2', 'foo')
         ->assertSeeIn('@nested-component-2 h3', '2')
-        ->assertSeeIn('@nested-component-2 h4', '2')
+        ->assertSeeIn('@nested-component-2 h4', 'bar')
         ->assertSeeIn('@nested-component-2 h5', '2')
         ->waitForLivewire()->click('@button')
+        ->tap($this->assertFetchedHtmlIsMissing('foo'))
+        ->tap($this->assertFetchedHtmlIsMissing('bar'))
         ->assertSeeIn('h1', '2')
-        ->assertSeeIn('@nested-component-1 h2', '1')
+        ->assertSeeIn('@nested-component-1 h2', 'foo')
         ->assertSeeIn('@nested-component-1 h3', '2')
-        ->assertSeeIn('@nested-component-1 h4', '1')
+        ->assertSeeIn('@nested-component-1 h4', 'bar')
         ->assertSeeIn('@nested-component-1 h5', '2')
-        ->assertSeeIn('@nested-component-2 h2', '2')
+        ->assertSeeIn('@nested-component-2 h2', 'foo')
         ->assertSeeIn('@nested-component-2 h3', '3')
-        ->assertSeeIn('@nested-component-2 h4', '2')
+        ->assertSeeIn('@nested-component-2 h4', 'bar')
         ->assertSeeIn('@nested-component-2 h5', '3')
         ;
+    }
+
+    protected function startListeningForFetchedHtml($browser)
+    {
+        $browser->script('
+            window.Livewire.hook("commit", ({ component, commit, respond, succeed, fail }) => {
+                respond(({ snapshot, effects }) => {
+                    window.__last_html = effects.html
+                })
+            });
+            return "";
+        ');
+    }
+
+    protected function assertFetchedHtmlIsMissing($browser)
+    {
+        return function ($browser) {
+            $html = $browser->script(['return window.__last_html'])[0];
+
+            $this->assertStringNotContainsString('foo', $html);
+        };
+    }
+
+    protected function assertFetchedHtmlContains($expected)
+    {
+        return function ($browser) use ($expected) {
+            $html = $browser->script(['return window.__last_html'])[0];
+
+            $this->assertStringContainsString($expected, $html);
+        };
     }
 }

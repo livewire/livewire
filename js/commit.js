@@ -108,7 +108,7 @@ class Commit {
 
         let succeed = (fwd) => succeedCallbacks.forEach(i => i(fwd))
         let fail = () => failCallbacks.forEach(i => i())
-        let respond = () => respondCallbacks.forEach(i => i())
+        let respond = (fwd) => respondCallbacks.forEach(i => i(fwd))
 
         let finishTarget = trigger('commit', {
             component: this.component,
@@ -125,9 +125,9 @@ class Commit {
         })
 
         let handleResponse = (response) => {
-            let { snapshot, effects } = response
+            respond(response)
 
-            respond()
+            let { snapshot, effects } = response
 
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
 

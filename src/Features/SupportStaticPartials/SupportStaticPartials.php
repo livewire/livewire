@@ -58,12 +58,12 @@ class SupportStaticPartials extends ComponentHook
             return "<?php echo \$this->endStatic(); ?>";
         });
 
-        Blade::directive('staticSlot', function () {
-            return "<?php \$this->startStaticSlot(); ?>";
+        Blade::directive('dynamic', function () {
+            return "<?php \$this->startDynamic(); ?>";
         });
 
-        Blade::directive('endstaticSlot', function () {
-            return "<?php echo \$this->endStaticSlot(); ?>";
+        Blade::directive('enddynamic', function () {
+            return "<?php echo \$this->endDynamic(); ?>";
         });
     }
 

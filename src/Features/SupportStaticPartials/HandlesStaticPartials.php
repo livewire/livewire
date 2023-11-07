@@ -11,6 +11,8 @@ trait HandlesStaticPartials
     protected $staticStack = [];
     protected $renderedStatics = [];
 
+    protected $lastStaticContent = null;
+
     public function setPreviousStatics($statics)
     {
         $this->previousStatics = $statics;
@@ -19,13 +21,6 @@ trait HandlesStaticPartials
     public function startStatic($key)
     {
         $this->staticStack[] = $key;
-
-        if ($this->shouldProcessStatic($key)) {
-            // It's important to add "newStatics" in "startStatic" rather than
-            // "endStatic" so that their order matches document.querySelectorAll()
-            // when nesting the same component within itself...
-            $this->newStatics[] = $key;
-        }
 
         ob_start();
     }
@@ -37,65 +32,75 @@ trait HandlesStaticPartials
 
         $output = ob_get_clean();
 
-        if ($this->shouldProcessStatic($key)) {
-            $output = Utils::insertAttributesIntoHtmlRoot($output, [
-                'wire:static' => $key,
-            ]);
+        $hash = $this->generateHashOfStatic($output, $currentStackIdx);
 
-            return $output;
-        } else {
-            // It's important to add "renderedStatics" in "endStattic" rather than
+        if ($this->shouldBypassStatic($hash)) {
+            // It's important to add "renderedStatics" in "endStatic" rather than
             // "startStatic" so that the order is "depth-first". This allows
             // JavaScript to recursively regex easily and reliably...
-            $this->renderedStatics[] = $key;
+            $this->renderedStatics[] = $hash;
 
-            $tmp = "[STATICSTART:$key]";
+            $tmp = "[STATICSTART:$hash]";
 
-            foreach ($this->staticSlotsByCurrentStackIdx[$currentStackIdx] ?? [] as $slot) {
-                $tmp .= "[STATICSLOTSTART:$key]{$slot}[STATICSLOTEND:$key]";
+            foreach ($this->dynamicsByCurrentStackIdx[$currentStackIdx] ?? [] as $slot) {
+                $slot = Utils::insertAttributesIntoHtmlRoot($slot, ['wire:dynamic' => $hash], strict: false);
+                $tmp .= "[DYNAMICSTART:$hash]{$slot}[DYNAMICEND:$hash]";
             }
 
-            unset($this->staticSlotsByCurrentStackIdx[$currentStackIdx]);
+            unset($this->dynamicsByCurrentStackIdx[$currentStackIdx]);
 
-            $tmp .= "[STATICEND:$key]";
+            $tmp .= "[STATICEND:$hash]";
 
-            return $tmp;
+            $output = $tmp;
+        } else {
+            $this->newStatics[] = $hash;
+
+            foreach ($this->dynamicsByCurrentStackIdx[$currentStackIdx] ?? [] as $slot) {
+                $output = (string) str($output)->replaceFirst($slot,
+                    Utils::insertAttributesIntoHtmlRoot($slot, ['wire:dynamic' => $hash], strict: false)
+                );
+            }
+
+            unset($this->dynamicsByCurrentStackIdx[$currentStackIdx]);
+
+            $output = Utils::insertAttributesIntoHtmlRoot($output, [
+                'wire:static' => $hash,
+            ]);
+
+            $output = (string) str($output)->replace($key, $hash);
         }
+
+        $this->lastStaticContent = $output;
+
+        return $output;
     }
 
-    protected $staticSlotsByKey = [];
-    protected $staticSlotsByCurrentStackIdx = [];
+    protected $dynamicsByCurrentStackIdx = [];
 
-    public function startStaticSlot()
+    public function startDynamic()
     {
         ob_start();
     }
 
-    public function endStaticSlot()
+    public function endDynamic()
     {
         $key = last($this->staticStack);
         $currentStackIdx = array_key_last($this->staticStack);
 
-        if (! isset($this->staticSlotsByCurrentStackIdx[$currentStackIdx])) {
-            $this->staticSlotsByCurrentStackIdx[$currentStackIdx] = [];
+        if (! isset($this->dynamicsByCurrentStackIdx[$currentStackIdx])) {
+            $this->dynamicsByCurrentStackIdx[$currentStackIdx] = [];
         }
 
         $output = ob_get_clean();
 
-        if ($this->shouldProcessStatic($key)) {
-            $output = Utils::insertAttributesIntoHtmlRoot($output, [
-                'wire:static-slot' => $key,
-            ]);
+        $this->dynamicsByCurrentStackIdx[$currentStackIdx][] = $output;
 
-            return $output;
-        } else {
-            $this->staticSlotsByCurrentStackIdx[$currentStackIdx][] = $output;
-        }
+        return $output;
     }
 
-    public function shouldProcessStatic($key)
+    public function shouldBypassStatic($hash)
     {
-        return ! in_array($key, $this->previousStatics);
+        return in_array($hash, $this->previousStatics);
     }
 
     public function getAllStatics()
@@ -111,5 +116,20 @@ trait HandlesStaticPartials
     public function getRenderedStatics()
     {
         return $this->renderedStatics;
+    }
+
+    public function generateHashOfStatic($output, $currentStackIdx)
+    {
+        if ($this->lastStaticContent) {
+            $output = (string) str($output)->replaceFirst($this->lastStaticContent, '');
+        }
+
+        $slots = $this->dynamicsByCurrentStackIdx[$currentStackIdx] ?? [];
+
+        foreach ($slots as $slot) {
+            $output = (string) str($output)->replaceFirst($slot, '');
+        }
+
+        return crc32($output);
     }
 }

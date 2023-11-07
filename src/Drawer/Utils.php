@@ -8,15 +8,19 @@ use function Livewire\invade;
 
 class Utils extends BaseUtils
 {
-    static function insertAttributesIntoHtmlRoot($html, $attributes) {
-        $attributesFormattedForHtmlElement = static::stringifyHtmlAttributes($attributes);
-
+    static function insertAttributesIntoHtmlRoot($html, $attributes, $strict = true) {
         preg_match('/(?:\n\s*|^\s*)<([a-zA-Z0-9\-]+)/', $html, $matches, PREG_OFFSET_CAPTURE);
 
-        throw_unless(
-            count($matches),
-            new RootTagMissingFromViewException
-        );
+        if ($strict) {
+            throw_unless(
+                count($matches),
+                new RootTagMissingFromViewException
+            );
+        } else if (count($matches) < 1) {
+            return $html;
+        }
+
+        $attributesFormattedForHtmlElement = static::stringifyHtmlAttributes($attributes);
 
         $tagName = $matches[1][0];
         $lengthOfTagName = strlen($tagName);
