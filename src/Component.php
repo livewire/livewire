@@ -2,18 +2,19 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
-use Livewire\Features\SupportPageComponents\HandlesPageComponents;
-use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
-use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
+use Livewire\Features\SupportStaticPartials\HandlesStaticPartials;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
 use Livewire\Features\SupportEvents\HandlesEvents;
+use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use BadMethodCallException;
 
 abstract class Component
@@ -28,6 +29,7 @@ abstract class Component
     use HandlesAttributes;
     use HandlesValidation;
     use HandlesJsEvaluation;
+    use HandlesStaticPartials;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
 

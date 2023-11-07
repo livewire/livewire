@@ -8267,6 +8267,59 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return script;
   }
 
+  // js/features/supportStaticPartials.js
+  var staticCache = [];
+  on("effects", (component, effects) => {
+    let renderedStatics = effects.renderedStatics;
+    let newStatics = effects.newStatics;
+    let html = effects.html;
+    if (newStatics) {
+      let container = html ? createElement2(html) : component.el.cloneNode(true);
+      newStatics.forEach((key) => {
+        let eligableStaticEls = container.querySelectorAll('[wire\\:static="' + key + '"]');
+        let el;
+        for (let i of eligableStaticEls) {
+          if (i.__lw_alreadyUsed)
+            continue;
+          el = i;
+          el.__lw_alreadyUsed = true;
+          break;
+        }
+        if (!el)
+          throw new "Cannot locate a matching static on page for key: "() + key;
+        staticCache[key] = el.outerHTML;
+      });
+    }
+    if (renderedStatics && html) {
+      let runningHtml = html;
+      renderedStatics.forEach((key) => {
+        let staticContent = staticCache[key];
+        if (!staticContent)
+          throw new "Cannot find cached static for: "() + key;
+        let regex = new RegExp(`\\[STATICSTART:${key}\\](.*?)\\[STATICEND:${key}\\]`, "s");
+        runningHtml = runningHtml.replace(regex, (match, group) => {
+          let preSlottedHtmlEl = createElement2(staticContent);
+          let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:static-slot="' + key + '"]');
+          regex = new RegExp(`\\[STATICSLOTSTART:${key}\\](.*?)\\[STATICSLOTEND:${key}\\]`, "gs");
+          let matches2 = [...group.matchAll(regex)];
+          let slotContents = matches2.map((match2) => match2[1]);
+          if (slotContents.length !== slotEls.length)
+            throw new "Number of static slots doesnt match runtime slots"();
+          slotEls.forEach((el, idx) => {
+            el.outerHTML = slotContents[idx];
+          });
+          return preSlottedHtmlEl.outerHTML;
+        });
+      });
+      effects.html = runningHtml;
+    }
+  });
+  function createElement2(html) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    return template.content.firstElementChild;
+  }
+
   // js/features/supportFileDownloads.js
   on("commit", ({ component, succeed }) => {
     succeed(({ effects }) => {

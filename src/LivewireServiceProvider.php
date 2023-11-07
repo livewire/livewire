@@ -92,6 +92,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets::class,
             \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::class,
             \Livewire\Features\SupportConsoleCommands\SupportConsoleCommands::class,
+            \Livewire\Features\SupportStaticPartials\SupportStaticPartials::class,
             \Livewire\Features\SupportPageComponents\SupportPageComponents::class,
             \Livewire\Features\SupportReactiveProps\SupportReactiveProps::class,
             \Livewire\Features\SupportFileDownloads\SupportFileDownloads::class,
