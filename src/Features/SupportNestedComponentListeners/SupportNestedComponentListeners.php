@@ -19,7 +19,9 @@ class SupportNestedComponentListeners extends ComponentHook
         // to the root element of the component...
         foreach ($params as $key => $value) {
             if (str($key)->startsWith('@')) {
-                $fullEvent = str($key)->after('@');
+                // any kebab-cased parameters passed in will have been converted to camelCase
+                // so we need to convert back to kebab to ensure events are valid in html
+                $fullEvent = str($key)->after('@')->kebab();
                 $attributeKey = 'x-on:'.$fullEvent;
                 $attributeValue = "\$wire.\$parent.".$value;
 
