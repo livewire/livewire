@@ -87,4 +87,7 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@button')
             ->assertSeeIn('@button', '1');
     }
+
+    // Works with multiple slotted blade components
+    // Works with template elements
 }

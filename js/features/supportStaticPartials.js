@@ -17,7 +17,7 @@ on('effects', (component, effects) => {
 
         newStatics.forEach((hash) => {
             // Grap the static partial out of the pre-initialized HTML...
-            let el = container.querySelector('[wire\\:static="'+hash+'"]')
+            let el = deepQuerySelectorAll(container, '[wire\\:static="'+hash+'"]')[0]
 
             if (! el) throw new 'Cannot locate a matching static on page for key: '+hash
 
@@ -43,8 +43,8 @@ on('effects', (component, effects) => {
                 // Create a temporary element for slotting...
                 let preSlottedHtmlEl = createElement(staticContent)
 
-                // Find all the slots inside the static partial...
-                let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:dynamic="'+hash+'"]')
+                // Find all the slots inside the static partial (that may contain template tags)...
+                let slotEls = deepQuerySelectorAll(preSlottedHtmlEl, '[wire\\:dynamic="'+hash+'"]')
 
                 // Extract all the slot placeholders for re-injection...
                 regex = new RegExp(`\\[dynamic:${hash}\\](.*?)\\[enddynamic:${hash}\\]`, 'gs')
@@ -77,3 +77,26 @@ function createElement(html) {
 
     return template.content.firstElementChild
 }
+
+function deepQuerySelectorAll(parentNode, selector) {
+    // Array to hold all matching elements
+    let elements = [];
+
+    // Immediately invoke a function to search the parent node
+    (function searchNode(node) {
+      // Add all matching elements at this level to the array
+      elements = elements.concat(Array.from(node.querySelectorAll(selector)));
+
+      // Find all template tags at this level
+      const templates = Array.from(node.querySelectorAll('template'));
+
+      // For each template, search its content
+      templates.forEach(template => {
+        searchNode(template.content);
+      });
+    })(parentNode);
+
+    return elements;
+  }
+
+

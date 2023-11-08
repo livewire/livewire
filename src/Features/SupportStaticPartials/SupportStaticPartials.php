@@ -27,19 +27,19 @@ class SupportStaticPartials extends ComponentHook
         Blade::directive('static', function () {
             $key = str()->random(10);
 
-            return "<?php \$this->startStatic('$key'); ?>";
+            return "<?php \$__livewire->startStatic('$key'); ?>";
         });
 
         Blade::directive('endstatic', function () {
-            return "<?php echo \$this->endStatic(); ?>";
+            return "<?php echo \$__livewire->endStatic(); ?>";
         });
 
         Blade::directive('dynamic', function () {
-            return "<?php \$this->startDynamic(); ?>";
+            return "<?php \$__livewire->startDynamic(); ?>";
         });
 
         Blade::directive('enddynamic', function () {
-            return "<?php echo \$this->endDynamic(); ?>";
+            return "<?php echo \$__livewire->endDynamic(); ?>";
         });
     }
 

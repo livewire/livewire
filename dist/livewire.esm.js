@@ -9147,7 +9147,7 @@ on("effects", (component, effects) => {
   if (newStatics) {
     let container = html ? createElement(html) : component.el.cloneNode(true);
     newStatics.forEach((hash) => {
-      let el = container.querySelector('[wire\\:static="' + hash + '"]');
+      let el = deepQuerySelectorAll(container, '[wire\\:static="' + hash + '"]')[0];
       if (!el)
         throw new "Cannot locate a matching static on page for key: "() + hash;
       staticPartials[hash] = el.outerHTML;
@@ -9162,7 +9162,7 @@ on("effects", (component, effects) => {
       let regex = new RegExp(`\\[static:${hash}\\](.*?)\\[endstatic:${hash}\\]`, "s");
       runningHtml = runningHtml.replace(regex, (match, group) => {
         let preSlottedHtmlEl = createElement(staticContent);
-        let slotEls = preSlottedHtmlEl.querySelectorAll('[wire\\:dynamic="' + hash + '"]');
+        let slotEls = deepQuerySelectorAll(preSlottedHtmlEl, '[wire\\:dynamic="' + hash + '"]');
         regex = new RegExp(`\\[dynamic:${hash}\\](.*?)\\[enddynamic:${hash}\\]`, "gs");
         let matches = [...group.matchAll(regex)];
         let slotContents = matches.map((match2) => match2[1]);
@@ -9181,6 +9181,17 @@ function createElement(html) {
   const template = document.createElement("template");
   template.innerHTML = html;
   return template.content.firstElementChild;
+}
+function deepQuerySelectorAll(parentNode, selector) {
+  let elements = [];
+  (function searchNode(node) {
+    elements = elements.concat(Array.from(node.querySelectorAll(selector)));
+    const templates = Array.from(node.querySelectorAll("template"));
+    templates.forEach((template) => {
+      searchNode(template.content);
+    });
+  })(parentNode);
+  return elements;
 }
 
 // js/features/supportFileDownloads.js
