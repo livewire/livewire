@@ -59,7 +59,7 @@
 
 @script
 <script>
-    new Pikaday({ field: document.getElementById({{ $key }}) });
+    new Pikaday({ field: document.getElementById('{{ $key }}') });
 </script>
 @endscript
 ```
