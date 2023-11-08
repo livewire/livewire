@@ -24,7 +24,8 @@
     "orchestra/testbench": "^8.0",
     "orchestra/testbench-dusk": "^8.0",
     "calebporzio/sushi": "^2.1",
-    "laravel/prompts": "^0.1.6"
+    "laravel/prompts": "^0.1.6",
+    "phpstan/phpstan": "^1.10"
   },
   "autoload": {
     "files": [
@@ -49,6 +50,11 @@
       "aliases": {
         "Livewire": "Livewire\\Livewire"
       }
+    },
+    "phpstan": {
+      "includes": [
+        "extension.neon"
+      ]
     }
   },
   "minimum-stability": "dev",

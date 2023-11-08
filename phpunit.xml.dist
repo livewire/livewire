@@ -19,5 +19,8 @@
         <testsuite name="LegacyBrowser">
             <directory suffix="Test.php">./legacy_tests/Browser</directory>
         </testsuite>
+        <testsuite name="PHPStan">
+            <directory>tests/PHPStan</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

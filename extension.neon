@@ -1,0 +1,4 @@
+services:
+    -
+        class: Livewire\PHPStan\Properties\ComputedPropertyExtension
+        tags: [phpstan.broker.propertiesClassReflectionExtension]
