@@ -11,6 +11,7 @@ class BaseUrl extends LivewireAttribute
         public $as = null,
         public $history = false,
         public $keep = false,
+        public $except = null,
     ) {}
 
     public function mount()
@@ -34,6 +35,7 @@ class BaseUrl extends LivewireAttribute
             'as' => $this->as,
             'use' => $this->history ? 'push' : 'replace',
             'alwaysShow' => $this->keep,
+            'except' => $this->except,
         ];
 
         $context->pushEffect('url', $queryString, $this->getName());
