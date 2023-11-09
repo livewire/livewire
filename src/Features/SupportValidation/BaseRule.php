@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportValidation;
 
 use Attribute;
+use Illuminate\Auth\Events\Validated;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\wrap;
@@ -11,7 +12,7 @@ use function Livewire\wrap;
 class BaseRule extends LivewireAttribute
 {
     function __construct(
-        public $rule,
+        public $rule = null,
         protected $attribute = null,
         protected $as = null,
         protected $message = null,
@@ -23,9 +24,12 @@ class BaseRule extends LivewireAttribute
     {
         $rules = [];
 
-        // Support setting rules by key-value for this and other properties:
-        // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
-        if (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
+        if (is_null($this->rule)) {
+            // Allow "Rule" to be used without a given validation rule. It's purpose is to instead
+            // trigger validation on property updates...
+        } elseif (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
+            // Support setting rules by key-value for this and other properties:
+            // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
             $rules = $this->rule;
         } else {
             $rules[$this->getName()] = $this->rule;

@@ -2,16 +2,17 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use Tests\TestComponent;
 use Livewire\Wireable;
 use Livewire\Livewire;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Component;
+use Livewire\Attributes\Validate;
 use Illuminate\Support\ViewErrorBag;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Collection;
-use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -39,6 +40,59 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors([
                 'foo' => 'required',
             ]);
+    }
+
+    /** @test */
+    public function validate_alias_can_be_used()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate('required')]
+            public $foo = '';
+
+            #[Validate('required')]
+            public $bar = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('bar', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->call('clear')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors([
+                'foo' => 'required',
+            ]);
+    }
+
+    /** @test */
+    public function validate_can_be_used_without_a_rule()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate]
+            public $foo = '';
+
+            public $bar = '';
+
+            public function rules()
+            {
+                return [
+                    'foo' => 'required',
+                    'bar' => 'required',
+                ];
+            }
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('foo', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required']);
     }
 
     /** @test */
