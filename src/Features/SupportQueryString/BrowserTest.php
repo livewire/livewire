@@ -42,7 +42,7 @@ class BrowserTest extends \Tests\BrowserTestCase
              new class extends Component {
                  #[BaseUrl]
                  public $exclamation = '';
- 
+
                  #[BaseUrl]
                  public $quote = '';
 
@@ -51,7 +51,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                  #[BaseUrl]
                  public $asterisk = '';
- 
+
                  public function render() { return <<<'HTML'
                      <div>
                          <input type="text" dusk="exclamation" wire:model.live="exclamation" />
@@ -72,4 +72,34 @@ class BrowserTest extends \Tests\BrowserTestCase
              ->assertScript('return !! window.location.search.match(/asterisk=foo\*/)')
          ;
      }
+
+     /** @test */
+    public function can_use_a_value_other_than_initial_for_except_behavior()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl(except: '')]
+                public $search = '';
+
+                public function mount()
+                {
+                    $this->search = 'foo';
+                }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="input" wire:model.live="search" />
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertQueryStringHas('search', 'foo')
+            ->waitForLivewire()->type('@input', 'bar')
+            ->assertQueryStringHas('search', 'bar')
+            ->waitForLivewire()->type('@input', ' ')
+            ->waitForLivewire()->keys('@input', '{backspace}')
+            ->assertQueryStringMissing('search')
+        ;
+    }
 }
