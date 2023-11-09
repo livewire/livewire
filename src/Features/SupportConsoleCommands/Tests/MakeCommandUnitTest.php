@@ -39,7 +39,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
     /** @test */
     public function component_pest_test_is_created_by_make_command_with_pest_option()
     {
-        Artisan::call('make:livewire', ['name' => 'foo', '--pest' => true]);
+        Artisan::call('make:livewire', ['name' => 'foo', '--test' => true, '--pest' => true]);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Foo.php')));
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
