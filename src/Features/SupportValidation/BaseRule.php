@@ -29,7 +29,7 @@ class BaseRule extends LivewireAttribute
             // trigger validation on property updates...
         } elseif (is_array($this->rule) && count($this->rule) > 0 && ! is_numeric(array_keys($this->rule)[0])) {
             // Support setting rules by key-value for this and other properties:
-            // For example, #[Rule(['foo' => 'required', 'foo.*' => 'required'])]
+            // For example, #[Validate(['foo' => 'required', 'foo.*' => 'required'])]
             $rules = $this->rule;
         } else {
             $rules[$this->getName()] = $this->rule;
