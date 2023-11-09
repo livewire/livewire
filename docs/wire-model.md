@@ -231,7 +231,7 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
 
 ```blade
 <select wire:model="states" multiple>
-    <option value="AL">Alabama<option>
+    <option value="AL">Alabama</option>
     <option value="AK">Alaska</option>
     <option value="AZ">Arizona</option>
     ...
