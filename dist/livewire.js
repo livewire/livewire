@@ -1881,7 +1881,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return rawValue;
   }
   var isCloning = false;
-  function skipDuringClone(callback, fallback2 = () => {
+  function skipDuringClone2(callback, fallback2 = () => {
   }) {
     return (...args) => isCloning ? fallback2(...args) : callback(...args);
   }
@@ -2261,7 +2261,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     onAttributeRemoved,
     onAttributesAdded,
     closestDataStack,
-    skipDuringClone,
+    skipDuringClone: skipDuringClone2,
     onlyDuringClone,
     addRootSelector,
     addInitSelector,
@@ -3098,7 +3098,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   var teleportContainerDuringClone = document.createElement("div");
   function getTarget(expression) {
-    let target = skipDuringClone(() => {
+    let target = skipDuringClone2(() => {
       return document.querySelector(expression);
     }, () => {
       return teleportContainerDuringClone;
@@ -3116,7 +3116,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   };
   directive("ignore", handler);
-  directive("effect", (el, { expression }, { effect: effect3 }) => effect3(evaluateLater(el, expression)));
+  directive("effect", skipDuringClone((el, { expression }, { effect: effect3 }) => {
+    effect3(evaluateLater(el, expression));
+  }));
   function on2(el, event, modifiers, callback) {
     let listenerTarget = el;
     let handler4 = (e) => callback(e);
@@ -3385,7 +3387,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   directive("cloak", (el) => queueMicrotask(() => mutateDom(() => el.removeAttribute(prefix("cloak")))));
   addInitSelector(() => `[${prefix("init")}]`);
-  directive("init", skipDuringClone((el, { expression }, { evaluate: evaluate22 }) => {
+  directive("init", skipDuringClone2((el, { expression }, { evaluate: evaluate22 }) => {
     if (typeof expression === "string") {
       return !!expression.trim() && evaluate22(expression, {}, false);
     }
@@ -3750,7 +3752,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     names.forEach((name) => setIdRoot(el, name));
   });
   mapAttributes(startingWith("@", into(prefix("on:"))));
-  directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
+  directive("on", skipDuringClone2((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
     let evaluate22 = expression ? evaluateLater(el, expression) : () => {
     };
     if (el.tagName.toLowerCase() === "template") {
