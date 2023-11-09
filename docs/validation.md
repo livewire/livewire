@@ -645,3 +645,9 @@ public function cant_create_post_without_title_and_content()
 ```
 
 For more information on other testing utilities provided by Livewire, check out the [testing documentation](/docs/testing).
+
+## Deprecated `[#Rule]` attribute
+
+When Livewire v3 first launched, it used the term "Rule" instead of "Validate" for it's validation attributes (`#[Rule]`).
+
+Because of naming conflicts with Laravel rule objects, this has since been changed to `#[Validate]`. Both are supported in Livewire v3, however it is recommended that you change all occurances of `#[Rule]` with `#[Validate]` to stay current.
