@@ -8,6 +8,7 @@ use Livewire\Livewire;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Component;
 use Livewire\Attributes\Validate;
+use Livewire\Attributes\Rule;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Lang;
@@ -43,13 +44,13 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function validate_alias_can_be_used()
+    public function deprecated_rule_alias_can_be_used()
     {
         Livewire::test(new class extends TestComponent {
-            #[Validate('required')]
+            #[Rule('required')]
             public $foo = '';
 
-            #[Validate('required')]
+            #[Rule('required')]
             public $bar = '';
 
             function clear() { $this->clearValidation(); }
