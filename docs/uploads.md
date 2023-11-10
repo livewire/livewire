@@ -11,13 +11,13 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 
 class UploadPhoto extends Component
 {
     use WithFileUploads;
 
-    #[Rule('image|max:1024')] // 1MB Max
+    #[Validate('image|max:1024')] // 1MB Max
     public $photo;
 
     public function save()
@@ -89,13 +89,13 @@ For example, below is a component with an array property named `$photos`. By add
 ```php
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 
 class UploadPhotos extends Component
 {
     use WithFileUploads;
 
-    #[Rule(['photos.*' => 'image|max:1024'])]
+    #[Validate(['photos.*' => 'image|max:1024'])]
     public $photos = [];
 
     public function save()
@@ -140,13 +140,13 @@ Let's explore an example of a file upload with an image preview:
 ```php
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 
 class UploadPhoto extends Component
 {
     use WithFileUploads;
 
-    #[Rule('image|max:1024')]
+    #[Validate('image|max:1024')]
     public $photo;
 
     // ...
