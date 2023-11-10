@@ -2,28 +2,15 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use function Livewire\invade;
 use Livewire\Features\SupportValidation\HandlesValidation;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\MessageBag;
+use function Livewire\invade;
+use Illuminate\Support\Arr;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
-use Illuminate\Validation\ValidationException;
-
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Arr;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Support\Arrayable;
-
-// Form object validation is currently added to the base component.
-// Problem: the keys sometimes need a prefix (for displaying) and sometimes don't (for getting data) (form.username vs username)
-
-// Solution A: Isolate form object validation to itself (the form object contains it's own rules and handles it's own validation)
-// Problem A: we need to run form object validation when the component runs it's validation with $this->validate();
-    // Solution: when base component calls ->validate(), loop through properties, find form objects, and call sub-validate methods
-// Problem B: When using `@error()` in templates, currently, it's `@error('form.usernam')`, to keep that, we need to prefix all
-// validation rules from the nested form object validation failed bags...
-
-// Solution B: Go through all rule objects from form objects and set columns to scoped names.
-// Problem A: people don't always use form objects and the problem still plagues string variations (i.e. "unique:users")
 
 class Form implements Arrayable
 {
