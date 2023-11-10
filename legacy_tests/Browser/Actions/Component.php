@@ -8,6 +8,7 @@ use Livewire\Component as BaseComponent;
 class Component extends BaseComponent
 {
     public $output = '';
+    public $times_rendered = 0;
 
     public function setOutputToFoo()
     {
@@ -37,6 +38,7 @@ class Component extends BaseComponent
 
     public function render()
     {
+        $this->times_rendered++;
         return View::file(__DIR__.'/view.blade.php');
     }
 }

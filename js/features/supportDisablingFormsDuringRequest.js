@@ -10,11 +10,25 @@ on('element.init', ({ el, component }) => {
 
     if (directives.missing('submit')) return
 
-    // Set a forms "disabled" state on inputs and buttons.
+    // Set a forms "disabled" state on inputs and form element.
     // Livewire will clean it all up automatically when the form
     // submission returns and the new DOM lacks these additions.
-    el.addEventListener('submit', () => {
+    el.addEventListener('submit', (event) => {
+
+        // If the form is already submitting, do nothing
+        // if (el.hasAttribute('data-submitting')) {
+        //     // event.stopPropagation();
+        //     return;
+        // }
+
         cleanupStackByComponentId[component.id] = []
+
+        // el.setAttribute('data-submitting', true);
+
+        cleanupStackByComponentId[component.id].push(
+            () => (el.removeAttribute('data-submitting'))
+        )
+
 
         Alpine.walk(component.el, (node, skip) => {
             if (! el.contains(node)) return
@@ -31,13 +45,10 @@ on('element.init', ({ el, component }) => {
                 (node.tagName.toLowerCase() === 'input' &&
                     (node.type === 'checkbox' || node.type === 'radio'))
             ) {
-                if (!node.disabled)
-                    cleanupStackByComponentId[component.id].push(
-                        () => (node.disabled = false)
-                    )
+                return;
+            }
 
-                node.disabled = true
-            } else if (
+            if (
                 // <input type="text">
                 node.tagName.toLowerCase() === 'input' ||
                 // <textarea>

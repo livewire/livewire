@@ -2314,8 +2314,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2348,8 +2348,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2439,7 +2439,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (false) {
+      if (activeEffect.options.onTrack) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2503,7 +2503,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (false) {
+      if (effect3.options.onTrigger) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2640,13 +2640,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2708,7 +2708,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2727,7 +2727,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2740,7 +2740,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2785,7 +2785,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2887,6 +2887,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
+  function checkIdentityKeys(target, has2, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has2.call(target, rawKey)) {
+      const type = toRawType(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2919,7 +2926,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -4175,6 +4182,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     overriddenMethods.set(component, obj);
   }
   wireFallback((component) => (property) => async (...params) => {
+    console.log(property, params);
     if (params.length === 1 && params[0] instanceof Event) {
       params = [];
     }
@@ -4462,7 +4470,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4556,7 +4564,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5446,13 +5454,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (oldValue === value)
           return;
         if (value && !oldValue) {
-          if (modifiers.includes("noscroll"))
-            undoDisableScrolling = disableScrolling();
-          if (modifiers.includes("inert"))
-            undoInert = setInert(el);
           setTimeout(() => {
+            if (modifiers.includes("inert"))
+              undoInert = setInert(el);
+            if (modifiers.includes("noscroll"))
+              undoDisableScrolling = disableScrolling();
             trap.activate();
-          }, 15);
+          });
         }
         if (!value && oldValue) {
           releaseFocus();
@@ -5501,22 +5509,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
-      let storage;
-      try {
-        storage = localStorage;
-      } catch (e) {
-        console.error(e);
-        console.warn("Alpine: $persist is using temporary storage since localStorage is unavailable.");
-        let dummy = /* @__PURE__ */ new Map();
-        storage = {
-          getItem: dummy.get.bind(dummy),
-          setItem: dummy.set.bind(dummy)
-        };
-      }
+      let storage = localStorage;
       return Alpine3.interceptor((initialValue, getter, setter, path, key) => {
         let lookup = alias || `_x_${path}`;
         let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
@@ -5560,7 +5557,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -5615,7 +5612,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // ../../.nvm/versions/node/v18.18.2/lib/node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -6795,39 +6792,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         throw "Alpine: No x-anchor directive found on element using $anchor...";
       return el._x_anchor;
     });
-    Alpine3.interceptClone((from, to) => {
-      if (from && from._x_anchor && !to._x_anchor) {
-        to._x_anchor = from._x_anchor;
-      }
-    });
-    Alpine3.directive("anchor", Alpine3.skipDuringClone((el, { expression, modifiers, value }, { cleanup: cleanup3, evaluate: evaluate22 }) => {
-      let { placement, offsetValue, unstyled } = getOptions(modifiers);
+    Alpine3.directive("anchor", (el, { expression, modifiers, value }, { cleanup: cleanup3, evaluate: evaluate22 }) => {
       el._x_anchor = Alpine3.reactive({ x: 0, y: 0 });
       let reference = evaluate22(expression);
       if (!reference)
         throw "Alpine: no element provided to x-anchor...";
-      let compute = () => {
+      let positions = ["top", "top-start", "top-end", "right", "right-start", "right-end", "bottom", "bottom-start", "bottom-end", "left", "left-start", "left-end"];
+      let placement = positions.find((i) => modifiers.includes(i));
+      let offsetValue = 0;
+      let unstyled = modifiers.includes("unstyled");
+      if (modifiers.includes("offset")) {
+        let idx = modifiers.findIndex((i) => i === "offset");
+        offsetValue = modifiers[idx + 1] !== void 0 ? Number(modifiers[idx + 1]) : offsetValue;
+      }
+      let release2 = autoUpdate(reference, el, () => {
         let previousValue;
         computePosition2(reference, el, {
           placement,
           middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
         }).then(({ x, y }) => {
-          unstyled || setStyles2(el, x, y);
           if (JSON.stringify({ x, y }) !== previousValue) {
+            unstyled || setStyles2(el, x, y);
             el._x_anchor.x = x;
             el._x_anchor.y = y;
           }
           previousValue = JSON.stringify({ x, y });
         });
-      };
-      let release2 = autoUpdate(reference, el, () => compute());
+      });
       cleanup3(() => release2());
-    }, (el, { expression, modifiers, value }, { cleanup: cleanup3, evaluate: evaluate22 }) => {
-      let { placement, offsetValue, unstyled } = getOptions(modifiers);
-      if (el._x_anchor) {
-        unstyled || setStyles2(el, el._x_anchor.x, el._x_anchor.y);
-      }
-    }));
+    });
   }
   function setStyles2(el, x, y) {
     Object.assign(el.style, {
@@ -6835,17 +6828,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       top: y + "px",
       position: "absolute"
     });
-  }
-  function getOptions(modifiers) {
-    let positions = ["top", "top-start", "top-end", "right", "right-start", "right-end", "bottom", "bottom-start", "bottom-end", "left", "left-start", "left-end"];
-    let placement = positions.find((i) => modifiers.includes(i));
-    let offsetValue = 0;
-    if (modifiers.includes("offset")) {
-      let idx = modifiers.findIndex((i) => i === "offset");
-      offsetValue = modifiers[idx + 1] !== void 0 ? Number(modifiers[idx + 1]) : offsetValue;
-    }
-    let unstyled = modifiers.includes("no-style");
-    return { placement, offsetValue, unstyled };
   }
   var module_default6 = src_default6;
 
@@ -7594,7 +7576,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -7679,16 +7661,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     function patchChildren(from2, to) {
-      if (from2._x_teleport)
-        from2 = from2._x_teleport;
-      if (to._x_teleport)
-        to = to._x_teleport;
       let fromKeys = keyToMap(from2.children);
       let fromKeyHoldovers = {};
       let currentTo = getFirstNode(to);
       let currentFrom = getFirstNode(from2);
       while (currentTo) {
-        seedingMatchingId(currentTo, currentFrom);
         let toKey = getKey(currentTo);
         let fromKey = getKey(currentFrom);
         if (!currentFrom) {
@@ -7706,8 +7683,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             continue;
           }
         }
-        let isIf = (node) => node && node.nodeType === 8 && node.textContent === "[if BLOCK]><![endif]";
-        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === "[if ENDBLOCK]><![endif]";
+        let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
+        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
         if (isIf(currentTo) && isIf(currentFrom)) {
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
@@ -7894,6 +7871,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return parent.firstChild;
   }
   function getNextSibling(parent, reference) {
+    if (reference._x_teleport) {
+      return reference._x_teleport;
+    } else if (reference.teleportBack) {
+      return reference.teleportBack;
+    }
     let next;
     if (parent instanceof Block) {
       next = parent.nextNode(reference);
@@ -7918,19 +7900,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.setAttributeNode(attr);
     };
   }
-  function seedingMatchingId(to, from) {
-    let fromId = from && from._x_bindings && from._x_bindings.id;
-    if (!fromId)
-      return;
-    to.setAttribute("id", fromId);
-    to.id = fromId;
-  }
   function src_default7(Alpine3) {
     Alpine3.morph = morph;
   }
   var module_default7 = src_default7;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default8(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
       let templateFn = () => expression;
@@ -8162,18 +8137,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let directives2 = getDirectives(el);
     if (directives2.missing("submit"))
       return;
-    el.addEventListener("submit", () => {
+    el.addEventListener("submit", (event) => {
       cleanupStackByComponentId[component.id] = [];
+      cleanupStackByComponentId[component.id].push(() => el.removeAttribute("data-submitting"));
       module_default.walk(component.el, (node, skip) => {
         if (!el.contains(node))
           return;
         if (node.hasAttribute("wire:ignore"))
           return skip();
         if (node.tagName.toLowerCase() === "button" && node.type === "submit" || node.tagName.toLowerCase() === "select" || node.tagName.toLowerCase() === "input" && (node.type === "checkbox" || node.type === "radio")) {
-          if (!node.disabled)
-            cleanupStackByComponentId[component.id].push(() => node.disabled = false);
-          node.disabled = true;
-        } else if (node.tagName.toLowerCase() === "input" || node.tagName.toLowerCase() === "textarea") {
+          return;
+        }
+        if (node.tagName.toLowerCase() === "input" || node.tagName.toLowerCase() === "textarea") {
           if (!node.readOnly)
             cleanupStackByComponentId[component.id].push(() => node.readOnly = false);
           node.readOnly = true;
@@ -8609,12 +8584,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             module_default.evaluate(el, "$wire." + directive3.expression, { scope: { $event: e } });
           });
         };
+        if (e.type == "submit" && e.target.hasAttribute("data-submitting")) {
+          return;
+        }
         if (el.__livewire_confirm) {
           el.__livewire_confirm(() => {
             execute();
           });
         } else {
           execute();
+        }
+        if (e.type == "submit") {
+          e.target.setAttribute("data-submitting", true);
         }
       }
     });
