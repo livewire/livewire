@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
@@ -471,16 +471,16 @@ class PostFormValidateStub extends Form
 
 class PostFormRuleAttributeStub extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title = '';
 
-    #[Rule('required')]
+    #[Validate('required')]
     public $content = '';
 }
 
 class PostFormRuleAttributeWithCustomNameStub extends Form
 {
-    #[Rule(
+    #[Validate(
         rule: [
             'required',
             'min:3',
@@ -493,10 +493,10 @@ class PostFormRuleAttributeWithCustomNameStub extends Form
 
 class PostFormDynamicValidationAttributesStub extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title = '';
 
-    #[Rule('required')]
+    #[Validate('required')]
     public $content = '';
 
     public function validationAttributes() {
@@ -509,10 +509,10 @@ class PostFormDynamicValidationAttributesStub extends Form
 
 class PostFormDynamicMessagesStub extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title = '';
 
-    #[Rule(['required', 'min:10'])]
+    #[Validate(['required', 'min:10'])]
     public $content = '';
 
     public function messages()
@@ -526,10 +526,10 @@ class PostFormDynamicMessagesStub extends Form
 
 class PostFormDynamicMessagesAndAttributesStub extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title = '';
 
-    #[Rule('required')]
+    #[Validate('required')]
     public $content = '';
 
     public function validationAttributes() {
