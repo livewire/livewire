@@ -2,79 +2,93 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Model;
+use function Livewire\invade;
+use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
+use Illuminate\Validation\ValidationException;
+
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\Arr;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Support\Arrayable;
+
+// Form object validation is currently added to the base component.
+// Problem: the keys sometimes need a prefix (for displaying) and sometimes don't (for getting data) (form.username vs username)
+
+// Solution A: Isolate form object validation to itself (the form object contains it's own rules and handles it's own validation)
+// Problem A: we need to run form object validation when the component runs it's validation with $this->validate();
+    // Solution: when base component calls ->validate(), loop through properties, find form objects, and call sub-validate methods
+// Problem B: When using `@error()` in templates, currently, it's `@error('form.usernam')`, to keep that, we need to prefix all
+// validation rules from the nested form object validation failed bags...
+
+// Solution B: Go through all rule objects from form objects and set columns to scoped names.
+// Problem A: people don't always use form objects and the problem still plagues string variations (i.e. "unique:users")
 
 class Form implements Arrayable
 {
+    use HandlesValidation {
+        validate as parentValidate;
+        validateOnly as parentValidateOnly;
+    }
+
     function __construct(
         protected Component $component,
         protected $propertyName
     ) {
-        $this->addValidationRulesToComponent();
-        $this->addValidationAttributesToComponent();
-        $this->addMessagesToComponent();
+        //
+    }
+
+    public function getName()
+    {
+        return $this->getComponent()->getName();
+    }
+
+    public function validate($rules = null, $messages = [], $attributes = [])
+    {
+        try {
+            return $this->parentValidate($rules, $messages, $attributes);
+        } catch (ValidationException $e) {
+            $raw = invade($e->validator)->messages->toArray();
+            $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
+            $errors = new MessageBag($raw);
+            invade($e->validator)->messages = $errors;
+
+            throw $e;
+        }
+    }
+
+    public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
+    {
+        try {
+            return $this->parentValidateOnly($field, $rules, $messages, $attributes, $dataOverrides);
+        } catch (ValidationException $e) {
+            $raw = invade($e->validator)->messages->toArray();
+            $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
+            $errors = new MessageBag($raw);
+            invade($e->validator)->messages = $errors;
+
+            throw $e;
+        }
     }
 
     public function getComponent() { return $this->component; }
     public function getPropertyName() { return $this->propertyName; }
-
-    protected function addValidationRulesToComponent()
-    {
-        $this->component->addRulesFromOutside(function() {
-            $rules = [];
-
-            if (method_exists($this, 'rules')) $rules = $this->rules();
-            else if (property_exists($this, 'rules')) $rules = $this->rules;
-
-            return $this->getAttributesWithPrefixedKeys($rules);
-        });
-    }
-
-    protected function addValidationAttributesToComponent()
-    {
-        $this->component->addValidationAttributesFromOutside(function() {
-            $validationAttributes = [];
-
-            if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
-            else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
-
-            return $this->getAttributesWithPrefixedKeys($validationAttributes);
-        });
-    }
-
-    protected function addMessagesToComponent()
-    {
-        $this->component->addMessagesFromOutside(function() {
-            $messages = [];
-
-            if (method_exists($this, 'messages')) $messages = $this->messages();
-            else if (property_exists($this, 'messages')) $messages = $this->messages;
-
-            return $this->getAttributesWithPrefixedKeys($messages);
-        });
-    }
 
     public function addError($key, $message)
     {
         $this->component->addError($this->propertyName . '.' . $key, $message);
     }
 
-    public function validate()
+    public function resetErrorBag($field = null)
     {
-        $rules = $this->component->getRules();
+        $fields = (array) $field;
 
-        $filteredRules = [];
-
-        foreach ($rules as $key => $value) {
-            if (! str($key)->startsWith($this->propertyName . '.')) continue;
-
-            $filteredRules[$key] = $value;
+        foreach ($fields as $idx => $field) {
+            $fields[$idx] = $this->propertyName . '.' . $field;
         }
 
-        return $this->component->validate($filteredRules)[$this->propertyName];
+        $this->getComponent()->resetErrorBag($fields);
     }
 
     public function all()
@@ -149,16 +163,5 @@ class Form implements Arrayable
     public function toArray()
     {
         return Utils::getPublicProperties($this);
-    }
-
-    protected function getAttributesWithPrefixedKeys($attributes)
-    {
-        $attributesWithPrefixedKeys = [];
-
-        foreach ($attributes as $key => $value) {
-            $attributesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
-        }
-
-        return $attributesWithPrefixedKeys;
     }
 }

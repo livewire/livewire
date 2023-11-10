@@ -135,4 +135,9 @@ abstract class Component
             'Method %s::%s does not exist.', static::class, $method
         ));
     }
+
+    public function noop($i)
+    {
+        return $i();
+    }
 }

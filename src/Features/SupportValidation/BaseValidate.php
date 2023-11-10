@@ -32,22 +32,16 @@ class BaseValidate extends LivewireAttribute
             // For example, #[Validate(['foo' => 'required', 'foo.*' => 'required'])]
             $rules = $this->rule;
         } else {
-            $rules[$this->getName()] = $this->rule;
-        }
-
-        // @todo: make this more robust (account for FormObjects that
-        // aren't named "form")...
-        if (str($this->getName())->startsWith('form.')) {
-            $name = (string) str($this->getName())->after('form.');
-
-            $this->component->addValidationAttributesFromOutside([$this->getName() => $name]);
+            $rules[$this->getSubName()] = $this->rule;
         }
 
         if ($this->attribute) {
             if (is_array($this->attribute)) {
-                $this->component->addValidationAttributesFromOutside($this->attribute);
+                $target = $this->subTarget ?? $this->component;
+                $target->addValidationAttributesFromOutside($this->attribute);
             } else {
-                $this->component->addValidationAttributesFromOutside([$this->getName() => $this->attribute]);
+                $target = $this->subTarget ?? $this->component;
+                $target->addValidationAttributesFromOutside([$this->getSubName() => $this->attribute]);
             }
         }
 
@@ -57,9 +51,11 @@ class BaseValidate extends LivewireAttribute
                     ? array_map(fn ($i) => trans($i), $this->as)
                     : $this->as;
 
-                $this->component->addValidationAttributesFromOutside($as);
+                    $target = $this->subTarget ?? $this->component;
+                $target->addValidationAttributesFromOutside($as);
             } else {
-                $this->component->addValidationAttributesFromOutside([$this->getName() => $this->translate ? trans($this->as) : $this->as]);
+                $target = $this->subTarget ?? $this->component;
+                $target->addValidationAttributesFromOutside([$this->getSubName() => $this->translate ? trans($this->as) : $this->as]);
             }
         }
 
@@ -69,7 +65,8 @@ class BaseValidate extends LivewireAttribute
                     ? array_map(fn ($i) => trans($i), $this->message)
                     : $this->message;
 
-                $this->component->addMessagesFromOutside($messages);
+                $target = $this->subTarget ?? $this->component;
+                $target->addMessagesFromOutside($messages);
             } else {
                 // If a single message was provided, apply it to the first given rule.
                 // There should have only been one rule provided in this case anyways...
@@ -78,11 +75,13 @@ class BaseValidate extends LivewireAttribute
                 // In the case of "min:5" or something, we only want "min"...
                 $rule = (string) str($rule)->before(':');
 
-                $this->component->addMessagesFromOutside([$this->getName().'.'.$rule => $this->translate ? trans($this->message) : $this->message]);
+                $target = $this->subTarget ?? $this->component;
+                $target->addMessagesFromOutside([$this->getSubName().'.'.$rule => $this->translate ? trans($this->message) : $this->message]);
             }
         }
 
-        $this->component->addRulesFromOutside($rules);
+        $target = $this->subTarget ?? $this->component;
+        $target->addRulesFromOutside($rules);
     }
 
     function update($fullPath, $newValue)
@@ -90,7 +89,9 @@ class BaseValidate extends LivewireAttribute
         if ($this->onUpdate === false) return;
 
         return function () {
-            wrap($this->component)->validateOnly($this->getName());
+            wrap($this->component)->noop(function () {
+                ($this->subTarget ?? $this->component)->validateOnly($this->getSubName());
+            });
         };
     }
 }

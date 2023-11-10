@@ -80,28 +80,6 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    function can_manually_add_errors_to_the_error_bag()
-    {
-        Livewire::test(new class extends Component {
-            public PostFormValidateStub $form;
-
-            function save()
-            {
-                $this->addError('status', 'An error message...');
-            }
-
-            public function render() {
-                return '<div></div>';
-            }
-        })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
-        ->assertHasNoErrors()
-        ->call('save')
-        ->assertHasErrors('form.status')
-        ;
-    }
-
     /** @test */
     function can_validate_a_form_object_using_rule_attributes()
     {

@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Form;
 
 trait HandlesValidation
 {
@@ -226,6 +227,21 @@ trait HandlesValidation
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
+        // Check for rule objects and validate them first...
+        foreach (Utils::getPublicPropertiesDefinedOnSubclass($this) as $key => $value) {
+            if ($value instanceof Form) {
+                try {
+                    $value->validate();
+                } catch (ValidationException $e) {
+                    $e->validator->errors();
+
+                    $this->setErrorBag($e->validator->errors());
+
+                    throw $e;
+                }
+            }
+        }
+
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         $data = $this->prepareForValidation(
@@ -258,6 +274,11 @@ trait HandlesValidation
         $this->resetErrorBag();
 
         return $validatedData;
+    }
+
+    protected function interceptValidator($validator)
+    {
+        return $validator;
     }
 
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
