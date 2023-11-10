@@ -276,11 +276,6 @@ trait HandlesValidation
         return $validatedData;
     }
 
-    protected function interceptValidator($validator)
-    {
-        return $validator;
-    }
-
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
     {
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
