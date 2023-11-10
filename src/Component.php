@@ -136,8 +136,10 @@ abstract class Component
         ));
     }
 
-    public function noop($i)
+    public function tap($callback)
     {
-        return $i();
+        $callback($this);
+
+        return $this;
     }
 }
