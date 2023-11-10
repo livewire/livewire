@@ -39,7 +39,7 @@ trait HandlesValidation
     public function getErrorBag()
     {
         if (! store($this)->has('errorBag')) {
-            $this->setErrorBag([]);
+            $this->setErrorBag(app('view')->getShared()['errors']?->getMessages() ?? []);
         }
 
         return store($this)->get('errorBag');
