@@ -3266,27 +3266,55 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
         else if (el.type === "checkbox") {
           if (Array.isArray(currentValue)) {
-            let newValue = modifiers.includes("number") ? safeParseNumber(event.target.value) : event.target.value;
+            let newValue = null;
+            if (modifiers.includes("number")) {
+              newValue = safeParseNumber(event.target.value);
+            } else if (modifiers.includes("boolean")) {
+              newValue = safeParseBoolean(event.target.value);
+            } else {
+              newValue = event.target.value;
+            }
             return event.target.checked ? currentValue.concat([newValue]) : currentValue.filter((el2) => !checkedAttrLooseCompare2(el2, newValue));
           } else {
             return event.target.checked;
           }
         } else if (el.tagName.toLowerCase() === "select" && el.multiple) {
-          return modifiers.includes("number") ? Array.from(event.target.selectedOptions).map((option) => {
-            let rawValue = option.value || option.text;
-            return safeParseNumber(rawValue);
-          }) : Array.from(event.target.selectedOptions).map((option) => {
+          if (modifiers.includes("number")) {
+            return Array.from(event.target.selectedOptions).map((option) => {
+              let rawValue = option.value || option.text;
+              return safeParseNumber(rawValue);
+            });
+          } else if (modifiers.includes("boolean")) {
+            return Array.from(event.target.selectedOptions).map((option) => {
+              let rawValue = option.value || option.text;
+              return safeParseBoolean(rawValue);
+            });
+          }
+          return Array.from(event.target.selectedOptions).map((option) => {
             return option.value || option.text;
           });
         } else {
-          let rawValue = event.target.value;
-          return modifiers.includes("number") ? safeParseNumber(rawValue) : modifiers.includes("trim") ? rawValue.trim() : rawValue;
+          if (modifiers.includes("number")) {
+            return safeParseNumber(event.target.value);
+          } else if (modifiers.includes("boolean")) {
+            return safeParseBoolean(event.target.value);
+          }
+          return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
         }
       });
     }
     function safeParseNumber(rawValue) {
       let number = rawValue ? parseFloat(rawValue) : null;
       return isNumeric2(number) ? number : rawValue;
+    }
+    function safeParseBoolean(rawValue) {
+      if ([1, "1", "true", true].includes(rawValue)) {
+        return true;
+      }
+      if ([0, "0", "false", false].includes(rawValue)) {
+        return false;
+      }
+      return rawValue ? Boolean(rawValue) : null;
     }
     function checkedAttrLooseCompare2(valueA, valueB) {
       return valueA == valueB;
