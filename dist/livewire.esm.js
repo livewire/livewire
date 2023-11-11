@@ -2527,7 +2527,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           el.value = value;
         }
         if (window.fromModel) {
-          el.checked = checkedAttrLooseCompare(el.value, value);
+          if (typeof value === "boolean") {
+            el.checked = safeParseBoolean(el.value) === value;
+          } else {
+            el.checked = checkedAttrLooseCompare(el.value, value);
+          }
         }
       } else if (el.type === "checkbox") {
         if (Number.isInteger(value)) {
@@ -2595,6 +2599,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function checkedAttrLooseCompare(valueA, valueB) {
       return valueA == valueB;
+    }
+    function safeParseBoolean(rawValue) {
+      if ([1, "1", "true", true].includes(rawValue)) {
+        return true;
+      }
+      if ([0, "0", "false", false].includes(rawValue)) {
+        return false;
+      }
+      return rawValue ? Boolean(rawValue) : null;
     }
     function isBooleanAttr(attrName) {
       const booleanAttributes = [
@@ -3306,15 +3319,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function safeParseNumber(rawValue) {
       let number = rawValue ? parseFloat(rawValue) : null;
       return isNumeric2(number) ? number : rawValue;
-    }
-    function safeParseBoolean(rawValue) {
-      if ([1, "1", "true", true].includes(rawValue)) {
-        return true;
-      }
-      if ([0, "0", "false", false].includes(rawValue)) {
-        return false;
-      }
-      return rawValue ? Boolean(rawValue) : null;
     }
     function checkedAttrLooseCompare2(valueA, valueB) {
       return valueA == valueB;
