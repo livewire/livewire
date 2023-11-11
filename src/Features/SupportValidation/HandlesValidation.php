@@ -427,7 +427,7 @@ trait HandlesValidation
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
 
-        throw_if(empty($rules), new MissingRulesException($this->getName()));
+        throw_if(empty($rules), new MissingRulesException($this));
 
         $messages = empty($messages) ? $this->getMessages() : $messages;
         $attributes = empty($attributes) ? $this->getValidationAttributes() : $attributes;
