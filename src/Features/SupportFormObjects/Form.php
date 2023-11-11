@@ -22,24 +22,17 @@ class Form implements Arrayable
     function __construct(
         protected Component $component,
         protected $propertyName
-    ) {
-        //
-    }
+    ) {}
 
-    public function getName()
-    {
-        return $this->getComponent()->getName();
-    }
+    public function getComponent() { return $this->component; }
+    public function getPropertyName() { return $this->propertyName; }
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
         try {
             return $this->parentValidate($rules, $messages, $attributes);
         } catch (ValidationException $e) {
-            $raw = invade($e->validator)->messages->toArray();
-            $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
-            $errors = new MessageBag($raw);
-            invade($e->validator)->messages = $errors;
+            invade($e->validator)->messages = $this->prefixErrorBag(invade($e->validator)->messages);
 
             throw $e;
         }
@@ -50,17 +43,26 @@ class Form implements Arrayable
         try {
             return $this->parentValidateOnly($field, $rules, $messages, $attributes, $dataOverrides);
         } catch (ValidationException $e) {
-            $raw = invade($e->validator)->messages->toArray();
-            $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
-            $errors = new MessageBag($raw);
-            invade($e->validator)->messages = $errors;
+            invade($e->validator)->messages = $this->prefixErrorBag(invade($e->validator)->messages);
 
             throw $e;
         }
     }
 
-    public function getComponent() { return $this->component; }
-    public function getPropertyName() { return $this->propertyName; }
+    protected function runSubValidators()
+    {
+        // This form object IS the sub-validator.
+        // Let's skip it...
+    }
+
+    protected function prefixErrorBag($bag)
+    {
+        $raw = $bag->toArray();
+
+        $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
+
+        return new MessageBag($raw);
+    }
 
     public function addError($key, $message)
     {
