@@ -34,6 +34,27 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_set_an_enum_as_the_initial_value()
+    {
+        Livewire::test(new class extends TestComponent {
+            public Country $country = Country::US;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>{{ $country->name }}</div>
+                HTML;
+            }
+        })
+        ->assertSee('US')
+        ->call('$refresh')
+        ->assertSee('US')
+        ->set('country', 'CA')
+        ->assertSee('CA')
+        ;
+    }
+
+    /** @test */
     public function can_assign_a_description_to_an_enum()
     {
         Livewire::test(new class extends TestComponent {

@@ -25,6 +25,7 @@ Features:
     Locked Properties: { uri: /docs/locked, file: /locked.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
+    Enums: { uri: /docs/enums, file: /enums.md }
 HTML Directives:
     wire:click: { uri: /docs/wire-click, file: /wire-click.md }
     wire:submit: { uri: /docs/wire-submit, file: /wire-submit.md }
