@@ -59,7 +59,7 @@ You can use `redirectRoute` to redirect to that page using the name of the route
     $this->redirectRoute('profile');
 ```
 
-In case you need to page parameters to the route you may use the second argument of the method `redirectRoute` like so:
+In case you need to pass parameters to the route you may use the second argument of the method `redirectRoute` like so:
 
 ```php
     $this->redirectRoute('profile', ['id' => 1]);
