@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportEnums;
 
+use Illuminate\Contracts\Support\DeferringDisplayableValue;
 use Tests\TestComponent;
 use Livewire\Livewire;
 
@@ -15,13 +16,13 @@ class UnitTest extends \Tests\TestCase
 
             public function mount()
             {
-                $this->country = Country::US;
+                $this->country = Country::United_States;
             }
 
             public function render()
             {
                 return <<<'HTML'
-                    <div>{{ $country->name }}</div>
+                    <div>{{ $country->value }}</div>
                 HTML;
             }
         })
@@ -37,12 +38,12 @@ class UnitTest extends \Tests\TestCase
     public function can_set_an_enum_as_the_initial_value()
     {
         Livewire::test(new class extends TestComponent {
-            public Country $country = Country::US;
+            public Country $country = Country::United_States;
 
             public function render()
             {
                 return <<<'HTML'
-                    <div>{{ $country->name }}</div>
+                    <div>{{ $country->value }}</div>
                 HTML;
             }
         })
@@ -55,35 +56,107 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function can_assign_a_description_to_an_enum()
+    public function can_make_an_enum_displayable()
     {
         Livewire::test(new class extends TestComponent {
             public Country $country;
 
             public function mount()
             {
-                $this->country = Country::US;
+                $this->country = Country::United_States;
             }
 
             public function render()
             {
                 return <<<'HTML'
-                    <div>{{ $country->description() }}</div>
+                    <div>{{ $country->display() }}</div>
                 HTML;
             }
         })
         ->assertSee('United States')
+        ->set('country', 'CA')
+        ->assertSee('O Canada')
+        ;
+    }
+
+    /** @test */
+    public function can_customize_display_strategy()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PullUpMethodCountry $country;
+
+            public function mount()
+            {
+                $this->country = PullUpMethodCountry::United_States;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>{{ $country->display() }}</div>
+                HTML;
+            }
+        })
+        ->assertSee('foo')
+        ;
+    }
+
+    /** @test */
+    public function can_use_laravel_displayable_interface()
+    {
+        Livewire::test(new class extends TestComponent {
+            public DisplayInterfaceCountry $country;
+
+            public function mount()
+            {
+                $this->country = DisplayInterfaceCountry::United_States;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>{{ $country }}</div>
+                HTML;
+            }
+        })
+        ->assertSee('United States')
+        ->set('country', 'CA')
+        ->assertSee('O Canada')
         ;
     }
 }
 
 enum Country: string
 {
-    use \Livewire\Enums\Describable;
+    use \Livewire\Enums\Displayable;
 
-    #[\Livewire\Enums\Description('United States')]
-    case US = 'US';
+    case United_States = 'US';
 
-    #[\Livewire\Enums\Description('Canada')]
-    case CA = 'CA';
+    #[\Livewire\Enums\Display('O Canada')]
+    case Canada = 'CA';
+}
+
+enum PullUpMethodCountry: string
+{
+    use \Livewire\Enums\Displayable;
+
+    public function display()
+    {
+        return 'foo';
+    }
+
+    case United_States = 'US';
+
+    #[\Livewire\Enums\Display('O Canada')]
+    case Canada = 'CA';
+}
+
+enum DisplayInterfaceCountry: string implements \Illuminate\Contracts\Support\DeferringDisplayableValue
+{
+    use \Livewire\Enums\Displayable;
+
+    case United_States = 'US';
+
+    #[\Livewire\Enums\Display('O Canada')]
+    case Canada = 'CA';
 }
