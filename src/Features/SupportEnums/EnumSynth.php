@@ -1,6 +1,8 @@
 <?php
 
-namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
+namespace Livewire\Features\SupportEnums;
+
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
 class EnumSynth extends Synth {
     public static $key = 'enm';

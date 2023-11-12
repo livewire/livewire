@@ -15,7 +15,6 @@ class HandleComponents
         Synthesizers\CarbonSynth::class,
         Synthesizers\CollectionSynth::class,
         Synthesizers\StringableSynth::class,
-        Synthesizers\EnumSynth::class,
         Synthesizers\StdClassSynth::class,
         Synthesizers\ArraySynth::class,
         Synthesizers\IntSynth::class,
