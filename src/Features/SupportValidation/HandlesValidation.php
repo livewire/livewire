@@ -238,7 +238,7 @@ trait HandlesValidation
 
         $data = $this->unwrapDataForValidation($data);
 
-        $validator = Validator::make($data, $rules, $messages, $attributes);
+        $validator = $this->getValidator($data, $rules, $messages, $attributes);
 
         if ($this->withValidatorCallback) {
             call_user_func($this->withValidatorCallback, $validator);
@@ -314,7 +314,7 @@ trait HandlesValidation
             $data = $this->filterCollectionDataDownToSpecificKeys($data, $ruleArray, $fieldArray);
         }
 
-        $validator = Validator::make($data, $rulesForField, $messages, $attributes);
+        $validator = $this->getValidator($data, $rulesForField, $messages, $attributes);
 
         if ($this->withValidatorCallback) {
             call_user_func($this->withValidatorCallback, $validator);
@@ -433,5 +433,30 @@ trait HandlesValidation
     protected function prepareForValidation($attributes)
     {
         return $attributes;
+    }
+
+    protected function getValidator(array $data, array $rules, array $messages = [], array $attributes = [])
+    {
+        $validator = Validator::make($data, $rules, $messages, $attributes);
+
+        // We are only concerned with the props having dot in their name
+        // as normal names works fine.
+        // We are also intentially omitting array props e.g. having "prefix.*"
+        // as Laravel takes care of them internally
+        $implicitAttributes = collect($data)
+            ->dot()
+            ->keys()
+            ->reject(fn ($key) => str($key)->contains('.*'))
+            ->filter(fn ($key) => str($key)->contains('.'));
+
+        if ($implicitAttributes->isEmpty()) {
+            return $validator;
+        }
+
+        $existing = invade($validator)->implicitAttributes ?? [];
+        invade($validator)->implicitAttributes = array_merge($existing, [$implicitAttributes->toArray()]);
+        $validator->setImplicitAttributesFormatter(fn ($attribute) => (string) str($attribute)->snake()->replace('_', ' '));
+
+        return $validator;
     }
 }
