@@ -227,6 +227,8 @@ trait HandlesValidation
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
+        $isUsingGlobalRules = is_null($rules);
+
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         $data = $this->prepareForValidation(
@@ -254,35 +256,77 @@ trait HandlesValidation
             $validator->addCustomValues($customValues);
         }
 
-        $validatedData = $validator->validate();
-
-        $this->runSubValidators();
+        if ($this->isRootComponent() && $isUsingGlobalRules) {
+            $validatedData = $this->withFormObjectValidators($validator, fn () => $validator->validate(), fn ($form) => $form->validate());
+        } else {
+            $validatedData = $validator->validate();
+        }
 
         $this->resetErrorBag();
 
         return $validatedData;
     }
 
-    protected function runSubValidators()
+    protected function isRootComponent()
     {
-        // Check for any form objects and validate them...
-        foreach (Utils::getPublicPropertiesDefinedOnSubclass($this) as $key => $value) {
-            if ($value instanceof Form) {
-                try {
-                    $value->validate();
-                } catch (ValidationException $e) {
-                    $e->validator->errors();
+        // Because this trait is used for form objects as well...
+        return $this instanceof \Livewire\Component;
+    }
 
-                    $this->setErrorBag($e->validator->errors());
+    protected function withFormObjectValidators($validator, $validateSelf, $validateForm)
+    {
+        $cumulativeErrors = new MessageBag;
+        $cumulativeData = [];
+        $formExceptions = [];
 
-                    throw $e;
-                }
+        // First, run sub-validators...
+        foreach ($this->getFormObjects() as $form) {
+            try {
+                $cumulativeData = array_merge($validateForm($form));
+            } catch (ValidationException $e) {
+                $cumulativeErrors->merge($e->validator->errors());
+
+                $formExceptions[] = $e;
             }
         }
+
+        // Now run main validator...
+        try {
+            $cumulativeData = array_merge($validateSelf());
+        } catch (ValidationException $e) {
+            // If the main validator has errors, merge them with subs and rethrow...
+            $e->validator->errors()->merge($cumulativeErrors);
+
+            throw $e;
+        }
+
+        // If main validation passed, go through other sub-validation exceptions
+        // and throw the first one with the cumulative messages...
+        foreach ($formExceptions as $e) {
+            $e->validator->errors()->merge($cumulativeErrors);
+
+            throw $e;
+        }
+
+        // All validation has passed, we can return the data...
+        return $cumulativeData;
     }
 
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
     {
+        $property = (string) str($field)->before('.');
+
+        // If validating a field in a form object, defer validation to that form object...
+        if (
+            $this->isRootComponent()
+            && ($form = $this->all()[$property] ?? false) instanceof Form
+        ) {
+            $stripPrefix = (string) str($field)->after('.');
+            return $form->validateOnly($stripPrefix, $rules, $messages, $attributes, $dataOverrides);
+        }
+
+        $isUsingGlobalRules = is_null($rules);
+
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         // Loop through rules and swap any wildcard '*' with keys from field, then filter down to only
@@ -427,7 +471,17 @@ trait HandlesValidation
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
 
-        throw_if(empty($rules), new MissingRulesException($this));
+        // Before we warn the user about not providing validation rules,
+        // Let's make sure there are no form objects that contain them...
+        $allRules = $rules;
+
+        if ($this->isRootComponent()) {
+            foreach ($this->getFormObjects() as $form) {
+                $allRules = array_merge($form->getRules());
+            }
+        }
+
+        throw_if(empty($allRules), new MissingRulesException($this));
 
         $messages = empty($messages) ? $this->getMessages() : $messages;
         $attributes = empty($attributes) ? $this->getValidationAttributes() : $attributes;

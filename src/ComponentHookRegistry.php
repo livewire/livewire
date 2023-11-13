@@ -77,8 +77,10 @@ class ComponentHookRegistry
             static::proxyCallToHooks($component, 'callDestroy')($context);
         });
 
-        on('exception', function ($component, $e, $stopPropagation) {
-            static::proxyCallToHooks($component, 'callException')($e, $stopPropagation);
+        on('exception', function ($target, $e, $stopPropagation) {
+            if ($target instanceof \Livewire\Component) {
+                static::proxyCallToHooks($target, 'callException')($e, $stopPropagation);
+            }
         });
     }
 

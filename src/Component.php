@@ -15,6 +15,7 @@ use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use BadMethodCallException;
+use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 
 abstract class Component
 {
@@ -27,6 +28,7 @@ abstract class Component
     use HandlesStreaming;
     use HandlesAttributes;
     use HandlesValidation;
+    use HandlesFormObjects;
     use HandlesJsEvaluation;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;

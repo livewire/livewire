@@ -6,6 +6,8 @@ use ReflectionClass;
 use Livewire\ComponentHook;
 use ReflectionNamedType;
 
+use function Livewire\on;
+
 class SupportFormObjects extends ComponentHook
 {
     public static function provide()
@@ -13,6 +15,12 @@ class SupportFormObjects extends ComponentHook
         app('livewire')->propertySynthesizer(
             FormObjectSynth::class
         );
+
+        on('exception', function ($target, $e, $stopPropagation) {
+            if ($target instanceof Form) {
+                // Do something...?
+            }
+        });
     }
 
     function boot()
@@ -42,9 +50,11 @@ class SupportFormObjects extends ComponentHook
                 $name = $property->getName()
             );
 
-            FormObjectSynth::bootFormObject($this->component, $form, $name);
+            $callBootMethod = FormObjectSynth::bootFormObject($this->component, $form, $name);
 
             $property->setValue($this->component, $form);
+
+            $callBootMethod();
         }
     }
 }
