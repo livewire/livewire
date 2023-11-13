@@ -15,12 +15,6 @@ class SupportFormObjects extends ComponentHook
         app('livewire')->propertySynthesizer(
             FormObjectSynth::class
         );
-
-        on('exception', function ($target, $e, $stopPropagation) {
-            if ($target instanceof Form) {
-                // Do something...?
-            }
-        });
     }
 
     function boot()
