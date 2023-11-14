@@ -32,7 +32,7 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     function cant_deeply_update_locked_property()
     {
-        $this->expectExceptionObject(new CannotUpdateLockedPropertyException('foo'));
+        $this->expectException(CannotUpdateLockedPropertyException::class);
         $this->expectExceptionMessage(
             'Cannot update locked property: [foo]'
         );
@@ -77,7 +77,7 @@ class UnitTest extends \Tests\TestCase
             ->assertOk();
     }
 }
-    
+
 class SomeForm extends Form {
     #[BaseLocked]
     public ?string $id = null;
