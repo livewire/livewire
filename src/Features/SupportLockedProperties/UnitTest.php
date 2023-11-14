@@ -32,6 +32,7 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     function cant_deeply_update_locked_property()
     {
+        $this->expectExceptionObject(new CannotUpdateLockedPropertyException('foo'));
         $this->expectExceptionMessage(
             'Cannot update locked property: [foo]'
         );
