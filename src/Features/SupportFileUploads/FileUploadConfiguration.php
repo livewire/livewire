@@ -111,4 +111,9 @@ class FileUploadConfiguration
     {
         return config('livewire.temporary_file_upload.max_upload_time') ?: 5;
     }
+
+    public static function tempLifeTime()
+    {
+        return config('livewire.temporary_file_upload.temp_life_time') ?: 1440;//in minutes
+    }
 }

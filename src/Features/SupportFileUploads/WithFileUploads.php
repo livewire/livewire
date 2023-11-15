@@ -106,7 +106,7 @@ trait WithFileUploads
             // of allFiles() to have already been deleted by another thread.
             if (! $storage->exists($filePathname)) continue;
 
-            $yesterdaysStamp = now()->subDay()->timestamp;
+            $yesterdaysStamp = now()->addMinutes(-1 * FileUploadConfiguration::tempLifeTime())->timestamp;
             if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
             }
