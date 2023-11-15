@@ -137,7 +137,7 @@ class FrontendAssets
     public static function js($options)
     {
         // Use the default endpoint...
-        $url = app(static::class)->javaScriptRoute->uri;
+        $url = url(app(static::class)->javaScriptRoute->uri);
 
         // Use the configured one...
         $url = config('livewire.asset_url') ?: $url;
@@ -148,9 +148,7 @@ class FrontendAssets
         // Use the new passed in one...
         $url = $options['url'] ?? $url;
 
-        $url = rtrim($url, '/');
-
-        $url = (string) str($url)->start('/');
+        $url = rtrim((string) $url, '/');
 
         // Add the build manifest hash to it...
         $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
