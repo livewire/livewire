@@ -27,6 +27,14 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
+        View::macro('seo', function ($data = []) {
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+
+            $this->layoutConfig->mergeParams($data);
+
+            return $this;
+        });
+
         View::macro('section', function ($section) {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
