@@ -24,7 +24,7 @@ class FrontendAssets
     public function boot()
     {
         app($this::class)->setScriptRoute(function ($handle) {
-            return Route::get('/livewire/livewire.js', $handle);
+            return Route::get(config('livewire.asset_url'), $handle);
         });
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);

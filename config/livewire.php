@@ -156,4 +156,15 @@ return [
     */
 
     'pagination_theme' => 'tailwind',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Asset url
+    |---------------------------------------------------------------------------
+    |
+    | This route path is configured to return the primary JavaScript
+    | asset as a file, with the default set to '/dist/livewire.js'.
+    |
+    */
+    'asset_url' => '/livewire/livewire.js'
 ];
