@@ -26,11 +26,7 @@ class HandleRequests
 
     function getUpdateUri()
     {
-        $uri = (string) str(
-            route($this->updateRoute->getName(), [], false)
-        )->start('/');
-
-        $url = url($uri);
+        $url = route($this->updateRoute->getName(), [], true);
 
         return parse_url($url, PHP_URL_PATH);
     }

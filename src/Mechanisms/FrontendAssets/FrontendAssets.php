@@ -148,7 +148,7 @@ class FrontendAssets
         // Use the new passed in one...
         $url = $options['url'] ?? $url;
 
-        $url = rtrim((string) $url, '/');
+        $url = rtrim($url, '/');
 
         // Add the build manifest hash to it...
         $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
