@@ -174,6 +174,25 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_obtain_layout_from_get_layout_method()
+    {
+        Route::get('/configurable-layout', ComponentWithCustomLayout1::class);
+
+        $this->withoutExceptionHandling()->get('/configurable-layout')
+            ->assertSee('Custom Layout 1');
+    }
+
+    /** @test */
+    public function can_pass_attributes_to_a_component_with_get_layout_method()
+    {
+        Route::get('/configurable-layout', ComponentWithCustomLayout1::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertSee('baz');
+    }
+
+    /** @test */
     public function can_extend_a_blade_layout()
     {
         $this->withoutExceptionHandling();
@@ -454,6 +473,9 @@ class UnitTest extends \Tests\TestCase
 
         $this->get('/route-with-params/123')->assertSeeText('123');
     }
+
+    /** @test */
+
 }
 
 class ComponentForRouteWithoutMountParametersTest extends Component
@@ -780,3 +802,22 @@ class ComponentWithStacks extends Component
         HTML;
     }
 }
+
+abstract class CustomComponentBaseWithGetLayoutMethod1 extends Component
+{
+    public function getLayout()
+    {
+        return new BaseLayout('layouts.app-layout-1', [
+            'customParam' => 'baz',
+        ]);
+    }
+}
+
+class ComponentWithCustomLayout1 extends CustomComponentBaseWithGetLayoutMethod1
+{
+    public function render()
+    {
+        return view('dummy-component');
+    }
+}
+

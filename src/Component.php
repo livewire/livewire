@@ -76,6 +76,10 @@ abstract class Component
         store($this)->set('skipHydrate', true);
     }
 
+    function getLayout(){
+        return null;
+    }
+
     function __isset($property)
     {
         try {
