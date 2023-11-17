@@ -803,9 +803,9 @@ class ComponentWithStacks extends Component
     }
 }
 
-abstract class CustomComponentBaseWithGetLayoutMethod1 extends Component
+abstract class CustomComponentBaseWithlayoutMethod1 extends Component
 {
-    public function getLayout()
+    public function layout()
     {
         return new BaseLayout('layouts.app-layout-1', [
             'customParam' => 'baz',
@@ -813,7 +813,7 @@ abstract class CustomComponentBaseWithGetLayoutMethod1 extends Component
     }
 }
 
-class ComponentWithCustomLayout1 extends CustomComponentBaseWithGetLayoutMethod1
+class ComponentWithCustomLayout1 extends CustomComponentBaseWithlayoutMethod1
 {
     public function render()
     {
