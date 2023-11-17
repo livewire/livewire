@@ -229,7 +229,7 @@ If you have a `<script>` tag in the body that you only want to be run once, you 
 
 ## Customizing the progress bar
 
-When a page takes longer than 150ms to load, Livewirew will show a progress bar at the top of the page.
+When a page takes longer than 150ms to load, Livewire will show a progress bar at the top of the page.
 
 You can customize the color of this bar or disable it all together inside Livewire's config file (`config/livewire.php`):
 
