@@ -47,6 +47,30 @@ php artisan make:livewire Posts\\CreatePost
 php artisan make:livewire posts.create-post
 ```
 
+### Rendering components inside your view
+
+The most basic way to render a Livewire component on a page is using the `<livewire:` tag syntax:
+
+```html
+<div>
+    <livewire:show-posts />
+</div>
+```
+
+Alternatively you can use the `@livewire` blade directive:
+
+```html
+@livewire('show-posts')
+```
+
+If you have a component inside of a sub-folder with its own namespace, you must use a dot (`.`) prefixed with the namespace.
+
+For example, if we have a `ShowPosts` component inside of a `app/Livewire/Nav` folder, we would indicate it as such:
+
+```html
+<livewire:nav.show-posts />
+```
+
 ### Inline components
 
 If your component is fairly small, you may want to create an _inline_ component. Inline components are single-file Livewire components whose view template is contained directly in the `render()` method rather than a separate file:
