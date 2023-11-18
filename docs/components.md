@@ -65,7 +65,7 @@ Alternatively you can use the `@livewire` blade directive:
 
 If you have a component inside of a sub-folder with its own namespace, you must use a dot (`.`) prefixed with the namespace.
 
-For example, if we have a `ShowPosts` component inside of a `app/Livewire/Nav` folder, we would indicate it as such:
+For example, if you have a `ShowPosts` component inside of a `app/Livewire/Nav` folder, we would indicate it as such:
 
 ```html
 <livewire:nav.show-posts />
