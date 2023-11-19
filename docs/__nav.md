@@ -13,6 +13,7 @@ Essentials:
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
     Testing: { uri: /docs/testing, file: /testing.md }
 Features:
+    Alpine: { uri: /docs/alpine, file: /alpine.md }
     Navigate: { uri: /docs/navigate, file: /navigate.md }
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/validation, file: /validation.md }
