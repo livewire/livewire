@@ -196,10 +196,31 @@ public function posts()
 }
 ```
 
+Instead of the `key` parameter, you can also use 'tags'.
+
+
+```php
+use Livewire\Attributes\Computed;
+use App\Models\Post;
+
+#[Computed(cache: true, tags: ['foo', 'bar'])]
+public function posts()
+{
+    return Post::all();
+}
+```
+
+
 Then somewhere else in your app, you may clear the cache for that property:
 
 ```php
 Cache::forget('homepage-posts');
+```
+
+or clear the entire tag:
+
+```php
+Cache::tags('foo')->flush();
 ```
 
 ## When to use computed properties?
