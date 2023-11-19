@@ -742,5 +742,5 @@ Here is an example of using `@assets` to load a date picker library called [Pika
 @endscript
 ```
 
-> [!info] Using `@script` and `@assets` inside Blade components
-> If you are using [Blade components](https://laravel.com/docs/blade#components) to extract parts of your markup, you can use `@script` and `@assets` inside them as well; even if there are multiple Blade components inside the same Livewire component. However, `@script` and `@assets` are currently only supported in the context of a Livewire component, meaning if you use the given Blade component outside of Livewire entirely, those scripts and assets won't be loaded on the page.
+> [!info] Using `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside Blade components
+> If you are using [Blade components](https://laravel.com/docs/blade#components) to extract parts of your markup, you can use `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside them as well; even if there are multiple Blade components inside the same Livewire component. However, `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` are currently only supported in the context of a Livewire component, meaning if you use the given Blade component outside of Livewire entirely, those scripts and assets won't be loaded on the page.
