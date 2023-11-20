@@ -2,6 +2,18 @@ import { on } from '@/events'
 import Alpine from 'alpinejs'
 
 on('effects', (component, effects) => {
+    let assets = effects.assets
+
+    if (assets) {
+        Object.entries(assets).forEach(([key, content]) => {
+            onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
+                addAssetsToHeadTagOfPage(content)
+            })
+        })
+    }
+})
+
+on('effects', (component, effects) => {
     let scripts = effects.scripts
 
     if (scripts) {
@@ -10,18 +22,6 @@ on('effects', (component, effects) => {
                 let scriptContent = extractScriptTagContent(content)
 
                 Alpine.evaluate(component.el, scriptContent, { '$wire': component.$wire })
-            })
-        })
-    }
-})
-
-on('effects', (component, effects) => {
-    let assets = effects.assets
-
-    if (assets) {
-        Object.entries(assets).forEach(([key, content]) => {
-            onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
-                addAssetsToHeadTagOfPage(content)
             })
         })
     }

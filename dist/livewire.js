@@ -859,7 +859,7 @@
       directives(el, attrs).forEach((handle) => handle());
     });
     let outNestedComponents = (el) => !closestRoot(el.parentElement, true);
-    Array.from(document.querySelectorAll(allSelectors())).filter(outNestedComponents).forEach((el) => {
+    Array.from(document.querySelectorAll(allSelectors().join(","))).filter(outNestedComponents).forEach((el) => {
       initTree(el);
     });
     dispatch2(document, "alpine:initialized");
@@ -2042,10 +2042,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return valueA == valueB;
   }
   function safeParseBoolean(rawValue) {
-    if ([1, "1", "true", true].includes(rawValue)) {
+    if ([1, "1", "true", "on", "yes", true].includes(rawValue)) {
       return true;
     }
-    if ([0, "0", "false", false].includes(rawValue)) {
+    if ([0, "0", "false", "off", "no", false].includes(rawValue)) {
       return false;
     }
     return rawValue ? Boolean(rawValue) : null;
@@ -2264,7 +2264,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.2",
+    version: "3.13.3",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -8237,22 +8237,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportScriptsAndAssets.js
   on("effects", (component, effects) => {
+    let assets = effects.assets;
+    if (assets) {
+      Object.entries(assets).forEach(([key, content]) => {
+        onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
+          addAssetsToHeadTagOfPage(content);
+        });
+      });
+    }
+  });
+  on("effects", (component, effects) => {
     let scripts = effects.scripts;
     if (scripts) {
       Object.entries(scripts).forEach(([key, content]) => {
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
-        });
-      });
-    }
-  });
-  on("effects", (component, effects) => {
-    let assets = effects.assets;
-    if (assets) {
-      Object.entries(assets).forEach(([key, content]) => {
-        onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
-          addAssetsToHeadTagOfPage(content);
         });
       });
     }
