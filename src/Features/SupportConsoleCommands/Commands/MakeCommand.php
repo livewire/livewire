@@ -108,7 +108,7 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
         return $viewPath;
     }
 
-    protected function createTest($force = false, $testType)
+    protected function createTest($force = false, $testType = 'phpunit')
     {
         $testPath = $this->parser->testPath();
 
