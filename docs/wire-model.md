@@ -192,7 +192,7 @@ Below is an example of a select dropdown filled with a static list of states:
 
 ```blade
 <select wire:model="state">
-    <option value="AL">Alabama<option>
+    <option value="AL">Alabama</option>
     <option value="AK">Alaska</option>
     <option value="AZ">Arizona</option>
     ...
