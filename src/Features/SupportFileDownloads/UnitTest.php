@@ -6,6 +6,7 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\ExpectationFailedException;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -105,11 +106,34 @@ class UnitTest extends \Tests\TestCase
             ->assertFileDownloaded()
             ->assertSeeText('Thanks!');
     }
+
+    /** @test */
+    public function can_assert_that_nothing_was_downloaded()
+    {
+        Livewire::test(FileDownloadComponent::class)
+            ->call('noDownload')
+            ->assertNothingDownloaded();
+    }
+
+    /** @test */
+    public function can_fail_to_assert_that_nothing_was_downloaded()
+    {
+        $this->expectException(ExpectationFailedException::class);
+
+        Livewire::test(FileDownloadComponent::class)
+            ->call('download')
+            ->assertNothingDownloaded();
+    }
 }
 
 class FileDownloadComponent extends Component
 {
     public $downloaded = false;
+
+    public function noDownload()
+    {
+        //
+    }
 
     public function download($filename = null, $headers = [])
     {
