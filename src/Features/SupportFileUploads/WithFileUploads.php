@@ -63,8 +63,8 @@ trait WithFileUploads
         }
 
         $errorsInJson = $isMultiple
-            ? str_ireplace('files', $name, $errorsInJson)
-            : str_ireplace('files.0', $name, $errorsInJson);
+            ? str_ireplace('files.0', $name, $errorsInJson)
+            : str_ireplace('files', $name, $errorsInJson);
 
         $errors = json_decode($errorsInJson, true)['errors'];
 
