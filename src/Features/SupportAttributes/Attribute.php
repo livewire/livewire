@@ -8,13 +8,19 @@ abstract class Attribute
 {
     protected Component $component;
 
+    protected $subTarget;
+
+    protected $subName;
+
     protected AttributeLevel $level;
 
     protected $levelName;
 
-    function __boot($component, AttributeLevel $level, $name = null)
+    function __boot($component, AttributeLevel $level, $name = null, $subName = null, $subTarget = null)
     {
         $this->component = $component;
+        $this->subName = $subName;
+        $this->subTarget = $subTarget;
         $this->level = $level;
         $this->levelName = $name;
     }
@@ -22,6 +28,16 @@ abstract class Attribute
     function getComponent()
     {
         return $this->component;
+    }
+
+    function getSubTarget()
+    {
+        return $this->subTarget;
+    }
+
+    function getSubName()
+    {
+        return $this->subName;
     }
 
     function getLevel()

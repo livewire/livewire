@@ -2,59 +2,66 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
+use Livewire\Features\SupportValidation\HandlesValidation;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\MessageBag;
+use function Livewire\invade;
+use Illuminate\Support\Arr;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 
 class Form implements Arrayable
 {
+    use HandlesValidation {
+        validate as parentValidate;
+        validateOnly as parentValidateOnly;
+    }
+
     function __construct(
         protected Component $component,
         protected $propertyName
-    ) {
-        $this->addValidationRulesToComponent();
-        $this->addValidationAttributesToComponent();
-        $this->addMessagesToComponent();
-    }
+    ) {}
 
     public function getComponent() { return $this->component; }
     public function getPropertyName() { return $this->propertyName; }
 
-    protected function addValidationRulesToComponent()
+    public function validate($rules = null, $messages = [], $attributes = [])
     {
-        $this->component->addRulesFromOutside(function() {
-            $rules = [];
+        try {
+            return $this->parentValidate($rules, $messages, $attributes);
+        } catch (ValidationException $e) {
+            invade($e->validator)->messages = $this->prefixErrorBag(invade($e->validator)->messages);
 
-            if (method_exists($this, 'rules')) $rules = $this->rules();
-            else if (property_exists($this, 'rules')) $rules = $this->rules;
-
-            return $this->getAttributesWithPrefixedKeys($rules);
-        });
+            throw $e;
+        }
     }
 
-    protected function addValidationAttributesToComponent()
+    public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
     {
-        $this->component->addValidationAttributesFromOutside(function() {
-            $validationAttributes = [];
+        try {
+            return $this->parentValidateOnly($field, $rules, $messages, $attributes, $dataOverrides);
+        } catch (ValidationException $e) {
+            invade($e->validator)->messages = $this->prefixErrorBag(invade($e->validator)->messages);
 
-            if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
-            else if (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
-
-            return $this->getAttributesWithPrefixedKeys($validationAttributes);
-        });
+            throw $e;
+        }
     }
 
-    protected function addMessagesToComponent()
+    protected function runSubValidators()
     {
-        $this->component->addMessagesFromOutside(function() {
-            $messages = [];
+        // This form object IS the sub-validator.
+        // Let's skip it...
+    }
 
-            if (method_exists($this, 'messages')) $messages = $this->messages();
-            else if (property_exists($this, 'messages')) $messages = $this->messages;
+    protected function prefixErrorBag($bag)
+    {
+        $raw = $bag->toArray();
 
-            return $this->getAttributesWithPrefixedKeys($messages);
-        });
+        $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
+
+        return new MessageBag($raw);
     }
 
     public function addError($key, $message)
@@ -62,19 +69,15 @@ class Form implements Arrayable
         $this->component->addError($this->propertyName . '.' . $key, $message);
     }
 
-    public function validate()
+    public function resetErrorBag($field = null)
     {
-        $rules = $this->component->getRules();
+        $fields = (array) $field;
 
-        $filteredRules = [];
-
-        foreach ($rules as $key => $value) {
-            if (! str($key)->startsWith($this->propertyName . '.')) continue;
-
-            $filteredRules[$key] = $value;
+        foreach ($fields as $idx => $field) {
+            $fields[$idx] = $this->propertyName . '.' . $field;
         }
 
-        return $this->component->validate($filteredRules)[$this->propertyName];
+        $this->getComponent()->resetErrorBag($fields);
     }
 
     public function all()
@@ -149,16 +152,5 @@ class Form implements Arrayable
     public function toArray()
     {
         return Utils::getPublicProperties($this);
-    }
-
-    protected function getAttributesWithPrefixedKeys($attributes)
-    {
-        $attributesWithPrefixedKeys = [];
-
-        foreach ($attributes as $key => $value) {
-            $attributesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
-        }
-
-        return $attributesWithPrefixedKeys;
     }
 }
