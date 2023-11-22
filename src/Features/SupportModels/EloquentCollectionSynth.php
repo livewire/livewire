@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportModels;
 
+use Illuminate\Contracts\Database\ModelIdentifier;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
@@ -36,6 +37,7 @@ class EloquentCollectionSynth extends Synth {
         $serializedCollection = (array) $this->getSerializedPropertyValue($target);
 
         $meta['keys'] = $serializedCollection['id'];
+        $meta['connection'] = $serializedCollection['connection'];
         $meta['class'] = $class;
         $meta['modelClass'] = $modelAlias;
 
@@ -64,10 +66,14 @@ class EloquentCollectionSynth extends Synth {
             return new $class();
         }
 
-        // We are using Laravel's method here for restoring the collection, which ensures
-        // that all models in the collection are restored in one query, preventing n+1
-        // issues and also only restores models that exist.
-        $collection = (new $modelClass)->newQueryForRestoration($keys)->useWritePdo()->get();
+        $connection = $meta['connection'];
+
+        $collection = self::getRestoredPropertyValue(new ModelIdentifier(
+            $modelClass,
+            $keys,
+            [],
+            $connection
+        ));
 
         return $collection;
     }
