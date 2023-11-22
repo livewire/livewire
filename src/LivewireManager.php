@@ -186,7 +186,13 @@ class LivewireManager
 
     function test($name, $params = [])
     {
-        return Testable::create($name, $params, $this->queryParamsForTesting, $this->cookiesForTesting);
+        return Testable::create(
+            $name,
+            $params,
+            $this->queryParamsForTesting,
+            $this->cookiesForTesting,
+            $this->headersForTesting
+        );
     }
 
     function visit($name)

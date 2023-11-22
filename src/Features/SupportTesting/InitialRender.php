@@ -30,9 +30,7 @@ class InitialRender extends Render
 
         [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $fromQueryString, $cookies, $headers) {
             return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $fromQueryString, $cookies, $headers) {
-                $serverVars = invade($requestBroker)->transformHeadersToServerVars($headers);
-
-                return $requestBroker->call('GET', $uri, $fromQueryString, $cookies, [], $serverVars);
+                return $requestBroker->addHeaders($headers)->call('GET', $uri, $fromQueryString, $cookies);
             });
         });
 
