@@ -281,4 +281,4 @@ Alpine.directive('clipboard', (el) => {
 Livewire.start()
 ```
 
-Now the `x-clibboard` directive will be available to all your Alpine components in your Livewire application.
+Now the `x-clipboard` directive will be available to all your Alpine components in your Livewire application.
