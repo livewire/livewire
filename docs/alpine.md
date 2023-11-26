@@ -20,7 +20,7 @@ To lay a foundation for the rest of this documentation, here is one of the most 
 </div>
 ```
 
-The Alpine component above can be used inside any Livewire component in your application without a hitch. Livewire takes care of maintaining Alpine's state across Livewire component updates. In essance, you should feel free to use Alpine components inside Livewire as if you were using Alpine in any other non-Livewire context.
+The Alpine component above can be used inside any Livewire component in your application without a hitch. Livewire takes care of maintaining Alpine's state across Livewire component updates. In essence, you should feel free to use Alpine components inside Livewire as if you were using Alpine in any other non-Livewire context.
 
 ## Using Alpine inside Livewire
 
