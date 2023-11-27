@@ -45,6 +45,7 @@ Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
+    Security: { uri: /docs/security, file: /security.md }
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
 Packages:
