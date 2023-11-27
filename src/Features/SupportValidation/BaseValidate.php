@@ -16,7 +16,7 @@ class BaseValidate extends LivewireAttribute
         protected $attribute = null,
         protected $as = null,
         protected $message = null,
-        protected $onUpdate = true,
+        protected $onUpdate = false,
         protected bool $translate = true
     ) {}
 

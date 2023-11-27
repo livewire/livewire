@@ -26,14 +26,12 @@ class UnitTest extends \Tests\TestCase
 
             #[Validate('required')]
             public $bar = '';
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->set('bar', 'testing...')
+            ->set('foo', 'testing...')
             ->assertHasNoErrors()
             ->set('foo', '')
+            ->call('save')
             ->assertHasErrors(['foo' => 'required'])
             ->call('clear')
             ->assertHasNoErrors()
@@ -52,14 +50,12 @@ class UnitTest extends \Tests\TestCase
 
             #[Rule('required')]
             public $bar = '';
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->set('bar', 'testing...')
+            ->set('foo', 'testing...')
             ->assertHasNoErrors()
             ->set('foo', '')
+            ->call('save')
             ->assertHasErrors(['foo' => 'required'])
             ->call('clear')
             ->assertHasNoErrors()
@@ -85,38 +81,33 @@ class UnitTest extends \Tests\TestCase
                     'bar' => 'required',
                 ];
             }
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->set('foo', 'testing...')
+            ->set('bar', 'testing...')
+            ->call('save')
             ->assertHasNoErrors()
             ->set('foo', '')
+            ->call('save')
             ->assertHasErrors(['foo' => 'required']);
     }
 
     /** @test */
-    public function realtime_validation_can_be_opted_out_of()
+    public function realtime_validation_can_be_opted_out_on()
     {
         Livewire::test(new class extends TestComponent {
-            #[Validate('required|min:3', onUpdate: false)]
+            #[Validate('required|min:3', onUpdate: true)]
             public $foo = '';
 
             #[Validate('required|min:3')]
             public $bar = '';
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->assertHasNoErrors()
             ->set('bar', 'te')
-            ->assertHasErrors()
+            ->assertHasNoErrors()
             ->set('bar', 'testing...')
             ->assertHasNoErrors()
             ->set('foo', 'te')
-            ->assertHasNoErrors()
+            ->assertHasErrors(['foo' => 'min'])
             ->call('save')
             ->assertHasErrors();
     }
@@ -127,12 +118,9 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(new class extends TestComponent {
             #[Validate('required|min:3', attribute: 'The Foo')]
             public $foo = '';
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -148,12 +136,9 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(new class extends TestComponent {
             #[Validate('required|min:3', as: 'The Foo')]
             public $foo = '';
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -173,6 +158,7 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -192,6 +178,7 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -211,6 +198,7 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -226,12 +214,9 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(new class extends TestComponent {
             #[Validate('min:5', message: 'Your foo is too short.')]
             public $foo = '';
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -250,6 +235,7 @@ class UnitTest extends \Tests\TestCase
             public $title = '';
         })
             ->set('title', '')
+            ->call('save')
             ->assertHasErrors(['title' => 'required'])
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -268,6 +254,7 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -287,6 +274,7 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
         })
             ->set('foo', 'te')
+            ->call('save')
             ->assertHasErrors()
             ->tap(function ($component) {
                 $messages = $component->errors()->getMessages();
@@ -304,14 +292,11 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
 
             public $bar = '';
-
-            function clear() { $this->clearValidation(); }
-
-            function save() { $this->validate(); }
         })
             ->set('bar', '')
             ->assertHasNoErrors()
             ->set('foo', '')
+            ->call('save')
             ->assertHasErrors(['foo' => 'required'])
             ->call('clear')
             ->assertHasNoErrors()
@@ -330,12 +315,17 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
         })
             ->set('foo', '')
+            ->call('save')
             ->assertHasErrors(['foo' => 'required'])
             ->set('foo', '1')
+            ->call('save')
             ->assertHasErrors(['foo' => 'min'])
+            ->call('save')
             ->set('foo', '12345')
+            ->call('save')
             ->assertHasErrors(['foo' => 'max'])
             ->set('foo', 'ok')
+            ->call('save')
             ->assertHasNoErrors()
         ;
     }
@@ -350,12 +340,16 @@ class UnitTest extends \Tests\TestCase
             public $foo = '';
         })
             ->set('foo', '')
+            ->call('save')
             ->assertHasErrors(['foo' => 'required'])
             ->set('foo', '1')
+            ->call('save')
             ->assertHasErrors(['foo' => 'min'])
             ->set('foo', '12345')
+            ->call('save')
             ->assertHasErrors(['foo' => 'max'])
             ->set('foo', 'ok')
+            ->call('save')
             ->assertHasNoErrors()
         ;
     }
@@ -376,16 +370,22 @@ class UnitTest extends \Tests\TestCase
             public $bar = '';
         })
             ->set('foo', '')
+            ->call('save')
             ->assertHasErrors(['foo' => 'required'])
             ->set('foo', '1')
+            ->call('save')
             ->assertHasErrors(['foo' => 'min'])
             ->set('foo', '12345')
+            ->call('save')
             ->assertHasErrors(['foo' => 'max'])
             ->set('foo', 'ok')
+            ->call('save')
             ->assertHasNoErrors()
             ->set('bar', '12')
+            ->call('save')
             ->assertHasErrors(['bar' => 'max'])
             ->set('bar', '1')
+            ->call('save')
             ->assertHasNoErrors()
         ;
     }
