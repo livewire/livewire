@@ -1,15 +1,15 @@
 import { on } from '@/events'
 import Alpine from 'alpinejs'
 
-on('effects', (component, effects) => {
+on('effects', async (component, effects) => {
     let assets = effects.assets
 
     if (assets) {
-        Object.entries(assets).forEach(([key, content]) => {
-            onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
-                addAssetsToHeadTagOfPage(content)
+        for (const [key, content] of Object.entries(assets)) {
+            await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
+                await addAssetsToHeadTagOfPage(content)
             })
-        })
+        }
     }
 })
 
@@ -57,25 +57,40 @@ function extractScriptTagContent(rawHtml) {
 
 let executedAssets = new Set
 
-function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
+async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key)) return
 
-    callback()
+    await callback()
 
     executedAssets.add(key)
 }
 
-function addAssetsToHeadTagOfPage(rawHtml) {
+async function addAssetsToHeadTagOfPage(rawHtml) {
     let newDocument = (new DOMParser()).parseFromString(rawHtml, "text/html")
     let newHead = document.adoptNode(newDocument.head)
 
     for (let child of newHead.children) {
+        await runAssetSynchronously(child)
+    }
+}
+
+async function runAssetSynchronously(child) {
+    return new Promise((resolve, reject) => {
         if (isScript(child)) {
-            document.head.appendChild(cloneScriptTag(child))
+            let script = cloneScriptTag(child)
+
+            // Script assets need to be loaded synchronously so that scripts have
+            // their global variables available...
+            script.onload = () => resolve()
+
+            document.head.appendChild(script)
+
         } else {
             document.head.appendChild(child)
+
+            resolve()
         }
-    }
+    })
 }
 
 function isScript(el)   {

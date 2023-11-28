@@ -42,11 +42,12 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             public function render() { return <<<'HTML'
             <div>
-                <h1 dusk="foo" x-dusk-test></h1>
+                <h1 dusk="foo" x-dusk-test x-init="console.log('init')"></h1>
             </div>
 
             @script
             <script>
+                console.log('hi')
                 Alpine.directive('dusk-test', (el) => {
                     el.textContent = 'evaluated'
                 })
@@ -134,7 +135,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             </div>
 
             @assets
-            <script src="/test.js"></script>
+            <script src="/test.js" defer></script>
             @endassets
             HTML; }
         })
@@ -149,6 +150,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             public function render() { return <<<'HTML'
             <div>
                 <input type="text" data-picker>
+
+                <span dusk="output" x-text="'foo'"></span>
             </div>
 
             @assets
@@ -163,7 +166,43 @@ class BrowserTest extends \Tests\BrowserTestCase
             @endscript
             HTML; }
         })
-        ->assertScript('window.datePicker')
+        ->waitForTextIn('@output', 'foo')
+        ->assertScript('!! window.datePicker')
+        ;
+    }
+
+    /** @test */
+    public function remote_assets_can_be_loaded_lazily()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $load = false;
+
+            public function render() { return <<<'HTML'
+            <div>
+                <input type="text" data-picker>
+
+                <button wire:click="$toggle('load')" dusk="button">Load assets</button>
+
+                <span dusk="output" x-text="'foo'"></span>
+            </div>
+
+            @if ($load)
+                @assets
+                    <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
+                    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+                @endassets
+
+                @script
+                    <script>
+                        window.datePicker = new Pikaday({ field: $wire.$el.querySelector('[data-picker]') });
+                    </script>
+                @endscript
+            @endif
+            HTML; }
+        })
+        ->waitForTextIn('@output', 'foo')
+        ->waitForLivewire()->click('@button')
+        ->waitUntil('!! window.datePicker === true')
         ;
     }
 }

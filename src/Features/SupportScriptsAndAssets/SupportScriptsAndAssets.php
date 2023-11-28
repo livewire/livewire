@@ -5,6 +5,8 @@ namespace Livewire\Features\SupportScriptsAndAssets;
 use Illuminate\Support\Facades\Blade;
 use function Livewire\store;
 use Livewire\ComponentHook;
+use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
+
 use function Livewire\on;
 
 class SupportScriptsAndAssets extends ComponentHook
@@ -119,7 +121,15 @@ class SupportScriptsAndAssets extends ComponentHook
 
         foreach (store($this->component)->get('assets', []) as $key => $assets) {
             if (! in_array($key, $alreadyRunAssetKeys)) {
-                $context->pushEffect('assets', $assets, $key);
+
+                // If they are part of an ajax requests, send them as an effect to be executed after page load...
+                if (app('livewire')->isLivewireRequest()) {
+                    $context->pushEffect('assets', $assets, $key);
+                // If they are part of the initial request, inject them as a normal asset on the page...
+                } else {
+                    SupportAutoInjectedAssets::injectAdditionalHeadAssets($assets);
+                }
+
                 $alreadyRunAssetKeys[] = $key;
             }
         }

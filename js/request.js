@@ -131,7 +131,7 @@ async function sendRequestToServer() {
 
         let { components } = JSON.parse(content)
 
-        handleSuccess(components)
+        await handleSuccess(components)
 
         succeed({ status: response.status, json: JSON.parse(content) })
     })

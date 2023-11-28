@@ -484,6 +484,25 @@
       return latest;
     };
   }
+  async function triggerAsync(name, ...params) {
+    let callbacks = listeners[name] || [];
+    let finishers = [];
+    for (let i = 0; i < callbacks.length; i++) {
+      let finisher = await callbacks[i](...params);
+      if (isFunction(finisher))
+        finishers.push(finisher);
+    }
+    return (result) => {
+      let latest = result;
+      for (let i = 0; i < finishers.length; i++) {
+        let iResult = finishers[i](latest);
+        if (iResult !== void 0) {
+          latest = iResult;
+        }
+      }
+      return latest;
+    };
+  }
 
   // js/request.js
   var updateUri = document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
@@ -566,7 +585,7 @@
         finishProfile({ content, failed: false });
       }
       let { components: components2 } = JSON.parse(content);
-      handleSuccess(components2);
+      await handleSuccess(components2);
       succeed({ status: response.status, json: JSON.parse(content) });
     });
   }
@@ -705,11 +724,11 @@
           respondCallbacks.push(callback);
         }
       });
-      let handleResponse = (response) => {
+      let handleResponse = async (response) => {
         let { snapshot, effects } = response;
         respond();
         this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
-        processEffects(this.component, this.component.effects);
+        await processEffectsAsync(this.component, this.component.effects);
         if (effects["returns"]) {
           let returns = effects["returns"];
           let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
@@ -730,7 +749,10 @@
     }
   };
   function processEffects(target, effects) {
-    trigger("effects", target, effects);
+    return trigger("effects", target, effects);
+  }
+  async function processEffectsAsync(target, effects) {
+    return await triggerAsync("effects", target, effects);
   }
 
   // ../alpine/packages/alpinejs/dist/module.esm.js
@@ -8236,14 +8258,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportScriptsAndAssets.js
-  on("effects", (component, effects) => {
+  on("effects", async (component, effects) => {
     let assets = effects.assets;
     if (assets) {
-      Object.entries(assets).forEach(([key, content]) => {
-        onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
-          addAssetsToHeadTagOfPage(content);
+      for (const [key, content] of Object.entries(assets)) {
+        await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
+          await addAssetsToHeadTagOfPage(content);
         });
-      });
+      }
     }
   });
   on("effects", (component, effects) => {
@@ -8278,22 +8300,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return innards;
   }
   var executedAssets = /* @__PURE__ */ new Set();
-  function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
+  async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key))
       return;
-    callback();
+    await callback();
     executedAssets.add(key);
   }
-  function addAssetsToHeadTagOfPage(rawHtml) {
+  async function addAssetsToHeadTagOfPage(rawHtml) {
     let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
     let newHead = document.adoptNode(newDocument.head);
     for (let child of newHead.children) {
+      await runAssetSynchronously(child);
+    }
+  }
+  async function runAssetSynchronously(child) {
+    return new Promise((resolve, reject) => {
       if (isScript2(child)) {
-        document.head.appendChild(cloneScriptTag2(child));
+        let script = cloneScriptTag2(child);
+        script.onload = () => resolve();
+        document.head.appendChild(script);
       } else {
         document.head.appendChild(child);
+        resolve();
       }
-    }
+    });
   }
   function isScript2(el) {
     return el.tagName.toLowerCase() === "script";
