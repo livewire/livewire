@@ -147,7 +147,6 @@ class UnitTest extends \Tests\TestCase
         ->assertHasErrors('form.content')
         ->set('form.title', 'title...')
         ->set('form.content', 'content...')
-        ->call('save')
         ->assertHasNoErrors()
         ->call('save')
         ;
@@ -169,12 +168,10 @@ class UnitTest extends \Tests\TestCase
             }
         })
             ->assertSet('form.name', '')
-            ->call('save')
-            ->assertHasErrors('form.name')
+            ->assertHasNoErrors()
             ->call('save')
             ->assertHasErrors('form.name')
             ->set('form.name', 'Mfawa...')
-            ->call('save')
             ->assertHasNoErrors()
             ->call('save')
         ;
