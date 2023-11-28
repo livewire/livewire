@@ -170,5 +170,5 @@ class Commit {
  * users interact with, triggering reactive effects.
  */
 export function processEffects(target, effects) {
-    return trigger('effects', target, effects)
+    trigger('effects', target, effects)
 }
