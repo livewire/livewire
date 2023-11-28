@@ -9,6 +9,6 @@ class BaseLocked extends LivewireAttribute
 {
     public function update()
     {
-        throw new \Exception('Cannot update locked property: ['.$this->getName().']');
+        throw new CannotUpdateLockedPropertyException($this->getName());
     }
 }
