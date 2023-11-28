@@ -1,6 +1,6 @@
 import { triggerSend, waitUntilTheCurrentRequestIsFinished } from "./request"
 import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObject, contentIsFromDump, splitDumpFromContent } from '@/utils'
-import { on, trigger, triggerAsync } from '@/events'
+import { on, trigger } from '@/events'
 
 /**
  * A "commit" is anytime a Livewire component makes a server-side update.
@@ -124,14 +124,14 @@ class Commit {
             },
         })
 
-        let handleResponse = async (response) => {
-            respond(response)
-
+        let handleResponse = (response) => {
             let { snapshot, effects } = response
+
+            respond()
 
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
 
-            await processEffectsAsync(this.component, this.component.effects)
+            processEffects(this.component, this.component.effects)
 
             if (effects['returns']) {
                 let returns = effects['returns']
@@ -171,8 +171,4 @@ class Commit {
  */
 export function processEffects(target, effects) {
     return trigger('effects', target, effects)
-}
-
-export async function processEffectsAsync(target, effects) {
-    return await triggerAsync('effects', target, effects)
 }
