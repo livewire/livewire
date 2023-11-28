@@ -156,4 +156,16 @@ return [
     */
 
     'pagination_theme' => 'tailwind',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Validate Realtime
+    |---------------------------------------------------------------------------
+    |
+    | When using the Validate Attribute, updates will be sent automatically
+    | by default. To disable this functionality, set it to false.
+    |
+    */
+
+    'validate_realtime' => false,
 ];

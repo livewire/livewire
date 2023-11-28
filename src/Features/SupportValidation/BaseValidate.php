@@ -16,9 +16,11 @@ class BaseValidate extends LivewireAttribute
         protected $attribute = null,
         protected $as = null,
         protected $message = null,
-        protected $onUpdate = false,
+        protected $onUpdate = null,
         protected bool $translate = true
-    ) {}
+    ) {
+        $this->onUpdate ??= config('livewire.validate_realtime');
+    }
 
     function boot()
     {
