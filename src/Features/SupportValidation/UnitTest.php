@@ -139,7 +139,7 @@ class UnitTest extends \Tests\TestCase
 
                 $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
             })
-        ;
+            ;
     }
 
     /** @test */
@@ -160,7 +160,7 @@ class UnitTest extends \Tests\TestCase
 
                 $this->assertEquals('The The Foo field must be at least 3 characters.', $messages['foo'][0]);
             })
-        ;
+            ;
     }
 
     /** @test */
@@ -179,7 +179,7 @@ class UnitTest extends \Tests\TestCase
 
                 $this->assertEquals('The Translated Foo field must be at least 3 characters.', $messages['foo'][0]);
             })
-        ;
+            ;
     }
 
     /** @test */
@@ -217,7 +217,7 @@ class UnitTest extends \Tests\TestCase
 
                 $this->assertEquals('The translatable.foo field must be at least 3 characters.', $messages['foo'][0]);
             })
-        ;
+            ;
     }
 
     /** @test */
@@ -238,7 +238,7 @@ class UnitTest extends \Tests\TestCase
 
                 $this->assertEquals('Your foo is too short.', $messages['foo'][0]);
             })
-        ;
+            ;
     }
 
     /** @test */
@@ -621,7 +621,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The Items Baz field is required.')
             ->call('runValidationOnlyWithAttributesProperty', 'items.1.baz') // Test specific instance works
             ->assertSee('The Items Baz field is required.')
-        ;
+            ;
     }
 
     /** @test */
@@ -878,7 +878,7 @@ class UnitTest extends \Tests\TestCase
 
         $this->expectExceptionMessage('No property found for validation: [missing]');
         Livewire::test(ForValidation::class)
-            ->call('runValidationOnlyWithMissingProperty', 'missing');
+                ->call('runValidationOnlyWithMissingProperty', 'missing');
 
         $this->expectExceptionMessage('No property found for validation: [fail]');
         Livewire::test(ValidatesComputedProperty::class)
@@ -896,7 +896,7 @@ class UnitTest extends \Tests\TestCase
             ->set('customCollection.0.amount', 150)
             ->call('runValidation')
             ->assertHasNoErrors('customCollection.0.amount')
-        ;
+            ;
     }
 
     /** @test */
@@ -1403,9 +1403,9 @@ class CustomWireableValidationCollection extends Collection implements Wireable
     public static function fromLivewire($value)
     {
         return static::wrap($value)
-            ->mapWithKeys(function ($dto, $key) {
-                return [$key => CustomWireableValidationDTO::fromLivewire($dto)];
-            });
+        ->mapWithKeys(function ($dto, $key) {
+            return [$key => CustomWireableValidationDTO::fromLivewire($dto)];
+        });
     }
 }
 
