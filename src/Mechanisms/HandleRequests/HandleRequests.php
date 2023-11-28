@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
 use function Livewire\trigger;
 
@@ -96,6 +97,7 @@ class HandleRequests
 
         $response = [
             'components' => $responses,
+            'assets' => SupportScriptsAndAssets::getAssets(),
         ];
 
         $finish = trigger('profile.response', $response);

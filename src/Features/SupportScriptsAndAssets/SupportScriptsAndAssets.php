@@ -15,6 +15,13 @@ class SupportScriptsAndAssets extends ComponentHook
 
     public static $countersByViewPath = [];
 
+    public static $renderedAssets = [];
+
+    public static function getAssets()
+    {
+        return static::$renderedAssets;
+    }
+
     public static function getUniqueBladeCompileTimeKey()
     {
         // Rather than using random strings as compile-time keys for blade directives,
@@ -122,13 +129,15 @@ class SupportScriptsAndAssets extends ComponentHook
         foreach (store($this->component)->get('assets', []) as $key => $assets) {
             if (! in_array($key, $alreadyRunAssetKeys)) {
 
-                // If they are part of an ajax requests, send them as an effect to be executed after page load...
-                if (app('livewire')->isLivewireRequest()) {
-                    $context->pushEffect('assets', $assets, $key);
-                // If they are part of the initial request, inject them as a normal asset on the page...
-                } else {
-                    SupportAutoInjectedAssets::injectAdditionalHeadAssets($assets);
-                }
+                static::$renderedAssets[$key] = $assets;
+
+                // // If they are part of an ajax requests, send them as an effect to be executed after page load...
+                // if (app('livewire')->isLivewireRequest()) {
+                //     $context->pushEffect('assets', $assets, $key);
+                // // If they are part of the initial request, inject them as a normal asset on the page...
+                // } else {
+                //     SupportAutoInjectedAssets::injectAdditionalHeadAssets($assets);
+                // }
 
                 $alreadyRunAssetKeys[] = $key;
             }

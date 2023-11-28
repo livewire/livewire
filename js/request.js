@@ -1,6 +1,6 @@
 import { getCsrfToken, contentIsFromDump, splitDumpFromContent } from '@/utils'
 import { showHtmlModal } from './modal'
-import { trigger } from '@/events'
+import { trigger, triggerAsync } from '@/events'
 import { getCommits, flushCommits } from './commit'
 
 /**
@@ -129,7 +129,9 @@ async function sendRequestToServer() {
             finishProfile({ content, failed: false })
         }
 
-        let { components } = JSON.parse(content)
+        let { components, assets } = JSON.parse(content)
+
+        await triggerAsync('payload.intercept', { components, assets })
 
         await handleSuccess(components)
 

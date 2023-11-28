@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportAutoInjectedAssets;
 
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Livewire\ComponentHook;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
 
 use function Livewire\on;
@@ -12,18 +13,6 @@ class SupportAutoInjectedAssets extends ComponentHook
 {
     static $hasRenderedAComponentThisRequest = false;
     static $forceAssetInjection = false;
-    static $additionalHeadAssets = [];
-    static $additionalBodyAssets = [];
-
-    static function injectAdditionalHeadAssets($assetString)
-    {
-        static::$additionalHeadAssets[] = $assetString;
-    }
-
-    static function injectAdditionalBodyAssets($assetString)
-    {
-        static::$additionalBodyAssets[] = $assetString;
-    }
 
     static function provide()
     {
@@ -40,17 +29,12 @@ class SupportAutoInjectedAssets extends ComponentHook
             $assetsHead = '';
             $assetsBody = '';
 
-            // If there are additional head assets, inject those...
-            if (count(static::$additionalHeadAssets) > 0) {
-                foreach (static::$additionalHeadAssets as $additional) {
-                    $assetsHead .= $additional."\n";
-                }
-            }
+            $assets = array_values(SupportScriptsAndAssets::getAssets());
 
-            // If there are additional body assets, inject those...
-            if (count(static::$additionalBodyAssets) > 0) {
-                foreach (static::$additionalBodyAssets as $additional) {
-                    $assetsBody .= $additional."\n";
+            // If there are additional head assets, inject those...
+            if (count($assets) > 0) {
+                foreach ($assets as $asset) {
+                    $assetsHead .= $asset."\n";
                 }
             }
 
@@ -59,6 +43,8 @@ class SupportAutoInjectedAssets extends ComponentHook
                 $assetsHead .= FrontendAssets::styles()."\n";
                 $assetsBody .= FrontendAssets::scripts()."\n";
             }
+
+            if ($assetsHead === '' && $assetsBody === '') return;
 
             $html = $handled->response->getContent();
 

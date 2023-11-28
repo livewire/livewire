@@ -7382,7 +7382,8 @@ async function sendRequestToServer() {
     } else {
       finishProfile({ content, failed: false });
     }
-    let { components: components2 } = JSON.parse(content);
+    let { components: components2, assets } = JSON.parse(content);
+    await triggerAsync("payload.intercept", { components: components2, assets });
     await handleSuccess(components2);
     succeed({ status: response.status, json: JSON.parse(content) });
   });
@@ -7523,8 +7524,8 @@ var Commit = class {
       }
     });
     let handleResponse = async (response) => {
+      respond(response);
       let { snapshot, effects } = response;
-      respond();
       this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
       await processEffectsAsync(this.component, this.component.effects);
       if (effects["returns"]) {
@@ -9121,14 +9122,11 @@ function cleanup(component) {
 
 // js/features/supportScriptsAndAssets.js
 var import_alpinejs10 = __toESM(require_module_cjs());
-on("effects", async (component, effects) => {
-  let assets = effects.assets;
-  if (assets) {
-    for (const [key, content] of Object.entries(assets)) {
-      await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
-        await addAssetsToHeadTagOfPage(content);
-      });
-    }
+on("payload.intercept", async ({ assets }) => {
+  for (let [key, asset] of Object.entries(assets)) {
+    await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
+      await addAssetsToHeadTagOfPage(asset);
+    });
   }
 });
 on("effects", (component, effects) => {
@@ -9173,14 +9171,22 @@ async function addAssetsToHeadTagOfPage(rawHtml) {
   let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
   let newHead = document.adoptNode(newDocument.head);
   for (let child of newHead.children) {
-    await runAssetSynchronously(child);
+    try {
+      await runAssetSynchronously(child);
+    } catch (error2) {
+    }
   }
 }
 async function runAssetSynchronously(child) {
   return new Promise((resolve, reject) => {
     if (isScript2(child)) {
       let script = cloneScriptTag2(child);
-      script.onload = () => resolve();
+      if (script.src) {
+        script.onload = () => resolve();
+        script.onerror = () => reject();
+      } else {
+        resolve();
+      }
       document.head.appendChild(script);
     } else {
       document.head.appendChild(child);

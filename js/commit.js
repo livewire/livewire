@@ -125,9 +125,9 @@ class Commit {
         })
 
         let handleResponse = async (response) => {
-            let { snapshot, effects } = response
+            respond(response)
 
-            respond()
+            let { snapshot, effects } = response
 
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
 
