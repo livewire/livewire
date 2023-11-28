@@ -188,14 +188,14 @@ class ShowPost extends Component
         $this->postId = $postId;
     }
 
-public function delete()
-{
-    $post = Post::find($this->postId);
-
-    $this->authorize('delete', $post); // [tl! highlight]
-
-    $post->delete();
-}
+    public function delete()
+    {
+        $post = Post::find($this->postId);
+    
+        $this->authorize('delete', $post); // [tl! highlight]
+    
+        $post->delete();
+    }
 }
 ```
 
