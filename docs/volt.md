@@ -242,6 +242,18 @@ title('Users');
 // ...
 ```
 
+If the title relies on component state or an external dependency, you may pass a closure to the `title` function instead:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title(fn () => 'Users: ' . $this->users->count());
+```
+
 ## Properties
 
 Volt properties, like Livewire properties, are conveniently accessible in the view and persist between Livewire updates. You can define a property using the `state` function:
