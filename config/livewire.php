@@ -167,5 +167,5 @@ return [
     |
     */
 
-    'validate_realtime' => false,
+    'validate_realtime' => true,
 ];
