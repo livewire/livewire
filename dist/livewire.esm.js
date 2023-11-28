@@ -7272,14 +7272,7 @@ function trigger(name, ...params) {
       finishers.push(finisher);
   }
   return (result) => {
-    let latest = result;
-    for (let i = 0; i < finishers.length; i++) {
-      let iResult = finishers[i](latest);
-      if (iResult !== void 0) {
-        latest = iResult;
-      }
-    }
-    return latest;
+    return runFinishers(result);
   };
 }
 async function triggerAsync(name, ...params) {
@@ -7291,15 +7284,18 @@ async function triggerAsync(name, ...params) {
       finishers.push(finisher);
   }
   return (result) => {
-    let latest = result;
-    for (let i = 0; i < finishers.length; i++) {
-      let iResult = finishers[i](latest);
-      if (iResult !== void 0) {
-        latest = iResult;
-      }
-    }
-    return latest;
+    return runFinishers(result);
   };
+}
+function runFinishers(result, finishers) {
+  let latest = result;
+  for (let i = 0; i < finishers.length; i++) {
+    let iResult = finishers[i](latest);
+    if (iResult !== void 0) {
+      latest = iResult;
+    }
+  }
+  return latest;
 }
 
 // js/request.js
@@ -7523,11 +7519,11 @@ var Commit = class {
         respondCallbacks.push(callback);
       }
     });
-    let handleResponse = async (response) => {
-      respond(response);
+    let handleResponse = (response) => {
       let { snapshot, effects } = response;
+      respond();
       this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
-      await processEffectsAsync(this.component, this.component.effects);
+      processEffects(this.component, this.component.effects);
       if (effects["returns"]) {
         let returns = effects["returns"];
         let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
@@ -7548,10 +7544,7 @@ var Commit = class {
   }
 };
 function processEffects(target, effects) {
-  return trigger("effects", target, effects);
-}
-async function processEffectsAsync(target, effects) {
-  return await triggerAsync("effects", target, effects);
+  trigger("effects", target, effects);
 }
 
 // js/features/supportEntangle.js
@@ -9122,10 +9115,22 @@ function cleanup(component) {
 
 // js/features/supportScriptsAndAssets.js
 var import_alpinejs10 = __toESM(require_module_cjs());
+var executedScripts = /* @__PURE__ */ new WeakMap();
+var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
   for (let [key, asset] of Object.entries(assets)) {
     await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
       await addAssetsToHeadTagOfPage(asset);
+    });
+  }
+});
+on("component.init", ({ component }) => {
+  let assets = component.snapshot.memo.assets;
+  if (assets) {
+    assets.forEach((key) => {
+      if (executedAssets.has(key))
+        return;
+      executedAssets.add(key);
     });
   }
 });
@@ -9140,7 +9145,6 @@ on("effects", (component, effects) => {
     });
   }
 });
-var executedScripts = /* @__PURE__ */ new WeakMap();
 function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
   if (executedScripts.has(component)) {
     let alreadyRunKeys2 = executedScripts.get(component);
@@ -9160,7 +9164,6 @@ function extractScriptTagContent(rawHtml) {
   let innards = matches && matches[1] ? matches[1].trim() : "";
   return innards;
 }
-var executedAssets = /* @__PURE__ */ new Set();
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
   if (executedAssets.has(key))
     return;

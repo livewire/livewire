@@ -1,10 +1,27 @@
 import { on } from '@/events'
 import Alpine from 'alpinejs'
 
+let executedScripts = new WeakMap
+
+let executedAssets = new Set
+
 on('payload.intercept', async ({ assets }) => {
     for (let [key, asset] of Object.entries(assets)) {
         await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
             await addAssetsToHeadTagOfPage(asset)
+        })
+    }
+})
+
+// Assets that were injected into the HTML need to be registered so that
+// they aren't loaded again...
+on('component.init', ({ component }) => {
+    let assets = component.snapshot.memo.assets
+
+    if (assets) {
+        assets.forEach((key) => {
+            if (executedAssets.has(key)) return
+            executedAssets.add(key)
         })
     }
 })
@@ -22,8 +39,6 @@ on('effects', (component, effects) => {
         })
     }
 })
-
-let executedScripts = new WeakMap
 
 function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
     if (executedScripts.has(component)) {
@@ -50,8 +65,6 @@ function extractScriptTagContent(rawHtml) {
 
     return innards
 }
-
-let executedAssets = new Set
 
 async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key)) return
@@ -99,33 +112,6 @@ async function runAssetSynchronously(child) {
         }
     })
 }
-
-function loadAndExecuteScriptSync(scriptElement) {
-    try {
-
-        let scriptContent = ''
-
-        if (scriptElement.src) {
-            let xhr = new XMLHttpRequest();
-            xhr.open('GET', scriptElement.src, false); // false for synchronous request
-            xhr.send(null);
-
-            if (xhr.status === 200) {
-                scriptContent = xhr.responseText;
-            } else {
-                throw new Error(`Failed to load script: HTTP Status ${xhr.status}`);
-            }
-        } else {
-            scriptContent = scriptElement.textContent
-        }
-
-        new Function(scriptContent)();
-    } catch (error) {
-        console.error('Error loading and executing script:', error);
-        throw error; // Rethrow the error to be handled by the caller
-    }
-}
-
 
 function isScript(el)   {
     return el.tagName.toLowerCase() === 'script'
