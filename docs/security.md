@@ -73,11 +73,11 @@ Now, we can use the `$this->authorize()` method from the Livewire component to e
 ```php
 public function delete($id)
 {
+    $post = Post::find($id);
+
     // If the user doesn't own the post,
     // an AuthorizationException will be thrown...
     $this->authorize('delete', $post); // [tl! highlight]
-
-    $post = Post::find($id);
 
     $post->delete();
 }
@@ -169,6 +169,37 @@ class ShowPost extends Component
 
 This component is now secured because there is no way for a malicious user to change the `$post` property to a different Eloquent model.
 
+### Locking the property
+Another way to prevent properties from being set to unwanted values is to use [locked properties](https://livewire.laravel.com/docs/locked). Locking properties is done by applying the `#[Locked]` attribute. Now if users attempt to tamper with this value an error will be thrown.
+
+Note that properties with the Locked attribute can still be changed in the back-end, so care still needs to taken that untrusted user input is not passed to the property in your own Livewire functions.
+
+```php
+<?php
+
+use App\Models\Post;
+use Livewire\Component;
+use Livewire\Attributes\Locked;
+
+class ShowPost extends Component
+{
+    #[Locked] // [tl! highlight]
+    public $postId;
+
+    public function mount($postId)
+    {
+        $this->postId = $postId;
+    }
+
+    public function delete()
+    {
+        $post = Post::find($this->postId);
+
+        $post->delete();
+    }
+}
+```
+
 ### Authorizing the property
 
 If using a model property is undesired in your scenario, you can of course fall-back to manually authorizing the deletion of the post inside the `delete` action:
@@ -188,14 +219,14 @@ class ShowPost extends Component
         $this->postId = $postId;
     }
 
-public function delete()
-{
-    $post = Post::find($this->postId);
-
-    $this->authorize('delete', $post); // [tl! highlight]
-
-    $post->delete();
-}
+    public function delete()
+    {
+        $post = Post::find($this->postId);
+    
+        $this->authorize('delete', $post); // [tl! highlight]
+    
+        $post->delete();
+    }
 }
 ```
 

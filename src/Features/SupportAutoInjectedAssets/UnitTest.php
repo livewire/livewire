@@ -13,10 +13,10 @@ class UnitTest extends TestCase
     /** @test */
     public function it_injects_livewire_assets_before_closing_tags(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <!doctype html>
             <html>
                 <head>
@@ -42,10 +42,10 @@ class UnitTest extends TestCase
     /** @test */
     public function it_injects_livewire_assets_html_only(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <html>
                 <yolo />
             </html>
@@ -59,10 +59,10 @@ class UnitTest extends TestCase
     /** @test */
     public function it_injects_livewire_assets_weirdly_formatted_html(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <!doctype html>
             <html
                 lang="en"
@@ -96,10 +96,10 @@ class UnitTest extends TestCase
     /** @test */
     public function it_injects_livewire_assets_html_with_header(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <!doctype html>
             <HTML
                 lang="en"
@@ -218,9 +218,9 @@ class UnitTest extends TestCase
         $this->markTestIncomplete();
     }
 
-    protected function compare(string $original, string $expected): void
+    protected function compare($forHead, $forBody, string $original, string $expected): void
     {
-        $this->assertEquals($expected, SupportAutoInjectedAssets::injectAssets($original));
+        $this->assertEquals($expected, SupportAutoInjectedAssets::injectAssets($original, $forHead, $forBody));
     }
 
     public function makeACleanSlate()

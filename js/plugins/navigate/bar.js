@@ -1,7 +1,10 @@
 import NProgress from 'nprogress'
 
-NProgress.configure({ minimum: 0.1 });
-NProgress.configure({ trickleSpeed: 200 });
+NProgress.configure({
+    minimum: 0.1,
+    trickleSpeed: 200,
+    showSpinner: false,
+})
 
 injectStyles()
 

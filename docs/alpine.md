@@ -122,7 +122,7 @@ Typically you would just use `wire:model.blur="title"` in this situation, howeve
 
 #### Passing parameters
 
-You can also pass parameters to Livewire methods by simply passing the to the `$wire` method call.
+You can also pass parameters to Livewire methods by simply passing them to the `$wire` method call.
 
 Consider a component with a `deletePost()` method like so:
 
