@@ -474,15 +474,30 @@
         finishers.push(finisher);
     }
     return (result) => {
-      let latest = result;
-      for (let i = 0; i < finishers.length; i++) {
-        let iResult = finishers[i](latest);
-        if (iResult !== void 0) {
-          latest = iResult;
-        }
-      }
-      return latest;
+      return runFinishers(finishers, result);
     };
+  }
+  async function triggerAsync(name, ...params) {
+    let callbacks = listeners[name] || [];
+    let finishers = [];
+    for (let i = 0; i < callbacks.length; i++) {
+      let finisher = await callbacks[i](...params);
+      if (isFunction(finisher))
+        finishers.push(finisher);
+    }
+    return (result) => {
+      return runFinishers(finishers, result);
+    };
+  }
+  function runFinishers(finishers, result) {
+    let latest = result;
+    for (let i = 0; i < finishers.length; i++) {
+      let iResult = finishers[i](latest);
+      if (iResult !== void 0) {
+        latest = iResult;
+      }
+    }
+    return latest;
   }
 
   // js/request.js
@@ -565,8 +580,9 @@
       } else {
         finishProfile({ content, failed: false });
       }
-      let { components: components2 } = JSON.parse(content);
-      handleSuccess(components2);
+      let { components: components2, assets } = JSON.parse(content);
+      await triggerAsync("payload.intercept", { components: components2, assets });
+      await handleSuccess(components2);
       succeed({ status: response.status, json: JSON.parse(content) });
     });
   }
@@ -8236,13 +8252,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportScriptsAndAssets.js
-  on("effects", (component, effects) => {
-    let assets = effects.assets;
+  var executedScripts = /* @__PURE__ */ new WeakMap();
+  var executedAssets = /* @__PURE__ */ new Set();
+  on("payload.intercept", async ({ assets }) => {
+    for (let [key, asset] of Object.entries(assets)) {
+      await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
+        await addAssetsToHeadTagOfPage(asset);
+      });
+    }
+  });
+  on("component.init", ({ component }) => {
+    let assets = component.snapshot.memo.assets;
     if (assets) {
-      Object.entries(assets).forEach(([key, content]) => {
-        onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, () => {
-          addAssetsToHeadTagOfPage(content);
-        });
+      assets.forEach((key) => {
+        if (executedAssets.has(key))
+          return;
+        executedAssets.add(key);
       });
     }
   });
@@ -8257,7 +8282,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
   });
-  var executedScripts = /* @__PURE__ */ new WeakMap();
   function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
     if (executedScripts.has(component)) {
       let alreadyRunKeys2 = executedScripts.get(component);
@@ -8277,23 +8301,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let innards = matches2 && matches2[1] ? matches2[1].trim() : "";
     return innards;
   }
-  var executedAssets = /* @__PURE__ */ new Set();
-  function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
+  async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
     if (executedAssets.has(key))
       return;
-    callback();
+    await callback();
     executedAssets.add(key);
   }
-  function addAssetsToHeadTagOfPage(rawHtml) {
+  async function addAssetsToHeadTagOfPage(rawHtml) {
     let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
     let newHead = document.adoptNode(newDocument.head);
     for (let child of newHead.children) {
-      if (isScript2(child)) {
-        document.head.appendChild(cloneScriptTag2(child));
-      } else {
-        document.head.appendChild(child);
+      try {
+        await runAssetSynchronously(child);
+      } catch (error2) {
       }
     }
+  }
+  async function runAssetSynchronously(child) {
+    return new Promise((resolve, reject) => {
+      if (isScript2(child)) {
+        let script = cloneScriptTag2(child);
+        if (script.src) {
+          script.onload = () => resolve();
+          script.onerror = () => reject();
+        } else {
+          resolve();
+        }
+        document.head.appendChild(script);
+      } else {
+        document.head.appendChild(child);
+        resolve();
+      }
+    });
   }
   function isScript2(el) {
     return el.tagName.toLowerCase() === "script";
