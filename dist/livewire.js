@@ -474,7 +474,7 @@
         finishers.push(finisher);
     }
     return (result) => {
-      return runFinishers(result);
+      return runFinishers(finishers, result);
     };
   }
   async function triggerAsync(name, ...params) {
@@ -486,10 +486,10 @@
         finishers.push(finisher);
     }
     return (result) => {
-      return runFinishers(result);
+      return runFinishers(finishers, result);
     };
   }
-  function runFinishers(result, finishers) {
+  function runFinishers(finishers, result) {
     let latest = result;
     for (let i = 0; i < finishers.length; i++) {
       let iResult = finishers[i](latest);

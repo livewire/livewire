@@ -63,7 +63,7 @@ export function trigger(name, ...params) {
     }
 
     return (result) => {
-       return runFinishers(result)
+       return runFinishers(finishers, result)
     }
 }
 
@@ -79,11 +79,11 @@ export async function triggerAsync(name, ...params) {
     }
 
     return (result) => {
-       return runFinishers(result)
+       return runFinishers(finishers, result)
     }
 }
 
-export function runFinishers(result, finishers)
+export function runFinishers(finishers, result)
 {
     let latest = result
 
