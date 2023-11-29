@@ -7421,7 +7421,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
-                autofocus && autofocusElementsWithTheAutofocusAttribute();
+                setTimeout(() => {
+                  autofocus && autofocusElementsWithTheAutofocusAttribute();
+                });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
               });
             });
@@ -7462,7 +7464,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Alpine3.stopObservingMutations();
     callback((afterAllThis) => {
       Alpine3.startObservingMutations();
-      setTimeout(() => {
+      queueMicrotask(() => {
         afterAllThis();
       });
     });
@@ -9239,7 +9241,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook: on,
     trigger,
     dispatch: dispatchGlobal,
-    on: on3
+    on: on3,
+    get navigate() {
+      return module_default.navigate;
+    }
   };
   if (window.Livewire)
     console.warn("Detected multiple instances of Livewire running");

@@ -8770,7 +8770,9 @@ function navigate_default(Alpine22) {
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
-              autofocus && autofocusElementsWithTheAutofocusAttribute();
+              setTimeout(() => {
+                autofocus && autofocusElementsWithTheAutofocusAttribute();
+              });
               nowInitializeAlpineOnTheNewPage(Alpine22);
             });
           });
@@ -8811,7 +8813,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine22, callback) {
   Alpine22.stopObservingMutations();
   callback((afterAllThis) => {
     Alpine22.startObservingMutations();
-    setTimeout(() => {
+    queueMicrotask(() => {
       afterAllThis();
     });
   });
@@ -10111,7 +10113,10 @@ var Livewire2 = {
   hook: on,
   trigger,
   dispatch: dispatchGlobal,
-  on: on2
+  on: on2,
+  get navigate() {
+    return import_alpinejs20.default.navigate;
+  }
 };
 if (window.Livewire)
   console.warn("Detected multiple instances of Livewire running");
