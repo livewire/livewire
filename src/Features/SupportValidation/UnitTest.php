@@ -923,6 +923,52 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('second error')
             ->assertHasErrors(['first', 'second']);
     }
+
+    /** @test */
+    public function realtime_validation_update_does_not_work_if_validate_realtime_is_false_in_the_config_file()
+    {
+        config()->set('livewire.validate_realtime', false);
+
+        Livewire::test(new class extends TestComponent {
+            #[Validate('required')]
+            public $foo = '';
+
+            #[Validate('required')]
+            public $bar = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('bar', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors(['foo' => 'required']);
+    }
+
+    /** @test */
+    public function realtime_validation_update_works_if_validate_realtime_is_true_in_config_file()
+    {
+        config()->set('livewire.validate_realtime', true);
+
+        Livewire::test(new class extends TestComponent {
+            #[Validate('required')]
+            public $foo = '';
+
+            #[Validate('required')]
+            public $bar = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('bar', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required']);
+    }
 }
 
 class ComponentWithRulesProperty extends Component
