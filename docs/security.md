@@ -73,11 +73,11 @@ Now, we can use the `$this->authorize()` method from the Livewire component to e
 ```php
 public function delete($id)
 {
+    $post = Post::find($id);
+
     // If the user doesn't own the post,
     // an AuthorizationException will be thrown...
     $this->authorize('delete', $post); // [tl! highlight]
-
-    $post = Post::find($id);
 
     $post->delete();
 }
