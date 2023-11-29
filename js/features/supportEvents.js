@@ -79,10 +79,16 @@ export function listen(component, name, callback) {
 }
 
 export function on(eventName, callback) {
-    // Implemented for backwards compatibility...
-    window.addEventListener(eventName, (e) => {
+    let handler = (e) => {
+        // Implemented for backwards compatibility...
         if (! e.__livewire) return
 
         callback(e.detail)
-    })
+    }
+
+    window.addEventListener(eventName, handler)
+
+    return () => {
+        window.removeEventListener(eventName, handler)
+    }
 }
