@@ -936,8 +936,6 @@ class UnitTest extends \Tests\TestCase
             #[Validate('required')]
             public $bar = '';
 
-            function clear() { $this->clearValidation(); }
-
             function save() { $this->validate(); }
         })
             ->set('bar', 'testing...')
@@ -959,10 +957,24 @@ class UnitTest extends \Tests\TestCase
 
             #[Validate('required')]
             public $bar = '';
+        })
+            ->set('bar', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required']);
+    }
 
-            function clear() { $this->clearValidation(); }
+    /** @test */
+    public function should_overwrite_the_config_defined_in_the_validate_realtime()
+    {
+        config()->set('livewire.validate_realtime', false);
 
-            function save() { $this->validate(); }
+        Livewire::test(new class extends TestComponent {
+            #[Validate('required', onUpdate: true)]
+            public $foo = '';
+
+            #[Validate('required')]
+            public $bar = '';
         })
             ->set('bar', 'testing...')
             ->assertHasNoErrors()
