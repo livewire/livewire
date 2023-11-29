@@ -83,7 +83,9 @@ export default function (Alpine) {
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
-                            autofocus && autofocusElementsWithTheAutofocusAttribute()
+                            setTimeout(() => {
+                                autofocus && autofocusElementsWithTheAutofocusAttribute()
+                            })
 
                             nowInitializeAlpineOnTheNewPage(Alpine)
                         })
@@ -144,7 +146,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     callback((afterAllThis) => {
         Alpine.startObservingMutations()
 
-        setTimeout(() => {
+        queueMicrotask(() => {
             afterAllThis()
         })
     })
