@@ -7084,8 +7084,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       } else {
         el.scrollTo({
-          top: Number(el.getAttribute("data-scroll-x")),
-          left: Number(el.getAttribute("data-scroll-y")),
+          top: Number(el.getAttribute("data-scroll-y")),
+          left: Number(el.getAttribute("data-scroll-x")),
           behavior: "instant"
         });
         el.removeAttribute("data-scroll-x");
@@ -7133,8 +7133,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/bar.js
   var import_nprogress = __toESM(require_nprogress());
-  import_nprogress.default.configure({ minimum: 0.1 });
-  import_nprogress.default.configure({ trickleSpeed: 200 });
+  import_nprogress.default.configure({
+    minimum: 0.1,
+    trickleSpeed: 200,
+    showSpinner: false
+  });
   injectStyles();
   var inProgress = false;
   function showAndStartProgressBar() {
