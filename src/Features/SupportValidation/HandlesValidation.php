@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\ViewErrorBag;
 use Livewire\Form;
 
 trait HandlesValidation
@@ -40,7 +41,8 @@ trait HandlesValidation
     public function getErrorBag()
     {
         if (! store($this)->has('errorBag')) {
-            $this->setErrorBag([]);
+            $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
+            $this->setErrorBag($previouslySharedErrors->getMessages());
         }
 
         return store($this)->get('errorBag');

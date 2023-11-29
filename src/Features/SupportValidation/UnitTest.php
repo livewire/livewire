@@ -10,9 +10,10 @@ use Livewire\Component;
 use Livewire\Attributes\Validate;
 use Livewire\Attributes\Rule;
 use Illuminate\Support\ViewErrorBag;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;
 
 class UnitTest extends \Tests\TestCase
@@ -705,6 +706,23 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('sharedError:The bar field is required');
 
         $this->assertTrue(app('view')->shared('errors') === $errors);
+    }
+
+    /** @test */
+    public function validation_errors_are_shared_when_redirecting_back_to_full_page_component()
+    {
+        // We apply the web middleware here so that the errors will get shared
+        // from the session to the view via ShareErrorsFromSession middleware
+        Route::get('/full-page-component', ForValidation::class)->middleware('web');
+        Route::post('/non-livewire-form', function () {
+            request()->validate(['bar' => 'required']);
+        });
+
+        $post = $this
+            ->from('/full-page-component')
+            ->followingRedirects()
+            ->post(url('/non-livewire-form'))
+            ->assertSee('sharedError:The bar field is required');
     }
 
     /** @test */
