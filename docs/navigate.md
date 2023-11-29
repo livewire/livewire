@@ -90,6 +90,20 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
+### Preserving scroll position
+
+By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
+
+To do this, you must add `wire:scroll` to the element containing a scrollbar like so:
+
+```html
+@persist('scrollbar')
+<div class="overflow-y-scroll" wire:scroll> <!-- [!tl highlight] -->
+    <!-- ... -->
+</div>
+@endpersist
+```
+
 ## Updating the page before navigating away
 
 Livewire dispatches a useful event called `livewire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
