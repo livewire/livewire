@@ -104,7 +104,7 @@ To do this, you must add `wire:scroll` to the element containing a scrollbar lik
 @endpersist
 ```
 
-## Updating the page before navigating away
+## JavaScript hooks
 
 Livewire dispatches a useful event called `livewire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
 
@@ -114,6 +114,26 @@ This is useful for scenarios like modifying the contents of the current page bef
 document.addEventListener('livewire:navigating', () => {
     // Mutate the HTML before the page is navigated away...
 })
+```
+
+Alternatively, you can hook into AFTER Livewire has navigated to a page using `livewire:navigated`. This event will dispatch after every navigation including back and forward button presses:
+
+```js
+document.addEventListener('livewire:navigated', () => {
+    //
+})
+```
+
+## Manually visiting a new page
+
+In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` method to trigger a visit to a new page using JavaScript:
+
+```html
+<script>
+    // ...
+
+    Livewire.navigate('/new/url')
+</script>
 ```
 
 ## Script evaluation
@@ -177,6 +197,9 @@ In the below example, _page two_ includes a new JavaScript library for a third-p
     <script src="/third-party.js"></script>
 </head>
 ```
+
+> [!info] Head assets are blocking
+> If you are navigating to a new page that contains an asset like `<script src="...">` in the head tag. That asset will be fetched and processed before the navigation is complete and the new page is swapped in. This might be surprising behavior, but it ensures any scripts that depend on those assets will have immediate access to them.
 
 ### Reloading when assets change
 
