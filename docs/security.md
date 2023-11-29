@@ -363,7 +363,7 @@ Learn more about [customizing the update route on the Installation page](https:/
 
 ## Snapshot checksums
 
-Between every Livewire request, a snapshot is taken of the Livewire component and sent to the brower. This snapshot is used to re-build the component during the next server round-trip.
+Between every Livewire request, a snapshot is taken of the Livewire component and sent to the browser. This snapshot is used to re-build the component during the next server round-trip.
 
 [Learn more about Livewire snapshots in the Hydration documentation.](https://livewire.laravel.com/docs/hydration#the-snapshot)
 
