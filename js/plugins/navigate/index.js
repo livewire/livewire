@@ -68,7 +68,7 @@ export default function (Alpine) {
                     packUpPersistedTeleports(persistedEl)
                 })
 
-                swapCurrentPageWithNewHtml(html, () => {
+                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
                     removeAnyLeftOverStaleTeleportTargets(document.body)
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
@@ -81,10 +81,12 @@ export default function (Alpine) {
 
                     updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination)
 
-                    andAfterAllThis(() => {
-                        autofocus && autofocusElementsWithTheAutofocusAttribute()
+                    afterNewScriptsAreDoneLoading(() => {
+                        andAfterAllThis(() => {
+                            autofocus && autofocusElementsWithTheAutofocusAttribute()
 
-                        nowInitializeAlpineOnTheNewPage(Alpine)
+                            nowInitializeAlpineOnTheNewPage(Alpine)
+                        })
                     })
                 })
             })

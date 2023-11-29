@@ -7245,27 +7245,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll("script")).map((i) => {
       return simpleHash(ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing));
     }));
-    mergeNewHead(newHead);
+    let afterRemoteScriptsHaveLoaded = () => {
+    };
+    mergeNewHead(newHead).finally(() => {
+      afterRemoteScriptsHaveLoaded();
+    });
     prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes);
-    transitionOut(document.body);
     let oldBody = document.body;
     document.body.replaceWith(newBody);
     Alpine.destroyTree(oldBody);
-    transitionIn(newBody);
-    andThen();
-  }
-  function transitionOut(body) {
-    return;
-    body.style.transition = "all .5s ease";
-    body.style.opacity = "0";
-  }
-  function transitionIn(body) {
-    return;
-    body.style.opacity = "0";
-    body.style.transition = "all .5s ease";
-    requestAnimationFrame(() => {
-      body.style.opacity = "1";
-    });
+    andThen((i) => afterRemoteScriptsHaveLoaded = i);
   }
   function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes2) {
     newBody.querySelectorAll("script").forEach((i) => {
@@ -7282,6 +7271,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let headChildrenHtmlLookup = children.map((i) => i.outerHTML);
     let garbageCollector = document.createDocumentFragment();
     let touchedHeadElements = [];
+    let remoteScriptsPromises = [];
     for (let child of Array.from(newHead.children)) {
       if (isAsset(child)) {
         if (!headChildrenHtmlLookup.includes(child.outerHTML)) {
@@ -7291,7 +7281,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             }
           }
           if (isScript(child)) {
-            document.head.appendChild(cloneScriptTag(child));
+            try {
+              remoteScriptsPromises.push(injectScriptTagAndWaitForItToFullyLoad(cloneScriptTag(child)));
+            } catch (error2) {
+            }
           } else {
             document.head.appendChild(child);
           }
@@ -7308,6 +7301,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     for (let child of Array.from(newHead.children)) {
       document.head.appendChild(child);
     }
+    return Promise.all(remoteScriptsPromises);
+  }
+  async function injectScriptTagAndWaitForItToFullyLoad(script) {
+    return new Promise((resolve, reject) => {
+      if (script.src) {
+        script.onload = () => resolve();
+        script.onerror = () => reject();
+      } else {
+        resolve();
+      }
+      document.head.appendChild(script);
+    });
   }
   function cloneScriptTag(el) {
     let script = document.createElement("script");
@@ -7406,7 +7411,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
           });
-          swapCurrentPageWithNewHtml(html, () => {
+          swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
             removeAnyLeftOverStaleTeleportTargets(document.body);
             enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
               unPackPersistedTeleports(persistedEl);
@@ -7414,9 +7419,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             restoreScrollPositionOrScrollToTop();
             fireEventForOtherLibariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
-            andAfterAllThis(() => {
-              autofocus && autofocusElementsWithTheAutofocusAttribute();
-              nowInitializeAlpineOnTheNewPage(Alpine3);
+            afterNewScriptsAreDoneLoading(() => {
+              andAfterAllThis(() => {
+                autofocus && autofocusElementsWithTheAutofocusAttribute();
+                nowInitializeAlpineOnTheNewPage(Alpine3);
+              });
             });
           });
         });
