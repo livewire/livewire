@@ -27,6 +27,14 @@ class SupportPageComponents extends ComponentHook
             return $this;
         });
 
+        View::macro('seo', function ($data = []) {
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+
+            $this->layoutConfig->mergeParams($data);
+
+            return $this;
+        });
+
         View::macro('section', function ($section) {
             if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
@@ -92,6 +100,7 @@ class SupportPageComponents extends ComponentHook
         $handler = once(function ($target, $view, $data) use (&$layoutConfig, &$slots) {
             $layoutAttr = $target->getAttributes()->whereInstanceOf(BaseLayout::class)->first();
             $titleAttr = $target->getAttributes()->whereInstanceOf(BaseTitle::class)->first();
+            $seoAttr = $target->getAttributes()->whereInstanceOf(BaseSeo::class)->first();
 
             if ($layoutAttr) {
                 $view->layout($layoutAttr->name, $layoutAttr->params);
@@ -99,6 +108,31 @@ class SupportPageComponents extends ComponentHook
 
             if ($titleAttr) {
                 $view->title($titleAttr->content);
+            }
+
+            if ($seoAttr) {
+                $view->seo([
+                    'title' => $seoAttr->title,
+                    'description' => $seoAttr->description,
+                    'keywords' => $seoAttr->keywords,
+                    'robots' => $seoAttr->robots,
+                    'author' => $seoAttr->author,
+                    'ogType' => $seoAttr->ogType,
+                    'ogSitename' => $seoAttr->ogSitename,
+                    'ogTitle' => $seoAttr->ogTitle,
+                    'ogDescription' => $seoAttr->ogDescription,
+                    'ogImage' => $seoAttr->ogImage,
+                    'ogLocale' => $seoAttr->ogLocale,
+                    'ogUrl' => $seoAttr->ogUrl,
+                    'twitterCard' => $seoAttr->twitterCard,
+                    'twitterSite' => $seoAttr->twitterSite,
+                    'twitterTitle' => $seoAttr->twitterTitle,
+                    'twitterDescription' => $seoAttr->twitterDescription,
+                    'twitterImage' => $seoAttr->twitterImage,
+                    'twitterAuthor' => $seoAttr->twitterAuthor,
+                    'twitterCreator' => $seoAttr->twitterCreator,
+                    'twitterUrl' => $seoAttr->twitterUrl,
+                ]);
             }
 
             $layoutConfig = $view->layoutConfig ?? new PageComponentConfig;

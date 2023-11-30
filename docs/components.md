@@ -498,33 +498,64 @@ public function render()
 }
 ```
 
-### Setting the page title
+### Setting the page SEO
 
-Assigning unique page titles to each page in your application is helpful for both users and search engines.
+Defining specific meta tags for each page in your app is useful for search engines.
 
-To set a custom page title for a full-page component, first, make sure your layout file includes a dynamic title:
+To set custom metadata for a full page component, first make sure your layout file contains the necessary keys for a dynamic data:
 
 ```blade
 <head>
     <title>{{ $title ?? 'Page Title' }}</title>
+
+    <!-- META -->
+    <meta name="title" content="{{ $title ?? 'Page Title' }}" />
+    <meta name="description" content="{{ $description ?? 'Page description' }}" />
+    <meta name="keywords" content="{{ $keywords ?? 'page,keyword' }}" />
+    <meta name="robots" content="{{ $robots ?? 'noindex, nofollow' }}" />
+    <meta name="author" content="{{ $author ?? 'author' }}" />
+    <!-- META -->
+
+    <!-- OPENGRAPH -->
+    <meta property="og:type" content="{{ $ogType }}" />
+    <meta property="og:site_name" content="{{ $ogSitename }}" />
+    <meta property="og:title" content="{{ $ogTitle }}" />
+    <meta property="og:description" content="{{ $ogDescription }}" />
+    <meta property="og:image" content="{{ $ogImage ?? '' }}" />
+    <meta property="og:locale" content="{{ $ogLocale }}" />
+    <meta property="og:url" content="{{ $ogUrl }}" />
+    <!-- OPENGRAPH -->
+
+    <!-- TWITTER -->
+    <meta name="twitter:card" content="{{ $twitterCard }}" />
+    <meta name="twitter:site" content="{{ $twitterSite }}" />
+    <meta name="twitter:title" content="{{ $twitterTitle }}" />
+    <meta name="twitter:description" content="{{ $twitterDescription }}" />
+    <meta name="twitter:image" content="{{ $twitterImage }}" />
+    <meta name="twitter:author" content="{{ $twitterAuthor }}" />
+    <meta name="twitter:creator" content="{{ $twitterCreator }}" />
+    <meta name="twitter:url" content="{{ $twitterUrl }}" />
+    <!-- TWITTER -->
+
+	// ...
 </head>
 ```
 
-Next, above your Livewire component's `render()` method, add the `#[Title]` attribute and pass it your page title:
+Next, above your Livewire component's `render()` method, add the `#[Seo]` attribute and pass it your page title:
 
 ```php
 <?php
 
 namespace App\Livewire;
 
-use Livewire\Attributes\Title;
+use Livewire\Attributes\Seo;
 use Livewire\Component;
 
 class CreatePost extends Component
 {
 	// ...
 
-	#[Title('Create Post')] // [tl! highlight]
+	#[Seo('Page Title', 'Page description', 'keywords', 'author')] // [tl! highlight]
 	public function render()
 	{
 	    return view('livewire.create-post');
@@ -532,7 +563,9 @@ class CreatePost extends Component
 }
 ```
 
-This will set the page title for the `CreatePost` Livewire component. In this example, the page title will be "Create Post" when the component is rendered.
+This will create the seo data for the 'CreatePost' Livewire component with the given data. The SEO attribute is designed to be able to gradually check more than one needed data and follow it up to the first needed variable at the top level.
+
+That is, when you assign a value to the `$title` variable, all title variables such as `$ogTitle`, `$twitterTitle` are assigned the value of the `$title` variable.
 
 If you prefer, you can use this attribute above the class declaration:
 
@@ -544,20 +577,20 @@ namespace App\Livewire;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Create Post')] // [tl! highlight]
+#[Seo('Page Title', 'Page description', 'keywords', 'author')] // [tl! highlight]
 class CreatePost extends Component
 {
 	// ...
 }
 ```
 
-If you need to pass a dynamic title, such as a title that uses a component property, you can use the `->title()` fluent method in the component's `render()` method:
+If you need to pass dynamic SEO data like a title using a component property, you can use the fluent method `->seo()` in the component's `render()` method:
 
 ```php
 public function render()
 {
     return view('livewire.create-post')
-	     ->title('Create Post'); // [tl! highlight]
+	     ->seo('Page Title', 'Page description', 'keywords', 'author'); // [tl! highlight]
 }
 ```
 
