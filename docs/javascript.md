@@ -161,6 +161,25 @@ Livewire.on('post-created', ({ postId }) => {
 })
 ```
 
+In certain scenarios, you might need to unregister global Livewire events. For instance, when working with Alpine components and `wire:navigate`, multiple listeners may be registered as `init` is called when navigating between pages. To address this, utilize the `destroy` function, automatically invoked by Alpine. Loop through all your listeners within this function to unregister them and prevent any unwanted accumulation.
+
+```js
+Alpine.data('MyComponent', () => ({
+    listeners: [],
+    init() {
+        this.listeners.push(  
+            Livewire.on('post-created', (options) => {  
+                // Do something...
+            })
+        );
+    },
+    destroy() {
+        this.listeners.forEach((listener) => {  
+            listener();  
+        });
+    }
+});
+```
 ### Using lifecycle hooks
 
 Livewire allows you to hook into various parts of its global lifecycle using `Livewire.hook()`:

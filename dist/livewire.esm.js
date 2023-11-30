@@ -8158,11 +8158,15 @@ function listen(component, name, callback) {
   });
 }
 function on2(eventName, callback) {
-  window.addEventListener(eventName, (e) => {
+  let handler = (e) => {
     if (!e.__livewire)
       return;
     callback(e.detail);
-  });
+  };
+  window.addEventListener(eventName, handler);
+  return () => {
+    window.removeEventListener(eventName, handler);
+  };
 }
 
 // js/directives.js
@@ -9130,6 +9134,8 @@ var import_alpinejs10 = __toESM(require_module_cjs());
 var executedScripts = /* @__PURE__ */ new WeakMap();
 var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
+  if (!assets)
+    return;
   for (let [key, asset] of Object.entries(assets)) {
     await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
       await addAssetsToHeadTagOfPage(asset);
