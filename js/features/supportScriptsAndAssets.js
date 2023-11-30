@@ -6,6 +6,8 @@ let executedScripts = new WeakMap
 let executedAssets = new Set
 
 on('payload.intercept', async ({ assets }) => {
+    if(!assets) return
+    
     for (let [key, asset] of Object.entries(assets)) {
         await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
             await addAssetsToHeadTagOfPage(asset)
