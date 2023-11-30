@@ -98,7 +98,7 @@ To do this, you must add `wire:scroll` to the element containing a scrollbar lik
 
 ```html
 @persist('scrollbar')
-<div class="overflow-y-scroll" wire:scroll> <!-- [!tl highlight] -->
+<div class="overflow-y-scroll" wire:scroll> <!-- [tl! highlight] -->
     <!-- ... -->
 </div>
 @endpersist
