@@ -4433,11 +4433,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function on3(eventName, callback) {
-    window.addEventListener(eventName, (e) => {
+    let handler4 = (e) => {
       if (!e.__livewire)
         return;
       callback(e.detail);
-    });
+    };
+    window.addEventListener(eventName, handler4);
+    return () => {
+      window.removeEventListener(eventName, handler4);
+    };
   }
 
   // js/directives.js
@@ -8267,6 +8271,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var executedScripts = /* @__PURE__ */ new WeakMap();
   var executedAssets = /* @__PURE__ */ new Set();
   on("payload.intercept", async ({ assets }) => {
+    if (!assets)
+      return;
     for (let [key, asset] of Object.entries(assets)) {
       await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
         await addAssetsToHeadTagOfPage(asset);
