@@ -2,6 +2,9 @@
 
 namespace Livewire\Drawer;
 
+use BackedEnum;
+use Illuminate\Routing\Exceptions\BackedEnumCaseNotFoundException;
+use ReflectionClass;
 use ReflectionMethod;
 use Livewire\Component;
 use Illuminate\Support\Reflector;
@@ -9,8 +12,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Routing\Route;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Routing\UrlRoutable;
-use Livewire\Drawer\Utils;
-use UnitEnum;
 
 /**
  * This class mirrors the functionality of Laravel's Illuminate\Routing\ImplicitRouteBinding class.
@@ -94,8 +95,18 @@ class ImplicitRouteBinding
             return $parameterValue;
         }
 
-        if ($parameterValue instanceof UnitEnum) {
+        if ($parameterValue instanceof BackedEnum) {
             return $parameterValue;
+        }
+
+        if ((new ReflectionClass($parameterClassName))->isEnum()) {
+            $enum = $parameterClassName::tryFrom($parameterValue);
+
+            if (is_null($enum)) {
+                throw new BackedEnumCaseNotFoundException($parameterClassName, $parameterValue);
+            }
+
+            return $enum;
         }
 
         $instance = $this->container->make($parameterClassName);
