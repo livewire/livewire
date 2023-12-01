@@ -2,16 +2,19 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use Tests\TestComponent;
 use Livewire\Wireable;
 use Livewire\Livewire;
 use Livewire\Exceptions\MissingRulesException;
 use Livewire\Component;
+use Livewire\Attributes\Validate;
+use Livewire\Attributes\Rule;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;
-use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -19,10 +22,10 @@ class UnitTest extends \Tests\TestCase
     public function update_triggers_rule_attribute()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required')]
+            #[Validate('required')]
             public $foo = '';
 
-            #[BaseRule('required')]
+            #[Validate('required')]
             public $bar = '';
 
             function clear() { $this->clearValidation(); }
@@ -42,13 +45,66 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function deprecated_rule_alias_can_be_used()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Rule('required')]
+            public $foo = '';
+
+            #[Rule('required')]
+            public $bar = '';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('bar', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required'])
+            ->call('clear')
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors([
+                'foo' => 'required',
+            ]);
+    }
+
+    /** @test */
+    public function validate_can_be_used_without_a_rule()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate]
+            public $foo = '';
+
+            public $bar = '';
+
+            public function rules()
+            {
+                return [
+                    'foo' => 'required',
+                    'bar' => 'required',
+                ];
+            }
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('foo', 'testing...')
+            ->assertHasNoErrors()
+            ->set('foo', '')
+            ->assertHasErrors(['foo' => 'required']);
+    }
+
+    /** @test */
     public function realtime_validation_can_be_opted_out_of()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required|min:3', onUpdate: false)]
+            #[Validate('required|min:3', onUpdate: false)]
             public $foo = '';
 
-            #[BaseRule('required|min:3')]
+            #[Validate('required|min:3')]
             public $bar = '';
 
             function clear() { $this->clearValidation(); }
@@ -70,7 +126,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_attribute()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required|min:3', attribute: 'The Foo')]
+            #[Validate('required|min:3', attribute: 'The Foo')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -91,7 +147,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_attribute_as_alias()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required|min:3', as: 'The Foo')]
+            #[Validate('required|min:3', as: 'The Foo')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -114,7 +170,7 @@ class UnitTest extends \Tests\TestCase
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
 
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required|min:3', as: 'translatable.foo')]
+            #[Validate('required|min:3', as: 'translatable.foo')]
             public $foo = '';
         })
             ->set('foo', 'te')
@@ -133,7 +189,7 @@ class UnitTest extends \Tests\TestCase
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
 
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required|min:3', as: ['foo' => 'translatable.foo'])]
+            #[Validate('required|min:3', as: ['foo' => 'translatable.foo'])]
             public $foo = '';
         })
             ->set('foo', 'te')
@@ -152,7 +208,7 @@ class UnitTest extends \Tests\TestCase
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
 
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required|min:3', as: 'translatable.foo', translate: false)]
+            #[Validate('required|min:3', as: 'translatable.foo', translate: false)]
             public $foo = '';
         })
             ->set('foo', 'te')
@@ -169,7 +225,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_messages()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('min:5', message: 'Your foo is too short.')]
+            #[Validate('min:5', message: 'Your foo is too short.')]
             public $foo = '';
 
             function clear() { $this->clearValidation(); }
@@ -190,8 +246,8 @@ class UnitTest extends \Tests\TestCase
     public function rule_attribute_supports_custom_messages_when_using_repeated_attributes()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required', message: 'Please provide a post title')]
-            #[BaseRule('min:3', message: 'This title is too short')]
+            #[Validate('required', message: 'Please provide a post title')]
+            #[Validate('min:3', message: 'This title is too short')]
             public $title = '';
         })
             ->set('title', '')
@@ -209,7 +265,7 @@ class UnitTest extends \Tests\TestCase
         Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
 
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('min:5', message: 'translatable.foo')]
+            #[Validate('min:5', message: 'translatable.foo')]
             public $foo = '';
         })
             ->set('foo', 'te')
@@ -228,7 +284,7 @@ class UnitTest extends \Tests\TestCase
         Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
 
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('min:5', message: ['min' => 'translatable.foo'])]
+            #[Validate('min:5', message: ['min' => 'translatable.foo'])]
             public $foo = '';
         })
             ->set('foo', 'te')
@@ -245,7 +301,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attributes_can_contain_rules_for_multiple_properties()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule(['foo' => 'required', 'bar' => 'required'])]
+            #[Validate(['foo' => 'required', 'bar' => 'required'])]
             public $foo = '';
 
             public $bar = '';
@@ -271,7 +327,7 @@ class UnitTest extends \Tests\TestCase
     public function rule_attributes_can_contain_multiple_rules()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule(['required', 'min:2', 'max:3'])]
+            #[Validate(['required', 'min:2', 'max:3'])]
             public $foo = '';
         })
             ->set('foo', '')
@@ -289,9 +345,9 @@ class UnitTest extends \Tests\TestCase
     public function rule_attributes_can_contain_multiple_rules_userland(): void
     {
         Livewire::test(new class extends TestComponent {
-            #[\Livewire\Attributes\Rule('required')]
-            #[\Livewire\Attributes\Rule('min:2')]
-            #[\Livewire\Attributes\Rule('max:3')]
+            #[\Livewire\Attributes\Validate('required')]
+            #[\Livewire\Attributes\Validate('min:2')]
+            #[\Livewire\Attributes\Validate('max:3')]
             public $foo = '';
         })
             ->set('foo', '')
@@ -309,14 +365,14 @@ class UnitTest extends \Tests\TestCase
     public function rule_attributes_can_be_repeated()
     {
         Livewire::test(new class extends TestComponent {
-            #[BaseRule('required')]
-            #[BaseRule('min:2')]
-            #[BaseRule('max:3')]
+            #[Validate('required')]
+            #[Validate('min:2')]
+            #[Validate('max:3')]
             public $foo = '';
 
             #[
-                BaseRule('sometimes'),
-                BaseRule('max:1')
+                Validate('sometimes'),
+                Validate('max:1')
             ]
             public $bar = '';
         })
@@ -650,6 +706,23 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('sharedError:The bar field is required');
 
         $this->assertTrue(app('view')->shared('errors') === $errors);
+    }
+
+    /** @test */
+    public function validation_errors_are_shared_when_redirecting_back_to_full_page_component()
+    {
+        // We apply the web middleware here so that the errors will get shared
+        // from the session to the view via ShareErrorsFromSession middleware
+        Route::get('/full-page-component', ForValidation::class)->middleware('web');
+        Route::post('/non-livewire-form', function () {
+            request()->validate(['bar' => 'required']);
+        });
+
+        $post = $this
+            ->from('/full-page-component')
+            ->followingRedirects()
+            ->post(url('/non-livewire-form'))
+            ->assertSee('sharedError:The bar field is required');
     }
 
     /** @test */

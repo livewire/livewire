@@ -286,10 +286,10 @@ class Customer implements Wireable
         ];
     }
 
-    public static function fromLivewire($data)
+    public static function fromLivewire($value)
     {
-        $name = $data['name'];
-        $age = $data['age'];
+        $name = $value['name'];
+        $age = $value['age'];
 
         return new static($name, $age);
     }

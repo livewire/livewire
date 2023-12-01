@@ -90,7 +90,21 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
-## Updating the page before navigating away
+### Preserving scroll position
+
+By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
+
+To do this, you must add `wire:scroll` to the element containing a scrollbar like so:
+
+```html
+@persist('scrollbar')
+<div class="overflow-y-scroll" wire:scroll> <!-- [tl! highlight] -->
+    <!-- ... -->
+</div>
+@endpersist
+```
+
+## JavaScript hooks
 
 Livewire dispatches a useful event called `livewire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
 
@@ -100,6 +114,26 @@ This is useful for scenarios like modifying the contents of the current page bef
 document.addEventListener('livewire:navigating', () => {
     // Mutate the HTML before the page is navigated away...
 })
+```
+
+Alternatively, you can hook into AFTER Livewire has navigated to a page using `livewire:navigated`. This event will dispatch after every navigation including back and forward button presses:
+
+```js
+document.addEventListener('livewire:navigated', () => {
+    //
+})
+```
+
+## Manually visiting a new page
+
+In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` method to trigger a visit to a new page using JavaScript:
+
+```html
+<script>
+    // ...
+
+    Livewire.navigate('/new/url')
+</script>
 ```
 
 ## Script evaluation
@@ -163,6 +197,9 @@ In the below example, _page two_ includes a new JavaScript library for a third-p
     <script src="/third-party.js"></script>
 </head>
 ```
+
+> [!info] Head assets are blocking
+> If you are navigating to a new page that contains an asset like `<script src="...">` in the head tag. That asset will be fetched and processed before the navigation is complete and the new page is swapped in. This might be surprising behavior, but it ensures any scripts that depend on those assets will have immediate access to them.
 
 ### Reloading when assets change
 
@@ -229,7 +266,7 @@ If you have a `<script>` tag in the body that you only want to be run once, you 
 
 ## Customizing the progress bar
 
-When a page takes longer than 150ms to load, Livewirew will show a progress bar at the top of the page.
+When a page takes longer than 150ms to load, Livewire will show a progress bar at the top of the page.
 
 You can customize the color of this bar or disable it all together inside Livewire's config file (`config/livewire.php`):
 

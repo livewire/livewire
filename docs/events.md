@@ -77,6 +77,32 @@ class ShowPost extends Component
 
 If the above `$post` model had an ID of `3`, the `refreshPost()` method would only be triggered by an event named: `post-updated.3`.
 
+### Listening for events from specific child components
+
+Livewire allows you to listen for events directly on individual child components in your Blade template like so:
+
+```blade
+<div>
+    <livewire:edit-post @saved="$refresh">
+
+    <!-- ... -->
+</div>
+```
+
+In the above scenario, if the `edit-post` child component dispatches a `saved` event, the parent's `$refresh` will be called and the parent will be refreshed.
+
+Instead of passing `$refresh`, you can pass any method you normally would to something like `wire:click`. Here's an example of calling a `close()` method that might do something like close a modal dialog:
+
+```blade
+<livewire:edit-post @saved="close">
+```
+
+If the child dispatched parameters along with the request, for example `$this->dispatch('close', postId: 1)`, you can forward those values to the parent method using the following syntax:
+
+```blade
+<livewire:edit-post @saved="close($event.detail.postId)">
+```
+
 ## Using events within inline scripts
 
 You can dispatch and listen to events from inline scripts within your component's template.

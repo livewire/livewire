@@ -47,6 +47,54 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
+## Refreshing a component
+
+Sometimes you may want to trigger a simple "refresh" of your component. For example, if you have a component checking the status of something in the database, you may want to show a button to your users allowing them to refresh the displayed results.
+
+You can do this using Livewire's simple `$refresh` action anywhere you would normally reference your own component method:
+
+```blade
+<button type="button" wire:click="$refresh">...</button>
+```
+
+When the `$refresh` action is triggered, Livewire will make a server-roundtrip and re-render your component without calling any methods.
+
+It's important to note that any pending data updates in your component (for example `wire:model` bindings) will be applied on the server when the component is refreshed.
+
+Internally, Livewire uses the name "commit" to refer to any time a Livewire component is updated on the server. If you prefer this terminology, you can use the `$commit` helper instead of `$refresh`. The two are identical.
+
+```blade
+<button type="button" wire:click="$commit">...</button>
+```
+
+You can also trigger a component refresh using AlpineJS in your Livewire component:
+
+```blade
+<button type="button" x-on:click="$wire.$refresh()">...</button>
+```
+
+Learn more by reading the [documentation for using Alpine inside Livewire](/docs/alpine).
+
+## Confirming an action
+
+When allowing users to perform dangerous actions—such as deleting a post from the database—you may want to show them a confirmation alert to verify that they wish to perform that action.
+
+Livewire makes this easy by providing a simple directive called `wire:confirm`:
+
+```blade
+<button
+    type="button"
+    wire:click="delete"
+    wire:confirm="Are you sure you want to delete this post?"
+>
+    Delete post <!-- [tl! highlight:-2,1] -->
+</button>
+```
+
+When `wire:confirm` is added to an element containing a Livewire action, when a user tries to trigger that action, they will be presented with a confirmation dialog containing the provided message. They can either press "OK" to confirm the action, or press "Cancel" or hit the escape key.
+
+For more information, visit the [`wire:confirm` documentation page](/docs/wire-confirm).
+
 ## Event listeners
 
 Livewire supports a variety of event listeners, allowing you to respond to various types of user interactions:
@@ -163,7 +211,6 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 >    x-on:trix-change="$wire.content = $event.target.value"
 >></trix-editor>
 > ```
-
 
 ### Listening for dispatched custom events
 

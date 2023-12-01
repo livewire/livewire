@@ -15,8 +15,8 @@ export function restoreScrollPositionOrScrollToTop() {
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         } else {
             el.scrollTo({
-                top: Number(el.getAttribute('data-scroll-x')),
-                left: Number(el.getAttribute('data-scroll-y')),
+                top: Number(el.getAttribute('data-scroll-y')),
+                left: Number(el.getAttribute('data-scroll-x')),
                 behavior: 'instant',
             })
             el.removeAttribute('data-scroll-x')

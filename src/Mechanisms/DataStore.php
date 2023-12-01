@@ -42,7 +42,7 @@ class DataStore
         }
 
         if ($iKey !== null) {
-            return !! $this->lookup[$instance][$key][$iKey] ?? false;
+            return !! ($this->lookup[$instance][$key][$iKey] ?? false);
         }
 
         return true;

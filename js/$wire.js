@@ -22,6 +22,8 @@ function wireFallback(callback) {
 // And I actually like both depending on the scenario...
 let aliases = {
     'on': '$on',
+    'el': '$el',
+    'id': '$id',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -103,6 +105,14 @@ wireProperty('__instance', (component) => component)
 
 wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 
+wireProperty('$el', (component) => {
+    return component.el
+})
+
+wireProperty('$id', (component) => {
+    return component.id
+})
+
 wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
@@ -172,7 +182,6 @@ wireProperty('$parent', component => {
 
     return parent.$wire
 })
-
 
 let overriddenMethods = new WeakMap
 

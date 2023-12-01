@@ -196,12 +196,6 @@ public function posts()
 }
 ```
 
-Then somewhere else in your app, you may clear the cache for that property:
-
-```php
-Cache::forget('homepage-posts');
-```
-
 ## When to use computed properties?
 
 In addition to offering performance advantages, there are a few other scenarios where computed properties are helpful.

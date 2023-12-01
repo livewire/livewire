@@ -41,7 +41,7 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
         $force = $this->option('force');
         $inline = $this->option('inline');
         $test = $this->option('test') || $this->option('pest');
-        $testType = $this->option('test') ? 'phpunit' : 'pest';
+        $testType = $this->option('pest') ? 'pest' : 'phpunit';
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
 

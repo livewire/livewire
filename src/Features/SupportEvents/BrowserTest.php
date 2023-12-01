@@ -87,4 +87,37 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@button')
             ->assertSeeIn('@button', '1');
     }
+
+    /** @test */
+    public function can_unregister_global_livewire_listener()
+    {
+        Livewire::visit(new class extends Component {
+            function render()
+            {
+                return Blade::render(<<<'HTML'
+                <div x-data="{
+                    count: 0,
+                    listener: null,
+                    init() {
+                        this.listener = Livewire.on('foo', () => { this.count++ })
+                    },
+                    removeListener() {
+                        this.listener()
+                    }
+                }">
+                    <span x-text="count" dusk="text"></span>
+                    <button @click="Livewire.dispatch('foo')" dusk="dispatch">Dispatch Event</button>
+                    <button @click="removeListener" dusk="removeListener">Remove Listener</button>
+                </div>
+                HTML);
+            }
+        })
+            ->assertSeeIn('@text', '0')
+            ->click('@dispatch')
+            ->assertSeeIn('@text', '1')
+            ->click('@removeListener')
+            ->click('@dispatch')
+            ->assertSeeIn('@text', '1')
+        ;
+    }
 }

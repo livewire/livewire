@@ -447,7 +447,7 @@ $this->assertHasErrors(['title' => ['required']]);
 
 ### Authorization
 
-Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides an `assertUnauthorized()` method to ensure that an authorization check has failed:
+Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
 
 ```php
 <?php
@@ -475,6 +475,12 @@ class UpdatePostTest extends TestCase
             ->set('title', 'Living the lavender life')
             ->call('save')
             ->assertUnauthorized();
+
+        Livewire::actingAs($user)
+            ->test(UpdatePost::class, ['post' => $post])
+            ->set('title', 'Living the lavender life')
+            ->call('save')
+            ->assertForbidden();
     }
 }
 ```
@@ -482,7 +488,8 @@ class UpdatePostTest extends TestCase
 If you prefer, you can also test for explicit status codes that an action in your component may have triggered using `assertStatus()`:
 
 ```php
-->assertStatus(403);
+->assertStatus(401); // Unauthorized
+->assertStatus(403); // Forbidden
 ```
 
 ### Redirects
@@ -681,7 +688,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertNoRedirect()`                                  | Assert that no redirect has been triggered                                                                                                                                           |
 | `assertViewHas('posts')`                              | Assert that the `render()` method has passed a `posts` item to the view data                                                                                                         |
 | `assertViewHas('postCount', 3)`                       | Assert that a `postCount` variable has been passed to the view with a value of `3`                                                                                                   |
-| `assertViewHas('posts', function ($posts) { ... })`   | Assert that `postCount` view data exists and that it passes any assertions declared in the provided callback                                                                         |
+| `assertViewHas('posts', function ($posts) { ... })`   | Assert that `posts` view data exists and that it passes any assertions declared in the provided callback                                                                         |
 | `assertViewIs('livewire.show-posts')`                 | Assert that the component's render method returned the provided view name                                                                                                            |
 | `assertFileDownloaded()`                              | Assert that a file download has been triggered                                                                                                                                       |
 | `assertFileDownloaded($filename)`                     | Assert that a file download matching the provided file name has been triggered                                                                                                       |

@@ -115,6 +115,31 @@ class ShowUsers extends Component
 
 Now, when a user types "bob" into the search field, the URL will show: `https://example.com/users?q=bob` instead of `?search=bob`.
 
+## Excluding certain values
+
+By default, Livewire will only put an entry in the query string when it's value has changed from what it was at initialization. Most of the time, this is the desired behavior, however, there are certain scenarios where you may want more control over which value Livewire excludes from the query string. In these cases you can use the `except` parameter.
+
+For example, in the component below, the inital value of `$search` is modified in `mount()`. To ensure the browser will only ever exclude `search` from the query string if the `search` value is an empty string, the `except` parameter has been added to `#[Url]`:
+
+```php
+use Livewire\Attributes\Url;
+use Livewire\Component;
+
+class ShowUsers extends Component
+{
+    #[Url(except: '')]
+    public $search = '';
+
+    public function mount() {
+        $this->search = auth()->user()->username;
+    }
+
+    // ...
+}
+```
+
+Without `except` in the above example, Livewire would remove the `search` entry from the query string any time the value of `search` is equal to the initial value of `auth()->user()->username`. Instead, because `except: ''` has been used, Livewire will preserve all query string values except when `search` is an empty string.
+
 ## Display on page load
 
 By default, Livewire will only display a value in the query string after the value has been changed on the page. For example, if the default value for `$search` is an empty string: `""`, when the actual search input is empty, no value will appear in the URL.

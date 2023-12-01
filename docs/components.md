@@ -467,6 +467,37 @@ public function render()
 }
 ```
 
+Alternatively, Livewire supports using traditional Blade layout files with `@extends`.
+
+Given the following layout file:
+
+```blade
+<body>
+    @yield('content')
+</body>
+```
+
+You can configure Livewire to reference it using `->extends()` instead of `->layout()`:
+
+```php
+public function render()
+{
+    return view('livewire.show-posts')
+        ->extends('layouts.app'); // [tl! highlight]
+}
+```
+
+If you need to configure the `@section` for the component to use, you can configure that as well with the `->section()` method:
+
+```php
+public function render()
+{
+    return view('livewire.show-posts')
+        ->extends('layouts.app')
+        ->section('body'); // [tl! highlight]
+}
+```
+
 ### Setting the page title
 
 Assigning unique page titles to each page in your application is helpful for both users and search engines.
@@ -658,3 +689,58 @@ class ShowPost extends Component
     }
 }
 ```
+
+## Using JavaScript
+
+There are many instances where the built-in Livewire and Alpine utilities aren't enough to accomplish your goals inside your Livewire components.
+
+Fortunately, Livewire provides many useful extension points and utilities to interact with bespoke JavaScript. You can learn from the exhastive reference on [the JavaScript documentation page](/docs/javascript). But for now, here are a few useful ways to use your own JavaScript inside your Livewire components.
+
+### Executing scripts
+
+Livewire provides a helpful `@script` directive that, when wrapping a `<script>` element, will execute the given JavaScript when your component is initialized on the page.
+
+Here is an example of a simple `@script` that uses JavaScript's `setInterval()` to refresh your component every two seconds:
+
+```blade
+@script
+<script>
+    setInterval(() => {
+        $wire.$refresh()
+    }, 2000)
+</script>
+@endscript
+```
+
+You'll notice we are using an object called `$wire` inside the `<script>` to control the component. Livewire automatically makes this object available inside any `@script`s. If you're unfamiliar with `$wire`, you can learn more about `$wire` in the following documentation:
+* [Accessing properties from JavaScript](/docs/properties#accessing-properties-from-javascript)
+* [Calling Livewire actions from JS/Alpine](/docs/actions#calling-actions-from-alpine)
+* [The `$wire` object reference](/docs/javascript#the-wire-object)
+
+### Loading assets
+
+In addition to one-off `@script`s, Livewire provides a helpful `@assets` utility to easily load any script/style dependancies on the page.
+
+It also ensures that the provided assets are loaded only once per browser page, unlike `@script`, which executes every time a new instance of that Livewire component is initialized.
+
+Here is an example of using `@assets` to load a date picker library called [Pikaday](https://github.com/Pikaday/Pikaday) and initialize it inside your component using `@script`:
+
+```blade
+<div>
+    <input type="text" data-picker>
+</div>
+
+@assets
+<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+@endassets
+
+@script
+<script>
+    new Pikaday({ field: $wire.$el.querySelector('[data-picker]') });
+</script>
+@endscript
+```
+
+> [!info] Using `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside Blade components
+> If you are using [Blade components](https://laravel.com/docs/blade#components) to extract parts of your markup, you can use `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside them as well; even if there are multiple Blade components inside the same Livewire component. However, `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` are currently only supported in the context of a Livewire component, meaning if you use the given Blade component outside of Livewire entirely, those scripts and assets won't be loaded on the page.
