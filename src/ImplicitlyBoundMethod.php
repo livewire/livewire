@@ -78,12 +78,7 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     protected static function getClassForDependencyInjection($parameter)
     {
-//        $className = static::getParameterClassName($parameter);
-
-        if (! is_null($className = static::getParameterClassName($parameter)) && ! static::implementsInterface($parameter)) {
-            return $className;
-        }
-
+        $className = static::getParameterClassName($parameter);
 
         if(is_null($className)){
             return null;
@@ -93,7 +88,7 @@ class ImplicitlyBoundMethod extends BoundMethod
             return null;
         }
 
-        if (static::implementsInterface($parameter)) {
+        if (!static::implementsInterface($parameter)) {
             return $className;
         }
 

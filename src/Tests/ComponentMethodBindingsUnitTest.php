@@ -39,24 +39,24 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
     /** @test */
     public function mount_method_receives_implicit_model_binding()
     {
-//        Livewire::test(ComponentWithBindings::class, [
-//            'model' => 'new model',
-//        ])->assertSeeText('new model:param-default');
-//
-//        Livewire::test(ComponentWithBindings::class, [
-//            'model' => 'new model',
-//            'param' => 'foo',
-//        ])->assertSeeText('new model:foo');
+        Livewire::test(ComponentWithBindings::class, [
+            'model' => 'new model',
+        ])->assertSeeText('new model:param-default');
+
+        Livewire::test(ComponentWithBindings::class, [
+            'model' => 'new model',
+            'param' => 'foo',
+        ])->assertSeeText('new model:foo');
 
         Livewire::test(ComponentWithBindings::class, [
             'new model',
             'foo',
         ])->assertSeeText('new model:foo');
-//
-//        Livewire::test(ComponentWithBindings::class, [
-//            'foo',
-//            'model' => 'new model',
-//        ])->assertSeeText('new model:foo');
+
+        Livewire::test(ComponentWithBindings::class, [
+            'foo',
+            'model' => 'new model',
+        ])->assertSeeText('new model:foo');
     }
 
     /** @test */
@@ -118,26 +118,11 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $component = Livewire::test(ComponentWithBindings::class)
             ->assertSee('model-default');
 
-        dump('start');
-
         $component->runAction('actionWithModel', 'implicitly bound');
         $this->assertEquals('implicitly bound:param-default', $component->name);
 
-//        $component->runAction('actionWithModel', 'implicitly bound', 'foo');
-//        $this->assertEquals('implicitly bound:foo', $component->name);
-    }
-
-    /** @test */
-    public function action_receives_implicit_enum_binding()
-    {
-        $component = Livewire::test(ComponentWithEnumBindings::class, ['enum' => EnumToBeBound::FIRST])
-            ->assertSee('enum-first:param-default');
-
-        $component->runAction('actionWithEnum', 'enum-first');
-        $this->assertEquals('enum-first:param-default', $component->name);
-
-        $component->runAction('actionWithEnum', 'enum-first', 'foo');
-        $this->assertEquals('enum-first:foo', $component->name);
+        $component->runAction('actionWithModel', 'implicitly bound', 'foo');
+        $this->assertEquals('implicitly bound:foo', $component->name);
     }
 
     /** @test */
@@ -166,33 +151,44 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->assertEquals('implicitly bound:http://localhost/some-url/foo', $component->name);
     }
 
+    /** @test */
+    public function action_receives_implicit_enum_binding()
+    {
+        $component = Livewire::test(ComponentWithEnumBindings::class, ['enum' => EnumToBeBound::FIRST])
+            ->assertSee('enum-first:param-default');
 
+        $component->runAction('actionWithEnum', 'enum-first');
+        $this->assertEquals('enum-first:param-default', $component->name);
 
-//    /** @test */
-//    public function action_receives_implicit_binding_independent_of_parameter_order()
-//    {
-//        $component = Livewire::test(ComponentWithBindings::class)
-//            ->assertSee('model-default');
-//
-//        $component->runAction('actionWithModelAsSecond', 'bar', 'implicitly bound');
-//        $this->assertEquals('bar:implicitly bound:param-default', $component->name);
-//
-//        $component->runAction('actionWithModelAsSecond', 'bar', 'implicitly bound', 'foo');
-//        $this->assertEquals('bar:implicitly bound:foo', $component->name);
-//    }
-//
-//    /** @test */
-//    public function action_implicit_binding_plays_well_with_dependency_injection()
-//    {
-//        $component = Livewire::test(ComponentWithBindings::class)
-//            ->assertSee('model-default');
-//
-//        $component->runAction('actionWithModelAndDependency', 'implicitly bound');
-//        $this->assertEquals('implicitly bound:http://localhost/some-url/param-default', $component->name);
-//
-//        $component->runAction('actionWithModelAndDependency', 'implicitly bound', 'foo');
-//        $this->assertEquals('implicitly bound:http://localhost/some-url/foo', $component->name);
-//    }
+        $component->runAction('actionWithEnum', 'enum-first', 'foo');
+        $this->assertEquals('enum-first:foo', $component->name);
+    }
+
+    /** @test */
+    public function action_receives_implicit_enum_binding_independent_of_parameter_order()
+    {
+        $component = Livewire::test(ComponentWithEnumBindings::class, ['enum' => EnumToBeBound::FIRST])
+            ->assertSee('enum-first:param-default');
+
+        $component->runAction('actionWithEnumAsSecond', 'bar', 'enum-first');
+        $this->assertEquals('bar:enum-first:param-default', $component->name);
+
+        $component->runAction('actionWithEnumAsSecond', 'bar', 'enum-first', 'foo');
+        $this->assertEquals('bar:enum-first:foo', $component->name);
+    }
+
+    /** @test */
+    public function action_implicit_enum_binding_plays_well_with_dependency_injection()
+    {
+        $component = Livewire::test(ComponentWithEnumBindings::class, ['enum' => EnumToBeBound::FIRST])
+            ->assertSee('enum-first:param-default');
+
+        $component->runAction('actionWithEnumAndDependency', 'enum-first');
+        $this->assertEquals('enum-first:http://localhost/some-url/param-default', $component->name);
+
+        $component->runAction('actionWithEnumAndDependency', 'enum-first', 'foo');
+        $this->assertEquals('enum-first:http://localhost/some-url/foo', $component->name);
+    }
 }
 
 class ModelToBeBound extends Model
