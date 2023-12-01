@@ -83,7 +83,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function mount_method_receives_route_and_implicit_binding_and_dependency_injection()
+    public function mount_method_receives_route_and_implicit_model_binding_and_dependency_injection()
     {
         Livewire::test(ComponentWithMountInjections::class, [
             'foo',
@@ -113,7 +113,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function action_receives_implicit_binding()
+    public function action_receives_implicit_model_binding()
     {
         $component = Livewire::test(ComponentWithBindings::class)
             ->assertSee('model-default');
@@ -126,7 +126,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function action_receives_implicit_binding_independent_of_parameter_order()
+    public function action_receives_implicit_model_binding_independent_of_parameter_order()
     {
         $component = Livewire::test(ComponentWithBindings::class)
             ->assertSee('model-default');
@@ -139,7 +139,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function action_implicit_binding_plays_well_with_dependency_injection()
+    public function action_implicit_model_binding_plays_well_with_dependency_injection()
     {
         $component = Livewire::test(ComponentWithBindings::class)
             ->assertSee('model-default');
