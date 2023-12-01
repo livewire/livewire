@@ -256,14 +256,14 @@ class ComponentWithEnumBindings extends Component
         $this->name = collect([$enum->value, $param])->join(':');
     }
 
-    public function actionWithEnumAsSecond($foo, EnumToBeBound $Enum, $param = 'param-default')
+    public function actionWithEnumAsSecond($foo, EnumToBeBound $enum, $param = 'param-default')
     {
-        $this->name = collect([$foo, $Enum->value, $param])->join(':');
+        $this->name = collect([$foo, $enum->value, $param])->join(':');
     }
 
-    public function actionWithEnumAndDependency(UrlGenerator $generator, EnumToBeBound $Enum, $param = 'param-default')
+    public function actionWithEnumAndDependency(UrlGenerator $generator, EnumToBeBound $enum, $param = 'param-default')
     {
-        $this->name = collect([$Enum->value, $generator->to('/some-url/' . $param)])->join(':');
+        $this->name = collect([$enum->value, $generator->to('/some-url/' . $param)])->join(':');
     }
 
     public function render()
