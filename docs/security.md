@@ -68,6 +68,18 @@ class PostPolicy
 }
 ```
 
+Before you can use the new Policy, you need to register it inside `app\Providers\AuthServiceProvider.php`:
+
+```php
+// ...
+
+protected $policies = [
+    Post::class => PostPolicy::class,
+];
+
+// ...
+```
+
 Now, we can use the `$this->authorize()` method from the Livewire component to ensure the user owns the post before deleting it:
 
 ```php
