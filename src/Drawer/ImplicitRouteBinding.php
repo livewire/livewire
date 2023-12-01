@@ -10,6 +10,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Routing\UrlRoutable;
 use Livewire\Drawer\Utils;
+use UnitEnum;
 
 /**
  * This class mirrors the functionality of Laravel's Illuminate\Routing\ImplicitRouteBinding class.
@@ -90,6 +91,10 @@ class ImplicitRouteBinding
         $parameterValue = $route->parameter($parameterName);
 
         if ($parameterValue instanceof UrlRoutable) {
+            return $parameterValue;
+        }
+
+        if ($parameterValue instanceof UnitEnum) {
             return $parameterValue;
         }
 
