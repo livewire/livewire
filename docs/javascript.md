@@ -51,7 +51,7 @@ Here's a more full example where you can do something like register a one-off Al
 
 ### Using `$wire` from scripts
 
-Another helpful feature of using `@script` for your JavaScript is that you automatically have access to your Liveiwre component's `$wire` object.
+Another helpful feature of using `@script` for your JavaScript is that you automatically have access to your Livewire component's `$wire` object.
 
 Here's an example of using a simple `setInterval` to refresh the component every 2 seconds (You could easily do this with [`wire:poll`](/docs/wire-poll), but it's a simple way to demonstrate the point):
 
