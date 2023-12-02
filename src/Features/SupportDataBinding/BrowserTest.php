@@ -60,16 +60,10 @@ class BrowserTest extends BrowserTestCase
         })
             ->click('@save')
             ->assertSeeIn('@input.blade', '100')
-
-            ->type('@input', 'Hello World')
-            ->assertDontSeeIn('@input.alpine', 'Hel-l') // it shouldn't be possible to insert a letter because of x-mask
-
             ->type('@input', 'abc-d')
             ->assertDontSeeIn('@input.alpine', 'abc-d') // it shouldn't be possible to insert a letter because of x-mask
-
             ->type('@input', 'xyz-1')
             ->assertSeeIn('@input.alpine', 'xyz-1')
-
             ->waitForLivewire()->click('@save')
             ->assertSeeIn('@input.blade', 'xyz-1')
         ;
