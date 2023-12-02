@@ -248,6 +248,30 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    function computed_property_is_accessible_using_snake_case()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $upperCasedFoo = 'FOO_BAR';
+
+            #[Computed]
+            public function fooBar()
+            {
+                return strtolower($this->upperCasedFoo);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    {{ var_dump($this->foo_bar) }}
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('foo_bar');
+    }
+
+    /** @test */
     public function computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(ComputedPropertyStub::class)
