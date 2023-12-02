@@ -20,6 +20,9 @@ let Livewire = {
     trigger,
     dispatch,
     on,
+    get navigate() {
+        return Alpine.navigate
+    }
 }
 
 if (window.Livewire) console.warn('Detected multiple instances of Livewire running')

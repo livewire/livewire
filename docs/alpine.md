@@ -20,7 +20,7 @@ To lay a foundation for the rest of this documentation, here is one of the most 
 </div>
 ```
 
-The Alpine component above can be used inside any Livewire component in your application without a hitch. Livewire takes care of maintaining Alpine's state across Livewire component updates. In essance, you should feel free to use Alpine components inside Livewire as if you were using Alpine in any other non-Livewire context.
+The Alpine component above can be used inside any Livewire component in your application without a hitch. Livewire takes care of maintaining Alpine's state across Livewire component updates. In essence, you should feel free to use Alpine components inside Livewire as if you were using Alpine in any other non-Livewire context.
 
 ## Using Alpine inside Livewire
 
@@ -122,7 +122,7 @@ Typically you would just use `wire:model.blur="title"` in this situation, howeve
 
 #### Passing parameters
 
-You can also pass parameters to Livewire methods by simply passing the to the `$wire` method call.
+You can also pass parameters to Livewire methods by simply passing them to the `$wire` method call.
 
 Consider a component with a `deletePost()` method like so:
 
@@ -281,4 +281,4 @@ Alpine.directive('clipboard', (el) => {
 Livewire.start()
 ```
 
-Now the `x-clibboard` directive will be available to all your Alpine components in your Livewire application.
+Now the `x-clipboard` directive will be available to all your Alpine components in your Livewire application.

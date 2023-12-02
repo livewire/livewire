@@ -611,8 +611,8 @@ class CreatePostTest extends TestCase
     public function cant_create_post_without_title()
     {
         Livewire::test(CreatePost::class)
-            ->call('save')
             ->set('content', 'Sample content...')
+            ->call('save')
             ->assertHasErrors('title');
     }
 }
