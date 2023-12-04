@@ -51,7 +51,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Mechanisms\HandleRequests\HandleRequests::class,
             \Livewire\Mechanisms\FrontendAssets\FrontendAssets::class,
             \Livewire\Mechanisms\ExtendBlade\ExtendBlade::class,
-            \Livewire\Mechanisms\CompileLivewireTags::class,
+            \LiveWire\Mechanisms\CompileLivewireTags\CompileLivewireTags::class,
             \Livewire\Mechanisms\ComponentRegistry::class,
             \Livewire\Mechanisms\RenderComponent::class,
             \Livewire\Mechanisms\DataStore::class,

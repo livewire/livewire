@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\{ invade, store, trigger, wrap };
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -9,7 +10,7 @@ use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
 use ReflectionUnionType;
 
-class HandleComponents
+class HandleComponents extends Mechanism
 {
     protected $propertySynthesizers = [
         Synthesizers\CarbonSynth::class,
@@ -23,16 +24,6 @@ class HandleComponents
 
     public static $renderStack = [];
     public static $componentStack = [];
-
-    public function register()
-    {
-        app()->singleton($this::class);
-    }
-
-    public function boot()
-    {
-        //
-    }
 
     public function registerPropertySynthesizer($synth)
     {
