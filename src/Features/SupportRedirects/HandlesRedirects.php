@@ -22,9 +22,9 @@ trait HandlesRedirects
         $this->redirect(route($name, $parameters, $absolute), $navigate);
     }
 
-    public function redirectIntended($defaultUrl, $navigate = false)
+    public function redirectIntended($default = '/', $navigate = false)
     {
-        $url = url()->previous() ?: $defaultUrl;
+        $url = session()->pull('url.intended', $default);
     
         $this->redirect($url, $navigate);
     }
