@@ -89,6 +89,47 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    public function can_dispatch_to_another_component_globally()
+    {
+        Livewire::visit([
+            new class extends Component {
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button x-on:click="window.Livewire.dispatchTo('child', 'foo', { message: 'bar' })" dusk="button">Dispatch to child</button>
+
+                        <livewire:child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $message = 'foo';
+
+                protected $listeners = ['foo' => 'onFoo'];
+
+                function onFoo($message)
+                {
+                    $this->message = $message;
+                }
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <h1 dusk="output">{{ $message }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@output', 'foo')
+            ->waitForLivewire()->click('@button')
+            ->assertSeeIn('@output', 'bar');
+    }
+
+    /** @test */
     public function can_unregister_global_livewire_listener()
     {
         Livewire::visit(new class extends Component {

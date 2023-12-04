@@ -64,7 +64,7 @@ export function dispatchSelf(component, name, params) {
     dispatchEvent(component.el, name, params, false)
 }
 
-export function dispatchTo(component, componentName, name, params) {
+export function dispatchTo(componentName, name, params) {
     let targets = componentsByName(componentName)
 
     targets.forEach(target => {
