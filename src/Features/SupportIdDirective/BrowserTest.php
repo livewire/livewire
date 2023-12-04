@@ -16,7 +16,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <div x-id="['text-input']">
                         <label :for="$id('text-input')" dusk='label'>Username</label>
-                        <input type="text" :id="$id('text-input')" dusk='username'>
+                        <input type="text" :id="$id('text-input')" name="username" dusk='username'>
                     </div>
                     <button type="button" dusk='refresh' wire:click="$refresh">Refresh</button>
                 </div>
@@ -30,6 +30,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->click('@refresh')
             ->waitForLivewire()
             ->assertValue('@username', 'John')
+            ->assertAttribute('@label', 'for', 'text-input-1')
+            ->assertAttribute('@username', 'id', 'text-input-1')
         ;
     }
 
