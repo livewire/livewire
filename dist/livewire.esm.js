@@ -8138,7 +8138,7 @@ function dispatchEvents(component, dispatches) {
     if (self2)
       dispatchSelf(component, name, params);
     else if (to)
-      dispatchTo(component, to, name, params);
+      dispatchTo(to, name, params);
     else
       dispatch2(component, name, params);
   });

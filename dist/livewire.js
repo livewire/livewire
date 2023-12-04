@@ -4413,7 +4413,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (self)
         dispatchSelf(component, name, params);
       else if (to)
-        dispatchTo(component, to, name, params);
+        dispatchTo(to, name, params);
       else
         dispatch3(component, name, params);
     });
