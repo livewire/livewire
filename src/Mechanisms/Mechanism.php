@@ -12,7 +12,7 @@ abstract class Mechanism
 
     function register($provider)
     {
-        if ($this->singleton) app()->singleton(static::class, $this);
+        if ($this->singleton) app()->singleton(static::class, fn() => $this);
     }
 
     function boot()
