@@ -65,6 +65,14 @@ In case you need to pass parameters to the route you may use the second argument
     $this->redirectRoute('profile', ['id' => 1]);
 ```
 
+## Redirect to Intended
+
+In case you want to redirect the user back to the previous page they were on you can use `redirectIntended`. It accepts a default URL as its first argument which is used as a fallback if no previous page can be determined:
+
+```php
+    $this->redirectIntended('/default/url');
+```
+
 ## Redirecting to full-page components
 
 Because Livewire uses Laravel's built-in redirection feature, you can use all of the redirection methods available to you in a typical Laravel application.
