@@ -108,6 +108,7 @@ Modifier | Description
 `.lazy` | An alias for `.change`
 `.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay
 `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
+`.boolean` | Cast the text value of an input to `bool` on the server
 `.number` | Cast the text value of an input to `int` on the server
 `.fill` | Use the initial value provided by a "value" HTML attribute on page-load
 
