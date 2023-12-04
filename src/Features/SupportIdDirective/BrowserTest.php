@@ -24,13 +24,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->type('@username', 'John')
-            ->assertInputValue('@username', 'John')
+            ->assertValue('@username', 'John')
             ->assertAttribute('@label', 'for', 'text-input-1')
             ->assertAttribute('@username', 'id', 'text-input-1')
-            ->waitForLivewire()
             ->click('@refresh')
             ->waitForLivewire()
-            ->assertInputValue('@username', 'John')
+            ->assertValue('@username', 'John')
         ;
     }
 
