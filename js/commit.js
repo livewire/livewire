@@ -8,13 +8,22 @@ import { on, trigger } from '@/events'
  * some action...
  */
 
+/**
+ * This bus manages the pooling of multiple commits and sending
+ * those pools of commits to the server...
+ */
 class CommitBus {
     constructor() {
+        // A list of loose, un-pooled, commits ready to be pooled and sent to the server...
         this.commits = new Set
+
+        // A list of commit pools currently out to the server...
         this.pools = new Set
     }
 
     add(component) {
+        // If this component already has a commit, leave it, otherwise,
+        // create a new commit and add it to the list...
         let commit = this.findCommitOr(component, () => {
             let newCommit = new Commit(component)
 
@@ -23,12 +32,21 @@ class CommitBus {
             return newCommit
         })
 
+        // Allow features like "reactive properties" to initiate associated
+        // commits before those commits are pooled for a network request...
         trigger('commit.pooling', { component: commit.component })
 
+        // Buffer the sending of a pool for 5ms to account for UI interactions
+        // that will trigger multiple events within a few milliseconds of each other.
+        // For example, clicking on a button that both unfocuses a field and registers a mousedown...
         bufferPoolingForFiveMs(commit, () => {
-            this.findPoolOr(commit, () => {
-                this.createAndSendNewPool(this.commits)
-            })
+            // If this commit is already in a pool, leave it be...
+            let pool = this.findPoolWithComponent(commit.component)
+
+            if (! pool) {
+                // If it's not, create a new pool or add it to an existing one and trigger a network request...
+                this.createAndSendNewPool()
+            }
         })
 
         return commit
@@ -44,20 +62,45 @@ class CommitBus {
         return callback()
     }
 
-    findPoolOr(commit, callback) {
+    findPoolWithComponent(component) {
         for (let [idx, pool] of this.pools.entries()) {
-            if (pool.hasCommitFor(commit.component)) return pool
+            if (pool.hasCommitFor(component)) return pool
         }
-
-        return callback()
     }
 
-    createAndSendNewPool(commits) {
+    createAndSendNewPool() {
+        // Split commits up across one or multiple pools to be sent as seperate network requests...
+        let pools = this.corraleCommitsIntoPools()
+
+        // Clear all commits in the queue now that they're in pools...
+        this.commits.clear()
+
+        // Go through each pool and...
+        pools.forEach(pool => {
+            // Add it to the list of pending pools...
+            this.pools.add(pool)
+
+            // Send it's payload along to the server...
+            pool.send().then(() => {
+                // When it comes back, remove it from the list...
+                this.pools.delete(pool)
+
+                // Trigger another pooling phase in case commits have
+                // been added while the current request was out...
+                this.sendAnyQueuedCommits()
+            })
+        })
+    }
+
+    corraleCommitsIntoPools() {
         let pools = []
 
-        for (let [idx, commit] of commits.entries()) {
+        // Go through each commit and assess wether it should be bundled
+        // with other commits or sperated into it's own pool (network request)...
+        for (let [idx, commit] of this.commits.entries()) {
             let hasFoundPool = false
 
+            // If an existing pool wants to claim a commit, let it...
             pools.forEach(pool => {
                 if (pool.shouldHoldCommit(commit)) {
                     pool.add(commit)
@@ -66,6 +109,7 @@ class CommitBus {
                 }
             })
 
+            // Otherwise, create a new pool and seed it with this commit...
             if (! hasFoundPool) {
                 let newPool = new RequestPool
 
@@ -75,27 +119,54 @@ class CommitBus {
             }
         }
 
-        // Clear then from the queue...
-        this.commits.clear()
-
-        pools.forEach(pool => {
-            this.pools.add(pool)
-
-            pool.send().then(() => {
-                this.pools.delete(pool)
-
-                this.sendAnyQueuedCommits()
-            })
-        })
+        return pools
     }
 
     sendAnyQueuedCommits() {
         if (this.commits.size > 0) {
-            this.createAndSendNewPool(this.commits)
+            this.createAndSendNewPool()
         }
     }
 }
+/**
+ * This is the bus that manages pooling and sending
+ * commits to the server as network requests...
+ */
+let commitBus = new CommitBus
 
+/**
+ * Create a commit and trigger a network request...
+ */
+export async function requestCommit(component) {
+    let commit = commitBus.add(component)
+
+    let promise = new Promise((resolve, reject) => {
+        commit.addResolver(resolve)
+    })
+
+    promise.commit = commit
+
+    return promise
+}
+
+/**
+ * Create a commit with an "action" call and trigger a network request...
+ */
+export async function requestCall(component, method, params) {
+    let commit = commitBus.add(component)
+
+    let promise = new Promise((resolve, reject) => {
+        commit.addCall(method, params, value => resolve(value))
+    })
+
+    promise.commit = commit
+
+    return promise
+}
+
+/**
+ * The RequestPool contains a list of commits to be sent to the server...
+ */
 class RequestPool {
     constructor() {
         this.commits = new Set
@@ -106,6 +177,7 @@ class RequestPool {
     }
 
     hasCommitFor(component) {
+        // Determine if this pool already has a commit for this component...
         for (let [idx, commit] of this.commits.entries()) {
             if (commit.component === component) return true
         }
@@ -113,13 +185,16 @@ class RequestPool {
         return false
     }
 
+    // Determine if a commit should be added to this pool or isolated into its own...
     shouldHoldCommit(commit) {
-        return true
+        return ! commit.isolate
     }
 
     async send() {
         this.prepare()
 
+        // Send this pool of commits to the server and let the commits
+        // Manage their own response actions...
         await sendRequest(this)
     }
 
@@ -130,8 +205,10 @@ class RequestPool {
     }
 
     payload() {
+        // Extract a request payload from each of the commits in this pool...
         let commitPayloads = []
 
+        // Collect success and failure callbacks to be used inside aggregated callbacks...
         let successReceivers = []
         let failureReceivers = []
 
@@ -143,6 +220,8 @@ class RequestPool {
             failureReceivers.push(fail)
         })
 
+        // Aggregate the success and failure callbacks for individual commits
+        // into something that can be called singularly...
         let succeed = components => successReceivers.forEach(receiver => receiver(components.shift()))
 
         let fail = () => failureReceivers.forEach(receiver => receiver())
@@ -151,43 +230,24 @@ class RequestPool {
     }
 }
 
-let commitBus = new CommitBus
-
-export async function requestCommit(component) {
-    let commit = commitBus.add(component)
-
-    return new Promise((resolve, reject) => {
-        commit.addResolver(resolve)
-    })
-}
-
-export async function requestCall(component, method, params) {
-    let commit = commitBus.add(component)
-
-    return new Promise((resolve, reject) => {
-        commit.addCall(method, params, value => resolve(value))
-    })
-}
-
 /**
- * The term "commit" here refers to anytime we're making a network
- * request, updating the server, and generating a new snapshot.
- * We're "requesting" a new commit rather than executing it
- * immediately, because we might want to batch multiple
- * simultaneus commits from other livewire targets.
+ * A commit represents an individual component updating itself server-side...
  */
 class Commit {
     constructor(component) {
         this.component = component
+        this.isolate = false
         this.calls = []
         this.receivers = []
         this.resolvers = []
     }
 
+    // Add a new resolver to be resolved when a commit is returned from the server...
     addResolver(resolver) {
         this.resolvers.push(resolver)
     }
 
+    // Add a new action "call" to the commit payload...
     addCall(method, params, receiver) {
         this.calls.push({
             path: '', method, params,
@@ -201,7 +261,10 @@ class Commit {
         trigger('commit.prepare', { component: this.component })
     }
 
+    // Generate a JSON-friendly server-request payload...
     toRequestPayload() {
+        // Generate a "diff" of the current last known server-side state, and
+        // the new front-end state so that we can update the server atomically...
         let propertiesDiff = diff(this.component.canonical, this.component.ephemeral)
 
         let payload = {
@@ -214,6 +277,8 @@ class Commit {
             }))
         }
 
+        // Store success and failure hooks from commit listeners
+        // so they can be aggregated into a singular callback later...
         let succeedCallbacks = []
         let failCallbacks = []
         let respondCallbacks = []
@@ -222,6 +287,8 @@ class Commit {
         let fail = () => failCallbacks.forEach(i => i())
         let respond = () => respondCallbacks.forEach(i => i())
 
+        // Allow other areas of the codebase to hook into the lifecycle
+        // of an individual commit...
         let finishTarget = trigger('commit', {
             component: this.component,
             commit: payload,
@@ -236,13 +303,16 @@ class Commit {
             },
         })
 
+        // Handle the response payload for a commit...
         let handleResponse = (response) => {
             let { snapshot, effects } = response
 
             respond()
 
+            // Take the new snapshot and merge it into the existing one...
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
 
+            // Trigger any side effects from the payload like "morph" and "dispatch event"...
             processEffects(this.component, this.component.effects)
 
             if (effects['returns']) {

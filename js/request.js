@@ -3,9 +3,7 @@ import { showHtmlModal } from './modal'
 import { trigger, triggerAsync } from '@/events'
 
 /**
- * This method prepares the network request payload and makes
- * the actual request to the server to update the target,
- * store a new snapshot, and handle any side effects.
+ * Send a pool of commits to the server over HTTP...
  */
 export async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload()

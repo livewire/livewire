@@ -594,9 +594,10 @@
       });
       trigger("commit.pooling", { component: commit.component });
       bufferPoolingForFiveMs(commit, () => {
-        this.findPoolOr(commit, () => {
-          this.createAndSendNewPool(this.commits);
-        });
+        let pool = this.findPoolWithComponent(commit.component);
+        if (!pool) {
+          this.createAndSendNewPool();
+        }
       });
       return commit;
     }
@@ -608,16 +609,26 @@
       }
       return callback();
     }
-    findPoolOr(commit, callback) {
+    findPoolWithComponent(component) {
       for (let [idx, pool] of this.pools.entries()) {
-        if (pool.hasCommitFor(commit.component))
+        if (pool.hasCommitFor(component))
           return pool;
       }
-      return callback();
     }
-    createAndSendNewPool(commits) {
+    createAndSendNewPool() {
+      let pools = this.corraleCommitsIntoPools();
+      this.commits.clear();
+      pools.forEach((pool) => {
+        this.pools.add(pool);
+        pool.send().then(() => {
+          this.pools.delete(pool);
+          this.sendAnyQueuedCommits();
+        });
+      });
+    }
+    corraleCommitsIntoPools() {
       let pools = [];
-      for (let [idx, commit] of commits.entries()) {
+      for (let [idx, commit] of this.commits.entries()) {
         let hasFoundPool = false;
         pools.forEach((pool) => {
           if (pool.shouldHoldCommit(commit)) {
@@ -631,21 +642,31 @@
           pools.push(newPool);
         }
       }
-      this.commits.clear();
-      pools.forEach((pool) => {
-        this.pools.add(pool);
-        pool.send().then(() => {
-          this.pools.delete(pool);
-          this.sendAnyQueuedCommits();
-        });
-      });
+      return pools;
     }
     sendAnyQueuedCommits() {
       if (this.commits.size > 0) {
-        this.createAndSendNewPool(this.commits);
+        this.createAndSendNewPool();
       }
     }
   };
+  var commitBus = new CommitBus();
+  async function requestCommit(component) {
+    let commit = commitBus.add(component);
+    let promise = new Promise((resolve, reject) => {
+      commit.addResolver(resolve);
+    });
+    promise.commit = commit;
+    return promise;
+  }
+  async function requestCall(component, method, params) {
+    let commit = commitBus.add(component);
+    let promise = new Promise((resolve, reject) => {
+      commit.addCall(method, params, (value) => resolve(value));
+    });
+    promise.commit = commit;
+    return promise;
+  }
   var RequestPool = class {
     constructor() {
       this.commits = /* @__PURE__ */ new Set();
@@ -661,7 +682,7 @@
       return false;
     }
     shouldHoldCommit(commit) {
-      return true;
+      return !commit.isolate;
     }
     async send() {
       this.prepare();
@@ -685,22 +706,10 @@
       return [commitPayloads, succeed, fail];
     }
   };
-  var commitBus = new CommitBus();
-  async function requestCommit(component) {
-    let commit = commitBus.add(component);
-    return new Promise((resolve, reject) => {
-      commit.addResolver(resolve);
-    });
-  }
-  async function requestCall(component, method, params) {
-    let commit = commitBus.add(component);
-    return new Promise((resolve, reject) => {
-      commit.addCall(method, params, (value) => resolve(value));
-    });
-  }
   var Commit = class {
     constructor(component) {
       this.component = component;
+      this.isolate = false;
       this.calls = [];
       this.receivers = [];
       this.resolvers = [];
