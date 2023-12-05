@@ -298,8 +298,14 @@ You can include a Livewire component in your Blade templates using the `<livewir
 <livewire:create-post />
 ```
 
+If the component class is nested deeper within the ``app/Livewire/`` directory, you may use the ``.`` character to indicate directory nesting. For example, if we assume a component is located at ``app/Livewire/EditorPosts/CreatePost.php``, we may render it like so:
+
+```blade
+<livewire:editor-posts.create-post />
+```
+
 > [!warning] You must use kebab-case
-> As you can see in the snippet above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
+> As you can see in the snippets above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
 
 
 ### Passing data into components
