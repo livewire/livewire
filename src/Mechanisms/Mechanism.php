@@ -8,11 +8,9 @@ use Livewire\LivewireServiceProvider;
 
 abstract class Mechanism
 {
-    protected $singleton = true;
-
     function register()
     {
-        if ($this->singleton) app()->instance(static::class, $this);
+        app()->instance(static::class, $this);
     }
 
     function boot()
