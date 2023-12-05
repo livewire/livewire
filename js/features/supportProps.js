@@ -1,7 +1,7 @@
 import { findComponent } from "../store";
 import { on } from '@/events'
 
-on('commit.prepare', ({ component }) => {
+on('commit.pooling', ({ component }) => {
     // Ensure that all child components with reactive props (even deeply nested)
     // are included in the network request...
     getChildrenRecursively(component, child => {
@@ -11,6 +11,10 @@ on('commit.prepare', ({ component }) => {
         // If this child has a prop from the parent
         if (props) child.$wire.$commit()
     })
+})
+
+on('commit.prepare', ({ component }) => {
+    //
 })
 
 function getChildrenRecursively(component, callback) {

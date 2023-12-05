@@ -405,6 +405,9 @@
     }
     throw "Livewire: No CSRF token detected";
   }
+  function getUpdateUri() {
+    return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+  }
   function contentIsFromDump(content) {
     return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
   }
@@ -501,109 +504,73 @@
   }
 
   // js/request.js
-  var updateUri = document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
-  function triggerSend() {
-    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-      sendRequestToServer();
+  async function sendRequest(pool) {
+    let [payload, handleSuccess, handleFailure] = pool.payload();
+    let options = {
+      method: "POST",
+      body: JSON.stringify({
+        _token: getCsrfToken(),
+        components: payload
+      }),
+      headers: {
+        "Content-type": "application/json",
+        "X-Livewire": ""
+      }
+    };
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    let respondCallbacks = [];
+    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+    let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
+    let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
+    let finishProfile = trigger("request.profile", options);
+    let updateUri = getUpdateUri();
+    trigger("request", {
+      url: updateUri,
+      options,
+      payload: options.body,
+      respond: (i) => respondCallbacks.push(i),
+      succeed: (i) => succeedCallbacks.push(i),
+      fail: (i) => failCallbacks.push(i)
     });
-  }
-  var requestBufferTimeout;
-  function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
-    if (requestBufferTimeout)
-      return;
-    requestBufferTimeout = setTimeout(() => {
-      callback();
-      requestBufferTimeout = void 0;
-    }, 5);
-  }
-  async function sendRequestToServer() {
-    prepareCommitPayloads();
-    await queueNewRequestAttemptsWhile(async () => {
-      let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
-      let options = {
-        method: "POST",
-        body: JSON.stringify({
-          _token: getCsrfToken(),
-          components: payload
-        }),
-        headers: {
-          "Content-type": "application/json",
-          "X-Livewire": ""
-        }
-      };
-      let succeedCallbacks = [];
-      let failCallbacks = [];
-      let respondCallbacks = [];
-      let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-      let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
-      let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-      let finishProfile = trigger("request.profile", options);
-      trigger("request", {
-        url: updateUri,
-        options,
-        payload: options.body,
-        respond: (i) => respondCallbacks.push(i),
-        succeed: (i) => succeedCallbacks.push(i),
-        fail: (i) => failCallbacks.push(i)
-      });
-      let response = await fetch(updateUri, options);
-      let mutableObject = {
+    let response = await fetch(updateUri, options);
+    let mutableObject = {
+      status: response.status,
+      response
+    };
+    respond(mutableObject);
+    response = mutableObject.response;
+    let content = await response.text();
+    if (!response.ok) {
+      finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      handleFailure();
+      fail({
         status: response.status,
-        response
-      };
-      respond(mutableObject);
-      response = mutableObject.response;
-      let content = await response.text();
-      if (!response.ok) {
-        finishProfile({ content: "{}", failed: true });
-        let preventDefault = false;
-        handleFailure();
-        fail({
-          status: response.status,
-          content,
-          preventDefault: () => preventDefault = true
-        });
-        if (preventDefault)
-          return;
-        if (response.status === 419) {
-          handlePageExpiry();
-        }
-        return showFailureModal(content);
+        content,
+        preventDefault: () => preventDefault = true
+      });
+      if (preventDefault)
+        return;
+      if (response.status === 419) {
+        handlePageExpiry();
       }
-      if (response.redirected) {
-        window.location.href = response.url;
-      }
-      if (contentIsFromDump(content)) {
-        [dump, content] = splitDumpFromContent(content);
-        showHtmlModal(dump);
-        finishProfile({ content: "{}", failed: true });
-      } else {
-        finishProfile({ content, failed: false });
-      }
-      let { components: components2, assets } = JSON.parse(content);
-      await triggerAsync("payload.intercept", { components: components2, assets });
-      await handleSuccess(components2);
-      succeed({ status: response.status, json: JSON.parse(content) });
-    });
-  }
-  function prepareCommitPayloads() {
-    let commits = getCommits();
-    commits.forEach((i) => i.prepare());
-  }
-  function compileCommitPayloads() {
-    let commits = getCommits();
-    let commitPayloads = [];
-    let successReceivers = [];
-    let failureReceivers = [];
-    flushCommits((commit) => {
-      let [payload, succeed2, fail2] = commit.toRequestPayload();
-      commitPayloads.push(payload);
-      successReceivers.push(succeed2);
-      failureReceivers.push(fail2);
-    });
-    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-    let fail = () => failureReceivers.forEach((receiver) => receiver());
-    return [commitPayloads, succeed, fail];
+      return showFailureModal(content);
+    }
+    if (response.redirected) {
+      window.location.href = response.url;
+    }
+    if (contentIsFromDump(content)) {
+      [dump, content] = splitDumpFromContent(content);
+      showHtmlModal(dump);
+      finishProfile({ content: "{}", failed: true });
+    } else {
+      finishProfile({ content, failed: false });
+    }
+    let { components: components2, assets } = JSON.parse(content);
+    await triggerAsync("payload.intercept", { components: components2, assets });
+    await handleSuccess(components2);
+    succeed({ status: response.status, json: JSON.parse(content) });
   }
   function handlePageExpiry() {
     confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
@@ -612,60 +579,123 @@
     let html = content;
     showHtmlModal(html);
   }
-  var sendingRequest = false;
-  var afterSendStack = [];
-  async function waitUntilTheCurrentRequestIsFinished(callback) {
-    return new Promise((resolve) => {
-      if (sendingRequest) {
-        afterSendStack.push(() => resolve(callback()));
-      } else {
-        resolve(callback());
-      }
-    });
-  }
-  async function queueNewRequestAttemptsWhile(callback) {
-    sendingRequest = true;
-    await callback();
-    sendingRequest = false;
-    while (afterSendStack.length > 0)
-      afterSendStack.shift()();
-  }
 
   // js/commit.js
-  var commitQueue = [];
-  function getCommits() {
-    return commitQueue;
-  }
-  function flushCommits(callback) {
-    while (commitQueue.length > 0) {
-      callback(commitQueue.shift());
+  var CommitBus = class {
+    constructor() {
+      this.commits = /* @__PURE__ */ new Set();
+      this.pools = /* @__PURE__ */ new Set();
     }
-  }
-  function findOrCreateCommit(component) {
-    let commit = commitQueue.find((i) => {
-      return i.component.id === component.id;
-    });
-    if (!commit) {
-      commitQueue.push(commit = new Commit(component));
-    }
-    return commit;
-  }
-  async function requestCommit(component) {
-    return await waitUntilTheCurrentRequestIsFinished(() => {
-      let commit = findOrCreateCommit(component);
-      triggerSend();
-      return new Promise((resolve, reject) => {
-        commit.addResolver(resolve);
+    add(component) {
+      let commit = this.findCommitOr(component, () => {
+        let newCommit = new Commit(component);
+        this.commits.add(newCommit);
+        return newCommit;
       });
+      trigger("commit.pooling", { component: commit.component });
+      bufferPoolingForFiveMs(commit, () => {
+        this.findPoolOr(commit, () => {
+          this.createAndSendNewPool(this.commits);
+        });
+      });
+      return commit;
+    }
+    findCommitOr(component, callback) {
+      for (let [idx, commit] of this.commits.entries()) {
+        if (commit.component === component) {
+          return commit;
+        }
+      }
+      return callback();
+    }
+    findPoolOr(commit, callback) {
+      for (let [idx, pool] of this.pools.entries()) {
+        if (pool.hasCommitFor(commit.component))
+          return pool;
+      }
+      return callback();
+    }
+    createAndSendNewPool(commits) {
+      let pools = [];
+      for (let [idx, commit] of commits.entries()) {
+        let hasFoundPool = false;
+        pools.forEach((pool) => {
+          if (pool.shouldHoldCommit(commit)) {
+            pool.add(commit);
+            hasFoundPool = true;
+          }
+        });
+        if (!hasFoundPool) {
+          let newPool = new RequestPool();
+          newPool.add(commit);
+          pools.push(newPool);
+        }
+      }
+      this.commits.clear();
+      pools.forEach((pool) => {
+        this.pools.add(pool);
+        pool.send().then(() => {
+          this.pools.delete(pool);
+          this.sendAnyQueuedCommits();
+        });
+      });
+    }
+    sendAnyQueuedCommits() {
+      if (this.commits.size > 0) {
+        this.createAndSendNewPool(this.commits);
+      }
+    }
+  };
+  var RequestPool = class {
+    constructor() {
+      this.commits = /* @__PURE__ */ new Set();
+    }
+    add(commit) {
+      this.commits.add(commit);
+    }
+    hasCommitFor(component) {
+      for (let [idx, commit] of this.commits.entries()) {
+        if (commit.component === component)
+          return true;
+      }
+      return false;
+    }
+    shouldHoldCommit(commit) {
+      return true;
+    }
+    async send() {
+      this.prepare();
+      await sendRequest(this);
+    }
+    prepare() {
+      this.commits.forEach((i) => i.prepare());
+    }
+    payload() {
+      let commitPayloads = [];
+      let successReceivers = [];
+      let failureReceivers = [];
+      this.commits.forEach((commit) => {
+        let [payload, succeed2, fail2] = commit.toRequestPayload();
+        commitPayloads.push(payload);
+        successReceivers.push(succeed2);
+        failureReceivers.push(fail2);
+      });
+      let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
+      let fail = () => failureReceivers.forEach((receiver) => receiver());
+      return [commitPayloads, succeed, fail];
+    }
+  };
+  var commitBus = new CommitBus();
+  async function requestCommit(component) {
+    let commit = commitBus.add(component);
+    return new Promise((resolve, reject) => {
+      commit.addResolver(resolve);
     });
   }
   async function requestCall(component, method, params) {
-    return await waitUntilTheCurrentRequestIsFinished(() => {
-      let commit = findOrCreateCommit(component);
-      triggerSend();
-      return new Promise((resolve, reject) => {
-        commit.addCall(method, params, (value) => resolve(value));
-      });
+    let commit = commitBus.add(component);
+    return new Promise((resolve, reject) => {
+      commit.addCall(method, params, (value) => resolve(value));
     });
   }
   var Commit = class {
@@ -747,6 +777,15 @@
   };
   function processEffects(target, effects) {
     trigger("effects", target, effects);
+  }
+  var buffersByCommit = /* @__PURE__ */ new WeakMap();
+  function bufferPoolingForFiveMs(commit, callback) {
+    if (buffersByCommit.has(commit))
+      return;
+    buffersByCommit.set(commit, setTimeout(() => {
+      callback();
+      buffersByCommit.delete(commit);
+    }, 5));
   }
 
   // ../alpine/packages/alpinejs/dist/module.esm.js
@@ -8647,13 +8686,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportProps.js
-  on("commit.prepare", ({ component }) => {
+  on("commit.pooling", ({ component }) => {
     getChildrenRecursively(component, (child) => {
       let childMeta = child.snapshot.memo;
       let props = childMeta.props;
       if (props)
         child.$wire.$commit();
     });
+  });
+  on("commit.prepare", ({ component }) => {
   });
   function getChildrenRecursively(component, callback) {
     component.children.forEach((child) => {

@@ -1,4 +1,4 @@
-import { sendRequest } from "./request"
+import { triggerSend, waitUntilTheCurrentRequestIsFinished } from "./request"
 import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObject, contentIsFromDump, splitDumpFromContent } from '@/utils'
 import { on, trigger } from '@/events'
 
@@ -8,164 +8,52 @@ import { on, trigger } from '@/events'
  * some action...
  */
 
-class CommitBus {
-    constructor() {
-        this.commits = new Set
-        this.pools = new Set
-    }
+// The running queue of component commits to send to the server when the time comes...
+let commitQueue = []
 
-    add(component) {
-        let commit = this.findCommitOr(component, () => {
-            let newCommit = new Commit(component)
+export function getCommits() {
+    return commitQueue
+}
 
-            this.commits.add(newCommit)
-
-            return newCommit
-        })
-
-        trigger('commit.pooling', { component: commit.component })
-
-        bufferPoolingForFiveMs(commit, () => {
-            this.findPoolOr(commit, () => {
-                this.createAndSendNewPool(this.commits)
-            })
-        })
-
-        return commit
-    }
-
-    findCommitOr(component, callback) {
-        for (let [idx, commit] of this.commits.entries()) {
-            if (commit.component === component) {
-                return commit
-            }
-        }
-
-        return callback()
-    }
-
-    findPoolOr(commit, callback) {
-        for (let [idx, pool] of this.pools.entries()) {
-            if (pool.hasCommitFor(commit.component)) return pool
-        }
-
-        return callback()
-    }
-
-    createAndSendNewPool(commits) {
-        let pools = []
-
-        for (let [idx, commit] of commits.entries()) {
-            let hasFoundPool = false
-
-            pools.forEach(pool => {
-                if (pool.shouldHoldCommit(commit)) {
-                    pool.add(commit)
-
-                    hasFoundPool = true
-                }
-            })
-
-            if (! hasFoundPool) {
-                let newPool = new RequestPool
-
-                newPool.add(commit)
-
-                pools.push(newPool)
-            }
-        }
-
-        // Clear then from the queue...
-        this.commits.clear()
-
-        pools.forEach(pool => {
-            this.pools.add(pool)
-
-            pool.send().then(() => {
-                this.pools.delete(pool)
-
-                this.sendAnyQueuedCommits()
-            })
-        })
-    }
-
-    sendAnyQueuedCommits() {
-        if (this.commits.size > 0) {
-            this.createAndSendNewPool(this.commits)
-        }
+export function flushCommits(callback) {
+    while (commitQueue.length > 0) {
+        callback(commitQueue.shift())
     }
 }
 
-class RequestPool {
-    constructor() {
-        this.commits = new Set
+function findOrCreateCommit(component) {
+    let commit = commitQueue.find(i => {
+        return i.component.id === component.id
+    })
+
+    if (! commit) {
+        commitQueue.push(commit = new Commit(component))
     }
 
-    add(commit) {
-        this.commits.add(commit)
-    }
-
-    hasCommitFor(component) {
-        for (let [idx, commit] of this.commits.entries()) {
-            if (commit.component === component) return true
-        }
-
-        return false
-    }
-
-    shouldHoldCommit(commit) {
-        return true
-    }
-
-    async send() {
-        this.prepare()
-
-        await sendRequest(this)
-    }
-
-    prepare() {
-        // Give each commit a chance to do any last-minute prep
-        // before being sent to the server.
-        this.commits.forEach(i => i.prepare())
-    }
-
-    payload() {
-        let commitPayloads = []
-
-        let successReceivers = []
-        let failureReceivers = []
-
-        this.commits.forEach(commit => {
-            let [payload, succeed, fail] = commit.toRequestPayload()
-
-            commitPayloads.push(payload)
-            successReceivers.push(succeed)
-            failureReceivers.push(fail)
-        })
-
-        let succeed = components => successReceivers.forEach(receiver => receiver(components.shift()))
-
-        let fail = () => failureReceivers.forEach(receiver => receiver())
-
-        return [ commitPayloads, succeed, fail ]
-    }
+    return commit
 }
-
-let commitBus = new CommitBus
 
 export async function requestCommit(component) {
-    let commit = commitBus.add(component)
+    return await waitUntilTheCurrentRequestIsFinished(() => {
+        let commit = findOrCreateCommit(component)
 
-    return new Promise((resolve, reject) => {
-        commit.addResolver(resolve)
+        triggerSend()
+
+        return new Promise((resolve, reject) => {
+            commit.addResolver(resolve)
+        })
     })
 }
 
 export async function requestCall(component, method, params) {
-    let commit = commitBus.add(component)
+    return await waitUntilTheCurrentRequestIsFinished(() => {
+        let commit = findOrCreateCommit(component)
 
-    return new Promise((resolve, reject) => {
-        commit.addCall(method, params, value => resolve(value))
+        triggerSend()
+
+        return new Promise((resolve, reject) => {
+            commit.addCall(method, params, value => resolve(value))
+        })
     })
 }
 
@@ -283,16 +171,4 @@ class Commit {
  */
 export function processEffects(target, effects) {
     trigger('effects', target, effects)
-}
-
-let buffersByCommit = new WeakMap
-
-function bufferPoolingForFiveMs(commit, callback) {
-    if (buffersByCommit.has(commit)) return
-
-    buffersByCommit.set(commit, setTimeout(() => {
-        callback()
-
-        buffersByCommit.delete(commit)
-    }, 5))
 }
