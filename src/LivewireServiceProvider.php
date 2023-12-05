@@ -61,7 +61,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function registerMechanisms()
     {
         foreach ($this->getMechanisms() as $mechanism) {
-            app($mechanism)->register($this);
+            app($mechanism)->register();
         }
     }
 
@@ -74,7 +74,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         }
 
         foreach ($this->getMechanisms() as $mechanism) {
-            app($mechanism)->boot($this);
+            app($mechanism)->boot();
         }
     }
 

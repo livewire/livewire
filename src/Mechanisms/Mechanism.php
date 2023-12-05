@@ -10,7 +10,7 @@ abstract class Mechanism
 {
     protected $singleton = true;
 
-    function register($provider)
+    function register()
     {
         if ($this->singleton) app()->instance(static::class, $this);
     }
