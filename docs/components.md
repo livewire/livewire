@@ -387,6 +387,14 @@ Now, when you visit the `/posts/create` path in your browser, the `CreatePost` c
 
 Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layouts/app.blade.php` file.
 
+You may create this file if it doesn't already exist by running the following command:
+
+```shell
+php artisan livewire:layout
+```
+
+This command will generate a file called `resources/views/components/layouts/app.blade.php`
+
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
 ```blade
