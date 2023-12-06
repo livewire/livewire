@@ -168,7 +168,7 @@ By binding multiple checkboxes to the `$updateTypes` property, the user can sele
 ```blade
 <input type="checkbox" value="email" wire:model="updateTypes">
 <input type="checkbox" value="sms" wire:model="updateTypes">
-<input type="checkbox" value="notificaiton" wire:model="updateTypes">
+<input type="checkbox" value="notification" wire:model="updateTypes">
 ```
 
 For example, if the user checks the first two boxes but not the third, the value of `$updateTypes` will be: `["email", "sms"]`
