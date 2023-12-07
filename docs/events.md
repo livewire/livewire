@@ -34,6 +34,9 @@ $this->dispatch('post-created', title: $post->title);
 
 To listen for an event in a Livewire component, add the `#[On]` attribute above the method you want to be called when a given event is dispatched:
 
+> [!warning] Make sure you import attribute classes
+> Make sure you import any attribute classes. For example, the below `#[On()]` attributes requires the following import `use Livewire\Attributes\On;`.
+
 ```php
 use Livewire\Component;
 use Livewire\Attributes\On; // [tl! highlight]
