@@ -3,7 +3,7 @@ import { on } from '@/events'
 
 // Ensure that all child components with reactive props (even deeply nested)
 // are included in the network request...
-on('commit.pooling', ({ bus: { commits } }) => {
+on('commit.pooling', ({ commits }) => {
     commits.forEach(commit => {
         let component = commit.component
 
