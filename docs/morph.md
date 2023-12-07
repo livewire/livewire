@@ -95,7 +95,7 @@ Consider the following Livewire Blade template for a fictitious `CreatePost` com
     <div>
         <button>Save</button>
     </div>
-<div>
+</form>
 ```
 
 If a user tries submitting the form, but encounters a validation error, the following problem occurs:
@@ -152,7 +152,7 @@ Here's an example of the previous Blade template but with Livewire's injected ma
     <div>
         <button>Save</button>
     </div>
-<div>
+</form>
 ```
 
 With these markers injected into the template, Livewire can now more easily detect the difference between a change and an addition.
@@ -184,7 +184,7 @@ For example, here's the above Blade template rewritten with wrapping `<div>` ele
     <div>
         <button>Save</button>
     </div>
-<div>
+</form>
 ```
 
 Now that the conditional has been wrapped in a persistent element, Livewire will morph the two different HTML trees properly.
