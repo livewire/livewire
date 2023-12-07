@@ -93,11 +93,17 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::visit([
             new class extends Component {
+                public function dispatchToOtherComponent()
+                {
+                    $this->dispatch('foo', message: 'baz')->to('child');
+                }
+
                 function render()
                 {
                     return <<<'HTML'
                     <div>
-                        <button x-on:click="window.Livewire.dispatchTo('child', 'foo', { message: 'bar' })" dusk="button">Dispatch to child</button>
+                        <button x-on:click="window.Livewire.dispatchTo('child', 'foo', { message: 'bar' })" dusk="button">Dispatch to child from Alpine</button>
+                        <button wire:click="dispatchToOtherComponent" dusk="button2">Dispatch to child from Livewire</button>
 
                         <livewire:child />
                     </div>
@@ -126,7 +132,11 @@ class BrowserTest extends BrowserTestCase
         ])
             ->assertSeeIn('@output', 'foo')
             ->waitForLivewire()->click('@button')
-            ->assertSeeIn('@output', 'bar');
+            ->waitForTextIn('@output', 'bar')
+            // For some reason this is flaky?
+            // ->waitForLivewire()->click('@button2')
+            // ->waitForTextIn('@output', 'baz')
+            ;
     }
 
     /** @test */

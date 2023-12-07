@@ -109,7 +109,7 @@ To re-iterate what's happening more explicitly:
 * Livewire encounters the first `<div>` in both trees. They are the same, so it continues.
 * Livewire encounters the second `<div>` in both trees and thinks they are the same `<div>`, just one has changed contents. So instead of inserting the error message as a new element, it changes the `<button>` into an error message.
 * Livewire then, after mistakenly modifying the previous element, notices an additional element at the end of the comparison. It then creates and appends the element after the previous one.
-* Therefore destroying, then re-creating an element that otherwise should have been simply moved.
+* Therefore, destroying, then re-creating an element that otherwise should have been simply moved.
 
 This scenario is at the root of almost all morph-related bugs.
 

@@ -1,7 +1,7 @@
 
 ## Using JavaScript in Livewire components
 
-Livewire and Alpine provide plenty of utilities for building dynamic components directly in your HTML, however, there are times where it's helpful to break out of the HTML and execute plain JavaScript for your component. Livewire's `@script` and `@assets` directive allow you to do this in a predictable, maintainable way.
+Livewire and Alpine provide plenty of utilities for building dynamic components directly in your HTML, however, there are times when it's helpful to break out of the HTML and execute plain JavaScript for your component. Livewire's `@script` and `@assets` directive allow you to do this in a predictable, maintainable way.
 
 ### Executing scripts
 
@@ -9,7 +9,7 @@ To execute bespoke JavaScript in your Livewire component, simply wrap a `<script
 
 Because scripts inside `@script` are handled by Livewire, they are executed at the perfect time after the page has loaded, but before the Livewire component has rendered. This means you no longer need to wrap your scripts in `document.addEventListener('...')` to load them properly.
 
-This also means that lazilly or conditionally loaded Livewire components are still able to execute JavaScript after the page has intiailized.
+This also means that lazily or conditionally loaded Livewire components are still able to execute JavaScript after the page has initialized.
 
 ```blade
 <div>
