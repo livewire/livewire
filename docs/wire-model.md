@@ -100,7 +100,6 @@ Any changes made to the text input will be automatically synchronized with the `
 
 ## All available modifiers
 
-
  Modifier          | Description                                                             
 -------------------|-------------------------------------------------------------------------
  `.live`           | Send updates as a user types                                            
