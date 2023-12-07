@@ -341,7 +341,7 @@ $count = computed(function () {
 })->persist();
 ```
 
-By default, Livewire caches the computed computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
+By default, Livewire caches the computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
 
 ```php
 $count = computed(function () {

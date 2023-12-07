@@ -100,7 +100,7 @@ public function placeholder(array $params = [])
 }
 ```
 
-Any parameters from the component being lazy loaded will be available as an `$params` arugment passed to the `placeholder()` method.
+Any parameters from the component being lazy loaded will be available as an `$params` argument passed to the `placeholder()` method.
 
 ## Lazy loading outside of the viewport
 
@@ -209,7 +209,7 @@ You may want to lazy load full-page Livewire components. You can do this by call
 Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy();
 ```
 
-Or alternatively, if there is a component that is lazy-loaded by default and you would like to opt-out of lazy-loading, you can use the following `enabled: false` parameter:
+Or alternatively, if there is a component that is lazy-loaded by default, and you would like to opt-out of lazy-loading, you can use the following `enabled: false` parameter:
 
 ```php
 Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy(enabled: false);

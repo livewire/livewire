@@ -1,5 +1,5 @@
 
-Livewire's ability to make updates to the page is what makes it "live", however, there are times where you might want to prevent Livewire from updating a portion of the page.
+Livewire's ability to make updates to the page is what makes it "live", however, there are times when you might want to prevent Livewire from updating a portion of the page.
 
 In these cases, you can use the `wire:ignore` directive to instruct Livewire to ignore the contents of a particular element, even if they change between requests.
 
