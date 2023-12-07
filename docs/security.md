@@ -36,7 +36,7 @@ class ShowPost extends Component
 
 The reason the above example is insecure is that `wire:click="delete(...)"` can be modified in the browser to pass ANY post ID a malicious user wishes.
 
-Action paramaters (like `$id` in this case) should be treated the same as any untrusted input from the browser.
+Action parameters (like `$id` in this case) should be treated the same as any untrusted input from the browser.
 
 Therefore, to keep this application secure and prevent a user from deleting another user's post, we must add authorization to the `delete()` action.
 
@@ -305,7 +305,7 @@ Because Livewire has internal mechanisms to re-apply middleware from the origina
 
 ### Configuring persistent middleware
 
-By default Livewire persists the following middleware across network requests:
+By default, Livewire persists the following middleware across network requests:
 
 ```php
 \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -357,7 +357,7 @@ Livewire::setUpdateRoute(function ($handle) {
 });
 ```
 
-Any Livewire AJAX/fetch requests made to the server will use the above endpoint and apply the `LocalizeViewPaths` middleware before handling the component udpdate.
+Any Livewire AJAX/fetch requests made to the server will use the above endpoint and apply the `LocalizeViewPaths` middleware before handling the component update.
 
 Learn more about [customizing the update route on the Installation page](https://livewire.laravel.com/docs/installation#configuring-livewires-update-endpoint).
 
