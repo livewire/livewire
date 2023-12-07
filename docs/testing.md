@@ -319,6 +319,57 @@ class SearchPostsTest extends TestCase
 }
 ```
 
+### Setting cookies
+
+If your Livewire component depends on cookies, you can use the `withCookie()` or `withCookies()` methods to set the cookies manually for your test.
+
+Below is a basic `Cart` component that loads a discount token from a cookie on mount:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\With\Url;
+use App\Models\Post;
+
+class Cart extends Component
+{
+    public $discountToken;
+
+    public mount()
+    {
+        $this->discountToken = request()->cookie('discountToken');
+    }
+}
+```
+
+As you can see, the `$discountToken` property above gets its value from a cookie in the request.
+
+Below is an example of how you would simulate the scenario of loading this component on a page with cookies:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\Cart;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CartTest extends TestCase
+{
+    /** @test */
+    public function can_load_discount_token_from_a_cookie()
+    {
+        Livewire::withCookies(['discountToken' => 'CALEB2023'])
+            ->test(Cart::class)
+            ->assertSet('discountToken', 'CALEB2023');
+    }
+}
+```
+
 ## Calling actions
 
 Livewire actions are typically called from the frontend using something like `wire:click`.
@@ -391,12 +442,12 @@ class CreatePostTest extends TestCase
 If you want to test that a specific validation rule has failed, you can pass an array of rules:
 
 ```php
-$this->assertHasErrors(['title', ['required']]);
+$this->assertHasErrors(['title' => ['required']]);
 ```
 
 ### Authorization
 
-Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides an `assertUnauthorized()` method to ensure that an authorization check has failed:
+Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
 
 ```php
 <?php
@@ -424,6 +475,12 @@ class UpdatePostTest extends TestCase
             ->set('title', 'Living the lavender life')
             ->call('save')
             ->assertUnauthorized();
+
+        Livewire::actingAs($user)
+            ->test(UpdatePost::class, ['post' => $post])
+            ->set('title', 'Living the lavender life')
+            ->call('save')
+            ->assertForbidden();
     }
 }
 ```
@@ -431,7 +488,8 @@ class UpdatePostTest extends TestCase
 If you prefer, you can also test for explicit status codes that an action in your component may have triggered using `assertStatus()`:
 
 ```php
-->assertStatus(403);
+->assertStatus(401); // Unauthorized
+->assertStatus(403); // Forbidden
 ```
 
 ### Redirects
@@ -587,6 +645,9 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `Livewire::test(UpdatePost::class, ['post' => $post])`                      | Test the `UpdatePost` component with the `post` parameter (To be received through the `mount()` method) |
 | `Livewire::actingAs($user)`                      | Set the provided user as the session's authenticated user |
 | `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) |
+| `Livewire::withCookie('color', 'blue')`                      | Set the test's `color` cookie to the provided value (`blue`). |
+| `Livewire::withCookies(['color' => 'blue', 'name' => 'Taylor])`                      | Set the test's `color` and `name` cookies to the provided values (`blue`, `Taylor`). |
+
 
 ### Interacting with components
 | Method                                                  | Description                                                                                                      |
@@ -627,7 +688,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertNoRedirect()`                                  | Assert that no redirect has been triggered                                                                                                                                           |
 | `assertViewHas('posts')`                              | Assert that the `render()` method has passed a `posts` item to the view data                                                                                                         |
 | `assertViewHas('postCount', 3)`                       | Assert that a `postCount` variable has been passed to the view with a value of `3`                                                                                                   |
-| `assertViewHas('posts', function ($posts) { ... })`   | Assert that `postCount` view data exists and that it passes any assertions declared in the provided callback                                                                         |
+| `assertViewHas('posts', function ($posts) { ... })`   | Assert that `posts` view data exists and that it passes any assertions declared in the provided callback                                                                         |
 | `assertViewIs('livewire.show-posts')`                 | Assert that the component's render method returned the provided view name                                                                                                            |
 | `assertFileDownloaded()`                              | Assert that a file download has been triggered                                                                                                                                       |
 | `assertFileDownloaded($filename)`                     | Assert that a file download matching the provided file name has been triggered                                                                                                       |

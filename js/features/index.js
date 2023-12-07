@@ -1,6 +1,7 @@
 
 import './supportWireModelingNestedComponents';
 import './supportDisablingFormsDuringRequest';
+import './supportScriptsAndAssets';
 import './supportFileDownloads';
 import './supportJsEvaluation';
 import './supportFileUploads';

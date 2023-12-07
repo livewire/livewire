@@ -25,7 +25,10 @@ class EloquentModelSynth extends Synth
 
         $meta = [];
 
-        $meta['key'] = $target->getKey();
+        if ($target->exists) {
+            $meta['key'] = $target->getKey();
+        }
+
         $meta['class'] = $alias;
 
         if ($target->getConnectionName() !== $class::make()->getConnectionName()) {
@@ -123,8 +126,8 @@ class EloquentModelSynth extends Synth
     protected function getDataFromModel(Model $model, $rules)
     {
         return [
-            ...$this->filterData($this->getAttributes($model), $rules),
-            ...$this->filterData($model->getRelations(), $rules),
+            ...$this->filterAttributes($this->getAttributes($model), $rules),
+            ...$this->filterRelations($model->getRelations(), $rules),
         ];
     }
 
@@ -146,7 +149,25 @@ class EloquentModelSynth extends Synth
         return $attributes;
     }
 
-    protected function filterData($data, $rules)
+    protected function filterAttributes($data, $rules)
+    {
+        $filteredAttributes = [];
+
+        foreach($rules as $key => $rule) {
+            // If the rule is an array, take the key instead
+            if (is_array($rule)) {
+                $rule = $key;
+            }
+
+            // If someone has created an empty model, the attribute may not exist
+            // yet, so use data_get so it will still be sent to the front end.
+            $filteredAttributes[$rule] = data_get($data, $rule);
+        }
+
+        return $filteredAttributes;
+    }
+
+    protected function filterRelations($data, $rules)
     {
         return array_filter($data, function ($key) use ($rules) {
             return array_key_exists($key, $rules) || in_array($key, $rules);

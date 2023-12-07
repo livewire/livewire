@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 use Livewire\Form;
 use Livewire\Livewire;
 use Sushi\Sushi;
@@ -60,6 +60,49 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_bind_a_live_property_from_parent_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = 0;
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="parent">Parent: {{ $foo }}</span>
+                    <span x-text="$wire.foo" dusk="parent.ephemeral"></span>
+
+                    <livewire:child wire:model.live="foo" />
+
+                    <button wire:click="$refresh" dusk="refresh">refresh</button>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar;
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <span dusk="child">Child: {{ $bar }}</span>
+                    <span x-text="$wire.bar" dusk="child.ephemeral"></span>
+                    <button wire:click="bar++;" dusk="increment">increment</button>
+                </div>
+                HTML; }
+            },
+        ])
+        ->assertSeeIn('@parent', 'Parent: 0')
+        ->assertSeeIn('@child', 'Child: 0')
+        ->assertSeeIn('@parent.ephemeral', '0')
+        ->assertSeeIn('@child.ephemeral', '0')
+        ->waitForLivewire()->click('@increment')
+        ->assertSeeIn('@parent', 'Parent: 1')
+        ->assertSeeIn('@child', 'Child: 1')
+        ->assertSeeIn('@parent.ephemeral', '1')
+        ->assertSeeIn('@child.ephemeral', '1')
+        ;
+    }
+
+    /** @test */
     public function can_bind_a_property_from_parent_array_to_property_from_child()
     {
         Livewire::visit([
@@ -97,6 +140,60 @@ class BrowserTest extends \Tests\BrowserTestCase
             },
         ])
         ->assertDontSee('Property [$foo.bar] not found')
+        ->assertSeeIn('@parent', 'Parent: baz')
+        ->assertSeeIn('@child', 'Child: baz')
+        ->assertSeeIn('@parent.ephemeral', 'baz')
+        ->assertSeeIn('@child.ephemeral', 'baz')
+        ->type('@child.input', 'qux')
+        ->assertSeeIn('@parent', 'Parent: baz')
+        ->assertSeeIn('@child', 'Child: baz')
+        ->assertSeeIn('@parent.ephemeral', 'qux')
+        ->assertSeeIn('@child.ephemeral', 'qux')
+        ->waitForLivewire()->click('@refresh')
+        ->assertSeeIn('@parent', 'Parent: qux')
+        ->assertSeeIn('@child', 'Child: qux')
+        ->assertSeeIn('@parent.ephemeral', 'qux')
+        ->assertSeeIn('@child.ephemeral', 'qux');
+    }
+
+    /** @test */
+    public function can_bind_a_property_from_parent_array_using_a_numeric_index_to_property_from_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = ['baz'];
+
+                public function render()
+                {
+                    return <<<'HTML'
+                <div>
+                    <span dusk='parent'>Parent: {{ $foo[0] }}</span>
+                    <span x-text="$wire.foo[0]" dusk='parent.ephemeral'></span>
+
+                    <livewire:child wire:model='foo.0' />
+
+                    <button wire:click='$refresh' dusk='refresh'>refresh</button>
+                </div>
+                HTML;
+                }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $bar;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                <div>
+                    <span dusk='child'>Child: {{ $bar }}</span>
+                    <span x-text='$wire.bar' dusk='child.ephemeral'></span>
+                    <input type='text' wire:model='bar' dusk='child.input' />
+                </div>
+                HTML;
+                }
+            },
+        ])
+        ->assertDontSee('Property [$foo.0] not found')
         ->assertSeeIn('@parent', 'Parent: baz')
         ->assertSeeIn('@child', 'Child: baz')
         ->assertSeeIn('@parent.ephemeral', 'baz')
@@ -226,11 +323,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 }
 
-
-
 class CreatePost extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title;
 
     public function store()

@@ -6,6 +6,8 @@ use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Livewire\Features\SupportAttributes\AttributeCollection;
 
+use function Livewire\wrap;
+
 class FormObjectSynth extends Synth {
     public static $key = 'form';
 
@@ -29,7 +31,7 @@ class FormObjectSynth extends Synth {
     {
         $form = new $meta['class']($this->context->component, $this->path);
 
-        static::bootFormObject($this->context->component, $form, $this->path);
+        $callBootMethod = static::bootFormObject($this->context->component, $form, $this->path);
 
         foreach ($data as $key => $child) {
             if ($child === null && Utils::propertyIsTypedAndUninitialized($form, $key)) {
@@ -38,6 +40,8 @@ class FormObjectSynth extends Synth {
 
             $form->$key = $hydrateChild($key, $child);
         }
+
+        $callBootMethod();
 
         return $form;
     }
@@ -56,6 +60,10 @@ class FormObjectSynth extends Synth {
         $component->mergeOutsideAttributes(
             AttributeCollection::fromComponent($component, $form, $path . '.')
         );
+
+        return function () use ($form) {
+            wrap($form)->boot();
+        };
     }
 }
 

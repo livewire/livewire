@@ -1,5 +1,5 @@
 
-export function toggleBooleanStateDirective(el, directive, isTruthy) {
+export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDisplay = null) {
     isTruthy = directive.modifiers.includes('remove') ? ! isTruthy : isTruthy
 
     if (directive.modifiers.includes('class')) {
@@ -17,7 +17,7 @@ export function toggleBooleanStateDirective(el, directive, isTruthy) {
             el.removeAttribute(directive.expression)
         }
     } else {
-        let cache = window
+        let cache = cachedDisplay ?? window
             .getComputedStyle(el, null)
             .getPropertyValue('display')
             

@@ -38,7 +38,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
                     (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
                     >                   # A ">" character that isn\'t preceded by a "<" character (meaning it\'s outside of a tag)
                 )
-            /mUx';
+            /mUxi';
 
             return $pattern;
         };
@@ -71,13 +71,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
             $entire = preg_replace_callback($generatePattern($openings), function ($matches) {
                 $original = $matches[0];
 
-                return '<!-- __BLOCK__ -->'.$original;
+                return '<!--[if BLOCK]><![endif]-->'.$original;
             }, $entire) ?? $entire;
 
             $entire = preg_replace_callback($generatePattern($closings), function ($matches) {
                 $original = $matches[0];
 
-                return $original.' <!-- __ENDBLOCK__ -->';
+                return $original.' <!--[if ENDBLOCK]><![endif]-->';
             }, $entire) ?? $entire;
 
             return $entire;

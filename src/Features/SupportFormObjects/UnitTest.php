@@ -3,10 +3,11 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use PHPUnit\Framework\Assert;
 use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
@@ -79,25 +80,47 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    function can_manually_add_errors_to_the_error_bag()
+    /** @test */
+    function can_validate_a_form_object_with_validate_only()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
 
             function save()
             {
-                $this->addError('status', 'An error message...');
+                $this->form->validateOnly('title');
             }
 
             public function render() {
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
         ->assertHasNoErrors()
         ->call('save')
-        ->assertHasErrors('form.status')
+        ->assertHasErrors('form.title')
+        ->assertHasNoErrors('form.content')
+        ;
+    }
+
+    /** @test */
+    function can_validate_a_form_object_with_root_component_validate_only()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->validateOnly('form.title');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.title')
+        ->assertHasNoErrors('form.content')
         ;
     }
 
@@ -203,6 +226,32 @@ class UnitTest extends \Tests\TestCase
         ->assertHasNoErrors()
         ->assertSet('form.title', '')
         ->assertSet('form.content', '')
+        ;
+    }
+
+    /** @test */
+    function all_properties_are_available_in_rules_method()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormWithRulesStub $form;
+
+            public function mount()
+            {
+                $this->form->setPost(42);
+            }
+
+            function save() {
+                $this->form->validate();
+            }
+
+            function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.post', 42)
+        ->call('save')
+        ->assertSet('form.post', 42)
+        ->assertHasErrors()
         ;
     }
 
@@ -399,6 +448,119 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('form.content', 'Content from array')
         ;
     }
+
+    /** @test */
+    function form_object_validation_runs_alongside_component_validation()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            #[Validate('required')]
+            public $username = '';
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.title')
+        ->assertHasErrors('form.content')
+        ->assertHasErrors('username')
+        ;
+    }
+
+    /** @test */
+    function form_object_validation_wont_run_if_rules_are_passed_into_validate()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            public $username = '';
+
+            function save()
+            {
+                $this->validate(['username' => 'required']);
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasNoErrors('form.title')
+        ->assertHasNoErrors('form.content')
+        ->assertHasErrors('username')
+        ;
+    }
+
+    /** @test */
+    function resetting_validation_errors_resets_form_objects_as_well()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            #[Validate('required')]
+            public $username = '';
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            function resetVal()
+            {
+                $this->resetValidation();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form.title')
+        ->assertHasErrors('form.content')
+        ->call('resetVal')
+        ->assertHasNoErrors('form.title')
+        ->assertHasNoErrors('form.content')
+        ;
+    }
+
+    /** @test */
+    function can_intercept_form_object_validator_instance()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateWithInterceptStub $form;
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            function resetVal()
+            {
+                $this->resetValidation();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->set('form.title', '"title with quotes"')
+        ->set('form.content', 'content')
+        ->call('save')
+        ->assertHasErrors('form.title')
+        ->assertHasNoErrors('form.content')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -406,6 +568,28 @@ class PostFormStub extends Form
     public $title = '';
 
     public $content = '';
+}
+
+class PostFormWithRulesStub extends Form
+{
+    public ?int $post = null;
+    public $title = '';
+    public $content = '';
+
+    public function setPost($model)
+    {
+        $this->post = $model;
+    }
+
+    public function rules()
+    {
+        Assert::assertEquals(42, $this->post, 'post should be available to run more complex rules');
+
+        return [
+            'title' => 'required',
+            'content' => 'required',
+        ];
+    }
 }
 
 class PostFormValidateStub extends Form
@@ -420,18 +604,41 @@ class PostFormValidateStub extends Form
     ];
 }
 
-class PostFormRuleAttributeStub extends Form
+class PostFormValidateWithInterceptStub extends Form
 {
-    #[Rule('required')]
     public $title = '';
 
-    #[Rule('required')]
+    public $content = '';
+
+    protected $rules = [
+        'title' => 'required',
+        'content' => 'required',
+    ];
+
+    public function boot()
+    {
+        $this->withValidator(function ($validator) {
+            $validator->after(function ($validator) {
+                if (str($this->title)->startsWith('"')) {
+                    $validator->errors()->add('title', 'Titles cannot start with quotations');
+                }
+            });
+        });
+    }
+}
+
+class PostFormRuleAttributeStub extends Form
+{
+    #[Validate('required')]
+    public $title = '';
+
+    #[Validate('required')]
     public $content = '';
 }
 
 class PostFormRuleAttributeWithCustomNameStub extends Form
 {
-    #[Rule(
+    #[Validate(
         rule: [
             'required',
             'min:3',
@@ -444,10 +651,10 @@ class PostFormRuleAttributeWithCustomNameStub extends Form
 
 class PostFormDynamicValidationAttributesStub extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title = '';
 
-    #[Rule('required')]
+    #[Validate('required')]
     public $content = '';
 
     public function validationAttributes() {
@@ -460,10 +667,10 @@ class PostFormDynamicValidationAttributesStub extends Form
 
 class PostFormDynamicMessagesStub extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title = '';
 
-    #[Rule(['required', 'min:10'])]
+    #[Validate(['required', 'min:10'])]
     public $content = '';
 
     public function messages()
@@ -477,10 +684,10 @@ class PostFormDynamicMessagesStub extends Form
 
 class PostFormDynamicMessagesAndAttributesStub extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title = '';
 
-    #[Rule('required')]
+    #[Validate('required')]
     public $content = '';
 
     public function validationAttributes() {
