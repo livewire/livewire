@@ -426,7 +426,7 @@
       listeners[name] = listeners[name].filter((i) => i !== callback);
     };
   }
-  function trigger2(name, ...params) {
+  function trigger(name, ...params) {
     let callbacks = listeners[name] || [];
     let finishers = [];
     for (let i = 0; i < callbacks.length; i++) {
@@ -2209,7 +2209,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   }
-  function trigger3(target, type, key, newValue, oldValue, oldTarget) {
+  function trigger2(target, type, key, newValue, oldValue, oldTarget) {
     const depsMap = targetMap.get(target);
     if (!depsMap) {
       return;
@@ -2362,9 +2362,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       const result = Reflect.set(target, key, value, receiver);
       if (target === toRaw(receiver)) {
         if (!hadKey) {
-          trigger3(target, "add", key, value);
+          trigger2(target, "add", key, value);
         } else if (hasChanged(value, oldValue)) {
-          trigger3(target, "set", key, value, oldValue);
+          trigger2(target, "set", key, value, oldValue);
         }
       }
       return result;
@@ -2375,7 +2375,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldValue = target[key];
     const result = Reflect.deleteProperty(target, key);
     if (result && hadKey) {
-      trigger3(target, "delete", key, void 0, oldValue);
+      trigger2(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
@@ -2456,7 +2456,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const hadKey = proto.has.call(target, value);
     if (!hadKey) {
       target.add(value);
-      trigger3(target, "add", value, value);
+      trigger2(target, "add", value, value);
     }
     return this;
   }
@@ -2474,9 +2474,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldValue = get3.call(target, key);
     target.set(key, value);
     if (!hadKey) {
-      trigger3(target, "add", key, value);
+      trigger2(target, "add", key, value);
     } else if (hasChanged(value, oldValue)) {
-      trigger3(target, "set", key, value, oldValue);
+      trigger2(target, "set", key, value, oldValue);
     }
     return this;
   }
@@ -2493,7 +2493,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldValue = get3 ? get3.call(target, key) : void 0;
     const result = target.delete(key);
     if (hadKey) {
-      trigger3(target, "delete", key, void 0, oldValue);
+      trigger2(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
@@ -2503,7 +2503,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
-      trigger3(target, "clear", void 0, void 0, oldTarget);
+      trigger2(target, "clear", void 0, void 0, oldTarget);
     }
     return result;
   }
@@ -3708,7 +3708,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     prepare() {
-      trigger2("commit.prepare", { component: this.component });
+      trigger("commit.prepare", { component: this.component });
     }
     toRequestPayload() {
       let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
@@ -3727,7 +3727,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
       let fail = () => failCallbacks.forEach((i) => i());
       let respond = () => respondCallbacks.forEach((i) => i());
-      let finishTarget = trigger2("commit", {
+      let finishTarget = trigger("commit", {
         component: this.component,
         commit: payload,
         succeed: (callback) => {
@@ -3800,12 +3800,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     createAndSendNewPool() {
-      trigger2("commit.pooling", { bus: this });
+      trigger("commit.pooling", { bus: this });
       let pools = this.corraleCommitsIntoPools();
       this.commits.clear();
-      trigger2("commit.pooled", { pools });
+      trigger("commit.pooled", { pools });
       pools.forEach((pool) => {
-        console.count("yo");
         if (pool.empty())
           return;
         this.pools.add(pool);
@@ -3886,9 +3885,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
     let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
     let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-    let finishProfile = trigger2("request.profile", options);
+    let finishProfile = trigger("request.profile", options);
     let updateUri = getUpdateUri();
-    trigger2("request", {
+    trigger("request", {
       url: updateUri,
       options,
       payload: options.body,
@@ -4402,7 +4401,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (components[component.id])
       throw "Component already registered";
     let cleanup3 = (i) => component.addCleanup(i);
-    trigger2("component.init", { component, cleanup: cleanup3 });
+    trigger("component.init", { component, cleanup: cleanup3 });
     components[component.id] = component;
     return component;
   }
@@ -8258,7 +8257,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!matchesForLivewireDirective(attribute.name))
           return;
         let directive3 = extractDirective(el, attribute.name);
-        trigger2("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
+        trigger("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
           module_default.onAttributeRemoved(el, directive3.raw, callback);
         } });
       });
@@ -8272,10 +8271,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let component = closestComponent(el, false);
       if (component) {
-        trigger2("element.init", { el, component });
+        trigger("element.init", { el, component });
         let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives2.forEach((directive3) => {
-          trigger2("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
+          trigger("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
             module_default.onAttributeRemoved(el, directive3.raw, callback);
           } });
         });
@@ -8700,12 +8699,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
-    trigger2("morph", { el, toEl: to, component });
+    trigger("morph", { el, toEl: to, component });
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+        trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
         if (el2.__livewire_ignore === true)
           return skip();
         if (el2.__livewire_ignore_self === true)
@@ -8718,26 +8717,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       updated: (el2, toEl) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.updated", { el: el2, component });
+        trigger("morph.updated", { el: el2, component });
       },
       removing: (el2, skip) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.removing", { el: el2, component, skip });
+        trigger("morph.removing", { el: el2, component, skip });
       },
       removed: (el2) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.removed", { el: el2, component });
+        trigger("morph.removed", { el: el2, component });
       },
       adding: (el2) => {
-        trigger2("morph.adding", { el: el2, component });
+        trigger("morph.adding", { el: el2, component });
       },
       added: (el2) => {
         if (isntElement(el2))
           return;
         const closestComponentId = closestComponent(el2).id;
-        trigger2("morph.added", { el: el2 });
+        trigger("morph.added", { el: el2 });
       },
       key: (el2) => {
         if (isntElement(el2))
@@ -9068,7 +9067,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         status: 200,
         async text() {
           let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger2("stream", streamed);
+            trigger("stream", streamed);
           });
           if (contentIsFromDump(finalResponse)) {
             this.ok = false;
@@ -9358,7 +9357,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     getByName,
     all,
     hook: on,
-    trigger: trigger2,
+    trigger,
     dispatch: dispatchGlobal,
     on: on3,
     get navigate() {
