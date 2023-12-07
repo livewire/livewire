@@ -116,6 +116,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             }
         ])
+            ->tinker()
             ->assertSeeIn('@parent.count', 0)
             ->assertSeeIn('@child.count', 0)
             ->assertSeeIn('@nested-child.count', 0)
