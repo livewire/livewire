@@ -9147,20 +9147,6 @@ function rescan() {
 // js/index.js
 var import_alpinejs20 = __toESM(require_module_cjs());
 
-// js/features/supportWireModelingNestedComponents.js
-on("commit.prepare", ({ component }) => {
-  component.children.forEach((child) => {
-    if (hasBindings(child)) {
-      child.$wire.$commit();
-    }
-  });
-});
-function hasBindings(component) {
-  let childMemo = component.snapshot.memo;
-  let bindings = childMemo.bindings;
-  return !!bindings;
-}
-
 // js/features/supportDisablingFormsDuringRequest.js
 var import_alpinejs9 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
@@ -9198,6 +9184,74 @@ function cleanup(component) {
   while (cleanupStackByComponentId[component.id].length > 0) {
     cleanupStackByComponentId[component.id].shift()();
   }
+}
+
+// js/features/supportPropsAndModelables.js
+on("commit.pooling", ({ bus: { commits } }) => {
+  commits.forEach((commit) => {
+    let component = commit.component;
+    getDeepChildrenWithBindings(component, (child) => {
+      child.$wire.$commit();
+    });
+  });
+});
+on("commit.pooled", ({ pools }) => {
+  let commits = getPooledCommits(pools);
+  commits.forEach((commit) => {
+    let component = commit.component;
+    getDeepChildrenWithBindings(component, (child) => {
+      colocateCommitsByComponent(pools, component, child);
+    });
+  });
+});
+function getPooledCommits(pools) {
+  let commits = [];
+  pools.forEach((pool) => {
+    pool.commits.forEach((commit) => {
+      commits.push(commit);
+    });
+  });
+  return commits;
+}
+function colocateCommitsByComponent(pools, component, foreignComponent) {
+  let pool = findPoolWithComponent(pools, component);
+  let foreignPool = findPoolWithComponent(pools, foreignComponent);
+  let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
+  foreignPool.delete(foreignCommit);
+  pool.add(foreignCommit);
+  pools.forEach((pool2) => {
+    if (pool2.empty())
+      pools.delete(pool2);
+  });
+}
+function findPoolWithComponent(pools, component) {
+  for (let [idx, pool] of pools.entries()) {
+    if (pool.hasCommitFor(component))
+      return pool;
+  }
+}
+function getDeepChildrenWithBindings(component, callback) {
+  getDeepChildren(component, (child) => {
+    if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+      callback(child);
+    }
+  });
+}
+function hasReactiveProps(component) {
+  let meta = component.snapshot.memo;
+  let props = meta.props;
+  return !!props;
+}
+function hasWireModelableBindings(component) {
+  let meta = component.snapshot.memo;
+  let bindings = meta.bindings;
+  return !!bindings;
+}
+function getDeepChildren(component, callback) {
+  component.children.forEach((child) => {
+    callback(child);
+    getDeepChildren(child, callback);
+  });
 }
 
 // js/features/supportScriptsAndAssets.js
@@ -9571,69 +9625,6 @@ on("effects", (component, effects) => {
     morph2(component, component.el, html);
   });
 });
-
-// js/features/supportProps.js
-on("commit.pooling", ({ bus: { commits } }) => {
-  commits.forEach((commit) => {
-    let component = commit.component;
-    getDeepChildrenWithReactiveProps(component, (child) => {
-      child.$wire.$commit();
-    });
-  });
-});
-on("commit.pooled", ({ pools }) => {
-  let commits = getPooledCommits(pools);
-  commits.forEach((commit) => {
-    console.count("poold");
-    let component = commit.component;
-    getDeepChildrenWithReactiveProps(component, (child) => {
-      colocateCommitsByComponent(pools, component, child);
-    });
-  });
-});
-function getPooledCommits(pools) {
-  let commits = [];
-  pools.forEach((pool) => {
-    pool.commits.forEach((commit) => {
-      commits.push(commit);
-    });
-  });
-  return commits;
-}
-function colocateCommitsByComponent(pools, component, foreignComponent) {
-  let pool = findPoolWithComponent(pools, component);
-  let foreignPool = findPoolWithComponent(pools, foreignComponent);
-  let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
-  foreignPool.delete(foreignCommit);
-  pool.add(foreignCommit);
-  pools.forEach((pool2) => {
-    if (pool2.empty())
-      pools.delete(pool2);
-  });
-}
-function findPoolWithComponent(pools, component) {
-  for (let [idx, pool] of pools.entries()) {
-    if (pool.hasCommitFor(component))
-      return pool;
-  }
-}
-function getDeepChildrenWithReactiveProps(component, callback) {
-  getDeepChildren(component, (child) => {
-    if (hasReactiveProps(child))
-      callback(child);
-  });
-}
-function hasReactiveProps(component) {
-  let meta = component.snapshot.memo;
-  let props = meta.props;
-  return !!props;
-}
-function getDeepChildren(component, callback) {
-  component.children.forEach((child) => {
-    callback(child);
-    getDeepChildren(child, callback);
-  });
-}
 
 // js/directives/wire-transition.js
 var import_alpinejs14 = __toESM(require_module_cjs());

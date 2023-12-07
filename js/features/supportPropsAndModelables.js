@@ -7,7 +7,7 @@ on('commit.pooling', ({ bus: { commits } }) => {
     commits.forEach(commit => {
         let component = commit.component
 
-        getDeepChildrenWithReactiveProps(component, child => {
+        getDeepChildrenWithBindings(component, child => {
             child.$wire.$commit()
         })
     })
@@ -19,10 +19,9 @@ on('commit.pooled', ({ pools }) => {
     let commits = getPooledCommits(pools)
 
     commits.forEach(commit => {
-        console.count('poold')
         let component = commit.component
 
-        getDeepChildrenWithReactiveProps(component, child => {
+        getDeepChildrenWithBindings(component, child => {
             colocateCommitsByComponent(pools, component, child)
         })
     })
@@ -64,9 +63,11 @@ function findPoolWithComponent(pools, component) {
     }
 }
 
-function getDeepChildrenWithReactiveProps(component, callback) {
+function getDeepChildrenWithBindings(component, callback) {
     getDeepChildren(component, child => {
-        if (hasReactiveProps(child)) callback(child)
+        if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+            callback(child)
+        }
     })
 }
 
@@ -75,6 +76,13 @@ function hasReactiveProps(component) {
     let props = meta.props
 
     return !! props
+}
+
+function hasWireModelableBindings(component) {
+    let meta = component.snapshot.memo
+    let bindings = meta.bindings
+
+    return !! bindings
 }
 
 function getDeepChildren(component, callback) {
