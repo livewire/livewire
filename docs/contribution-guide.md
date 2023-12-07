@@ -78,10 +78,12 @@ You may also need to run:
 
 Once everything is configured, run all tests to make sure everything is working and passing.
 
-To do this, run `phpunit` and confirm everything is running ok.
+To do this, run the test suites and confirm everything is running ok (you have to run each separately).
 
 ```shell
-./vendor/bin/phpunit
+./vendor/bin/phpunit --testsuite Unit
+./vendor/bin/phpunit --testsuite Browser
+./vendor/bin/phpunit --testsuite LegacyBrowser
 ```
 
 If the dusk tests don't run and you get an error, make sure you have run the command in
