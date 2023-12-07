@@ -1,4 +1,6 @@
 import { on, trigger } from '@/events'
+import { RequestPool } from './pool'
+import { Commit } from './commit'
 
 /**
  * This bus manages the pooling of multiple commits and sending

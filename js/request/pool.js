@@ -1,4 +1,4 @@
-import { sendRequest } from "./request"
+import { sendRequest } from "@/request"
 
 /**
  * The RequestPool contains a list of commits to be sent to the server...

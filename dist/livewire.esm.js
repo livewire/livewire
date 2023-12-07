@@ -7214,8 +7214,15 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
+function getUpdateUri() {
+  return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+}
 function contentIsFromDump(content) {
   return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
+}
+function splitDumpFromContent(content) {
+  let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+  return [dump2, content.replace(dump2, "")];
 }
 
 // js/events.js
@@ -7233,6 +7240,18 @@ function trigger2(name, ...params) {
   let finishers = [];
   for (let i = 0; i < callbacks.length; i++) {
     let finisher = callbacks[i](...params);
+    if (isFunction(finisher))
+      finishers.push(finisher);
+  }
+  return (result) => {
+    return runFinishers(finishers, result);
+  };
+}
+async function triggerAsync(name, ...params) {
+  let callbacks = listeners[name] || [];
+  let finishers = [];
+  for (let i = 0; i < callbacks.length; i++) {
+    let finisher = await callbacks[i](...params);
     if (isFunction(finisher))
       finishers.push(finisher);
   }
@@ -7295,6 +7314,177 @@ function generateEntangleFunction(component, cleanup2) {
     return interceptor(livewirePropertyValue);
   };
 }
+
+// js/request/modal.js
+function showHtmlModal(html) {
+  let page = document.createElement("html");
+  page.innerHTML = html;
+  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+  let modal = document.getElementById("livewire-error");
+  if (typeof modal != "undefined" && modal != null) {
+    modal.innerHTML = "";
+  } else {
+    modal = document.createElement("div");
+    modal.id = "livewire-error";
+    modal.style.position = "fixed";
+    modal.style.width = "100vw";
+    modal.style.height = "100vh";
+    modal.style.padding = "50px";
+    modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
+    modal.style.zIndex = 2e5;
+  }
+  let iframe = document.createElement("iframe");
+  iframe.style.backgroundColor = "#17161A";
+  iframe.style.borderRadius = "5px";
+  iframe.style.width = "100%";
+  iframe.style.height = "100%";
+  modal.appendChild(iframe);
+  document.body.prepend(modal);
+  document.body.style.overflow = "hidden";
+  iframe.contentWindow.document.open();
+  iframe.contentWindow.document.write(page.outerHTML);
+  iframe.contentWindow.document.close();
+  modal.addEventListener("click", () => hideHtmlModal(modal));
+  modal.setAttribute("tabindex", 0);
+  modal.addEventListener("keydown", (e) => {
+    if (e.key === "Escape")
+      hideHtmlModal(modal);
+  });
+  modal.focus();
+}
+function hideHtmlModal(modal) {
+  modal.outerHTML = "";
+  document.body.style.overflow = "visible";
+}
+
+// js/request/pool.js
+var RequestPool = class {
+  constructor() {
+    this.commits = /* @__PURE__ */ new Set();
+  }
+  add(commit) {
+    this.commits.add(commit);
+  }
+  delete(commit) {
+    this.commits.delete(commit);
+  }
+  hasCommitFor(component) {
+    return !!this.findCommitByComponent(component);
+  }
+  findCommitByComponent(component) {
+    for (let [idx, commit] of this.commits.entries()) {
+      if (commit.component === component)
+        return commit;
+    }
+  }
+  shouldHoldCommit(commit) {
+    return !commit.isolate;
+  }
+  empty() {
+    return this.commits.size === 0;
+  }
+  async send() {
+    this.prepare();
+    await sendRequest(this);
+  }
+  prepare() {
+    this.commits.forEach((i) => i.prepare());
+  }
+  payload() {
+    let commitPayloads = [];
+    let successReceivers = [];
+    let failureReceivers = [];
+    this.commits.forEach((commit) => {
+      let [payload, succeed2, fail2] = commit.toRequestPayload();
+      commitPayloads.push(payload);
+      successReceivers.push(succeed2);
+      failureReceivers.push(fail2);
+    });
+    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
+    let fail = () => failureReceivers.forEach((receiver) => receiver());
+    return [commitPayloads, succeed, fail];
+  }
+};
+
+// js/request/commit.js
+var Commit = class {
+  constructor(component) {
+    this.component = component;
+    this.isolate = false;
+    this.calls = [];
+    this.receivers = [];
+    this.resolvers = [];
+  }
+  addResolver(resolver) {
+    this.resolvers.push(resolver);
+  }
+  addCall(method, params, receiver) {
+    this.calls.push({
+      path: "",
+      method,
+      params,
+      handleReturn(value) {
+        receiver(value);
+      }
+    });
+  }
+  prepare() {
+    trigger2("commit.prepare", { component: this.component });
+  }
+  toRequestPayload() {
+    let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
+    let payload = {
+      snapshot: this.component.snapshotEncoded,
+      updates: propertiesDiff,
+      calls: this.calls.map((i) => ({
+        path: i.path,
+        method: i.method,
+        params: i.params
+      }))
+    };
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    let respondCallbacks = [];
+    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+    let fail = () => failCallbacks.forEach((i) => i());
+    let respond = () => respondCallbacks.forEach((i) => i());
+    let finishTarget = trigger2("commit", {
+      component: this.component,
+      commit: payload,
+      succeed: (callback) => {
+        succeedCallbacks.push(callback);
+      },
+      fail: (callback) => {
+        failCallbacks.push(callback);
+      },
+      respond: (callback) => {
+        respondCallbacks.push(callback);
+      }
+    });
+    let handleResponse = (response) => {
+      let { snapshot, effects } = response;
+      respond();
+      this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
+      this.component.processEffects(this.component.effects);
+      if (effects["returns"]) {
+        let returns = effects["returns"];
+        let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
+        returnHandlerStack.forEach((handleReturn, index) => {
+          handleReturn(returns[index]);
+        });
+      }
+      let parsedSnapshot = JSON.parse(snapshot);
+      finishTarget({ snapshot: parsedSnapshot, effects });
+      this.resolvers.forEach((i) => i());
+      succeed(response);
+    };
+    let handleFailure = () => {
+      respond();
+      fail();
+    };
+    return [payload, handleResponse, handleFailure];
+  }
+};
 
 // js/request/bus.js
 var CommitBus = class {
@@ -7397,6 +7587,81 @@ async function requestCall(component, method, params) {
   });
   promise.commit = commit;
   return promise;
+}
+async function sendRequest(pool) {
+  let [payload, handleSuccess, handleFailure] = pool.payload();
+  let options = {
+    method: "POST",
+    body: JSON.stringify({
+      _token: getCsrfToken(),
+      components: payload
+    }),
+    headers: {
+      "Content-type": "application/json",
+      "X-Livewire": ""
+    }
+  };
+  let succeedCallbacks = [];
+  let failCallbacks = [];
+  let respondCallbacks = [];
+  let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+  let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
+  let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
+  let finishProfile = trigger2("request.profile", options);
+  let updateUri = getUpdateUri();
+  trigger2("request", {
+    url: updateUri,
+    options,
+    payload: options.body,
+    respond: (i) => respondCallbacks.push(i),
+    succeed: (i) => succeedCallbacks.push(i),
+    fail: (i) => failCallbacks.push(i)
+  });
+  let response = await fetch(updateUri, options);
+  let mutableObject = {
+    status: response.status,
+    response
+  };
+  respond(mutableObject);
+  response = mutableObject.response;
+  let content = await response.text();
+  if (!response.ok) {
+    finishProfile({ content: "{}", failed: true });
+    let preventDefault = false;
+    handleFailure();
+    fail({
+      status: response.status,
+      content,
+      preventDefault: () => preventDefault = true
+    });
+    if (preventDefault)
+      return;
+    if (response.status === 419) {
+      handlePageExpiry();
+    }
+    return showFailureModal(content);
+  }
+  if (response.redirected) {
+    window.location.href = response.url;
+  }
+  if (contentIsFromDump(content)) {
+    [dump, content] = splitDumpFromContent(content);
+    showHtmlModal(dump);
+    finishProfile({ content: "{}", failed: true });
+  } else {
+    finishProfile({ content, failed: false });
+  }
+  let { components: components2, assets } = JSON.parse(content);
+  await triggerAsync("payload.intercept", { components: components2, assets });
+  await handleSuccess(components2);
+  succeed({ status: response.status, json: JSON.parse(content) });
+}
+function handlePageExpiry() {
+  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+}
+function showFailureModal(content) {
+  let html = content;
+  showHtmlModal(html);
 }
 
 // js/$wire.js

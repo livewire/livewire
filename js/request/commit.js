@@ -4,7 +4,7 @@ import { on, trigger } from '@/events'
 /**
  * A commit represents an individual component updating itself server-side...
  */
-class Commit {
+export class Commit {
     constructor(component) {
         this.component = component
         this.isolate = false
