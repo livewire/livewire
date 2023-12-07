@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs_prod = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
+    var require_shared_cjs = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = {};
-        var EMPTY_ARR = [];
+        var EMPTY_OBJ = Object.freeze({});
+        var EMPTY_ARR = Object.freeze([]);
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (true) {
-          module2.exports = require_shared_cjs_prod();
-        } else {
+        if (false) {
           module2.exports = null;
+        } else {
+          module2.exports = require_shared_cjs();
         }
       }
     });
-    var require_reactivity_cjs_prod = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
+    var require_reactivity_cjs = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("");
-        var MAP_KEY_ITERATE_KEY = Symbol("");
+        var ITERATE_KEY = Symbol("iterate");
+        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,6 +558,14 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
+            if (activeEffect.options.onTrack) {
+              activeEffect.options.onTrack({
+                effect: activeEffect,
+                target,
+                type,
+                key
+              });
+            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -614,6 +622,17 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
+            if (effect4.options.onTrigger) {
+              effect4.options.onTrigger({
+                effect: effect4,
+                target,
+                key,
+                type,
+                newValue,
+                oldValue,
+                oldTarget
+              });
+            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -707,7 +726,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value);
+                trigger2(target, "set", key, value, oldValue);
               }
             }
             return result;
@@ -715,10 +734,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          target[key];
+          const oldValue = target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -743,9 +762,15 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
+            {
+              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
+            }
             return true;
           },
           deleteProperty(target, key) {
+            {
+              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
+            }
             return true;
           }
         };
@@ -812,13 +837,15 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
+          } else {
+            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value);
+            trigger2(target, "set", key, value, oldValue);
           }
           return this;
         }
@@ -829,20 +856,23 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
+          } else {
+            checkIdentityKeys(target, has2, key);
           }
-          get3 ? get3.call(target, key) : void 0;
+          const oldValue = get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
         function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
+          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0);
+            trigger2(target, "clear", void 0, void 0, oldTarget);
           }
           return result;
         }
@@ -884,6 +914,10 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
+            {
+              const key = args[0] ? `on key "${args[0]}" ` : ``;
+              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
+            }
             return type === "delete" ? false : this;
           };
         }
@@ -988,6 +1022,13 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
+        function checkIdentityKeys(target, has2, key) {
+          const rawKey = toRaw2(key);
+          if (rawKey !== key && has2.call(target, rawKey)) {
+            const type = shared.toRawType(target);
+            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+          }
+        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1026,6 +1067,9 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
+            {
+              console.warn(`value cannot be made reactive: ${String(target)}`);
+            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1099,7 +1143,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", void 0);
+          trigger2(toRaw2(ref2), "set", "value", ref2.value);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1137,6 +1181,9 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
+          if (!isProxy(object)) {
+            console.warn(`toRefs() expects a reactive object but received a plain one.`);
+          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1193,7 +1240,9 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = shared.NOOP;
+            setter = () => {
+              console.warn("Write operation failed: computed value is readonly");
+            };
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1232,10 +1281,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (true) {
-          module2.exports = require_reactivity_cjs_prod();
-        } else {
+        if (false) {
           module2.exports = null;
+        } else {
+          module2.exports = require_reactivity_cjs();
         }
       }
     });
@@ -1751,7 +1800,6 @@ var require_module_cjs = __commonJS({
       return obj;
     }
     function tryCatch(el, expression, callback, ...args) {
-      return callback(...args);
       try {
         return callback(...args);
       } catch (e) {
@@ -2861,44 +2909,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup2(unwatch);
     });
     magic("store", getStores);
-    magic("model", (el, { cleanup: cleanup2 }) => {
-      let closestModelEl = findClosest(el.parentElement, (i) => {
-        return !!i._x_model;
-      });
-      if (!closestModelEl) {
-        throw "Could't find an x-model or wire:model above the usage of `$model`";
-      }
-      return closestModelEl._x_model;
-      let func = function() {
-      };
-      func.get = (callback) => {
-        if (callback) {
-          callback(closestModelEl._x_model.get());
-        } else {
-          return closestModelEl._x_model.get();
-        }
-      };
-      func.set = (value) => {
-        closestModelEl._x_model.set(value);
-      };
-      let cleanups = [];
-      func.watch = (callback) => {
-        cleanups.push(Alpine.watch(closestModelEl._x_model.get, callback));
-      };
-      func.cleanup = (callback) => {
-        cleanups.push(callback);
-      };
-      func.effect = (callback) => {
-        let effect3 = Alpine.effect(callback);
-        cleanups.push(() => Alpine.release(effect3));
-      };
-      cleanup2(() => {
-        while (cleanups.length > 0) {
-          cleanups.pop()();
-        }
-      });
-      return func;
-    });
     magic("data", (el) => scope(el));
     magic("root", (el) => closestRoot(el));
     magic("refs", (el) => {
@@ -2959,7 +2969,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let initialValue = innerGet();
       innerSet(initialValue);
       queueMicrotask(() => {
-        if (!(el._x_model && el._x_model.set))
+        if (!el._x_model)
           return;
         el._x_removeModelListeners["default"]();
         let outerGet = el._x_model.get;
@@ -3194,8 +3204,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return modifier;
       }).filter((modifier) => modifier);
     }
-    directive2("model", (el, { modifiers, value, expression }, { effect: effect3, cleanup: cleanup2 }) => {
-      console.log(expression);
+    directive2("model", (el, { modifiers, expression }, { effect: effect3, cleanup: cleanup2 }) => {
       let scopeTarget = el;
       if (modifiers.includes("parent")) {
         scopeTarget = el.parentNode;
@@ -3212,34 +3221,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let getValue = () => {
         let result;
-        evaluateGet((value2) => result = value2);
+        evaluateGet((value) => result = value);
         return isGetterSetter(result) ? result.get() : result;
       };
-      let setValue = (value2) => {
+      let setValue = (value) => {
         let result;
-        evaluateGet((value3) => result = value3);
+        evaluateGet((value2) => result = value2);
         if (isGetterSetter(result)) {
-          result.set(value2);
+          result.set(value);
         } else {
           evaluateSet(() => {
           }, {
-            scope: { "__placeholder": value2 }
+            scope: { "__placeholder": value }
           });
         }
       };
-      if (value) {
-        if (!el._x_model)
-          el._x_model = {};
-        el._x_model[value] = {
-          get() {
-            return getValue();
-          },
-          set(value2) {
-            setValue(value2);
-          }
-        };
-        return;
-      }
       if (typeof expression === "string" && el.type === "radio") {
         mutateDom(() => {
           if (!el.hasAttribute("name"))
@@ -3270,21 +3266,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         get() {
           return getValue();
         },
-        set(value2) {
-          setValue(value2);
+        set(value) {
+          setValue(value);
         }
       };
-      el._x_forceModelUpdate = (value2) => {
-        if (value2 === void 0 && typeof expression === "string" && expression.match(/\./))
-          value2 = "";
+      el._x_forceModelUpdate = (value) => {
+        if (value === void 0 && typeof expression === "string" && expression.match(/\./))
+          value = "";
         window.fromModel = true;
+        mutateDom(() => bind(el, "value", value));
         delete window.fromModel;
       };
       effect3(() => {
-        let value2 = getValue();
+        let value = getValue();
         if (modifiers.includes("unintrusive") && document.activeElement.isSameNode(el))
           return;
-        el._x_forceModelUpdate(value2);
+        el._x_forceModelUpdate(value);
       });
     });
     function getInputValue(el, modifiers, event, currentValue) {
@@ -6973,7 +6970,7 @@ var require_module_cjs8 = __commonJS({
           } else {
             processInputValue(el, false);
           }
-          if (el._x_model && el._x_model.set)
+          if (el._x_model)
             el._x_model.set(el.value);
         });
         el.addEventListener("input", () => processInputValue(el));
