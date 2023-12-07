@@ -53,6 +53,8 @@ The following configuration keys have been introduced in version 3:
 'inject_morph_markers' => true,
 
 'navigate' => false,
+
+'pagination_theme' => 'tailwind',
 ```
 
 You can reference [Livewire's new configuration file on GitHub](https://github.com/livewire/livewire/blob/master/config/livewire.php) for additional option descriptions and copy-pastable code.
