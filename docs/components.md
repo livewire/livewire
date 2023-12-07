@@ -694,7 +694,7 @@ class ShowPost extends Component
 
 There are many instances where the built-in Livewire and Alpine utilities aren't enough to accomplish your goals inside your Livewire components.
 
-Fortunately, Livewire provides many useful extension points and utilities to interact with bespoke JavaScript. You can learn from the exhastive reference on [the JavaScript documentation page](/docs/javascript). But for now, here are a few useful ways to use your own JavaScript inside your Livewire components.
+Fortunately, Livewire provides many useful extension points and utilities to interact with bespoke JavaScript. You can learn from the exhaustive reference on [the JavaScript documentation page](/docs/javascript). But for now, here are a few useful ways to use your own JavaScript inside your Livewire components.
 
 ### Executing scripts
 
@@ -719,7 +719,7 @@ You'll notice we are using an object called `$wire` inside the `<script>` to con
 
 ### Loading assets
 
-In addition to one-off `@script`s, Livewire provides a helpful `@assets` utility to easily load any script/style dependancies on the page.
+In addition to one-off `@script`s, Livewire provides a helpful `@assets` utility to easily load any script/style dependencies on the page.
 
 It also ensures that the provided assets are loaded only once per browser page, unlike `@script`, which executes every time a new instance of that Livewire component is initialized.
 

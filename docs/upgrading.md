@@ -3,7 +3,7 @@
 
 To save you time upgrading, we've included an Artisan command to automate as many parts of the upgrade process as possible.
 
-After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command and you will receive prompts to upgrade each breaking change automatically:
+After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command, and you will receive prompts to upgrade each breaking change automatically:
 
 ```shell
 php artisan livewire:upgrade

@@ -121,7 +121,7 @@ You can easily listen for the `post-created` event inside your component's templ
 @endscript
 ```
 
-The above snippet would listen for the `post-created` from the component its registered within. If the component is no longer on the page, the event listener will no longer be triggered.
+The above snippet would listen for the `post-created` from the component it's registered within. If the component is no longer on the page, the event listener will no longer be triggered.
 
 [Read more about using JavaScript inside your Livewire components →](/docs/javascript#using-javascript-in-livewire-components)
 
