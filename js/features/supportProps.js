@@ -1,26 +1,86 @@
 import { findComponent } from "../store";
 import { on } from '@/events'
 
-on('commit.pooling', ({ component }) => {
-    // Ensure that all child components with reactive props (even deeply nested)
-    // are included in the network request...
-    getChildrenRecursively(component, child => {
-        let childMeta = child.snapshot.memo
-        let props = childMeta.props
+// Ensure that all child components with reactive props (even deeply nested)
+// are included in the network request...
+on('commit.pooling', ({ bus: { commits } }) => {
+    commits.forEach(commit => {
+        let component = commit.component
 
-        // If this child has a prop from the parent
-        if (props) child.$wire.$commit()
+        getDeepChildrenWithReactiveProps(component, child => {
+            child.$wire.$commit()
+        })
     })
 })
 
-on('commit.prepare', ({ component }) => {
-    //
+// Ensure that related components are pooled together, even if they chose
+// to be isolated normally...
+on('commit.pooled', ({ pools }) => {
+    let commits = getPooledCommits(pools)
+
+    commits.forEach(commit => {
+        console.count('poold')
+        let component = commit.component
+
+        getDeepChildrenWithReactiveProps(component, child => {
+            colocateCommitsByComponent(pools, component, child)
+        })
+    })
 })
 
-function getChildrenRecursively(component, callback) {
+function getPooledCommits(pools) {
+    let commits = []
+
+    pools.forEach(pool => {
+        pool.commits.forEach(commit => {
+            commits.push(commit)
+        })
+    })
+
+    return commits
+}
+
+function colocateCommitsByComponent(pools, component, foreignComponent) {
+    let pool = findPoolWithComponent(pools, component)
+
+    let foreignPool = findPoolWithComponent(pools, foreignComponent)
+
+    let foreignCommit = foreignPool.findCommitByComponent(foreignComponent)
+
+    // Delete needs to come before add in case there are the same pool...
+    foreignPool.delete(foreignCommit)
+
+    pool.add(foreignCommit)
+
+    // Cleanup empty pools...
+    pools.forEach(pool => {
+        if (pool.empty()) pools.delete(pool)
+    })
+}
+
+function findPoolWithComponent(pools, component) {
+    for (let [idx, pool] of pools.entries()) {
+        if (pool.hasCommitFor(component)) return pool
+    }
+}
+
+function getDeepChildrenWithReactiveProps(component, callback) {
+    getDeepChildren(component, child => {
+        if (hasReactiveProps(child)) callback(child)
+    })
+}
+
+function hasReactiveProps(component) {
+    let meta = component.snapshot.memo
+    let props = meta.props
+
+    return !! props
+}
+
+function getDeepChildren(component, callback) {
     component.children.forEach(child => {
         callback(child)
 
-        getChildrenRecursively(child, callback)
+        getDeepChildren(child, callback)
     })
 }

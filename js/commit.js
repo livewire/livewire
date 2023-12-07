@@ -32,10 +32,6 @@ class CommitBus {
             return newCommit
         })
 
-        // Allow features like "reactive properties" to initiate associated
-        // commits before those commits are pooled for a network request...
-        trigger('commit.pooling', { component: commit.component })
-
         // Buffer the sending of a pool for 5ms to account for UI interactions
         // that will trigger multiple events within a few milliseconds of each other.
         // For example, clicking on a button that both unfocuses a field and registers a mousedown...
@@ -69,14 +65,23 @@ class CommitBus {
     }
 
     createAndSendNewPool() {
+        // Allow features like "reactive properties" to initiate associated
+        // commits before those commits are pooled for a network request...
+        trigger('commit.pooling', { bus: this })
+
         // Split commits up across one or multiple pools to be sent as seperate network requests...
         let pools = this.corraleCommitsIntoPools()
 
         // Clear all commits in the queue now that they're in pools...
         this.commits.clear()
 
+        trigger('commit.pooled', { pools })
+
         // Go through each pool and...
         pools.forEach(pool => {
+            console.count('yo')
+            if (pool.empty()) return
+
             // Add it to the list of pending pools...
             this.pools.add(pool)
 
@@ -93,7 +98,7 @@ class CommitBus {
     }
 
     corraleCommitsIntoPools() {
-        let pools = []
+        let pools = new Set
 
         // Go through each commit and assess wether it should be bundled
         // with other commits or sperated into it's own pool (network request)...
@@ -115,7 +120,7 @@ class CommitBus {
 
                 newPool.add(commit)
 
-                pools.push(newPool)
+                pools.add(newPool)
             }
         }
 
@@ -176,18 +181,28 @@ class RequestPool {
         this.commits.add(commit)
     }
 
+    delete(commit) {
+        this.commits.delete(commit)
+    }
+
     hasCommitFor(component) {
+        return !! this.findCommitByComponent(component)
+    }
+
+    findCommitByComponent(component) {
         // Determine if this pool already has a commit for this component...
         for (let [idx, commit] of this.commits.entries()) {
-            if (commit.component === component) return true
+            if (commit.component === component) return commit
         }
-
-        return false
     }
 
     // Determine if a commit should be added to this pool or isolated into its own...
     shouldHoldCommit(commit) {
         return ! commit.isolate
+    }
+
+    empty() {
+        return this.commits.size === 0
     }
 
     async send() {

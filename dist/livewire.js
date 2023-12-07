@@ -592,7 +592,6 @@
         this.commits.add(newCommit);
         return newCommit;
       });
-      trigger("commit.pooling", { component: commit.component });
       bufferPoolingForFiveMs(commit, () => {
         let pool = this.findPoolWithComponent(commit.component);
         if (!pool) {
@@ -616,9 +615,14 @@
       }
     }
     createAndSendNewPool() {
+      trigger("commit.pooling", { bus: this });
       let pools = this.corraleCommitsIntoPools();
       this.commits.clear();
+      trigger("commit.pooled", { pools });
       pools.forEach((pool) => {
+        console.count("yo");
+        if (pool.empty())
+          return;
         this.pools.add(pool);
         pool.send().then(() => {
           this.pools.delete(pool);
@@ -627,7 +631,7 @@
       });
     }
     corraleCommitsIntoPools() {
-      let pools = [];
+      let pools = /* @__PURE__ */ new Set();
       for (let [idx, commit] of this.commits.entries()) {
         let hasFoundPool = false;
         pools.forEach((pool) => {
@@ -639,7 +643,7 @@
         if (!hasFoundPool) {
           let newPool = new RequestPool();
           newPool.add(commit);
-          pools.push(newPool);
+          pools.add(newPool);
         }
       }
       return pools;
@@ -674,15 +678,23 @@
     add(commit) {
       this.commits.add(commit);
     }
+    delete(commit) {
+      this.commits.delete(commit);
+    }
     hasCommitFor(component) {
+      return !!this.findCommitByComponent(component);
+    }
+    findCommitByComponent(component) {
       for (let [idx, commit] of this.commits.entries()) {
         if (commit.component === component)
-          return true;
+          return commit;
       }
-      return false;
     }
     shouldHoldCommit(commit) {
       return !commit.isolate;
+    }
+    empty() {
+      return this.commits.size === 0;
     }
     async send() {
       this.prepare();
@@ -1305,6 +1317,7 @@
     return obj;
   }
   function tryCatch(el, expression, callback, ...args) {
+    return callback(...args);
     try {
       return callback(...args);
     } catch (e) {
@@ -2410,8 +2423,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2444,8 +2457,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2535,7 +2548,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.options.onTrack) {
+      if (false) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2599,7 +2612,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (effect3.options.onTrigger) {
+      if (false) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2736,13 +2749,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2804,7 +2817,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2823,7 +2836,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2836,7 +2849,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2881,7 +2894,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2983,13 +2996,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has2, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has2.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -3022,7 +3028,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3061,6 +3067,44 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     cleanup22(unwatch);
   });
   magic("store", getStores);
+  magic("model", (el, { cleanup: cleanup22 }) => {
+    let closestModelEl = findClosest(el.parentElement, (i) => {
+      return !!i._x_model;
+    });
+    if (!closestModelEl) {
+      throw "Could't find an x-model or wire:model above the usage of `$model`";
+    }
+    return closestModelEl._x_model;
+    let func = function() {
+    };
+    func.get = (callback) => {
+      if (callback) {
+        callback(closestModelEl._x_model.get());
+      } else {
+        return closestModelEl._x_model.get();
+      }
+    };
+    func.set = (value) => {
+      closestModelEl._x_model.set(value);
+    };
+    let cleanups = [];
+    func.watch = (callback) => {
+      cleanups.push(Alpine.watch(closestModelEl._x_model.get, callback));
+    };
+    func.cleanup = (callback) => {
+      cleanups.push(callback);
+    };
+    func.effect = (callback) => {
+      let effect3 = Alpine.effect(callback);
+      cleanups.push(() => Alpine.release(effect3));
+    };
+    cleanup22(() => {
+      while (cleanups.length > 0) {
+        cleanups.pop()();
+      }
+    });
+    return func;
+  });
   magic("data", (el) => scope(el));
   magic("root", (el) => closestRoot(el));
   magic("refs", (el) => {
@@ -3121,7 +3165,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let initialValue = innerGet();
     innerSet(initialValue);
     queueMicrotask(() => {
-      if (!el._x_model)
+      if (!(el._x_model && el._x_model.set))
         return;
       el._x_removeModelListeners["default"]();
       let outerGet = el._x_model.get;
@@ -3356,7 +3400,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return modifier;
     }).filter((modifier) => modifier);
   }
-  directive("model", (el, { modifiers, expression }, { effect: effect3, cleanup: cleanup22 }) => {
+  directive("model", (el, { modifiers, value, expression }, { effect: effect3, cleanup: cleanup22 }) => {
+    console.log(expression);
     let scopeTarget = el;
     if (modifiers.includes("parent")) {
       scopeTarget = el.parentNode;
@@ -3373,21 +3418,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let getValue = () => {
       let result;
-      evaluateGet((value) => result = value);
+      evaluateGet((value2) => result = value2);
       return isGetterSetter(result) ? result.get() : result;
     };
-    let setValue = (value) => {
+    let setValue = (value2) => {
       let result;
-      evaluateGet((value2) => result = value2);
+      evaluateGet((value3) => result = value3);
       if (isGetterSetter(result)) {
-        result.set(value);
+        result.set(value2);
       } else {
         evaluateSet(() => {
         }, {
-          scope: { "__placeholder": value }
+          scope: { "__placeholder": value2 }
         });
       }
     };
+    if (value) {
+      if (!el._x_model)
+        el._x_model = {};
+      el._x_model[value] = {
+        get() {
+          return getValue();
+        },
+        set(value2) {
+          setValue(value2);
+        }
+      };
+      return;
+    }
     if (typeof expression === "string" && el.type === "radio") {
       mutateDom(() => {
         if (!el.hasAttribute("name"))
@@ -3418,22 +3476,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get() {
         return getValue();
       },
-      set(value) {
-        setValue(value);
+      set(value2) {
+        setValue(value2);
       }
     };
-    el._x_forceModelUpdate = (value) => {
-      if (value === void 0 && typeof expression === "string" && expression.match(/\./))
-        value = "";
+    el._x_forceModelUpdate = (value2) => {
+      if (value2 === void 0 && typeof expression === "string" && expression.match(/\./))
+        value2 = "";
       window.fromModel = true;
-      mutateDom(() => bind(el, "value", value));
       delete window.fromModel;
     };
     effect3(() => {
-      let value = getValue();
+      let value2 = getValue();
       if (modifiers.includes("unintrusive") && document.activeElement.isSameNode(el))
         return;
-      el._x_forceModelUpdate(value);
+      el._x_forceModelUpdate(value2);
     });
   });
   function getInputValue(el, modifiers, event, currentValue) {
@@ -8088,7 +8145,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         } else {
           processInputValue(el, false);
         }
-        if (el._x_model)
+        if (el._x_model && el._x_model.set)
           el._x_model.set(el.value);
       });
       el.addEventListener("input", () => processInputValue(el));
@@ -8695,20 +8752,65 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportProps.js
-  on("commit.pooling", ({ component }) => {
-    getChildrenRecursively(component, (child) => {
-      let childMeta = child.snapshot.memo;
-      let props = childMeta.props;
-      if (props)
+  on("commit.pooling", ({ bus: { commits } }) => {
+    commits.forEach((commit) => {
+      let component = commit.component;
+      getDeepChildrenWithReactiveProps(component, (child) => {
         child.$wire.$commit();
+      });
     });
   });
-  on("commit.prepare", ({ component }) => {
+  on("commit.pooled", ({ pools }) => {
+    let commits = getPooledCommits(pools);
+    commits.forEach((commit) => {
+      console.count("poold");
+      let component = commit.component;
+      getDeepChildrenWithReactiveProps(component, (child) => {
+        colocateCommitsByComponent(pools, component, child);
+      });
+    });
   });
-  function getChildrenRecursively(component, callback) {
+  function getPooledCommits(pools) {
+    let commits = [];
+    pools.forEach((pool) => {
+      pool.commits.forEach((commit) => {
+        commits.push(commit);
+      });
+    });
+    return commits;
+  }
+  function colocateCommitsByComponent(pools, component, foreignComponent) {
+    let pool = findPoolWithComponent(pools, component);
+    let foreignPool = findPoolWithComponent(pools, foreignComponent);
+    let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
+    foreignPool.delete(foreignCommit);
+    pool.add(foreignCommit);
+    pools.forEach((pool2) => {
+      if (pool2.empty())
+        pools.delete(pool2);
+    });
+  }
+  function findPoolWithComponent(pools, component) {
+    for (let [idx, pool] of pools.entries()) {
+      if (pool.hasCommitFor(component))
+        return pool;
+    }
+  }
+  function getDeepChildrenWithReactiveProps(component, callback) {
+    getDeepChildren(component, (child) => {
+      if (hasReactiveProps(child))
+        callback(child);
+    });
+  }
+  function hasReactiveProps(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function getDeepChildren(component, callback) {
     component.children.forEach((child) => {
       callback(child);
-      getChildrenRecursively(child, callback);
+      getDeepChildren(child, callback);
     });
   }
 
