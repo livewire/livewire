@@ -125,3 +125,16 @@ export class CommitBus {
         }
     }
 }
+
+let buffersByCommit = new WeakMap
+
+function bufferPoolingForFiveMs(commit, callback) {
+    if (buffersByCommit.has(commit)) return
+
+    buffersByCommit.set(commit, setTimeout(() => {
+        callback()
+
+        buffersByCommit.delete(commit)
+    }, 5))
+}
+

@@ -568,7 +568,7 @@ var require_module_cjs = __commonJS({
             }
           }
         }
-        function trigger2(target, type, key, newValue, oldValue, oldTarget) {
+        function trigger3(target, type, key, newValue, oldValue, oldTarget) {
           const depsMap = targetMap.get(target);
           if (!depsMap) {
             return;
@@ -724,9 +724,9 @@ var require_module_cjs = __commonJS({
             const result = Reflect.set(target, key, value, receiver);
             if (target === toRaw2(receiver)) {
               if (!hadKey) {
-                trigger2(target, "add", key, value);
+                trigger3(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger3(target, "set", key, value, oldValue);
               }
             }
             return result;
@@ -737,7 +737,7 @@ var require_module_cjs = __commonJS({
           const oldValue = target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger3(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -825,7 +825,7 @@ var require_module_cjs = __commonJS({
           const hadKey = proto.has.call(target, value);
           if (!hadKey) {
             target.add(value);
-            trigger2(target, "add", value, value);
+            trigger3(target, "add", value, value);
           }
           return this;
         }
@@ -843,9 +843,9 @@ var require_module_cjs = __commonJS({
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
-            trigger2(target, "add", key, value);
+            trigger3(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger3(target, "set", key, value, oldValue);
           }
           return this;
         }
@@ -862,7 +862,7 @@ var require_module_cjs = __commonJS({
           const oldValue = get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger3(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -872,7 +872,7 @@ var require_module_cjs = __commonJS({
           const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0, oldTarget);
+            trigger3(target, "clear", void 0, void 0, oldTarget);
           }
           return result;
         }
@@ -1132,7 +1132,7 @@ var require_module_cjs = __commonJS({
             if (shared.hasChanged(newVal, this._rawValue)) {
               this._rawValue = newVal;
               this._value = this._shallow ? newVal : convert(newVal);
-              trigger2(toRaw2(this), "set", "value", newVal);
+              trigger3(toRaw2(this), "set", "value", newVal);
             }
           }
         };
@@ -1143,7 +1143,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", ref2.value);
+          trigger3(toRaw2(ref2), "set", "value", ref2.value);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1166,7 +1166,7 @@ var require_module_cjs = __commonJS({
         var CustomRefImpl = class {
           constructor(factory) {
             this.__v_isRef = true;
-            const { get: get3, set: set3 } = factory(() => track2(this, "get", "value"), () => trigger2(this, "set", "value"));
+            const { get: get3, set: set3 } = factory(() => track2(this, "get", "value"), () => trigger3(this, "set", "value"));
             this._get = get3;
             this._set = set3;
           }
@@ -1216,7 +1216,7 @@ var require_module_cjs = __commonJS({
               scheduler: () => {
                 if (!this._dirty) {
                   this._dirty = true;
-                  trigger2(toRaw2(this), "set", "value");
+                  trigger3(toRaw2(this), "set", "value");
                 }
               }
             });
@@ -1273,7 +1273,7 @@ var require_module_cjs = __commonJS({
         exports2.toRef = toRef;
         exports2.toRefs = toRefs;
         exports2.track = track2;
-        exports2.trigger = trigger2;
+        exports2.trigger = trigger3;
         exports2.triggerRef = triggerRef;
         exports2.unref = unref;
       }
@@ -7214,15 +7214,8 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
-function getUpdateUri() {
-  return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
-}
 function contentIsFromDump(content) {
   return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
-}
-function splitDumpFromContent(content) {
-  let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-  return [dump2, content.replace(dump2, "")];
 }
 
 // js/events.js
@@ -7235,23 +7228,11 @@ function on(name, callback) {
     listeners[name] = listeners[name].filter((i) => i !== callback);
   };
 }
-function trigger(name, ...params) {
+function trigger2(name, ...params) {
   let callbacks = listeners[name] || [];
   let finishers = [];
   for (let i = 0; i < callbacks.length; i++) {
     let finisher = callbacks[i](...params);
-    if (isFunction(finisher))
-      finishers.push(finisher);
-  }
-  return (result) => {
-    return runFinishers(finishers, result);
-  };
-}
-async function triggerAsync(name, ...params) {
-  let callbacks = listeners[name] || [];
-  let finishers = [];
-  for (let i = 0; i < callbacks.length; i++) {
-    let finisher = await callbacks[i](...params);
     if (isFunction(finisher))
       finishers.push(finisher);
   }
@@ -7268,430 +7249,6 @@ function runFinishers(finishers, result) {
     }
   }
   return latest;
-}
-
-// js/request/modal.js
-function showHtmlModal(html) {
-  let page = document.createElement("html");
-  page.innerHTML = html;
-  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-  let modal = document.getElementById("livewire-error");
-  if (typeof modal != "undefined" && modal != null) {
-    modal.innerHTML = "";
-  } else {
-    modal = document.createElement("div");
-    modal.id = "livewire-error";
-    modal.style.position = "fixed";
-    modal.style.width = "100vw";
-    modal.style.height = "100vh";
-    modal.style.padding = "50px";
-    modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
-    modal.style.zIndex = 2e5;
-  }
-  let iframe = document.createElement("iframe");
-  iframe.style.backgroundColor = "#17161A";
-  iframe.style.borderRadius = "5px";
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  modal.appendChild(iframe);
-  document.body.prepend(modal);
-  document.body.style.overflow = "hidden";
-  iframe.contentWindow.document.open();
-  iframe.contentWindow.document.write(page.outerHTML);
-  iframe.contentWindow.document.close();
-  modal.addEventListener("click", () => hideHtmlModal(modal));
-  modal.setAttribute("tabindex", 0);
-  modal.addEventListener("keydown", (e) => {
-    if (e.key === "Escape")
-      hideHtmlModal(modal);
-  });
-  modal.focus();
-}
-function hideHtmlModal(modal) {
-  modal.outerHTML = "";
-  document.body.style.overflow = "visible";
-}
-
-// js/request/bus.js
-var CommitBus = class {
-  constructor() {
-    this.commits = /* @__PURE__ */ new Set();
-    this.pools = /* @__PURE__ */ new Set();
-  }
-  add(component) {
-    let commit = this.findCommitOr(component, () => {
-      let newCommit = new Commit(component);
-      this.commits.add(newCommit);
-      return newCommit;
-    });
-    bufferPoolingForFiveMs(commit, () => {
-      let pool = this.findPoolWithComponent(commit.component);
-      if (!pool) {
-        this.createAndSendNewPool();
-      }
-    });
-    return commit;
-  }
-  findCommitOr(component, callback) {
-    for (let [idx, commit] of this.commits.entries()) {
-      if (commit.component === component) {
-        return commit;
-      }
-    }
-    return callback();
-  }
-  findPoolWithComponent(component) {
-    for (let [idx, pool] of this.pools.entries()) {
-      if (pool.hasCommitFor(component))
-        return pool;
-    }
-  }
-  createAndSendNewPool() {
-    trigger("commit.pooling", { bus: this });
-    let pools = this.corraleCommitsIntoPools();
-    this.commits.clear();
-    trigger("commit.pooled", { pools });
-    pools.forEach((pool) => {
-      console.count("yo");
-      if (pool.empty())
-        return;
-      this.pools.add(pool);
-      pool.send().then(() => {
-        this.pools.delete(pool);
-        this.sendAnyQueuedCommits();
-      });
-    });
-  }
-  corraleCommitsIntoPools() {
-    let pools = /* @__PURE__ */ new Set();
-    for (let [idx, commit] of this.commits.entries()) {
-      let hasFoundPool = false;
-      pools.forEach((pool) => {
-        if (pool.shouldHoldCommit(commit)) {
-          pool.add(commit);
-          hasFoundPool = true;
-        }
-      });
-      if (!hasFoundPool) {
-        let newPool = new RequestPool();
-        newPool.add(commit);
-        pools.add(newPool);
-      }
-    }
-    return pools;
-  }
-  sendAnyQueuedCommits() {
-    if (this.commits.size > 0) {
-      this.createAndSendNewPool();
-    }
-  }
-};
-
-// js/request/index.js
-var commitBus = new CommitBus();
-async function requestCommit(component) {
-  let commit = commitBus.add(component);
-  let promise = new Promise((resolve, reject) => {
-    commit.addResolver(resolve);
-  });
-  promise.commit = commit;
-  return promise;
-}
-async function requestCall(component, method, params) {
-  let commit = commitBus.add(component);
-  let promise = new Promise((resolve, reject) => {
-    commit.addCall(method, params, (value) => resolve(value));
-  });
-  promise.commit = commit;
-  return promise;
-}
-async function sendRequest(pool) {
-  let [payload, handleSuccess, handleFailure] = pool.payload();
-  let options = {
-    method: "POST",
-    body: JSON.stringify({
-      _token: getCsrfToken(),
-      components: payload
-    }),
-    headers: {
-      "Content-type": "application/json",
-      "X-Livewire": ""
-    }
-  };
-  let succeedCallbacks = [];
-  let failCallbacks = [];
-  let respondCallbacks = [];
-  let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-  let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
-  let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-  let finishProfile = trigger("request.profile", options);
-  let updateUri = getUpdateUri();
-  trigger("request", {
-    url: updateUri,
-    options,
-    payload: options.body,
-    respond: (i) => respondCallbacks.push(i),
-    succeed: (i) => succeedCallbacks.push(i),
-    fail: (i) => failCallbacks.push(i)
-  });
-  let response = await fetch(updateUri, options);
-  let mutableObject = {
-    status: response.status,
-    response
-  };
-  respond(mutableObject);
-  response = mutableObject.response;
-  let content = await response.text();
-  if (!response.ok) {
-    finishProfile({ content: "{}", failed: true });
-    let preventDefault = false;
-    handleFailure();
-    fail({
-      status: response.status,
-      content,
-      preventDefault: () => preventDefault = true
-    });
-    if (preventDefault)
-      return;
-    if (response.status === 419) {
-      handlePageExpiry();
-    }
-    return showFailureModal(content);
-  }
-  if (response.redirected) {
-    window.location.href = response.url;
-  }
-  if (contentIsFromDump(content)) {
-    [dump, content] = splitDumpFromContent(content);
-    showHtmlModal(dump);
-    finishProfile({ content: "{}", failed: true });
-  } else {
-    finishProfile({ content, failed: false });
-  }
-  let { components: components2, assets } = JSON.parse(content);
-  await triggerAsync("payload.intercept", { components: components2, assets });
-  await handleSuccess(components2);
-  succeed({ status: response.status, json: JSON.parse(content) });
-}
-function handlePageExpiry() {
-  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-}
-function showFailureModal(content) {
-  let html = content;
-  showHtmlModal(html);
-}
-
-// js/commit.js
-var CommitBus2 = class {
-  constructor() {
-    this.commits = /* @__PURE__ */ new Set();
-    this.pools = /* @__PURE__ */ new Set();
-  }
-  add(component) {
-    let commit = this.findCommitOr(component, () => {
-      let newCommit = new Commit2(component);
-      this.commits.add(newCommit);
-      return newCommit;
-    });
-    bufferPoolingForFiveMs2(commit, () => {
-      let pool = this.findPoolWithComponent(commit.component);
-      if (!pool) {
-        this.createAndSendNewPool();
-      }
-    });
-    return commit;
-  }
-  findCommitOr(component, callback) {
-    for (let [idx, commit] of this.commits.entries()) {
-      if (commit.component === component) {
-        return commit;
-      }
-    }
-    return callback();
-  }
-  findPoolWithComponent(component) {
-    for (let [idx, pool] of this.pools.entries()) {
-      if (pool.hasCommitFor(component))
-        return pool;
-    }
-  }
-  createAndSendNewPool() {
-    trigger("commit.pooling", { bus: this });
-    let pools = this.corraleCommitsIntoPools();
-    this.commits.clear();
-    trigger("commit.pooled", { pools });
-    pools.forEach((pool) => {
-      console.count("yo");
-      if (pool.empty())
-        return;
-      this.pools.add(pool);
-      pool.send().then(() => {
-        this.pools.delete(pool);
-        this.sendAnyQueuedCommits();
-      });
-    });
-  }
-  corraleCommitsIntoPools() {
-    let pools = /* @__PURE__ */ new Set();
-    for (let [idx, commit] of this.commits.entries()) {
-      let hasFoundPool = false;
-      pools.forEach((pool) => {
-        if (pool.shouldHoldCommit(commit)) {
-          pool.add(commit);
-          hasFoundPool = true;
-        }
-      });
-      if (!hasFoundPool) {
-        let newPool = new RequestPool2();
-        newPool.add(commit);
-        pools.add(newPool);
-      }
-    }
-    return pools;
-  }
-  sendAnyQueuedCommits() {
-    if (this.commits.size > 0) {
-      this.createAndSendNewPool();
-    }
-  }
-};
-var commitBus2 = new CommitBus2();
-var RequestPool2 = class {
-  constructor() {
-    this.commits = /* @__PURE__ */ new Set();
-  }
-  add(commit) {
-    this.commits.add(commit);
-  }
-  delete(commit) {
-    this.commits.delete(commit);
-  }
-  hasCommitFor(component) {
-    return !!this.findCommitByComponent(component);
-  }
-  findCommitByComponent(component) {
-    for (let [idx, commit] of this.commits.entries()) {
-      if (commit.component === component)
-        return commit;
-    }
-  }
-  shouldHoldCommit(commit) {
-    return !commit.isolate;
-  }
-  empty() {
-    return this.commits.size === 0;
-  }
-  async send() {
-    this.prepare();
-    await sendRequest(this);
-  }
-  prepare() {
-    this.commits.forEach((i) => i.prepare());
-  }
-  payload() {
-    let commitPayloads = [];
-    let successReceivers = [];
-    let failureReceivers = [];
-    this.commits.forEach((commit) => {
-      let [payload, succeed2, fail2] = commit.toRequestPayload();
-      commitPayloads.push(payload);
-      successReceivers.push(succeed2);
-      failureReceivers.push(fail2);
-    });
-    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-    let fail = () => failureReceivers.forEach((receiver) => receiver());
-    return [commitPayloads, succeed, fail];
-  }
-};
-var Commit2 = class {
-  constructor(component) {
-    this.component = component;
-    this.isolate = false;
-    this.calls = [];
-    this.receivers = [];
-    this.resolvers = [];
-  }
-  addResolver(resolver) {
-    this.resolvers.push(resolver);
-  }
-  addCall(method, params, receiver) {
-    this.calls.push({
-      path: "",
-      method,
-      params,
-      handleReturn(value) {
-        receiver(value);
-      }
-    });
-  }
-  prepare() {
-    trigger("commit.prepare", { component: this.component });
-  }
-  toRequestPayload() {
-    let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
-    let payload = {
-      snapshot: this.component.snapshotEncoded,
-      updates: propertiesDiff,
-      calls: this.calls.map((i) => ({
-        path: i.path,
-        method: i.method,
-        params: i.params
-      }))
-    };
-    let succeedCallbacks = [];
-    let failCallbacks = [];
-    let respondCallbacks = [];
-    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-    let fail = () => failCallbacks.forEach((i) => i());
-    let respond = () => respondCallbacks.forEach((i) => i());
-    let finishTarget = trigger("commit", {
-      component: this.component,
-      commit: payload,
-      succeed: (callback) => {
-        succeedCallbacks.push(callback);
-      },
-      fail: (callback) => {
-        failCallbacks.push(callback);
-      },
-      respond: (callback) => {
-        respondCallbacks.push(callback);
-      }
-    });
-    let handleResponse = (response) => {
-      let { snapshot, effects } = response;
-      respond();
-      this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
-      processEffects(this.component, this.component.effects);
-      if (effects["returns"]) {
-        let returns = effects["returns"];
-        let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
-        returnHandlerStack.forEach((handleReturn, index) => {
-          handleReturn(returns[index]);
-        });
-      }
-      let parsedSnapshot = JSON.parse(snapshot);
-      finishTarget({ snapshot: parsedSnapshot, effects });
-      this.resolvers.forEach((i) => i());
-      succeed(response);
-    };
-    let handleFailure = () => {
-      respond();
-      fail();
-    };
-    return [payload, handleResponse, handleFailure];
-  }
-};
-function processEffects(target, effects) {
-  trigger("effects", target, effects);
-}
-var buffersByCommit = /* @__PURE__ */ new WeakMap();
-function bufferPoolingForFiveMs2(commit, callback) {
-  if (buffersByCommit.has(commit))
-    return;
-  buffersByCommit.set(commit, setTimeout(() => {
-    callback();
-    buffersByCommit.delete(commit);
-  }, 5));
 }
 
 // js/features/supportEntangle.js
@@ -7737,6 +7294,109 @@ function generateEntangleFunction(component, cleanup2) {
     });
     return interceptor(livewirePropertyValue);
   };
+}
+
+// js/request/bus.js
+var CommitBus = class {
+  constructor() {
+    this.commits = /* @__PURE__ */ new Set();
+    this.pools = /* @__PURE__ */ new Set();
+  }
+  add(component) {
+    let commit = this.findCommitOr(component, () => {
+      let newCommit = new Commit(component);
+      this.commits.add(newCommit);
+      return newCommit;
+    });
+    bufferPoolingForFiveMs(commit, () => {
+      let pool = this.findPoolWithComponent(commit.component);
+      if (!pool) {
+        this.createAndSendNewPool();
+      }
+    });
+    return commit;
+  }
+  findCommitOr(component, callback) {
+    for (let [idx, commit] of this.commits.entries()) {
+      if (commit.component === component) {
+        return commit;
+      }
+    }
+    return callback();
+  }
+  findPoolWithComponent(component) {
+    for (let [idx, pool] of this.pools.entries()) {
+      if (pool.hasCommitFor(component))
+        return pool;
+    }
+  }
+  createAndSendNewPool() {
+    trigger2("commit.pooling", { bus: this });
+    let pools = this.corraleCommitsIntoPools();
+    this.commits.clear();
+    trigger2("commit.pooled", { pools });
+    pools.forEach((pool) => {
+      console.count("yo");
+      if (pool.empty())
+        return;
+      this.pools.add(pool);
+      pool.send().then(() => {
+        this.pools.delete(pool);
+        this.sendAnyQueuedCommits();
+      });
+    });
+  }
+  corraleCommitsIntoPools() {
+    let pools = /* @__PURE__ */ new Set();
+    for (let [idx, commit] of this.commits.entries()) {
+      let hasFoundPool = false;
+      pools.forEach((pool) => {
+        if (pool.shouldHoldCommit(commit)) {
+          pool.add(commit);
+          hasFoundPool = true;
+        }
+      });
+      if (!hasFoundPool) {
+        let newPool = new RequestPool();
+        newPool.add(commit);
+        pools.add(newPool);
+      }
+    }
+    return pools;
+  }
+  sendAnyQueuedCommits() {
+    if (this.commits.size > 0) {
+      this.createAndSendNewPool();
+    }
+  }
+};
+var buffersByCommit = /* @__PURE__ */ new WeakMap();
+function bufferPoolingForFiveMs(commit, callback) {
+  if (buffersByCommit.has(commit))
+    return;
+  buffersByCommit.set(commit, setTimeout(() => {
+    callback();
+    buffersByCommit.delete(commit);
+  }, 5));
+}
+
+// js/request/index.js
+var commitBus = new CommitBus();
+async function requestCommit(component) {
+  let commit = commitBus.add(component);
+  let promise = new Promise((resolve, reject) => {
+    commit.addResolver(resolve);
+  });
+  promise.commit = commit;
+  return promise;
+}
+async function requestCall(component, method, params) {
+  let commit = commitBus.add(component);
+  let promise = new Promise((resolve, reject) => {
+    commit.addCall(method, params, (value) => resolve(value));
+  });
+  promise.commit = commit;
+  return promise;
 }
 
 // js/$wire.js
@@ -8137,7 +7797,7 @@ var Component = class {
     this.reactive = Alpine.reactive(this.ephemeral);
     this.$wire = generateWireObject(this, this.reactive);
     this.cleanups = [];
-    processEffects(this, this.effects);
+    this.processEffects(this.effects);
   }
   mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
     let snapshot = JSON.parse(snapshotEncoded);
@@ -8165,7 +7825,10 @@ var Component = class {
   replayUpdate(snapshot, html) {
     let effects = { ...this.effects, html };
     this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
-    processEffects(this, { html });
+    this.processEffects({ html });
+  }
+  processEffects(effects) {
+    trigger("effects", this, effects);
   }
   get children() {
     let meta = this.snapshot.memo;
@@ -8198,7 +7861,7 @@ function initComponent(el) {
   if (components[component.id])
     throw "Component already registered";
   let cleanup2 = (i) => component.addCleanup(i);
-  trigger("component.init", { component, cleanup: cleanup2 });
+  trigger2("component.init", { component, cleanup: cleanup2 });
   components[component.id] = component;
   return component;
 }
@@ -9188,7 +8851,7 @@ function start() {
       if (!matchesForLivewireDirective(attribute.name))
         return;
       let directive2 = extractDirective(el, attribute.name);
-      trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+      trigger2("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
         import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
@@ -9202,10 +8865,10 @@ function start() {
     }
     let component = closestComponent(el, false);
     if (component) {
-      trigger("element.init", { el, component });
+      trigger2("element.init", { el, component });
       let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
       directives.forEach((directive2) => {
-        trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+        trigger2("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
           import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
@@ -9638,12 +9301,12 @@ function morph2(component, el, html) {
   parentComponent && (wrapper.__livewire = parentComponent);
   let to = wrapper.firstElementChild;
   to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
+  trigger2("morph", { el, toEl: to, component });
   import_alpinejs13.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip) => {
       if (isntElement(el2))
         return;
-      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+      trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
       if (el2.__livewire_ignore === true)
         return skip();
       if (el2.__livewire_ignore_self === true)
@@ -9656,26 +9319,26 @@ function morph2(component, el, html) {
     updated: (el2, toEl) => {
       if (isntElement(el2))
         return;
-      trigger("morph.updated", { el: el2, component });
+      trigger2("morph.updated", { el: el2, component });
     },
     removing: (el2, skip) => {
       if (isntElement(el2))
         return;
-      trigger("morph.removing", { el: el2, component, skip });
+      trigger2("morph.removing", { el: el2, component, skip });
     },
     removed: (el2) => {
       if (isntElement(el2))
         return;
-      trigger("morph.removed", { el: el2, component });
+      trigger2("morph.removed", { el: el2, component });
     },
     adding: (el2) => {
-      trigger("morph.adding", { el: el2, component });
+      trigger2("morph.adding", { el: el2, component });
     },
     added: (el2) => {
       if (isntElement(el2))
         return;
       const closestComponentId = closestComponent(el2).id;
-      trigger("morph.added", { el: el2 });
+      trigger2("morph.added", { el: el2 });
     },
     key: (el2) => {
       if (isntElement(el2))
@@ -10009,7 +9672,7 @@ on("request", ({ respond }) => {
       status: 200,
       async text() {
         let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-          trigger("stream", streamed);
+          trigger2("stream", streamed);
         });
         if (contentIsFromDump(finalResponse)) {
           this.ok = false;
@@ -10302,7 +9965,7 @@ var Livewire2 = {
   getByName,
   all,
   hook: on,
-  trigger,
+  trigger: trigger2,
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {

@@ -84,7 +84,7 @@ class Commit {
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
 
             // Trigger any side effects from the payload like "morph" and "dispatch event"...
-            processEffects(this.component, this.component.effects)
+            this.component.processEffects(this.component.effects)
 
             if (effects['returns']) {
                 let returns = effects['returns']
@@ -115,25 +115,4 @@ class Commit {
 
         return [payload, handleResponse, handleFailure]
     }
-}
-
-/**
- * Here we'll take the new state and side effects from the
- * server and use them to update the existing data that
- * users interact with, triggering reactive effects.
- */
-export function processEffects(target, effects) {
-    trigger('effects', target, effects)
-}
-
-let buffersByCommit = new WeakMap
-
-function bufferPoolingForFiveMs(commit, callback) {
-    if (buffersByCommit.has(commit)) return
-
-    buffersByCommit.set(commit, setTimeout(() => {
-        callback()
-
-        buffersByCommit.delete(commit)
-    }, 5))
 }
