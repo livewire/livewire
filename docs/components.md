@@ -393,7 +393,7 @@ You may create this file if it doesn't already exist by running the following co
 php artisan livewire:layout
 ```
 
-This command will generate a file called `resources/views/components/layouts/app.blade.php`
+This command will generate a file called `resources/views/components/layouts/app.blade.php`.
 
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
