@@ -1,7 +1,7 @@
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEvents'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
-import { requestCommit, requestCall } from '@/commit'
+import { requestCommit, requestCall } from '@/request'
 import { WeakBag, dataGet, dataSet } from '@/utils'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
