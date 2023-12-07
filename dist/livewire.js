@@ -3800,7 +3800,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     createAndSendNewPool() {
-      trigger("commit.pooling", { bus: this });
+      trigger("commit.pooling", { commits: this.commits });
       let pools = this.corraleCommitsIntoPools();
       this.commits.clear();
       trigger("commit.pooled", { pools });
@@ -8328,7 +8328,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportPropsAndModelables.js
-  on("commit.pooling", ({ bus: { commits } }) => {
+  on("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
       let component = commit.component;
       getDeepChildrenWithBindings(component, (child) => {
@@ -8545,6 +8545,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         module_default.evaluate(component.el, expression);
       });
     }
+  });
+
+  // js/features/supportLazyLoading.js
+  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  on("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.lazyLoaded === void 0)
+      return;
+    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+      componentsThatWantToBeBundled.add(component);
+    }
+  });
+  on("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      if (componentsThatWantToBeBundled.has(commit.component)) {
+        commit.isolate = false;
+        componentsThatWantToBeBundled.delete(commit.component);
+      } else {
+        commit.isolate = true;
+      }
+    });
   });
 
   // js/features/supportQueryString.js

@@ -4,6 +4,7 @@ import './supportPropsAndModelables';
 import './supportScriptsAndAssets';
 import './supportFileDownloads';
 import './supportJsEvaluation';
+import './supportLazyLoading';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportLaravelEcho';

@@ -29,18 +29,26 @@ class SupportLazyLoading extends ComponentHook
     {
         $hasLazyParam = isset($params['lazy']);
         $lazyProperty = $params['lazy'] ?? false;
+        $isolate = true;
 
         $reflectionClass = new \ReflectionClass($this->component);
-        $hasLazyAttribute = count($reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)) > 0;
+        $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
 
         // If `:lazy="false"` disable lazy loading...
         if ($hasLazyParam && ! $lazyProperty) return;
         // If no lazy loading is included at all...
-        if (! $hasLazyParam && ! $hasLazyAttribute) return;
+        if (! $hasLazyParam && ! $lazyAttribute) return;
+
+        if ($lazyAttribute) {
+            $attribute = $lazyAttribute->newInstance();
+
+            $isolate = $attribute->isolate;
+        }
 
         $this->component->skipMount();
 
         store($this->component)->set('isLazyLoadMounting', true);
+        store($this->component)->set('isLazyIsolated', $isolate);
 
         $this->component->skipRender(
             $this->generatePlaceholderHtml($params)
@@ -61,6 +69,7 @@ class SupportLazyLoading extends ComponentHook
     {
         if (store($this->component)->get('isLazyLoadMounting') === true) {
             $context->addMemo('lazyLoaded', false);
+            $context->addMemo('lazyIsolated', store($this->component)->get('isLazyIsolated'));
         } elseif (store($this->component)->get('isLazyLoadHydrating') === true) {
             $context->addMemo('lazyLoaded', true);
         }

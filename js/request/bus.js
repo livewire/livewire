@@ -61,7 +61,7 @@ export class CommitBus {
     createAndSendNewPool() {
         // Allow features like "reactive properties" to initiate associated
         // commits before those commits are pooled for a network request...
-        trigger('commit.pooling', { bus: this })
+        trigger('commit.pooling', { commits: this.commits })
 
         // Split commits up across one or multiple pools to be sent as seperate network requests...
         let pools = this.corraleCommitsIntoPools()
