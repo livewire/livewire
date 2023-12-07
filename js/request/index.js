@@ -1,6 +1,43 @@
 import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
-import { showHtmlModal } from './modal'
 import { trigger, triggerAsync } from '@/events'
+import { showHtmlModal } from './modal'
+import { CommitBus } from './bus'
+
+/**
+ * This is the bus that manages pooling and sending
+ * commits to the server as network requests...
+ */
+let commitBus = new CommitBus
+
+/**
+ * Create a commit and trigger a network request...
+ */
+export async function requestCommit(component) {
+    let commit = commitBus.add(component)
+
+    let promise = new Promise((resolve, reject) => {
+        commit.addResolver(resolve)
+    })
+
+    promise.commit = commit
+
+    return promise
+}
+
+/**
+ * Create a commit with an "action" call and trigger a network request...
+ */
+export async function requestCall(component, method, params) {
+    let commit = commitBus.add(component)
+
+    let promise = new Promise((resolve, reject) => {
+        commit.addCall(method, params, value => resolve(value))
+    })
+
+    promise.commit = commit
+
+    return promise
+}
 
 /**
  * Send a pool of commits to the server over HTTP...

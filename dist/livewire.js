@@ -416,48 +416,6 @@
     return [dump2, content.replace(dump2, "")];
   }
 
-  // js/modal.js
-  function showHtmlModal(html) {
-    let page = document.createElement("html");
-    page.innerHTML = html;
-    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-    let modal = document.getElementById("livewire-error");
-    if (typeof modal != "undefined" && modal != null) {
-      modal.innerHTML = "";
-    } else {
-      modal = document.createElement("div");
-      modal.id = "livewire-error";
-      modal.style.position = "fixed";
-      modal.style.width = "100vw";
-      modal.style.height = "100vh";
-      modal.style.padding = "50px";
-      modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
-      modal.style.zIndex = 2e5;
-    }
-    let iframe = document.createElement("iframe");
-    iframe.style.backgroundColor = "#17161A";
-    iframe.style.borderRadius = "5px";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    modal.appendChild(iframe);
-    document.body.prepend(modal);
-    document.body.style.overflow = "hidden";
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(page.outerHTML);
-    iframe.contentWindow.document.close();
-    modal.addEventListener("click", () => hideHtmlModal(modal));
-    modal.setAttribute("tabindex", 0);
-    modal.addEventListener("keydown", (e) => {
-      if (e.key === "Escape")
-        hideHtmlModal(modal);
-    });
-    modal.focus();
-  }
-  function hideHtmlModal(modal) {
-    modal.outerHTML = "";
-    document.body.style.overflow = "visible";
-  }
-
   // js/events.js
   var listeners = [];
   function on(name, callback) {
@@ -503,7 +461,141 @@
     return latest;
   }
 
-  // js/request.js
+  // js/request/modal.js
+  function showHtmlModal(html) {
+    let page = document.createElement("html");
+    page.innerHTML = html;
+    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+    let modal = document.getElementById("livewire-error");
+    if (typeof modal != "undefined" && modal != null) {
+      modal.innerHTML = "";
+    } else {
+      modal = document.createElement("div");
+      modal.id = "livewire-error";
+      modal.style.position = "fixed";
+      modal.style.width = "100vw";
+      modal.style.height = "100vh";
+      modal.style.padding = "50px";
+      modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
+      modal.style.zIndex = 2e5;
+    }
+    let iframe = document.createElement("iframe");
+    iframe.style.backgroundColor = "#17161A";
+    iframe.style.borderRadius = "5px";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    modal.appendChild(iframe);
+    document.body.prepend(modal);
+    document.body.style.overflow = "hidden";
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(page.outerHTML);
+    iframe.contentWindow.document.close();
+    modal.addEventListener("click", () => hideHtmlModal(modal));
+    modal.setAttribute("tabindex", 0);
+    modal.addEventListener("keydown", (e) => {
+      if (e.key === "Escape")
+        hideHtmlModal(modal);
+    });
+    modal.focus();
+  }
+  function hideHtmlModal(modal) {
+    modal.outerHTML = "";
+    document.body.style.overflow = "visible";
+  }
+
+  // js/request/bus.js
+  var CommitBus = class {
+    constructor() {
+      this.commits = /* @__PURE__ */ new Set();
+      this.pools = /* @__PURE__ */ new Set();
+    }
+    add(component) {
+      let commit = this.findCommitOr(component, () => {
+        let newCommit = new Commit(component);
+        this.commits.add(newCommit);
+        return newCommit;
+      });
+      bufferPoolingForFiveMs(commit, () => {
+        let pool = this.findPoolWithComponent(commit.component);
+        if (!pool) {
+          this.createAndSendNewPool();
+        }
+      });
+      return commit;
+    }
+    findCommitOr(component, callback) {
+      for (let [idx, commit] of this.commits.entries()) {
+        if (commit.component === component) {
+          return commit;
+        }
+      }
+      return callback();
+    }
+    findPoolWithComponent(component) {
+      for (let [idx, pool] of this.pools.entries()) {
+        if (pool.hasCommitFor(component))
+          return pool;
+      }
+    }
+    createAndSendNewPool() {
+      trigger("commit.pooling", { bus: this });
+      let pools = this.corraleCommitsIntoPools();
+      this.commits.clear();
+      trigger("commit.pooled", { pools });
+      pools.forEach((pool) => {
+        console.count("yo");
+        if (pool.empty())
+          return;
+        this.pools.add(pool);
+        pool.send().then(() => {
+          this.pools.delete(pool);
+          this.sendAnyQueuedCommits();
+        });
+      });
+    }
+    corraleCommitsIntoPools() {
+      let pools = /* @__PURE__ */ new Set();
+      for (let [idx, commit] of this.commits.entries()) {
+        let hasFoundPool = false;
+        pools.forEach((pool) => {
+          if (pool.shouldHoldCommit(commit)) {
+            pool.add(commit);
+            hasFoundPool = true;
+          }
+        });
+        if (!hasFoundPool) {
+          let newPool = new RequestPool();
+          newPool.add(commit);
+          pools.add(newPool);
+        }
+      }
+      return pools;
+    }
+    sendAnyQueuedCommits() {
+      if (this.commits.size > 0) {
+        this.createAndSendNewPool();
+      }
+    }
+  };
+
+  // js/request/index.js
+  var commitBus = new CommitBus();
+  async function requestCommit(component) {
+    let commit = commitBus.add(component);
+    let promise = new Promise((resolve, reject) => {
+      commit.addResolver(resolve);
+    });
+    promise.commit = commit;
+    return promise;
+  }
+  async function requestCall(component, method, params) {
+    let commit = commitBus.add(component);
+    let promise = new Promise((resolve, reject) => {
+      commit.addCall(method, params, (value) => resolve(value));
+    });
+    promise.commit = commit;
+    return promise;
+  }
   async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload();
     let options = {
@@ -581,18 +673,18 @@
   }
 
   // js/commit.js
-  var CommitBus = class {
+  var CommitBus2 = class {
     constructor() {
       this.commits = /* @__PURE__ */ new Set();
       this.pools = /* @__PURE__ */ new Set();
     }
     add(component) {
       let commit = this.findCommitOr(component, () => {
-        let newCommit = new Commit(component);
+        let newCommit = new Commit2(component);
         this.commits.add(newCommit);
         return newCommit;
       });
-      bufferPoolingForFiveMs(commit, () => {
+      bufferPoolingForFiveMs2(commit, () => {
         let pool = this.findPoolWithComponent(commit.component);
         if (!pool) {
           this.createAndSendNewPool();
@@ -641,7 +733,7 @@
           }
         });
         if (!hasFoundPool) {
-          let newPool = new RequestPool();
+          let newPool = new RequestPool2();
           newPool.add(commit);
           pools.add(newPool);
         }
@@ -654,24 +746,8 @@
       }
     }
   };
-  var commitBus = new CommitBus();
-  async function requestCommit(component) {
-    let commit = commitBus.add(component);
-    let promise = new Promise((resolve, reject) => {
-      commit.addResolver(resolve);
-    });
-    promise.commit = commit;
-    return promise;
-  }
-  async function requestCall(component, method, params) {
-    let commit = commitBus.add(component);
-    let promise = new Promise((resolve, reject) => {
-      commit.addCall(method, params, (value) => resolve(value));
-    });
-    promise.commit = commit;
-    return promise;
-  }
-  var RequestPool = class {
+  var commitBus2 = new CommitBus2();
+  var RequestPool2 = class {
     constructor() {
       this.commits = /* @__PURE__ */ new Set();
     }
@@ -718,7 +794,7 @@
       return [commitPayloads, succeed, fail];
     }
   };
-  var Commit = class {
+  var Commit2 = class {
     constructor(component) {
       this.component = component;
       this.isolate = false;
@@ -800,7 +876,7 @@
     trigger("effects", target, effects);
   }
   var buffersByCommit = /* @__PURE__ */ new WeakMap();
-  function bufferPoolingForFiveMs(commit, callback) {
+  function bufferPoolingForFiveMs2(commit, callback) {
     if (buffersByCommit.has(commit))
       return;
     buffersByCommit.set(commit, setTimeout(() => {
