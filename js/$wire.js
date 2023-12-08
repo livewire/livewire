@@ -1,7 +1,7 @@
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEvents'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
-import { requestCommit, requestCall } from '@/commit'
+import { requestCommit, requestCall } from '@/request'
 import { WeakBag, dataGet, dataSet } from '@/utils'
 import { on, trigger } from '@/events'
 import Alpine from 'alpinejs'
@@ -21,6 +21,9 @@ function wireFallback(callback) {
 // For V2 backwards compatibility...
 // And I actually like both depending on the scenario...
 let aliases = {
+    'on': '$on',
+    'el': '$el',
+    'id': '$id',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -81,7 +84,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         get(target, property) {
             if (! component) component = closestComponent(el)
 
-            if (property === 'entangle') {
+            if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
             }
 
@@ -102,6 +105,14 @@ wireProperty('__instance', (component) => component)
 
 wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 
+wireProperty('$el', (component) => {
+    return component.el
+})
+
+wireProperty('$id', (component) => {
+    return component.id
+})
+
 wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
@@ -118,8 +129,8 @@ wireProperty('$entangle', (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live)
 })
 
-wireProperty('$toggle', (component) => (name) => {
-    return component.$wire.set(name, ! component.$wire.get(name))
+wireProperty('$toggle', (component) => (name, live = true) => {
+    return component.$wire.set(name, ! component.$wire.get(name), live)
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
@@ -154,24 +165,22 @@ wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
-wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
-
+wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
 
-let parentMemo
+let parentMemo = new WeakMap
 
 wireProperty('$parent', component => {
-    if (parentMemo) return parentMemo.$wire
+    if (parentMemo.has(component)) return parentMemo.get(component).$wire
 
     let parent = closestComponent(component.el.parentElement)
 
-    parentMemo = parent
+    parentMemo.set(component, parent)
 
     return parent.$wire
 })
-
 
 let overriddenMethods = new WeakMap
 

@@ -12,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\ViewErrorBag;
+use Livewire\Form;
 
 trait HandlesValidation
 {
@@ -23,22 +25,27 @@ trait HandlesValidation
 
     public function addRulesFromOutside($rules)
     {
-        $this->rulesFromOutside = array_merge_recursive($this->rulesFromOutside, $rules);
+        $this->rulesFromOutside[] = $rules;
     }
 
     public function addMessagesFromOutside($messages)
     {
-        $this->messagesFromOutside = array_merge($this->messagesFromOutside, $messages);
+        $this->messagesFromOutside[] = $messages;
     }
 
     public function addValidationAttributesFromOutside($validationAttributes)
     {
-        $this->validationAttributesFromOutside = array_merge($this->validationAttributesFromOutside, $validationAttributes);
+        $this->validationAttributesFromOutside[] = $validationAttributes;
     }
 
     public function getErrorBag()
     {
-        return store($this)->get('errorBag', new MessageBag);
+        if (! store($this)->has('errorBag')) {
+            $previouslySharedErrors = app('view')->getShared()['errors'] ?? new ViewErrorBag;
+            $this->setErrorBag($previouslySharedErrors->getMessages());
+        }
+
+        return store($this)->get('errorBag');
     }
 
     public function addError($name, $message)
@@ -103,7 +110,14 @@ trait HandlesValidation
         if (method_exists($this, 'rules')) $rulesFromComponent = $this->rules();
         else if (property_exists($this, 'rules')) $rulesFromComponent = $this->rules;
 
-        return array_merge($rulesFromComponent, $this->rulesFromOutside);
+        $rulesFromOutside = array_merge_recursive(
+            ...array_map(
+                fn($i) => value($i),
+                $this->rulesFromOutside
+            )
+        );
+
+        return array_merge($rulesFromComponent, $rulesFromOutside);
     }
 
     protected function getMessages()
@@ -113,7 +127,14 @@ trait HandlesValidation
         if (method_exists($this, 'messages')) $messages = $this->messages();
         elseif (property_exists($this, 'messages')) $messages = $this->messages;
 
-        return array_merge($messages, $this->messagesFromOutside);
+        $messagesFromOutside = array_merge(
+            ...array_map(
+                fn($i) => value($i),
+                $this->messagesFromOutside
+            )
+        );
+
+        return array_merge($messages, $messagesFromOutside);
     }
 
     protected function getValidationAttributes()
@@ -123,7 +144,14 @@ trait HandlesValidation
         if (method_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes();
         elseif (property_exists($this, 'validationAttributes')) $validationAttributes = $this->validationAttributes;
 
-        return array_merge($validationAttributes, $this->validationAttributesFromOutside);
+        $validationAttributesFromOutside = array_merge(
+            ...array_map(
+                fn($i) => value($i),
+                $this->validationAttributesFromOutside
+            )
+        );
+
+        return array_merge($validationAttributes, $validationAttributesFromOutside);
     }
 
     protected function getValidationCustomValues()
@@ -201,6 +229,8 @@ trait HandlesValidation
 
     public function validate($rules = null, $messages = [], $attributes = [])
     {
+        $isUsingGlobalRules = is_null($rules);
+
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         $data = $this->prepareForValidation(
@@ -228,15 +258,77 @@ trait HandlesValidation
             $validator->addCustomValues($customValues);
         }
 
-        $validatedData = $validator->validate();
+        if ($this->isRootComponent() && $isUsingGlobalRules) {
+            $validatedData = $this->withFormObjectValidators($validator, fn () => $validator->validate(), fn ($form) => $form->validate());
+        } else {
+            $validatedData = $validator->validate();
+        }
 
         $this->resetErrorBag();
 
         return $validatedData;
     }
 
+    protected function isRootComponent()
+    {
+        // Because this trait is used for form objects as well...
+        return $this instanceof \Livewire\Component;
+    }
+
+    protected function withFormObjectValidators($validator, $validateSelf, $validateForm)
+    {
+        $cumulativeErrors = new MessageBag;
+        $cumulativeData = [];
+        $formExceptions = [];
+
+        // First, run sub-validators...
+        foreach ($this->getFormObjects() as $form) {
+            try {
+                $cumulativeData = array_merge($validateForm($form));
+            } catch (ValidationException $e) {
+                $cumulativeErrors->merge($e->validator->errors());
+
+                $formExceptions[] = $e;
+            }
+        }
+
+        // Now run main validator...
+        try {
+            $cumulativeData = array_merge($validateSelf());
+        } catch (ValidationException $e) {
+            // If the main validator has errors, merge them with subs and rethrow...
+            $e->validator->errors()->merge($cumulativeErrors);
+
+            throw $e;
+        }
+
+        // If main validation passed, go through other sub-validation exceptions
+        // and throw the first one with the cumulative messages...
+        foreach ($formExceptions as $e) {
+            $e->validator->errors()->merge($cumulativeErrors);
+
+            throw $e;
+        }
+
+        // All validation has passed, we can return the data...
+        return $cumulativeData;
+    }
+
     public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
     {
+        $property = (string) str($field)->before('.');
+
+        // If validating a field in a form object, defer validation to that form object...
+        if (
+            $this->isRootComponent()
+            && ($form = $this->all()[$property] ?? false) instanceof Form
+        ) {
+            $stripPrefix = (string) str($field)->after('.');
+            return $form->validateOnly($stripPrefix, $rules, $messages, $attributes, $dataOverrides);
+        }
+
+        $isUsingGlobalRules = is_null($rules);
+
         [$rules, $messages, $attributes] = $this->providedOrGlobalRulesMessagesAndAttributes($rules, $messages, $attributes);
 
         // Loop through rules and swap any wildcard '*' with keys from field, then filter down to only
@@ -381,7 +473,17 @@ trait HandlesValidation
     {
         $rules = is_null($rules) ? $this->getRules() : $rules;
 
-        throw_if(empty($rules), new MissingRulesException($this->getName()));
+        // Before we warn the user about not providing validation rules,
+        // Let's make sure there are no form objects that contain them...
+        $allRules = $rules;
+
+        if ($this->isRootComponent()) {
+            foreach ($this->getFormObjects() as $form) {
+                $allRules = array_merge($form->getRules());
+            }
+        }
+
+        throw_if(empty($allRules), new MissingRulesException($this));
 
         $messages = empty($messages) ? $this->getMessages() : $messages;
         $attributes = empty($attributes) ? $this->getValidationAttributes() : $attributes;

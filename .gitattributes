@@ -22,6 +22,7 @@
 /package*.json      export-ignore
 /.prettierrc        export-ignore
 /.all-contributorsrc export-ignore
+/vercel.json        export-ignore
 /stubs              export-ignore
 /squishy            export-ignore
 /docs               export-ignore

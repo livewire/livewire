@@ -10,7 +10,6 @@ class UpgradeIntroduction extends UpgradeStep
     {
         $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> LIVEWIRE v2 to v3 UPGRADE 🚀 </>");
         $console->newLine();
-        $console->comment('!! Please be aware that Livewire 3 is still in beta. Additional breaking changes may be introduced before the final release. !!');
         $console->comment('!! Running this command multiple times may result in incorrect replacements !!');
         $console->newLine();
         $console->line('This command will help you upgrade from Livewire v2 to v3.');

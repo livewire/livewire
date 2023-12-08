@@ -179,6 +179,45 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@delete-one')
         ->assertNotPresent('@child-one');
     }
+
+    /** @test */
+    public function lazy_nested_components_do_not_call_boot_method_twice()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div>Page</div>
+                        <livewire:nested-boot-component lazy/>
+                    </div>
+                    HTML;
+                }
+            },
+            'nested-boot-component' => new class extends Component {
+                public $bootCount = 0;
+
+                public function boot()
+                {
+                    $this->increment();
+                }
+
+                public function increment()
+                {
+                    $this->bootCount ++;
+                }
+
+                public function render()
+                {
+                    return '<div>Boot count: {{ $bootCount }}</div>';
+                }
+
+            }])
+            ->assertSee('Page')
+            ->waitForText('Boot count: 1');
+        ;
+    }
 }
 
 class Page extends Component
@@ -242,5 +281,39 @@ class ThirdComponent extends Component
     public function render()
     {
         return '<div>Third Component Rendered</div>';
+    }
+}
+
+class BootPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>Page</div>
+
+            <livewire:nested-boot-component lazy/>
+        </div>
+        HTML;
+    }
+}
+
+class NestedBootComponent extends Component
+{
+    public $bootCount = 0;
+
+    public function boot()
+    {
+        $this->increment();
+    }
+
+    public function increment()
+    {
+        $this->bootCount ++;
+    }
+
+    public function render()
+    {
+        return '<div>Boot count: {{ $bootCount }}</div>';
     }
 }

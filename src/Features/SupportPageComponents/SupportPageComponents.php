@@ -20,7 +20,7 @@ class SupportPageComponents extends ComponentHook
     static function registerLayoutViewMacros()
     {
         View::macro('layoutData', function ($data = []) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->mergeParams($data);
 
@@ -28,7 +28,7 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('section', function ($section) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->slotOrSection = $section;
 
@@ -36,7 +36,7 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('title', function ($title) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->mergeParams(['title' => $title]);
 
@@ -44,7 +44,7 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('slot', function ($slot) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->slotOrSection = $slot;
 
@@ -52,7 +52,7 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('extends', function ($view, $params = []) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->type = 'extends';
             $this->layoutConfig->slotOrSection = 'content';
@@ -63,12 +63,20 @@ class SupportPageComponents extends ComponentHook
         });
 
         View::macro('layout', function ($view, $params = []) {
-            if (! isset($this->layoutConfig)) $this->layoutConfig = new LayoutConfig;
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
 
             $this->layoutConfig->type = 'component';
             $this->layoutConfig->slotOrSection = 'slot';
             $this->layoutConfig->view = $view;
             $this->layoutConfig->mergeParams($params);
+
+            return $this;
+        });
+
+        View::macro('response', function (callable $callback) {
+            if (! isset($this->layoutConfig)) $this->layoutConfig = new PageComponentConfig;
+
+            $this->layoutConfig->response = $callback;
 
             return $this;
         });
@@ -82,8 +90,8 @@ class SupportPageComponents extends ComponentHook
         // Only run this handler once for the parent-most component. Otherwise child components
         // will run this handler too and override the configured layout...
         $handler = once(function ($target, $view, $data) use (&$layoutConfig, &$slots) {
-            $layoutAttr = $target->getAttributes()->whereInstanceOf(Layout::class)->first();
-            $titleAttr = $target->getAttributes()->whereInstanceOf(Title::class)->first();
+            $layoutAttr = $target->getAttributes()->whereInstanceOf(BaseLayout::class)->first();
+            $titleAttr = $target->getAttributes()->whereInstanceOf(BaseTitle::class)->first();
 
             if ($layoutAttr) {
                 $view->layout($layoutAttr->name, $layoutAttr->params);
@@ -93,7 +101,7 @@ class SupportPageComponents extends ComponentHook
                 $view->title($titleAttr->content);
             }
 
-            $layoutConfig = $view->layoutConfig ?? new LayoutConfig;
+            $layoutConfig = $view->layoutConfig ?? new PageComponentConfig;
 
             return function ($html, $replace, $viewContext) use ($view, $layoutConfig) {
                 // Gather up any slots and sections declared in the component template and store them
@@ -149,7 +157,7 @@ class SupportPageComponents extends ComponentHook
 
                         <?php
                         // Manually forward slots defined in the Livewire template into the layout component...
-                        foreach (\Illuminate\Support\Arr::collapse($layout->viewContext->slots) as $name => $slot) {
+                        foreach ($layout->viewContext->slots[-1] ?? [] as $name => $slot) {
                             $__env->slot($name, attributes: $slot->attributes->getAttributes());
                             echo $slot->toHtml();
                             $__env->endSlot();

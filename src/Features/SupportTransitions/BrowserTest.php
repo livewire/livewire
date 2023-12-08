@@ -9,7 +9,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function can_transition_blade_conditional_dom_segments()
     {
-        $this->markTestSkipped('this is flaky');
+        $opacity = 'parseFloat(getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity, 10)';
+        $isBlock = 'getComputedStyle(document.querySelector(\'[dusk="target"]\')).display === "block"';
 
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -25,7 +26,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <button wire:click="toggle" dusk="toggle">Toggle</button>
 
                     @if ($show)
-                    <div dusk="target" wire:transition.duration.250ms>
+                    <div dusk="target" wire:transition.duration.2000ms>
                         Transition Me!
                     </div>
                     @endif
@@ -34,19 +35,57 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertDontSee('@target')
         ->waitForLivewire()->click('@toggle')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity < 1', true)
-        ->pause(250)
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity', 1)
-        ->pause(250)
+        ->waitFor('@target')
+        ->waitUntil($isBlock)
+        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
+        ->waitUntil("$opacity === 1") // Now it's done.
+        ->assertScript($opacity, 1) // Assert that it's done.
         ->waitForLivewire()->click('@toggle')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).display', 'block')
-        ->assertScript('getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity', 1)
-        ->pause(200)
         ->assertPresent('@target')
-        ->pause(100)
+        ->assertScript($isBlock, true) // That should not have changed yet.
+        ->waitUntil("$opacity > 0 && $opacity < 1") // In progress.
+        ->waitUntilMissing('@target')
         ->assertMissing('@target')
+        ;
+    }
+
+    /** @test */
+    public function elements_the_contain_transition_are_displayed_on_page_load()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $messages = [
+                    'message 1',
+                    'message 2',
+                    'message 3',
+                    'message 4',
+                ];
+
+                public function addMessage()
+                {
+                    $this->messages[] = 'message ' . count($this->messages) + 1;
+                }
+
+                public function render()
+                {
+                    return <<< 'HTML'
+                    <div>
+                        <ul class="text-xs">
+                            @foreach($messages as $index => $message)
+                                <li wire:transition.fade.duration.1000ms dusk="message-{{ $index + 1 }}">{{$message}}</li>
+                            @endforeach
+                        </ul>
+
+                        <button type="button" wire:click="addMessage" dusk="add-message">Add message</button>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->assertVisible('@message-1')
+        ->assertVisible('@message-2')
+        ->assertVisible('@message-3')
+        ->assertVisible('@message-4')
         ;
     }
 }

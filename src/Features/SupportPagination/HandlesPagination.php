@@ -2,6 +2,9 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Str;
+
 trait HandlesPagination
 {
     public $paginators = [];
@@ -15,7 +18,7 @@ trait HandlesPagination
 
     public function getPage($pageName = 'page')
     {
-        return $this->paginators[$pageName] ?? 1;
+        return $this->paginators[$pageName] ?? Paginator::resolveCurrentPage($pageName);
     }
 
     public function previousPage($pageName = 'page')
@@ -47,8 +50,8 @@ trait HandlesPagination
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
-        $beforeMethod = 'updating' . $pageName;
-        $afterMethod = 'updated' . $pageName;
+        $beforeMethod = 'updating' . ucfirst(Str::camel($pageName));
+        $afterMethod = 'updated' . ucfirst(Str::camel($pageName));
 
         if (method_exists($this, $beforePaginatorMethod)) {
             $this->{$beforePaginatorMethod}($page, $pageName);

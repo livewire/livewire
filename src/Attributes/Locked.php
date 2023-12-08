@@ -2,7 +2,7 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportLockedProperties\Locked as BaseLocked;
+use Livewire\Features\SupportLockedProperties\BaseLocked;
 
 #[\Attribute]
 class Locked extends BaseLocked

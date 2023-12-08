@@ -2,36 +2,66 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
+use Livewire\Features\SupportValidation\HandlesValidation;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\MessageBag;
+use function Livewire\invade;
+use Illuminate\Support\Arr;
 use Livewire\Drawer\Utils;
 use Livewire\Component;
 
 class Form implements Arrayable
 {
+    use HandlesValidation {
+        validate as parentValidate;
+        validateOnly as parentValidateOnly;
+    }
+
     function __construct(
         protected Component $component,
         protected $propertyName
-    ) {
-        $this->addValidationRulesToComponent();
-    }
+    ) {}
 
     public function getComponent() { return $this->component; }
     public function getPropertyName() { return $this->propertyName; }
 
-    public function addValidationRulesToComponent()
+    public function validate($rules = null, $messages = [], $attributes = [])
     {
-        $rules = [];
+        try {
+            return $this->parentValidate($rules, $messages, $attributes);
+        } catch (ValidationException $e) {
+            invade($e->validator)->messages = $this->prefixErrorBag(invade($e->validator)->messages);
 
-        if (method_exists($this, 'rules')) $rules = $this->rules();
-        else if (property_exists($this, 'rules')) $rules = $this->rules;
-
-        $rulesWithPrefixedKeys = [];
-
-        foreach ($rules as $key => $value) {
-            $rulesWithPrefixedKeys[$this->propertyName . '.' . $key] = $value;
+            throw $e;
         }
+    }
 
-        $this->component->addRulesFromOutside($rulesWithPrefixedKeys);
+    public function validateOnly($field, $rules = null, $messages = [], $attributes = [], $dataOverrides = [])
+    {
+        try {
+            return $this->parentValidateOnly($field, $rules, $messages, $attributes, $dataOverrides);
+        } catch (ValidationException $e) {
+            invade($e->validator)->messages = $this->prefixErrorBag(invade($e->validator)->messages);
+
+            throw $e;
+        }
+    }
+
+    protected function runSubValidators()
+    {
+        // This form object IS the sub-validator.
+        // Let's skip it...
+    }
+
+    protected function prefixErrorBag($bag)
+    {
+        $raw = $bag->toArray();
+
+        $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
+
+        return new MessageBag($raw);
     }
 
     public function addError($key, $message)
@@ -39,19 +69,15 @@ class Form implements Arrayable
         $this->component->addError($this->propertyName . '.' . $key, $message);
     }
 
-    public function validate()
+    public function resetErrorBag($field = null)
     {
-        $rules = $this->component->getRules();
+        $fields = (array) $field;
 
-        $filteredRules = [];
-
-        foreach ($rules as $key => $value) {
-            if (! str($key)->startsWith($this->propertyName . '.')) continue;
-
-            $filteredRules[$key] = $value;
+        foreach ($fields as $idx => $field) {
+            $fields[$idx] = $this->propertyName . '.' . $field;
         }
 
-        return $this->component->validate($filteredRules)[$this->propertyName];
+        $this->getComponent()->resetErrorBag($fields);
     }
 
     public function all()
@@ -63,11 +89,18 @@ class Form implements Arrayable
     {
         $results = [];
 
-        foreach ($properties as $property) {
+        foreach (is_array($properties) ? $properties : func_get_args() as $property) {
             $results[$property] = $this->hasProperty($property) ? $this->getPropertyValue($property) : null;
         }
 
         return $results;
+    }
+
+    public function except($properties)
+    {
+        $properties = is_array($properties) ? $properties : func_get_args();
+
+        return array_diff_key($this->all(), array_flip($properties));
     }
 
     public function hasProperty($prop)
@@ -84,6 +117,21 @@ class Form implements Arrayable
         }
 
         return $value;
+    }
+
+    public function fill($values)
+    {
+        $publicProperties = array_keys($this->all());
+
+        if ($values instanceof Model) {
+            $values = $values->toArray();
+        }
+
+        foreach ($values as $key => $value) {
+            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+                data_set($this, $key, $value);
+            }
+        }
     }
 
     public function reset(...$properties)

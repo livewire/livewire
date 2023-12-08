@@ -2,7 +2,7 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportReactiveProps\Reactive as BaseReactive;
+use Livewire\Features\SupportReactiveProps\BaseReactive;
 
 #[\Attribute]
 class Reactive extends BaseReactive

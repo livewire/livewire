@@ -13,7 +13,7 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(new class extends Component {
             public $foo = 'bar';
 
-            #[On('bar')]
+            #[BaseOn('bar')]
             public function onBar($param)
             {
                 $this->foo = $param;
@@ -35,7 +35,7 @@ class UnitTest extends \Tests\TestCase
 
             public $foo = 'bar';
 
-            #[On('bar.{post.id}')]
+            #[BaseOn('bar.{post.id}')]
             public function onBar($param)
             {
                 $this->foo = $param;
@@ -55,7 +55,7 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(new class extends Component {
             public $foo = 'bar';
 
-            #[On('bar')]
+            #[BaseOn('bar')]
             public function onBar($name, $game)
             {
                 $this->foo = $name . $game;
@@ -96,7 +96,7 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(new class extends Component {
             public $counter = 0;
 
-            #[On('foo'), On('bar')]
+            #[BaseOn('foo'), BaseOn('bar')]
             public function add(): void
             {
                 $this->counter++;

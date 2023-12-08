@@ -1,7 +1,7 @@
-import { dataSet, deepClone, deeplyEqual, diff, extractData} from './utils'
-import { processEffects } from './commit'
-import { generateWireObject } from './$wire'
-import { findComponent } from './store';
+import { dataSet, deepClone, deeplyEqual, diff, extractData} from '@/utils'
+import { generateWireObject } from '@/$wire'
+import { findComponent } from '@/store'
+import { trigger } from '@/events'
 
 export class Component {
     constructor(el) {
@@ -41,7 +41,7 @@ export class Component {
         this.cleanups = []
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
-        processEffects(this, this.effects)
+        this.processEffects(this.effects)
     }
 
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -90,7 +90,16 @@ export class Component {
 
         this.mergeNewSnapshot(JSON.stringify(snapshot), effects)
 
-        processEffects(this, { html })
+        this.processEffects({ html })
+    }
+
+    /**
+     * Here we'll take the new state and side effects from the
+     * server and use them to update the existing data that
+     * users interact with, triggering reactive effects.
+     */
+    processEffects(effects) {
+        trigger('effects', this, effects)
     }
 
     get children() {
@@ -109,6 +118,11 @@ export class Component {
         let effects = this.originalEffects.listeners
             ? { listeners: this.originalEffects.listeners }
             : {}
+
+        // We need to re-register any url/query-string bindings...
+        if (this.originalEffects.url) {
+            effects.url = this.originalEffects.url
+        }
 
         el.setAttribute('wire:effects', JSON.stringify(effects))
     }

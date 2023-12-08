@@ -49,6 +49,22 @@ As you can see, in addition to limiting the number of posts shown via the `Post:
 
 For more information on pagination using Laravel, check out [Laravel's comprehensive pagination documentation](https://laravel.com/docs/pagination).
 
+## Customizing scroll behavior
+
+By default, Livewire's paginator scrolls to the top of the page after every page change.
+
+You can disable this behavior by passing `false` to the `scrollTo` parameter of the `links()` method like so:
+
+```blade
+{{ $posts->links(data: ['scrollTo' => false]) }}
+```
+
+Alternatively, you can provide any CSS selector to the `scrollTo` parameter, and Livewire will find the nearest element matching that selector and scroll to it after each navigation:
+
+```blade
+{{ $posts->links(data: ['scrollTo' => '#paginated-posts']) }}
+```
+
 ## Resetting the page
 
 When sorting or filtering results, it is common to want to reset the page number back to `1`.

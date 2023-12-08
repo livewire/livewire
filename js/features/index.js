@@ -1,8 +1,10 @@
 
-import './supportWireModelingNestedComponents';
 import './supportDisablingFormsDuringRequest';
+import './supportPropsAndModelables';
+import './supportScriptsAndAssets';
 import './supportFileDownloads';
 import './supportJsEvaluation';
+import './supportLazyLoading';
 import './supportFileUploads';
 import './supportQueryString';
 import './supportLaravelEcho';
@@ -11,4 +13,3 @@ import './supportNavigate';
 import './supportMorphDom';
 import './supportEntangle';
 import './supportEvents';
-import './supportProps';

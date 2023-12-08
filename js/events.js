@@ -63,16 +63,37 @@ export function trigger(name, ...params) {
     }
 
     return (result) => {
-        let latest = result
-
-        for (let i = 0; i < finishers.length; i++) {
-            let iResult = finishers[i](latest)
-
-            if (iResult !== undefined) {
-                latest = iResult
-            }
-        }
-
-        return latest
+       return runFinishers(finishers, result)
     }
+}
+
+export async function triggerAsync(name, ...params) {
+    let callbacks = listeners[name] || []
+
+    let finishers = []
+
+    for (let i = 0; i < callbacks.length; i++) {
+        let finisher = await callbacks[i](...params)
+
+        if (isFunction(finisher)) finishers.push(finisher)
+    }
+
+    return (result) => {
+       return runFinishers(finishers, result)
+    }
+}
+
+export function runFinishers(finishers, result)
+{
+    let latest = result
+
+    for (let i = 0; i < finishers.length; i++) {
+        let iResult = finishers[i](latest)
+
+        if (iResult !== undefined) {
+            latest = iResult
+        }
+    }
+
+    return latest
 }

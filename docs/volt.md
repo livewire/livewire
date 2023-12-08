@@ -27,8 +27,7 @@ $increment = fn () => $this->count++;
 To get started, install Volt into your project using the Composer package manager:
 
 ```bash
-composer require livewire/livewire "^3.0@beta" # Or ensure Livewire v3.x is installed...
-composer require livewire/volt "^1.0@beta"
+composer require livewire/volt
 ```
 
 After installing Volt, you may execute the `volt:install` Artisan command, which will install Volt's service provider file into your application. This service provider specifies the mounted directories in which Volt will search for single file components:
@@ -53,6 +52,13 @@ By adding the `--test` directive when generating a component, a corresponding te
 php artisan make:volt counter --test --pest
 ```
 
+
+By adding the `--class` directive it will generate a class-based volt component.
+
+```bash
+php artisan make:volt counter --class
+```
+
 ## API style
 
 By utilizing Volt's functional API, we can define a Livewire component's logic through imported `Livewire\Volt` functions. Volt then transforms and compiles the functional code into a conventional Livewire class, enabling us to leverage the extensive capabilities of Livewire with reduced boilerplate.
@@ -69,7 +75,7 @@ $increment = fn () => $this->count++;
 // ...
 ```
 
-### Class based Volt components
+### Class-based Volt components
 
 If you would like to enjoy the single-file component capabilities of Volt while still writing class-based components, we've got you covered. To get started, define an anonymous class that extends `Livewire\Volt\Component`. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
 
@@ -91,6 +97,74 @@ new class extends Component {
     <h1>{{ $count }}</h1>
     <button wire:click="increment">+</button>
 </div>
+```
+
+#### Class attributes
+
+Just like typical Livewire components, Volt components support class attributes. When utilizing anonymous PHP classes, class attributes should be defined after the `new` keyword:
+
+```blade
+<?php
+
+use Livewire\Attributes\{Layout, Title};
+use Livewire\Volt\Component;
+
+new
+#[Layout('layouts.guest')]
+#[Title('Login')]
+class extends Component
+{
+    public string $name = '';
+
+    // ...
+```
+
+#### Providing additional view data
+
+When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method. This data will be passed to the view in addition to the component's public properties:
+
+```blade
+<?php
+
+use Livewire\WithPagination;
+use Livewire\Volt\Component;
+use App\Models\Post;
+
+new class extends Component {
+    use WithPagination;
+
+    public function with(): array
+    {
+        return [
+            'posts' => Post::paginate(10),
+        ];
+    }
+} ?>
+
+<div>
+    <!-- ... -->
+</div>
+```
+
+#### Modifying the view instance
+
+Sometimes, you may wish to interact with the view instance directly, for example, to set the view's title using a translated string. To achieve this, you may define a `rendering` method on your component:
+
+```blade
+<?php
+
+use Illuminate\View\View;
+use Livewire\Volt\Component;
+
+new class extends Component {
+    public function rendering(View $view): void
+    {
+        $view->title('Create Post');
+
+        // ...
+    }
+
+    // ...
 ```
 
 ## Rendering and mounting components
@@ -132,7 +206,7 @@ mount(function (UserCounter $counter, $users) {
 });
 ```
 
-### Full page components
+### Full-page components
 
 Optionally, you may render a Volt component as a full page component by defining a Volt route in your application's `routes/web.php` file:
 
@@ -150,6 +224,20 @@ use function Livewire\Volt\{layout, state};
 state('users');
 
 layout('components.layouts.admin');
+
+// ...
+```
+
+You may also customize the title of the page using the `title` function:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title('Users');
 
 // ...
 ```
@@ -253,7 +341,7 @@ $count = computed(function () {
 })->persist();
 ```
 
-By default, Livewire caches the computed computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
+By default, Livewire caches the computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
 
 ```php
 $count = computed(function () {
@@ -499,7 +587,7 @@ rules(['name' => 'required|min:6', 'email' => 'required|email'])
 
 ## File uploads
 
-When using Volt, [uploading and storing files](/docs/uploads) is made incredibly thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
+When using Volt, [uploading and storing files](/docs/uploads) is much easier thanks to Livewire. To include the `Livewire\WithFileUploads` trait on your functional Volt component, you may use the `usesFileUploads` function:
 
 ```php
 use function Livewire\Volt\{state, usesFileUploads};
@@ -566,22 +654,20 @@ Livewire and Volt also have complete support for [pagination](/docs/pagination).
 ```php
 <?php
 
-use function Livewire\Volt\{computed, usesPagination};
+use function Livewire\Volt\{with, usesPagination};
 
 usesPagination();
 
-$posts = computed(function () {
-    return Post::paginate(10);
-});
+with(fn () => ['posts' => Post::paginate(10)]);
 
 ?>
 
 <div>
-    @foreach ($this->posts as $post)
+    @foreach ($posts as $post)
         //
     @endforeach
 
-    {{ $this->posts->links() }}
+    {{ $posts->links() }}
 </div>
 ```
 
@@ -606,7 +692,7 @@ uses([Sorting::class, WithSorting::class]);
 
 ## Anonymous components
 
-Sometimes, you may want to convert a small portion of a page a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
+Sometimes, you may want to convert a small portion of a page into a Volt component without extracting it into a separate file. For example, imagine a Laravel route that returns the following view:
 
 ```php
 Route::get('/counter', fn () => view('pages/counter.blade.php'));

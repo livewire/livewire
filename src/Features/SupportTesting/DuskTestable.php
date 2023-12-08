@@ -3,9 +3,10 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Dusk\Browser;
+use PHPUnit\Framework\TestCase;
 use function Livewire\{ invade, on };
 use Illuminate\Support\Arr;
-use Tests\TestCase;
 
 class DuskTestable
 {
@@ -51,6 +52,9 @@ class DuskTestable
         \Laravel\Dusk\Browser::mixin(new DuskBrowserMacros);
     }
 
+    /**
+     * @return Browser
+     */
     static function create($components, $params = [], $queryParams = [])
     {
         if (static::$shortCircuitCreateCall) {
@@ -116,7 +120,13 @@ class DuskTestable
 
             $components = null;
 
-            try { (new $testClass)->$method(); } catch (\Exception $e) {
+            try { 
+                if (\Orchestra\Testbench\phpunit_version_compare('10.0', '>=')) {
+                    (new $testClass($method))->$method(); 
+                } else {
+                    (new $testClass())->$method(); 
+                }
+            } catch (\Exception $e) {
                 if (! $e->isDuskShortcircuit) throw $e;
                 $components = $e->components;
             }

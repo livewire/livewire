@@ -9,7 +9,8 @@ use Illuminate\Pagination\Paginator;
 use Livewire\ComponentHook;
 use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportQueryString\SupportQueryString;
-use Livewire\Features\SupportQueryString\Url;
+use Livewire\Features\SupportQueryString\BaseUrl;
+use Livewire\WithPagination;
 
 class SupportPagination extends ComponentHook
 {
@@ -26,6 +27,11 @@ class SupportPagination extends ComponentHook
     }
 
     protected $restoreOverriddenPaginationViews;
+
+    function skip()
+    {
+        return ! in_array(WithPagination::class, class_uses_recursive($this->component));
+    }
 
     function boot()
     {
@@ -102,8 +108,7 @@ class SupportPagination extends ComponentHook
         $history = $queryStringDetails['history'];
         $keep = $queryStringDetails['keep'];
 
-        // @todo: make this work...
-        $this->component->setPropertyAttribute($key, new Url(as: $alias, history: $history, keep: $keep));
+        $this->component->setPropertyAttribute($key, new BaseUrl(as: $alias, history: $history, keep: $keep));
     }
 
     protected function paginationView()

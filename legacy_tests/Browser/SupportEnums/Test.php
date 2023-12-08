@@ -2,19 +2,33 @@
 
 namespace LegacyTests\Browser\SupportEnums;
 
+use LegacyTests\TestEnum;
+use Livewire\Component;
 use Livewire\Livewire;
-use LegacyTests\Browser\TestCase;
+use Tests\TestCase;
 
 class Test extends TestCase
 {
-    /**
-     * @requires PHP >= 8.1
-     */
     public function test()
     {
-        $this->browse(function ($browser) {
-            $this->visitLivewireComponent($browser, Component::class)
-                ->assertSee('Be excellent to each other');
-        });
+        Livewire::test(new class extends Component {
+            public $enum;
+
+            public function mount()
+            {
+                $this->enum = TestEnum::TEST;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        {{ $enum->value }}
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSee('Be excellent to each other')
+        ;
     }
 }

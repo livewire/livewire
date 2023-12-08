@@ -75,10 +75,93 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Loaded form.text')
         ;
     }
+
+    /** @test */
+    function wire_loading_attr_doesnt_conflict_with_exist_one()
+    {
+        Livewire::visit(new class extends Component {
+            public $localText = '';
+
+            public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <section>
+                            <button
+                                disabled
+                                dusk="button"
+                                wire:loading.attr="disabled"
+                                wire:target="localText">
+                                Submit
+                            </button>
+                            <input type="text" dusk="localInput" wire:model.live.debounce.100ms="localText">
+                            {{ $localText }}
+                        </section>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForText('Submit')
+        ->assertSee('Submit')
+        ->assertAttribute('@button', 'disabled', 'true')
+        ->type('@localInput', 'Text')
+        ->assertAttribute('@button', 'disabled', 'true')
+        ->waitForText('Text')
+        ->assertAttribute('@button', 'disabled', 'true')
+        ;
+    }
+
+    /** @test */
+    function wire_loading_delay_is_removed_after_being_triggered_once()
+    {
+        /**
+         * The (broken) scenario:
+         *   - first request takes LONGER than the wire:loading.delay, so the loader shows (and hides) once
+         *   - second request takes SHORTER than the wire:loading.delay, the loader shows, but never hides
+         */
+        Livewire::visit(new class extends Component {
+            public $stuff;
+
+            public $count = 0;
+
+            public function updating() {
+                // Need to delay the update, but only on the first request
+                if ($this->count === 0) {
+                    usleep(500000);
+                }
+
+                $this->count++;
+            }
+
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <div wire:loading.delay>
+                            <span>Loading...</span>
+                        </div>
+                        <input wire:model.live="stuff" dusk="input" type="text">
+                    </div>
+                HTML;
+            }
+        })
+        ->type('@input', 'Hello Caleb')
+        ->waitForText('Loading...')
+        ->assertSee('Loading...')
+        ->waitUntilMissingText('Loading...')
+        ->assertDontSee('Loading...')
+        ->type('@input', 'Bye Caleb')
+        ->pause(500) // wait for the loader to show when it shouldn't (second request is fast)
+        ->assertDontSee('Loading...')
+        ;
+    }
 }
 
 class PostFormStub extends Form
 {
     public $text = '';
 }
-

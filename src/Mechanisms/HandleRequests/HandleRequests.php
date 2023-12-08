@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
 use function Livewire\trigger;
 
@@ -26,7 +27,9 @@ class HandleRequests
 
     function getUpdateUri()
     {
-        return (string) str($this->updateRoute->uri)->start('/');
+        return (string) str(
+            route($this->updateRoute->getName(), [], false)
+        )->start('/');
     }
 
     function skipRequestPayloadTamperingMiddleware()
@@ -45,7 +48,9 @@ class HandleRequests
         $route = $callback([self::class, 'handleUpdate']);
 
         // Append `livewire.update` to the existing name, if any.
-        $route->name('livewire.update');
+        if (! str($route->getName())->endsWith('livewire.update')) {
+            $route->name('livewire.update');
+        }
 
         $this->updateRoute = $route;
     }
@@ -92,6 +97,7 @@ class HandleRequests
 
         $response = [
             'components' => $responses,
+            'assets' => SupportScriptsAndAssets::getAssets(),
         ];
 
         $finish = trigger('profile.response', $response);

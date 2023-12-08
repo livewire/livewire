@@ -10,7 +10,7 @@ Therefore, Livewire provides a point of extension called "Synthesizers" that all
 
 ## Understanding Synthesizers
 
-Before exploring the creation of custom Synthesizers, let's first look at the internal Synthesizer that Livewire uses to support [Laravel Stringables](https://laravel.com/docs/helpers#method-str).
+Before exploring the creation of custom Synthesizers, let's first look at the internal Synthesizer that Livewire uses to support [Laravel Stringables](https://laravel.com/docs/strings).
 
 Suppose your application contained the following `CreatePost` component:
 
@@ -180,15 +180,24 @@ class AddressSynth extends Synth
 }
 ```
 
-To make it available globally in your application, you can use Livewire's `propertySynthesizer` method from any service provider:
+To make it available globally in your application, you can use Livewire's `propertySynthesizer` method to register the synthesizer from your service provider boot method:
 
 ```php
-Livewire::propertySynthesizer(AddressSynth::class);
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Livewire::propertySynthesizer(AddressSynth::class);
+    }
+}
 ```
 
 ## Supporting data binding
 
-Using the `CreateProperty` example from above, it is likely that you would want to support `wire:model` binding directly to properties of the `Address` object. Synthesizers allow you to support this using the `get()` and `set()` methods:
+Using the `UpdateProperty` example from above, it is likely that you would want to support `wire:model` binding directly to properties of the `Address` object. Synthesizers allow you to support this using the `get()` and `set()` methods:
 
 ```php
 use App\Dtos\Address;
@@ -224,8 +233,8 @@ class AddressSynth extends Synth
         return $instance;
     }
 
-    public function get(&$target, $key)
-    { // [tl! highlight:6]
+    public function get(&$target, $key) // [tl! highlight:8]
+    {
         return $target->{$key};
     }
 
