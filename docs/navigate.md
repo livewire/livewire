@@ -110,8 +110,6 @@ Please be aware that the persisted element must be placed outside your Livewire 
 </html>
 ```
 
-
-
 ### Preserving scroll position
 
 By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
