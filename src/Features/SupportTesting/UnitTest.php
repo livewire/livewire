@@ -530,9 +530,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     public function can_set_headers_for_use_with_testing()
     {
-        // Test both the `withHeaders` and `withHeader` methods that Laravel normally provides
-        Livewire::withHeaders(['colour' => 'blue'])
-            ->withHeader('name', 'Taylor')
+        Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])
             ->test(new class extends Component {
                 public $colourHeader = '';
                 public $nameHeader = '';

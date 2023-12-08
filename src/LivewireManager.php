@@ -170,13 +170,6 @@ class LivewireManager
         return $this;
     }
 
-    function withHeader($name, $value)
-    {
-        $this->headersForTesting[$name] = $value;
-
-        return $this;
-    }
-
     function withHeaders($headers)
     {
         $this->headersForTesting = array_merge($this->headersForTesting, $headers);
