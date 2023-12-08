@@ -5,13 +5,8 @@ namespace Livewire\Mechanisms;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
 
-class RenderComponent
+class RenderComponent extends Mechanism
 {
-    function register()
-    {
-        app()->singleton($this::class);
-    }
-
     function boot()
     {
         Blade::directive('livewire', [static::class, 'livewire']);
