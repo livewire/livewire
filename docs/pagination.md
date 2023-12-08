@@ -53,7 +53,7 @@ For more information on pagination using Laravel, check out [Laravel's comprehen
 
 By default, Livewire's paginator scrolls to the top of the page after every page change.
 
-You disable this behavior by passing `false` to the `scrollTo` parameter of the `links()` method like so:
+You can disable this behavior by passing `false` to the `scrollTo` parameter of the `links()` method like so:
 
 ```blade
 {{ $posts->links(data: ['scrollTo' => false]) }}

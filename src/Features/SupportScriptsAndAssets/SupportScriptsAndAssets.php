@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportScriptsAndAssets;
 use Illuminate\Support\Facades\Blade;
 use function Livewire\store;
 use Livewire\ComponentHook;
+
 use function Livewire\on;
 
 class SupportScriptsAndAssets extends ComponentHook
@@ -12,6 +13,13 @@ class SupportScriptsAndAssets extends ComponentHook
     public static $alreadyRunAssetKeys = [];
 
     public static $countersByViewPath = [];
+
+    public static $renderedAssets = [];
+
+    public static function getAssets()
+    {
+        return static::$renderedAssets;
+    }
 
     public static function getUniqueBladeCompileTimeKey()
     {
@@ -36,6 +44,7 @@ class SupportScriptsAndAssets extends ComponentHook
         on('flush-state', function () {
             static::$alreadyRunAssetKeys = [];
             static::$countersByViewPath = [];
+            static::$renderedAssets = [];
         });
 
         Blade::directive('script', function () {
@@ -119,7 +128,11 @@ class SupportScriptsAndAssets extends ComponentHook
 
         foreach (store($this->component)->get('assets', []) as $key => $assets) {
             if (! in_array($key, $alreadyRunAssetKeys)) {
-                $context->pushEffect('assets', $assets, $key);
+
+                // These will either get injected into the HTML if it's an initial page load
+                // or they will be added to the "assets" key in an ajax payload...
+                static::$renderedAssets[$key] = $assets;
+
                 $alreadyRunAssetKeys[] = $key;
             }
         }

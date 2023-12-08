@@ -275,8 +275,6 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 }
 
-
-
 class CreatePost extends Form
 {
     #[Validate('required')]

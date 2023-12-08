@@ -39,7 +39,7 @@ function registerListeners(component, listeners) {
 function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self = false, to }) => {
         if (self) dispatchSelf(component, name, params)
-        else if (to) dispatchTo(component, to, name, params)
+        else if (to) dispatchTo(to, name, params)
         else dispatch(component, name, params)
     })
 }
@@ -64,7 +64,7 @@ export function dispatchSelf(component, name, params) {
     dispatchEvent(component.el, name, params, false)
 }
 
-export function dispatchTo(component, componentName, name, params) {
+export function dispatchTo(componentName, name, params) {
     let targets = componentsByName(componentName)
 
     targets.forEach(target => {
@@ -79,10 +79,16 @@ export function listen(component, name, callback) {
 }
 
 export function on(eventName, callback) {
-    // Implemented for backwards compatibility...
-    window.addEventListener(eventName, (e) => {
+    let handler = (e) => {
+        // Implemented for backwards compatibility...
         if (! e.__livewire) return
 
         callback(e.detail)
-    })
+    }
+
+    window.addEventListener(eventName, handler)
+
+    return () => {
+        window.removeEventListener(eventName, handler)
+    }
 }

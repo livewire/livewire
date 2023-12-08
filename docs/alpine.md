@@ -20,11 +20,11 @@ To lay a foundation for the rest of this documentation, here is one of the most 
 </div>
 ```
 
-The Alpine component above can be used inside any Livewire component in your application without a hitch. Livewire takes care of maintaining Alpine's state across Livewire component updates. In essance, you should feel free to use Alpine components inside Livewire as if you were using Alpine in any other non-Livewire context.
+The Alpine component above can be used inside any Livewire component in your application without a hitch. Livewire takes care of maintaining Alpine's state across Livewire component updates. In essence, you should feel free to use Alpine components inside Livewire as if you were using Alpine in any other non-Livewire context.
 
 ## Using Alpine inside Livewire
 
-Let's explore a more real-life example of using a Alpine inside a Livewire component.
+Let's explore a more real-life example of using an Alpine inside a Livewire component.
 
 Below is a simple Livewire component showing the details of a post model from the database. By default, only the title of the post is shown:
 
@@ -73,7 +73,7 @@ Here is an example of a simple "character count" utility in a form for creating 
 </form>
 ```
 
-As you can see `x-text` in the above example is being used to allow Alpine to control the text content of the `<span>` element. `x-text` accepts any JavaScript expression inside of it and automatically reacts when any dependancies are updated. Because we are using `$wire.content` to access the value of `$content`, Alpine will automatically update the text content every time `$wire.content` is updated from Livewire; in this case by `wire:model="content"`.
+As you can see `x-text` in the above example is being used to allow Alpine to control the text content of the `<span>` element. `x-text` accepts any JavaScript expression inside of it and automatically reacts when any dependencies are updated. Because we are using `$wire.content` to access the value of `$content`, Alpine will automatically update the text content every time `$wire.content` is updated from Livewire; in this case by `wire:model="content"`.
 
 ### Mutating Livewire properties
 
@@ -106,7 +106,7 @@ Here's a brief explanation of what's going on to make that happen:
 
 Alpine can also easily call any Livewire methods/actions by simply calling them directly on `$wire`.
 
-Here is an example of using Alpine to listen for a "blur" event on an input and triggering a form save. The "blur" event is dispatched by the browser when a user presses "tab" to remove focus from the current elemement and focus on the next one on the page:
+Here is an example of using Alpine to listen for a "blur" event on an input and triggering a form save. The "blur" event is dispatched by the browser when a user presses "tab" to remove focus from the current element and focus on the next one on the page:
 
 ```html
 <form wire:submit="save">
@@ -118,11 +118,11 @@ Here is an example of using Alpine to listen for a "blur" event on an input and 
 </form>
 ```
 
-Typically you would just use `wire:model.blur="title"` in this situation, however, it's helpful for demonstration purposes how you can achieve this using Alpine.
+Typically, you would just use `wire:model.blur="title"` in this situation, however, it's helpful for demonstration purposes how you can achieve this using Alpine.
 
 #### Passing parameters
 
-You can also pass parameters to Livewire methods by simply passing the to the `$wire` method call.
+You can also pass parameters to Livewire methods by simply passing them to the `$wire` method call.
 
 Consider a component with a `deletePost()` method like so:
 
@@ -281,4 +281,4 @@ Alpine.directive('clipboard', (el) => {
 Livewire.start()
 ```
 
-Now the `x-clibboard` directive will be available to all your Alpine components in your Livewire application.
+Now the `x-clipboard` directive will be available to all your Alpine components in your Livewire application.

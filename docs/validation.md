@@ -93,7 +93,7 @@ class CreatePost extends Component
 >
 > Learn more in the documentation on [using Laravel Rule objects with Livewire](#using-laravel-rule-objects).
 
-If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Validate]` attribute. This will disabled any automatic validation and instead assume you want to manually validate the properties using the `$this->validate()` method:
+If you prefer more control over when the properties are validated, you can pass a `onUpdate: false` parameter to the `#[Validate]` attribute. This will disable any automatic validation and instead assume you want to manually validate the properties using the `$this->validate()` method:
 
 ```php
 use Livewire\Attributes\Validate;
@@ -159,7 +159,7 @@ public $title;
 
 By default, Livewire rule messages and attributes are localized using Laravel's translate helper: `trans()`.
 
-You can opt-out of locaization by passing the `translate: false` parameter to the `#[Validate]` attribute:
+You can opt-out of localization by passing the `translate: false` parameter to the `#[Validate]` attribute:
 
 ```php
 #[Validate('required', message: 'Please provide a post title', translate: false)]
@@ -611,8 +611,8 @@ class CreatePostTest extends TestCase
     public function cant_create_post_without_title()
     {
         Livewire::test(CreatePost::class)
-            ->call('save')
             ->set('content', 'Sample content...')
+            ->call('save')
             ->assertHasErrors('title');
     }
 }
@@ -650,4 +650,4 @@ For more information on other testing utilities provided by Livewire, check out 
 
 When Livewire v3 first launched, it used the term "Rule" instead of "Validate" for it's validation attributes (`#[Rule]`).
 
-Because of naming conflicts with Laravel rule objects, this has since been changed to `#[Validate]`. Both are supported in Livewire v3, however it is recommended that you change all occurances of `#[Rule]` with `#[Validate]` to stay current.
+Because of naming conflicts with Laravel rule objects, this has since been changed to `#[Validate]`. Both are supported in Livewire v3, however it is recommended that you change all occurrences of `#[Rule]` with `#[Validate]` to stay current.
