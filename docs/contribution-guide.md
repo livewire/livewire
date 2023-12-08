@@ -59,8 +59,7 @@ If you want to work on Alpine packages at the same time, you can clone the
 
 ### Configure dusk
 
-A lot of Livewire's tests make use of `orchestral/testbench-dusk` which runs browser tests in Google Chrome (so you will
-need Chrome to be installed).
+A lot of Livewire's tests make use of `orchestral/testbench-dusk` which runs browser tests in Google Chrome (so you will need Chrome to be installed).
 
 To get `orchestral/testbench-dusk` to run, you need to install the latest chrome driver by running:
 
@@ -89,9 +88,7 @@ To do this, run the test suites and confirm everything is running ok (you have t
 If the dusk tests don't run and you get an error, make sure you have run the command in
 the [Configure dusk](#configure-dusk) section above.
 
-If you still get an error, the first time you try to run dusk tests, you may also need to close any Google Chrome
-instances you may have open and try running the tests again. After that, you should be able to leave Chrome open when
-running tests.
+If you still get an error, the first time you try to run dusk tests, you may also need to close any Google Chrome instances you may have open and try running the tests again. After that, you should be able to leave Chrome open when running tests.
 
 ## Bug fix/feature development
 
@@ -99,27 +96,27 @@ Now it's time to start working on your bug fix or new feature.
 
 ### Create a branch
 
-To start working on a new feature or fix a bug, you should always create a new branch in your fork with the name of your
-feature or fix.
+To start working on a new feature or fix a bug, you should always create a new branch in your fork with the name of your feature or fix.
 
 > [!tip]
 > Always create a new branch for your feature or fix.
 
-Do not use your master/ main branch of your fork as maintainers cannot modify PR's submitted from a master/main branch
-on a fork.
+Do not use your main branch of your fork as maintainers cannot modify PR's submitted from a main branch on a fork.
 
 > [!warning]
 > Any PR's submitted from a master/main branch will be closed.
 
 ### Add failing tests
 
-The next step is to add failing tests for your code.
+The next step is to add failing tests for your code. Livewire has both Dusk browser tests and standard PHPUnit unit tests, which can be found throughout the `src/` directory respectively.
 
-Livewire has both Dusk browser tests and standard PHPUnit unit tests, which you can find in `tests/Browser`
-and named `UnitTest` throughout the `src/` directory respectively.
+Most Livewire features all have their dedicated directory containing the code for a specific feature but it also includes the unit and browser tests for that specific feature.
 
-Livewire runs both PHP and Javascript code, so Dusk browser tests are preferred to ensure everything works as expected,
-and can be supported with unit tests as required.
+For example, lets say you are adding some new functionality to Livewire's form objects, in that case, you will add your tests to `src/Features/SupportFormObjects/UnitTest.php`. Please be aware that some existing features may only contain unit or browser tests. If you can't find an existing `UnitTest.php` or `BrowserTest.php` you can go ahead and create the test yourself.
+
+If you are building an entirely new feature for which you think none of the existing tests apply you can create a new `SupportYourFeature` directory and place your tests here.
+
+Livewire runs both PHP and Javascript code, so Dusk browser tests are preferred to ensure everything works as expected, and can be supported with unit tests as required.
 
 See below for an example of how a Livewire Dusk test should be structured:
 
@@ -127,11 +124,22 @@ See below for an example of how a Livewire Dusk test should be structured:
 /** @test */
 public function it_can_run_foo_action
 {
-    $this->browse(function ($browser) {
-    Livewire::visit($browser, FooComponent::class)
-        ->waitForLivewire()->click('@foo')
-        ->assertSeeIn('@output', 'foo');
-    });
+    Livewire::visit(new class extends Component {
+        public $count = 0;
+        
+        public function inc() { $this->count++; }
+
+        public function render() { return <<<'HTML'
+        <div>
+            <h1>Count: <span dusk="count">{{ $count }}</span>
+            <button wire:click="inc" dusk="inc">inc</button>
+        </div>
+        HTML;
+    })
+        ->assertSeeIn('@count', 0)
+        ->waitForLivewire()
+        ->click('@inc')
+        ->assertSeeIn('@count', 1);
 }
 ```
 
@@ -140,11 +148,9 @@ Livewire's existing browser tests for further examples.
 
 ### Add working code
 
-Livewire has both PHP and javascript code, which you can find in the `src` directory for PHP and the `js` directory for
-javascript.
+Livewire has both PHP and javascript code, which you can find in the `src` directory for PHP and the `js` directory for javascript.
 
-Change the code as required to fix the bug or add the new feature, but try to keep changes to a minimum. Consider
-splitting into multiple PR's if required.
+Change the code as required to fix the bug or add the new feature, but try to keep changes to a minimum. Consider splitting into multiple PR's if required.
 
 > [!warning]
 > PR's that make too many changes or make unrelated changes may be closed.
@@ -157,8 +163,7 @@ Compiled javascript assets should be committed with your changes.
 > [!tip]
 > If you update any javascript, make sure to recompile assets and commit them.
 
-Once you have finished writing your code, do a review to ensure you haven't left any debugging code and formatting
-matches the existing style.
+Once you have finished writing your code, do a review to ensure you haven't left any debugging code and formatting matches the existing style.
 
 ### Run tests
 
@@ -176,8 +181,7 @@ If the Dusk browser tests don't run, see [Run tests](#setup-run-tests) in the Se
 
 Once all tests pass, then push your branch up to GitHub and submit your PR.
 
-In your PR description make sure to provide a small example of what your PR does along with a thorough description of
-the improvement and reasons why it's useful.
+In your PR description make sure to provide a small example of what your PR does along with a thorough description of the improvement and reasons why it's useful.
 
 Add links to any issues or discussions that are relevant for further details.
 
