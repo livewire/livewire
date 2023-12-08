@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Str;
 
 trait HandlesPagination
@@ -17,7 +18,7 @@ trait HandlesPagination
 
     public function getPage($pageName = 'page')
     {
-        return $this->paginators[$pageName] ?? 1;
+        return $this->paginators[$pageName] ?? Paginator::resolveCurrentPage($pageName);
     }
 
     public function previousPage($pageName = 'page')

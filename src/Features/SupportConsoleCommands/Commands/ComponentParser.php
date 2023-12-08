@@ -218,8 +218,8 @@ class ComponentParser
 
     public static function generateTestPathFromNamespace($namespace)
     {
-        return str(base_path($namespace))
+        return base_path(str($namespace)
             ->replace('\\', '/', $namespace)
-            ->replaceFirst('T', 't');
+            ->replaceFirst('T', 't'));
     }
 }

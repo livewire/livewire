@@ -165,24 +165,30 @@ export function isSynthetic(subject) {
  * Post requests in Laravel require a csrf token to be passed
  * along with the payload. Here, we'll try and locate one.
  */
-let csrf
-
 export function getCsrfToken() {
-    if (csrf) return csrf
+    // Purposely not caching. Fetching it fresh every time ensures we're
+    // not depending on a stale session's CSRF token...
+
+    if (document.querySelector('meta[name="csrf-token"]')) {
+        return document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    }
 
     if (document.querySelector('[data-csrf]')) {
-        csrf = document.querySelector('[data-csrf]').getAttribute('data-csrf')
-
-        return csrf
+        return document.querySelector('[data-csrf]').getAttribute('data-csrf')
     }
 
     if (window.livewireScriptConfig['csrf'] ?? false) {
-        csrf = window.livewireScriptConfig['csrf']
-
-        return csrf
+        return window.livewireScriptConfig['csrf']
     }
 
     throw 'Livewire: No CSRF token detected'
+}
+
+/**
+ * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
+ */
+export function getUpdateUri() {
+    return document.querySelector('[data-update-uri]')?.getAttribute('data-update-uri') ?? window.livewireScriptConfig['uri'] ?? null
 }
 
 export function contentIsFromDump(content) {

@@ -38,7 +38,11 @@ class ChangeDefaultNamespace extends UpgradeStep
 
             $componentNames = [];
 
-            $results = collect($this->filesystem()->allFiles('app/Http/Livewire'))->map(function($file) {
+            $results = collect($this->filesystem()->allFiles('app/Http/Livewire'))
+                ->filter(function($file) {
+                    return str($file)->endsWith('.php');
+                })
+                ->map(function($file) {
                 return str($file)->after('app/Http/Livewire/')->before('.php')->__toString();
             })->map(function($component) use (&$componentNames) {
 

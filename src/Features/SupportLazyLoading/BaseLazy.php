@@ -7,4 +7,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 #[\Attribute(\Attribute::TARGET_CLASS)]
 class BaseLazy extends LivewireAttribute
 {
+    public function __construct(
+        public $isolate = true
+    ) {}
 }

@@ -72,6 +72,11 @@ class SupportFileDownloads extends ComponentHook
          * Content-Disposition: attachment; filename="test file.jpg"
          */
 
+         // Support foreign-language filenames (japanese, greek, etc..)...
+        if (preg_match('/filename\*=utf-8\'\'(.+)$/i', $header, $matches)) {
+            return rawurldecode($matches[1]);
+        }
+
         if (preg_match('/.*?filename="(.+?)"/', $header, $matches)) {
             return $matches[1];
         }

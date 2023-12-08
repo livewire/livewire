@@ -2,16 +2,16 @@ Livewire provides a variety of lifecycle hooks that allow you to execute code at
 
 Here's a list of all the available component lifecycle hooks:
 
-| Hook Method        | Description                               |
-|-----------------|-------------------------------------------|
-| `mount()`    | Called when a component is created |
-| `hydrate()`    | Called when a component is re-hydrated at the beginning of a subsequent request |
-| `boot()`    | Called at the beginning of every request. Both initial, and subsequent |
-| `updating()`    | Called before updating a component property |
-| `updated()`    | Called after updating a property |
-| `rendering()`    | Called before `render()` is called |
-| `rendered()`    | Called after `render()` is called |
-| `dehydrate()`    | Called at the end of every component request |
+| Hook Method      | Description                                                                     |
+|------------------|---------------------------------------------------------------------------------|
+| `mount()`        | Called when a component is created                                              |
+| `hydrate()`      | Called when a component is re-hydrated at the beginning of a subsequent request |
+| `boot()`         | Called at the beginning of every request. Both initial, and subsequent          |
+| `updating()`     | Called before updating a component property                                     |
+| `updated()`      | Called after updating a property                                                |
+| `rendering()`    | Called before `render()` is called                                              |
+| `rendered()`     | Called after `render()` is called                                               |
+| `dehydrate()`    | Called at the end of every component request                                    |
 
 ## Mount
 

@@ -1,3 +1,4 @@
+
 // This code and concept is all Jonathan Reinink - thanks main!
 export function showHtmlModal(html) {
     let page = document.createElement('html')
