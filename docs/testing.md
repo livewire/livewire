@@ -120,7 +120,7 @@ class ShowPostsTest extends TestCase
 
         Livewire::test(ShowPosts::class)
             ->assertViewHas('posts', function ($posts) {
-                $this->assertEquals(2, count($posts));
+                return count($posts) == 2;
             });
     }
 }
@@ -169,7 +169,7 @@ class ShowPostsTest extends TestCase
         Livewire::actingAs($user)
             ->test(ShowPosts::class)
             ->assertViewHas('posts', function ($posts) {
-                $this->assertEquals(3, count($posts));
+                return count($posts) == 3;
             });
     }
 }
