@@ -1721,6 +1721,15 @@ var require_module_cjs = __commonJS({
           let path = basePath === "" ? key : `${basePath}.${key}`;
           if (typeof value === "object" && value !== null && value._x_interceptor) {
             obj[key] = value.initialize(data2, path, key);
+          } else if ((typeof value === "object" || typeof value === "function") && value !== null && value._x_accessor) {
+            Object.defineProperty(obj, key, {
+              get() {
+                return value.get();
+              },
+              set(val) {
+                return value.set(val);
+              }
+            });
           } else {
             if (isObject2(value) && value !== obj && !(value instanceof Element)) {
               recurse(value, path);
@@ -1729,6 +1738,10 @@ var require_module_cjs = __commonJS({
         });
       };
       return recurse(data2);
+    }
+    function accessor(obj) {
+      obj._x_accessor = true;
+      return obj;
     }
     function interceptor(callback, mutateObj = () => {
     }) {
@@ -2895,7 +2908,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       bind: bind2
     };
     var alpine_default = Alpine22;
-    var import_reactivity10 = __toESM2(require_reactivity());
+    var import_reactivity11 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
     magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key, callback) => {
@@ -2908,6 +2921,41 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let unwatch = watch(getter, callback);
       cleanup2(unwatch);
     });
+    magic("model", (el, { cleanup: cleanup2 }) => {
+      let func = generateModelAccessor(el.parentElement, cleanup2);
+      Object.defineProperty(func, "self", { get() {
+        return accessor(generateModelAccessor(el, cleanup2));
+      } });
+      return accessor(func);
+    });
+    function generateModelAccessor(el, cleanup2) {
+      let closestModelEl = findClosest(el, (i) => {
+        if (i._x_model)
+          return true;
+      });
+      let accessor2 = function(fallbackStateInitialValue) {
+        if (closestModelEl)
+          return this;
+        return fallbackStateInitialValue;
+      };
+      accessor2.exists = () => {
+        return !!closestModelEl;
+      };
+      accessor2.get = () => {
+        return closestModelEl._x_model.get();
+      };
+      accessor2.set = (value) => {
+        if (typeof value === "function") {
+          closestModelEl._x_model.set(value(accessor2.get()));
+        } else {
+          closestModelEl._x_model.set(value);
+        }
+      };
+      accessor2.watch = (callback) => {
+        cleanup2(Alpine.watch(() => accessor2.get(), callback));
+      };
+      return accessor2;
+    }
     magic("store", getStores);
     magic("data", (el) => scope(el));
     magic("root", (el) => closestRoot(el));
@@ -3730,7 +3778,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
-    alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
+    alpine_default.setReactivityEngine({ reactive: import_reactivity11.reactive, effect: import_reactivity11.effect, release: import_reactivity11.stop, raw: import_reactivity11.toRaw });
     var src_default = alpine_default;
     var module_default = src_default;
   }
@@ -9135,6 +9183,17 @@ function start() {
         trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
           import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
+      });
+    }
+  }, (el) => {
+    let component = closestComponent(el, false);
+    if (component) {
+      el.getAttributeNames.forEach((name) => {
+        if (name.match(new RegExp("wire:model"))) {
+          let directive2 = extractDirective(el, name);
+          trigger("directive.init", { el, component, directive: directive2, cleanup: () => {
+          } });
+        }
       });
     }
   }));

@@ -70,6 +70,21 @@ export function start() {
                     } })
                 })
             }
+        }, el => {
+            // The only directive we need to run during the cloning phase (while morphing)
+            // is "wire:model", so we're just going to handle that individually here.
+            // If there are new additions we can work with a cleaner abstraction...
+            let component = closestComponent(el, false)
+
+            if (component) {
+                el.getAttributeNames.forEach(name => {
+                    if (name.match(new RegExp('wire:model'))) {
+                        let directive = extractDirective(el, name)
+
+                        trigger('directive.init', { el, component, directive, cleanup: () => {} })
+                    }
+                })
+            }
         })
     )
 

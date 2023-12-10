@@ -890,6 +890,15 @@
         let path = basePath === "" ? key : `${basePath}.${key}`;
         if (typeof value === "object" && value !== null && value._x_interceptor) {
           obj[key] = value.initialize(data2, path, key);
+        } else if ((typeof value === "object" || typeof value === "function") && value !== null && value._x_accessor) {
+          Object.defineProperty(obj, key, {
+            get() {
+              return value.get();
+            },
+            set(val) {
+              return value.set(val);
+            }
+          });
         } else {
           if (isObject22(value) && value !== obj && !(value instanceof Element)) {
             recurse(value, path);
@@ -898,6 +907,10 @@
       });
     };
     return recurse(data2);
+  }
+  function accessor(obj) {
+    obj._x_accessor = true;
+    return obj;
   }
   function interceptor(callback, mutateObj = () => {
   }) {
@@ -2724,6 +2737,41 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let unwatch = watch(getter, callback);
     cleanup22(unwatch);
   });
+  magic("model", (el, { cleanup: cleanup22 }) => {
+    let func = generateModelAccessor(el.parentElement, cleanup22);
+    Object.defineProperty(func, "self", { get() {
+      return accessor(generateModelAccessor(el, cleanup22));
+    } });
+    return accessor(func);
+  });
+  function generateModelAccessor(el, cleanup22) {
+    let closestModelEl = findClosest(el, (i) => {
+      if (i._x_model)
+        return true;
+    });
+    let accessor2 = function(fallbackStateInitialValue) {
+      if (closestModelEl)
+        return this;
+      return fallbackStateInitialValue;
+    };
+    accessor2.exists = () => {
+      return !!closestModelEl;
+    };
+    accessor2.get = () => {
+      return closestModelEl._x_model.get();
+    };
+    accessor2.set = (value) => {
+      if (typeof value === "function") {
+        closestModelEl._x_model.set(value(accessor2.get()));
+      } else {
+        closestModelEl._x_model.set(value);
+      }
+    };
+    accessor2.watch = (callback) => {
+      cleanup22(Alpine.watch(() => accessor2.get(), callback));
+    };
+    return accessor2;
+  }
   magic("store", getStores);
   magic("data", (el) => scope(el));
   magic("root", (el) => closestRoot(el));
@@ -8277,6 +8325,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           trigger("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
             module_default.onAttributeRemoved(el, directive3.raw, callback);
           } });
+        });
+      }
+    }, (el) => {
+      let component = closestComponent(el, false);
+      if (component) {
+        el.getAttributeNames.forEach((name) => {
+          if (name.match(new RegExp("wire:model"))) {
+            let directive3 = extractDirective(el, name);
+            trigger("directive.init", { el, component, directive: directive3, cleanup: () => {
+            } });
+          }
         });
       }
     }));
