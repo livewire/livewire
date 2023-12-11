@@ -3211,15 +3211,75 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     directive2("model", (el, { modifiers, expression }, { effect: effect3, cleanup: cleanup2 }) => {
       let scopeTarget = el;
-      if (modifiers.includes("parent")) {
+      if (modifiers.includes("parent"))
         scopeTarget = el.parentNode;
+      let [getValue, setValue] = generateGetAndSet(evaluateLater, scopeTarget, expression);
+      el._x_model = { get() {
+        return getValue();
+      }, set(value) {
+        setValue(value);
+      } };
+      initializeRadioInput(expression, el);
+      let event = determineListenerEvent(el, modifiers);
+      let removeListener = registerInputEventListener(el, event, modifiers, setValue, getValue);
+      modifiers.includes("fill") && initializeFilledInput(el, event, getValue);
+      if (!el._x_removeModelListeners)
+        el._x_removeModelListeners = {};
+      el._x_removeModelListeners["default"] = removeListener;
+      cleanup2(() => el._x_removeModelListeners["default"]());
+      handleFormResets(el, cleanup2);
+      el._x_forceModelUpdate = (value) => {
+        if (value === void 0 && typeof expression === "string" && expression.match(/\./))
+          value = "";
+        window.fromModel = true;
+        mutateDom(() => bind(el, "value", value));
+        delete window.fromModel;
+      };
+      effect3(() => {
+        let value = getValue();
+        if (modifiers.includes("unintrusive") && document.activeElement.isSameNode(el))
+          return;
+        el._x_forceModelUpdate(value);
+      });
+    });
+    function initializeFilledInput(el, event, getValue) {
+      if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
+        el.dispatchEvent(new Event(event, {}));
       }
-      let evaluateGet = evaluateLater(scopeTarget, expression);
+    }
+    function determineListenerEvent(el, modifiers) {
+      return el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
+    }
+    function registerInputEventListener(el, event, modifiers, setValue, getValue) {
+      let removeListener = isCloning ? () => {
+      } : on3(el, event, modifiers, (e) => {
+        setValue(getInputValue(el, modifiers, e, getValue()));
+      });
+      return removeListener;
+    }
+    function handleFormResets(el, cleanup2) {
+      if (el.form) {
+        let removeResetListener = on3(el.form, "reset", [], (e) => {
+          nextTick(() => el._x_model && el._x_model.set(el.value));
+        });
+        cleanup2(() => removeResetListener());
+      }
+    }
+    function initializeRadioInput(expression, el) {
+      if (typeof expression === "string" && el.type === "radio") {
+        mutateDom(() => {
+          if (!el.hasAttribute("name"))
+            el.setAttribute("name", expression);
+        });
+      }
+    }
+    function generateGetAndSet(evaluateLater2, scopeTarget, expression) {
+      let evaluateGet = evaluateLater2(scopeTarget, expression);
       let evaluateSet;
       if (typeof expression === "string") {
-        evaluateSet = evaluateLater(scopeTarget, `${expression} = __placeholder`);
+        evaluateSet = evaluateLater2(scopeTarget, `${expression} = __placeholder`);
       } else if (typeof expression === "function" && typeof expression() === "string") {
-        evaluateSet = evaluateLater(scopeTarget, `${expression()} = __placeholder`);
+        evaluateSet = evaluateLater2(scopeTarget, `${expression()} = __placeholder`);
       } else {
         evaluateSet = () => {
         };
@@ -3247,54 +3307,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
         }
       };
-      if (typeof expression === "string" && el.type === "radio") {
-        mutateDom(() => {
-          if (!el.hasAttribute("name"))
-            el.setAttribute("name", expression);
-        });
-      }
-      var event = el.tagName.toLowerCase() === "select" || ["checkbox", "radio"].includes(el.type) || modifiers.includes("lazy") ? "change" : "input";
-      let removeListener = isCloning ? () => {
-      } : on3(el, event, modifiers, (e) => {
-        setValue(getInputValue(el, modifiers, e, getValue()));
-      });
-      if (modifiers.includes("fill")) {
-        if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-          el.dispatchEvent(new Event(event, {}));
-        }
-      }
-      if (!el._x_removeModelListeners)
-        el._x_removeModelListeners = {};
-      el._x_removeModelListeners["default"] = removeListener;
-      cleanup2(() => el._x_removeModelListeners["default"]());
-      if (el.form) {
-        let removeResetListener = on3(el.form, "reset", [], (e) => {
-          nextTick(() => el._x_model && el._x_model.set(el.value));
-        });
-        cleanup2(() => removeResetListener());
-      }
-      el._x_model = {
-        get() {
-          return getValue();
-        },
-        set(value) {
-          setValue(value);
-        }
-      };
-      el._x_forceModelUpdate = (value) => {
-        if (value === void 0 && typeof expression === "string" && expression.match(/\./))
-          value = "";
-        window.fromModel = true;
-        mutateDom(() => bind(el, "value", value));
-        delete window.fromModel;
-      };
-      effect3(() => {
-        let value = getValue();
-        if (modifiers.includes("unintrusive") && document.activeElement.isSameNode(el))
-          return;
-        el._x_forceModelUpdate(value);
-      });
-    });
+      return [getValue, setValue];
+    }
     function getInputValue(el, modifiers, event, currentValue) {
       return mutateDom(() => {
         if (event instanceof CustomEvent && event.detail !== void 0)

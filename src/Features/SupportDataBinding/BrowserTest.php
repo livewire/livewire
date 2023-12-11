@@ -54,7 +54,7 @@ class BrowserTest extends BrowserTestCase
                         <button wire:click="increment" dusk="server-button">server increment</button>
                         <span dusk="server-output">{{ $count }}</span>
 
-                        <div x-data="{ value: $model.self }" wire:model.live="count">
+                        <div x-data="{ value: $model }" wire:model.live="count">
                             <button x-on:click="value++" dusk="browser-button">browser increment</button>
                             <span x-text="value" dusk="browser-output"></span>
                         </div>
