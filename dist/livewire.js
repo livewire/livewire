@@ -8549,22 +8549,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportLazyLoading.js
   var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
   on("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.lazyLoaded === void 0)
       return;
+    componentsThatAreLazy.add(component);
     if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
       componentsThatWantToBeBundled.add(component);
     }
   });
   on("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
+      if (!componentsThatAreLazy.has(commit.component))
+        return;
       if (componentsThatWantToBeBundled.has(commit.component)) {
         commit.isolate = false;
         componentsThatWantToBeBundled.delete(commit.component);
       } else {
         commit.isolate = true;
       }
+      componentsThatAreLazy.delete(commit.component);
     });
   });
 
