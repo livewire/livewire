@@ -9192,9 +9192,6 @@ function start() {
       trigger("element.init", { el, component });
       let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
       directives.forEach((directive2) => {
-        if (directive2.name === "model") {
-          console.log("livewire wire model registered");
-        }
         trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
           import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
         } });

@@ -8334,9 +8334,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         trigger("element.init", { el, component });
         let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives2.forEach((directive3) => {
-          if (directive3.name === "model") {
-            console.log("livewire wire model registered");
-          }
           trigger("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
             module_default.onAttributeRemoved(el, directive3.raw, callback);
           } });
