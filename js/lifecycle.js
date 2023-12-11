@@ -65,10 +65,6 @@ export function start() {
                     .map(name => extractDirective(el, name))
 
                 directives.forEach(directive => {
-                    if (directive.name === 'model') {
-                        console.log('livewire wire model registered')
-                    }
-
                     trigger('directive.init', { el, component, directive, cleanup: (callback) => {
                         Alpine.onAttributeRemoved(el, directive.raw, callback)
                     } })
