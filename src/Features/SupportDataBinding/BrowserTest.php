@@ -35,4 +35,45 @@ class BrowserTest extends BrowserTestCase
             ->assertDontSee('Unsaved changes...')
         ;
     }
+
+    /** @test */
+    function can_update_bound_value_from_lifecyle_hook()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = null;
+
+            public $bar = null;
+
+            public function updatedFoo(): void
+            {
+                $this->bar = null;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <select wire:model.live="foo" dusk="fooSelect">
+                            <option value=""></option>
+                            <option value="one">One</option>
+                            <option value="two">Two</option>
+                            <option value="three">Three</option>
+                        </select>
+
+                        <select wire:model="bar" dusk="barSelect">
+                            <option value=""></option>
+                            <option value="one">One</option>
+                            <option value="two">Two</option>
+                            <option value="three">Three</option>
+                        </select>
+                    </div>
+                BLADE;
+            }
+        })
+            ->select('@barSelect', 'one')
+            ->select('@fooSelect', 'one')
+            ->waitForLivewire()
+            ->assertSelected('@barSelect', '')
+        ;
+    }
 }
