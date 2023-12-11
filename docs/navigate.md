@@ -93,20 +93,25 @@ If the above HTML appears on both pages â€” the current page, and the next one â
 Please be aware that the persisted element must be placed outside your Livewire components. A common practice is to position the persisted element in your main layout, such as `resources/views/components/layouts/app.blade.php`.
 
 ```html
+<!-- resources/views/components/layouts/app.blade.php -->
+
 <!DOCTYPE html>
-<html lang="en">
-<body>
-    <div class="nav">
-        My App
-    </div>
-    <div class="content">
-        {{ $slot }}
-    </div>
- 
-    @persist('player')
-        <audio src="{{ $episode->file }}" controls></audio>
-    @endpersist
-</body>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        <main>
+            {{ $slot }}
+        </main>
+
+        @persist('player') <!-- [tl! highlight:2] -->
+            <audio src="{{ $episode->file }}" controls></audio>
+        @endpersist
+    </body>
 </html>
 ```
 

@@ -298,7 +298,7 @@ You can include a Livewire component in your Blade templates using the `<livewir
 <livewire:create-post />
 ```
 
-If the component class is nested deeper within the ``app/Livewire/`` directory, you may use the ``.`` character to indicate directory nesting. For example, if we assume a component is located at ``app/Livewire/EditorPosts/CreatePost.php``, we may render it like so:
+If the component class is nested deeper within the `app/Livewire/` directory, you may use the `.` character to indicate directory nesting. For example, if we assume a component is located at `app/Livewire/EditorPosts/CreatePost.php`, we may render it like so:
 
 ```blade
 <livewire:editor-posts.create-post />
