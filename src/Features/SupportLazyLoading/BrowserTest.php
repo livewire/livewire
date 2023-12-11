@@ -156,7 +156,6 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }])
-        ->tinker()
         ->waitForText('Child 1')
         ->waitForText('Child 2')
         ->waitForText('Child 3')
@@ -172,7 +171,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function lazy_requests_are_isolated_by_default_but_batched_on_next_request_when_polling()
+    public function lazy_requests_are_isolated_by_default_but_bundled_on_next_request_when_polling()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -198,7 +197,6 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }])
-        // ->tinker()
         ->waitForText('Child 1')
         ->waitForText('Child 2')
         ->waitForText('Child 3')
