@@ -322,4 +322,64 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForTextIn('@foo', 'received')
         ;
     }
+
+    /** @test */
+    public function functions_loaded_in_scripts_are_not_loaded_before_called()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div x-data>
+
+                <div dusk="output"></div>
+                <div dusk="debug"></div>
+            </div>
+
+            @script
+                <script>
+                    function run() {
+                        document.querySelector('[dusk="output"]').innerHTML = 'it works';
+                    }
+                     document.querySelector('[dusk="debug"]').textContent = 'evaluated';
+                </script>
+            @endscript
+            HTML; }
+        })
+            ->waitForText('evaluated')
+            ->assertSeeIn('@debug', 'evaluated')
+            ->assertDontSeeIn('@output', 'it works')
+        ;
+    }
+    /** @test */
+    public function functions_loaded_in_scripts_can_be_used_after_load()
+    {
+        $browser = Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div x-data>
+
+                <button type="button" dusk="button" @click="run">Run</button>
+                <div dusk="output"></div>
+                <div dusk="debug"></div>
+            </div>
+
+            @script
+                <script>
+                    let called = 0;
+                    function run() {
+                        called++;
+                        document.querySelector('[dusk="output"]').innerHTML = 'it works ' + called;
+                    }
+                     document.querySelector('[dusk="debug"]').textContent = 'evaluated';
+                </script>
+            @endscript
+            HTML; }
+        })->waitForText('evaluated')
+            ->assertSeeIn('@debug', 'evaluated')
+            ->click('@button')
+        ;
+
+        $errorLog = collect($browser->driver->manage()->getLog('browser'))
+            ->first(fn($error) => str_contains($error['message'], 'run is not defined'));
+
+        $this->assertNull($errorLog, 'There was a error due to the function not being defined');
+    }
 }
