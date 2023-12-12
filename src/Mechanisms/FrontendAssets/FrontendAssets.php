@@ -5,9 +5,10 @@ namespace Livewire\Mechanisms\FrontendAssets;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\on;
 
-class FrontendAssets
+class FrontendAssets extends Mechanism
 {
     public $hasRenderedScripts = false;
     public $hasRenderedStyles = false;
@@ -15,11 +16,6 @@ class FrontendAssets
     public $javaScriptRoute;
 
     public $scriptTagAttributes = [];
-
-    public function register()
-    {
-        app()->singleton($this::class);
-    }
 
     public function boot()
     {

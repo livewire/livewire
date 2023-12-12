@@ -23,12 +23,12 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function mount()
                 {
-                    $this->posts = Post::all();
+                    $this->posts = BrowserTestPost::all();
                 }
 
                 #[BaseOn('postDeleted')]
                 public function setPosts() {
-                    $this->posts = Post::all();
+                    $this->posts = BrowserTestPost::all();
                 }
 
                 public function render()
@@ -49,7 +49,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function delete($id)
                 {
-                    Post::find($id)->delete();
+                    BrowserTestPost::find($id)->delete();
                     $this->dispatch('postDeleted');
                 }
 
@@ -127,7 +127,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 }
 
-class Post extends Model
+class BrowserTestPost extends Model
 {
     use Sushi;
 

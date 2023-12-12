@@ -1,5 +1,5 @@
 
-Loading indicators are an important part of crafting good user interfaces. They give users visual feedback when a request is being made to the server so they know they are waiting for a process to complete.
+Loading indicators are an important part of crafting good user interfaces. They give users visual feedback when a request is being made to the server, so they know they are waiting for a process to complete.
 
 ## Basic usage
 

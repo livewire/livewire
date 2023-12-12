@@ -1,81 +1,24 @@
-import { triggerSend, waitUntilTheCurrentRequestIsFinished } from "./request"
-import { dataGet, dataSet, each, deeplyEqual, isObjecty, deepClone, diff, isObject, contentIsFromDump, splitDumpFromContent } from '@/utils'
+import { diff } from '@/utils'
 import { on, trigger } from '@/events'
 
 /**
- * A "commit" is anytime a Livewire component makes a server-side update.
- * Typically this is for the purposes of synchronizing state or calling
- * some action...
+ * A commit represents an individual component updating itself server-side...
  */
-
-// The running queue of component commits to send to the server when the time comes...
-let commitQueue = []
-
-export function getCommits() {
-    return commitQueue
-}
-
-export function flushCommits(callback) {
-    while (commitQueue.length > 0) {
-        callback(commitQueue.shift())
-    }
-}
-
-function findOrCreateCommit(component) {
-    let commit = commitQueue.find(i => {
-        return i.component.id === component.id
-    })
-
-    if (! commit) {
-        commitQueue.push(commit = new Commit(component))
-    }
-
-    return commit
-}
-
-export async function requestCommit(component) {
-    return await waitUntilTheCurrentRequestIsFinished(() => {
-        let commit = findOrCreateCommit(component)
-
-        triggerSend()
-
-        return new Promise((resolve, reject) => {
-            commit.addResolver(resolve)
-        })
-    })
-}
-
-export async function requestCall(component, method, params) {
-    return await waitUntilTheCurrentRequestIsFinished(() => {
-        let commit = findOrCreateCommit(component)
-
-        triggerSend()
-
-        return new Promise((resolve, reject) => {
-            commit.addCall(method, params, value => resolve(value))
-        })
-    })
-}
-
-/**
- * The term "commit" here refers to anytime we're making a network
- * request, updating the server, and generating a new snapshot.
- * We're "requesting" a new commit rather than executing it
- * immediately, because we might want to batch multiple
- * simultaneus commits from other livewire targets.
- */
-class Commit {
+export class Commit {
     constructor(component) {
         this.component = component
+        this.isolate = false
         this.calls = []
         this.receivers = []
         this.resolvers = []
     }
 
+    // Add a new resolver to be resolved when a commit is returned from the server...
     addResolver(resolver) {
         this.resolvers.push(resolver)
     }
 
+    // Add a new action "call" to the commit payload...
     addCall(method, params, receiver) {
         this.calls.push({
             path: '', method, params,
@@ -89,7 +32,10 @@ class Commit {
         trigger('commit.prepare', { component: this.component })
     }
 
+    // Generate a JSON-friendly server-request payload...
     toRequestPayload() {
+        // Generate a "diff" of the current last known server-side state, and
+        // the new front-end state so that we can update the server atomically...
         let propertiesDiff = diff(this.component.canonical, this.component.ephemeral)
 
         let payload = {
@@ -102,6 +48,8 @@ class Commit {
             }))
         }
 
+        // Store success and failure hooks from commit listeners
+        // so they can be aggregated into a singular callback later...
         let succeedCallbacks = []
         let failCallbacks = []
         let respondCallbacks = []
@@ -110,6 +58,8 @@ class Commit {
         let fail = () => failCallbacks.forEach(i => i())
         let respond = () => respondCallbacks.forEach(i => i())
 
+        // Allow other areas of the codebase to hook into the lifecycle
+        // of an individual commit...
         let finishTarget = trigger('commit', {
             component: this.component,
             commit: payload,
@@ -124,14 +74,17 @@ class Commit {
             },
         })
 
+        // Handle the response payload for a commit...
         let handleResponse = (response) => {
             let { snapshot, effects } = response
 
             respond()
 
+            // Take the new snapshot and merge it into the existing one...
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
 
-            processEffects(this.component, this.component.effects)
+            // Trigger any side effects from the payload like "morph" and "dispatch event"...
+            this.component.processEffects(this.component.effects)
 
             if (effects['returns']) {
                 let returns = effects['returns']
@@ -162,13 +115,4 @@ class Commit {
 
         return [payload, handleResponse, handleFailure]
     }
-}
-
-/**
- * Here we'll take the new state and side effects from the
- * server and use them to update the existing data that
- * users interact with, triggering reactive effects.
- */
-export function processEffects(target, effects) {
-    trigger('effects', target, effects)
 }
