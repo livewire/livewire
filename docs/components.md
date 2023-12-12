@@ -298,8 +298,14 @@ You can include a Livewire component in your Blade templates using the `<livewir
 <livewire:create-post />
 ```
 
+If the component class is nested deeper within the `app/Livewire/` directory, you may use the `.` character to indicate directory nesting. For example, if we assume a component is located at `app/Livewire/EditorPosts/CreatePost.php`, we may render it like so:
+
+```blade
+<livewire:editor-posts.create-post />
+```
+
 > [!warning] You must use kebab-case
-> As you can see in the snippet above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
+> As you can see in the snippets above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
 
 
 ### Passing data into components
@@ -386,6 +392,14 @@ Now, when you visit the `/posts/create` path in your browser, the `CreatePost` c
 ### Layout files
 
 Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layouts/app.blade.php` file.
+
+You may create this file if it doesn't already exist by running the following command:
+
+```shell
+php artisan livewire:layout
+```
+
+This command will generate a file called `resources/views/components/layouts/app.blade.php`.
 
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
@@ -561,6 +575,38 @@ public function render()
 }
 ```
 
+### Setting additional layout file slots
+
+If your [layout file](#layout-files) has any named slots in addition to `$slot`, you can set their content in your Blade view by defining `<x-slot>`s outside your root element. For example, if you want to be able to set the page language for each component individually, you can add a dynamic `$lang` slot into the opening HTML tag in your layout file:
+
+```blade
+<!-- resources/views/components/layouts/app.blade.php -->
+
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', $lang ?? app()->getLocale()) }}"> // [tl! highlight]
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        {{ $slot }}
+    </body>
+</html>
+```
+
+Then, in your component view, define an `<x-slot>` element outside the root element:
+
+```blade
+<x-slot:lang>fr</x-slot> // This component is in French [!tl highlight]
+
+<div>
+    // French content goes here...
+</div>
+```
+
+
 ### Accessing route parameters
 
 When working with full-page components, you may need to access route parameters within your Livewire component.
@@ -694,7 +740,7 @@ class ShowPost extends Component
 
 There are many instances where the built-in Livewire and Alpine utilities aren't enough to accomplish your goals inside your Livewire components.
 
-Fortunately, Livewire provides many useful extension points and utilities to interact with bespoke JavaScript. You can learn from the exhastive reference on [the JavaScript documentation page](/docs/javascript). But for now, here are a few useful ways to use your own JavaScript inside your Livewire components.
+Fortunately, Livewire provides many useful extension points and utilities to interact with bespoke JavaScript. You can learn from the exhaustive reference on [the JavaScript documentation page](/docs/javascript). But for now, here are a few useful ways to use your own JavaScript inside your Livewire components.
 
 ### Executing scripts
 
@@ -719,7 +765,7 @@ You'll notice we are using an object called `$wire` inside the `<script>` to con
 
 ### Loading assets
 
-In addition to one-off `@script`s, Livewire provides a helpful `@assets` utility to easily load any script/style dependancies on the page.
+In addition to one-off `@script`s, Livewire provides a helpful `@assets` utility to easily load any script/style dependencies on the page.
 
 It also ensures that the provided assets are loaded only once per browser page, unlike `@script`, which executes every time a new instance of that Livewire component is initialized.
 

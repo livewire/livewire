@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
+    var require_shared_cjs_prod = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = Object.freeze({});
-        var EMPTY_ARR = Object.freeze([]);
+        var EMPTY_OBJ = {};
+        var EMPTY_ARR = [];
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_shared_cjs_prod();
         } else {
-          module2.exports = require_shared_cjs();
+          module2.exports = null;
         }
       }
     });
-    var require_reactivity_cjs = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
+    var require_reactivity_cjs_prod = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("iterate");
-        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
+        var ITERATE_KEY = Symbol("");
+        var MAP_KEY_ITERATE_KEY = Symbol("");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,14 +558,6 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
-            if (activeEffect.options.onTrack) {
-              activeEffect.options.onTrack({
-                effect: activeEffect,
-                target,
-                type,
-                key
-              });
-            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -622,17 +614,6 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
-            if (effect4.options.onTrigger) {
-              effect4.options.onTrigger({
-                effect: effect4,
-                target,
-                key,
-                type,
-                newValue,
-                oldValue,
-                oldTarget
-              });
-            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -726,7 +707,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value);
               }
             }
             return result;
@@ -734,10 +715,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          const oldValue = target[key];
+          target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
@@ -762,15 +743,9 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
-            {
-              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           },
           deleteProperty(target, key) {
-            {
-              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           }
         };
@@ -837,15 +812,13 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value);
           }
           return this;
         }
@@ -856,23 +829,20 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
-          const oldValue = get3 ? get3.call(target, key) : void 0;
+          get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
         function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
-          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0);
           }
           return result;
         }
@@ -914,10 +884,6 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
-            {
-              const key = args[0] ? `on key "${args[0]}" ` : ``;
-              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
-            }
             return type === "delete" ? false : this;
           };
         }
@@ -1022,13 +988,6 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
-        function checkIdentityKeys(target, has2, key) {
-          const rawKey = toRaw2(key);
-          if (rawKey !== key && has2.call(target, rawKey)) {
-            const type = shared.toRawType(target);
-            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-          }
-        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1067,9 +1026,6 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
-            {
-              console.warn(`value cannot be made reactive: ${String(target)}`);
-            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1143,7 +1099,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", void 0);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1181,9 +1137,6 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
-          if (!isProxy(object)) {
-            console.warn(`toRefs() expects a reactive object but received a plain one.`);
-          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1240,9 +1193,7 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = () => {
-              console.warn("Write operation failed: computed value is readonly");
-            };
+            setter = shared.NOOP;
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1281,10 +1232,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_reactivity_cjs_prod();
         } else {
-          module2.exports = require_reactivity_cjs();
+          module2.exports = null;
         }
       }
     });
@@ -1375,6 +1326,24 @@ var require_module_cjs = __commonJS({
       return [wrappedEffect, () => {
         cleanup2();
       }];
+    }
+    function watch(getter, callback) {
+      let firstTime = true;
+      let oldValue;
+      let effectReference = effect(() => {
+        let value = getter();
+        JSON.stringify(value);
+        if (!firstTime) {
+          queueMicrotask(() => {
+            callback(value, oldValue);
+            oldValue = value;
+          });
+        } else {
+          oldValue = value;
+        }
+        firstTime = false;
+      });
+      return () => release(effectReference);
     }
     function dispatch3(el, name, detail = {}) {
       el.dispatchEvent(new CustomEvent(name, {
@@ -2871,31 +2840,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cloneNode,
       bound: getBinding,
       $data: scope,
+      watch,
       walk,
       data,
       bind: bind2
     };
     var alpine_default = Alpine22;
-    var import_reactivity9 = __toESM2(require_reactivity());
+    var import_reactivity10 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
-    magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
+    magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key, callback) => {
       let evaluate2 = evaluateLater2(key);
-      let firstTime = true;
-      let oldValue;
-      let effectReference = effect3(() => evaluate2((value) => {
-        JSON.stringify(value);
-        if (!firstTime) {
-          queueMicrotask(() => {
-            callback(value, oldValue);
-            oldValue = value;
-          });
-        } else {
-          oldValue = value;
-        }
-        firstTime = false;
-      }));
-      el._x_effects.delete(effectReference);
+      let getter = () => {
+        let value;
+        evaluate2((i) => value = i);
+        return value;
+      };
+      let unwatch = watch(getter, callback);
+      cleanup2(unwatch);
     });
     magic("store", getStores);
     magic("data", (el) => scope(el));
@@ -2934,11 +2896,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_ids[name])
         el._x_ids[name] = findAndIncrementId(name);
     }
-    magic("id", (el) => (name, key = null) => {
-      let root = closestIdRoot(el, name);
-      let id = root ? root._x_ids[name] : findAndIncrementId(name);
-      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+    magic("id", (el, { cleanup: cleanup2 }) => (name, key = null) => {
+      let cacheKey = `${name}${key ? `-${key}` : ""}`;
+      return cacheIdByNameOnElement(el, cacheKey, cleanup2, () => {
+        let root = closestIdRoot(el, name);
+        let id = root ? root._x_ids[name] : findAndIncrementId(name);
+        return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+      });
     });
+    interceptClone((from, to) => {
+      if (from._x_id) {
+        to._x_id = from._x_id;
+      }
+    });
+    function cacheIdByNameOnElement(el, cacheKey, cleanup2, callback) {
+      if (!el._x_id)
+        el._x_id = {};
+      if (el._x_id[cacheKey])
+        return el._x_id[cacheKey];
+      let output = callback();
+      el._x_id[cacheKey] = output;
+      cleanup2(() => {
+        delete el._x_id[cacheKey];
+      });
+      return output;
+    }
     magic("el", (el) => el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3695,6 +3677,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let names = evaluate2(expression);
       names.forEach((name) => setIdRoot(el, name));
     });
+    interceptClone((from, to) => {
+      if (from._x_ids) {
+        to._x_ids = from._x_ids;
+      }
+    });
     mapAttributes(startingWith("@", into(prefix("on:"))));
     directive2("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup2 }) => {
       let evaluate2 = expression ? evaluateLater(el, expression) : () => {
@@ -3719,7 +3706,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
-    alpine_default.setReactivityEngine({ reactive: import_reactivity9.reactive, effect: import_reactivity9.effect, release: import_reactivity9.stop, raw: import_reactivity9.toRaw });
+    alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
     var src_default = alpine_default;
     var module_default = src_default;
   }
@@ -7203,54 +7190,15 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
+function getUpdateUri() {
+  return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+}
 function contentIsFromDump(content) {
   return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
 }
 function splitDumpFromContent(content) {
   let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
   return [dump2, content.replace(dump2, "")];
-}
-
-// js/modal.js
-function showHtmlModal(html) {
-  let page = document.createElement("html");
-  page.innerHTML = html;
-  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-  let modal = document.getElementById("livewire-error");
-  if (typeof modal != "undefined" && modal != null) {
-    modal.innerHTML = "";
-  } else {
-    modal = document.createElement("div");
-    modal.id = "livewire-error";
-    modal.style.position = "fixed";
-    modal.style.width = "100vw";
-    modal.style.height = "100vh";
-    modal.style.padding = "50px";
-    modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
-    modal.style.zIndex = 2e5;
-  }
-  let iframe = document.createElement("iframe");
-  iframe.style.backgroundColor = "#17161A";
-  iframe.style.borderRadius = "5px";
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  modal.appendChild(iframe);
-  document.body.prepend(modal);
-  document.body.style.overflow = "hidden";
-  iframe.contentWindow.document.open();
-  iframe.contentWindow.document.write(page.outerHTML);
-  iframe.contentWindow.document.close();
-  modal.addEventListener("click", () => hideHtmlModal(modal));
-  modal.setAttribute("tabindex", 0);
-  modal.addEventListener("keydown", (e) => {
-    if (e.key === "Escape")
-      hideHtmlModal(modal);
-  });
-  modal.focus();
-}
-function hideHtmlModal(modal) {
-  modal.outerHTML = "";
-  document.body.style.overflow = "visible";
 }
 
 // js/events.js
@@ -7298,177 +7246,147 @@ function runFinishers(finishers, result) {
   return latest;
 }
 
-// js/request.js
-var updateUri = document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
-function triggerSend() {
-  bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-    sendRequestToServer();
-  });
-}
-var requestBufferTimeout;
-function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
-  if (requestBufferTimeout)
-    return;
-  requestBufferTimeout = setTimeout(() => {
-    callback();
-    requestBufferTimeout = void 0;
-  }, 5);
-}
-async function sendRequestToServer() {
-  prepareCommitPayloads();
-  await queueNewRequestAttemptsWhile(async () => {
-    let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
-    let options = {
-      method: "POST",
-      body: JSON.stringify({
-        _token: getCsrfToken(),
-        components: payload
-      }),
-      headers: {
-        "Content-type": "application/json",
-        "X-Livewire": ""
-      }
+// js/features/supportEntangle.js
+var import_alpinejs = __toESM(require_module_cjs());
+function generateEntangleFunction(component, cleanup2) {
+  if (!cleanup2)
+    cleanup2 = () => {
     };
-    let succeedCallbacks = [];
-    let failCallbacks = [];
-    let respondCallbacks = [];
-    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-    let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
-    let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-    let finishProfile = trigger("request.profile", options);
-    trigger("request", {
-      url: updateUri,
-      options,
-      payload: options.body,
-      respond: (i) => respondCallbacks.push(i),
-      succeed: (i) => succeedCallbacks.push(i),
-      fail: (i) => failCallbacks.push(i)
-    });
-    let response = await fetch(updateUri, options);
-    let mutableObject = {
-      status: response.status,
-      response
-    };
-    respond(mutableObject);
-    response = mutableObject.response;
-    let content = await response.text();
-    if (!response.ok) {
-      finishProfile({ content: "{}", failed: true });
-      let preventDefault = false;
-      handleFailure();
-      fail({
-        status: response.status,
-        content,
-        preventDefault: () => preventDefault = true
-      });
-      if (preventDefault)
+  return (name, live = false) => {
+    let isLive = live;
+    let livewireProperty = name;
+    let livewireComponent = component.$wire;
+    let livewirePropertyValue = livewireComponent.get(livewireProperty);
+    let interceptor = import_alpinejs.default.interceptor((initialValue, getter, setter, path, key) => {
+      if (typeof livewirePropertyValue === "undefined") {
+        console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
         return;
-      if (response.status === 419) {
-        handlePageExpiry();
       }
-      return showFailureModal(content);
-    }
-    if (response.redirected) {
-      window.location.href = response.url;
-    }
-    if (contentIsFromDump(content)) {
-      [dump, content] = splitDumpFromContent(content);
-      showHtmlModal(dump);
-      finishProfile({ content: "{}", failed: true });
-    } else {
-      finishProfile({ content, failed: false });
-    }
-    let { components: components2, assets } = JSON.parse(content);
-    await triggerAsync("payload.intercept", { components: components2, assets });
-    await handleSuccess(components2);
-    succeed({ status: response.status, json: JSON.parse(content) });
-  });
-}
-function prepareCommitPayloads() {
-  let commits = getCommits();
-  commits.forEach((i) => i.prepare());
-}
-function compileCommitPayloads() {
-  let commits = getCommits();
-  let commitPayloads = [];
-  let successReceivers = [];
-  let failureReceivers = [];
-  flushCommits((commit) => {
-    let [payload, succeed2, fail2] = commit.toRequestPayload();
-    commitPayloads.push(payload);
-    successReceivers.push(succeed2);
-    failureReceivers.push(fail2);
-  });
-  let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-  let fail = () => failureReceivers.forEach((receiver) => receiver());
-  return [commitPayloads, succeed, fail];
-}
-function handlePageExpiry() {
-  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-}
-function showFailureModal(content) {
-  let html = content;
-  showHtmlModal(html);
-}
-var sendingRequest = false;
-var afterSendStack = [];
-async function waitUntilTheCurrentRequestIsFinished(callback) {
-  return new Promise((resolve) => {
-    if (sendingRequest) {
-      afterSendStack.push(() => resolve(callback()));
-    } else {
-      resolve(callback());
-    }
-  });
-}
-async function queueNewRequestAttemptsWhile(callback) {
-  sendingRequest = true;
-  await callback();
-  sendingRequest = false;
-  while (afterSendStack.length > 0)
-    afterSendStack.shift()();
+      let release = import_alpinejs.default.entangle({
+        get() {
+          return livewireComponent.get(name);
+        },
+        set(value) {
+          livewireComponent.set(name, value, isLive);
+        }
+      }, {
+        get() {
+          return getter();
+        },
+        set(value) {
+          setter(value);
+        }
+      });
+      cleanup2(() => release());
+      return livewireComponent.get(name);
+    }, (obj) => {
+      Object.defineProperty(obj, "live", {
+        get() {
+          isLive = true;
+          return obj;
+        }
+      });
+    });
+    return interceptor(livewirePropertyValue);
+  };
 }
 
-// js/commit.js
-var commitQueue = [];
-function getCommits() {
-  return commitQueue;
-}
-function flushCommits(callback) {
-  while (commitQueue.length > 0) {
-    callback(commitQueue.shift());
+// js/request/modal.js
+function showHtmlModal(html) {
+  let page = document.createElement("html");
+  page.innerHTML = html;
+  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+  let modal = document.getElementById("livewire-error");
+  if (typeof modal != "undefined" && modal != null) {
+    modal.innerHTML = "";
+  } else {
+    modal = document.createElement("div");
+    modal.id = "livewire-error";
+    modal.style.position = "fixed";
+    modal.style.width = "100vw";
+    modal.style.height = "100vh";
+    modal.style.padding = "50px";
+    modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
+    modal.style.zIndex = 2e5;
   }
-}
-function findOrCreateCommit(component) {
-  let commit = commitQueue.find((i) => {
-    return i.component.id === component.id;
+  let iframe = document.createElement("iframe");
+  iframe.style.backgroundColor = "#17161A";
+  iframe.style.borderRadius = "5px";
+  iframe.style.width = "100%";
+  iframe.style.height = "100%";
+  modal.appendChild(iframe);
+  document.body.prepend(modal);
+  document.body.style.overflow = "hidden";
+  iframe.contentWindow.document.open();
+  iframe.contentWindow.document.write(page.outerHTML);
+  iframe.contentWindow.document.close();
+  modal.addEventListener("click", () => hideHtmlModal(modal));
+  modal.setAttribute("tabindex", 0);
+  modal.addEventListener("keydown", (e) => {
+    if (e.key === "Escape")
+      hideHtmlModal(modal);
   });
-  if (!commit) {
-    commitQueue.push(commit = new Commit(component));
+  modal.focus();
+}
+function hideHtmlModal(modal) {
+  modal.outerHTML = "";
+  document.body.style.overflow = "visible";
+}
+
+// js/request/pool.js
+var RequestPool = class {
+  constructor() {
+    this.commits = /* @__PURE__ */ new Set();
   }
-  return commit;
-}
-async function requestCommit(component) {
-  return await waitUntilTheCurrentRequestIsFinished(() => {
-    let commit = findOrCreateCommit(component);
-    triggerSend();
-    return new Promise((resolve, reject) => {
-      commit.addResolver(resolve);
+  add(commit) {
+    this.commits.add(commit);
+  }
+  delete(commit) {
+    this.commits.delete(commit);
+  }
+  hasCommitFor(component) {
+    return !!this.findCommitByComponent(component);
+  }
+  findCommitByComponent(component) {
+    for (let [idx, commit] of this.commits.entries()) {
+      if (commit.component === component)
+        return commit;
+    }
+  }
+  shouldHoldCommit(commit) {
+    return !commit.isolate;
+  }
+  empty() {
+    return this.commits.size === 0;
+  }
+  async send() {
+    this.prepare();
+    await sendRequest(this);
+  }
+  prepare() {
+    this.commits.forEach((i) => i.prepare());
+  }
+  payload() {
+    let commitPayloads = [];
+    let successReceivers = [];
+    let failureReceivers = [];
+    this.commits.forEach((commit) => {
+      let [payload, succeed2, fail2] = commit.toRequestPayload();
+      commitPayloads.push(payload);
+      successReceivers.push(succeed2);
+      failureReceivers.push(fail2);
     });
-  });
-}
-async function requestCall(component, method, params) {
-  return await waitUntilTheCurrentRequestIsFinished(() => {
-    let commit = findOrCreateCommit(component);
-    triggerSend();
-    return new Promise((resolve, reject) => {
-      commit.addCall(method, params, (value) => resolve(value));
-    });
-  });
-}
+    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
+    let fail = () => failureReceivers.forEach((receiver) => receiver());
+    return [commitPayloads, succeed, fail];
+  }
+};
+
+// js/request/commit.js
 var Commit = class {
   constructor(component) {
     this.component = component;
+    this.isolate = false;
     this.calls = [];
     this.receivers = [];
     this.resolvers = [];
@@ -7523,7 +7441,7 @@ var Commit = class {
       let { snapshot, effects } = response;
       respond();
       this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
-      processEffects(this.component, this.component.effects);
+      this.component.processEffects(this.component.effects);
       if (effects["returns"]) {
         let returns = effects["returns"];
         let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
@@ -7543,53 +7461,182 @@ var Commit = class {
     return [payload, handleResponse, handleFailure];
   }
 };
-function processEffects(target, effects) {
-  trigger("effects", target, effects);
-}
 
-// js/features/supportEntangle.js
-var import_alpinejs = __toESM(require_module_cjs());
-function generateEntangleFunction(component, cleanup2) {
-  if (!cleanup2)
-    cleanup2 = () => {
-    };
-  return (name, live = false) => {
-    let isLive = live;
-    let livewireProperty = name;
-    let livewireComponent = component.$wire;
-    let livewirePropertyValue = livewireComponent.get(livewireProperty);
-    let interceptor = import_alpinejs.default.interceptor((initialValue, getter, setter, path, key) => {
-      if (typeof livewirePropertyValue === "undefined") {
-        console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
-        return;
+// js/request/bus.js
+var CommitBus = class {
+  constructor() {
+    this.commits = /* @__PURE__ */ new Set();
+    this.pools = /* @__PURE__ */ new Set();
+  }
+  add(component) {
+    let commit = this.findCommitOr(component, () => {
+      let newCommit = new Commit(component);
+      this.commits.add(newCommit);
+      return newCommit;
+    });
+    bufferPoolingForFiveMs(commit, () => {
+      let pool = this.findPoolWithComponent(commit.component);
+      if (!pool) {
+        this.createAndSendNewPool();
       }
-      let release = import_alpinejs.default.entangle({
-        get() {
-          return livewireComponent.get(name);
-        },
-        set(value) {
-          livewireComponent.set(name, value, isLive);
-        }
-      }, {
-        get() {
-          return getter();
-        },
-        set(value) {
-          setter(value);
-        }
-      });
-      cleanup2(() => release());
-      return livewireComponent.get(name);
-    }, (obj) => {
-      Object.defineProperty(obj, "live", {
-        get() {
-          isLive = true;
-          return obj;
-        }
+    });
+    return commit;
+  }
+  findCommitOr(component, callback) {
+    for (let [idx, commit] of this.commits.entries()) {
+      if (commit.component === component) {
+        return commit;
+      }
+    }
+    return callback();
+  }
+  findPoolWithComponent(component) {
+    for (let [idx, pool] of this.pools.entries()) {
+      if (pool.hasCommitFor(component))
+        return pool;
+    }
+  }
+  createAndSendNewPool() {
+    trigger("commit.pooling", { commits: this.commits });
+    let pools = this.corraleCommitsIntoPools();
+    this.commits.clear();
+    trigger("commit.pooled", { pools });
+    pools.forEach((pool) => {
+      if (pool.empty())
+        return;
+      this.pools.add(pool);
+      pool.send().then(() => {
+        this.pools.delete(pool);
+        this.sendAnyQueuedCommits();
       });
     });
-    return interceptor(livewirePropertyValue);
+  }
+  corraleCommitsIntoPools() {
+    let pools = /* @__PURE__ */ new Set();
+    for (let [idx, commit] of this.commits.entries()) {
+      let hasFoundPool = false;
+      pools.forEach((pool) => {
+        if (pool.shouldHoldCommit(commit)) {
+          pool.add(commit);
+          hasFoundPool = true;
+        }
+      });
+      if (!hasFoundPool) {
+        let newPool = new RequestPool();
+        newPool.add(commit);
+        pools.add(newPool);
+      }
+    }
+    return pools;
+  }
+  sendAnyQueuedCommits() {
+    if (this.commits.size > 0) {
+      this.createAndSendNewPool();
+    }
+  }
+};
+var buffersByCommit = /* @__PURE__ */ new WeakMap();
+function bufferPoolingForFiveMs(commit, callback) {
+  if (buffersByCommit.has(commit))
+    return;
+  buffersByCommit.set(commit, setTimeout(() => {
+    callback();
+    buffersByCommit.delete(commit);
+  }, 5));
+}
+
+// js/request/index.js
+var commitBus = new CommitBus();
+async function requestCommit(component) {
+  let commit = commitBus.add(component);
+  let promise = new Promise((resolve, reject) => {
+    commit.addResolver(resolve);
+  });
+  promise.commit = commit;
+  return promise;
+}
+async function requestCall(component, method, params) {
+  let commit = commitBus.add(component);
+  let promise = new Promise((resolve, reject) => {
+    commit.addCall(method, params, (value) => resolve(value));
+  });
+  promise.commit = commit;
+  return promise;
+}
+async function sendRequest(pool) {
+  let [payload, handleSuccess, handleFailure] = pool.payload();
+  let options = {
+    method: "POST",
+    body: JSON.stringify({
+      _token: getCsrfToken(),
+      components: payload
+    }),
+    headers: {
+      "Content-type": "application/json",
+      "X-Livewire": ""
+    }
   };
+  let succeedCallbacks = [];
+  let failCallbacks = [];
+  let respondCallbacks = [];
+  let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+  let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
+  let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
+  let finishProfile = trigger("request.profile", options);
+  let updateUri = getUpdateUri();
+  trigger("request", {
+    url: updateUri,
+    options,
+    payload: options.body,
+    respond: (i) => respondCallbacks.push(i),
+    succeed: (i) => succeedCallbacks.push(i),
+    fail: (i) => failCallbacks.push(i)
+  });
+  let response = await fetch(updateUri, options);
+  let mutableObject = {
+    status: response.status,
+    response
+  };
+  respond(mutableObject);
+  response = mutableObject.response;
+  let content = await response.text();
+  if (!response.ok) {
+    finishProfile({ content: "{}", failed: true });
+    let preventDefault = false;
+    handleFailure();
+    fail({
+      status: response.status,
+      content,
+      preventDefault: () => preventDefault = true
+    });
+    if (preventDefault)
+      return;
+    if (response.status === 419) {
+      handlePageExpiry();
+    }
+    return showFailureModal(content);
+  }
+  if (response.redirected) {
+    window.location.href = response.url;
+  }
+  if (contentIsFromDump(content)) {
+    [dump, content] = splitDumpFromContent(content);
+    showHtmlModal(dump);
+    finishProfile({ content: "{}", failed: true });
+  } else {
+    finishProfile({ content, failed: false });
+  }
+  let { components: components2, assets } = JSON.parse(content);
+  await triggerAsync("payload.intercept", { components: components2, assets });
+  await handleSuccess(components2);
+  succeed({ status: response.status, json: JSON.parse(content) });
+}
+function handlePageExpiry() {
+  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+}
+function showFailureModal(content) {
+  let html = content;
+  showHtmlModal(html);
 }
 
 // js/$wire.js
@@ -7934,7 +7981,7 @@ wireProperty("$commit", (component) => async () => await requestCommit(component
 wireProperty("$on", (component) => (...params) => listen(component, ...params));
 wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
 wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
-wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(component, ...params));
+wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params));
 wireProperty("$upload", (component) => (...params) => upload(component, ...params));
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
@@ -7990,7 +8037,7 @@ var Component = class {
     this.reactive = Alpine.reactive(this.ephemeral);
     this.$wire = generateWireObject(this, this.reactive);
     this.cleanups = [];
-    processEffects(this, this.effects);
+    this.processEffects(this.effects);
   }
   mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
     let snapshot = JSON.parse(snapshotEncoded);
@@ -8018,7 +8065,10 @@ var Component = class {
   replayUpdate(snapshot, html) {
     let effects = { ...this.effects, html };
     this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
-    processEffects(this, { html });
+    this.processEffects({ html });
+  }
+  processEffects(effects) {
+    trigger("effects", this, effects);
   }
   get children() {
     let meta = this.snapshot.memo;
@@ -8127,7 +8177,7 @@ function dispatchEvents(component, dispatches) {
     if (self2)
       dispatchSelf(component, name, params);
     else if (to)
-      dispatchTo(component, to, name, params);
+      dispatchTo(to, name, params);
     else
       dispatch2(component, name, params);
   });
@@ -8146,7 +8196,7 @@ function dispatchGlobal(name, params) {
 function dispatchSelf(component, name, params) {
   dispatchEvent(component.el, name, params, false);
 }
-function dispatchTo(component, componentName, name, params) {
+function dispatchTo(componentName, name, params) {
   let targets = componentsByName(componentName);
   targets.forEach((target) => {
     dispatchEvent(target.el, name, params, false);
@@ -9076,20 +9126,6 @@ function rescan() {
 // js/index.js
 var import_alpinejs20 = __toESM(require_module_cjs());
 
-// js/features/supportWireModelingNestedComponents.js
-on("commit.prepare", ({ component }) => {
-  component.children.forEach((child) => {
-    if (hasBindings(child)) {
-      child.$wire.$commit();
-    }
-  });
-});
-function hasBindings(component) {
-  let childMemo = component.snapshot.memo;
-  let bindings = childMemo.bindings;
-  return !!bindings;
-}
-
 // js/features/supportDisablingFormsDuringRequest.js
 var import_alpinejs9 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
@@ -9127,6 +9163,74 @@ function cleanup(component) {
   while (cleanupStackByComponentId[component.id].length > 0) {
     cleanupStackByComponentId[component.id].shift()();
   }
+}
+
+// js/features/supportPropsAndModelables.js
+on("commit.pooling", ({ commits }) => {
+  commits.forEach((commit) => {
+    let component = commit.component;
+    getDeepChildrenWithBindings(component, (child) => {
+      child.$wire.$commit();
+    });
+  });
+});
+on("commit.pooled", ({ pools }) => {
+  let commits = getPooledCommits(pools);
+  commits.forEach((commit) => {
+    let component = commit.component;
+    getDeepChildrenWithBindings(component, (child) => {
+      colocateCommitsByComponent(pools, component, child);
+    });
+  });
+});
+function getPooledCommits(pools) {
+  let commits = [];
+  pools.forEach((pool) => {
+    pool.commits.forEach((commit) => {
+      commits.push(commit);
+    });
+  });
+  return commits;
+}
+function colocateCommitsByComponent(pools, component, foreignComponent) {
+  let pool = findPoolWithComponent(pools, component);
+  let foreignPool = findPoolWithComponent(pools, foreignComponent);
+  let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
+  foreignPool.delete(foreignCommit);
+  pool.add(foreignCommit);
+  pools.forEach((pool2) => {
+    if (pool2.empty())
+      pools.delete(pool2);
+  });
+}
+function findPoolWithComponent(pools, component) {
+  for (let [idx, pool] of pools.entries()) {
+    if (pool.hasCommitFor(component))
+      return pool;
+  }
+}
+function getDeepChildrenWithBindings(component, callback) {
+  getDeepChildren(component, (child) => {
+    if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+      callback(child);
+    }
+  });
+}
+function hasReactiveProps(component) {
+  let meta = component.snapshot.memo;
+  let props = meta.props;
+  return !!props;
+}
+function hasWireModelableBindings(component) {
+  let meta = component.snapshot.memo;
+  let bindings = meta.bindings;
+  return !!bindings;
+}
+function getDeepChildren(component, callback) {
+  component.children.forEach((child) => {
+    callback(child);
+    getDeepChildren(child, callback);
+  });
 }
 
 // js/features/supportScriptsAndAssets.js
@@ -9281,6 +9385,32 @@ on("effects", (component, effects) => {
       import_alpinejs11.default.evaluate(component.el, expression);
     });
   }
+});
+
+// js/features/supportLazyLoading.js
+var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+on("component.init", ({ component }) => {
+  let memo = component.snapshot.memo;
+  if (memo.lazyLoaded === void 0)
+    return;
+  componentsThatAreLazy.add(component);
+  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+    componentsThatWantToBeBundled.add(component);
+  }
+});
+on("commit.pooling", ({ commits }) => {
+  commits.forEach((commit) => {
+    if (!componentsThatAreLazy.has(commit.component))
+      return;
+    if (componentsThatWantToBeBundled.has(commit.component)) {
+      commit.isolate = false;
+      componentsThatWantToBeBundled.delete(commit.component);
+    } else {
+      commit.isolate = true;
+    }
+    componentsThatAreLazy.delete(commit.component);
+  });
 });
 
 // js/features/supportQueryString.js
@@ -9500,22 +9630,6 @@ on("effects", (component, effects) => {
     morph2(component, component.el, html);
   });
 });
-
-// js/features/supportProps.js
-on("commit.prepare", ({ component }) => {
-  getChildrenRecursively(component, (child) => {
-    let childMeta = child.snapshot.memo;
-    let props = childMeta.props;
-    if (props)
-      child.$wire.$commit();
-  });
-});
-function getChildrenRecursively(component, callback) {
-  component.children.forEach((child) => {
-    callback(child);
-    getChildrenRecursively(child, callback);
-  });
-}
 
 // js/directives/wire-transition.js
 var import_alpinejs14 = __toESM(require_module_cjs());

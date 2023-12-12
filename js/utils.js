@@ -184,6 +184,13 @@ export function getCsrfToken() {
     throw 'Livewire: No CSRF token detected'
 }
 
+/**
+ * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
+ */
+export function getUpdateUri() {
+    return document.querySelector('[data-update-uri]')?.getAttribute('data-update-uri') ?? window.livewireScriptConfig['uri'] ?? null
+}
+
 export function contentIsFromDump(content) {
     return !! content.match(/<script>Sfdump\(".+"\)<\/script>/)
 }

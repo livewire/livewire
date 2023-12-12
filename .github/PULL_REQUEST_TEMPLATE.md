@@ -1,4 +1,4 @@
-Review the contribution guide first at: https://laravel-livewire.com/docs/2.x/contribution-guide
+Review the contribution guide first at: https://livewire.laravel.com/docs/contribution-guide
 
 1️⃣ Is this something that is wanted/needed? Did you create a discussion about it first?
 

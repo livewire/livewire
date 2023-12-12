@@ -242,6 +242,18 @@ title('Users');
 // ...
 ```
 
+If the title relies on component state or an external dependency, you may pass a closure to the `title` function instead:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title(fn () => 'Users: ' . $this->users->count());
+```
+
 ## Properties
 
 Volt properties, like Livewire properties, are conveniently accessible in the view and persist between Livewire updates. You can define a property using the `state` function:
@@ -341,7 +353,7 @@ $count = computed(function () {
 })->persist();
 ```
 
-By default, Livewire caches the computed computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
+By default, Livewire caches the computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
 
 ```php
 $count = computed(function () {

@@ -501,6 +501,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertReturned('bar')
             ->assertReturned(fn ($data) => $data === 'bar');
     }
+
     /** @test */
     public function can_set_cookies_for_use_with_testing()
     {
@@ -523,6 +524,29 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             })
             ->assertSet('colourCookie', 'blue')
             ->assertSet('nameCookie', 'Taylor')
+            ;
+    }
+
+    /** @test */
+    public function can_set_headers_for_use_with_testing()
+    {
+        Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])
+            ->test(new class extends Component {
+                public $colourHeader = '';
+                public $nameHeader = '';
+                public function mount()
+                {
+                    $this->colourHeader = request()->header('colour');
+                    $this->nameHeader = request()->header('name');
+                }
+
+                public function render()
+                {
+                    return '<div></div>';
+                }
+            })
+            ->assertSet('colourHeader', 'blue')
+            ->assertSet('nameHeader', 'Taylor')
             ;
     }
 }
