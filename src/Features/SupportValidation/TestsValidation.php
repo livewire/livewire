@@ -23,6 +23,12 @@ trait TestsValidation
         return new MessageBag;
     }
 
+    public function dumpErrors()
+    {
+        dump($this->errors());
+        return $this;
+    }
+
     function failedRules()
     {
         $validator = store($this->target)->get('testing.validator');
