@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use Closure;
 use function Livewire\store;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Support\Str;
@@ -28,6 +29,21 @@ trait TestsValidation
         $validator = store($this->target)->get('testing.validator');
 
         return $validator ? $validator->failed() : [];
+    }
+
+    public function assertHasError($key, $value = null)
+    {
+        $errors = $this->errors();
+
+        if (is_null($value)) {
+            PHPUnit::assertTrue($errors->has($key), "Component missing error: $key");
+        } elseif ($value instanceof Closure) {
+            PHPUnit::assertTrue($value($errors->get($key)));
+        } else {
+            PHPUnit::assertContains($value, $errors->get($key));
+        }
+
+        return $this;
     }
 
     public function assertHasErrors($keys = [])
