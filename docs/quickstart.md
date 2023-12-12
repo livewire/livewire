@@ -102,7 +102,7 @@ Now, our _counter_ component is assigned to the `/counter` route, so that when a
 
 ## Create a template layout
 
-Before you can visit `/counter` in the browser, we need an HTML layout for our component to render inside. By default, Livewire will automatically look for a layout file named: `resources/views/components/layouts/app.blade.php`
+Before you can visit `/counter` in the browser, we need an HTML layout for our component to render inside. By default, Livewire will automatically look for a layout file named: `resources/views/layouts/app.blade.php`
 
 You may create this file if it doesn't already exist by running the following command:
 
@@ -110,7 +110,7 @@ You may create this file if it doesn't already exist by running the following co
 php artisan livewire:layout
 ```
 
-This command will generate a file called `resources/views/components/layouts/app.blade.php` with the following contents:
+This command will generate a file called `resources/views/layouts/app.blade.php` with the following contents:
 
 ```blade
 <!DOCTYPE html>
