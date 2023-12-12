@@ -415,7 +415,7 @@ You can also pass parameters to actions by passing additional parameters into th
 
 ### Validation
 
-To test that a validation error has been thrown, you can use Livewire's `assertHasErrors()` method:
+To test that a validation error has been thrown, you can use Livewire's `assertHasError()` or `assertHasErrors()` methods:
 
 ```php
 <?php
@@ -434,7 +434,7 @@ class CreatePostTest extends TestCase
         Livewire::test(CreatePost::class)
             ->set('title', '')
             ->call('save')
-            ->assertHasErrors('title');
+            ->assertHasError('title');
     }
 }
 ```
@@ -442,7 +442,81 @@ class CreatePostTest extends TestCase
 If you want to test that a specific validation rule has failed, you can pass an array of rules:
 
 ```php
-$this->assertHasErrors(['title' => ['required']]);
+$this->assertHasError('title', 'required');
+```
+
+You can also assert that specific validation messages are present:
+
+```php
+$this->assertHasError('title', 'The title field is required.');
+```
+
+You can also pass a closure to make assertions of your own:
+
+```php
+$this->assertHasError('title', function ($rules, $messages) {
+    return in_array('required', $rules);
+
+    // Or...
+
+    return in_array('The title field is required.', $messages);
+});
+```
+
+If you wish to assert multiple validation errors at once, you can do so with the `assertHasErrors()` method:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\CreatePost;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CreatePostTest extends TestCase
+{
+    /** @test */
+    public function title_field_is_required()
+    {
+        Livewire::test(CreatePost::class)
+            ->set('title', '')
+            ->set('content', '')
+            ->call('save')
+            ->assertHasErrors(['title', 'content']);
+    }
+}
+```
+
+Similar to the singular `assertHasError()` method, `assertHasErrors()` supports asserting rules and messages:
+
+```php
+$this->assertHasErrors([
+    'title' => 'required',
+    'content' => 'The content field is required.'
+]);
+```
+
+You can also assert against multiple failed validation rules or messages at once:
+
+```php
+$this->assertHasErrors([
+    'title' => ['required', 'min:3'],
+]);
+```
+
+If you want full control over your validation assertions you can pass a callback and manually confirm validation scenarios:
+
+```php
+$this->assertHasErrors([
+    'title' => function ($rules, $messages) {
+        return in_array('required', $rules);
+
+        // Or...
+
+        return in_array('The title field is required.', $messages);
+    },
+]);
 ```
 
 ### Authorization
@@ -679,6 +753,10 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertSeeHtmlInOrder([$firstString, $secondString])` | Assert that the provided HTML strings appear in order in the rendered output of the component                                                                                        |
 | `assertDispatched('post-created')`                    | Assert that the given event has been dispatched by the component                                                                                                                     |
 | `assertNotDispatched('post-created')`                 | Assert that the given event has not been dispatched by the component                                                                                                                 |
+| `assertHasError('title')`                            | Assert that validation has failed for the `title` property                                                                                                                           |
+| `assertHasError('title', 'required')`                | Assert that the provided validation rule failed for `title` property                                                                                                                           |
+| `assertHasError('title', 'The title field is required.')`                | Assert that the provided validation messsage exists for `title` property                                                                                                                           |
+| `assertHasErrors()`                                  | Assert that there are validation errors thrown property                                                                                                                           |
 | `assertHasErrors('title')`                            | Assert that validation has failed for the `title` property                                                                                                                           |
 | `assertHasErrors(['title' => ['required', 'min:6']])`   | Assert that the provided validation rules failed for the `title` property                                                                                                            |
 | `assertHasNoErrors('title')`                          | Assert that there are no validation errors for the `title` property                                                                                                                  |
