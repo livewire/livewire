@@ -31,21 +31,6 @@ trait TestsValidation
         return $validator ? $validator->failed() : [];
     }
 
-    public function assertHasError($key, $value = null)
-    {
-        $errors = $this->errors();
-
-        if (is_null($value)) {
-            PHPUnit::assertTrue($errors->has($key), "Component missing error: $key");
-        } elseif ($value instanceof Closure) {
-            PHPUnit::assertTrue($value($errors->get($key)));
-        } else {
-            PHPUnit::assertContains($value, $errors->get($key));
-        }
-
-        return $this;
-    }
-
     public function assertHasErrors($keys = [])
     {
         $errors = $this->errors();
@@ -56,23 +41,57 @@ trait TestsValidation
 
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
-                PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
+                $this->assertHasError($value);
             } else {
-                $failed = $this->failedRules() ?: [];
-                $rules = array_keys(Arr::get($failed, $key, []));
-
-                foreach ((array) $value as $rule) {
-                    if (Str::contains($rule, ':')){
-                        $rule = Str::before($rule, ':');
-                    }
-
-                    PHPUnit::assertContains(Str::studly($rule), $rules, "Component has no [{$rule}] errors for [{$key}] attribute.");
-                }
+                $this->assertHasError($key, $value);
             }
         }
 
         return $this;
     }
+
+    public  function assertHasError($key = null, $value = null) {
+        $errors = $this->errors();
+
+        PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
+
+        if (is_null($value)) {
+            PHPUnit::assertTrue($errors->has($key), "Component missing error: $key");
+        } elseif ($value instanceof Closure) {
+            PHPUnit::assertTrue($value($errors->get($key)));
+        } elseif (is_array($value)) {
+            foreach ((array) $value as $ruleOrMessage) {
+                $this->assertErrorMatchesRuleOrMessage($errors, $key, $ruleOrMessage);
+            }
+        } else {
+            $this->assertErrorMatchesRuleOrMessage($errors, $key, $value);
+        }
+
+        return $this;
+    }
+
+    protected function assertErrorMatchesRuleOrMessage($errors, $key, $ruleOrMessage)
+    {
+        // Check for matching rules...
+        $failed = $this->failedRules() ?: [];
+        $rules = array_keys(Arr::get($failed, $key, []));
+
+        if (Str::contains($ruleOrMessage, ':')){
+            $ruleOrMessage = Str::before($ruleOrMessage, ':');
+        }
+
+        if (in_array(Str::studly($ruleOrMessage), $rules)) {
+            PHPUnit::assertTrue(true);
+
+            return;
+        }
+
+        // If the provided rule/message isn't a failed rule, let's check to see if it's a message...
+        PHPUnit::assertContains($ruleOrMessage, $errors->get($key), "Component has no matching failed rule or error message [{$ruleOrMessage}] for [{$key}] attribute.");
+
+        return;
+    }
+
 
     public function assertHasNoErrors($keys = [])
     {

@@ -449,6 +449,22 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
+    function assert_has_error()
+    {
+        Livewire::test(ValidatesDataWithSubmitStub::class)
+            ->call('submit')
+            ->assertHasError('foo');
+    }
+
+    /** @test */
+    function assert_has_error_with_provided_rule()
+    {
+        Livewire::test(ValidatesDataWithSubmitStub::class)
+            ->call('submit')
+            ->assertHasError('foo', 'required');
+    }
+
+    /** @test */
     function assert_has_error_and_message_with_manually_added_error()
     {
         Livewire::test(ValidatesDataWithSubmitStub::class)
