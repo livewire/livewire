@@ -440,6 +440,26 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             });
     }
 
+
+    /** @test */
+    function assert_has_errors()
+    {
+        Livewire::test(ValidatesDataWithSubmitStub::class)
+            ->call('submit')
+            ->assertHasErrors()
+            ->assertHasErrors('foo')
+            ->assertHasErrors(['foo'])
+            ->assertHasErrors(['foo' => 'required'])
+            ->assertHasErrors(['foo' => 'The foo field is required.'])
+            ->assertHasErrors(['foo' => 'required', 'bar' => 'required'])
+            ->assertHasErrors(['foo' => 'The foo field is required.', 'bar' => 'The bar field is required.'])
+            ->assertHasErrors(['foo' => ['The foo field is required.'], 'bar' => ['The bar field is required.']])
+            ->assertHasErrors(['foo' => function ($rules, $messages) {
+                return in_array('required', $rules) && in_array('The foo field is required.', $messages);
+            }])
+            ;
+    }
+
     /** @test */
     function assert_has_error_with_manually_added_error()
     {

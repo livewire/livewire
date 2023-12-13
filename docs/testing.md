@@ -445,6 +445,12 @@ If you want to test that a specific validation rule has failed, you can pass an 
 $this->assertHasErrors(['title' => ['required']]);
 ```
 
+Or if you'd rather assert a validation message exists, you can do so as well:
+
+```php
+$this->assertHasErrors(['title' => ['The title field is required.']]);
+```
+
 ### Authorization
 
 Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
