@@ -386,3 +386,7 @@ This checksum is then used on the next network request to verify that the snapsh
 If Livewire finds a checksum mismatch, it will throw a `CorruptComponentPayloadException` and the request will fail.
 
 This protects against any form of malicious tampering that would otherwise result in granting users the ability to execute or modify unrelated code.
+
+## CSP (Content Security Policies)
+
+// @todo...
