@@ -1,4 +1,4 @@
-import { on } from '@/events'
+import { on } from '@/hooks'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'

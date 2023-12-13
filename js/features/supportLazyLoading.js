@@ -1,4 +1,4 @@
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 let componentsThatWantToBeBundled = new WeakSet
 

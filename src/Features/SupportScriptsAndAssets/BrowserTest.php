@@ -296,4 +296,30 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitUntil('!! window.datePicker === true')
         ;
     }
+
+    /** @test */
+    public function can_listen_for_initial_dispatches_inside_script()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() {
+                $this->dispatch('test')->self();
+
+                return <<<'HTML'
+                <div>
+                    <h1 dusk="foo"></h1>
+                </div>
+
+                @script
+                <script>
+                    $wire.on('test', () => {
+                        $wire.el.querySelector('h1').textContent = 'received'
+                    })
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+        ->waitForTextIn('@foo', 'received')
+        ;
+    }
 }

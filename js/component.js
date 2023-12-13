@@ -1,7 +1,7 @@
 import { dataSet, deepClone, deeplyEqual, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponent } from '@/store'
-import { trigger } from '@/events'
+import { trigger } from '@/hooks'
 
 export class Component {
     constructor(el) {

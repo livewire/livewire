@@ -1,4 +1,4 @@
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 // // Only allow this in "Simple Preview"...
 // if (! navigator.userAgent.includes('Electron')) return
