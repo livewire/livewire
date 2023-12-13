@@ -12,4 +12,5 @@ import './supportRedirects';
 import './supportNavigate';
 import './supportMorphDom';
 import './supportEntangle';
+import './supportMercure';
 import './supportEvents';
