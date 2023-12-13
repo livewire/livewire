@@ -12,28 +12,6 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->registerConfig();
         $this->bootEventBus();
         $this->registerMechanisms();
-
-        $router = app('router');
-
-        if (method_exists($router, 'substituteImplicitBindingsUsing')) {
-            $router->substituteImplicitBindingsUsing(function ($container, $route, $default) {
-                $action = $route->action;
-                $uses = $action['uses'];
-
-                if (is_string($uses)) {
-                    $class = str($uses)->before('@')->toString();
-                    $method = str($uses)->after('@')->toString();
-
-                    if (is_subclass_of($class, \Livewire\Component::class) && $method === '__invoke') {
-                        // Resolve and set all page component parameters to the current route...
-                        (new \Livewire\Drawer\ImplicitRouteBinding($container))
-                            ->resolveAllParameters($route, new $class);
-                    }
-                }
-
-                $default();
-            });
-        }
     }
 
     public function boot()
