@@ -41,23 +41,23 @@ trait TestsValidation
 
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
-                $this->assertHasError($value);
+                $this->makeErrorAssertion($value);
             } else {
-                $this->assertHasError($key, $value);
+                $this->makeErrorAssertion($key, $value);
             }
         }
 
         return $this;
     }
 
-    public  function assertHasError($key = null, $value = null) {
+    protected function makeErrorAssertion($key = null, $value = null) {
         $errors = $this->errors();
 
         $messages = $errors->get($key);
 
         $failed = $this->failedRules() ?: [];
         $failedRules = array_keys(Arr::get($failed, $key, []));
-        $failedRules = array_map(fn ($i) => Str::lower($i), $failedRules);
+        $failedRules = array_map(fn ($i) => Str::snake($i), $failedRules);
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
 

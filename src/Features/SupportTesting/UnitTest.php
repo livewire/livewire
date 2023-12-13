@@ -440,66 +440,9 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             });
     }
 
-    /** @test */
-    function assert_has_error_with_manually_added_error()
-    {
-        Livewire::test(ValidatesDataWithSubmitStub::class)
-            ->call('manuallyAddError')
-            ->assertHasErrors('bob');
-    }
 
     /** @test */
-    function assert_has_error()
-    {
-        Livewire::test(ValidatesDataWithSubmitStub::class)
-            ->call('submit')
-            ->assertHasError();
-    }
-
-    /** @test */
-    function assert_has_error_for_specific_field()
-    {
-        Livewire::test(ValidatesDataWithSubmitStub::class)
-            ->call('submit')
-            ->assertHasError('foo');
-    }
-
-    /** @test */
-    function assert_has_error_with_provided_rule()
-    {
-        Livewire::test(ValidatesDataWithSubmitStub::class)
-            ->call('submit')
-            ->assertHasError('foo', 'required');
-    }
-
-    /** @test */
-    function assert_has_error_with_provided_message()
-    {
-        Livewire::test(ValidatesDataWithSubmitStub::class)
-            ->call('submit')
-            ->assertHasError('foo', 'The foo field is required.');
-    }
-
-    /** @test */
-    function assert_has_error_with_provided_callback()
-    {
-        Livewire::test(ValidatesDataWithSubmitStub::class)
-            ->call('submit')
-            ->assertHasError('foo', function ($rules, $messages) {
-                return in_array('required', $rules) && in_array('The foo field is required.', $messages);
-            });
-    }
-
-    /** @test */
-    function assert_has_error_and_message_with_manually_added_error()
-    {
-        Livewire::test(ValidatesDataWithSubmitStub::class)
-            ->call('manuallyAddError')
-            ->assertHasError('bob', 'lob');
-    }
-
-    /** @test */
-    function assert_has_errors_honors_the_same_api_as_the_singular_alternative()
+    function assert_has_errors()
     {
         Livewire::test(ValidatesDataWithSubmitStub::class)
             ->call('submit')
@@ -515,6 +458,14 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                 return in_array('required', $rules) && in_array('The foo field is required.', $messages);
             }])
             ;
+    }
+
+    /** @test */
+    function assert_has_error_with_manually_added_error()
+    {
+        Livewire::test(ValidatesDataWithSubmitStub::class)
+            ->call('manuallyAddError')
+            ->assertHasErrors('bob');
     }
 
     /** @test */

@@ -592,7 +592,7 @@ class CreatePost extends Component
 
 ## Testing validation
 
-Livewire provides useful testing utilities for validation scenarios, such as the `assertHasError()` method.
+Livewire provides useful testing utilities for validation scenarios, such as the `assertHasErrors()` method.
 
 Below is a basic test case that ensures validation errors are thrown if no input is set for the `title` property:
 
@@ -613,12 +613,12 @@ class CreatePostTest extends TestCase
         Livewire::test(CreatePost::class)
             ->set('content', 'Sample content...')
             ->call('save')
-            ->assertHasError('title');
+            ->assertHasErrors('title');
     }
 }
 ```
 
-In addition to testing the presence of errors, `assertHasError` allows you to also narrow down the assertion to specific rules by passing the rules to assert against as the second argument to the method:
+In addition to testing the presence of errors, `assertHasErrors` allows you to also narrow down the assertion to specific rules by passing the rules to assert against as the second argument to the method:
 
 ```php
 /** @test */
@@ -628,11 +628,11 @@ public function cant_create_post_with_title_shorter_than_3_characters()
         ->set('title', 'Sa')
         ->set('content', 'Sample content...')
         ->call('save')
-        ->assertHasError(['title' => ['min:3']]);
+        ->assertHasErrors(['title' => ['min:3']]);
 }
 ```
 
-You can also assert the presence of validation errors for multiple properties at the same time using `assertHasErrors()`:
+You can also assert the presence of validation errors for multiple properties at the same time:
 
 ```php
 /** @test */
