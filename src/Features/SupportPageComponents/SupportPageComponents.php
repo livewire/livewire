@@ -15,6 +15,8 @@ class SupportPageComponents extends ComponentHook
     static function provide()
     {
         static::registerLayoutViewMacros();
+
+        static::resolvePageComponentRouteBindings();
     }
 
     static function registerLayoutViewMacros()
@@ -191,5 +193,53 @@ class SupportPageComponents extends ComponentHook
                 throw $e;
             }
         }
+    }
+
+    // This needs to exist so that authorization middleware (and other middleware) have access
+    // to implicit route bindings based on the Livewire page component. Otherwise, Laravel
+    // has no implicit binding references because the action is __invoke with no params
+    protected static function resolvePageComponentRouteBindings()
+    {
+        // This method was introduced into Laravel 10.37.1 for this exact purpose...
+        if (static::canSubstituteImplicitBindings()) {
+            app('router')->substituteImplicitBindingsUsing(function ($container, $route, $default) {
+                // If the current route is a Livewire page component...
+                if ($componentClass = static::routeActionIsAPageComponent($route)) {
+                    // Resolve and set all page component parameters to the current route...
+                    (new \Livewire\Drawer\ImplicitRouteBinding($container))
+                        ->resolveAllParameters($route, new $componentClass);
+                } else {
+                    // Otherwise, run the default Laravel implicit binding system...
+                    $default();
+                }
+            });
+        }
+    }
+
+    public static function canSubstituteImplicitBindings()
+    {
+        return method_exists(app('router'), 'substituteImplicitBindingsUsing');
+    }
+
+    protected static function routeActionIsAPageComponent($route)
+    {
+        $action = $route->action;
+
+        if (! $action) return false;
+
+        $uses = $action['uses'] ?? false;
+
+        if (! $uses) return;
+
+        if (is_string($uses)) {
+            $class = str($uses)->before('@')->toString();
+            $method = str($uses)->after('@')->toString();
+
+            if (is_subclass_of($class, \Livewire\Component::class) && $method === '__invoke') {
+                return $class;
+            }
+        }
+
+        return false;
     }
 }
