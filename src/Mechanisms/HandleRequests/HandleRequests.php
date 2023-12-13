@@ -24,7 +24,7 @@ class HandleRequests extends Mechanism
     function getUpdateUri()
     {
         return (string) str(
-            route($this->updateRoute->getName(), [], false)
+            route($this->updateRoute, [], false)
         )->start('/');
     }
 
@@ -48,7 +48,7 @@ class HandleRequests extends Mechanism
             $route->name('livewire.update');
         }
 
-        $this->updateRoute = $route;
+        $this->updateRoute = $route->getName();
     }
 
     function isLivewireRequest()
