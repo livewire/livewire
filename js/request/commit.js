@@ -1,5 +1,5 @@
 import { diff } from '@/utils'
-import { on, trigger } from '@/events'
+import { on, trigger } from '@/hooks'
 
 /**
  * A commit represents an individual component updating itself server-side...
