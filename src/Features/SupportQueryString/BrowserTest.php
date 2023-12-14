@@ -11,14 +11,17 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function can_encode_url_containing_spaces_and_commas()
     {
         Livewire::visit([
-            new class extends Component {
+            new class extends Component
+            {
                 #[BaseUrl]
                 public $space = '';
 
                 #[BaseUrl]
                 public $comma = '';
 
-                public function render() { return <<<'HTML'
+                public function render()
+                {
+                    return <<<'HTML'
                     <div>
                         <input type="text" dusk="space" wire:model.live="space" />
                         <input type="text" dusk="comma" wire:model.live="comma" />
@@ -31,8 +34,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->type('@space', 'foo bar')
             ->type('@comma', 'foo,bar')
             ->assertScript('return !! window.location.search.match(/space=foo\+bar/)')
-            ->assertScript('return !! window.location.search.match(/comma=foo\,bar/)')
-        ;
+            ->assertScript('return !! window.location.search.match(/comma=foo\,bar/)');
     }
 
      /** @test */
@@ -80,7 +82,17 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends Component {
                 public FormObject $form;
 
-                public function render() { return <<<'HTML'
+    /** @test */
+    public function can_use_url_on_form_object_properties()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public FormObject $form;
+
+                public function render()
+                {
+                    return <<<'HTML'
                     <div>
                         <input type="text" dusk="foo.input" wire:model.live="form.foo" />
                         <input type="text" dusk="bob.input" wire:model.live="form.bob" />
@@ -101,6 +113,44 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('bob')
             ->assertQueryStringHas('aliased', 'law')
         ;
+    }
+
+    /** @test */
+    public function can_use_url_on_lazy_component()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child lazy />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component
+            {
+                #[BaseUrl]
+                public $foo = 'bar';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div>lazy loaded</div>
+                        <input type="text" dusk="foo.input" wire:model.live="foo" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForText('lazy loaded')
+            ->assertQueryStringMissing('foo')
+            ->waitForLivewire()->type('@foo.input', 'baz')
+            ->assertQueryStringHas('foo', 'baz')
+            ;
     }
 }
 
