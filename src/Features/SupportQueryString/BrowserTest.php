@@ -73,33 +73,42 @@ class BrowserTest extends \Tests\BrowserTestCase
          ;
      }
 
-     /** @test */
-    public function can_use_a_value_other_than_initial_for_except_behavior()
+    /** @test */
+    public function can_use_url_on_form_object_properties()
     {
         Livewire::visit([
             new class extends Component {
-                #[BaseUrl(except: '')]
-                public $search = '';
-
-                public function mount()
-                {
-                    $this->search = 'foo';
-                }
+                public FormObject $form;
 
                 public function render() { return <<<'HTML'
                     <div>
-                        <input type="text" dusk="input" wire:model.live="search" />
+                        <input type="text" dusk="foo.input" wire:model.live="form.foo" />
+                        <input type="text" dusk="bob.input" wire:model.live="form.bob" />
                     </div>
                     HTML;
                 }
             }
         ])
-            ->assertQueryStringHas('search', 'foo')
-            ->waitForLivewire()->type('@input', 'bar')
-            ->assertQueryStringHas('search', 'bar')
-            ->waitForLivewire()->type('@input', ' ')
-            ->waitForLivewire()->keys('@input', '{backspace}')
-            ->assertQueryStringMissing('search')
+            ->assertQueryStringMissing('foo')
+            ->assertQueryStringMissing('bob')
+            ->assertQueryStringMissing('aliased')
+            ->waitForLivewire()->type('@foo.input', 'baz')
+            ->assertQueryStringHas('foo', 'baz')
+            ->assertQueryStringMissing('bob')
+            ->assertQueryStringMissing('aliased')
+            ->waitForLivewire()->type('@bob.input', 'law')
+            ->assertQueryStringHas('foo', 'baz')
+            ->assertQueryStringMissing('bob')
+            ->assertQueryStringHas('aliased', 'law')
         ;
     }
+}
+
+class FormObject extends \Livewire\Form
+{
+    #[\Livewire\Attributes\Url]
+    public $foo = 'bar';
+
+    #[\Livewire\Attributes\Url(as: 'aliased')]
+    public $bob = 'lob';
 }
