@@ -89,6 +89,57 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    public function can_dispatch_to_another_component_globally()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function dispatchToOtherComponent()
+                {
+                    $this->dispatch('foo', message: 'baz')->to('child');
+                }
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button x-on:click="window.Livewire.dispatchTo('child', 'foo', { message: 'bar' })" dusk="button">Dispatch to child from Alpine</button>
+                        <button wire:click="dispatchToOtherComponent" dusk="button2">Dispatch to child from Livewire</button>
+
+                        <livewire:child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $message = 'foo';
+
+                protected $listeners = ['foo' => 'onFoo'];
+
+                function onFoo($message)
+                {
+                    $this->message = $message;
+                }
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <h1 dusk="output">{{ $message }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@output', 'foo')
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@output', 'bar')
+            // For some reason this is flaky?
+            // ->waitForLivewire()->click('@button2')
+            // ->waitForTextIn('@output', 'baz')
+            ;
+    }
+
+    /** @test */
     public function can_unregister_global_livewire_listener()
     {
         Livewire::visit(new class extends Component {

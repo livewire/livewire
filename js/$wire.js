@@ -1,11 +1,11 @@
-import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEvents'
+import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
+import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
-import { requestCommit, requestCall } from '@/commit'
+import { requestCommit, requestCall } from '@/request'
 import { WeakBag, dataGet, dataSet } from '@/utils'
-import { on, trigger } from '@/events'
+import { on, trigger } from '@/hooks'
 import Alpine from 'alpinejs'
-import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 
 let properties = {}
 let fallback
@@ -165,8 +165,7 @@ wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
-wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
-
+wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))

@@ -1,5 +1,5 @@
 import { overrideMethod } from '@/$wire'
-import { on } from '@/events'
+import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
 on('effects', (component, effects) => {

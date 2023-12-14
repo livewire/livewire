@@ -1,4 +1,4 @@
-import { trigger } from "@/events"
+import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 

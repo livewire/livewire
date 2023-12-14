@@ -1,4 +1,4 @@
-import { on, trigger } from "@/events"
+import { on, trigger } from "@/hooks"
 
 shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
 

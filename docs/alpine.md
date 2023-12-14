@@ -24,7 +24,7 @@ The Alpine component above can be used inside any Livewire component in your app
 
 ## Using Alpine inside Livewire
 
-Let's explore a more real-life example of using a Alpine inside a Livewire component.
+Let's explore a more real-life example of using an Alpine component inside a Livewire component.
 
 Below is a simple Livewire component showing the details of a post model from the database. By default, only the title of the post is shown:
 
@@ -73,7 +73,7 @@ Here is an example of a simple "character count" utility in a form for creating 
 </form>
 ```
 
-As you can see `x-text` in the above example is being used to allow Alpine to control the text content of the `<span>` element. `x-text` accepts any JavaScript expression inside of it and automatically reacts when any dependancies are updated. Because we are using `$wire.content` to access the value of `$content`, Alpine will automatically update the text content every time `$wire.content` is updated from Livewire; in this case by `wire:model="content"`.
+As you can see `x-text` in the above example is being used to allow Alpine to control the text content of the `<span>` element. `x-text` accepts any JavaScript expression inside of it and automatically reacts when any dependencies are updated. Because we are using `$wire.content` to access the value of `$content`, Alpine will automatically update the text content every time `$wire.content` is updated from Livewire; in this case by `wire:model="content"`.
 
 ### Mutating Livewire properties
 
@@ -106,7 +106,7 @@ Here's a brief explanation of what's going on to make that happen:
 
 Alpine can also easily call any Livewire methods/actions by simply calling them directly on `$wire`.
 
-Here is an example of using Alpine to listen for a "blur" event on an input and triggering a form save. The "blur" event is dispatched by the browser when a user presses "tab" to remove focus from the current elemement and focus on the next one on the page:
+Here is an example of using Alpine to listen for a "blur" event on an input and triggering a form save. The "blur" event is dispatched by the browser when a user presses "tab" to remove focus from the current element and focus on the next one on the page:
 
 ```html
 <form wire:submit="save">
@@ -118,7 +118,7 @@ Here is an example of using Alpine to listen for a "blur" event on an input and 
 </form>
 ```
 
-Typically you would just use `wire:model.blur="title"` in this situation, however, it's helpful for demonstration purposes how you can achieve this using Alpine.
+Typically, you would just use `wire:model.blur="title"` in this situation, however, it's helpful for demonstration purposes how you can achieve this using Alpine.
 
 #### Passing parameters
 

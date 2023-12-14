@@ -1,24 +1,14 @@
 <?php
 
-namespace Livewire\Mechanisms;
+namespace Livewire\Mechanisms\CompileLivewireTags;
 
-use Livewire\Exceptions\ComponentAttributeMissingOnDynamicComponentException;
 use Illuminate\View\Compilers\ComponentTagCompiler;
 use Livewire\Drawer\Regexes;
+use Livewire\Exceptions\ComponentAttributeMissingOnDynamicComponentException;
 
-class CompileLivewireTags extends ComponentTagCompiler
+class LivewireTagPrecompiler extends ComponentTagCompiler
 {
-    public function register()
-    {
-        //
-    }
-
-    public function boot()
-    {
-        app('blade.compiler')->precompiler($this->compileLivewireSelfClosingTags(...));
-    }
-
-    protected function compileLivewireSelfClosingTags($value)
+    public function __invoke($value)
     {
         $pattern = '/'.Regexes::$livewireOpeningTagOrSelfClosingTag.'/x';
 

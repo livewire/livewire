@@ -90,6 +90,31 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
+Please be aware that the persisted element must be placed outside your Livewire components. A common practice is to position the persisted element in your main layout, such as `resources/views/components/layouts/app.blade.php`.
+
+```html
+<!-- resources/views/components/layouts/app.blade.php -->
+
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        <main>
+            {{ $slot }}
+        </main>
+
+        @persist('player') <!-- [tl! highlight:2] -->
+            <audio src="{{ $episode->file }}" controls></audio>
+        @endpersist
+    </body>
+</html>
+```
+
 ### Preserving scroll position
 
 By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
