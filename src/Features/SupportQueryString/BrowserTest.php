@@ -79,13 +79,6 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function can_use_url_on_form_object_properties()
     {
         Livewire::visit([
-            new class extends Component {
-                public FormObject $form;
-
-    /** @test */
-    public function can_use_url_on_form_object_properties()
-    {
-        Livewire::visit([
             new class extends Component
             {
                 public FormObject $form;
