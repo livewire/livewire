@@ -382,4 +382,18 @@ class DuskBrowserMacros
             return $this;
         };
     }
+
+    public function assertConsoleLogEmpty()
+    {
+        return function(){
+            $logs = $this->driver->manage()->getLog('browser');
+
+            // Filter out network errors that are unrelated to Livewire.
+            $logs = array_filter($logs, fn (array $log) => $log['source'] !== 'network');
+
+            PHPUnit::assertEmpty($logs, "Console log is not empty.");
+
+            return $this;
+        };
+    }
 }
