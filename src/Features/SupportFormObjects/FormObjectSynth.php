@@ -60,10 +60,6 @@ class FormObjectSynth extends Synth {
         $component->mergeOutsideAttributes(
             AttributeCollection::fromComponent($component, $form, $path . '.')
         );
-
-        return function () use ($form) {
-            wrap($form)->boot();
-        };
     }
 }
 

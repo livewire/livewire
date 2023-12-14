@@ -561,6 +561,29 @@ class UnitTest extends \Tests\TestCase
         ->assertHasNoErrors('form.content')
         ;
     }
+
+    /** @test */
+    function can_use_the_mount_hook_from_form_objects()
+    {
+        Livewire::test(new class extends Component {
+            public FormObjectWithMountMethod $form;
+
+            public $formFooValue;
+
+            public function mount($thing)
+            {
+                $this->formFooValue = $this->form->foo;
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        }, ['bar'])
+        ->assertSet('formFooValue', 'bar')
+        ->call('$refresh')
+        ->assertSet('formFooValue', 'bar')
+        ;
+    }
 }
 
 class PostFormStub extends Form
@@ -716,4 +739,14 @@ class PostForFormObjectTesting extends Model
             'content' => 'Some content',
         ],
     ];
+}
+
+class FormObjectWithMountMethod extends Form
+{
+    public $foo;
+
+    public function mount($foo)
+    {
+        $this->foo = $foo;
+    }
 }
