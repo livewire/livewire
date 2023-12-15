@@ -64,9 +64,13 @@ export class Component {
 
         let newData = extractData(deepClone(snapshot.data))
 
-        Object.entries(dirty).forEach(([key, value]) => {
-            let rootKey = key.split('.')[0]
-            this.reactive[rootKey] = newData[rootKey]
+        queueMicrotask(() => {
+            queueMicrotask(() => {
+                Object.entries(dirty).forEach(([key, value]) => {
+                    let rootKey = key.split('.')[0]
+                    this.reactive[rootKey] = newData[rootKey]
+                })
+            })
         })
         // Object.entries(this.ephemeral).forEach(([key, value]) => {
         //     if (! deeplyEqual(this.ephemeral[key], newData[key])) {
