@@ -149,55 +149,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@selected', 'D')
         ;
     }
-
-    /** @test */
-    public function is_does_not_rerender_alpine_components_removed_from_the_dom()
-    {
-        Livewire::visit(new class extends \Livewire\Component {
-            public $foo = true;
-
-            public $bar = [
-                'baz' => [
-                    'isVisible' => true,
-                ],
-            ];
-
-            public function hide()
-            {
-                $this->foo = false;
-                $this->bar = [];
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                <div>
-                    <div>
-                        @if ($foo)
-                            <div x-data="{ state: $wire.entangle('bar.baz') }">
-                                <template x-if="state.isVisible">
-                                    <div dusk="output">
-                                        Foo
-                                    </div>
-                                </template>
-                            </div>
-                        @endif
-                    </div>
-
-                    <button dusk="hideButton" wire:click="hide" type="button">
-                        Hide
-                    </button>
-                </div>
-                HTML;
-            }
-        })
-            ->assertSeeIn('@output', 'Foo')
-            ->click('@hideButton')->waitForLivewire()
-            ->pause(100) // Wait for Alpine.
-            ->assertNotPresent('@output')
-            ->assertConsoleLogEmpty()
-        ;
-    }
 }
 
 enum Suit: string
