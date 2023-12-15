@@ -118,7 +118,7 @@ function containsTargets(payload, targets) {
         }
 
         let hasMatchingUpdate = Object.keys(updates).some(property => {
-            return property.startsWith(target)
+            return property === target
         })
 
         if (hasMatchingUpdate) return true
