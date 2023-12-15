@@ -7649,6 +7649,83 @@ var RequestPool = class {
   }
 };
 
+// js/morph.js
+var import_alpinejs2 = __toESM(require_module_cjs());
+function morph(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = closestComponent(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  import_alpinejs2.default.morph(el, to, {
+    updating: (el2, toEl, childrenOnly, skip) => {
+      if (isntElement(el2))
+        return;
+      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+      if (el2.__livewire_ignore === true)
+        return skip();
+      if (el2.__livewire_ignore_self === true)
+        childrenOnly();
+      if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el2))
+        toEl.__livewire = component;
+    },
+    updated: (el2, toEl) => {
+      if (isntElement(el2))
+        return;
+      trigger("morph.updated", { el: el2, component });
+    },
+    removing: (el2, skip) => {
+      if (isntElement(el2))
+        return;
+      trigger("morph.removing", { el: el2, component, skip });
+    },
+    removed: (el2) => {
+      if (isntElement(el2))
+        return;
+      trigger("morph.removed", { el: el2, component });
+    },
+    adding: (el2) => {
+      trigger("morph.adding", { el: el2, component });
+    },
+    added: (el2) => {
+      if (isntElement(el2))
+        return;
+      const closestComponentId = closestComponent(el2).id;
+      trigger("morph.added", { el: el2 });
+    },
+    key: (el2) => {
+      if (isntElement(el2))
+        return;
+      return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
+    },
+    lookahead: false
+  });
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+
+// js/features/supportMorphDom.js
+function handleMorph(component, html) {
+  if (!html)
+    return;
+  morph(component, component.el, html);
+}
+on("effects", (component, effects) => {
+});
+
 // js/request/commit.js
 var Commit = class {
   constructor(component) {
@@ -7707,6 +7784,7 @@ var Commit = class {
     let handleResponse = (response) => {
       let { snapshot, effects } = response;
       respond();
+      handleMorph(this.component, effects.html);
       this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
       this.component.processEffects(this.component.effects);
       if (effects["returns"]) {
@@ -7907,7 +7985,7 @@ function showFailureModal(content) {
 }
 
 // js/$wire.js
-var import_alpinejs2 = __toESM(require_module_cjs());
+var import_alpinejs3 = __toESM(require_module_cjs());
 var properties = {};
 var fallback;
 function wireProperty(name, callback, component = null) {
@@ -7962,7 +8040,7 @@ function getProperty(component, name) {
 function getFallback(component) {
   return fallback(component);
 }
-import_alpinejs2.default.magic("wire", (el, { cleanup: cleanup2 }) => {
+import_alpinejs3.default.magic("wire", (el, { cleanup: cleanup2 }) => {
   let component;
   return new Proxy({}, {
     get(target, property) {
@@ -8005,7 +8083,7 @@ wireProperty("$toggle", (component) => (name, live = true) => {
 wireProperty("$watch", (component) => (path, callback) => {
   let firstTime = true;
   let oldValue = void 0;
-  import_alpinejs2.default.effect(() => {
+  import_alpinejs3.default.effect(() => {
     let value = dataGet(component.reactive, path);
     JSON.stringify(value);
     if (!firstTime) {
@@ -8232,7 +8310,7 @@ function dispatchEvent(target, name, params, bubbles = true) {
 }
 
 // js/directives.js
-var import_alpinejs3 = __toESM(require_module_cjs());
+var import_alpinejs4 = __toESM(require_module_cjs());
 function matchesForLivewireDirective(attributeName) {
   return attributeName.match(new RegExp("wire:"));
 }
@@ -8462,19 +8540,19 @@ function createUrlObjectFromString(urlString) {
 }
 
 // js/plugins/navigate/teleport.js
-var import_alpinejs4 = __toESM(require_module_cjs());
+var import_alpinejs5 = __toESM(require_module_cjs());
 function packUpPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs5.default.mutateDom(() => {
     persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
   });
 }
 function removeAnyLeftOverStaleTeleportTargets(body) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs5.default.mutateDom(() => {
     body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
   });
 }
 function unPackPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.walk(persistedEl, (el, skip) => {
+  import_alpinejs5.default.walk(persistedEl, (el, skip) => {
     if (!el._x_teleport)
       return;
     el._x_teleportPutBack();
@@ -8512,14 +8590,14 @@ function restoreScrollPositionOrScrollToTop() {
 }
 
 // js/plugins/navigate/persist.js
-var import_alpinejs5 = __toESM(require_module_cjs());
+var import_alpinejs6 = __toESM(require_module_cjs());
 var els = {};
 function storePersistantElementsForLater(callback) {
   els = {};
   document.querySelectorAll("[x-persist]").forEach((i) => {
     els[i.getAttribute("x-persist")] = i;
     callback(i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs6.default.mutateDom(() => {
       i.remove();
     });
   });
@@ -8533,14 +8611,14 @@ function putPersistantElementsBack(callback) {
     usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
     callback(old, i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs6.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
   Object.entries(els).forEach(([key, el]) => {
     if (usedPersists.includes(key))
       return;
-    import_alpinejs5.default.destroyTree(el);
+    import_alpinejs6.default.destroyTree(el);
   });
   els = {};
 }
@@ -8784,7 +8862,7 @@ function fetchHtml(destination, callback) {
 }
 
 // js/plugins/navigate/index.js
-var import_alpinejs6 = __toESM(require_module_cjs());
+var import_alpinejs7 = __toESM(require_module_cjs());
 var enablePersist = true;
 var showProgressBar = true;
 var restoreScroll = true;
@@ -9079,23 +9157,23 @@ function fromQueryString(search) {
 }
 
 // js/lifecycle.js
-var import_morph = __toESM(require_module_cjs7());
+var import_morph2 = __toESM(require_module_cjs7());
 var import_mask = __toESM(require_module_cjs8());
-var import_alpinejs7 = __toESM(require_module_cjs());
+var import_alpinejs8 = __toESM(require_module_cjs());
 function start() {
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs7.default.plugin(import_morph.default);
-  import_alpinejs7.default.plugin(history2);
-  import_alpinejs7.default.plugin(import_intersect.default);
-  import_alpinejs7.default.plugin(import_collapse.default);
-  import_alpinejs7.default.plugin(import_anchor.default);
-  import_alpinejs7.default.plugin(import_focus.default);
-  import_alpinejs7.default.plugin(import_persist2.default);
-  import_alpinejs7.default.plugin(navigate_default);
-  import_alpinejs7.default.plugin(import_mask.default);
-  import_alpinejs7.default.addRootSelector(() => "[wire\\:id]");
-  import_alpinejs7.default.onAttributesAdded((el, attributes) => {
+  import_alpinejs8.default.plugin(import_morph2.default);
+  import_alpinejs8.default.plugin(history2);
+  import_alpinejs8.default.plugin(import_intersect.default);
+  import_alpinejs8.default.plugin(import_collapse.default);
+  import_alpinejs8.default.plugin(import_anchor.default);
+  import_alpinejs8.default.plugin(import_focus.default);
+  import_alpinejs8.default.plugin(import_persist2.default);
+  import_alpinejs8.default.plugin(navigate_default);
+  import_alpinejs8.default.plugin(import_mask.default);
+  import_alpinejs8.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs8.default.onAttributesAdded((el, attributes) => {
     let component = closestComponent(el, false);
     if (!component)
       return;
@@ -9104,14 +9182,14 @@ function start() {
         return;
       let directive2 = extractDirective(el, attribute.name);
       trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-        import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
   });
-  import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+  import_alpinejs8.default.interceptInit(import_alpinejs8.default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
-      import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {
+      import_alpinejs8.default.onAttributeRemoved(el, "wire:id", () => {
         destroyComponent(component2.id);
       });
     }
@@ -9121,12 +9199,12 @@ function start() {
       let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
       directives.forEach((directive2) => {
         trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-          import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
+          import_alpinejs8.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
     }
   }));
-  import_alpinejs7.default.start();
+  import_alpinejs8.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
@@ -9139,7 +9217,7 @@ function rescan() {
 var import_alpinejs19 = __toESM(require_module_cjs());
 
 // js/features/supportDisablingFormsDuringRequest.js
-var import_alpinejs8 = __toESM(require_module_cjs());
+var import_alpinejs9 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
 on("element.init", ({ el, component }) => {
   let directives = getDirectives(el);
@@ -9147,7 +9225,7 @@ on("element.init", ({ el, component }) => {
     return;
   el.addEventListener("submit", () => {
     cleanupStackByComponentId[component.id] = [];
-    import_alpinejs8.default.walk(component.el, (node, skip) => {
+    import_alpinejs9.default.walk(component.el, (node, skip) => {
       if (!el.contains(node))
         return;
       if (node.hasAttribute("wire:ignore"))
@@ -9246,7 +9324,7 @@ function getDeepChildren(component, callback) {
 }
 
 // js/features/supportScriptsAndAssets.js
-var import_alpinejs9 = __toESM(require_module_cjs());
+var import_alpinejs10 = __toESM(require_module_cjs());
 var executedScripts = /* @__PURE__ */ new WeakMap();
 var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
@@ -9274,7 +9352,7 @@ on("effects", (component, effects) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        import_alpinejs10.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
       });
     });
   }
@@ -9381,20 +9459,20 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs10 = __toESM(require_module_cjs());
+var import_alpinejs11 = __toESM(require_module_cjs());
 on("effects", (component, effects) => {
   let js = effects.js;
   let xjs = effects.xjs;
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs10.default.evaluate(component.el, body);
+        import_alpinejs11.default.evaluate(component.el, body);
       });
     });
   }
   if (xjs) {
     xjs.forEach((expression) => {
-      import_alpinejs10.default.evaluate(component.el, expression);
+      import_alpinejs11.default.evaluate(component.el, expression);
     });
   }
 });
@@ -9426,7 +9504,7 @@ on("commit.pooling", ({ commits }) => {
 });
 
 // js/features/supportQueryString.js
-var import_alpinejs11 = __toESM(require_module_cjs());
+var import_alpinejs12 = __toESM(require_module_cjs());
 on("component.init", ({ component, cleanup: cleanup2 }) => {
   let effects = component.effects;
   let queryString = effects["url"];
@@ -9439,10 +9517,10 @@ on("component.init", ({ component, cleanup: cleanup2 }) => {
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
     let { initial, replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow);
     if (use === "replace") {
-      let effectReference = import_alpinejs11.default.effect(() => {
+      let effectReference = import_alpinejs12.default.effect(() => {
         replace2(dataGet(component.reactive, name));
       });
-      cleanup2(() => import_alpinejs11.default.release(effectReference));
+      cleanup2(() => import_alpinejs12.default.release(effectReference));
     } else if (use === "push") {
       let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
         let beforeValue = dataGet(component2.canonical, name);
@@ -9562,84 +9640,6 @@ on("effects", (component, effects) => {
   let url = effects["redirect"];
   shouldRedirectUsingNavigateOr(effects, url, () => {
     window.location.href = url;
-  });
-});
-
-// js/morph.js
-var import_alpinejs12 = __toESM(require_module_cjs());
-function morph2(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
-  }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  import_alpinejs12.default.morph(el, to, {
-    updating: (el2, toEl, childrenOnly, skip) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
-      if (el2.__livewire_ignore === true)
-        return skip();
-      if (el2.__livewire_ignore_self === true)
-        childrenOnly();
-      if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el2))
-        toEl.__livewire = component;
-    },
-    updated: (el2, toEl) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.updated", { el: el2, component });
-    },
-    removing: (el2, skip) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.removing", { el: el2, component, skip });
-    },
-    removed: (el2) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.removed", { el: el2, component });
-    },
-    adding: (el2) => {
-      trigger("morph.adding", { el: el2, component });
-    },
-    added: (el2) => {
-      if (isntElement(el2))
-        return;
-      const closestComponentId = closestComponent(el2).id;
-      trigger("morph.added", { el: el2 });
-    },
-    key: (el2) => {
-      if (isntElement(el2))
-        return;
-      return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-    },
-    lookahead: false
-  });
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
-
-// js/features/supportMorphDom.js
-on("effects", (component, effects) => {
-  let html = effects.html;
-  if (!html)
-    return;
-  queueMicrotask(() => {
-    morph2(component, component.el, html);
   });
 });
 

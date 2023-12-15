@@ -1,5 +1,6 @@
 import { diff } from '@/utils'
 import { on, trigger } from '@/hooks'
+import { handleMorph } from '@/features/supportMorphDom'
 
 /**
  * A commit represents an individual component updating itself server-side...
@@ -79,6 +80,8 @@ export class Commit {
             let { snapshot, effects } = response
 
             respond()
+
+            handleMorph(this.component, effects.html)
 
             // Take the new snapshot and merge it into the existing one...
             this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)

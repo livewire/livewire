@@ -3928,6 +3928,82 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
+  // js/morph.js
+  function morph(component, el, html) {
+    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let wrapper = document.createElement(wrapperTag);
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.__livewire = component;
+    trigger("morph", { el, toEl: to, component });
+    module_default.morph(el, to, {
+      updating: (el2, toEl, childrenOnly, skip) => {
+        if (isntElement(el2))
+          return;
+        trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+        if (el2.__livewire_ignore === true)
+          return skip();
+        if (el2.__livewire_ignore_self === true)
+          childrenOnly();
+        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el2))
+          toEl.__livewire = component;
+      },
+      updated: (el2, toEl) => {
+        if (isntElement(el2))
+          return;
+        trigger("morph.updated", { el: el2, component });
+      },
+      removing: (el2, skip) => {
+        if (isntElement(el2))
+          return;
+        trigger("morph.removing", { el: el2, component, skip });
+      },
+      removed: (el2) => {
+        if (isntElement(el2))
+          return;
+        trigger("morph.removed", { el: el2, component });
+      },
+      adding: (el2) => {
+        trigger("morph.adding", { el: el2, component });
+      },
+      added: (el2) => {
+        if (isntElement(el2))
+          return;
+        const closestComponentId = closestComponent(el2).id;
+        trigger("morph.added", { el: el2 });
+      },
+      key: (el2) => {
+        if (isntElement(el2))
+          return;
+        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
+      },
+      lookahead: false
+    });
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
+  }
+
+  // js/features/supportMorphDom.js
+  function handleMorph(component, html) {
+    if (!html)
+      return;
+    morph(component, component.el, html);
+  }
+  on("effects", (component, effects) => {
+  });
+
   // js/request/commit.js
   var Commit = class {
     constructor(component) {
@@ -3986,6 +4062,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let handleResponse = (response) => {
         let { snapshot, effects } = response;
         respond();
+        handleMorph(this.component, effects.html);
         this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
         this.component.processEffects(this.component.effects);
         if (effects["returns"]) {
@@ -7733,7 +7810,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // ../alpine/packages/morph/dist/module.esm.js
-  function morph(from, toHtml, options) {
+  function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
     let toEl;
@@ -7976,9 +8053,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     toEl = void 0;
     return from;
   }
-  morph.step = () => {
+  morph2.step = () => {
   };
-  morph.log = () => {
+  morph2.log = () => {
   };
   function shouldSkip(hook, ...args) {
     let skip = false;
@@ -8064,7 +8141,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.id = fromId;
   }
   function src_default7(Alpine3) {
-    Alpine3.morph = morph;
+    Alpine3.morph = morph2;
   }
   var module_default7 = src_default7;
 
@@ -8700,83 +8777,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let url = effects["redirect"];
     shouldRedirectUsingNavigateOr(effects, url, () => {
       window.location.href = url;
-    });
-  });
-
-  // js/morph.js
-  function morph2(component, el, html) {
-    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-    let wrapper = document.createElement(wrapperTag);
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.__livewire = component;
-    trigger("morph", { el, toEl: to, component });
-    module_default.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip) => {
-        if (isntElement(el2))
-          return;
-        trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
-        if (el2.__livewire_ignore === true)
-          return skip();
-        if (el2.__livewire_ignore_self === true)
-          childrenOnly();
-        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el2))
-          toEl.__livewire = component;
-      },
-      updated: (el2, toEl) => {
-        if (isntElement(el2))
-          return;
-        trigger("morph.updated", { el: el2, component });
-      },
-      removing: (el2, skip) => {
-        if (isntElement(el2))
-          return;
-        trigger("morph.removing", { el: el2, component, skip });
-      },
-      removed: (el2) => {
-        if (isntElement(el2))
-          return;
-        trigger("morph.removed", { el: el2, component });
-      },
-      adding: (el2) => {
-        trigger("morph.adding", { el: el2, component });
-      },
-      added: (el2) => {
-        if (isntElement(el2))
-          return;
-        const closestComponentId = closestComponent(el2).id;
-        trigger("morph.added", { el: el2 });
-      },
-      key: (el2) => {
-        if (isntElement(el2))
-          return;
-        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-      },
-      lookahead: false
-    });
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
-  }
-
-  // js/features/supportMorphDom.js
-  on("effects", (component, effects) => {
-    let html = effects.html;
-    if (!html)
-      return;
-    queueMicrotask(() => {
-      morph2(component, component.el, html);
     });
   });
 
