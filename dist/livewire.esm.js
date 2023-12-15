@@ -8171,13 +8171,9 @@ var Component = class {
     this.effects = effects;
     this.canonical = extractData(deepClone(snapshot.data));
     let newData = extractData(deepClone(snapshot.data));
-    queueMicrotask(() => {
-      queueMicrotask(() => {
-        Object.entries(dirty).forEach(([key, value]) => {
-          let rootKey = key.split(".")[0];
-          this.reactive[rootKey] = newData[rootKey];
-        });
-      });
+    Object.entries(dirty).forEach(([key, value]) => {
+      let rootKey = key.split(".")[0];
+      this.reactive[rootKey] = newData[rootKey];
     });
     return dirty;
   }
