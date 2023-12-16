@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLazyLoading;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Attributes\Layout;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -188,7 +189,7 @@ class BrowserTest extends BrowserTestCase
             {
                 $this->time = LARAVEL_START;
             }
-            
+
             public function render() { return <<<'HTML'
             <div wire:poll.500ms id="child">
                 Child {{ $num }}
@@ -276,8 +277,33 @@ class BrowserTest extends BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('Loading...')
                 ->assertDontSee('Hello World')
+                ->assertDontSee('This is a custom layout')
                 ->waitFor('#page')
                 ->assertDontSee('Loading...')
+                ->assertDontSee('This is a custom layout')
+                ->assertSee('Hello World');
+        });
+    }
+
+    /** @test */
+    public function can_lazy_load_component_with_custom_layout()
+    {
+        $this->tweakApplication(function() {
+            Livewire::component('page', PageWithCustomLayout::class);
+            Route::get('/', PageWithCustomLayout::class)->lazy()->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('Loading...')
+                ->assertSee('This is a custom layout')
+                ->assertDontSee('Hello World')
+                ->waitFor('#page')
+                ->assertDontSee('Loading...')
+                ->assertSee('This is a custom layout')
                 ->assertSee('Hello World');
         });
     }
@@ -429,6 +455,26 @@ class BrowserTest extends BrowserTestCase
 }
 
 class Page extends Component {
+    public function mount() {
+        sleep(1);
+    }
+
+    public function placeholder() { return <<<HTML
+            <div id="loading">
+                Loading...
+            </div>
+            HTML; }
+
+    public function render() { return <<<HTML
+            <div id="page">
+                Hello World
+            </div>
+            HTML; }
+}
+
+
+#[Layout('components.layouts.custom')]
+class PageWithCustomLayout extends Component {
     public function mount() {
         sleep(1);
     }

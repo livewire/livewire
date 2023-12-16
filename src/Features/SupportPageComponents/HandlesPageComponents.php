@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
+use Livewire\Attributes\Layout;
+
 trait HandlesPageComponents
 {
     function __invoke()
@@ -10,6 +12,7 @@ trait HandlesPageComponents
         // This way, users can pass Livewire components into Routes as if they were
         // simple invokable controllers. Ex: Route::get('...', SomeLivewireComponent::class);
         $html = null;
+        $layout = null;
 
         $layoutConfig = SupportPageComponents::interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () use (&$html) {
             $params = SupportPageComponents::gatherMountMethodParamsFromRouteParameters($this);
@@ -17,7 +20,10 @@ trait HandlesPageComponents
             $html = app('livewire')->mount($this::class, $params);
         });
 
-        $layoutConfig = $layoutConfig ?: new PageComponentConfig;
+        $reflectionClass = new \ReflectionClass($this);
+        $layout = collect($reflectionClass->getAttributes(Layout::class))->first()?->getArguments()[0];
+
+        $layoutConfig = $layoutConfig ?: new PageComponentConfig(view: $layout);
 
         $layoutConfig->normalizeViewNameAndParamsForBladeComponents();
 
