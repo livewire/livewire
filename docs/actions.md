@@ -497,7 +497,7 @@ class SearchPosts extends Component
     public $query = '';
 
     #[Js] // [tl! highlight:6]
-    public function reset()
+    public function resetData()
     {
         return <<<'JS'
             $wire.query = '';
@@ -517,7 +517,7 @@ class SearchPosts extends Component
 <div>
     <input wire:model.live="query">
 
-    <button wire:click="reset">Reset Search</button> <!-- [tl! highlight] -->
+    <button wire:click="resetData">Reset Search</button> <!-- [tl! highlight] -->
 
     @foreach ($posts as $post)
         <!-- ... -->
