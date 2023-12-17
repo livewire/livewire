@@ -8,6 +8,11 @@ import { CommitBus } from './bus'
  * commits to the server as network requests...
  */
 let commitBus = new CommitBus
+let headers = {}
+
+export function addHeaders(additionalHeaders) {
+    headers = { headers, ...additionalHeaders}
+}
 
 /**
  * Create a commit and trigger a network request...
@@ -54,6 +59,8 @@ export async function sendRequest(pool) {
         headers: {
             'Content-type': 'application/json',
             'X-Livewire': '',
+
+            ...headers,
         },
     }
 

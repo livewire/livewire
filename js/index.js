@@ -2,6 +2,7 @@ import { dispatchGlobal as dispatch, dispatchTo, on } from './events'
 import { find, first, getByName, all } from './store'
 import { start, stop, rescan } from './lifecycle'
 import { dispatch as doDispatch } from './utils'
+import { addHeaders} from "./request";
 import { on as hook, trigger } from './hooks'
 import { directive } from './directives'
 import Alpine from 'alpinejs'
@@ -20,6 +21,7 @@ let Livewire = {
     trigger,
     dispatch,
     on,
+    addHeaders,
     get navigate() {
         return Alpine.navigate
     }

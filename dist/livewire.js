@@ -556,30 +556,30 @@
     handleSignedUrl(name, url) {
       let formData = new FormData();
       Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
-      let headers = {
+      let headers2 = {
         "Accept": "application/json"
       };
       let csrfToken = getCsrfToken();
       if (csrfToken)
-        headers["X-CSRF-TOKEN"] = csrfToken;
-      this.makeRequest(name, formData, "post", url, headers, (response) => {
+        headers2["X-CSRF-TOKEN"] = csrfToken;
+      this.makeRequest(name, formData, "post", url, headers2, (response) => {
         return response.paths;
       });
     }
     handleS3PreSignedUrl(name, payload) {
       let formData = this.uploadBag.first(name).files[0];
-      let headers = payload.headers;
-      if ("Host" in headers)
-        delete headers.Host;
+      let headers2 = payload.headers;
+      if ("Host" in headers2)
+        delete headers2.Host;
       let url = payload.url;
-      this.makeRequest(name, formData, "put", url, headers, (response) => {
+      this.makeRequest(name, formData, "put", url, headers2, (response) => {
         return [payload.path];
       });
     }
-    makeRequest(name, formData, method, url, headers, retrievePaths) {
+    makeRequest(name, formData, method, url, headers2, retrievePaths) {
       let request = new XMLHttpRequest();
       request.open(method, url);
-      Object.entries(headers).forEach(([key, value]) => {
+      Object.entries(headers2).forEach(([key, value]) => {
         request.setRequestHeader(key, value);
       });
       request.upload.addEventListener("progress", (e) => {
@@ -767,24 +767,6 @@
       cleanup22();
     }];
   }
-  function watch(getter, callback) {
-    let firstTime = true;
-    let oldValue;
-    let effectReference = effect(() => {
-      let value = getter();
-      JSON.stringify(value);
-      if (!firstTime) {
-        queueMicrotask(() => {
-          callback(value, oldValue);
-          oldValue = value;
-        });
-      } else {
-        oldValue = value;
-      }
-      firstTime = false;
-    });
-    return () => release(effectReference);
-  }
   function dispatch2(el, name, detail = {}) {
     el.dispatchEvent(new CustomEvent(name, {
       detail,
@@ -941,17 +923,21 @@
     observer.disconnect();
     currentlyObserving = false;
   }
-  var queuedMutations = [];
+  var recordQueue = [];
+  var willProcessRecordQueue = false;
   function flushObserver() {
-    let records = observer.takeRecords();
-    queuedMutations.push(() => records.length > 0 && onMutate(records));
-    let queueLengthWhenTriggered = queuedMutations.length;
-    queueMicrotask(() => {
-      if (queuedMutations.length === queueLengthWhenTriggered) {
-        while (queuedMutations.length > 0)
-          queuedMutations.shift()();
-      }
-    });
+    recordQueue = recordQueue.concat(observer.takeRecords());
+    if (recordQueue.length && !willProcessRecordQueue) {
+      willProcessRecordQueue = true;
+      queueMicrotask(() => {
+        processRecordQueue();
+        willProcessRecordQueue = false;
+      });
+    }
+  }
+  function processRecordQueue() {
+    onMutate(recordQueue);
+    recordQueue.length = 0;
   }
   function mutateDom(callback) {
     if (!currentlyObserving)
@@ -2276,7 +2262,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     cloneNode,
     bound: getBinding,
     $data: scope,
-    watch,
     walk,
     data,
     bind: bind2
@@ -2932,15 +2917,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   magic("nextTick", () => nextTick);
   magic("dispatch", (el) => dispatch2.bind(dispatch2, el));
-  magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup22 }) => (key, callback) => {
+  magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
     let evaluate22 = evaluateLater2(key);
-    let getter = () => {
-      let value;
-      evaluate22((i) => value = i);
-      return value;
-    };
-    let unwatch = watch(getter, callback);
-    cleanup22(unwatch);
+    let firstTime = true;
+    let oldValue;
+    let effectReference = effect3(() => evaluate22((value) => {
+      JSON.stringify(value);
+      if (!firstTime) {
+        queueMicrotask(() => {
+          callback(value, oldValue);
+          oldValue = value;
+        });
+      } else {
+        oldValue = value;
+      }
+      firstTime = false;
+    }));
+    el._x_effects.delete(effectReference);
   });
   magic("store", getStores);
   magic("data", (el) => scope(el));
@@ -2979,31 +2972,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!el._x_ids[name])
       el._x_ids[name] = findAndIncrementId(name);
   }
-  magic("id", (el, { cleanup: cleanup22 }) => (name, key = null) => {
-    let cacheKey = `${name}${key ? `-${key}` : ""}`;
-    return cacheIdByNameOnElement(el, cacheKey, cleanup22, () => {
-      let root = closestIdRoot(el, name);
-      let id = root ? root._x_ids[name] : findAndIncrementId(name);
-      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
-    });
+  magic("id", (el) => (name, key = null) => {
+    let root = closestIdRoot(el, name);
+    let id = root ? root._x_ids[name] : findAndIncrementId(name);
+    return key ? `${name}-${id}-${key}` : `${name}-${id}`;
   });
-  interceptClone((from, to) => {
-    if (from._x_id) {
-      to._x_id = from._x_id;
-    }
-  });
-  function cacheIdByNameOnElement(el, cacheKey, cleanup22, callback) {
-    if (!el._x_id)
-      el._x_id = {};
-    if (el._x_id[cacheKey])
-      return el._x_id[cacheKey];
-    let output = callback();
-    el._x_id[cacheKey] = output;
-    cleanup22(() => {
-      delete el._x_id[cacheKey];
-    });
-    return output;
-  }
   magic("el", (el) => el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3760,11 +3733,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let names = evaluate22(expression);
     names.forEach((name) => setIdRoot(el, name));
   });
-  interceptClone((from, to) => {
-    if (from._x_ids) {
-      to._x_ids = from._x_ids;
-    }
-  });
   mapAttributes(startingWith("@", into(prefix("on:"))));
   directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
     let evaluate22 = expression ? evaluateLater(el, expression) : () => {
@@ -4093,6 +4061,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/request/index.js
   var commitBus = new CommitBus();
+  var headers = {};
+  function addHeaders(additionalHeaders) {
+    headers = { headers, ...additionalHeaders };
+  }
   async function requestCommit(component) {
     let commit = commitBus.add(component);
     let promise = new Promise((resolve, reject) => {
@@ -4119,7 +4091,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }),
       headers: {
         "Content-type": "application/json",
-        "X-Livewire": ""
+        "X-Livewire": "",
+        ...headers
       }
     };
     let succeedCallbacks = [];
@@ -9409,6 +9382,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     trigger,
     dispatch: dispatchGlobal,
     on: on3,
+    addHeaders,
     get navigate() {
       return module_default.navigate;
     }
