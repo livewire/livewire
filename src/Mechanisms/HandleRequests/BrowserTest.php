@@ -39,4 +39,34 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@output', 5)
         ;
     }
+
+    /** @test */
+    public function can_add_additional_headers_to_update_request()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $header = '';
+            function doUpdate() {
+                $this->header = request()->headers->get('X-FOO');
+            }
+
+            function render() { return <<<'BLADE'
+            <div>
+                <button wire:click="doUpdate" dusk="target">Update</button>
+
+                <div dusk="header">{{ $header }}</div>
+
+                <script>
+                    document.addEventListener('livewire:init', () => {
+                        Livewire.addHeaders({
+                            'X-FOO': 'bar'
+                        });
+                    });
+                </script>
+            </div>
+            BLADE; }
+        })
+            ->waitForLivewire()->click('@target')
+            ->assertSeeIn('@header', 'bar')
+        ;
+    }
 }
