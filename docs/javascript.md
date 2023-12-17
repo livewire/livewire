@@ -235,6 +235,18 @@ Livewire.directive('confirm', ({ el, directive, component, cleanup }) => {
 })
 ```
 
+### Registering custom headers
+
+Livewire allows you to register custom headers that will be sent when performing an update request.
+
+```js
+document.addEventListener('livewire:init', () => {
+    Livewire.addHeaders({
+        'X-MY-TOKEN': '1234'
+    });
+});
+```
+
 ## Object schemas
 
 When extending Livewire's JavaScript system, it's important to understand the different objects you might encounter.
