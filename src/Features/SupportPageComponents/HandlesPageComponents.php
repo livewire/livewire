@@ -20,8 +20,15 @@ trait HandlesPageComponents
             $html = app('livewire')->mount($this::class, $params);
         });
 
-        $reflectionClass = new \ReflectionClass($this);
-        $layout = collect($reflectionClass->getAttributes(Layout::class))->first()?->getArguments()[0];
+        if (blank($layoutConfig))
+        {
+            $reflectionClass = new \ReflectionClass($this);
+            $attributes = $reflectionClass->getAttributes(Layout::class);
+            if (isset($attributes[0]) && isset($attributes[0]->getArguments()[0]))
+            {
+                $layout = $attributes[0]->getArguments()[0];
+            }
+        }
 
         $layoutConfig = $layoutConfig ?: new PageComponentConfig(view: $layout);
 
