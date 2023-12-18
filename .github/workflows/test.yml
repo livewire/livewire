@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "**"
@@ -25,8 +26,14 @@ jobs:
     name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}
 
     steps:
-      - name: Checkout
+      - name: Checkout Livewire
         uses: actions/checkout@v4
+
+      - name: Checkout Alpine
+        uses: actions/checkout@v4
+        with:
+          repository: alpinejs/alpine
+          path: alpine
 
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
@@ -35,6 +42,18 @@ jobs:
           extensions: dom, curl, libxml, mbstring, iconv, intl, zip, pdo_sqlite
           tools: composer:v2
           coverage: none
+
+      - name: Build Alpine packages
+        working-directory: ./alpine
+        run: |
+          npm ci
+          npm run build
+
+      - name: Compile Livewire assets
+        run: |
+          npm ci
+          npm link ../alpine/packages/persist ../alpine/packages/collapse ../alpine/packages/mask ../alpine/packages/intersect ../alpine/packages/focus ../alpine/packages/anchor ../alpine/packages/morph ../alpine/packages/csp ../alpine/packages/ui ../alpine/packages/alpinejs
+          npm run build
 
       - name: Get composer cache directory
         id: composer-cache
