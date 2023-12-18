@@ -194,6 +194,29 @@ class CreateUser extends Component
 
 Of course, you can also apply this technique to the `updating` hook.
 
+### Arrays
+
+Array properties have an additional `$key` argument passed to these functions to specify the changing element.
+
+Note that when the array itself is updated instead of a specific key, the `$key` argument is null.
+
+```php
+use Livewire\Component;
+
+class UpdatePreferences extends Component
+{
+    public $preferences = [];
+
+    public function updatedPreferences($value, $key)
+    {
+        // $value = 'dark'
+        // $key   = 'theme'
+    }
+
+    // ...
+}
+```
+
 ## Hydrate & Dehydrate
 
 Hydrate and dehydrate are lesser-known and lesser-utilized hooks. However, there are specific scenarios where they can be powerful.
