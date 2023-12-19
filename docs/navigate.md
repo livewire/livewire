@@ -161,6 +161,25 @@ In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` 
 </script>
 ```
 
+## Using with analytics software
+
+When navigating pages using `wire:navigate` in your app, any `<script>` tags in the `<head>` only evaluate when the page is initially loaded.
+
+This creates a problem for analytics software such as [Fathom Analytics](https://usefathom.com/). These tools rely on a `<script>` snippet being evaluated on every single page change, not just the first.
+
+Tools like [Google Analytics](https://marketingplatform.google.com/about/analytics/) are smart enough to handle this automatically, however, when using Fathom Analytics, you must add `data-spa="auto"` to your script tag to ensure each page visit is tracked properly:
+
+```blade
+<head>
+    <!-- ... -->
+
+    <!-- Fathom Analytics -->
+    @if (! config('app.debug'))
+        <script src="https://cdn.usefathom.com/script.js" data-site="ABCDEFG" data-spa="auto" defer></script> <!-- [tl! highlight] -->
+    @endif
+</head>
+```
+
 ## Script evaluation
 
 When navigating to a new page using `wire:navigate`, it _feels_ like the browser has changed pages; however, from the browser's perspective, you are technically still on the original page.
