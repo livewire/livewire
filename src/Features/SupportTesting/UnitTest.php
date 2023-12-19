@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 use PHPUnit\Framework\ExpectationFailedException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -459,6 +461,29 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
+    function assert_has_errors_with_validation_class()
+    {
+        Livewire::test(ValidatesDataWithCustomRuleStub::class)
+            ->call('submit')
+            ->assertHasErrors()
+            ->assertHasErrors('foo')
+            ->assertHasErrors(['foo'])
+            ->assertHasErrors(['foo' => CustomValidationRule::class])
+            ->assertHasErrors(['foo' => 'My custom message'])
+            ->assertHasErrors(['foo' => function ($rules, $messages) {
+                return in_array(CustomValidationRule::class, $rules) && in_array('My custom message', $messages);
+            }])
+            ->set('foo', true)
+            ->call('submit')
+            ->assertHasNoErrors()
+            ->assertHasNoErrors('foo')
+            ->assertHasNoErrors(['foo'])
+            ->assertHasNoErrors(['foo' => CustomValidationRule::class])
+            ->assertHasNoErrors(['foo' => 'My custom message'])
+        ;
+    }
+
+    /** @test */
     function assert_has_error_with_manually_added_error()
     {
         Livewire::test(ValidatesDataWithSubmitStub::class)
@@ -640,6 +665,33 @@ class DispatchesEventsComponentStub extends Component
     function dispatchFooToAComponentAsAModel()
     {
         $this->dispatch('foo')->to(ComponentWhichReceivesEvent::class);
+    }
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class CustomValidationRule implements ValidationRule
+{
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        if ($value === false) {
+            $fail('My custom message');
+        }
+    }
+}
+
+class ValidatesDataWithCustomRuleStub extends Component
+{
+    public bool $foo = false;
+
+    function submit()
+    {
+        $this->validate([
+            'foo' => new CustomValidationRule,
+        ]);
     }
 
     function render()
