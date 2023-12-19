@@ -1,6 +1,6 @@
 import { closestComponent, destroyComponent, initComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
-import { trigger } from './events'
+import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'

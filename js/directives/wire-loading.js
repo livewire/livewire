@@ -1,6 +1,6 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 directive('loading', ({ el, directive, component }) => {
     let targets = getTargets(el)

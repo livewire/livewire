@@ -440,6 +440,26 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             });
     }
 
+
+    /** @test */
+    function assert_has_errors()
+    {
+        Livewire::test(ValidatesDataWithSubmitStub::class)
+            ->call('submit')
+            ->assertHasErrors()
+            ->assertHasErrors('foo')
+            ->assertHasErrors(['foo'])
+            ->assertHasErrors(['foo' => 'required'])
+            ->assertHasErrors(['foo' => 'The foo field is required.'])
+            ->assertHasErrors(['foo' => 'required', 'bar' => 'required'])
+            ->assertHasErrors(['foo' => 'The foo field is required.', 'bar' => 'The bar field is required.'])
+            ->assertHasErrors(['foo' => ['The foo field is required.'], 'bar' => ['The bar field is required.']])
+            ->assertHasErrors(['foo' => function ($rules, $messages) {
+                return in_array('required', $rules) && in_array('The foo field is required.', $messages);
+            }])
+            ;
+    }
+
     /** @test */
     function assert_has_error_with_manually_added_error()
     {
@@ -501,6 +521,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertReturned('bar')
             ->assertReturned(fn ($data) => $data === 'bar');
     }
+
     /** @test */
     public function can_set_cookies_for_use_with_testing()
     {
@@ -523,6 +544,29 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             })
             ->assertSet('colourCookie', 'blue')
             ->assertSet('nameCookie', 'Taylor')
+            ;
+    }
+
+    /** @test */
+    public function can_set_headers_for_use_with_testing()
+    {
+        Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])
+            ->test(new class extends Component {
+                public $colourHeader = '';
+                public $nameHeader = '';
+                public function mount()
+                {
+                    $this->colourHeader = request()->header('colour');
+                    $this->nameHeader = request()->header('name');
+                }
+
+                public function render()
+                {
+                    return '<div></div>';
+                }
+            })
+            ->assertSet('colourHeader', 'blue')
+            ->assertSet('nameHeader', 'Taylor')
             ;
     }
 }

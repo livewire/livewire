@@ -1,4 +1,4 @@
-import { on, trigger } from "@/events"
+import { on, trigger } from "@/hooks"
 import { shouldRedirectUsingNavigateOr } from "./supportNavigate"
 
 on('effects', (component, effects) => {

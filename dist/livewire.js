@@ -405,6 +405,9 @@
     }
     throw "Livewire: No CSRF token detected";
   }
+  function getUpdateUri() {
+    return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+  }
   function contentIsFromDump(content) {
     return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
   }
@@ -413,49 +416,7 @@
     return [dump2, content.replace(dump2, "")];
   }
 
-  // js/modal.js
-  function showHtmlModal(html) {
-    let page = document.createElement("html");
-    page.innerHTML = html;
-    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-    let modal = document.getElementById("livewire-error");
-    if (typeof modal != "undefined" && modal != null) {
-      modal.innerHTML = "";
-    } else {
-      modal = document.createElement("div");
-      modal.id = "livewire-error";
-      modal.style.position = "fixed";
-      modal.style.width = "100vw";
-      modal.style.height = "100vh";
-      modal.style.padding = "50px";
-      modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
-      modal.style.zIndex = 2e5;
-    }
-    let iframe = document.createElement("iframe");
-    iframe.style.backgroundColor = "#17161A";
-    iframe.style.borderRadius = "5px";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    modal.appendChild(iframe);
-    document.body.prepend(modal);
-    document.body.style.overflow = "hidden";
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(page.outerHTML);
-    iframe.contentWindow.document.close();
-    modal.addEventListener("click", () => hideHtmlModal(modal));
-    modal.setAttribute("tabindex", 0);
-    modal.addEventListener("keydown", (e) => {
-      if (e.key === "Escape")
-        hideHtmlModal(modal);
-    });
-    modal.focus();
-  }
-  function hideHtmlModal(modal) {
-    modal.outerHTML = "";
-    document.body.style.overflow = "visible";
-  }
-
-  // js/events.js
+  // js/hooks.js
   var listeners = [];
   function on(name, callback) {
     if (!listeners[name])
@@ -500,253 +461,226 @@
     return latest;
   }
 
-  // js/request.js
-  var updateUri = document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
-  function triggerSend() {
-    bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(() => {
-      sendRequestToServer();
-    });
-  }
-  var requestBufferTimeout;
-  function bundleMultipleRequestsTogetherIfTheyHappenWithinFiveMsOfEachOther(callback) {
-    if (requestBufferTimeout)
-      return;
-    requestBufferTimeout = setTimeout(() => {
-      callback();
-      requestBufferTimeout = void 0;
-    }, 5);
-  }
-  async function sendRequestToServer() {
-    prepareCommitPayloads();
-    await queueNewRequestAttemptsWhile(async () => {
-      let [payload, handleSuccess, handleFailure] = compileCommitPayloads();
-      let options = {
-        method: "POST",
-        body: JSON.stringify({
-          _token: getCsrfToken(),
-          components: payload
-        }),
-        headers: {
-          "Content-type": "application/json",
-          "X-Livewire": ""
-        }
-      };
-      let succeedCallbacks = [];
-      let failCallbacks = [];
-      let respondCallbacks = [];
-      let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-      let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
-      let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-      let finishProfile = trigger("request.profile", options);
-      trigger("request", {
-        url: updateUri,
-        options,
-        payload: options.body,
-        respond: (i) => respondCallbacks.push(i),
-        succeed: (i) => succeedCallbacks.push(i),
-        fail: (i) => failCallbacks.push(i)
-      });
-      let response = await fetch(updateUri, options);
-      let mutableObject = {
-        status: response.status,
-        response
-      };
-      respond(mutableObject);
-      response = mutableObject.response;
-      let content = await response.text();
-      if (!response.ok) {
-        finishProfile({ content: "{}", failed: true });
-        let preventDefault = false;
-        handleFailure();
-        fail({
-          status: response.status,
-          content,
-          preventDefault: () => preventDefault = true
-        });
-        if (preventDefault)
-          return;
-        if (response.status === 419) {
-          handlePageExpiry();
-        }
-        return showFailureModal(content);
-      }
-      if (response.redirected) {
-        window.location.href = response.url;
-      }
-      if (contentIsFromDump(content)) {
-        [dump, content] = splitDumpFromContent(content);
-        showHtmlModal(dump);
-        finishProfile({ content: "{}", failed: true });
-      } else {
-        finishProfile({ content, failed: false });
-      }
-      let { components: components2, assets } = JSON.parse(content);
-      await triggerAsync("payload.intercept", { components: components2, assets });
-      await handleSuccess(components2);
-      succeed({ status: response.status, json: JSON.parse(content) });
-    });
-  }
-  function prepareCommitPayloads() {
-    let commits = getCommits();
-    commits.forEach((i) => i.prepare());
-  }
-  function compileCommitPayloads() {
-    let commits = getCommits();
-    let commitPayloads = [];
-    let successReceivers = [];
-    let failureReceivers = [];
-    flushCommits((commit) => {
-      let [payload, succeed2, fail2] = commit.toRequestPayload();
-      commitPayloads.push(payload);
-      successReceivers.push(succeed2);
-      failureReceivers.push(fail2);
-    });
-    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-    let fail = () => failureReceivers.forEach((receiver) => receiver());
-    return [commitPayloads, succeed, fail];
-  }
-  function handlePageExpiry() {
-    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-  }
-  function showFailureModal(content) {
-    let html = content;
-    showHtmlModal(html);
-  }
-  var sendingRequest = false;
-  var afterSendStack = [];
-  async function waitUntilTheCurrentRequestIsFinished(callback) {
-    return new Promise((resolve) => {
-      if (sendingRequest) {
-        afterSendStack.push(() => resolve(callback()));
-      } else {
-        resolve(callback());
-      }
-    });
-  }
-  async function queueNewRequestAttemptsWhile(callback) {
-    sendingRequest = true;
-    await callback();
-    sendingRequest = false;
-    while (afterSendStack.length > 0)
-      afterSendStack.shift()();
-  }
-
-  // js/commit.js
-  var commitQueue = [];
-  function getCommits() {
-    return commitQueue;
-  }
-  function flushCommits(callback) {
-    while (commitQueue.length > 0) {
-      callback(commitQueue.shift());
+  // js/features/supportFileUploads.js
+  var uploadManagers = /* @__PURE__ */ new WeakMap();
+  function getUploadManager(component) {
+    if (!uploadManagers.has(component)) {
+      let manager = new UploadManager(component);
+      uploadManagers.set(component, manager);
+      manager.registerListeners();
     }
+    return uploadManagers.get(component);
   }
-  function findOrCreateCommit(component) {
-    let commit = commitQueue.find((i) => {
-      return i.component.id === component.id;
+  function handleFileUpload(el, property, component, cleanup3) {
+    let manager = getUploadManager(component);
+    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
+    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+    let progress = (progressEvent) => {
+      var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
+      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
+        bubbles: true,
+        detail: { progress: percentCompleted }
+      }));
+    };
+    let eventHandler = (e) => {
+      if (e.target.files.length === 0)
+        return;
+      start3();
+      if (e.target.multiple) {
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
+      } else {
+        manager.upload(property, e.target.files[0], finish, error2, progress);
+      }
+    };
+    el.addEventListener("change", eventHandler);
+    let clearFileInputValue = () => {
+      el.value = null;
+    };
+    el.addEventListener("click", clearFileInputValue);
+    cleanup3(() => {
+      el.removeEventListener("change", eventHandler);
+      el.removeEventListener("click", clearFileInputValue);
     });
-    if (!commit) {
-      commitQueue.push(commit = new Commit(component));
-    }
-    return commit;
   }
-  async function requestCommit(component) {
-    return await waitUntilTheCurrentRequestIsFinished(() => {
-      let commit = findOrCreateCommit(component);
-      triggerSend();
-      return new Promise((resolve, reject) => {
-        commit.addResolver(resolve);
-      });
-    });
-  }
-  async function requestCall(component, method, params) {
-    return await waitUntilTheCurrentRequestIsFinished(() => {
-      let commit = findOrCreateCommit(component);
-      triggerSend();
-      return new Promise((resolve, reject) => {
-        commit.addCall(method, params, (value) => resolve(value));
-      });
-    });
-  }
-  var Commit = class {
+  var UploadManager = class {
     constructor(component) {
       this.component = component;
-      this.calls = [];
-      this.receivers = [];
-      this.resolvers = [];
+      this.uploadBag = new MessageBag();
+      this.removeBag = new MessageBag();
     }
-    addResolver(resolver) {
-      this.resolvers.push(resolver);
+    registerListeners() {
+      this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
+        setUploadLoading(this.component, name);
+        this.handleSignedUrl(name, url);
+      });
+      this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
+        setUploadLoading(this.component, name);
+        this.handleS3PreSignedUrl(name, payload);
+      });
+      this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
+      this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
+      this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
     }
-    addCall(method, params, receiver) {
-      this.calls.push({
-        path: "",
-        method,
-        params,
-        handleReturn(value) {
-          receiver(value);
-        }
+    upload(name, file, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: [file],
+        multiple: false,
+        finishCallback,
+        errorCallback,
+        progressCallback
       });
     }
-    prepare() {
-      trigger("commit.prepare", { component: this.component });
-    }
-    toRequestPayload() {
-      let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
-      let payload = {
-        snapshot: this.component.snapshotEncoded,
-        updates: propertiesDiff,
-        calls: this.calls.map((i) => ({
-          path: i.path,
-          method: i.method,
-          params: i.params
-        }))
-      };
-      let succeedCallbacks = [];
-      let failCallbacks = [];
-      let respondCallbacks = [];
-      let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-      let fail = () => failCallbacks.forEach((i) => i());
-      let respond = () => respondCallbacks.forEach((i) => i());
-      let finishTarget = trigger("commit", {
-        component: this.component,
-        commit: payload,
-        succeed: (callback) => {
-          succeedCallbacks.push(callback);
-        },
-        fail: (callback) => {
-          failCallbacks.push(callback);
-        },
-        respond: (callback) => {
-          respondCallbacks.push(callback);
-        }
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+      this.setUpload(name, {
+        files: Array.from(files),
+        multiple: true,
+        finishCallback,
+        errorCallback,
+        progressCallback
       });
-      let handleResponse = (response) => {
-        let { snapshot, effects } = response;
-        respond();
-        this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
-        processEffects(this.component, this.component.effects);
-        if (effects["returns"]) {
-          let returns = effects["returns"];
-          let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
-          returnHandlerStack.forEach((handleReturn, index) => {
-            handleReturn(returns[index]);
-          });
+    }
+    removeUpload(name, tmpFilename, finishCallback) {
+      this.removeBag.push(name, {
+        tmpFilename,
+        finishCallback
+      });
+      this.component.$wire.call("_removeUpload", name, tmpFilename);
+    }
+    setUpload(name, uploadObject) {
+      this.uploadBag.add(name, uploadObject);
+      if (this.uploadBag.get(name).length === 1) {
+        this.startUpload(name, uploadObject);
+      }
+    }
+    handleSignedUrl(name, url) {
+      let formData = new FormData();
+      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
+      let headers = {
+        "Accept": "application/json"
+      };
+      let csrfToken = getCsrfToken();
+      if (csrfToken)
+        headers["X-CSRF-TOKEN"] = csrfToken;
+      this.makeRequest(name, formData, "post", url, headers, (response) => {
+        return response.paths;
+      });
+    }
+    handleS3PreSignedUrl(name, payload) {
+      let formData = this.uploadBag.first(name).files[0];
+      let headers = payload.headers;
+      if ("Host" in headers)
+        delete headers.Host;
+      let url = payload.url;
+      this.makeRequest(name, formData, "put", url, headers, (response) => {
+        return [payload.path];
+      });
+    }
+    makeRequest(name, formData, method, url, headers, retrievePaths) {
+      let request = new XMLHttpRequest();
+      request.open(method, url);
+      Object.entries(headers).forEach(([key, value]) => {
+        request.setRequestHeader(key, value);
+      });
+      request.upload.addEventListener("progress", (e) => {
+        e.detail = {};
+        e.detail.progress = Math.round(e.loaded * 100 / e.total);
+        this.uploadBag.first(name).progressCallback(e);
+      });
+      request.addEventListener("load", () => {
+        if ((request.status + "")[0] === "2") {
+          let paths = retrievePaths(request.response && JSON.parse(request.response));
+          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          return;
         }
-        let parsedSnapshot = JSON.parse(snapshot);
-        finishTarget({ snapshot: parsedSnapshot, effects });
-        this.resolvers.forEach((i) => i());
-        succeed(response);
-      };
-      let handleFailure = () => {
-        respond();
-        fail();
-      };
-      return [payload, handleResponse, handleFailure];
+        let errors = null;
+        if (request.status === 422) {
+          errors = request.response;
+        }
+        this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+      });
+      request.send(formData);
+    }
+    startUpload(name, uploadObject) {
+      let fileInfos = uploadObject.files.map((file) => {
+        return { name: file.name, size: file.size, type: file.type };
+      });
+      this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+      setUploadLoading(this.component, name);
+    }
+    markUploadFinished(name, tmpFilenames) {
+      unsetUploadLoading(this.component);
+      let uploadObject = this.uploadBag.shift(name);
+      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+    markUploadErrored(name) {
+      unsetUploadLoading(this.component);
+      this.uploadBag.shift(name).errorCallback();
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
     }
   };
-  function processEffects(target, effects) {
-    trigger("effects", target, effects);
+  var MessageBag = class {
+    constructor() {
+      this.bag = {};
+    }
+    add(name, thing) {
+      if (!this.bag[name]) {
+        this.bag[name] = [];
+      }
+      this.bag[name].push(thing);
+    }
+    push(name, thing) {
+      this.add(name, thing);
+    }
+    first(name) {
+      if (!this.bag[name])
+        return null;
+      return this.bag[name][0];
+    }
+    last(name) {
+      return this.bag[name].slice(-1)[0];
+    }
+    get(name) {
+      return this.bag[name];
+    }
+    shift(name) {
+      return this.bag[name].shift();
+    }
+    call(name, ...params) {
+      (this.listeners[name] || []).forEach((callback) => {
+        callback(...params);
+      });
+    }
+    has(name) {
+      return Object.keys(this.listeners).includes(name);
+    }
+  };
+  function setUploadLoading() {
+  }
+  function unsetUploadLoading() {
+  }
+  function upload(component, name, file, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
+  }
+  function uploadMultiple(component, name, files, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  }
+  function removeUpload(component, name, tmpFilename, finishCallback = () => {
+  }, errorCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
   }
 
   // ../alpine/packages/alpinejs/dist/module.esm.js
@@ -1007,21 +941,17 @@
     observer.disconnect();
     currentlyObserving = false;
   }
-  var recordQueue = [];
-  var willProcessRecordQueue = false;
+  var queuedMutations = [];
   function flushObserver() {
-    recordQueue = recordQueue.concat(observer.takeRecords());
-    if (recordQueue.length && !willProcessRecordQueue) {
-      willProcessRecordQueue = true;
-      queueMicrotask(() => {
-        processRecordQueue();
-        willProcessRecordQueue = false;
-      });
-    }
-  }
-  function processRecordQueue() {
-    onMutate(recordQueue);
-    recordQueue.length = 0;
+    let records = observer.takeRecords();
+    queuedMutations.push(() => records.length > 0 && onMutate(records));
+    let queueLengthWhenTriggered = queuedMutations.length;
+    queueMicrotask(() => {
+      if (queuedMutations.length === queueLengthWhenTriggered) {
+        while (queuedMutations.length > 0)
+          queuedMutations.shift()();
+      }
+    });
   }
   function mutateDom(callback) {
     if (!currentlyObserving)
@@ -3049,11 +2979,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!el._x_ids[name])
       el._x_ids[name] = findAndIncrementId(name);
   }
-  magic("id", (el) => (name, key = null) => {
-    let root = closestIdRoot(el, name);
-    let id = root ? root._x_ids[name] : findAndIncrementId(name);
-    return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+  magic("id", (el, { cleanup: cleanup22 }) => (name, key = null) => {
+    let cacheKey = `${name}${key ? `-${key}` : ""}`;
+    return cacheIdByNameOnElement(el, cacheKey, cleanup22, () => {
+      let root = closestIdRoot(el, name);
+      let id = root ? root._x_ids[name] : findAndIncrementId(name);
+      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+    });
   });
+  interceptClone((from, to) => {
+    if (from._x_id) {
+      to._x_id = from._x_id;
+    }
+  });
+  function cacheIdByNameOnElement(el, cacheKey, cleanup22, callback) {
+    if (!el._x_id)
+      el._x_id = {};
+    if (el._x_id[cacheKey])
+      return el._x_id[cacheKey];
+    let output = callback();
+    el._x_id[cacheKey] = output;
+    cleanup22(() => {
+      delete el._x_id[cacheKey];
+    });
+    return output;
+  }
   magic("el", (el) => el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3810,6 +3760,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let names = evaluate22(expression);
     names.forEach((name) => setIdRoot(el, name));
   });
+  interceptClone((from, to) => {
+    if (from._x_ids) {
+      to._x_ids = from._x_ids;
+    }
+  });
   mapAttributes(startingWith("@", into(prefix("on:"))));
   directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
     let evaluate22 = expression ? evaluateLater(el, expression) : () => {
@@ -3882,226 +3837,352 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
 
-  // js/features/supportFileUploads.js
-  var uploadManagers = /* @__PURE__ */ new WeakMap();
-  function getUploadManager(component) {
-    if (!uploadManagers.has(component)) {
-      let manager = new UploadManager(component);
-      uploadManagers.set(component, manager);
-      manager.registerListeners();
+  // js/request/modal.js
+  function showHtmlModal(html) {
+    let page = document.createElement("html");
+    page.innerHTML = html;
+    page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+    let modal = document.getElementById("livewire-error");
+    if (typeof modal != "undefined" && modal != null) {
+      modal.innerHTML = "";
+    } else {
+      modal = document.createElement("div");
+      modal.id = "livewire-error";
+      modal.style.position = "fixed";
+      modal.style.width = "100vw";
+      modal.style.height = "100vh";
+      modal.style.padding = "50px";
+      modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
+      modal.style.zIndex = 2e5;
     }
-    return uploadManagers.get(component);
-  }
-  function handleFileUpload(el, property, component, cleanup3) {
-    let manager = getUploadManager(component);
-    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
-    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
-    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
-    let progress = (progressEvent) => {
-      var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
-        bubbles: true,
-        detail: { progress: percentCompleted }
-      }));
-    };
-    let eventHandler = (e) => {
-      if (e.target.files.length === 0)
-        return;
-      start3();
-      if (e.target.multiple) {
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
-      } else {
-        manager.upload(property, e.target.files[0], finish, error2, progress);
-      }
-    };
-    el.addEventListener("change", eventHandler);
-    let clearFileInputValue = () => {
-      el.value = null;
-    };
-    el.addEventListener("click", clearFileInputValue);
-    cleanup3(() => {
-      el.removeEventListener("change", eventHandler);
-      el.removeEventListener("click", clearFileInputValue);
+    let iframe = document.createElement("iframe");
+    iframe.style.backgroundColor = "#17161A";
+    iframe.style.borderRadius = "5px";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    modal.appendChild(iframe);
+    document.body.prepend(modal);
+    document.body.style.overflow = "hidden";
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(page.outerHTML);
+    iframe.contentWindow.document.close();
+    modal.addEventListener("click", () => hideHtmlModal(modal));
+    modal.setAttribute("tabindex", 0);
+    modal.addEventListener("keydown", (e) => {
+      if (e.key === "Escape")
+        hideHtmlModal(modal);
     });
+    modal.focus();
   }
-  var UploadManager = class {
+  function hideHtmlModal(modal) {
+    modal.outerHTML = "";
+    document.body.style.overflow = "visible";
+  }
+
+  // js/request/pool.js
+  var RequestPool = class {
+    constructor() {
+      this.commits = /* @__PURE__ */ new Set();
+    }
+    add(commit) {
+      this.commits.add(commit);
+    }
+    delete(commit) {
+      this.commits.delete(commit);
+    }
+    hasCommitFor(component) {
+      return !!this.findCommitByComponent(component);
+    }
+    findCommitByComponent(component) {
+      for (let [idx, commit] of this.commits.entries()) {
+        if (commit.component === component)
+          return commit;
+      }
+    }
+    shouldHoldCommit(commit) {
+      return !commit.isolate;
+    }
+    empty() {
+      return this.commits.size === 0;
+    }
+    async send() {
+      this.prepare();
+      await sendRequest(this);
+    }
+    prepare() {
+      this.commits.forEach((i) => i.prepare());
+    }
+    payload() {
+      let commitPayloads = [];
+      let successReceivers = [];
+      let failureReceivers = [];
+      this.commits.forEach((commit) => {
+        let [payload, succeed2, fail2] = commit.toRequestPayload();
+        commitPayloads.push(payload);
+        successReceivers.push(succeed2);
+        failureReceivers.push(fail2);
+      });
+      let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
+      let fail = () => failureReceivers.forEach((receiver) => receiver());
+      return [commitPayloads, succeed, fail];
+    }
+  };
+
+  // js/request/commit.js
+  var Commit = class {
     constructor(component) {
       this.component = component;
-      this.uploadBag = new MessageBag();
-      this.removeBag = new MessageBag();
+      this.isolate = false;
+      this.calls = [];
+      this.receivers = [];
+      this.resolvers = [];
     }
-    registerListeners() {
-      this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
-        setUploadLoading(this.component, name);
-        this.handleSignedUrl(name, url);
-      });
-      this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
-        setUploadLoading(this.component, name);
-        this.handleS3PreSignedUrl(name, payload);
-      });
-      this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
-      this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
-      this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
+    addResolver(resolver) {
+      this.resolvers.push(resolver);
     }
-    upload(name, file, finishCallback, errorCallback, progressCallback) {
-      this.setUpload(name, {
-        files: [file],
-        multiple: false,
-        finishCallback,
-        errorCallback,
-        progressCallback
+    addCall(method, params, receiver) {
+      this.calls.push({
+        path: "",
+        method,
+        params,
+        handleReturn(value) {
+          receiver(value);
+        }
       });
     }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
-      this.setUpload(name, {
-        files: Array.from(files),
-        multiple: true,
-        finishCallback,
-        errorCallback,
-        progressCallback
-      });
+    prepare() {
+      trigger("commit.prepare", { component: this.component });
     }
-    removeUpload(name, tmpFilename, finishCallback) {
-      this.removeBag.push(name, {
-        tmpFilename,
-        finishCallback
-      });
-      this.component.$wire.call("_removeUpload", name, tmpFilename);
-    }
-    setUpload(name, uploadObject) {
-      this.uploadBag.add(name, uploadObject);
-      if (this.uploadBag.get(name).length === 1) {
-        this.startUpload(name, uploadObject);
-      }
-    }
-    handleSignedUrl(name, url) {
-      let formData = new FormData();
-      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
-      let headers = {
-        "Accept": "application/json"
+    toRequestPayload() {
+      let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
+      let payload = {
+        snapshot: this.component.snapshotEncoded,
+        updates: propertiesDiff,
+        calls: this.calls.map((i) => ({
+          path: i.path,
+          method: i.method,
+          params: i.params
+        }))
       };
-      let csrfToken = getCsrfToken();
-      if (csrfToken)
-        headers["X-CSRF-TOKEN"] = csrfToken;
-      this.makeRequest(name, formData, "post", url, headers, (response) => {
-        return response.paths;
-      });
-    }
-    handleS3PreSignedUrl(name, payload) {
-      let formData = this.uploadBag.first(name).files[0];
-      let headers = payload.headers;
-      if ("Host" in headers)
-        delete headers.Host;
-      let url = payload.url;
-      this.makeRequest(name, formData, "put", url, headers, (response) => {
-        return [payload.path];
-      });
-    }
-    makeRequest(name, formData, method, url, headers, retrievePaths) {
-      let request = new XMLHttpRequest();
-      request.open(method, url);
-      Object.entries(headers).forEach(([key, value]) => {
-        request.setRequestHeader(key, value);
-      });
-      request.upload.addEventListener("progress", (e) => {
-        e.detail = {};
-        e.detail.progress = Math.round(e.loaded * 100 / e.total);
-        this.uploadBag.first(name).progressCallback(e);
-      });
-      request.addEventListener("load", () => {
-        if ((request.status + "")[0] === "2") {
-          let paths = retrievePaths(request.response && JSON.parse(request.response));
-          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
-          return;
+      let succeedCallbacks = [];
+      let failCallbacks = [];
+      let respondCallbacks = [];
+      let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+      let fail = () => failCallbacks.forEach((i) => i());
+      let respond = () => respondCallbacks.forEach((i) => i());
+      let finishTarget = trigger("commit", {
+        component: this.component,
+        commit: payload,
+        succeed: (callback) => {
+          succeedCallbacks.push(callback);
+        },
+        fail: (callback) => {
+          failCallbacks.push(callback);
+        },
+        respond: (callback) => {
+          respondCallbacks.push(callback);
         }
-        let errors = null;
-        if (request.status === 422) {
-          errors = request.response;
+      });
+      let handleResponse = (response) => {
+        let { snapshot, effects } = response;
+        respond();
+        this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
+        this.component.processEffects(this.component.effects);
+        if (effects["returns"]) {
+          let returns = effects["returns"];
+          let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
+          returnHandlerStack.forEach((handleReturn, index) => {
+            handleReturn(returns[index]);
+          });
         }
-        this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
-      });
-      request.send(formData);
-    }
-    startUpload(name, uploadObject) {
-      let fileInfos = uploadObject.files.map((file) => {
-        return { name: file.name, size: file.size, type: file.type };
-      });
-      this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
-      setUploadLoading(this.component, name);
-    }
-    markUploadFinished(name, tmpFilenames) {
-      unsetUploadLoading(this.component);
-      let uploadObject = this.uploadBag.shift(name);
-      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
-      if (this.uploadBag.get(name).length > 0)
-        this.startUpload(name, this.uploadBag.last(name));
-    }
-    markUploadErrored(name) {
-      unsetUploadLoading(this.component);
-      this.uploadBag.shift(name).errorCallback();
-      if (this.uploadBag.get(name).length > 0)
-        this.startUpload(name, this.uploadBag.last(name));
+        let parsedSnapshot = JSON.parse(snapshot);
+        finishTarget({ snapshot: parsedSnapshot, effects });
+        this.resolvers.forEach((i) => i());
+        succeed(response);
+      };
+      let handleFailure = () => {
+        respond();
+        fail();
+      };
+      return [payload, handleResponse, handleFailure];
     }
   };
-  var MessageBag = class {
+
+  // js/request/bus.js
+  var CommitBus = class {
     constructor() {
-      this.bag = {};
+      this.commits = /* @__PURE__ */ new Set();
+      this.pools = /* @__PURE__ */ new Set();
     }
-    add(name, thing) {
-      if (!this.bag[name]) {
-        this.bag[name] = [];
+    add(component) {
+      let commit = this.findCommitOr(component, () => {
+        let newCommit = new Commit(component);
+        this.commits.add(newCommit);
+        return newCommit;
+      });
+      bufferPoolingForFiveMs(commit, () => {
+        let pool = this.findPoolWithComponent(commit.component);
+        if (!pool) {
+          this.createAndSendNewPool();
+        }
+      });
+      return commit;
+    }
+    findCommitOr(component, callback) {
+      for (let [idx, commit] of this.commits.entries()) {
+        if (commit.component === component) {
+          return commit;
+        }
       }
-      this.bag[name].push(thing);
+      return callback();
     }
-    push(name, thing) {
-      this.add(name, thing);
+    findPoolWithComponent(component) {
+      for (let [idx, pool] of this.pools.entries()) {
+        if (pool.hasCommitFor(component))
+          return pool;
+      }
     }
-    first(name) {
-      if (!this.bag[name])
-        return null;
-      return this.bag[name][0];
-    }
-    last(name) {
-      return this.bag[name].slice(-1)[0];
-    }
-    get(name) {
-      return this.bag[name];
-    }
-    shift(name) {
-      return this.bag[name].shift();
-    }
-    call(name, ...params) {
-      (this.listeners[name] || []).forEach((callback) => {
-        callback(...params);
+    createAndSendNewPool() {
+      trigger("commit.pooling", { commits: this.commits });
+      let pools = this.corraleCommitsIntoPools();
+      this.commits.clear();
+      trigger("commit.pooled", { pools });
+      pools.forEach((pool) => {
+        if (pool.empty())
+          return;
+        this.pools.add(pool);
+        pool.send().then(() => {
+          this.pools.delete(pool);
+          this.sendAnyQueuedCommits();
+        });
       });
     }
-    has(name) {
-      return Object.keys(this.listeners).includes(name);
+    corraleCommitsIntoPools() {
+      let pools = /* @__PURE__ */ new Set();
+      for (let [idx, commit] of this.commits.entries()) {
+        let hasFoundPool = false;
+        pools.forEach((pool) => {
+          if (pool.shouldHoldCommit(commit)) {
+            pool.add(commit);
+            hasFoundPool = true;
+          }
+        });
+        if (!hasFoundPool) {
+          let newPool = new RequestPool();
+          newPool.add(commit);
+          pools.add(newPool);
+        }
+      }
+      return pools;
+    }
+    sendAnyQueuedCommits() {
+      if (this.commits.size > 0) {
+        this.createAndSendNewPool();
+      }
     }
   };
-  function setUploadLoading() {
+  var buffersByCommit = /* @__PURE__ */ new WeakMap();
+  function bufferPoolingForFiveMs(commit, callback) {
+    if (buffersByCommit.has(commit))
+      return;
+    buffersByCommit.set(commit, setTimeout(() => {
+      callback();
+      buffersByCommit.delete(commit);
+    }, 5));
   }
-  function unsetUploadLoading() {
+
+  // js/request/index.js
+  var commitBus = new CommitBus();
+  async function requestCommit(component) {
+    let commit = commitBus.add(component);
+    let promise = new Promise((resolve, reject) => {
+      commit.addResolver(resolve);
+    });
+    promise.commit = commit;
+    return promise;
   }
-  function upload(component, name, file, finishCallback = () => {
-  }, errorCallback = () => {
-  }, progressCallback = () => {
-  }) {
-    let uploadManager = getUploadManager(component);
-    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
+  async function requestCall(component, method, params) {
+    let commit = commitBus.add(component);
+    let promise = new Promise((resolve, reject) => {
+      commit.addCall(method, params, (value) => resolve(value));
+    });
+    promise.commit = commit;
+    return promise;
   }
-  function uploadMultiple(component, name, files, finishCallback = () => {
-  }, errorCallback = () => {
-  }, progressCallback = () => {
-  }) {
-    let uploadManager = getUploadManager(component);
-    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  async function sendRequest(pool) {
+    let [payload, handleSuccess, handleFailure] = pool.payload();
+    let options = {
+      method: "POST",
+      body: JSON.stringify({
+        _token: getCsrfToken(),
+        components: payload
+      }),
+      headers: {
+        "Content-type": "application/json",
+        "X-Livewire": ""
+      }
+    };
+    let succeedCallbacks = [];
+    let failCallbacks = [];
+    let respondCallbacks = [];
+    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+    let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
+    let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
+    let finishProfile = trigger("request.profile", options);
+    let updateUri = getUpdateUri();
+    trigger("request", {
+      url: updateUri,
+      options,
+      payload: options.body,
+      respond: (i) => respondCallbacks.push(i),
+      succeed: (i) => succeedCallbacks.push(i),
+      fail: (i) => failCallbacks.push(i)
+    });
+    let response = await fetch(updateUri, options);
+    let mutableObject = {
+      status: response.status,
+      response
+    };
+    respond(mutableObject);
+    response = mutableObject.response;
+    let content = await response.text();
+    if (!response.ok) {
+      finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      handleFailure();
+      fail({
+        status: response.status,
+        content,
+        preventDefault: () => preventDefault = true
+      });
+      if (preventDefault)
+        return;
+      if (response.status === 419) {
+        handlePageExpiry();
+      }
+      return showFailureModal(content);
+    }
+    if (response.redirected) {
+      window.location.href = response.url;
+    }
+    if (contentIsFromDump(content)) {
+      [dump, content] = splitDumpFromContent(content);
+      showHtmlModal(dump);
+      finishProfile({ content: "{}", failed: true });
+    } else {
+      finishProfile({ content, failed: false });
+    }
+    let { components: components2, assets } = JSON.parse(content);
+    await triggerAsync("payload.intercept", { components: components2, assets });
+    await handleSuccess(components2);
+    succeed({ status: response.status, json: JSON.parse(content) });
   }
-  function removeUpload(component, name, tmpFilename, finishCallback = () => {
-  }, errorCallback = () => {
-  }) {
-    let uploadManager = getUploadManager(component);
-    uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+  function handlePageExpiry() {
+    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+  }
+  function showFailureModal(content) {
+    let html = content;
+    showHtmlModal(html);
   }
 
   // js/$wire.js
@@ -4277,7 +4358,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.reactive = Alpine.reactive(this.ephemeral);
       this.$wire = generateWireObject(this, this.reactive);
       this.cleanups = [];
-      processEffects(this, this.effects);
+      this.processEffects(this.effects);
     }
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
       let snapshot = JSON.parse(snapshotEncoded);
@@ -4305,7 +4386,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     replayUpdate(snapshot, html) {
       let effects = { ...this.effects, html };
       this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
-      processEffects(this, { html });
+      this.processEffects({ html });
+    }
+    processEffects(effects) {
+      trigger("effects", this, effects);
     }
     get children() {
       let meta = this.snapshot.memo;
@@ -4383,46 +4467,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return Object.values(components);
   }
 
-  // js/features/supportEvents.js
-  on("effects", (component, effects) => {
-    registerListeners(component, effects.listeners || []);
-    dispatchEvents(component, effects.dispatches || []);
-  });
-  function registerListeners(component, listeners2) {
-    listeners2.forEach((name) => {
-      let handler4 = (e) => {
-        if (e.__livewire)
-          e.__livewire.receivedBy.push(component);
-        component.$wire.call("__dispatch", name, e.detail || {});
-      };
-      window.addEventListener(name, handler4);
-      component.addCleanup(() => window.removeEventListener(name, handler4));
-      component.el.addEventListener(name, (e) => {
-        if (!e.__livewire)
-          return;
-        if (e.bubbles)
-          return;
-        if (e.__livewire)
-          e.__livewire.receivedBy.push(component.id);
-        component.$wire.call("__dispatch", name, e.detail || {});
-      });
-    });
-  }
-  function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to }) => {
-      if (self)
-        dispatchSelf(component, name, params);
-      else if (to)
-        dispatchTo(to, name, params);
-      else
-        dispatch3(component, name, params);
-    });
-  }
-  function dispatchEvent(target, name, params, bubbles = true) {
-    let e = new CustomEvent(name, { bubbles, detail: params });
-    e.__livewire = { name, params, receivedBy: [] };
-    target.dispatchEvent(e);
-  }
+  // js/events.js
   function dispatch3(component, name, params) {
     dispatchEvent(component.el, name, params);
   }
@@ -4453,6 +4498,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return () => {
       window.removeEventListener(eventName, handler4);
     };
+  }
+  function dispatchEvent(target, name, params, bubbles = true) {
+    let e = new CustomEvent(name, { bubbles, detail: params });
+    e.__livewire = { name, params, receivedBy: [] };
+    target.dispatchEvent(e);
   }
 
   // js/directives.js
@@ -8226,20 +8276,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function rescan() {
   }
 
-  // js/features/supportWireModelingNestedComponents.js
-  on("commit.prepare", ({ component }) => {
-    component.children.forEach((child) => {
-      if (hasBindings(child)) {
-        child.$wire.$commit();
-      }
-    });
-  });
-  function hasBindings(component) {
-    let childMemo = component.snapshot.memo;
-    let bindings = childMemo.bindings;
-    return !!bindings;
-  }
-
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
   on("element.init", ({ el, component }) => {
@@ -8276,6 +8312,74 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     while (cleanupStackByComponentId[component.id].length > 0) {
       cleanupStackByComponentId[component.id].shift()();
     }
+  }
+
+  // js/features/supportPropsAndModelables.js
+  on("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      let component = commit.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        child.$wire.$commit();
+      });
+    });
+  });
+  on("commit.pooled", ({ pools }) => {
+    let commits = getPooledCommits(pools);
+    commits.forEach((commit) => {
+      let component = commit.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        colocateCommitsByComponent(pools, component, child);
+      });
+    });
+  });
+  function getPooledCommits(pools) {
+    let commits = [];
+    pools.forEach((pool) => {
+      pool.commits.forEach((commit) => {
+        commits.push(commit);
+      });
+    });
+    return commits;
+  }
+  function colocateCommitsByComponent(pools, component, foreignComponent) {
+    let pool = findPoolWithComponent(pools, component);
+    let foreignPool = findPoolWithComponent(pools, foreignComponent);
+    let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
+    foreignPool.delete(foreignCommit);
+    pool.add(foreignCommit);
+    pools.forEach((pool2) => {
+      if (pool2.empty())
+        pools.delete(pool2);
+    });
+  }
+  function findPoolWithComponent(pools, component) {
+    for (let [idx, pool] of pools.entries()) {
+      if (pool.hasCommitFor(component))
+        return pool;
+    }
+  }
+  function getDeepChildrenWithBindings(component, callback) {
+    getDeepChildren(component, (child) => {
+      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+        callback(child);
+      }
+    });
+  }
+  function hasReactiveProps(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function hasWireModelableBindings(component) {
+    let meta = component.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  function getDeepChildren(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      getDeepChildren(child, callback);
+    });
   }
 
   // js/features/supportScriptsAndAssets.js
@@ -8428,6 +8532,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         module_default.evaluate(component.el, expression);
       });
     }
+  });
+
+  // js/features/supportLazyLoading.js
+  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  on("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.lazyLoaded === void 0)
+      return;
+    componentsThatAreLazy.add(component);
+    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+      componentsThatWantToBeBundled.add(component);
+    }
+  });
+  on("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      if (!componentsThatAreLazy.has(commit.component))
+        return;
+      if (componentsThatWantToBeBundled.has(commit.component)) {
+        commit.isolate = false;
+        componentsThatWantToBeBundled.delete(commit.component);
+      } else {
+        commit.isolate = true;
+      }
+      componentsThatAreLazy.delete(commit.component);
+    });
   });
 
   // js/features/supportQueryString.js
@@ -8646,19 +8776,39 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
-  // js/features/supportProps.js
-  on("commit.prepare", ({ component }) => {
-    getChildrenRecursively(component, (child) => {
-      let childMeta = child.snapshot.memo;
-      let props = childMeta.props;
-      if (props)
-        child.$wire.$commit();
-    });
+  // js/features/supportEvents.js
+  on("effects", (component, effects) => {
+    registerListeners(component, effects.listeners || []);
+    dispatchEvents(component, effects.dispatches || []);
   });
-  function getChildrenRecursively(component, callback) {
-    component.children.forEach((child) => {
-      callback(child);
-      getChildrenRecursively(child, callback);
+  function registerListeners(component, listeners2) {
+    listeners2.forEach((name) => {
+      let handler4 = (e) => {
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component);
+        component.$wire.call("__dispatch", name, e.detail || {});
+      };
+      window.addEventListener(name, handler4);
+      component.addCleanup(() => window.removeEventListener(name, handler4));
+      component.el.addEventListener(name, (e) => {
+        if (!e.__livewire)
+          return;
+        if (e.bubbles)
+          return;
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component.id);
+        component.$wire.call("__dispatch", name, e.detail || {});
+      });
+    });
+  }
+  function dispatchEvents(component, dispatches) {
+    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+      if (self)
+        dispatchSelf(component, name, params);
+      else if (to)
+        dispatchTo(to, name, params);
+      else
+        dispatch3(component, name, params);
     });
   }
 
