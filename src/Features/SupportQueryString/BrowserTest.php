@@ -109,6 +109,42 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_use_url_on_enum_object_properties()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public EnumForUrlTesting $foo = EnumForUrlTesting::First;
+
+                public function change()
+                {
+                    $this->foo = EnumForUrlTesting::Second;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="change" dusk="button">Change</button>
+                        <h1 dusk="output">{{ $foo }}</h1>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertQueryStringMissing('foo')
+            ->assertSeeIn('@output', 'first')
+            ->waitForLivewire()->click('@button')
+            ->assertQueryStringHas('foo', 'second')
+            ->assertSeeIn('@output', 'second')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'second')
+            ->assertSeeIn('@output', 'second')
+        ;
+    }
+
+    /** @test */
     public function can_use_url_on_lazy_component()
     {
         Livewire::visit([
@@ -154,4 +190,10 @@ class FormObject extends \Livewire\Form
 
     #[\Livewire\Attributes\Url(as: 'aliased')]
     public $bob = 'lob';
+}
+
+enum EnumForUrlTesting: string
+{
+    case First = 'first';
+    case Second = 'second';
 }
