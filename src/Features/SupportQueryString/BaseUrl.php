@@ -29,7 +29,9 @@ class BaseUrl extends LivewireAttribute
             ? json_decode(json_encode($initialValue), true)
             : json_decode($initialValue, true);
 
-        $this->setValue($decoded === null ? $initialValue : $decoded);
+        $value = $decoded === null ? $initialValue : $decoded;
+
+        $this->setValue($value);
     }
 
     public function dehydrate($context)
