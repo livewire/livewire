@@ -90,8 +90,6 @@ trait TestsValidation
 
         // If the provided rule/message isn't a failed rule, let's check to see if it's a message...
         PHPUnit::assertContains($ruleOrMessage, $messages, "Component has no matching failed rule or error message [{$ruleOrMessage}] for [{$key}] attribute.");
-
-        return;
     }
 
 
