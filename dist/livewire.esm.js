@@ -6967,7 +6967,7 @@ var require_module_cjs8 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
+      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -6994,8 +6994,12 @@ var require_module_cjs8 = __commonJS({
           if (el._x_model)
             el._x_model.set(el.value);
         });
-        el.addEventListener("input", () => processInputValue(el));
-        el.addEventListener("blur", () => processInputValue(el, false));
+        const controller = new AbortController();
+        cleanup2(() => {
+          controller.abort();
+        });
+        el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
+        el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
         function processInputValue(el2, shouldRestoreCursor = true) {
           let input = el2.value;
           let template = templateFn(input);

@@ -8066,7 +8066,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // ../alpine/packages/mask/dist/module.esm.js
   function src_default8(Alpine3) {
-    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
+    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
       queueMicrotask(() => {
@@ -8093,8 +8093,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el._x_model)
           el._x_model.set(el.value);
       });
-      el.addEventListener("input", () => processInputValue(el));
-      el.addEventListener("blur", () => processInputValue(el, false));
+      const controller = new AbortController();
+      cleanup3(() => {
+        controller.abort();
+      });
+      el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
+      el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
       function processInputValue(el2, shouldRestoreCursor = true) {
         let input = el2.value;
         let template = templateFn(input);
