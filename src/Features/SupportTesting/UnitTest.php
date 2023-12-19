@@ -9,7 +9,6 @@ use Illuminate\Testing\TestResponse;
 use Illuminate\Testing\TestView;
 use Livewire\Component;
 use Livewire\Livewire;
-use Tests\TestCase;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -440,7 +439,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             });
     }
 
-
     /** @test */
     function assert_has_errors()
     {
@@ -457,7 +455,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertHasErrors(['foo' => function ($rules, $messages) {
                 return in_array('required', $rules) && in_array('The foo field is required.', $messages);
             }])
-            ;
+        ;
     }
 
     /** @test */
