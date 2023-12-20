@@ -1,7 +1,7 @@
 import { morph } from '@/morph'
 import { on } from '@/hooks'
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     let html = effects.html
     if (! html) return
 

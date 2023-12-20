@@ -1,7 +1,7 @@
 import { dispatch, dispatchSelf, dispatchTo } from '@/events'
 import { on as hook } from '@/hooks'
 
-hook('effects', (component, effects) => {
+hook('effect', ({ component, effects }) => {
     registerListeners(component, effects.listeners || [])
 
     dispatchEvents(component, effects.dispatches || [])

@@ -17,11 +17,23 @@ class BaseUrl extends LivewireAttribute
 
     public function mount()
     {
+        $this->setPropertyFromQueryString();
+    }
+
+    public function dehydrate($context)
+    {
+        if (! $context->mounting) return;
+
+        $this->pushQueryStringEffect($context);
+    }
+
+    public function setPropertyFromQueryString()
+    {
         if ($this->as === null && $this->isOnFormObjectProperty()) {
             $this->as = $this->getSubName();
         }
 
-        $initialValue = request()->query($this->urlName(), 'noexist');
+        $initialValue = $this->getFromUrlQueryString($this->urlName(), 'noexist');
 
         if ($initialValue === 'noexist') return;
 
@@ -34,10 +46,8 @@ class BaseUrl extends LivewireAttribute
         $this->setValue($value);
     }
 
-    public function dehydrate($context)
+    public function pushQueryStringEffect($context)
     {
-        if (! $context->mounting) return;
-
         $queryString = [
             'as' => $this->as,
             'use' => $this->history ? 'push' : 'replace',
@@ -58,6 +68,32 @@ class BaseUrl extends LivewireAttribute
     public function urlName()
     {
         return $this->as ?? $this->getName();
+    }
+
+    public function getFromUrlQueryString($name, $default = null)
+    {
+        if (! app('livewire')->isLivewireRequest()) {
+            return request()->query($this->urlName(), $default);
+        }
+
+        // If this is a subsequent ajax request, we can't use Laravel's standard "request()->query()"...
+        return $this->getFromRefererUrlQueryString(
+            request()->header('Referer'),
+            $name,
+            $default
+        );
+    }
+
+    public function getFromRefererUrlQueryString($url, $key, $default = null)
+    {
+        $parsedUrl = parse_url($url);
+        $query = [];
+
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $query);
+        }
+
+        return $query[$key] ?? $default;
     }
 }
 
