@@ -517,7 +517,7 @@ class SearchPosts extends Component
 <div>
     <input wire:model.live="query">
 
-    <button wire:click="resetData">Reset Search</button> <!-- [tl! highlight] -->
+    <button wire:click="resetQuery">Reset Search</button> <!-- [tl! highlight] -->
 
     @foreach ($posts as $post)
         <!-- ... -->
