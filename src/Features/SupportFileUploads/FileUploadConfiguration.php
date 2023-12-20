@@ -27,7 +27,14 @@ class FileUploadConfiguration
     public static function disk()
     {
         if (app()->runningUnitTests()) {
-            return 'tmp-for-tests';
+            $disk = 'tmp-for-tests';
+
+            config()->set('filesystems.disks.'.$disk, [
+                'driver' => 'local',
+                'root' => storage_path('app')
+            ]);
+
+            return $disk;
         }
 
         return config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
