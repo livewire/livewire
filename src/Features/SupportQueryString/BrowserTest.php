@@ -145,6 +145,30 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function it_does_not_break_string_typed_properties()
+    {
+        Livewire::withQueryParams(['foo' => 'bar'])
+            ->visit([
+                new class extends Component
+                {
+                    #[BaseUrl]
+                    public string $foo = '';
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <h1 dusk="output">{{ $foo }}</h1>
+                        </div>
+                        HTML;
+                    }
+                }
+            ])
+            ->assertSeeIn('@output', 'bar')
+        ;
+    }
+
+    /** @test */
     public function can_use_url_on_lazy_component()
     {
         Livewire::visit([
