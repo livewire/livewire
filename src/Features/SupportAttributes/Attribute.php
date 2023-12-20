@@ -80,14 +80,16 @@ abstract class Attribute
 
         $name = $this->subName ?? $this->levelName;
 
-        $reflection = new \ReflectionProperty($target, $name);
+        $property = str($name)->before('.')->toString();
+
+        $reflection = new \ReflectionProperty($target, $property);
 
         $type = $reflection->getType();
 
         // If the type is available, display its name
         if ($type instanceof \ReflectionNamedType) {
             $name = $type->getName();
-            
+
             // If the type is a BackedEnum then return it's name
             if (is_subclass_of($name, \BackedEnum::class)) {
                 return $name;

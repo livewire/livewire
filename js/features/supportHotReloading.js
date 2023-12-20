@@ -5,7 +5,7 @@ import { on } from '@/hooks'
 
 // if (! enabled.includes('hot-reloading')) return
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     queueMicrotask(() => {
         let files = effects.hotReload
 

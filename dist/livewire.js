@@ -4390,6 +4390,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     processEffects(effects) {
       trigger("effects", this, effects);
+      trigger("effect", {
+        component: this,
+        effects,
+        cleanup: (i) => this.addCleanup(i)
+      });
     }
     get children() {
       let meta = this.snapshot.memo;
@@ -8408,7 +8413,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let scripts = effects.scripts;
     if (scripts) {
       Object.entries(scripts).forEach(([key, content]) => {
@@ -8521,7 +8526,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
     if (js) {
@@ -8565,8 +8570,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportQueryString.js
-  on("component.init", ({ component, cleanup: cleanup3 }) => {
-    let effects = component.effects;
+  on("effect", ({ component, effects, cleanup: cleanup3 }) => {
     let queryString = effects["url"];
     if (!queryString)
       return;
@@ -8620,7 +8624,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       options.headers["X-Socket-ID"] = window.Echo.socketId();
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let listeners2 = effects.listeners || [];
     listeners2.forEach((event) => {
       if (event.startsWith("echo")) {
@@ -8694,7 +8698,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportRedirects.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     if (!effects["redirect"])
       return;
     let url = effects["redirect"];
@@ -8771,7 +8775,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportMorphDom.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let html = effects.html;
     if (!html)
       return;
@@ -8781,7 +8785,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportEvents.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     registerListeners(component, effects.listeners || []);
     dispatchEvents(component, effects.dispatches || []);
   });
