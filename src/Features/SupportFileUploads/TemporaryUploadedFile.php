@@ -83,6 +83,10 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function temporaryUrl()
     {
+        if (!$this->isPreviewable()) {
+            return null;
+        }
+
         $expiration = now()->addMinutes(30)->endOfHour();
 
         $temporaryUrlOptions = [];
@@ -99,7 +103,7 @@ class TemporaryUploadedFile extends UploadedFile
         );
     }
 
-    public function isPreviewable()
+    public function isPreviewable(): bool
     {
         $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
             'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
