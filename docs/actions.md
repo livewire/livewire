@@ -497,7 +497,7 @@ class SearchPosts extends Component
     public $query = '';
 
     #[Js] // [tl! highlight:6]
-    public function resetData()
+    public function resetQuery()
     {
         return <<<'JS'
             $wire.query = '';
