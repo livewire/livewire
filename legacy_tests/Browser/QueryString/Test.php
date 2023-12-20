@@ -161,24 +161,24 @@ class Test extends TestCase
         });
     }
 
-    // public function test_excepts_results_in_no_query_string()
-    // {
-    //     $this->browse(function (Browser $browser) {
-    //         $this->visitLivewireComponent($browser, ComponentWithExcepts::class)
-    //             ->assertSeeIn('@output', 'On page 1');
+    public function test_excepts_results_in_no_query_string()
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitLivewireComponent($browser, ComponentWithExcepts::class)
+                ->assertSeeIn('@output', 'On page 1');
 
-    //         $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
+            $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
 
-    //         $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=1')
-    //             ->assertSeeIn('@output', 'On page 1');
+            $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=1')
+                ->assertSeeIn('@output', 'On page 1');
 
-    //         $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
+            $this->assertStringNotContainsString('?', $browser->driver->getCurrentURL());
 
-    //         $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=2')
-    //             ->assertSeeIn('@output', 'On page 2')
-    //             ->assertQueryStringHas('page', 2);
-    //     });
-    // }
+            $this->visitLivewireComponent($browser, ComponentWithExcepts::class, '?page=2')
+                ->assertSeeIn('@output', 'On page 2')
+                ->assertQueryStringHas('page', 2);
+        });
+    }
 
     public function test_that_input_values_are_set_after_back_button()
     {
