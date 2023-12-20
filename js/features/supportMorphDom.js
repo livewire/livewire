@@ -1,5 +1,5 @@
 import { morph } from '@/morph'
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 on('effects', (component, effects) => {
     let html = effects.html

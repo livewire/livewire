@@ -86,7 +86,7 @@ Adding `.blur` is helpful for scenarios where you want to update the server more
 
 ### Updating on "change" event
 
-There are times where the behavior of `.blur` isn't exactly what you want and instead `.change` is.
+There are times when the behavior of `.blur` isn't exactly what you want and instead `.change` is.
 
 For example, if you want to run validation every time a select input is changed, by adding `.change`, Livewire will send a network request and validate the property as soon as a user selects a new option. As opposed to `.blur` which will only update the server after the user tabs away from the select input.
 
@@ -100,16 +100,17 @@ Any changes made to the text input will be automatically synchronized with the `
 
 ## All available modifiers
 
-Modifier | Description
---- | ---
-`.live` | Send updates as a user types
-`.blur` | Only send updates on the `blur` event
-`.change` | Only send updates on the the `change` event
-`.lazy` | An alias for `.change`
-`.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay
-`.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
-`.number` | Cast the text value of an input to `int` on the server
-`.fill` | Use the initial value provided by a "value" HTML attribute on page-load
+ Modifier          | Description                                                             
+-------------------|-------------------------------------------------------------------------
+ `.live`           | Send updates as a user types                                            
+ `.blur`           | Only send updates on the `blur` event                                   
+ `.change`         | Only send updates on the the `change` event                             
+ `.lazy`           | An alias for `.change`                                                  
+ `.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay      
+ `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval  
+ `.number`         | Cast the text value of an input to `int` on the server
+ `.boolean`        | Cast the text value of an input to `bool` on the server
+ `.fill`           | Use the initial value provided by a "value" HTML attribute on page-load 
 
 ## Input fields
 
@@ -168,7 +169,7 @@ By binding multiple checkboxes to the `$updateTypes` property, the user can sele
 ```blade
 <input type="checkbox" value="email" wire:model="updateTypes">
 <input type="checkbox" value="sms" wire:model="updateTypes">
-<input type="checkbox" value="notificaiton" wire:model="updateTypes">
+<input type="checkbox" value="notification" wire:model="updateTypes">
 ```
 
 For example, if the user checks the first two boxes but not the third, the value of `$updateTypes` will be: `["email", "sms"]`
@@ -192,7 +193,7 @@ Below is an example of a select dropdown filled with a static list of states:
 
 ```blade
 <select wire:model="state">
-    <option value="AL">Alabama<option>
+    <option value="AL">Alabama</option>
     <option value="AK">Alaska</option>
     <option value="AZ">Arizona</option>
     ...
@@ -231,7 +232,7 @@ If you are using a "multiple" select menu, Livewire works as expected. In this e
 
 ```blade
 <select wire:model="states" multiple>
-    <option value="AL">Alabama<option>
+    <option value="AL">Alabama</option>
     <option value="AK">Alaska</option>
     <option value="AZ">Arizona</option>
     ...

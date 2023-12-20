@@ -84,6 +84,10 @@ Open the `resources/views/livewire/counter.blade.php` file and replace its conte
 
 This code will display the value of the `$count` property and two buttons that increment and decrement the `$count` property, respectively.
 
+> [!warning] Livewire components MUST have a single root element
+> In order for Livewire to work, components must have just **one** single element as its root. If multiple root elements are detected, an exception is thrown. It is recommended to use a `<div>` element as in the example. HTML comments count as separate elements and should be put inside the root element.
+> When rendering [full-page components](/docs/components#full-page-components), named slots for the layout file may be put outside the root element. These are removed before the component is rendered.
+
 ## Register a route for the component
 
 Open the `routes/web.php` file in your Laravel application and add the following code:

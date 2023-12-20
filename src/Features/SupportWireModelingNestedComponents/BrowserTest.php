@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 use Livewire\Form;
 use Livewire\Livewire;
 use Sushi\Sushi;
@@ -275,11 +275,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 }
 
-
-
 class CreatePost extends Form
 {
-    #[Rule('required')]
+    #[Validate('required')]
     public $title;
 
     public function store()

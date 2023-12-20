@@ -3,17 +3,14 @@
 namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\trigger;
 
-class HandleRequests
+class HandleRequests extends Mechanism
 {
     protected $updateRoute;
-
-    function register()
-    {
-        app()->singleton($this::class);
-    }
 
     function boot()
     {
@@ -96,6 +93,7 @@ class HandleRequests
 
         $response = [
             'components' => $responses,
+            'assets' => SupportScriptsAndAssets::getAssets(),
         ];
 
         $finish = trigger('profile.response', $response);

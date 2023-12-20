@@ -13,6 +13,7 @@ Essentials:
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
     Testing: { uri: /docs/testing, file: /testing.md }
 Features:
+    Alpine: { uri: /docs/alpine, file: /alpine.md }
     Navigate: { uri: /docs/navigate, file: /navigate.md }
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/validation, file: /validation.md }
@@ -44,8 +45,10 @@ Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
+    Security: { uri: /docs/security, file: /security.md }
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
+    Contribution Guide: { uri: /docs/contribution-guide, file: /contribution-guide.md }
 Packages:
     Volt: { uri: /docs/volt, file: /volt.md }
 ---
