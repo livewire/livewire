@@ -86,7 +86,12 @@ abstract class Attribute
 
         // If the type is available, display its name
         if ($type instanceof \ReflectionNamedType) {
-            return $type->getName();
+            $name = $type->getName();
+            
+            // If the type is a BackedEnum then return it's name
+            if (is_subclass_of($name, \BackedEnum::class)) {
+                return $name;
+            }
         }
 
         return false;
