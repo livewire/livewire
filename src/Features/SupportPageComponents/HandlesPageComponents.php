@@ -23,11 +23,8 @@ trait HandlesPageComponents
         if (blank($layoutConfig))
         {
             $reflectionClass = new \ReflectionClass($this);
-            $attributes = $reflectionClass->getAttributes(Layout::class);
-            if (isset($attributes[0]) && isset($attributes[0]->getArguments()[0]))
-            {
-                $layout = $attributes[0]->getArguments()[0];
-            }
+            $layoutAttribute = $reflectionClass->getAttributes(Layout::class)[0] ?? null;
+            $layout = $layoutAttribute?->getArguments()[0] ?? null;
         }
 
         $layoutConfig = $layoutConfig ?: new PageComponentConfig(view: $layout);
