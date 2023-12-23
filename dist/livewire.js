@@ -556,30 +556,30 @@
     handleSignedUrl(name, url) {
       let formData = new FormData();
       Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
-      let headers2 = {
+      let headers3 = {
         "Accept": "application/json"
       };
       let csrfToken = getCsrfToken();
       if (csrfToken)
-        headers2["X-CSRF-TOKEN"] = csrfToken;
-      this.makeRequest(name, formData, "post", url, headers2, (response) => {
+        headers3["X-CSRF-TOKEN"] = csrfToken;
+      this.makeRequest(name, formData, "post", url, headers3, (response) => {
         return response.paths;
       });
     }
     handleS3PreSignedUrl(name, payload) {
       let formData = this.uploadBag.first(name).files[0];
-      let headers2 = payload.headers;
-      if ("Host" in headers2)
-        delete headers2.Host;
+      let headers3 = payload.headers;
+      if ("Host" in headers3)
+        delete headers3.Host;
       let url = payload.url;
-      this.makeRequest(name, formData, "put", url, headers2, (response) => {
+      this.makeRequest(name, formData, "put", url, headers3, (response) => {
         return [payload.path];
       });
     }
-    makeRequest(name, formData, method, url, headers2, retrievePaths) {
+    makeRequest(name, formData, method, url, headers3, retrievePaths) {
       let request = new XMLHttpRequest();
       request.open(method, url);
-      Object.entries(headers2).forEach(([key, value]) => {
+      Object.entries(headers3).forEach(([key, value]) => {
         request.setRequestHeader(key, value);
       });
       request.upload.addEventListener("progress", (e) => {
@@ -7004,13 +7004,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
-  function prefetchHtml(destination, callback) {
+  function prefetchHtml(destination, callback, options = {}) {
     let path = destination.pathname;
     if (prefetches[path])
       return;
     prefetches[path] = { finished: false, html: null, whenFinished: () => {
     } };
-    fetch(path).then((i) => i.text()).then((html) => {
+    fetch(path, options).then((i) => i.text()).then((html) => {
       callback(html);
     });
   }
@@ -7400,9 +7400,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/plugins/navigate/fetch.js
-  function fetchHtml(destination, callback) {
+  function fetchHtml(destination, callback, options = {}) {
     let uri = destination.pathname + destination.search;
-    fetch(uri).then((i) => i.text()).then((html) => {
+    fetch(uri, options).then((i) => i.text()).then((html) => {
       callback(html);
     });
   }
@@ -7412,12 +7412,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var showProgressBar = true;
   var restoreScroll = true;
   var autofocus = false;
+  var headers2 = {};
   function navigate_default(Alpine3) {
     Alpine3.navigate = (url) => {
       navigateTo(createUrlObjectFromString(url));
     };
     Alpine3.navigate.disableProgressBar = () => {
       showProgressBar = false;
+    };
+    Alpine3.navigate.addHeaders = (additionalHeaders) => {
+      headers2 = { headers: headers2, ...additionalHeaders };
     };
     Alpine3.addInitSelector(() => `[${Alpine3.prefixed("navigate")}]`);
     Alpine3.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
@@ -7426,13 +7430,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let destination = extractDestinationFromLink(el);
         prefetchHtml(destination, (html) => {
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
-        });
+        }, { headers: headers2 });
       });
       whenThisLinkIsPressed(el, (whenItIsReleased) => {
         let destination = extractDestinationFromLink(el);
         prefetchHtml(destination, (html) => {
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
-        });
+        }, { headers: headers2 });
         whenItIsReleased(() => {
           navigateTo(destination);
         });
@@ -7495,7 +7499,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
     getPretchedHtmlOr(fromDestination, callback, () => {
-      fetchHtml(fromDestination, callback);
+      fetchHtml(fromDestination, callback, { headers: headers2 });
     });
   }
   function preventAlpineFromPickingUpDomChanges(Alpine3, callback) {
