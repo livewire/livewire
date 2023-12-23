@@ -2,14 +2,14 @@
 // Warning: this could cause some memory leaks
 let prefetches = {}
 
-export function prefetchHtml(destination, callback) {
+export function prefetchHtml(destination, callback, options = {}) {
     let path = destination.pathname
 
     if (prefetches[path]) return
 
     prefetches[path] = { finished: false, html: null, whenFinished: () => {} }
 
-    fetch(path).then(i => i.text()).then(html => {
+    fetch(path, options).then(i => i.text()).then(html => {
         callback(html)
     })
 }

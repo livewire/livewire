@@ -13,6 +13,7 @@ let enablePersist = true
 let showProgressBar = true
 let restoreScroll = true
 let autofocus = false
+let headers = {}
 
 export default function (Alpine) {
     Alpine.navigate = (url) => {
@@ -25,6 +26,10 @@ export default function (Alpine) {
         showProgressBar = false
     }
 
+    Alpine.navigate.addHeaders = (additionalHeaders) => {
+        headers = { headers, ...additionalHeaders }
+    }
+
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
 
     Alpine.directive('navigate', (el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
@@ -35,7 +40,7 @@ export default function (Alpine) {
 
             prefetchHtml(destination, html => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination)
-            })
+            }, { headers: headers })
         })
 
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
@@ -43,7 +48,7 @@ export default function (Alpine) {
 
             prefetchHtml(destination, html => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination)
-            })
+            }, { headers: headers })
 
             whenItIsReleased(() => {
                 navigateTo(destination)
@@ -136,7 +141,7 @@ export default function (Alpine) {
 
 function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
     getPretchedHtmlOr(fromDestination, callback, () => {
-        fetchHtml(fromDestination, callback)
+        fetchHtml(fromDestination, callback, { headers: headers })
     })
 }
 
