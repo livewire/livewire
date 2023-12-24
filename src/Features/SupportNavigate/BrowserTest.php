@@ -243,9 +243,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test
-     @uses foo
-     */
+    /** @test */
     public function can_set_custom_navigate_headers()
     {
         $this->browse(function ($browser) {
