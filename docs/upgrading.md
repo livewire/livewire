@@ -125,6 +125,10 @@ You can either move all of your components to the new location or add the follow
 'class_namespace' => 'App\\Http\\Livewire',
 ```
 
+### Discovery
+
+With Livewire 3, there is no manifest present, and there is therefore nothing to “discover” in relation to Livewire Components, and you can safely remove any livewire:discover references from your build scripts without issue.
+
 ## Page component layout view
 
 When rendering Livewire components as full pages using a syntax like the following:
