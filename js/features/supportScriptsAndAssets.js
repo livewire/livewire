@@ -28,7 +28,7 @@ on('component.init', ({ component }) => {
     }
 })
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     let scripts = effects.scripts
 
     if (scripts) {

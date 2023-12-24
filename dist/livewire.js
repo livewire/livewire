@@ -4363,6 +4363,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     processEffects(effects) {
       trigger("effects", this, effects);
+      trigger("effect", {
+        component: this,
+        effects,
+        cleanup: (i) => this.addCleanup(i)
+      });
     }
     get children() {
       let meta = this.snapshot.memo;
@@ -8043,7 +8048,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // ../alpine/packages/mask/dist/module.esm.js
   function src_default8(Alpine3) {
-    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
+    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
       queueMicrotask(() => {
@@ -8070,8 +8075,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el._x_model)
           el._x_model.set(el.value);
       });
-      el.addEventListener("input", () => processInputValue(el));
-      el.addEventListener("blur", () => processInputValue(el, false));
+      const controller = new AbortController();
+      cleanup3(() => {
+        controller.abort();
+      });
+      el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
+      el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
       function processInputValue(el2, shouldRestoreCursor = true) {
         let input = el2.value;
         let template = templateFn(input);
@@ -8381,7 +8390,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let scripts = effects.scripts;
     if (scripts) {
       Object.entries(scripts).forEach(([key, content]) => {
@@ -8494,7 +8503,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
     if (js) {
@@ -8538,8 +8547,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportQueryString.js
-  on("component.init", ({ component, cleanup: cleanup3 }) => {
-    let effects = component.effects;
+  on("effect", ({ component, effects, cleanup: cleanup3 }) => {
     let queryString = effects["url"];
     if (!queryString)
       return;
@@ -8593,7 +8601,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       options.headers["X-Socket-ID"] = window.Echo.socketId();
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let listeners2 = effects.listeners || [];
     listeners2.forEach((event) => {
       if (event.startsWith("echo")) {
@@ -8667,7 +8675,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportRedirects.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     if (!effects["redirect"])
       return;
     let url = effects["redirect"];
@@ -8744,7 +8752,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportMorphDom.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let html = effects.html;
     if (!html)
       return;
@@ -8754,7 +8762,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportEvents.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     registerListeners(component, effects.listeners || []);
     dispatchEvents(component, effects.dispatches || []);
   });
