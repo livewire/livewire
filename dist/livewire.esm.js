@@ -7784,7 +7784,7 @@ function bufferPoolingForFiveMs(commit, callback) {
 var commitBus = new CommitBus();
 var headers = {};
 function addHeaders(additionalHeaders) {
-  headers = { headers, ...additionalHeaders };
+  headers = { ...headers, ...additionalHeaders };
 }
 async function requestCommit(component) {
   let commit = commitBus.add(component);
@@ -8767,7 +8767,7 @@ function navigate_default(Alpine21) {
     showProgressBar = false;
   };
   Alpine21.navigate.addHeaders = (additionalHeaders) => {
-    headers2 = { headers: headers2, ...additionalHeaders };
+    headers2 = { ...headers2, ...additionalHeaders };
   };
   Alpine21.addInitSelector(() => `[${Alpine21.prefixed("navigate")}]`);
   Alpine21.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {

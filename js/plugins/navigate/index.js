@@ -27,7 +27,7 @@ export default function (Alpine) {
     }
 
     Alpine.navigate.addHeaders = (additionalHeaders) => {
-        headers = { headers, ...additionalHeaders }
+        headers = { ...headers, ...additionalHeaders }
     }
 
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)

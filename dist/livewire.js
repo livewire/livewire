@@ -4063,7 +4063,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var commitBus = new CommitBus();
   var headers = {};
   function addHeaders(additionalHeaders) {
-    headers = { headers, ...additionalHeaders };
+    headers = { ...headers, ...additionalHeaders };
   }
   async function requestCommit(component) {
     let commit = commitBus.add(component);
@@ -7421,7 +7421,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       showProgressBar = false;
     };
     Alpine3.navigate.addHeaders = (additionalHeaders) => {
-      headers2 = { headers: headers2, ...additionalHeaders };
+      headers2 = { ...headers2, ...additionalHeaders };
     };
     Alpine3.addInitSelector(() => `[${Alpine3.prefixed("navigate")}]`);
     Alpine3.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {

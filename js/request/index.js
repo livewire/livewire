@@ -11,7 +11,7 @@ let commitBus = new CommitBus
 let headers = {}
 
 export function addHeaders(additionalHeaders) {
-    headers = { headers, ...additionalHeaders }
+    headers = { ...headers, ...additionalHeaders }
 }
 
 /**
