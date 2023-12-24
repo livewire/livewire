@@ -1,5 +1,5 @@
 import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
-import { trigger, triggerAsync } from '@/events'
+import { trigger, triggerAsync } from '@/hooks'
 import { showHtmlModal } from './modal'
 import { CommitBus } from './bus'
 

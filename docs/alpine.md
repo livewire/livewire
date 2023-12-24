@@ -24,7 +24,7 @@ The Alpine component above can be used inside any Livewire component in your app
 
 ## Using Alpine inside Livewire
 
-Let's explore a more real-life example of using an Alpine inside a Livewire component.
+Let's explore a more real-life example of using an Alpine component inside a Livewire component.
 
 Below is a simple Livewire component showing the details of a post model from the database. By default, only the title of the post is shown:
 

@@ -628,7 +628,7 @@ If you want to toggle an entire element's visibility, you can do so by using `wi
 
 ## Debouncing input
 
-When using `.live` on a text input, you may want more fine-grained control over how often a network request is sent. By default, debounce of "250ms" is applied to the input; however, you can customize this using the `.debounce` modifier:
+When using `.live` on a text input, you may want more fine-grained control over how often a network request is sent. By default, a debounce of "250ms" is applied to the input; however, you can customize this using the `.debounce` modifier:
 
 ```blade
 <input type="text" wire:model.live.debounce.150ms="title" >

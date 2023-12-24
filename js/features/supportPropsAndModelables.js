@@ -1,5 +1,5 @@
 import { findComponent } from "../store";
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 // Ensure that all child components with reactive props (even deeply nested)
 // are included in the network request...

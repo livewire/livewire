@@ -68,6 +68,18 @@ class PostPolicy
 }
 ```
 
+Before you can use the new Policy, you need to register it inside `app\Providers\AuthServiceProvider.php`:
+
+```php
+// ...
+
+protected $policies = [
+    Post::class => PostPolicy::class,
+];
+
+// ...
+```
+
 Now, we can use the `$this->authorize()` method from the Livewire component to ensure the user owns the post before deleting it:
 
 ```php
@@ -222,9 +234,9 @@ class ShowPost extends Component
     public function delete()
     {
         $post = Post::find($this->postId);
-    
+
         $this->authorize('delete', $post); // [tl! highlight]
-    
+
         $post->delete();
     }
 }
@@ -245,7 +257,7 @@ Further reading:
 When a Livewire component is loaded on a page containing route-level [Authorization Middleware](https://laravel.com/docs/authorization#via-middleware), like so:
 
 ```php
-Route::put('/post/{post}', App\Livewire\UpdatePost::class)
+Route::get('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 
@@ -256,7 +268,7 @@ Persistent middleware protects you from scenarios where the authorization rules 
 Here's a more in-depth example of such a scenario:
 
 ```php
-Route::put('/post/{post}', App\Livewire\UpdatePost::class)
+Route::get('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 

@@ -4,18 +4,8 @@ namespace Livewire\Mechanisms;
 
 use WeakMap;
 
-class DataStore
+class DataStore extends Mechanism
 {
-    function register()
-    {
-        app()->singleton($this::class);
-    }
-
-    function boot()
-    {
-        //
-    }
-
     protected $lookup;
 
     function __construct()

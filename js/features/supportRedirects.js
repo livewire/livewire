@@ -1,7 +1,7 @@
-import { on, trigger } from "@/events"
+import { on, trigger } from "@/hooks"
 import { shouldRedirectUsingNavigateOr } from "./supportNavigate"
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     if (! effects['redirect']) return
 
     let url = effects['redirect']

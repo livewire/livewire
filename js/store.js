@@ -1,5 +1,5 @@
 import { Component } from "@/component";
-import { trigger } from "@/events";
+import { trigger } from "@/hooks";
 import { deepClone } from "@/utils"
 
 let components = {}
