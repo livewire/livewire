@@ -149,6 +149,18 @@ document.addEventListener('livewire:navigated', () => {
 })
 ```
 
+### Registering custom headers
+
+You can register custom headers that will be sent when performing a navigation request.
+
+```js
+document.addEventListener('alpine:init', () => {
+    Alpine.navigate.addHeaders({
+        'X-MY-TOKEN': '1234'
+    });
+});
+```
+
 ## Manually visiting a new page
 
 In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` method to trigger a visit to a new page using JavaScript:
