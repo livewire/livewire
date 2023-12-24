@@ -243,6 +243,23 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    /** @test
+     @uses foo
+     */
+    public function can_set_custom_navigate_headers()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSeeIn('@custom-navigate-header', 'bar');
+        });
+    }
+
     /** @test */
     public function can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
     {
@@ -695,6 +712,14 @@ class FirstPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+
+            <script>
+                document.addEventListener('alpine:init', () => {
+                    window.Alpine.navigate.addHeaders({
+                        'X-Foo': 'bar',
+                    });
+                })
+            </script>
         </div>
         HTML;
     }
@@ -746,6 +771,8 @@ class SecondPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+
+            <div dusk="custom-navigate-header">{{ request()->header('X-Foo') }}</div>
 
             <script data-navigate-once>window.foo = 'bar';</script>
 
