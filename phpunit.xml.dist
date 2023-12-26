@@ -8,17 +8,18 @@
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.4/phpunit.xsd"
          cacheDirectory=".phpunit.cache"
          backupStaticProperties="false">
-  <coverage/>
-  <testsuites>
-    <testsuite name="Unit">
-        <directory suffix="UnitTest.php">./src</directory>
-    </testsuite>
-    <testsuite name="Browser">
-         <directory suffix="BrowserTest.php">./src</directory>
-    </testsuite>
-    <testsuite name="LegacyBrowser">
-        <directory suffix="Test.php">./legacy_tests/Browser</directory>
-    </testsuite>
-  </testsuites>
-  <source/>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="UnitTest.php">./src</directory>
+        </testsuite>
+        <testsuite name="Browser">
+            <directory suffix="BrowserTest.php">./src</directory>
+        </testsuite>
+        <testsuite name="LegacyBrowser">
+            <directory suffix="Test.php">./legacy_tests/Browser</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="CACHE_STORE" value="array"/>
+    </php>
 </phpunit>
