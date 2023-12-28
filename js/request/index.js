@@ -1,4 +1,4 @@
-import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
+import { contentIsFromDump, getCsrfToken, getUpdateUri, splitDumpFromContent } from '@/utils'
 import { trigger, triggerAsync } from '@/hooks'
 import { showHtmlModal } from './modal'
 import { CommitBus } from './bus'
@@ -125,11 +125,12 @@ export async function sendRequest(pool) {
 
     /**
      * Sometimes a response will be prepended with html to render a dump, so we
-     * will seperate the dump html from Livewire's JSON response content and
+     * will separate the dump html from Livewire's JSON response content and
      * render the dump in a modal and allow Livewire to continue with the
      * request.
      */
     if (contentIsFromDump(content)) {
+        let dump
         [dump, content] = splitDumpFromContent(content)
 
         showHtmlModal(dump)
@@ -155,8 +156,6 @@ function handlePageExpiry() {
 }
 
 function showFailureModal(content) {
-    let html = content
-
-    showHtmlModal(html)
+    showHtmlModal(content)
 }
 
