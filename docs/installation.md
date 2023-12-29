@@ -108,7 +108,7 @@ Now, Livewire will load its JavaScript like so:
 
 ## Manually bundling Livewire and Alpine
 
-By default, Alpine and Livewire are loaded using the `<script src="livewire.js">` tag, which means you have no control over the order in which these libraries are loaded. Consequently, importing and registering Alpine plugins, as shown in the example below, will no longer function:
+By default, Alpine and Livewire are loaded using the `<script src="/livewire/livewire.js">` tag, which means you have no control over the order in which these libraries are loaded. Consequently, importing and registering Alpine plugins, as shown in the example below, will no longer function:
 
 ```js
 // Warning: This snippet demonstrates what NOT to do...
