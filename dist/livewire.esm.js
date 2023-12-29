@@ -7246,8 +7246,8 @@ function contentIsFromDump(content) {
   return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
 }
 function splitDumpFromContent(content) {
-  let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-  return [dump2, content.replace(dump2, "")];
+  let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+  return [dump, content.replace(dump, "")];
 }
 
 // js/hooks.js
@@ -7891,6 +7891,7 @@ async function sendRequest(pool) {
     window.location.href = response.url;
   }
   if (contentIsFromDump(content)) {
+    let dump;
     [dump, content] = splitDumpFromContent(content);
     showHtmlModal(dump);
     finishProfile({ content: "{}", failed: true });
@@ -7906,8 +7907,7 @@ function handlePageExpiry() {
   confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
 }
 function showFailureModal(content) {
-  let html = content;
-  showHtmlModal(html);
+  showHtmlModal(content);
 }
 
 // js/$wire.js
