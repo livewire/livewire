@@ -10191,7 +10191,7 @@ function poll(callback, interval = 2e3) {
   let stopConditions = [];
   return {
     start() {
-      let clear = syncronizedInterval(interval, () => {
+      let clear = synchronizedInterval(interval, () => {
         if (stopConditions.some((i) => i()))
           return clear();
         if (pauseConditions.some((i) => i()))
@@ -10213,7 +10213,7 @@ function poll(callback, interval = 2e3) {
   };
 }
 var clocks = [];
-function syncronizedInterval(ms, callback) {
+function synchronizedInterval(ms, callback) {
   if (!clocks[ms]) {
     let clock = {
       timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),

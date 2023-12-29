@@ -9322,7 +9322,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let stopConditions = [];
     return {
       start() {
-        let clear2 = syncronizedInterval(interval, () => {
+        let clear2 = synchronizedInterval(interval, () => {
           if (stopConditions.some((i) => i()))
             return clear2();
           if (pauseConditions.some((i) => i()))
@@ -9344,7 +9344,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   var clocks = [];
-  function syncronizedInterval(ms, callback) {
+  function synchronizedInterval(ms, callback) {
     if (!clocks[ms]) {
       let clock = {
         timer: setInterval(() => clock.callbacks.forEach((i) => i()), ms),

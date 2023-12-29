@@ -30,7 +30,7 @@ function poll(callback, interval = 2000) {
 
     return {
         start() {
-            let clear = syncronizedInterval(interval, () => {
+            let clear = synchronizedInterval(interval, () => {
                 if (stopConditions.some(i => i())) return clear()
                 if (pauseConditions.some(i => i())) return
                 if (throttleConditions.some(i => i()) && Math.random() < .95) return
@@ -52,7 +52,7 @@ function poll(callback, interval = 2000) {
 
 let clocks = []
 
-function syncronizedInterval(ms, callback) {
+function synchronizedInterval(ms, callback) {
     if (! clocks[ms]) {
         let clock = {
             timer: setInterval(() => clock.callbacks.forEach(i => i()), ms),
