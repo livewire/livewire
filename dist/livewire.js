@@ -7170,7 +7170,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/persist.js
   var els = {};
-  function storePersistantElementsForLater(callback) {
+  function storePersistentElementsForLater(callback) {
     els = {};
     document.querySelectorAll("[x-persist]").forEach((i) => {
       els[i.getAttribute("x-persist")] = i;
@@ -7180,7 +7180,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function putPersistantElementsBack(callback) {
+  function putPersistentElementsBack(callback) {
     let usedPersists = [];
     document.querySelectorAll("[x-persist]").forEach((i) => {
       let old = els[i.getAttribute("x-persist")];
@@ -7478,12 +7478,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         showProgressBar && finishAndHideProgressBar();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
-          enablePersist && storePersistantElementsForLater((persistedEl) => {
+          enablePersist && storePersistentElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
           });
           swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
             removeAnyLeftOverStaleTeleportTargets(document.body);
-            enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+            enablePersist && putPersistentElementsBack((persistedEl, newStub) => {
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
@@ -7504,12 +7504,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     whenTheBackOrForwardButtonIsClicked((html) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
-        enablePersist && storePersistantElementsForLater((persistedEl) => {
+        enablePersist && storePersistentElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
         });
         swapCurrentPageWithNewHtml(html, () => {
           removeAnyLeftOverStaleTeleportTargets(document.body);
-          enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+          enablePersist && putPersistentElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();

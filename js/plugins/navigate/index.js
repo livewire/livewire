@@ -3,7 +3,7 @@ import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsCl
 import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
-import { putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
+import { putPersistentElementsBack, storePersistentElementsForLater } from "./persist"
 import { finishAndHideProgressBar, showAndStartProgressBar } from "./bar"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
@@ -64,14 +64,14 @@ export default function (Alpine) {
             updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                enablePersist && storePersistantElementsForLater(persistedEl => {
+                enablePersist && storePersistentElementsForLater(persistedEl => {
                     packUpPersistedTeleports(persistedEl)
                 })
 
                 swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
                     removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                    enablePersist && putPersistentElementsBack((persistedEl, newStub) => {
                         unPackPersistedTeleports(persistedEl)
                     })
 
@@ -102,14 +102,14 @@ export default function (Alpine) {
         // updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
         preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-            enablePersist && storePersistantElementsForLater(persistedEl => {
+            enablePersist && storePersistentElementsForLater(persistedEl => {
                 packUpPersistedTeleports(persistedEl)
             })
 
             swapCurrentPageWithNewHtml(html, () => {
                 removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                enablePersist && putPersistentElementsBack((persistedEl, newStub) => {
                     unPackPersistedTeleports(persistedEl)
                 })
 

@@ -2,7 +2,7 @@ import Alpine from 'alpinejs'
 
 let els = {}
 
-export function storePersistantElementsForLater(callback) {
+export function storePersistentElementsForLater(callback) {
     els = {}
 
     document.querySelectorAll('[x-persist]').forEach(i => {
@@ -16,7 +16,7 @@ export function storePersistantElementsForLater(callback) {
     })
 }
 
-export function putPersistantElementsBack(callback) {
+export function putPersistentElementsBack(callback) {
     let usedPersists = []
 
     document.querySelectorAll('[x-persist]').forEach(i => {
