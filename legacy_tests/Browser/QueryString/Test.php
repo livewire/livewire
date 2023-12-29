@@ -16,7 +16,7 @@ class Test extends TestCase
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, [Component::class, 'nested' => NestedComponent::class], '?foo=baz&eoo=lob')
                 /*
-                 * Check that the intial property value is set from the query string.
+                 * Check that the initial property value is set from the query string.
                  */
                 ->assertSeeIn('@output', 'baz')
                 ->assertInputValue('@input', 'baz')

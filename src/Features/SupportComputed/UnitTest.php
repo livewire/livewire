@@ -136,7 +136,7 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    function can_tag_persisten_computed_property()
+    function can_tag_persistent_computed_property()
     {
         // need to set a cache driver, which can handle tags
         Cache::setDefaultDriver('array');
@@ -272,14 +272,14 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    public function computed_property_is_accessable_within_blade_view()
+    public function computed_property_is_accessible_within_blade_view()
     {
         Livewire::test(ComputedPropertyStub::class)
             ->assertSee('foo');
     }
 
     /** @test */
-    public function injected_computed_property_is_accessable_within_blade_view()
+    public function injected_computed_property_is_accessible_within_blade_view()
     {
         Livewire::test(InjectedComputedPropertyStub::class)
             ->assertSee('bar');

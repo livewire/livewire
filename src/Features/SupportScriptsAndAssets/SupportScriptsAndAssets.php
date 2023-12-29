@@ -24,7 +24,7 @@ class SupportScriptsAndAssets extends ComponentHook
     public static function getUniqueBladeCompileTimeKey()
     {
         // Rather than using random strings as compile-time keys for blade directives,
-        // we want something more detereminstic to protect against problems that arise
+        // we want something more deterministic to protect against problems that arise
         // from using load-balancers and such.
         // Therefore, we create a key based on the currently compiling view path and
         // number of already compiled directives here...

@@ -86,7 +86,7 @@ export function track(name, initialSeedValue, alwaysShow = false) {
 
                     lock = true
 
-                    // Allow the "receiver" to be an async function in case a non-syncronous
+                    // Allow the "receiver" to be an async function in case a non-synchronous
                     // operation (like an ajax) requests needs to happen while preserving
                     // the "locking" mechanism ("lock = true" in this case)...
                     let result = receiver(newValue)
@@ -211,7 +211,7 @@ function fromQueryString(search) {
         // We're at a leaf node, let's make the assigment...
         if (! second) return data[key] = value
 
-        // This is where we fill in empty arrays/objects allong the way to the assigment...
+        // This is where we fill in empty arrays/objects along the way to the assigment...
         if (data[first] === undefined) {
             data[first] = isNaN(second) ? {} : []
         }

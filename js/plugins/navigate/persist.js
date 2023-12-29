@@ -39,7 +39,7 @@ export function putPersistantElementsBack(callback) {
     Object.entries(els).forEach(([key, el]) => {
         if (usedPersists.includes(key)) return
 
-        // Destory the un-used persist DOM trees before releasing them...
+        // Destroy the un-used persist DOM trees before releasing them...
         Alpine.destroyTree(el)
     })
 

@@ -22,7 +22,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
                 })
             }
 
-            // Account for the existance of wire:confirm="..." on the action...
+            // Account for the existence of wire:confirm="..." on the action...
             if (el.__livewire_confirm) {
                 el.__livewire_confirm(() => {
                     execute()

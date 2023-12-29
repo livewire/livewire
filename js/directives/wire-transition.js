@@ -21,7 +21,7 @@ directive('transition', ({ el, directive, component, cleanup }) => {
     let cleanups = []
 
     cleanups.push(on('morph.removing', ({ el, skip }) => {
-        // Here we interupt morphdom from removing an element...
+        // Here we interrupt morphdom from removing an element...
         skip()
 
         // When the transition ends...
@@ -37,7 +37,7 @@ directive('transition', ({ el, directive, component, cleanup }) => {
             if (morphComponent !== component) return
 
             // While this element is transitioning out, a new morph is about to occur.
-            // Let's expidite this one and clean it up so it doesn't interfere...
+            // Let's expedite this one and clean it up so it doesn't interfere...
             el.remove()
 
             cleanups.forEach(i => i())

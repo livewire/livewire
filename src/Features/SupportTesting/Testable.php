@@ -182,7 +182,7 @@ class Testable
     /** @todo Move me outta here and into the file upload folder somehow... */
     function upload($name, $files, $isMultiple = false)
     {
-        // This methhod simulates the calls Livewire's JavaScript
+        // This method simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
         $this->call(
             '_startUpload',

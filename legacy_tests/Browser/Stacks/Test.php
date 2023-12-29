@@ -7,7 +7,7 @@ use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    public function test_conditionally_loaded_component_can_push_and_preppend_to_stack()
+    public function test_conditionally_loaded_component_can_push_and_prepend_to_stack()
     {
         $this->markTestSkipped('Stacks feature reverted since 2021-10-20');
 

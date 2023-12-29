@@ -205,7 +205,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
-    function can_assert_see_livewire_on_test_view_refering_by_subfolder_without_dot_index()
+    function can_assert_see_livewire_on_test_view_referring_by_subfolder_without_dot_index()
     {
         Artisan::call('make:livewire', ['name' => 'bar.index']);
 

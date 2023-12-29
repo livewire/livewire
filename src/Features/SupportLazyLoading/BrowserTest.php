@@ -188,7 +188,7 @@ class BrowserTest extends BrowserTestCase
             {
                 $this->time = LARAVEL_START;
             }
-            
+
             public function render() { return <<<'HTML'
             <div wire:poll.500ms id="child">
                 Child {{ $num }}
@@ -313,7 +313,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_pass_props_to_lazyilly_loaded_component()
+    public function can_pass_props_to_lazily_loaded_component()
     {
         Livewire::visit([new class extends Component {
             public $count = 1;
@@ -337,7 +337,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_pass_props_to_mount_method_to_lazyilly_loaded_component()
+    public function can_pass_props_to_mount_method_to_lazily_loaded_component()
     {
         Livewire::visit([new class extends Component {
             public $count = 1;
@@ -361,7 +361,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_pass_reactive_props_to_lazyilly_loaded_component()
+    public function can_pass_reactive_props_to_lazily_loaded_component()
     {
         Livewire::visit([new class extends Component {
             public $count = 1;

@@ -194,7 +194,7 @@ JS;
 
     public function test_that_authorization_middleware_is_re_applied_on_page_components()
     {
-        // This test relies on "app('router')->subsituteImplicitBindingsUsing()"...
+        // This test relies on "app('router')->substituteImplicitBindingsUsing()"...
         if (app()->version() < '10.37.1') {
             $this->markTestSkipped();
         }

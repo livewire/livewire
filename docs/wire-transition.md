@@ -72,10 +72,10 @@ Modifier | Description
 --- | ---
 `.in` | Only transition the element "in"
 `.out` | Only transition the element "out"
-`.duration.[?]ms` | Customize the transtion duration in milliseconds
-`.duration.[?]s` | Customize the transtion duration in seconds
-`.delay.[?]ms` | Customize the transtion delay in milliseconds
-`.delay.[?]s` | Customize the transtion delay in seconds
+`.duration.[?]ms` | Customize the transition duration in milliseconds
+`.duration.[?]s` | Customize the transition duration in seconds
+`.delay.[?]ms` | Customize the transition delay in milliseconds
+`.delay.[?]s` | Customize the transition delay in seconds
 `.opacity` | Only apply the opacity transition
 `.scale` | Only apply the scale transition
 `.origin.[top\|bottom\|left\|right]` | Customize the scale "origin" used

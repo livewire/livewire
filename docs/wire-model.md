@@ -66,7 +66,7 @@ To send property updates to the server as a user types into an input-field, you 
 
 #### Customizing the debounce
 
-By default, when using `wire:model.live`, Livewire adds a 150 millisecond debounce to server updates. This means if a user is continually typing, Livewire will wait untill the user stops typing for 150 milliseconds before sending a request.
+By default, when using `wire:model.live`, Livewire adds a 150 millisecond debounce to server updates. This means if a user is continually typing, Livewire will wait until the user stops typing for 150 milliseconds before sending a request.
 
 You can customize this timing by appending `.debounce.Xms` to the input. Here is an example of changing the debounce to 250 milliseconds:
 

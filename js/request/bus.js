@@ -63,7 +63,7 @@ export class CommitBus {
         // commits before those commits are pooled for a network request...
         trigger('commit.pooling', { commits: this.commits })
 
-        // Split commits up across one or multiple pools to be sent as seperate network requests...
+        // Split commits up across one or multiple pools to be sent as separate network requests...
         let pools = this.corraleCommitsIntoPools()
 
         // Clear all commits in the queue now that they're in pools...
@@ -94,8 +94,8 @@ export class CommitBus {
     corraleCommitsIntoPools() {
         let pools = new Set
 
-        // Go through each commit and assess wether it should be bundled
-        // with other commits or sperated into it's own pool (network request)...
+        // Go through each commit and assess whether it should be bundled
+        // with other commits or seperated into its own pool (network request)...
         for (let [idx, commit] of this.commits.entries()) {
             let hasFoundPool = false
 

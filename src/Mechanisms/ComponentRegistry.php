@@ -151,7 +151,7 @@ class ComponentRegistry extends Mechanism
 
         if ($name = array_search($class, $resolvedAliases)) return $name;
 
-        // Check existance in non-aliased classes and hash...
+        // Check existence in non-aliased classes and hash...
         foreach ($this->nonAliasedClasses as $oneOff) {
             if (crc32($oneOff) === $hash = crc32($class)) {
                 return $hash;

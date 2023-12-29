@@ -72,7 +72,7 @@ class Test extends TestCase
                 ->click('@bob') // Set focus.
                 ->type('@bob', 'deferred')
                 ->assertDontSeeIn('@bob.output', 'deferred')
-                ->click('@foo') // Blur input to make sure this is more thans "lazy".
+                ->click('@foo') // Blur input to make sure this is more than "lazy".
                 ->pause(150) // Pause for upper-bound of most round-trip lengths.
                 ->assertDontSeeIn('@bob.output', 'deferred')
                 ->waitForLivewire()->click('@refresh')

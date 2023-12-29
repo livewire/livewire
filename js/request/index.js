@@ -125,7 +125,7 @@ export async function sendRequest(pool) {
 
     /**
      * Sometimes a response will be prepended with html to render a dump, so we
-     * will seperate the dump html from Livewire's JSON response content and
+     * will separate the dump html from Livewire's JSON response content and
      * render the dump in a modal and allow Livewire to continue with the
      * request.
      */

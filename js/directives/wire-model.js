@@ -32,7 +32,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
         : () => component.$wire.$commit()
 
     // If a plain wire:model is added to a text input, debounce the
-    // trigerring of network requests.
+    // triggering of network requests.
     let debouncedUpdate = isTextInput(el) && ! isDebounced && isLive
         ? debounce(update, 150)
         : update

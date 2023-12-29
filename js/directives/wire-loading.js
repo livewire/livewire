@@ -147,7 +147,7 @@ function getTargets(el) {
             targets.push({ target: raw })
         }
     } else {
-        // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
+        // If there is no wire:target, let's check for the existence of a wire:click="foo" or something,
         // and automatically scope this loading directive to that action.
         let nonActionOrModelLivewireDirectives = [ 'init', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore', 'key', 'id' ]
 

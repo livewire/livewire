@@ -10,7 +10,7 @@ class Test extends TestCase
     public function test()
     {
         // This is a manual test for Safari.
-        // We can't test this automically because
+        // We can't test this automatically because
         // Safari's automation mode disables autofill.
         //
         // Test steps:

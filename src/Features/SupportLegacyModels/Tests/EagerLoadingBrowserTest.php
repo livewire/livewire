@@ -13,7 +13,7 @@ class EagerLoadingBrowserTest extends TestCase
     use Concerns\EnableLegacyModels;
 
     /** @test */
-    public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
+    public function it_restores_eloquent_collection_eager_loaded_relations_on_hydrate()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EagerLoadComponent::class)

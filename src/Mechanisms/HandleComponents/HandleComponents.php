@@ -384,7 +384,7 @@ class HandleComponents extends Mechanism
 
             // Here's we've determined we're trying to set a deeply nested
             // value on an object/array that doesn't exist, so we need
-            // to build up that non-existant nesting structure first.
+            // to build up that non-existent nesting structure first.
             if ($propertyTarget === null) $propertyTarget = [];
 
             $toSet = $this->recursivelySetValue($baseProperty, $propertyTarget, $leafValue, $segments, $index + 1, $context);

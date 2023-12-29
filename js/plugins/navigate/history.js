@@ -63,7 +63,7 @@ export function fromSessionStorage(timestamp) {
 }
 
 function tryToStoreInSession(timestamp, value) {
-    // sessionStorage has a max storage limit (usally 5MB).
+    // sessionStorage has a max storage limit (usually 5MB).
     // If we meet that limit, we'll start removing entries
     // (oldest first), until there's enough space to store
     // the new one.

@@ -10,12 +10,12 @@
 
 > Always include import statements 
 
-> Be consistant, but switch it up (tone, filler transition text, using colons)
+> Be consistent, but switch it up (tone, filler transition text, using colons)
 
 > Optimize for skimming (don't show "wrong" example first unless you have visual aid. People aint reading the words: this is wrong up-front)
 
 
-[[Referencing file names in a sentance]]
+[[Referencing file names in a sentence]]
 [[Casing rules]]
 
 

@@ -126,7 +126,7 @@ class UnsafeComponentStub extends Component
 {
     public function someMethod()
     {
-        throw new \Exception('Should not be able to acess me!');
+        throw new \Exception('Should not be able to access me!');
     }
 
     public function render()

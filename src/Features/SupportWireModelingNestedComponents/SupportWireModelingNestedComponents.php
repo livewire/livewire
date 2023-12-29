@@ -87,7 +87,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
         $directives = store($this->component)->get('bindings-directives');
 
-        // Add the bindings metadata to the paylad for later reference...
+        // Add the bindings metadata to the payload for later reference...
         $context->addMemo('bindings', $bindings);
         $context->addMemo('bindingsDirectives', $directives);
     }

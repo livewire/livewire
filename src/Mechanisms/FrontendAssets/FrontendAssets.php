@@ -80,7 +80,7 @@ class FrontendAssets extends Mechanism
 
         $progressBarColor = config('livewire.navigate.progress_bar_color', '#2299dd');
 
-        // Note: the attribute selectors are "doubled" so that they don't get overriden when Tailwind's CDN loads a script tag
+        // Note: the attribute selectors are "doubled" so that they don't get overridden when Tailwind's CDN loads a script tag
         // BELOW the one Livewire injects...
         $html = <<<HTML
         <!-- Livewire Styles -->

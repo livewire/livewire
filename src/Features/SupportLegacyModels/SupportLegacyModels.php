@@ -127,7 +127,7 @@ class SupportLegacyModels extends ComponentHook
             ->replaceMatches('/(?<=(\.))\d+\./', '*.')
             // Replace all numeric indexes at the end of the name with an array wildcard
             // (Same as the previous regex, but ran only at the end of the string)
-            // For better undestanding, see: https://regexr.com/5d1n6
+            // For better understanding, see: https://regexr.com/5d1n6
             ->replaceMatches('/\.\d+$/', '.*');
     }
 

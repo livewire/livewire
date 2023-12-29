@@ -41,7 +41,7 @@ EOT
     }
 
     /** @test */
-    public function if_element_is_a_comment_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
+    public function if_element_is_a_comment_it_is_skipped_and_id_and_data_inserted_on_next_element()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
@@ -56,7 +56,7 @@ EOT
     }
 
     /** @test */
-    public function if_element_is_a_comment_and_contains_html_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
+    public function if_element_is_a_comment_and_contains_html_it_is_skipped_and_id_and_data_inserted_on_next_element()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 

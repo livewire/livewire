@@ -337,7 +337,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_redirect_to_a_page_after_destorying_session()
+    public function can_redirect_to_a_page_after_destroying_session()
     {
         $this->browse(function ($browser) {
             $browser

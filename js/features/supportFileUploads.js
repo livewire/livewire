@@ -66,7 +66,7 @@ class UploadManager {
 
     registerListeners() {
         this.component.$wire.$on('upload:generatedSignedUrl', ({ name, url }) => {
-            // We have to add reduntant "setLoading" calls because the dom-patch
+            // We have to add redundant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
             setUploadLoading(this.component, name)

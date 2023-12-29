@@ -39,7 +39,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function component_action_with_paramter_name_that_matches_a_container_registration_name()
+    public function component_action_with_parameter_name_that_matches_a_container_registration_name()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 

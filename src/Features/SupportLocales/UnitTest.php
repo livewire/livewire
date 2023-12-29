@@ -16,7 +16,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(App::getLocale(), 'en');
 
         // Mount component and new ensure locale is set
-        $component = Livewire::test(ComponentForLocalePersistanceHydrationMiddleware::class);
+        $component = Livewire::test(ComponentForLocalePersistenceHydrationMiddleware::class);
         $this->assertEquals(App::getLocale(), 'es');
 
         // Reset locale to ensure it isn't persisted in the test session
@@ -29,7 +29,7 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentForLocalePersistanceHydrationMiddleware extends Component
+class ComponentForLocalePersistenceHydrationMiddleware extends Component
 {
     public function mount()
     {
