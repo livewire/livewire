@@ -50,16 +50,11 @@ class SubsequentRender extends Render
             );
         }
 
-        $json = $response->json();
+        $componentResponsePayload = data_get($response, 'original.components.0');
 
-        // Set "original" to Blade view for assertions like "assertViewIs()"...
-        $response->original = $componentView;
+        $snapshot = json_decode(data_get($componentResponsePayload, 'snapshot'), true);
 
-        $componentResponsePayload = $json['components'][0];
-
-        $snapshot = json_decode($componentResponsePayload['snapshot'], true);
-
-        $effects = $componentResponsePayload['effects'];
+        $effects = data_get($componentResponsePayload, 'effects');
 
         // If no new HTML has been rendered, let's forward the last known HTML...
         $html = $effects['html'] ?? $this->lastState->getHtml(stripInitialData: true);
