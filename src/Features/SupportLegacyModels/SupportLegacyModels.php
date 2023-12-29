@@ -140,10 +140,10 @@ class SupportLegacyModels extends ComponentHook
 
     protected static function convertDotNotationToArrayNotation($rules)
     {
-        return static::recusivelyProcessDotNotation($rules);
+        return static::recursivelyProcessDotNotation($rules);
     }
 
-    protected static function recusivelyProcessDotNotation($rules)
+    protected static function recursivelyProcessDotNotation($rules)
     {
         $singleRules = [];
         $groupedRules = [];
@@ -161,7 +161,7 @@ class SupportLegacyModels extends ComponentHook
         }
 
         foreach ($groupedRules as $key => $value) {
-            $groupedRules[$key] = static::recusivelyProcessDotNotation($value);
+            $groupedRules[$key] = static::recursivelyProcessDotNotation($value);
         }
 
         return $singleRules + $groupedRules;
