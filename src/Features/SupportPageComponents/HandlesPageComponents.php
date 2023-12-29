@@ -11,7 +11,7 @@ trait HandlesPageComponents
         // simple invokable controllers. Ex: Route::get('...', SomeLivewireComponent::class);
         $html = null;
 
-        $layoutConfig = SupportPageComponents::interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () use (&$html) {
+        $layoutConfig = SupportPageComponents::interceptTheRenderOfTheComponentAndRetrieveTheLayoutConfiguration(function () use (&$html) {
             $params = SupportPageComponents::gatherMountMethodParamsFromRouteParameters($this);
 
             $html = app('livewire')->mount($this::class, $params);

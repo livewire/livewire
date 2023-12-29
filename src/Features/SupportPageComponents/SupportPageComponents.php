@@ -84,7 +84,7 @@ class SupportPageComponents extends ComponentHook
         });
     }
 
-    static function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
+    static function interceptTheRenderOfTheComponentAndRetrieveTheLayoutConfiguration($callback)
     {
         $layoutConfig = null;
         $slots = [];
