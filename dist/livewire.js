@@ -7473,7 +7473,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function navigateTo(destination) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
-        fireEventForOtherLibariesToHookInto("alpine:navigating");
+        fireEventForOtherLibrariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
@@ -7487,7 +7487,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
+            fireEventForOtherLibrariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
@@ -7513,7 +7513,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
+          fireEventForOtherLibrariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine3);
@@ -7522,7 +7522,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     setTimeout(() => {
-      fireEventForOtherLibariesToHookInto("alpine:navigated");
+      fireEventForOtherLibrariesToHookInto("alpine:navigated");
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -7539,7 +7539,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(eventName) {
+  function fireEventForOtherLibrariesToHookInto(eventName) {
     document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
   }
   function nowInitializeAlpineOnTheNewPage(Alpine3) {

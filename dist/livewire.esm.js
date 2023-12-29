@@ -8823,7 +8823,7 @@ function navigate_default(Alpine21) {
   function navigateTo(destination) {
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
-      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      fireEventForOtherLibrariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
@@ -8837,7 +8837,7 @@ function navigate_default(Alpine21) {
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
+          fireEventForOtherLibrariesToHookInto("alpine:navigated");
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
@@ -8863,7 +8863,7 @@ function navigate_default(Alpine21) {
           unPackPersistedTeleports(persistedEl);
         });
         restoreScrollPositionOrScrollToTop();
-        fireEventForOtherLibariesToHookInto("alpine:navigated");
+        fireEventForOtherLibrariesToHookInto("alpine:navigated");
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
           nowInitializeAlpineOnTheNewPage(Alpine21);
@@ -8872,7 +8872,7 @@ function navigate_default(Alpine21) {
     });
   });
   setTimeout(() => {
-    fireEventForOtherLibariesToHookInto("alpine:navigated");
+    fireEventForOtherLibrariesToHookInto("alpine:navigated");
   });
 }
 function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -8889,7 +8889,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine21, callback) {
     });
   });
 }
-function fireEventForOtherLibariesToHookInto(eventName) {
+function fireEventForOtherLibrariesToHookInto(eventName) {
   document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
 }
 function nowInitializeAlpineOnTheNewPage(Alpine21) {
