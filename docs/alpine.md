@@ -211,6 +211,15 @@ To fix this, we need to add quotations around the Blade expression like so:
 >
 ```
 
+Blade also has a `@js` directive that turns your PHP output into valid Javascript. It is better at handling different types, and special character issues, so it is recommended over the above method.
+
+```html
+<button
+    type="button"
+    x-on:click="$wire.deletePost(@js($post->uuid))"
+>
+```
+
 Now the above template will render properly and everything will work as expected:
 
 ```html
