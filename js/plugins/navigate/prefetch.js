@@ -21,7 +21,7 @@ export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination) {
     state.whenFinished()
 }
 
-export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
+export function getPrefetchedHtmlOr(destination, receive, ifNoPrefetchExists) {
     let uri = destination.pathname + destination.search
 
     if (! prefetches[uri]) return ifNoPrefetchExists()

@@ -1,5 +1,5 @@
 import { updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
-import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
+import { getPrefetchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
@@ -135,7 +135,7 @@ export default function (Alpine) {
 }
 
 function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
-    getPretchedHtmlOr(fromDestination, callback, () => {
+    getPrefetchedHtmlOr(fromDestination, callback, () => {
         fetchHtml(fromDestination, callback)
     })
 }

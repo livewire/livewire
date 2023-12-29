@@ -8399,7 +8399,7 @@ function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination) {
   state.finished = true;
   state.whenFinished();
 }
-function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
+function getPrefetchedHtmlOr(destination, receive, ifNoPrefetchExists) {
   let uri = destination.pathname + destination.search;
   if (!prefetches[uri])
     return ifNoPrefetchExists();
@@ -8876,7 +8876,7 @@ function navigate_default(Alpine21) {
   });
 }
 function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
-  getPretchedHtmlOr(fromDestination, callback, () => {
+  getPrefetchedHtmlOr(fromDestination, callback, () => {
     fetchHtml(fromDestination, callback);
   });
 }

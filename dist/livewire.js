@@ -7052,7 +7052,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     state.finished = true;
     state.whenFinished();
   }
-  function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
+  function getPrefetchedHtmlOr(destination, receive, ifNoPrefetchExists) {
     let uri = destination.pathname + destination.search;
     if (!prefetches[uri])
       return ifNoPrefetchExists();
@@ -7526,7 +7526,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
-    getPretchedHtmlOr(fromDestination, callback, () => {
+    getPrefetchedHtmlOr(fromDestination, callback, () => {
       fetchHtml(fromDestination, callback);
     });
   }
