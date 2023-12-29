@@ -86,7 +86,7 @@ class SupportEvents extends ComponentHook
 
         $listeners = array_merge($fromClass, $fromAttributes);
 
-        return static::replaceDynamicEventNamePlaceholers($listeners, $component);
+        return static::replaceDynamicEventNamePlaceholders($listeners, $component);
     }
 
     function getServerDispatchedEvents($component)
@@ -96,7 +96,7 @@ class SupportEvents extends ComponentHook
             ->toArray();
     }
 
-    static function replaceDynamicEventNamePlaceholers($listeners, $component)
+    static function replaceDynamicEventNamePlaceholders($listeners, $component)
     {
         foreach ($listeners as $event => $method) {
             if (is_numeric($event)) continue;
