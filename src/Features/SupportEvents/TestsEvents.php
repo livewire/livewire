@@ -65,7 +65,7 @@ trait TestsEvents
                 ksort($params);
 
                 return $item['name'] === $value
-                    && $commonParams === $params;
+                    && $commonParams == $params;
             });
 
             $encodedParams = json_encode($params);
