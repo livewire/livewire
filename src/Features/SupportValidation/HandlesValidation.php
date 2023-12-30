@@ -284,7 +284,7 @@ trait HandlesValidation
         // First, run sub-validators...
         foreach ($this->getFormObjects() as $form) {
             try {
-                $cumulativeData = array_merge($validateForm($form));
+                $cumulativeData = array_merge($cumulativeData, $validateForm($form));
             } catch (ValidationException $e) {
                 $cumulativeErrors->merge($e->validator->errors());
 
@@ -294,7 +294,7 @@ trait HandlesValidation
 
         // Now run main validator...
         try {
-            $cumulativeData = array_merge($validateSelf());
+            $cumulativeData = array_merge($cumulativeData, $validateSelf());
         } catch (ValidationException $e) {
             // If the main validator has errors, merge them with subs and rethrow...
             $e->validator->errors()->merge($cumulativeErrors);
