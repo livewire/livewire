@@ -479,7 +479,7 @@ trait HandlesValidation
 
         if ($this->isRootComponent()) {
             foreach ($this->getFormObjects() as $form) {
-                $allRules = array_merge($form->getRules());
+                $allRules = array_merge($allRules, $form->getRules());
             }
         }
 
