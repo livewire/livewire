@@ -504,10 +504,10 @@ trait HandlesValidation
         }
 
         if ($value instanceof Model) {
-            return collect($value->toArray())
-                ->map(
-                    fn ($attribute) => $this->castDataForValidation($attribute)
-                )->toArray();
+            return array_map(
+                fn ($attribute) => $this->castDataForValidation($attribute),
+                $value->toArray()
+            );
         }
 
         if ($value instanceof Arrayable) {
