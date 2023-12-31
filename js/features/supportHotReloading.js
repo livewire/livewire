@@ -1,11 +1,11 @@
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 // // Only allow this in "Simple Preview"...
 // if (! navigator.userAgent.includes('Electron')) return
 
 // if (! enabled.includes('hot-reloading')) return
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     queueMicrotask(() => {
         let files = effects.hotReload
 

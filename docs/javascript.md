@@ -1,7 +1,7 @@
 
 ## Using JavaScript in Livewire components
 
-Livewire and Alpine provide plenty of utilities for building dynamic components directly in your HTML, however, there are times where it's helpful to break out of the HTML and execute plain JavaScript for your component. Livewire's `@script` and `@assets` directive allow you to do this in a predictable, maintainable way.
+Livewire and Alpine provide plenty of utilities for building dynamic components directly in your HTML, however, there are times when it's helpful to break out of the HTML and execute plain JavaScript for your component. Livewire's `@script` and `@assets` directive allow you to do this in a predictable, maintainable way.
 
 ### Executing scripts
 
@@ -9,7 +9,7 @@ To execute bespoke JavaScript in your Livewire component, simply wrap a `<script
 
 Because scripts inside `@script` are handled by Livewire, they are executed at the perfect time after the page has loaded, but before the Livewire component has rendered. This means you no longer need to wrap your scripts in `document.addEventListener('...')` to load them properly.
 
-This also means that lazilly or conditionally loaded Livewire components are still able to execute JavaScript after the page has intiailized.
+This also means that lazily or conditionally loaded Livewire components are still able to execute JavaScript after the page has initialized.
 
 ```blade
 <div>
@@ -51,7 +51,7 @@ Here's a more full example where you can do something like register a one-off Al
 
 ### Using `$wire` from scripts
 
-Another helpful feature of using `@script` for your JavaScript is that you automatically have access to your Liveiwre component's `$wire` object.
+Another helpful feature of using `@script` for your JavaScript is that you automatically have access to your Livewire component's `$wire` object.
 
 Here's an example of using a simple `setInterval` to refresh the component every 2 seconds (You could easily do this with [`wire:poll`](/docs/wire-poll), but it's a simple way to demonstrate the point):
 
@@ -161,6 +161,25 @@ Livewire.on('post-created', ({ postId }) => {
 })
 ```
 
+In certain scenarios, you might need to unregister global Livewire events. For instance, when working with Alpine components and `wire:navigate`, multiple listeners may be registered as `init` is called when navigating between pages. To address this, utilize the `destroy` function, automatically invoked by Alpine. Loop through all your listeners within this function to unregister them and prevent any unwanted accumulation.
+
+```js
+Alpine.data('MyComponent', () => ({
+    listeners: [],
+    init() {
+        this.listeners.push(  
+            Livewire.on('post-created', (options) => {  
+                // Do something...
+            })
+        );
+    },
+    destroy() {
+        this.listeners.forEach((listener) => {  
+            listener();  
+        });
+    }
+});
+```
 ### Using lifecycle hooks
 
 Livewire allows you to hook into various parts of its global lifecycle using `Livewire.hook()`:

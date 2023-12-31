@@ -17,30 +17,30 @@ trait TestsEvents
         return $this->dispatch($event, ...$parameters);
     }
 
-    public function assertDispatched($value, ...$params)
+    public function assertDispatched($event, ...$params)
     {
-        $result = $this->testDispatched($value, $params);
+        $result = $this->testDispatched($event, $params);
 
-        PHPUnit::assertTrue($result['test'], "Failed asserting that an event [{$value}] was fired{$result['assertionSuffix']}");
+        PHPUnit::assertTrue($result['test'], "Failed asserting that an event [{$event}] was fired{$result['assertionSuffix']}");
 
         return $this;
     }
 
-    public function assertNotDispatched($value, ...$params)
+    public function assertNotDispatched($event, ...$params)
     {
-        $result = $this->testDispatched($value, $params);
+        $result = $this->testDispatched($event, $params);
 
-        PHPUnit::assertFalse($result['test'], "Failed asserting that an event [{$value}] was not fired{$result['assertionSuffix']}");
+        PHPUnit::assertFalse($result['test'], "Failed asserting that an event [{$event}] was not fired{$result['assertionSuffix']}");
 
         return $this;
     }
 
-    public function assertDispatchedTo($target, $value, ...$params)
+    public function assertDispatchedTo($target, $event, ...$params)
     {
-        $this->assertDispatched($value, ...$params);
-        $result = $this->testDispatchedTo($target, $value);
+        $this->assertDispatched($event, ...$params);
+        $result = $this->testDispatchedTo($target, $event);
 
-        PHPUnit::assertTrue($result, "Failed asserting that an event [{$value}] was fired to {$target}.");
+        PHPUnit::assertTrue($result, "Failed asserting that an event [{$event}] was fired to {$target}.");
 
         return $this;
     }

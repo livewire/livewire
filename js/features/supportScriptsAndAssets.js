@@ -1,4 +1,4 @@
-import { on } from '@/events'
+import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
 let executedScripts = new WeakMap
@@ -6,6 +6,8 @@ let executedScripts = new WeakMap
 let executedAssets = new Set
 
 on('payload.intercept', async ({ assets }) => {
+    if(!assets) return
+
     for (let [key, asset] of Object.entries(assets)) {
         await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
             await addAssetsToHeadTagOfPage(asset)
@@ -26,7 +28,7 @@ on('component.init', ({ component }) => {
     }
 })
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     let scripts = effects.scripts
 
     if (scripts) {

@@ -65,6 +65,37 @@ abstract class Attribute
             throw new \Exception('Can\'t set the value of a non-property attribute.');
         }
 
+        if ($enum = $this->tryingToSetStringToEnum($value)) {
+            $value = $enum::from($value);
+        }
+
         data_set($this->component, $this->levelName, $value);
+    }
+
+    protected function tryingToSetStringToEnum($subject)
+    {
+        if (! is_string($subject)) return;
+
+        $target = $this->subTarget ?? $this->component;
+
+        $name = $this->subName ?? $this->levelName;
+
+        $property = str($name)->before('.')->toString();
+
+        $reflection = new \ReflectionProperty($target, $property);
+
+        $type = $reflection->getType();
+
+        // If the type is available, display its name
+        if ($type instanceof \ReflectionNamedType) {
+            $name = $type->getName();
+
+            // If the type is a BackedEnum then return it's name
+            if (is_subclass_of($name, \BackedEnum::class)) {
+                return $name;
+            }
+        }
+
+        return false;
     }
 }

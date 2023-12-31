@@ -1,5 +1,5 @@
 import { getCsrfToken } from '@/utils';
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 let uploadManagers = new WeakMap
 

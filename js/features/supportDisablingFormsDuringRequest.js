@@ -1,5 +1,5 @@
 import { getDirectives } from '@/directives'
-import { on } from '@/events'
+import { on } from '@/hooks'
 import { Livewire } from '@/index'
 import Alpine from 'alpinejs'
 
