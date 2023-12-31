@@ -496,15 +496,32 @@ trait HandlesValidation
         return Utils::getPublicPropertiesDefinedOnSubclass($this);
     }
 
+    protected function castDataForValidation($value)
+    {
+        // @todo: this logic should be contained within "SupportWireables"...
+        if ($value instanceof Wireable) {
+            return $value->toLivewire();
+        }
+
+        if ($value instanceof Model) {
+            return collect($value->toArray())
+                ->map(
+                    fn ($attribute) => $this->castDataForValidation($attribute)
+                )->toArray();
+        }
+
+        if ($value instanceof Arrayable) {
+            return $value->toArray();
+        };
+
+        return $value;
+    }
+
     protected function unwrapDataForValidation($data)
     {
-        return collect($data)->map(function ($value) {
-            // @todo: this logic should be contained within "SupportWireables"...
-            if ($value instanceof Wireable) return $value->toLivewire();
-            else if ($value instanceof Arrayable) return $value->toArray();
-
-            return $value;
-        })->all();
+        return collect($data)
+            ->map(fn ($v) => $this->castDataForValidation($v))
+            ->all();
     }
 
     protected function prepareForValidation($attributes)
