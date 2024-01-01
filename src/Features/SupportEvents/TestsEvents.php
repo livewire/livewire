@@ -48,7 +48,6 @@ trait TestsEvents
     protected function testDispatched($value, $params)
     {
         $assertionSuffix = '.';
-        $params = json_decode(json_encode($params), true);
 
         if (empty($params)) {
             $test = collect(data_get($this->effects, 'dispatches'))->contains('name', '=', $value);
@@ -59,6 +58,8 @@ trait TestsEvents
 
             $test = $event && $params[0]($event['name'], $event['params']);
         } else {
+            $params = json_decode(json_encode($params), true);
+
             $test = (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($value, $params) {
                 $commonParams = array_intersect_key($item['params'], $params);
 
