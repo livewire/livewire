@@ -8673,6 +8673,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
+  // js/features/supportIsolating.js
+  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  on("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.isolate !== true)
+      return;
+    componentsThatAreIsolated.add(component);
+  });
+  on("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      if (!componentsThatAreIsolated.has(commit.component))
+        return;
+      commit.isolate = true;
+    });
+  });
+
   // js/features/supportNavigate.js
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
   document.addEventListener("alpine:navigated", (e) => {
