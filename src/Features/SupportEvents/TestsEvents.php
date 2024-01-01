@@ -48,6 +48,7 @@ trait TestsEvents
     protected function testDispatched($value, $params)
     {
         $assertionSuffix = '.';
+        $params = json_decode(json_encode($params), true);
 
         if (empty($params)) {
             $test = collect(data_get($this->effects, 'dispatches'))->contains('name', '=', $value);
