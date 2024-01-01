@@ -38,7 +38,7 @@ class TestableLivewireCanDispatchOriginalParamsUnitTest extends \Tests\TestCase
     /** @test */
     function can_assert_dispatch_with_datetime_in_array_values()
     {
-        $date = Carbon::create(2023, 12, 1, 10, 10, 58);
+        $date = Carbon::create(2024, 01, 1, 11, 11, 58);
 
         Carbon::setTestNow($date);
 
@@ -46,7 +46,7 @@ class TestableLivewireCanDispatchOriginalParamsUnitTest extends \Tests\TestCase
             function sentDateTimeInArrayValues()
             {
                 $this->dispatch('my-event', payload: [
-                    'datetime' => Carbon::create(2023, 12, 1, 10, 10, 58)
+                    'datetime' => Carbon::create(2024, 01, 1, 11, 11, 58)
                 ]);
             }
 
@@ -66,7 +66,7 @@ class TestableLivewireCanDispatchOriginalParamsUnitTest extends \Tests\TestCase
                 'datetime' => $date
             ])
             ->assertDispatched('my-event', payload: [
-                'datetime' => '2023-12-01T10:10:58.000000Z'
+                'datetime' => '2024-01-01T11:11:58.000000Z'
             ])
         ;
     }
