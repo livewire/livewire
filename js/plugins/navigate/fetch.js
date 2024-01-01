@@ -1,3 +1,4 @@
+import {trigger} from "@/hooks";
 
 export function fetchHtml(destination, callback) {
     let uri = destination.pathname + destination.search

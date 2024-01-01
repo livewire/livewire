@@ -568,7 +568,7 @@ var require_module_cjs = __commonJS({
             }
           }
         }
-        function trigger3(target, type, key, newValue, oldValue, oldTarget) {
+        function trigger2(target, type, key, newValue, oldValue, oldTarget) {
           const depsMap = targetMap.get(target);
           if (!depsMap) {
             return;
@@ -724,9 +724,9 @@ var require_module_cjs = __commonJS({
             const result = Reflect.set(target, key, value, receiver);
             if (target === toRaw2(receiver)) {
               if (!hadKey) {
-                trigger3(target, "add", key, value);
+                trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger3(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value, oldValue);
               }
             }
             return result;
@@ -737,7 +737,7 @@ var require_module_cjs = __commonJS({
           const oldValue = target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger3(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -825,7 +825,7 @@ var require_module_cjs = __commonJS({
           const hadKey = proto.has.call(target, value);
           if (!hadKey) {
             target.add(value);
-            trigger3(target, "add", value, value);
+            trigger2(target, "add", value, value);
           }
           return this;
         }
@@ -843,9 +843,9 @@ var require_module_cjs = __commonJS({
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
-            trigger3(target, "add", key, value);
+            trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger3(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value, oldValue);
           }
           return this;
         }
@@ -862,7 +862,7 @@ var require_module_cjs = __commonJS({
           const oldValue = get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger3(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -872,7 +872,7 @@ var require_module_cjs = __commonJS({
           const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger3(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0, oldTarget);
           }
           return result;
         }
@@ -1132,7 +1132,7 @@ var require_module_cjs = __commonJS({
             if (shared.hasChanged(newVal, this._rawValue)) {
               this._rawValue = newVal;
               this._value = this._shallow ? newVal : convert(newVal);
-              trigger3(toRaw2(this), "set", "value", newVal);
+              trigger2(toRaw2(this), "set", "value", newVal);
             }
           }
         };
@@ -1143,7 +1143,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger3(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", ref2.value);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1166,7 +1166,7 @@ var require_module_cjs = __commonJS({
         var CustomRefImpl = class {
           constructor(factory) {
             this.__v_isRef = true;
-            const { get: get3, set: set3 } = factory(() => track2(this, "get", "value"), () => trigger3(this, "set", "value"));
+            const { get: get3, set: set3 } = factory(() => track2(this, "get", "value"), () => trigger2(this, "set", "value"));
             this._get = get3;
             this._set = set3;
           }
@@ -1216,7 +1216,7 @@ var require_module_cjs = __commonJS({
               scheduler: () => {
                 if (!this._dirty) {
                   this._dirty = true;
-                  trigger3(toRaw2(this), "set", "value");
+                  trigger2(toRaw2(this), "set", "value");
                 }
               }
             });
@@ -1273,7 +1273,7 @@ var require_module_cjs = __commonJS({
         exports2.toRef = toRef;
         exports2.toRefs = toRefs;
         exports2.track = track2;
-        exports2.trigger = trigger3;
+        exports2.trigger = trigger2;
         exports2.triggerRef = triggerRef;
         exports2.unref = unref;
       }
@@ -1375,24 +1375,6 @@ var require_module_cjs = __commonJS({
       return [wrappedEffect, () => {
         cleanup2();
       }];
-    }
-    function watch(getter, callback) {
-      let firstTime = true;
-      let oldValue;
-      let effectReference = effect(() => {
-        let value = getter();
-        JSON.stringify(value);
-        if (!firstTime) {
-          queueMicrotask(() => {
-            callback(value, oldValue);
-            oldValue = value;
-          });
-        } else {
-          oldValue = value;
-        }
-        firstTime = false;
-      });
-      return () => release(effectReference);
     }
     function dispatch3(el, name, detail = {}) {
       el.dispatchEvent(new CustomEvent(name, {
@@ -1550,17 +1532,21 @@ var require_module_cjs = __commonJS({
       observer.disconnect();
       currentlyObserving = false;
     }
-    var queuedMutations = [];
+    var recordQueue = [];
+    var willProcessRecordQueue = false;
     function flushObserver() {
-      let records = observer.takeRecords();
-      queuedMutations.push(() => records.length > 0 && onMutate(records));
-      let queueLengthWhenTriggered = queuedMutations.length;
-      queueMicrotask(() => {
-        if (queuedMutations.length === queueLengthWhenTriggered) {
-          while (queuedMutations.length > 0)
-            queuedMutations.shift()();
-        }
-      });
+      recordQueue = recordQueue.concat(observer.takeRecords());
+      if (recordQueue.length && !willProcessRecordQueue) {
+        willProcessRecordQueue = true;
+        queueMicrotask(() => {
+          processRecordQueue();
+          willProcessRecordQueue = false;
+        });
+      }
+    }
+    function processRecordQueue() {
+      onMutate(recordQueue);
+      recordQueue.length = 0;
     }
     function mutateDom(callback) {
       if (!currentlyObserving)
@@ -2885,24 +2871,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cloneNode,
       bound: getBinding,
       $data: scope,
-      watch,
       walk,
       data,
       bind: bind2
     };
     var alpine_default = Alpine21;
-    var import_reactivity10 = __toESM2(require_reactivity());
+    var import_reactivity9 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
-    magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key, callback) => {
+    magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
       let evaluate2 = evaluateLater2(key);
-      let getter = () => {
-        let value;
-        evaluate2((i) => value = i);
-        return value;
-      };
-      let unwatch = watch(getter, callback);
-      cleanup2(unwatch);
+      let firstTime = true;
+      let oldValue;
+      let effectReference = effect3(() => evaluate2((value) => {
+        JSON.stringify(value);
+        if (!firstTime) {
+          queueMicrotask(() => {
+            callback(value, oldValue);
+            oldValue = value;
+          });
+        } else {
+          oldValue = value;
+        }
+        firstTime = false;
+      }));
+      el._x_effects.delete(effectReference);
     });
     magic("store", getStores);
     magic("data", (el) => scope(el));
@@ -2941,31 +2934,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_ids[name])
         el._x_ids[name] = findAndIncrementId(name);
     }
-    magic("id", (el, { cleanup: cleanup2 }) => (name, key = null) => {
-      let cacheKey = `${name}${key ? `-${key}` : ""}`;
-      return cacheIdByNameOnElement(el, cacheKey, cleanup2, () => {
-        let root = closestIdRoot(el, name);
-        let id = root ? root._x_ids[name] : findAndIncrementId(name);
-        return key ? `${name}-${id}-${key}` : `${name}-${id}`;
-      });
+    magic("id", (el) => (name, key = null) => {
+      let root = closestIdRoot(el, name);
+      let id = root ? root._x_ids[name] : findAndIncrementId(name);
+      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
     });
-    interceptClone((from, to) => {
-      if (from._x_id) {
-        to._x_id = from._x_id;
-      }
-    });
-    function cacheIdByNameOnElement(el, cacheKey, cleanup2, callback) {
-      if (!el._x_id)
-        el._x_id = {};
-      if (el._x_id[cacheKey])
-        return el._x_id[cacheKey];
-      let output = callback();
-      el._x_id[cacheKey] = output;
-      cleanup2(() => {
-        delete el._x_id[cacheKey];
-      });
-      return output;
-    }
     magic("el", (el) => el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3722,11 +3695,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let names = evaluate2(expression);
       names.forEach((name) => setIdRoot(el, name));
     });
-    interceptClone((from, to) => {
-      if (from._x_ids) {
-        to._x_ids = from._x_ids;
-      }
-    });
     mapAttributes(startingWith("@", into(prefix("on:"))));
     directive2("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup2 }) => {
       let evaluate2 = expression ? evaluateLater(el, expression) : () => {
@@ -3751,7 +3719,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
-    alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
+    alpine_default.setReactivityEngine({ reactive: import_reactivity9.reactive, effect: import_reactivity9.effect, release: import_reactivity9.stop, raw: import_reactivity9.toRaw });
     var src_default = alpine_default;
     var module_default = src_default;
   }
@@ -6967,7 +6935,7 @@ var require_module_cjs8 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -6994,12 +6962,8 @@ var require_module_cjs8 = __commonJS({
           if (el._x_model)
             el._x_model.set(el.value);
         });
-        const controller = new AbortController();
-        cleanup2(() => {
-          controller.abort();
-        });
-        el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
-        el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
+        el.addEventListener("input", () => processInputValue(el));
+        el.addEventListener("blur", () => processInputValue(el, false));
         function processInputValue(el2, shouldRestoreCursor = true) {
           let input = el2.value;
           let template = templateFn(input);
@@ -7260,7 +7224,7 @@ function on(name, callback) {
     listeners[name] = listeners[name].filter((i) => i !== callback);
   };
 }
-function trigger2(name, ...params) {
+function trigger(name, ...params) {
   let callbacks = listeners[name] || [];
   let finishers = [];
   for (let i = 0; i < callbacks.length; i++) {
@@ -7676,7 +7640,7 @@ var Commit = class {
     });
   }
   prepare() {
-    trigger2("commit.prepare", { component: this.component });
+    trigger("commit.prepare", { component: this.component });
   }
   toRequestPayload() {
     let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
@@ -7695,7 +7659,7 @@ var Commit = class {
     let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
     let fail = () => failCallbacks.forEach((i) => i());
     let respond = () => respondCallbacks.forEach((i) => i());
-    let finishTarget = trigger2("commit", {
+    let finishTarget = trigger("commit", {
       component: this.component,
       commit: payload,
       succeed: (callback) => {
@@ -7768,10 +7732,10 @@ var CommitBus = class {
     }
   }
   createAndSendNewPool() {
-    trigger2("commit.pooling", { commits: this.commits });
+    trigger("commit.pooling", { commits: this.commits });
     let pools = this.corraleCommitsIntoPools();
     this.commits.clear();
-    trigger2("commit.pooled", { pools });
+    trigger("commit.pooled", { pools });
     pools.forEach((pool) => {
       if (pool.empty())
         return;
@@ -7853,9 +7817,9 @@ async function sendRequest(pool) {
   let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
   let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
   let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-  let finishProfile = trigger2("request.profile", options);
+  let finishProfile = trigger("request.profile", options);
   let updateUri = getUpdateUri();
-  trigger2("request", {
+  trigger("request", {
     url: updateUri,
     options,
     payload: options.body,
@@ -8115,8 +8079,8 @@ var Component = class {
     this.processEffects({ html });
   }
   processEffects(effects) {
-    trigger2("effects", this, effects);
-    trigger2("effect", {
+    trigger("effects", this, effects);
+    trigger("effect", {
       component: this,
       effects,
       cleanup: (i) => this.addCleanup(i)
@@ -8153,7 +8117,7 @@ function initComponent(el) {
   if (components[component.id])
     throw "Component already registered";
   let cleanup2 = (i) => component.addCleanup(i);
-  trigger2("component.init", { component, cleanup: cleanup2 });
+  trigger("component.init", { component, cleanup: cleanup2 });
   components[component.id] = component;
   return component;
 }
@@ -9113,7 +9077,7 @@ function start() {
       if (!matchesForLivewireDirective(attribute.name))
         return;
       let directive2 = extractDirective(el, attribute.name);
-      trigger2("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+      trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
         import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
@@ -9127,10 +9091,10 @@ function start() {
     }
     let component = closestComponent(el, false);
     if (component) {
-      trigger2("element.init", { el, component });
+      trigger("element.init", { el, component });
       let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
       directives.forEach((directive2) => {
-        trigger2("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+        trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
           import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
@@ -9604,12 +9568,12 @@ function morph2(component, el, html) {
   parentComponent && (wrapper.__livewire = parentComponent);
   let to = wrapper.firstElementChild;
   to.__livewire = component;
-  trigger2("morph", { el, toEl: to, component });
+  trigger("morph", { el, toEl: to, component });
   import_alpinejs12.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
       if (el2.__livewire_ignore === true)
         return skip();
       if (el2.__livewire_ignore_self === true)
@@ -9622,26 +9586,26 @@ function morph2(component, el, html) {
     updated: (el2, toEl) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.updated", { el: el2, component });
+      trigger("morph.updated", { el: el2, component });
     },
     removing: (el2, skip) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.removing", { el: el2, component, skip });
+      trigger("morph.removing", { el: el2, component, skip });
     },
     removed: (el2) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.removed", { el: el2, component });
+      trigger("morph.removed", { el: el2, component });
     },
     adding: (el2) => {
-      trigger2("morph.adding", { el: el2, component });
+      trigger("morph.adding", { el: el2, component });
     },
     added: (el2) => {
       if (isntElement(el2))
         return;
       const closestComponentId = closestComponent(el2).id;
-      trigger2("morph.added", { el: el2 });
+      trigger("morph.added", { el: el2 });
     },
     key: (el2) => {
       if (isntElement(el2))
@@ -10011,7 +9975,7 @@ on("request", ({ respond }) => {
       status: 200,
       async text() {
         let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-          trigger2("stream", streamed);
+          trigger("stream", streamed);
         });
         if (contentIsFromDump(finalResponse)) {
           this.ok = false;
@@ -10304,7 +10268,7 @@ var Livewire2 = {
   getByName,
   all,
   hook: on,
-  trigger: trigger2,
+  trigger,
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {

@@ -426,7 +426,7 @@
       listeners[name] = listeners[name].filter((i) => i !== callback);
     };
   }
-  function trigger2(name, ...params) {
+  function trigger(name, ...params) {
     let callbacks = listeners[name] || [];
     let finishers = [];
     for (let i = 0; i < callbacks.length; i++) {
@@ -767,24 +767,6 @@
       cleanup22();
     }];
   }
-  function watch(getter, callback) {
-    let firstTime = true;
-    let oldValue;
-    let effectReference = effect(() => {
-      let value = getter();
-      JSON.stringify(value);
-      if (!firstTime) {
-        queueMicrotask(() => {
-          callback(value, oldValue);
-          oldValue = value;
-        });
-      } else {
-        oldValue = value;
-      }
-      firstTime = false;
-    });
-    return () => release(effectReference);
-  }
   function dispatch2(el, name, detail = {}) {
     el.dispatchEvent(new CustomEvent(name, {
       detail,
@@ -941,17 +923,21 @@
     observer.disconnect();
     currentlyObserving = false;
   }
-  var queuedMutations = [];
+  var recordQueue = [];
+  var willProcessRecordQueue = false;
   function flushObserver() {
-    let records = observer.takeRecords();
-    queuedMutations.push(() => records.length > 0 && onMutate(records));
-    let queueLengthWhenTriggered = queuedMutations.length;
-    queueMicrotask(() => {
-      if (queuedMutations.length === queueLengthWhenTriggered) {
-        while (queuedMutations.length > 0)
-          queuedMutations.shift()();
-      }
-    });
+    recordQueue = recordQueue.concat(observer.takeRecords());
+    if (recordQueue.length && !willProcessRecordQueue) {
+      willProcessRecordQueue = true;
+      queueMicrotask(() => {
+        processRecordQueue();
+        willProcessRecordQueue = false;
+      });
+    }
+  }
+  function processRecordQueue() {
+    onMutate(recordQueue);
+    recordQueue.length = 0;
   }
   function mutateDom(callback) {
     if (!currentlyObserving)
@@ -2276,7 +2262,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     cloneNode,
     bound: getBinding,
     $data: scope,
-    watch,
     walk,
     data,
     bind: bind2
@@ -2427,7 +2412,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   }
-  function trigger3(target, type, key, newValue, oldValue, oldTarget) {
+  function trigger2(target, type, key, newValue, oldValue, oldTarget) {
     const depsMap = targetMap.get(target);
     if (!depsMap) {
       return;
@@ -2580,9 +2565,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       const result = Reflect.set(target, key, value, receiver);
       if (target === toRaw(receiver)) {
         if (!hadKey) {
-          trigger3(target, "add", key, value);
+          trigger2(target, "add", key, value);
         } else if (hasChanged(value, oldValue)) {
-          trigger3(target, "set", key, value, oldValue);
+          trigger2(target, "set", key, value, oldValue);
         }
       }
       return result;
@@ -2593,7 +2578,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldValue = target[key];
     const result = Reflect.deleteProperty(target, key);
     if (result && hadKey) {
-      trigger3(target, "delete", key, void 0, oldValue);
+      trigger2(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
@@ -2674,7 +2659,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const hadKey = proto.has.call(target, value);
     if (!hadKey) {
       target.add(value);
-      trigger3(target, "add", value, value);
+      trigger2(target, "add", value, value);
     }
     return this;
   }
@@ -2692,9 +2677,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldValue = get3.call(target, key);
     target.set(key, value);
     if (!hadKey) {
-      trigger3(target, "add", key, value);
+      trigger2(target, "add", key, value);
     } else if (hasChanged(value, oldValue)) {
-      trigger3(target, "set", key, value, oldValue);
+      trigger2(target, "set", key, value, oldValue);
     }
     return this;
   }
@@ -2711,7 +2696,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldValue = get3 ? get3.call(target, key) : void 0;
     const result = target.delete(key);
     if (hadKey) {
-      trigger3(target, "delete", key, void 0, oldValue);
+      trigger2(target, "delete", key, void 0, oldValue);
     }
     return result;
   }
@@ -2721,7 +2706,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
-      trigger3(target, "clear", void 0, void 0, oldTarget);
+      trigger2(target, "clear", void 0, void 0, oldTarget);
     }
     return result;
   }
@@ -2932,15 +2917,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   magic("nextTick", () => nextTick);
   magic("dispatch", (el) => dispatch2.bind(dispatch2, el));
-  magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup22 }) => (key, callback) => {
+  magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
     let evaluate22 = evaluateLater2(key);
-    let getter = () => {
-      let value;
-      evaluate22((i) => value = i);
-      return value;
-    };
-    let unwatch = watch(getter, callback);
-    cleanup22(unwatch);
+    let firstTime = true;
+    let oldValue;
+    let effectReference = effect3(() => evaluate22((value) => {
+      JSON.stringify(value);
+      if (!firstTime) {
+        queueMicrotask(() => {
+          callback(value, oldValue);
+          oldValue = value;
+        });
+      } else {
+        oldValue = value;
+      }
+      firstTime = false;
+    }));
+    el._x_effects.delete(effectReference);
   });
   magic("store", getStores);
   magic("data", (el) => scope(el));
@@ -2979,31 +2972,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!el._x_ids[name])
       el._x_ids[name] = findAndIncrementId(name);
   }
-  magic("id", (el, { cleanup: cleanup22 }) => (name, key = null) => {
-    let cacheKey = `${name}${key ? `-${key}` : ""}`;
-    return cacheIdByNameOnElement(el, cacheKey, cleanup22, () => {
-      let root = closestIdRoot(el, name);
-      let id = root ? root._x_ids[name] : findAndIncrementId(name);
-      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
-    });
+  magic("id", (el) => (name, key = null) => {
+    let root = closestIdRoot(el, name);
+    let id = root ? root._x_ids[name] : findAndIncrementId(name);
+    return key ? `${name}-${id}-${key}` : `${name}-${id}`;
   });
-  interceptClone((from, to) => {
-    if (from._x_id) {
-      to._x_id = from._x_id;
-    }
-  });
-  function cacheIdByNameOnElement(el, cacheKey, cleanup22, callback) {
-    if (!el._x_id)
-      el._x_id = {};
-    if (el._x_id[cacheKey])
-      return el._x_id[cacheKey];
-    let output = callback();
-    el._x_id[cacheKey] = output;
-    cleanup22(() => {
-      delete el._x_id[cacheKey];
-    });
-    return output;
-  }
   magic("el", (el) => el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3760,11 +3733,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let names = evaluate22(expression);
     names.forEach((name) => setIdRoot(el, name));
   });
-  interceptClone((from, to) => {
-    if (from._x_ids) {
-      to._x_ids = from._x_ids;
-    }
-  });
   mapAttributes(startingWith("@", into(prefix("on:"))));
   directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
     let evaluate22 = expression ? evaluateLater(el, expression) : () => {
@@ -3951,7 +3919,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     prepare() {
-      trigger2("commit.prepare", { component: this.component });
+      trigger("commit.prepare", { component: this.component });
     }
     toRequestPayload() {
       let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
@@ -3970,7 +3938,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
       let fail = () => failCallbacks.forEach((i) => i());
       let respond = () => respondCallbacks.forEach((i) => i());
-      let finishTarget = trigger2("commit", {
+      let finishTarget = trigger("commit", {
         component: this.component,
         commit: payload,
         succeed: (callback) => {
@@ -4043,10 +4011,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     createAndSendNewPool() {
-      trigger2("commit.pooling", { commits: this.commits });
+      trigger("commit.pooling", { commits: this.commits });
       let pools = this.corraleCommitsIntoPools();
       this.commits.clear();
-      trigger2("commit.pooled", { pools });
+      trigger("commit.pooled", { pools });
       pools.forEach((pool) => {
         if (pool.empty())
           return;
@@ -4128,9 +4096,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
     let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
     let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-    let finishProfile = trigger2("request.profile", options);
+    let finishProfile = trigger("request.profile", options);
     let updateUri = getUpdateUri();
-    trigger2("request", {
+    trigger("request", {
       url: updateUri,
       options,
       payload: options.body,
@@ -4389,8 +4357,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.processEffects({ html });
     }
     processEffects(effects) {
-      trigger2("effects", this, effects);
-      trigger2("effect", {
+      trigger("effects", this, effects);
+      trigger("effect", {
         component: this,
         effects,
         cleanup: (i) => this.addCleanup(i)
@@ -4427,7 +4395,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (components[component.id])
       throw "Component already registered";
     let cleanup3 = (i) => component.addCleanup(i);
-    trigger2("component.init", { component, cleanup: cleanup3 });
+    trigger("component.init", { component, cleanup: cleanup3 });
     components[component.id] = component;
     return component;
   }
@@ -8076,7 +8044,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // ../alpine/packages/mask/dist/module.esm.js
   function src_default8(Alpine3) {
-    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
+    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
       queueMicrotask(() => {
@@ -8103,12 +8071,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el._x_model)
           el._x_model.set(el.value);
       });
-      const controller = new AbortController();
-      cleanup3(() => {
-        controller.abort();
-      });
-      el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
-      el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
+      el.addEventListener("input", () => processInputValue(el));
+      el.addEventListener("blur", () => processInputValue(el, false));
       function processInputValue(el2, shouldRestoreCursor = true) {
         let input = el2.value;
         let template = templateFn(input);
@@ -8258,7 +8222,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!matchesForLivewireDirective(attribute.name))
           return;
         let directive3 = extractDirective(el, attribute.name);
-        trigger2("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
+        trigger("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
           module_default.onAttributeRemoved(el, directive3.raw, callback);
         } });
       });
@@ -8272,10 +8236,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let component = closestComponent(el, false);
       if (component) {
-        trigger2("element.init", { el, component });
+        trigger("element.init", { el, component });
         let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives2.forEach((directive3) => {
-          trigger2("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
+          trigger("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
             module_default.onAttributeRemoved(el, directive3.raw, callback);
           } });
         });
@@ -8741,12 +8705,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
-    trigger2("morph", { el, toEl: to, component });
+    trigger("morph", { el, toEl: to, component });
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+        trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
         if (el2.__livewire_ignore === true)
           return skip();
         if (el2.__livewire_ignore_self === true)
@@ -8759,26 +8723,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       updated: (el2, toEl) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.updated", { el: el2, component });
+        trigger("morph.updated", { el: el2, component });
       },
       removing: (el2, skip) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.removing", { el: el2, component, skip });
+        trigger("morph.removing", { el: el2, component, skip });
       },
       removed: (el2) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.removed", { el: el2, component });
+        trigger("morph.removed", { el: el2, component });
       },
       adding: (el2) => {
-        trigger2("morph.adding", { el: el2, component });
+        trigger("morph.adding", { el: el2, component });
       },
       added: (el2) => {
         if (isntElement(el2))
           return;
         const closestComponentId = closestComponent(el2).id;
-        trigger2("morph.added", { el: el2 });
+        trigger("morph.added", { el: el2 });
       },
       key: (el2) => {
         if (isntElement(el2))
@@ -9145,7 +9109,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         status: 200,
         async text() {
           let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger2("stream", streamed);
+            trigger("stream", streamed);
           });
           if (contentIsFromDump(finalResponse)) {
             this.ok = false;
@@ -9435,7 +9399,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     getByName,
     all,
     hook: on,
-    trigger: trigger2,
+    trigger,
     dispatch: dispatchGlobal,
     on: on3,
     get navigate() {
