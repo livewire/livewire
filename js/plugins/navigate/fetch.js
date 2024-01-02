@@ -10,7 +10,16 @@ export function fetchHtml(destination, callback) {
         options,
     })
 
-    fetch(uri, options).then(i => i.text()).then(html => {
+    doFetch(uri, options).then(i => i.text()).then(html => {
         callback(html)
     })
+}
+
+export function doFetch(uri, options = {}) {
+    trigger('navigate.request', {
+        url: uri,
+        options,
+    })
+
+    return fetch(uri, options);
 }

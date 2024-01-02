@@ -1376,24 +1376,6 @@ var require_module_cjs = __commonJS({
         cleanup2();
       }];
     }
-    function watch(getter, callback) {
-      let firstTime = true;
-      let oldValue;
-      let effectReference = effect(() => {
-        let value = getter();
-        JSON.stringify(value);
-        if (!firstTime) {
-          queueMicrotask(() => {
-            callback(value, oldValue);
-            oldValue = value;
-          });
-        } else {
-          oldValue = value;
-        }
-        firstTime = false;
-      });
-      return () => release(effectReference);
-    }
     function dispatch3(el, name, detail = {}) {
       el.dispatchEvent(new CustomEvent(name, {
         detail,
@@ -1550,17 +1532,21 @@ var require_module_cjs = __commonJS({
       observer.disconnect();
       currentlyObserving = false;
     }
-    var queuedMutations = [];
+    var recordQueue = [];
+    var willProcessRecordQueue = false;
     function flushObserver() {
-      let records = observer.takeRecords();
-      queuedMutations.push(() => records.length > 0 && onMutate(records));
-      let queueLengthWhenTriggered = queuedMutations.length;
-      queueMicrotask(() => {
-        if (queuedMutations.length === queueLengthWhenTriggered) {
-          while (queuedMutations.length > 0)
-            queuedMutations.shift()();
-        }
-      });
+      recordQueue = recordQueue.concat(observer.takeRecords());
+      if (recordQueue.length && !willProcessRecordQueue) {
+        willProcessRecordQueue = true;
+        queueMicrotask(() => {
+          processRecordQueue();
+          willProcessRecordQueue = false;
+        });
+      }
+    }
+    function processRecordQueue() {
+      onMutate(recordQueue);
+      recordQueue.length = 0;
     }
     function mutateDom(callback) {
       if (!currentlyObserving)
@@ -2885,24 +2871,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cloneNode,
       bound: getBinding,
       $data: scope,
-      watch,
       walk,
       data,
       bind: bind2
     };
     var alpine_default = Alpine21;
-    var import_reactivity10 = __toESM2(require_reactivity());
+    var import_reactivity9 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
-    magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key, callback) => {
+    magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
       let evaluate2 = evaluateLater2(key);
-      let getter = () => {
-        let value;
-        evaluate2((i) => value = i);
-        return value;
-      };
-      let unwatch = watch(getter, callback);
-      cleanup2(unwatch);
+      let firstTime = true;
+      let oldValue;
+      let effectReference = effect3(() => evaluate2((value) => {
+        JSON.stringify(value);
+        if (!firstTime) {
+          queueMicrotask(() => {
+            callback(value, oldValue);
+            oldValue = value;
+          });
+        } else {
+          oldValue = value;
+        }
+        firstTime = false;
+      }));
+      el._x_effects.delete(effectReference);
     });
     magic("store", getStores);
     magic("data", (el) => scope(el));
@@ -2941,31 +2934,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_ids[name])
         el._x_ids[name] = findAndIncrementId(name);
     }
-    magic("id", (el, { cleanup: cleanup2 }) => (name, key = null) => {
-      let cacheKey = `${name}${key ? `-${key}` : ""}`;
-      return cacheIdByNameOnElement(el, cacheKey, cleanup2, () => {
-        let root = closestIdRoot(el, name);
-        let id = root ? root._x_ids[name] : findAndIncrementId(name);
-        return key ? `${name}-${id}-${key}` : `${name}-${id}`;
-      });
+    magic("id", (el) => (name, key = null) => {
+      let root = closestIdRoot(el, name);
+      let id = root ? root._x_ids[name] : findAndIncrementId(name);
+      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
     });
-    interceptClone((from, to) => {
-      if (from._x_id) {
-        to._x_id = from._x_id;
-      }
-    });
-    function cacheIdByNameOnElement(el, cacheKey, cleanup2, callback) {
-      if (!el._x_id)
-        el._x_id = {};
-      if (el._x_id[cacheKey])
-        return el._x_id[cacheKey];
-      let output = callback();
-      el._x_id[cacheKey] = output;
-      cleanup2(() => {
-        delete el._x_id[cacheKey];
-      });
-      return output;
-    }
     magic("el", (el) => el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3722,11 +3695,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let names = evaluate2(expression);
       names.forEach((name) => setIdRoot(el, name));
     });
-    interceptClone((from, to) => {
-      if (from._x_ids) {
-        to._x_ids = from._x_ids;
-      }
-    });
     mapAttributes(startingWith("@", into(prefix("on:"))));
     directive2("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup2 }) => {
       let evaluate2 = expression ? evaluateLater(el, expression) : () => {
@@ -3751,7 +3719,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
-    alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
+    alpine_default.setReactivityEngine({ reactive: import_reactivity9.reactive, effect: import_reactivity9.effect, release: import_reactivity9.stop, raw: import_reactivity9.toRaw });
     var src_default = alpine_default;
     var module_default = src_default;
   }
@@ -6967,7 +6935,7 @@ var require_module_cjs8 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -6994,12 +6962,8 @@ var require_module_cjs8 = __commonJS({
           if (el._x_model)
             el._x_model.set(el.value);
         });
-        const controller = new AbortController();
-        cleanup2(() => {
-          controller.abort();
-        });
-        el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
-        el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
+        el.addEventListener("input", () => processInputValue(el));
+        el.addEventListener("blur", () => processInputValue(el, false));
         function processInputValue(el2, shouldRestoreCursor = true) {
           let input = el2.value;
           let template = templateFn(input);
@@ -8381,6 +8345,26 @@ function tryToStoreInSession(timestamp, value) {
   }
 }
 
+// js/plugins/navigate/fetch.js
+function fetchHtml(destination, callback) {
+  let uri = destination.pathname + destination.search;
+  let options = {};
+  trigger("navigate.request", {
+    url: uri,
+    options
+  });
+  doFetch(uri, options).then((i) => i.text()).then((html) => {
+    callback(html);
+  });
+}
+function doFetch(uri, options = {}) {
+  trigger("navigate.request", {
+    url: uri,
+    options
+  });
+  return fetch(uri, options);
+}
+
 // js/plugins/navigate/prefetch.js
 var prefetches = {};
 function prefetchHtml(destination, callback) {
@@ -8389,7 +8373,7 @@ function prefetchHtml(destination, callback) {
     return;
   prefetches[path] = { finished: false, html: null, whenFinished: () => {
   } };
-  fetch(path).then((i) => i.text()).then((html) => {
+  doFetch(path).then((i) => i.text()).then((html) => {
     callback(html);
   });
 }
@@ -8778,19 +8762,6 @@ function ignoreAttributes(subject, attributesToRemove) {
     result = result.replace(regex, "");
   });
   return result.trim();
-}
-
-// js/plugins/navigate/fetch.js
-function fetchHtml(destination, callback) {
-  let uri = destination.pathname + destination.search;
-  let options = {};
-  trigger("navigate.request", {
-    url: uri,
-    options
-  });
-  fetch(uri, options).then((i) => i.text()).then((html) => {
-    callback(html);
-  });
 }
 
 // js/plugins/navigate/index.js
