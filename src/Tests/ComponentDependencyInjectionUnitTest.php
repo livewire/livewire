@@ -5,10 +5,11 @@ namespace Livewire\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
+use PHPUnit\Framework\Attributes\Test;
 
 class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function component_mount_action_with_dependency()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class, ['id' => 123]);
@@ -17,7 +18,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(123, $component->bar);
     }
 
-    /** @test */
+    #[Test]
     public function component_action_with_dependency()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
@@ -28,7 +29,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals('foobar', $component->bar);
     }
 
-    /** @test */
+    #[Test]
     public function component_action_with_spread_operator()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
@@ -38,7 +39,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(['foo', 'bar', 'baz'], $component->foo);
     }
 
-    /** @test */
+    #[Test]
     public function component_action_with_paramter_name_that_matches_a_container_registration_name()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
@@ -50,7 +51,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals('bar', $component->foo);
     }
 
-    /** @test */
+    #[Test]
     public function component_action_with_primitive()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
@@ -60,7 +61,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(1, $component->foo);
     }
 
-    /** @test */
+    #[Test]
     public function component_action_with_default_value()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
@@ -82,7 +83,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals('foo', $component->bar);
     }
 
-    /** @test */
+    #[Test]
     public function component_action_with_dependency_and_primitive()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
@@ -93,7 +94,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(1, $component->bar);
     }
 
-    /** @test */
+    #[Test]
     public function component_action_with_dependency_and_optional_primitive()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
@@ -111,7 +112,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertNull($component->bar);
     }
 
-    /** @test */
+    #[Test]
     public function component_render_method_with_dependency()
     {
         $component = Livewire::test(CustomComponent::class);
@@ -119,10 +120,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $component->assertSee('Results from the service');
     }
 
-    /**
-     * @test
-     * @requires PHP >= 8.0
-     */
+    #[Test]
     public function component_mount_action_with_primitive_union_types()
     {
         $component = Livewire::test(ComponentWithUnionTypes::class);
