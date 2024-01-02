@@ -756,7 +756,6 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Item #1')
 
         ->waitForLivewire()->click('@nextPage.before')
-
         ->assertSeeNothingIn('@item-page-pagination-hook')
         ->assertSeeIn('@page-pagination-hook', 'page-is-set-to-2')
         ->assertSee('Post #4')
@@ -1034,7 +1033,6 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@child', 'Child')
 
             ->waitForLivewire()->click('@nextPage.before')
-
             ->assertDontSee('Post #3')
             ->assertSee('Post #4')
             ->assertSee('Post #5')
