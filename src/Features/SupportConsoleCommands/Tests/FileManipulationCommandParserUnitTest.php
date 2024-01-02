@@ -3,12 +3,13 @@
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Livewire\Features\SupportConsoleCommands\Commands\ComponentParser;
-use PHPUnit\Framework\Attributes\{Test, DataProvider};
 
 class FileManipulationCommandParserUnitTest extends \Tests\TestCase
 {
-    #[Test]
-    #[DataProvider('classPathProvider')]
+    /**
+     * @test
+     * @dataProvider classPathProvider
+     */
     public function something($input, $component, $namespace, $classPath, $viewName, $viewPath)
     {
         $parser = new ComponentParser(
