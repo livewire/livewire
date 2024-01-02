@@ -89,4 +89,28 @@ class BrowserTest extends BrowserTestCase
         ->refresh()
         ->assertSeeIn('@count', '1');
     }
+
+    /** @test */
+    public function can_priorize_gets_computed_property_instead_of_property_with_same_name(): void
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            #[Computed]
+            public function count()
+            {
+                return 1;
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <p dusk="count">{{ $this->count }}</p>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@count', '1');
+    }
 }
