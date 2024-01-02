@@ -24,6 +24,7 @@ Features:
     Redirecting: { uri: /docs/redirecting, file: /redirecting.md }
     File Downloads: { uri: /docs/downloads, file: /downloads.md }
     Locked Properties: { uri: /docs/locked, file: /locked.md }
+    Request Bundling: { uri: /docs/bundling, file: /bundling.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
 HTML Directives:

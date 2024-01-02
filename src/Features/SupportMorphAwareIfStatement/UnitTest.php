@@ -49,11 +49,12 @@ class UnitTest extends \Tests\TestCase
     #[Test]
     #[DataProvider('templatesProvider')]
     function foo($occurances, $template, $expectedCompiled = null)
+    function foo($occurrences, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 
-        $this->assertOccurrences($occurances, '<!--[if BLOCK]><![endif]-->', $compiled);
-        $this->assertOccurrences($occurances, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
+        $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
+        $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
 
         $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
     }
