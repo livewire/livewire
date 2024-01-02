@@ -26,7 +26,7 @@ class EloquentCollectionSynth extends Synth
         $meta['class'] = $class;
         $meta['modelClass'] = $modelClass;
 
-        if ($modelClass && $connection = $this->getConnection($target) !== $modelClass::make()->getConnectionName()) {
+        if ($modelClass && ($connection = $this->getConnection($target)) !== $modelClass::make()->getConnectionName()) {
             $meta['connection'] = $connection;
         }
 
@@ -38,7 +38,9 @@ class EloquentCollectionSynth extends Synth
 
         $rules = $this->getRules($this->context);
 
-        if (empty($rules)) return [[], $meta];
+        if (empty($rules)) {
+            return [[], $meta];
+        }
 
         $data = $this->getDataFromCollection($target, $rules);
 
@@ -104,7 +106,9 @@ class EloquentCollectionSynth extends Synth
     {
         $key = $this->path ?? null;
 
-        if (is_null($key)) return [];
+        if (is_null($key)) {
+            return [];
+        }
 
         return SupportLegacyModels::getRulesFor($context->component, $key);
     }
