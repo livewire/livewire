@@ -48,7 +48,6 @@ class UnitTest extends \Tests\TestCase
 
     #[Test]
     #[DataProvider('templatesProvider')]
-    function foo($occurances, $template, $expectedCompiled = null)
     function foo($occurrences, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
