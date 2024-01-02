@@ -38,9 +38,7 @@ class EloquentCollectionSynth extends Synth
 
         $rules = $this->getRules($this->context);
 
-        if (empty($rules)) {
-            return [[], $meta];
-        }
+        if (empty($rules)) return [[], $meta];
 
         $data = $this->getDataFromCollection($target, $rules);
 
@@ -106,9 +104,7 @@ class EloquentCollectionSynth extends Synth
     {
         $key = $this->path ?? null;
 
-        if (is_null($key)) {
-            return [];
-        }
+        if (is_null($key)) return [];
 
         return SupportLegacyModels::getRulesFor($context->component, $key);
     }
