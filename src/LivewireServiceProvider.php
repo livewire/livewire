@@ -104,6 +104,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportAttributes\SupportAttributes::class,
             \Livewire\Features\SupportPagination\SupportPagination::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
+            \Livewire\Features\SupportIsolating\SupportIsolating::class,
             \Livewire\Features\SupportRedirects\SupportRedirects::class,
             \Livewire\Features\SupportStreaming\SupportStreaming::class,
             \Livewire\Features\SupportNavigate\SupportNavigate::class,
