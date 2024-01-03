@@ -7,7 +7,12 @@ let components = {}
 export function initComponent(el) {
     let component = new Component(el)
 
-    if (components[component.id]) throw 'Component already registered'
+    if (components[component.id]) {
+        throw {
+            message: `Component ['${component.name}'] with id ['${component.id}'] already registered`,
+            element: el
+        };
+    }
 
     let cleanup = (i) => component.addCleanup(i)
 
@@ -35,7 +40,7 @@ export function hasComponent(id) {
 export function findComponent(id) {
     let component = components[id]
 
-    if (! component) throw 'Component not found: ' + id
+    if (! component) throw `Component with id ['${id}'] not found`
 
     return component
 }
@@ -44,7 +49,10 @@ export function closestComponent(el, strict = true) {
     let closestRoot = Alpine.findClosest(el, i => i.__livewire)
 
     if (! closestRoot) {
-        if (strict) throw "Could not find Livewire component in DOM tree"
+        if (strict) throw {
+            message: `Could not find Livewire component in DOM tree`,
+            element: el
+        }
 
         return
     }
