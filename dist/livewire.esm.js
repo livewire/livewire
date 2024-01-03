@@ -568,7 +568,7 @@ var require_module_cjs = __commonJS({
             }
           }
         }
-        function trigger3(target, type, key, newValue, oldValue, oldTarget) {
+        function trigger2(target, type, key, newValue, oldValue, oldTarget) {
           const depsMap = targetMap.get(target);
           if (!depsMap) {
             return;
@@ -724,9 +724,9 @@ var require_module_cjs = __commonJS({
             const result = Reflect.set(target, key, value, receiver);
             if (target === toRaw2(receiver)) {
               if (!hadKey) {
-                trigger3(target, "add", key, value);
+                trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger3(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value, oldValue);
               }
             }
             return result;
@@ -737,7 +737,7 @@ var require_module_cjs = __commonJS({
           const oldValue = target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger3(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -825,7 +825,7 @@ var require_module_cjs = __commonJS({
           const hadKey = proto.has.call(target, value);
           if (!hadKey) {
             target.add(value);
-            trigger3(target, "add", value, value);
+            trigger2(target, "add", value, value);
           }
           return this;
         }
@@ -843,9 +843,9 @@ var require_module_cjs = __commonJS({
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
-            trigger3(target, "add", key, value);
+            trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger3(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value, oldValue);
           }
           return this;
         }
@@ -862,7 +862,7 @@ var require_module_cjs = __commonJS({
           const oldValue = get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger3(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -872,7 +872,7 @@ var require_module_cjs = __commonJS({
           const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger3(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0, oldTarget);
           }
           return result;
         }
@@ -1132,7 +1132,7 @@ var require_module_cjs = __commonJS({
             if (shared.hasChanged(newVal, this._rawValue)) {
               this._rawValue = newVal;
               this._value = this._shallow ? newVal : convert(newVal);
-              trigger3(toRaw2(this), "set", "value", newVal);
+              trigger2(toRaw2(this), "set", "value", newVal);
             }
           }
         };
@@ -1143,7 +1143,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger3(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", ref2.value);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1166,7 +1166,7 @@ var require_module_cjs = __commonJS({
         var CustomRefImpl = class {
           constructor(factory) {
             this.__v_isRef = true;
-            const { get: get3, set: set3 } = factory(() => track2(this, "get", "value"), () => trigger3(this, "set", "value"));
+            const { get: get3, set: set3 } = factory(() => track2(this, "get", "value"), () => trigger2(this, "set", "value"));
             this._get = get3;
             this._set = set3;
           }
@@ -1216,7 +1216,7 @@ var require_module_cjs = __commonJS({
               scheduler: () => {
                 if (!this._dirty) {
                   this._dirty = true;
-                  trigger3(toRaw2(this), "set", "value");
+                  trigger2(toRaw2(this), "set", "value");
                 }
               }
             });
@@ -1273,7 +1273,7 @@ var require_module_cjs = __commonJS({
         exports2.toRef = toRef;
         exports2.toRefs = toRefs;
         exports2.track = track2;
-        exports2.trigger = trigger3;
+        exports2.trigger = trigger2;
         exports2.triggerRef = triggerRef;
         exports2.unref = unref;
       }
@@ -7260,7 +7260,7 @@ function on(name, callback) {
     listeners[name] = listeners[name].filter((i) => i !== callback);
   };
 }
-function trigger2(name, ...params) {
+function trigger(name, ...params) {
   let callbacks = listeners[name] || [];
   let finishers = [];
   for (let i = 0; i < callbacks.length; i++) {
@@ -7676,7 +7676,7 @@ var Commit = class {
     });
   }
   prepare() {
-    trigger2("commit.prepare", { component: this.component });
+    trigger("commit.prepare", { component: this.component });
   }
   toRequestPayload() {
     let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
@@ -7695,7 +7695,7 @@ var Commit = class {
     let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
     let fail = () => failCallbacks.forEach((i) => i());
     let respond = () => respondCallbacks.forEach((i) => i());
-    let finishTarget = trigger2("commit", {
+    let finishTarget = trigger("commit", {
       component: this.component,
       commit: payload,
       succeed: (callback) => {
@@ -7768,10 +7768,10 @@ var CommitBus = class {
     }
   }
   createAndSendNewPool() {
-    trigger2("commit.pooling", { commits: this.commits });
+    trigger("commit.pooling", { commits: this.commits });
     let pools = this.corraleCommitsIntoPools();
     this.commits.clear();
-    trigger2("commit.pooled", { pools });
+    trigger("commit.pooled", { pools });
     pools.forEach((pool) => {
       if (pool.empty())
         return;
@@ -7853,9 +7853,9 @@ async function sendRequest(pool) {
   let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
   let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
   let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-  let finishProfile = trigger2("request.profile", options);
+  let finishProfile = trigger("request.profile", options);
   let updateUri = getUpdateUri();
-  trigger2("request", {
+  trigger("request", {
     url: updateUri,
     options,
     payload: options.body,
@@ -8115,8 +8115,8 @@ var Component = class {
     this.processEffects({ html });
   }
   processEffects(effects) {
-    trigger2("effects", this, effects);
-    trigger2("effect", {
+    trigger("effects", this, effects);
+    trigger("effect", {
       component: this,
       effects,
       cleanup: (i) => this.addCleanup(i)
@@ -8153,7 +8153,7 @@ function initComponent(el) {
   if (components[component.id])
     throw "Component already registered";
   let cleanup2 = (i) => component.addCleanup(i);
-  trigger2("component.init", { component, cleanup: cleanup2 });
+  trigger("component.init", { component, cleanup: cleanup2 });
   components[component.id] = component;
   return component;
 }
@@ -9113,7 +9113,7 @@ function start() {
       if (!matchesForLivewireDirective(attribute.name))
         return;
       let directive2 = extractDirective(el, attribute.name);
-      trigger2("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+      trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
         import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
@@ -9127,10 +9127,10 @@ function start() {
     }
     let component = closestComponent(el, false);
     if (component) {
-      trigger2("element.init", { el, component });
+      trigger("element.init", { el, component });
       let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
       directives.forEach((directive2) => {
-        trigger2("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+        trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
           import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
@@ -9604,12 +9604,12 @@ function morph2(component, el, html) {
   parentComponent && (wrapper.__livewire = parentComponent);
   let to = wrapper.firstElementChild;
   to.__livewire = component;
-  trigger2("morph", { el, toEl: to, component });
+  trigger("morph", { el, toEl: to, component });
   import_alpinejs12.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
       if (el2.__livewire_ignore === true)
         return skip();
       if (el2.__livewire_ignore_self === true)
@@ -9622,26 +9622,26 @@ function morph2(component, el, html) {
     updated: (el2, toEl) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.updated", { el: el2, component });
+      trigger("morph.updated", { el: el2, component });
     },
     removing: (el2, skip) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.removing", { el: el2, component, skip });
+      trigger("morph.removing", { el: el2, component, skip });
     },
     removed: (el2) => {
       if (isntElement(el2))
         return;
-      trigger2("morph.removed", { el: el2, component });
+      trigger("morph.removed", { el: el2, component });
     },
     adding: (el2) => {
-      trigger2("morph.adding", { el: el2, component });
+      trigger("morph.adding", { el: el2, component });
     },
     added: (el2) => {
       if (isntElement(el2))
         return;
       const closestComponentId = closestComponent(el2).id;
-      trigger2("morph.added", { el: el2 });
+      trigger("morph.added", { el: el2 });
     },
     key: (el2) => {
       if (isntElement(el2))
@@ -10011,7 +10011,7 @@ on("request", ({ respond }) => {
       status: 200,
       async text() {
         let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-          trigger2("stream", streamed);
+          trigger("stream", streamed);
         });
         if (contentIsFromDump(finalResponse)) {
           this.ok = false;
@@ -10304,7 +10304,7 @@ var Livewire2 = {
   getByName,
   all,
   hook: on,
-  trigger: trigger2,
+  trigger,
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {
