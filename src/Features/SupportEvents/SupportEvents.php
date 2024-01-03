@@ -81,10 +81,11 @@ class SupportEvents extends ComponentHook
     static function getComponentListeners($component)
     {
         $fromClass = invade($component)->getListeners();
+        $fromClassAttributes = store($component)->get('listenersFromClassAttributes', []);
 
         $fromAttributes = store($component)->get('listenersFromPropertyAttributes', []);
 
-        $listeners = array_merge($fromClass, $fromAttributes);
+        $listeners = array_merge($fromClass, $fromClassAttributes, $fromAttributes);
 
         return static::replaceDynamicEventNamePlaceholers($listeners, $component);
     }

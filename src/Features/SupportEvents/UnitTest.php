@@ -205,6 +205,19 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'name' => 'foo', 'params' => ['test']], $component->effects['dispatches']));
     }
+
+
+    /** @test */
+    public function receive_event_with_refresh_attribute()
+    {
+        $component = Livewire::test(ReceivesEventUsingRefreshAttribute::class);
+
+        $this->assertEquals(1, ReceivesEventUsingRefreshAttribute::$renderCount);
+
+        $component->dispatch('bar');
+
+        $this->assertEquals(2, ReceivesEventUsingRefreshAttribute::$renderCount);
+    }
 }
 
 class ReceivesEvents extends Component
@@ -304,4 +317,12 @@ class ItCanReceiveEventUsingClassname extends Component
     {
         return app('view')->make('null-view');
     }
+}
+
+#[BaseRefreshOn('bar')]
+class ReceivesEventUsingRefreshAttribute extends Component
+{
+    public static $renderCount = 0;
+
+    public function render() { static::$renderCount++; return '<div></div>'; }
 }
