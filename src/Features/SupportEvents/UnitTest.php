@@ -231,6 +231,17 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function it_can_register_multiple_listeners_via_single_refresh_attribute(): void
+    {
+        Livewire::test(ReceivesMultipleEventsUsingSingleRefreshAttribute::class)
+            ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter))
+            ->dispatch('foo')
+            ->tap(fn () => $this->assertEquals(2, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter))
+            ->dispatch('bar')
+            ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter));
+    }
+
+    /** @test */
     public function it_can_register_multiple_listeners_via_refresh_attribute_userland(): void
     {
         Livewire::test(ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::class)
@@ -356,6 +367,15 @@ class ReceivesMultipleEventsUsingMultipleRefreshAttributes extends Component
 
     public function render() { static::$counter++; return '<div></div>'; }
 }
+
+#[BaseRefreshOn(['foo', 'bar'])]
+class ReceivesMultipleEventsUsingSingleRefreshAttribute extends Component
+{
+    public static $counter = 0;
+
+    public function render() { static::$counter++; return '<div></div>'; }
+}
+
 
 #[\Livewire\Attributes\RefreshOn('foo'), \Livewire\Attributes\RefreshOn('bar')]
 class ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes extends Component

@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use Attribute;
+use Illuminate\Support\Arr;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\store;
@@ -14,10 +15,12 @@ class BaseRefreshOn extends LivewireAttribute
 
     public function boot()
     {
-        store($this->component)->push(
-            'listenersFromClassAttributes',
-            '$refresh',
-            $this->event,
-        );
+        foreach (Arr::wrap($this->event) as $event) {
+            store($this->component)->push(
+                'listenersFromClassAttributes',
+                '$refresh',
+                $event,
+            );
+        }
     }
 }
