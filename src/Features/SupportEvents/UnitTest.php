@@ -212,11 +212,33 @@ class UnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ReceivesEventUsingRefreshAttribute::class);
 
-        $this->assertEquals(1, ReceivesEventUsingRefreshAttribute::$renderCount);
+        $this->assertEquals(1, ReceivesEventUsingRefreshAttribute::$counter);
 
         $component->dispatch('bar');
 
-        $this->assertEquals(2, ReceivesEventUsingRefreshAttribute::$renderCount);
+        $this->assertEquals(2, ReceivesEventUsingRefreshAttribute::$counter);
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_refresh_attribute(): void
+    {
+        Livewire::test(ReceivesMultipleEventsUsingMultipleRefreshAttributes::class)
+            ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter))
+            ->dispatch('foo')
+            ->tap(fn () => $this->assertEquals(2, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter))
+            ->dispatch('bar')
+            ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter));
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_refresh_attribute_userland(): void
+    {
+        Livewire::test(ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::class)
+            ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter))
+            ->dispatch('foo')
+            ->tap(fn () => $this->assertEquals(2, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter))
+            ->dispatch('bar')
+            ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter));
     }
 }
 
@@ -322,7 +344,23 @@ class ItCanReceiveEventUsingClassname extends Component
 #[BaseRefreshOn('bar')]
 class ReceivesEventUsingRefreshAttribute extends Component
 {
-    public static $renderCount = 0;
+    public static $counter = 0;
 
-    public function render() { static::$renderCount++; return '<div></div>'; }
+    public function render() { static::$counter++; return '<div></div>'; }
+}
+
+#[BaseRefreshOn('foo'), BaseRefreshOn('bar')]
+class ReceivesMultipleEventsUsingMultipleRefreshAttributes extends Component
+{
+    public static $counter = 0;
+
+    public function render() { static::$counter++; return '<div></div>'; }
+}
+
+#[\Livewire\Attributes\RefreshOn('foo'), \Livewire\Attributes\RefreshOn('bar')]
+class ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes extends Component
+{
+    public static $counter = 0;
+
+    public function render() { static::$counter++; return '<div></div>'; }
 }
