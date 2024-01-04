@@ -229,8 +229,6 @@ class HandleComponents extends Mechanism
             $revertA = Utils::shareWithViews('__livewire', $component);
             $revertB = Utils::shareWithViews('_instance', $component); // @deprecated
 
-            $slots = $pushes = $prepends = $sections = null;
-
             $viewContext = new ViewContext;
 
             $html = $view->render(function ($view) use ($viewContext) {
