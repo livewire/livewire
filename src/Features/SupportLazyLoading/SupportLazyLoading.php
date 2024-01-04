@@ -2,14 +2,13 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
-use function Livewire\{ store, trigger, wrap };
-use Livewire\Mechanisms\HandleComponents\ViewContext;
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
-use Livewire\Drawer\Utils;
-use Livewire\ComponentHook;
-use Livewire\Component;
-use Illuminate\Support\Facades\Blade;
+use Livewire\Mechanisms\HandleComponents\ViewContext;
+use function Livewire\{ store, trigger, wrap };
 use Illuminate\Routing\Route;
+use Livewire\ComponentHook;
+use Livewire\Drawer\Utils;
+use Livewire\Component;
 
 class SupportLazyLoading extends ComponentHook
 {
