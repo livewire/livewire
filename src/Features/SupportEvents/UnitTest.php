@@ -352,7 +352,7 @@ class ItCanReceiveEventUsingClassname extends Component
     }
 }
 
-#[BaseRefreshOn('bar')]
+#[BaseOn('bar')]
 class ReceivesEventUsingRefreshAttribute extends Component
 {
     public static $counter = 0;
@@ -360,7 +360,7 @@ class ReceivesEventUsingRefreshAttribute extends Component
     public function render() { static::$counter++; return '<div></div>'; }
 }
 
-#[BaseRefreshOn('foo'), BaseRefreshOn('bar')]
+#[BaseOn('foo'), BaseOn('bar')]
 class ReceivesMultipleEventsUsingMultipleRefreshAttributes extends Component
 {
     public static $counter = 0;
@@ -368,7 +368,7 @@ class ReceivesMultipleEventsUsingMultipleRefreshAttributes extends Component
     public function render() { static::$counter++; return '<div></div>'; }
 }
 
-#[BaseRefreshOn(['foo', 'bar'])]
+#[BaseOn(['foo', 'bar'])]
 class ReceivesMultipleEventsUsingSingleRefreshAttribute extends Component
 {
     public static $counter = 0;
@@ -377,7 +377,7 @@ class ReceivesMultipleEventsUsingSingleRefreshAttribute extends Component
 }
 
 
-#[\Livewire\Attributes\RefreshOn('foo'), \Livewire\Attributes\RefreshOn('bar')]
+#[\Livewire\Attributes\On('foo'), \Livewire\Attributes\On('bar')]
 class ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes extends Component
 {
     public static $counter = 0;
