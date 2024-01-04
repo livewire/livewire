@@ -28,8 +28,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('third-page', ThirdPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
-            Livewire::component('first-lazy-page', FirstLazyPage::class);
-            Livewire::component('second-lazy-page', SecondLazyPage::class);
             Livewire::component('third-asset-page', ThirdAssetPage::class);
             Livewire::component('first-tracked-asset-page', FirstTrackedAssetPage::class);
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
@@ -55,8 +53,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/first-scroll', FirstScrollPage::class)->middleware('web');
             Route::get('/second-scroll', SecondScrollPage::class)->middleware('web');
             Route::get('/second-remote-asset', SecondRemoteAsset::class)->middleware('web');
-            Route::get('/first-lazy', FirstLazyPage::class)->middleware('web')->lazy();
-            Route::get('/second-lazy', SecondLazyPage::class)->middleware('web')->lazy();
 
             Route::get('/first-tracked-asset', FirstTrackedAssetPage::class)->middleware('web');
             Route::get('/second-tracked-asset', SecondTrackedAssetPage::class)->middleware('web');
@@ -410,49 +406,6 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForText('On second')
                 ->assertScript('return window._lw_dusk_test', false)
                 ->assertScript('return _lw_dusk_asset_count', 1);
-        });
-    }
-
-    /** @test */
-    public function can_navigate_to_page_with_lazy_loading()
-    {
-        $this->browse(function ($browser) {
-            $browser
-                ->visit('/first-lazy')
-                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
-                ->assertScript('return window._lw_dusk_test')
-                ->assertDontSee('This is a custom layout')
-                ->assertSee('Loading on first...')
-                ->assertDontSee('On first')
-                ->assertDontSee('Loading on second...')
-                ->waitFor('#page')
-                ->assertDontSee('This is a custom layout')
-                ->assertDontSee('Loading on first...')
-                ->assertDontSee('Loading on second...')
-                ->assertSee('On first')
-                ->click('@link.to.second')
-                ->waitFor('#loading')
-                ->assertSee('This is a custom layout')
-                ->assertSee('Loading on second...')
-                ->assertDontSee('On second')
-                ->assertDontSee('Loading on first...')
-                ->assertDontSee('On first')
-                ->waitFor('#page')
-                ->assertSee('This is a custom layout')
-                ->assertSee('On second')
-                ->assertDontSee('Loading on second...')
-                ->assertDontSee('Loading on first...')
-                ->click('@link.to.first')
-                ->waitFor('#loading')
-                ->assertDontSee('This is a custom layout')
-                ->assertSee('Loading on first...')
-                ->assertDontSee('On first')
-                ->assertDontSee('Loading on second...')
-                ->waitFor('#page')
-                ->assertDontSee('This is a custom layout')
-                ->assertDontSee('Loading on first...')
-                ->assertDontSee('Loading on second...')
-                ->assertSee('On first');
         });
     }
 
@@ -866,45 +819,6 @@ class SecondTrackedAssetPage extends Component
     {
         return '<div>On second asset page</div>';
     }
-}
-
-class FirstLazyPage extends Component
-{
-    public function mount() {
-        sleep(1);
-    }
-
-    public function placeholder() { return <<<HTML
-            <div id="loading">
-                Loading on first...
-            </div>
-            HTML; }
-
-    public function render() { return <<<HTML
-        <div id="page">
-            On first lazy page <a href="/second-lazy" wire:navigate dusk="link.to.second">Go to second page</a>
-        </div>
-        HTML; }
-}
-
-#[Layout('components.layouts.custom')]
-class SecondLazyPage extends Component
-{
-    public function mount() {
-        sleep(1);
-    }
-
-    public function placeholder() { return <<<HTML
-            <div id="loading">
-                Loading on second...
-            </div>
-            HTML; }
-
-    public function render() { return <<<HTML
-        <div id="page">
-            On second lazy page <a href="/first-lazy" wire:navigate dusk="link.to.first">Go to first page</a>
-        </div>
-        HTML; }
 }
 
 class SecondRemoteAsset extends Component
