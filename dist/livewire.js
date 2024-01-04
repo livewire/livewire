@@ -7095,6 +7095,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (isNotPlainLeftClick(e))
         return;
       e.preventDefault();
+      callback((whenReleased) => {
+        whenReleased();
+      });
     });
     el.addEventListener("mousedown", (e) => {
       if (isNotPlainLeftClick(e))
