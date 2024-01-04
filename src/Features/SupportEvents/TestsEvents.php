@@ -84,7 +84,7 @@ trait TestsEvents
 
         return (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($name, $value) {
             return $item['name'] === $value
-                && $item['to'] === $name;
+                && in_array($name, $item['to']);
         });
     }
 }
