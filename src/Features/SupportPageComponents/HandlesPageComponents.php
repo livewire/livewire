@@ -20,12 +20,12 @@ trait HandlesPageComponents
             $html = app('livewire')->mount($this::class, $params);
         });
 
-        if (blank($layoutConfig))
-        {
-            $reflectionClass = new \ReflectionClass($this);
-            $layoutAttribute = $reflectionClass->getAttributes(Layout::class)[0] ?? null;
-            $layout = $layoutAttribute?->getArguments()[0] ?? null;
-        }
+        // if (blank($layoutConfig))
+        // {
+        //     $reflectionClass = new \ReflectionClass($this);
+        //     $layoutAttribute = $reflectionClass->getAttributes(Layout::class)[0] ?? null;
+        //     $layout = $layoutAttribute?->getArguments()[0] ?? null;
+        // }
 
         $layoutConfig = $layoutConfig ?: new PageComponentConfig(view: $layout);
 

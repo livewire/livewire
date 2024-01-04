@@ -156,29 +156,6 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_lazy_load_component_with_custom_layout()
-    {
-        $this->tweakApplication(function() {
-            Livewire::component('page', PageWithCustomLayout::class);
-            Route::get('/', PageWithCustomLayout::class)->lazy()->middleware('web');
-        });
-
-        $this->browse(function ($browser) {
-            $browser
-                ->visit('/')
-                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
-                ->assertScript('return window._lw_dusk_test')
-                ->assertSee('Loading...')
-                ->assertSee('This is a custom layout')
-                ->assertDontSee('Hello World')
-                ->waitFor('#page')
-                ->assertDontSee('Loading...')
-                ->assertSee('This is a custom layout')
-                ->assertSee('Hello World');
-        });
-    }
-
-    /** @test */
     public function can_lazy_load_a_component_with_a_placeholder()
     {
         Livewire::visit([new class extends Component {
@@ -325,26 +302,6 @@ class BrowserTest extends BrowserTestCase
 }
 
 class Page extends Component {
-    public function mount() {
-        sleep(1);
-    }
-
-    public function placeholder() { return <<<HTML
-            <div id="loading">
-                Loading...
-            </div>
-            HTML; }
-
-    public function render() { return <<<HTML
-            <div id="page">
-                Hello World
-            </div>
-            HTML; }
-}
-
-
-#[Layout('components.layouts.custom')]
-class PageWithCustomLayout extends Component {
     public function mount() {
         sleep(1);
     }
