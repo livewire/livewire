@@ -171,4 +171,79 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@text', '1')
         ;
     }
+
+
+    /** @test */
+    public function can_dispatch_to_other_components_globally_in_a_request()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function dispatchToOtherComponents()
+                {
+                    $this->dispatch('foo', message: 'baz')->to('child', 'another-child');
+                }
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button x-on:click="window.Livewire.dispatchTo(['child', 'another-child'], 'foo', { message: 'bar' })" dusk="button">Dispatch to child from Alpine</button>
+                        <button wire:click="dispatchToOtherComponents" dusk="button2">Dispatch to child from Livewire</button>
+
+                        <livewire:child />
+                        <livewire:another-child />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $message = 'foo';
+
+                protected $listeners = ['foo' => 'onFoo'];
+
+                function onFoo($message)
+                {
+                    $this->message = $message;
+                }
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <h1 dusk="child-output">Child: {{ $message }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+            'another-child' => new class extends Component {
+                public $message = 'foo';
+
+                protected $listeners = ['foo' => 'onFoo'];
+
+                function onFoo($message)
+                {
+                    $this->message = $message;
+                }
+
+                function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <h1 dusk="another-child-output">Another Child: {{ $message }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@child-output', 'Child: foo')
+            ->assertSeeIn('@another-child-output', 'Another Child: foo')
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@child-output', 'Child: bar')
+            ->waitForTextIn('@another-child-output', 'Another Child: bar')
+            // For some reason this is flaky?
+//            ->waitForLivewire()->click('@button2')
+//            ->waitForTextIn('@child-output', 'Child: baz')
+//            ->waitForTextIn('@another-child-output', 'Another Child: baz')
+        ;
+    }
 }

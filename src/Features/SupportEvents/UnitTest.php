@@ -203,7 +203,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->call('dispatchToComponentUsingClassname');
 
-        $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'name' => 'foo', 'params' => ['test']], $component->effects['dispatches']));
+        $this->assertTrue(in_array(['to' => ['livewire.features.support-events.it-can-receive-event-using-classname'], 'name' => 'foo', 'params' => ['test']], $component->effects['dispatches']));
     }
 }
 

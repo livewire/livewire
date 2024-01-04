@@ -44,7 +44,7 @@ class Event
         ];
 
         if ($this->self) $output['self'] = true;
-        if ($this->components) $output['to'] = app(ComponentRegistry::class)->getName($this->components);
+        if ($this->components) $output['to'] = app(ComponentRegistry::class)->getNames($this->components);
 
         return $output;
     }
