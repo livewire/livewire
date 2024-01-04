@@ -40,6 +40,8 @@ trait TestsEvents
         $this->assertDispatched($event, ...$params);
         $result = $this->testDispatchedTo($target, $event);
 
+        $target = is_array($target) ? json_encode($target) : $target;
+
         PHPUnit::assertTrue($result, "Failed asserting that an event [{$event}] was fired to {$target}.");
 
         return $this;
@@ -80,11 +82,16 @@ trait TestsEvents
 
     protected function testDispatchedTo($target, $value)
     {
-        $name = app(ComponentRegistry::class)->getName($target);
+        $names = is_array($target)
+            ? app(ComponentRegistry::class)->getNames($target)
+            : app(ComponentRegistry::class)->getName($target);
 
-        return (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($name, $value) {
+        return (bool) collect(data_get($this->effects, 'dispatches'))->first(function ($item) use ($names, $value) {
             return $item['name'] === $value
-                && in_array($name, $item['to']);
+                && (is_array($names)
+                    ? count(array_intersect($names, $item['to'])) === count($item['to'])
+                    : in_array($names, $item['to'])
+                );
         });
     }
 }
