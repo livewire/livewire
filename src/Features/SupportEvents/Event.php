@@ -9,7 +9,7 @@ class Event
     protected $name;
     protected $params;
     protected $self;
-    protected $component;
+    protected $components;
 
     public function __construct($name, $params)
     {
@@ -24,16 +24,16 @@ class Event
         return $this;
     }
 
-    public function component($name)
+    public function components($names)
     {
-        $this->component = $name;
+        $this->components = $names;
 
         return $this;
     }
 
-    public function to($name)
+    public function to(...$names)
     {
-        return $this->component($name);
+        return $this->components($names);
     }
 
     public function serialize()
@@ -44,7 +44,7 @@ class Event
         ];
 
         if ($this->self) $output['self'] = true;
-        if ($this->component) $output['to'] = app(ComponentRegistry::class)->getName($this->component);
+        if ($this->components) $output['to'] = app(ComponentRegistry::class)->getName($this->components);
 
         return $output;
     }

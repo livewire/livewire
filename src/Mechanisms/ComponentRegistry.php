@@ -69,6 +69,19 @@ class ComponentRegistry extends Mechanism
         return $name;
     }
 
+    function getNames($namesOrClassesOrComponents)
+    {
+        $names = [];
+
+        foreach ($namesOrClassesOrComponents as $nameOrClassOrComponent) {
+            [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);
+
+            $names[] = $name;
+        }
+
+        return $names;
+    }
+
     function getClass($nameOrClassOrComponent)
     {
         [$class, $name] = $this->getNameAndClass($nameOrClassOrComponent);

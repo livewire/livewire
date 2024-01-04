@@ -12,12 +12,12 @@ export function dispatchSelf(component, name, params) {
     dispatchEvent(component.el, name, params, false)
 }
 
-export function dispatchTo(componentName, name, params) {
-    let targets = componentsByName(componentName)
+export function dispatchTo(componentNames, name, params) {
+    let targets = Array.isArray(componentNames)
+        ? componentNames.flatMap(componentName => componentsByName(componentName))
+        : componentsByName(componentNames);
 
-    targets.forEach(target => {
-        dispatchEvent(target.el, name, params, false)
-    })
+    targets.forEach(target => dispatchEvent(target.el, name, params, false));
 }
 
 export function listen(component, name, callback) {
