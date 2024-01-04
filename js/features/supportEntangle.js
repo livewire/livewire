@@ -15,7 +15,7 @@ export function generateEntangleFunction(component, cleanup) {
             // Check to see if the Livewire property exists and if not log a console error
             // and return so everything else keeps running.
             if (typeof livewirePropertyValue === 'undefined') {
-                console.error(`Livewire Entangle Error: Livewire property ['$${livewireProperty}'] cannot be found on component: ['${component.name}']`, component.el)
+                console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`, component.el)
                 return
             }
 
