@@ -113,10 +113,12 @@ class SupportPageComponents extends ComponentHook
         });
 
         on('render', $handler);
+        on('render.placeholder', $handler);
 
         $callback();
 
         off('render', $handler);
+        off('render.placeholder', $handler);
 
         return $layoutConfig;
     }
