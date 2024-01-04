@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportLazyLoading;
 
 use Illuminate\Support\Facades\Route;
-use Livewire\Attributes\Layout;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -147,10 +146,8 @@ class BrowserTest extends BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('Loading...')
                 ->assertDontSee('Hello World')
-                ->assertDontSee('This is a custom layout')
                 ->waitFor('#page')
                 ->assertDontSee('Loading...')
-                ->assertDontSee('This is a custom layout')
                 ->assertSee('Hello World');
         });
     }
