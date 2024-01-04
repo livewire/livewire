@@ -8208,11 +8208,9 @@ function dispatchGlobal(name, params) {
 function dispatchSelf(component, name, params) {
   dispatchEvent(component.el, name, params, false);
 }
-function dispatchTo(componentName, name, params) {
-  let targets = componentsByName(componentName);
-  targets.forEach((target) => {
-    dispatchEvent(target.el, name, params, false);
-  });
+function dispatchTo(componentNames, name, params) {
+  let targets = Array.isArray(componentNames) ? componentNames.flatMap((componentName) => componentsByName(componentName)) : componentsByName(componentNames);
+  targets.forEach((target) => dispatchEvent(target.el, name, params, false));
 }
 function listen(component, name, callback) {
   component.el.addEventListener(name, (e) => {
