@@ -386,4 +386,60 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@remove-entangled')
         ->assertSeeIn('@counter', '13');
     }
+
+    /** @test */
+    public function can_reorder_entangled_keys()
+    {
+        Livewire::visit(new class extends Component {
+            public $test = [
+                'one' => 'One',
+                'two' => 'Two',
+                'three' => 'Three',
+            ];
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div dusk="output">Test: {{ json_encode($test) }}</div>
+
+                    <div>
+                        <button dusk="set" wire:click="$set('test', { one: 'One', three: 'Three', two: 'Two' })" type="button">
+                            Set test to {"one":"One","three":"Three","two":"Two"}
+                        </button>
+                    </div>
+
+                    <div>
+                        <button dusk="set-add" wire:click="$set('test', { one: 'One', three: 'Three', two: 'Two', four: 'Four' })" type="button">
+                            Set test to {"one":"One","three":"Three","two":"Two","four":"Four"}
+                        </button>
+                    </div>
+
+                    <div x-data="{ test: $wire.entangle('test', true) }">
+                        <div>
+                            <button dusk="set-alpine" x-on:click="test = { one: 'One', three: 'Three', two: 'Two' }" type="button">
+                                Set test to {"one":"One","three":"Three","two":"Two"} with Alpine
+                            </button>
+                        </div>
+
+                        <div>
+                            <button dusk="set-add-alpine" x-on:click="test = { one: 'One', three: 'Three', two: 'Two', four: 'Four' }" type="button">
+                                Set test to {"one":"One","three":"Three","two":"Two","four":"Four"} with Alpine
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@output', json_encode(['one' => 'One', 'two' => 'Two', 'three' => 'Three']))
+        ->waitForLivewire()->click('@set')
+        ->assertSeeIn('@output', json_encode(['one' => 'One', 'three' => 'Three', 'two' => 'Two']))
+        ->waitForLivewire()->click('@set-add')
+        ->assertSeeIn('@output', json_encode(['one' => 'One', 'three' => 'Three', 'two' => 'Two', 'four' => 'Four']))
+        ->waitForLivewire()->click('@set-alpine')
+        ->assertSeeIn('@output', json_encode(['one' => 'One', 'three' => 'Three', 'two' => 'Two']))
+        ->waitForLivewire()->click('@set-add-alpine')
+        ->assertSeeIn('@output', json_encode(['one' => 'One', 'three' => 'Three', 'two' => 'Two', 'four' => 'Four']));
+    }    
 }
