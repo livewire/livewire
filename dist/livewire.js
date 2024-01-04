@@ -7032,6 +7032,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
+  // js/plugins/navigate/fetch.js
+  function fetchHtml(destination, callback) {
+    let uri = destination.pathname + destination.search;
+    performFetch(uri, (html) => {
+      callback(html);
+    });
+  }
+  function performFetch(uri, callback) {
+    let options = {};
+    trigger("navigate.request", {
+      url: uri,
+      options
+    });
+    fetch(uri, options).then((i) => i.text()).then((html) => {
+      callback(html);
+    });
+  }
+
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
   function prefetchHtml(destination, callback) {
@@ -7040,7 +7058,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     prefetches[path] = { finished: false, html: null, whenFinished: () => {
     } };
-    fetch(path).then((i) => i.text()).then((html) => {
+    performFetch(path, (html) => {
       callback(html);
     });
   }
@@ -7427,19 +7445,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       result = result.replace(regex, "");
     });
     return result.trim();
-  }
-
-  // js/plugins/navigate/fetch.js
-  function fetchHtml(destination, callback) {
-    let uri = destination.pathname + destination.search;
-    let options = {};
-    trigger("navigate.request", {
-      url: uri,
-      options
-    });
-    fetch(uri, options).then((i) => i.text()).then((html) => {
-      callback(html);
-    });
   }
 
   // js/plugins/navigate/index.js
