@@ -1,13 +1,14 @@
 import { Component } from "@/component";
 import { trigger } from "@/hooks";
 import { deepClone } from "@/utils"
+import componentException from '@/exceptions/componentException'
 
 let components = {}
 
 export function initComponent(el) {
     let component = new Component(el)
 
-    if (components[component.id]) throw 'Component already registered'
+    if (components[component.id]) componentException('Component ['+component.name+'] already registered', el)
 
     let cleanup = (i) => component.addCleanup(i)
 
@@ -32,10 +33,12 @@ export function hasComponent(id) {
     return !! components[id]
 }
 
-export function findComponent(id) {
+export function findComponent(id, el = null) {
     let component = components[id]
 
-    if (! component) throw 'Component not found: ' + id
+    if (! component && el) componentException(`Component ['${id}'] not found on ['${el.__livewire.name}']`, el)
+
+    if (! component && !el) componentException(`Component ['${id}'] not found`)
 
     return component
 }
@@ -44,7 +47,7 @@ export function closestComponent(el, strict = true) {
     let closestRoot = Alpine.findClosest(el, i => i.__livewire)
 
     if (! closestRoot) {
-        if (strict) throw "Could not find Livewire component in DOM tree"
+        if (strict) componentException('Could not find Livewire component in DOM tree', el)
 
         return
     }

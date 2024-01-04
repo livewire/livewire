@@ -2,10 +2,11 @@ import { dataSet, deepClone, deeplyEqual, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponent } from '@/store'
 import { trigger } from '@/hooks'
+import componentException from '@/exceptions/componentException'
 
 export class Component {
     constructor(el) {
-        if (el.__livewire) throw 'Component already initialized';
+        if (el.__livewire) componentException(`Component already initialized`, el);
 
         el.__livewire = this
 
@@ -20,7 +21,7 @@ export class Component {
         this.snapshot = JSON.parse(this.snapshotEncoded)
 
         if (! this.snapshot) {
-            throw `Snapshot missing on Livewire component with id: ` + this.id
+            componentException(`Snapshot missing on Livewire component`, el)
         }
 
         this.name = this.snapshot.memo.name
@@ -113,7 +114,7 @@ export class Component {
         let meta = this.snapshot.memo
         let childIds = Object.values(meta.children).map(i => i[1])
 
-        return childIds.map(id => findComponent(id))
+        return childIds.map(id => findComponent(id, this.el))
     }
 
     inscribeSnapshotAndEffectsOnElement() {
