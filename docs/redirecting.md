@@ -65,7 +65,7 @@ In case you need to pass parameters to the route you may use the second argument
     $this->redirectRoute('profile', ['id' => 1]);
 ```
 
-## Redirect to Intended
+## Redirect to intended
 
 In case you want to redirect the user back to the previous page they were on you can use `redirectIntended`. It accepts an optional default URL as its first argument which is used as a fallback if no previous page can be determined:
 
