@@ -1,4 +1,4 @@
-import {doFetch} from "@/plugins/navigate/fetch";
+import { performFetch } from "@/plugins/navigate/fetch";
 
 // Warning: this could cause some memory leaks
 let prefetches = {}
@@ -10,7 +10,7 @@ export function prefetchHtml(destination, callback) {
 
     prefetches[path] = { finished: false, html: null, whenFinished: () => {} }
 
-    doFetch(path).then(i => i.text()).then(html => {
+    performFetch(path, html => {
         callback(html)
     })
 }
