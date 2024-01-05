@@ -21,6 +21,7 @@ export function handleFileUpload(el, property, component, cleanup) {
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
     let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
+    let cancelled = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancelled', { bubbles: true, detail: { id: component.id, property} }))
     let progress = (progressEvent) => {
         var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
 
@@ -37,9 +38,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancelled)
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancelled)
         }
     }
 
@@ -85,23 +86,25 @@ class UploadManager {
         this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
-    upload(name, file, finishCallback, errorCallback, progressCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
         this.setUpload(name, {
             files: [file],
             multiple: false,
             finishCallback,
             errorCallback,
             progressCallback,
+            cancelledCallback
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
             finishCallback,
             errorCallback,
             progressCallback,
+            cancelledCallback
         })
     }
 
@@ -183,6 +186,8 @@ class UploadManager {
             this.component.$wire.call('_uploadErrored', name, errors, this.uploadBag.first(name).multiple)
         })
 
+        this.uploadBag.first(name).request = request
+
         request.send(formData)
     }
 
@@ -211,6 +216,16 @@ class UploadManager {
         this.uploadBag.shift(name).errorCallback()
 
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
+    }
+
+    cancelUpload(name) {
+        let uploadItem = this.uploadBag.first(name);
+
+        if (uploadItem) {
+            uploadItem.request.abort();
+            this.uploadBag.shift(name).cancelledCallback();
+            this.component.$wire.call('_uploadCancelled', name);
+        }
     }
 }
 
@@ -275,7 +290,8 @@ export function upload(
     file,
     finishCallback = () => { },
     errorCallback = () => { },
-    progressCallback = () => { }
+    progressCallback = () => { },
+    cancelledCallback = () => { }
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -284,7 +300,8 @@ export function upload(
         file,
         finishCallback,
         errorCallback,
-        progressCallback
+        progressCallback,
+        cancelledCallback
     )
 }
 
@@ -294,7 +311,8 @@ export function uploadMultiple(
     files,
     finishCallback = () => { },
     errorCallback = () => { },
-    progressCallback = () => { }
+    progressCallback = () => { },
+    cancelledCallback = () => { }
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -303,7 +321,8 @@ export function uploadMultiple(
         files,
         finishCallback,
         errorCallback,
-        progressCallback
+        progressCallback,
+        cancelledCallback
     )
 }
 
@@ -321,5 +340,18 @@ export function removeUpload(
         tmpFilename,
         finishCallback,
         errorCallback
+    )
+}
+
+export function cancelUpload(
+    component,
+    name,
+    cancelledCallback = () => { }
+) {
+    let uploadManager = getUploadManager(component)
+
+    uploadManager.cancelUpload(
+        name,
+        cancelledCallback
     )
 }

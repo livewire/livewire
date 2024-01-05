@@ -71,6 +71,19 @@ trait WithFileUploads
         throw (ValidationException::withMessages($errors));
     }
 
+    function _uploadCancelled($name) {
+        $translator = app()->make('translator');
+
+        $attribute = $translator->get("validation.attributes.{$name}");
+
+        if ($attribute === "validation.attributes.{$name}") $attribute = $name;
+
+        $message = trans('validation.cancelled', ['attribute' => $attribute]);
+        if ($message === 'validation.cancelled') $message = "The upload {$name} have been canceled.";
+
+        throw ValidationException::withMessages([$name => $message]);
+    }
+
     function _removeUpload($name, $tmpFilename)
     {
         $uploads = $this->getPropertyValue($name);
