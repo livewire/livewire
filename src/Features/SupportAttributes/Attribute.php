@@ -69,6 +69,10 @@ abstract class Attribute
             $value = $enum::from($value);
         }
 
+        if ($wireable = $this->tryingToSetToWireable($value)) {
+            $value = $wireable::fromLivewire($value);
+        }
+
         data_set($this->component, $this->levelName, $value);
     }
 
@@ -92,6 +96,31 @@ abstract class Attribute
 
             // If the type is a BackedEnum then return it's name
             if (is_subclass_of($name, \BackedEnum::class)) {
+                return $name;
+            }
+        }
+
+        return false;
+    }
+
+    protected function tryingToSetToWireable($subject)
+    {
+        $target = $this->subTarget ?? $this->component;
+
+        $name = $this->subName ?? $this->levelName;
+
+        $property = str($name)->before('.')->toString();
+
+        $reflection = new \ReflectionProperty($target, $property);
+
+        $type = $reflection->getType();
+
+        if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
+            $name = $type->getName();
+
+            $reflectedpropertyClass = new \ReflectionClass($name);
+
+            if ($reflectedpropertyClass->implementsInterface(\Livewire\Wireable::class)) {
                 return $name;
             }
         }

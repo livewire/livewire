@@ -220,6 +220,47 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_use_url_on_wirable_object_properties()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public WirableAttributeForUrlTesting $foo;
+
+                public function __construct()
+                {
+                    $this->foo = new WirableAttributeForUrlTesting('John', 'Smith');
+                }
+
+                public function change()
+                {
+                    $this->foo = new WirableAttributeForUrlTesting('Mary', 'Bell');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="change" dusk="button">Change</button>
+                        <h1 dusk="output">{{ $foo->firstName }} {{ $foo->lastName }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->assertSeeIn('@output', 'John Smith')
+            ->waitForLivewire()->click('@button')
+            ->assertQueryStringHas('foo', ['firstName' => 'Mary', 'lastName' => 'Bell'])
+            ->assertSeeIn('@output', 'Mary Bell')
+            ->refresh()
+            ->assertQueryStringHas('foo', ['firstName' => 'Mary', 'lastName' => 'Bell'])
+            ->assertSeeIn('@output', 'Mary Bell')
+        ;
+    }
+
+    /** @test */
     public function it_does_not_break_string_typed_properties()
     {
         Livewire::withQueryParams(['foo' => 'bar'])
@@ -295,4 +336,32 @@ enum EnumForUrlTesting: string
 {
     case First = 'first';
     case Second = 'second';
+}
+
+class WirableAttributeForUrlTesting implements \Livewire\Wireable
+{
+    public string $firstName;
+    public string $lastName;
+
+    public function __construct(string $firstName, string $lastName)
+    {
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+    }
+
+    public function toLivewire()
+    {
+        return [
+            'firstName' => $this->firstName,
+            'lastName' => $this->lastName,
+        ];
+    }
+
+    public static function fromLivewire($value)
+    {
+        return new static(
+            $value['firstName'] ?? null,
+            $value['lastName'] ?? null,
+        );
+    }
 }
