@@ -4,12 +4,25 @@ namespace Livewire\Mechanisms\HandleComponents;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
+use Livewire\Attributes\View;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
+    /** @test */
+    public function it_renders_view_provided_via_view_attribute()
+    {
+        Livewire::test(BasicComponentWithViewAttribute::class)->assertViewIs('null-view');
+    }
+
+    /** @test */
+    public function it_renders_view_provided_via_userland_view_attribute()
+    {
+        Livewire::test(BasicComponentWithUserlandViewAttribute::class)->assertViewIs('null-view');
+    }
+
     /** @test */
     public function it_restores_laravel_middleware_after_livewire_test()
     {
@@ -153,6 +166,17 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.selected', null)
         ;
     }
+}
+
+
+#[View('null-view')]
+class BasicComponentWithViewAttribute extends Component
+{
+}
+
+#[\Livewire\Attributes\View('null-view')]
+class BasicComponentWithUserlandViewAttribute extends Component
+{
 }
 
 class BasicComponent extends Component

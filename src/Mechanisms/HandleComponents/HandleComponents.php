@@ -262,9 +262,13 @@ class HandleComponents extends Mechanism
 
         $fileName = str($dotName)->replace('.', '/')->__toString();
 
-        $viewOrString = method_exists($component, 'render')
-            ? wrap($component)->render()
-            : View::file($viewPath . '/' . $fileName . '.blade.php');
+        if ($viewName = $component->getAttributes()->whereInstanceOf(BaseView::class)->first()?->name) {
+            $viewOrString = app('view')->make($viewName);
+        } else {
+            $viewOrString = method_exists($component, 'render')
+                ? wrap($component)->render()
+                : View::file($viewPath . '/' . $fileName . '.blade.php');
+        }
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 
