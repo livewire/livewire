@@ -36,7 +36,7 @@ class ShowPost extends Component
 
 The reason the above example is insecure is that `wire:click="delete(...)"` can be modified in the browser to pass ANY post ID a malicious user wishes.
 
-Action paramaters (like `$id` in this case) should be treated the same as any untrusted input from the browser.
+Action parameters (like `$id` in this case) should be treated the same as any untrusted input from the browser.
 
 Therefore, to keep this application secure and prevent a user from deleting another user's post, we must add authorization to the `delete()` action.
 
@@ -66,6 +66,18 @@ class PostPolicy
         return $user?->id === $post->user_id;
     }
 }
+```
+
+Before you can use the new Policy, you need to register it inside `app\Providers\AuthServiceProvider.php`:
+
+```php
+// ...
+
+protected $policies = [
+    Post::class => PostPolicy::class,
+];
+
+// ...
 ```
 
 Now, we can use the `$this->authorize()` method from the Livewire component to ensure the user owns the post before deleting it:
@@ -222,9 +234,9 @@ class ShowPost extends Component
     public function delete()
     {
         $post = Post::find($this->postId);
-    
+
         $this->authorize('delete', $post); // [tl! highlight]
-    
+
         $post->delete();
     }
 }
@@ -245,7 +257,7 @@ Further reading:
 When a Livewire component is loaded on a page containing route-level [Authorization Middleware](https://laravel.com/docs/authorization#via-middleware), like so:
 
 ```php
-Route::put('/post/{post}', App\Livewire\UpdatePost::class)
+Route::get('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 
@@ -256,7 +268,7 @@ Persistent middleware protects you from scenarios where the authorization rules 
 Here's a more in-depth example of such a scenario:
 
 ```php
-Route::put('/post/{post}', App\Livewire\UpdatePost::class)
+Route::get('/post/{post}', App\Livewire\UpdatePost::class)
     ->middleware('can:update,post'); // [tl! highlight]
 ```
 
@@ -305,7 +317,7 @@ Because Livewire has internal mechanisms to re-apply middleware from the origina
 
 ### Configuring persistent middleware
 
-By default Livewire persists the following middleware across network requests:
+By default, Livewire persists the following middleware across network requests:
 
 ```php
 \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -357,7 +369,7 @@ Livewire::setUpdateRoute(function ($handle) {
 });
 ```
 
-Any Livewire AJAX/fetch requests made to the server will use the above endpoint and apply the `LocalizeViewPaths` middleware before handling the component udpdate.
+Any Livewire AJAX/fetch requests made to the server will use the above endpoint and apply the `LocalizeViewPaths` middleware before handling the component update.
 
 Learn more about [customizing the update route on the Installation page](https://livewire.laravel.com/docs/installation#configuring-livewires-update-endpoint).
 

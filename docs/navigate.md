@@ -90,6 +90,31 @@ Here is an example of an `<audio>` player element being persisted across pages u
 
 If the above HTML appears on both pages — the current page, and the next one — the original element will be re-used on the new page. In the case of an audio player, the audio playback won't be interrupted when navigating from one page to another.
 
+Please be aware that the persisted element must be placed outside your Livewire components. A common practice is to position the persisted element in your main layout, such as `resources/views/components/layouts/app.blade.php`.
+
+```html
+<!-- resources/views/components/layouts/app.blade.php -->
+
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        <main>
+            {{ $slot }}
+        </main>
+
+        @persist('player') <!-- [tl! highlight:2] -->
+            <audio src="{{ $episode->file }}" controls></audio>
+        @endpersist
+    </body>
+</html>
+```
+
 ### Preserving scroll position
 
 By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
@@ -134,6 +159,25 @@ In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` 
 
     Livewire.navigate('/new/url')
 </script>
+```
+
+## Using with analytics software
+
+When navigating pages using `wire:navigate` in your app, any `<script>` tags in the `<head>` only evaluate when the page is initially loaded.
+
+This creates a problem for analytics software such as [Fathom Analytics](https://usefathom.com/). These tools rely on a `<script>` snippet being evaluated on every single page change, not just the first.
+
+Tools like [Google Analytics](https://marketingplatform.google.com/about/analytics/) are smart enough to handle this automatically, however, when using Fathom Analytics, you must add `data-spa="auto"` to your script tag to ensure each page visit is tracked properly:
+
+```blade
+<head>
+    <!-- ... -->
+
+    <!-- Fathom Analytics -->
+    @if (! config('app.debug'))
+        <script src="https://cdn.usefathom.com/script.js" data-site="ABCDEFG" data-spa="auto" defer></script> <!-- [tl! highlight] -->
+    @endif
+</head>
 ```
 
 ## Script evaluation

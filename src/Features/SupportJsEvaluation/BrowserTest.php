@@ -66,7 +66,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertDontSee('Toggle Me!')
         ->waitForLivewire()->click('@toggle')
-        ->assertSee('Toggle Me!')
+        ->waitForText('Toggle Me!')
         ;
     }
 }

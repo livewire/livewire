@@ -204,7 +204,7 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 > Within Livewire event handlers, you can access the event object via `$event`. This is useful for referencing information on the event. For example, you can access the element that triggered the event via `$event.target`.
 
 > [!warning]
-> The Trix demo code above is incomplete and only useful as a demonstration of event listeners. If used verbatim, a network request would be fired on every single key stroke. A more performant implementation would be:
+> The Trix demo code above is incomplete and only useful as a demonstration of event listeners. If used verbatim, a network request would be fired on every single keystroke. A more performant implementation would be:
 >
 > ```blade
 > <trix-editor
@@ -497,7 +497,7 @@ class SearchPosts extends Component
     public $query = '';
 
     #[Js] // [tl! highlight:6]
-    public function reset()
+    public function resetQuery()
     {
         return <<<'JS'
             $wire.query = '';
@@ -517,7 +517,7 @@ class SearchPosts extends Component
 <div>
     <input wire:model.live="query">
 
-    <button wire:click="reset">Reset Search</button> <!-- [tl! highlight] -->
+    <button wire:click="resetQuery">Reset Search</button> <!-- [tl! highlight] -->
 
     @foreach ($posts as $post)
         <!-- ... -->

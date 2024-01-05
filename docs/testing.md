@@ -120,7 +120,7 @@ class ShowPostsTest extends TestCase
 
         Livewire::test(ShowPosts::class)
             ->assertViewHas('posts', function ($posts) {
-                $this->assertEquals(2, count($posts));
+                return count($posts) == 2;
             });
     }
 }
@@ -169,7 +169,7 @@ class ShowPostsTest extends TestCase
         Livewire::actingAs($user)
             ->test(ShowPosts::class)
             ->assertViewHas('posts', function ($posts) {
-                $this->assertEquals(3, count($posts));
+                return count($posts) == 3;
             });
     }
 }
@@ -445,6 +445,12 @@ If you want to test that a specific validation rule has failed, you can pass an 
 $this->assertHasErrors(['title' => ['required']]);
 ```
 
+Or if you'd rather assert a validation message exists, you can do so as well:
+
+```php
+$this->assertHasErrors(['title' => ['The title field is required.']]);
+```
+
 ### Authorization
 
 Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
@@ -647,6 +653,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) |
 | `Livewire::withCookie('color', 'blue')`                      | Set the test's `color` cookie to the provided value (`blue`). |
 | `Livewire::withCookies(['color' => 'blue', 'name' => 'Taylor])`                      | Set the test's `color` and `name` cookies to the provided values (`blue`, `Taylor`). |
+| `Livewire::withHeaders(['X-COLOR' => 'blue', 'X-NAME' => 'Taylor])`                      | Set the test's `X-COLOR` and `X-NAME` headers to the provided values (`blue`, `Taylor`). |
 
 
 ### Interacting with components
@@ -681,7 +688,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertHasErrors('title')`                            | Assert that validation has failed for the `title` property                                                                                                                           |
 | `assertHasErrors(['title' => ['required', 'min:6']])`   | Assert that the provided validation rules failed for the `title` property                                                                                                            |
 | `assertHasNoErrors('title')`                          | Assert that there are no validation errors for the `title` property                                                                                                                  |
-| `assertHasNoErrors(['title', ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
+| `assertHasNoErrors(['title' => ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
 | `assertRedirect()`                                    | Assert that a redirect has been triggered from within the component                                                                                                                  |
 | `assertRedirect('/posts')`                            | Assert the component triggered a redirect to the `/posts` endpoint                                                                                                                   |
 | `assertRedirect(ShowPosts::class)`                    | Assert that the component triggered a redirect to the `ShowPosts` component                                                                                                          |

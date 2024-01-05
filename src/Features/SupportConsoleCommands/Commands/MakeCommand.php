@@ -223,6 +223,7 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
             'insteadof',
             'interface',
             'isset',
+            'self',
             'list',
             'namespace',
             'new',

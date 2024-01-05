@@ -51,7 +51,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Mechanisms\HandleRequests\HandleRequests::class,
             \Livewire\Mechanisms\FrontendAssets\FrontendAssets::class,
             \Livewire\Mechanisms\ExtendBlade\ExtendBlade::class,
-            \Livewire\Mechanisms\CompileLivewireTags::class,
+            \Livewire\Mechanisms\CompileLivewireTags\CompileLivewireTags::class,
             \Livewire\Mechanisms\ComponentRegistry::class,
             \Livewire\Mechanisms\RenderComponent::class,
             \Livewire\Mechanisms\DataStore::class,
@@ -61,7 +61,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     protected function registerMechanisms()
     {
         foreach ($this->getMechanisms() as $mechanism) {
-            app($mechanism)->register($this);
+            app($mechanism)->register();
         }
     }
 
@@ -74,7 +74,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         }
 
         foreach ($this->getMechanisms() as $mechanism) {
-            app($mechanism)->boot($this);
+            app($mechanism)->boot();
         }
     }
 
@@ -104,6 +104,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\Features\SupportAttributes\SupportAttributes::class,
             \Livewire\Features\SupportPagination\SupportPagination::class,
             \Livewire\Features\SupportValidation\SupportValidation::class,
+            \Livewire\Features\SupportIsolating\SupportIsolating::class,
             \Livewire\Features\SupportRedirects\SupportRedirects::class,
             \Livewire\Features\SupportStreaming\SupportStreaming::class,
             \Livewire\Features\SupportNavigate\SupportNavigate::class,

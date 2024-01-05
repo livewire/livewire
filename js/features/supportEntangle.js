@@ -1,5 +1,5 @@
 import { findComponent } from "../store";
-import { on } from '@/events'
+import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
 export function generateEntangleFunction(component, cleanup) {
