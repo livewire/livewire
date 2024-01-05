@@ -118,6 +118,12 @@ function containsTargets(payload, targets) {
         }
 
         let hasMatchingUpdate = Object.keys(updates).some(property => {
+            if (property.includes('.')) {
+                let nestedProperty = property.split('.')[0]
+
+                if (nestedProperty === target) return true
+            }
+
             return property === target
         })
 
