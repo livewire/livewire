@@ -190,7 +190,7 @@ export function getNonce() {
     if (nonce) return nonce
 
 
-    if (window.livewireScriptConfig['nonce'] ?? false) {
+    if (window.livewireScriptConfig && (window.livewireScriptConfig['nonce'] ?? false)) {
         nonce = window.livewireScriptConfig['nonce']
 
         return nonce
