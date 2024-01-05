@@ -205,6 +205,52 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertTrue(in_array(['to' => 'livewire.features.support-events.it-can-receive-event-using-classname', 'name' => 'foo', 'params' => ['test']], $component->effects['dispatches']));
     }
+
+
+    /** @test */
+    public function receive_event_with_refresh_attribute()
+    {
+        $component = Livewire::test(ReceivesEventUsingRefreshAttribute::class);
+
+        $this->assertEquals(1, ReceivesEventUsingRefreshAttribute::$counter);
+
+        $component->dispatch('bar');
+
+        $this->assertEquals(2, ReceivesEventUsingRefreshAttribute::$counter);
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_refresh_attribute(): void
+    {
+        Livewire::test(ReceivesMultipleEventsUsingMultipleRefreshAttributes::class)
+            ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter))
+            ->dispatch('foo')
+            ->tap(fn () => $this->assertEquals(2, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter))
+            ->dispatch('bar')
+            ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter));
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_single_refresh_attribute(): void
+    {
+        Livewire::test(ReceivesMultipleEventsUsingSingleRefreshAttribute::class)
+            ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter))
+            ->dispatch('foo')
+            ->tap(fn () => $this->assertEquals(2, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter))
+            ->dispatch('bar')
+            ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter));
+    }
+
+    /** @test */
+    public function it_can_register_multiple_listeners_via_refresh_attribute_userland(): void
+    {
+        Livewire::test(ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::class)
+            ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter))
+            ->dispatch('foo')
+            ->tap(fn () => $this->assertEquals(2, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter))
+            ->dispatch('bar')
+            ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter));
+    }
 }
 
 class ReceivesEvents extends Component
@@ -304,4 +350,37 @@ class ItCanReceiveEventUsingClassname extends Component
     {
         return app('view')->make('null-view');
     }
+}
+
+#[BaseOn('bar')]
+class ReceivesEventUsingRefreshAttribute extends Component
+{
+    public static $counter = 0;
+
+    public function render() { static::$counter++; return '<div></div>'; }
+}
+
+#[BaseOn('foo'), BaseOn('bar')]
+class ReceivesMultipleEventsUsingMultipleRefreshAttributes extends Component
+{
+    public static $counter = 0;
+
+    public function render() { static::$counter++; return '<div></div>'; }
+}
+
+#[BaseOn(['foo', 'bar'])]
+class ReceivesMultipleEventsUsingSingleRefreshAttribute extends Component
+{
+    public static $counter = 0;
+
+    public function render() { static::$counter++; return '<div></div>'; }
+}
+
+
+#[\Livewire\Attributes\On('foo'), \Livewire\Attributes\On('bar')]
+class ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes extends Component
+{
+    public static $counter = 0;
+
+    public function render() { static::$counter++; return '<div></div>'; }
 }
