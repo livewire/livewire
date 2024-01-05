@@ -112,7 +112,7 @@ class UnitTest extends \Tests\TestCase
     {
         Livewire::test(FileDownloadComponent::class)
             ->call('noDownload')
-            ->assertNothingDownloaded();
+            ->assertNoFileDownloaded();
     }
 
     /** @test */
@@ -122,7 +122,7 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::test(FileDownloadComponent::class)
             ->call('download')
-            ->assertNothingDownloaded();
+            ->assertNoFileDownloaded();
     }
 }
 

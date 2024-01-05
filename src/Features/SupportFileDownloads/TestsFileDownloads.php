@@ -38,7 +38,7 @@ trait TestsFileDownloads
         return $this;
     }
 
-    public function assertNothingDownloaded()
+    public function assertNoFileDownloaded()
     {
         $downloadEffect = data_get($this->effects, 'download');
 
