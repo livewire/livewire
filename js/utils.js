@@ -199,7 +199,7 @@ export function getNonce() {
     const elWithNonce = document.querySelector('style[data-livewire-style][nonce]')
 
     if (elWithNonce) {
-        nonce = (elWithNonce as any).nonce
+        nonce = elWithNonce.nonce
 
         return nonce
     }
