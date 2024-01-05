@@ -7,10 +7,7 @@ use Livewire\Livewire;
 
 class EnumUnitTest extends \Tests\TestCase
 {
-    /**
-     * @test
-     * @requires PHP >= 8.1
-     */
+    /** @test */
     public function public_properties_can_be_cast()
     {
         Livewire::test(ComponentWithPublicEnumCasters::class)

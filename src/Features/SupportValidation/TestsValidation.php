@@ -3,6 +3,8 @@
 namespace Livewire\Features\SupportValidation;
 
 use Closure;
+use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Contracts\Validation\ValidationRule;
 use function Livewire\store;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Support\Str;
@@ -57,7 +59,13 @@ trait TestsValidation
 
         $failed = $this->failedRules() ?: [];
         $failedRules = array_keys(Arr::get($failed, $key, []));
-        $failedRules = array_map(fn ($i) => Str::snake($i), $failedRules);
+        $failedRules = array_map(function (string $rule) {
+            if (is_a($rule, ValidationRule::class, true) || is_a($rule, Rule::class, true)) {
+                return $rule;
+            }
+
+            return Str::snake($rule);
+        }, $failedRules);
 
         PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
 
@@ -90,8 +98,6 @@ trait TestsValidation
 
         // If the provided rule/message isn't a failed rule, let's check to see if it's a message...
         PHPUnit::assertContains($ruleOrMessage, $messages, "Component has no matching failed rule or error message [{$ruleOrMessage}] for [{$key}] attribute.");
-
-        return;
     }
 
 

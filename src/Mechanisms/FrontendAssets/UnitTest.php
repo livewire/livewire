@@ -15,6 +15,10 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringStartsWith('<!-- Livewire Styles -->', $assets->styles());
 
+        $this->assertStringNotContainsString('data-livewire-style', $assets->styles());
+
+        $this->assertStringContainsString('nonce="test" data-livewire-style', $assets->styles(['nonce' => 'test']));
+
         $this->assertTrue($assets->hasRenderedStyles);
     }
 

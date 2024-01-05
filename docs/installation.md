@@ -149,3 +149,6 @@ Alpine.plugin(Clipboard)
 
 Livewire.start()
 ```
+
+> [!warning] Not compatible with Laravel Mix
+> Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. We recommend you switch to Vite if you need this ability.

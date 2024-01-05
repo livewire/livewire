@@ -119,10 +119,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $component->assertSee('Results from the service');
     }
 
-    /**
-     * @test
-     * @requires PHP >= 8.0
-     */
+    /** @test */
     public function component_mount_action_with_primitive_union_types()
     {
         $component = Livewire::test(ComponentWithUnionTypes::class);

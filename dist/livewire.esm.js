@@ -15,14 +15,11 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -44,10 +41,7 @@ var require_module_cjs = __commonJS({
       }
       return to;
     };
-    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(
-      isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
-      mod
-    ));
+    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var require_shared_cjs = __commonJS2({
       "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
@@ -359,9 +353,7 @@ var require_module_cjs = __commonJS({
         };
         var isPlainObject = (val) => toTypeString(val) === "[object Object]";
         var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
-        var isReservedProp = /* @__PURE__ */ makeMap(
-          ",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted"
-        );
+        var isReservedProp = /* @__PURE__ */ makeMap(",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted");
         var cacheStringFunction = (fn) => {
           const cache = /* @__PURE__ */ Object.create(null);
           return (str) => {
@@ -968,18 +960,10 @@ var require_module_cjs = __commonJS({
             has(key) {
               return has$1.call(this, key, true);
             },
-            add: createReadonlyMethod(
-              "add"
-            ),
-            set: createReadonlyMethod(
-              "set"
-            ),
-            delete: createReadonlyMethod(
-              "delete"
-            ),
-            clear: createReadonlyMethod(
-              "clear"
-            ),
+            add: createReadonlyMethod("add"),
+            set: createReadonlyMethod("set"),
+            delete: createReadonlyMethod("delete"),
+            clear: createReadonlyMethod("clear"),
             forEach: createForEach(true, false)
           };
           const shallowReadonlyInstrumentations2 = {
@@ -992,18 +976,10 @@ var require_module_cjs = __commonJS({
             has(key) {
               return has$1.call(this, key, true);
             },
-            add: createReadonlyMethod(
-              "add"
-            ),
-            set: createReadonlyMethod(
-              "set"
-            ),
-            delete: createReadonlyMethod(
-              "delete"
-            ),
-            clear: createReadonlyMethod(
-              "clear"
-            ),
+            add: createReadonlyMethod("add"),
+            set: createReadonlyMethod("set"),
+            delete: createReadonlyMethod("delete"),
+            clear: createReadonlyMethod("clear"),
             forEach: createForEach(true, true)
           };
           const iteratorMethods = ["keys", "values", "entries", Symbol.iterator];
@@ -1400,15 +1376,31 @@ var require_module_cjs = __commonJS({
         cleanup2();
       }];
     }
+    function watch(getter, callback) {
+      let firstTime = true;
+      let oldValue;
+      let effectReference = effect(() => {
+        let value = getter();
+        JSON.stringify(value);
+        if (!firstTime) {
+          queueMicrotask(() => {
+            callback(value, oldValue);
+            oldValue = value;
+          });
+        } else {
+          oldValue = value;
+        }
+        firstTime = false;
+      });
+      return () => release(effectReference);
+    }
     function dispatch3(el, name, detail = {}) {
-      el.dispatchEvent(
-        new CustomEvent(name, {
-          detail,
-          bubbles: true,
-          composed: true,
-          cancelable: true
-        })
-      );
+      el.dispatchEvent(new CustomEvent(name, {
+        detail,
+        bubbles: true,
+        composed: true,
+        cancelable: true
+      }));
     }
     function walk(el, callback) {
       if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
@@ -1558,21 +1550,17 @@ var require_module_cjs = __commonJS({
       observer.disconnect();
       currentlyObserving = false;
     }
-    var recordQueue = [];
-    var willProcessRecordQueue = false;
+    var queuedMutations = [];
     function flushObserver() {
-      recordQueue = recordQueue.concat(observer.takeRecords());
-      if (recordQueue.length && !willProcessRecordQueue) {
-        willProcessRecordQueue = true;
-        queueMicrotask(() => {
-          processRecordQueue();
-          willProcessRecordQueue = false;
-        });
-      }
-    }
-    function processRecordQueue() {
-      onMutate(recordQueue);
-      recordQueue.length = 0;
+      let records = observer.takeRecords();
+      queuedMutations.push(() => records.length > 0 && onMutate(records));
+      let queueLengthWhenTriggered = queuedMutations.length;
+      queueMicrotask(() => {
+        if (queuedMutations.length === queueLengthWhenTriggered) {
+          while (queuedMutations.length > 0)
+            queuedMutations.shift()();
+        }
+      });
     }
     function mutateDom(callback) {
       if (!currentlyObserving)
@@ -1693,32 +1681,20 @@ var require_module_cjs = __commonJS({
     }
     var mergeProxyTrap = {
       ownKeys({ objects }) {
-        return Array.from(
-          new Set(objects.flatMap((i) => Object.keys(i)))
-        );
+        return Array.from(new Set(objects.flatMap((i) => Object.keys(i))));
       },
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some(
-          (obj) => Object.prototype.hasOwnProperty.call(obj, name)
-        );
+        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
           return collapseProxies;
-        return Reflect.get(
-          objects.find(
-            (obj) => Object.prototype.hasOwnProperty.call(obj, name)
-          ) || {},
-          name,
-          thisProxy
-        );
+        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find(
-          (obj) => Object.prototype.hasOwnProperty.call(obj, name)
-        ) || objects[objects.length - 1];
+        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return Reflect.set(target, name, value, thisProxy);
@@ -1879,10 +1855,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
       const safeAsyncFunction = () => {
         try {
-          let func2 = new AsyncFunction(
-            ["__self", "scope"],
-            `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`
-          );
+          let func2 = new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
           Object.defineProperty(func2, "name", {
             value: `[Alpine] ${expression}`
           });
@@ -1943,9 +1916,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return {
         before(directive22) {
           if (!directiveHandlers[directive22]) {
-            console.warn(
-              "Cannot find directive `${directive}`. `${name}` will use the default order of execution"
-            );
+            console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
             return;
           }
           const pos = directiveOrder.indexOf(directive22);
@@ -2914,31 +2885,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cloneNode,
       bound: getBinding,
       $data: scope,
+      watch,
       walk,
       data,
       bind: bind2
     };
     var alpine_default = Alpine21;
-    var import_reactivity9 = __toESM2(require_reactivity());
+    var import_reactivity10 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
-    magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
+    magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key, callback) => {
       let evaluate2 = evaluateLater2(key);
-      let firstTime = true;
-      let oldValue;
-      let effectReference = effect3(() => evaluate2((value) => {
-        JSON.stringify(value);
-        if (!firstTime) {
-          queueMicrotask(() => {
-            callback(value, oldValue);
-            oldValue = value;
-          });
-        } else {
-          oldValue = value;
-        }
-        firstTime = false;
-      }));
-      el._x_effects.delete(effectReference);
+      let getter = () => {
+        let value;
+        evaluate2((i) => value = i);
+        return value;
+      };
+      let unwatch = watch(getter, callback);
+      cleanup2(unwatch);
     });
     magic("store", getStores);
     magic("data", (el) => scope(el));
@@ -2977,11 +2941,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_ids[name])
         el._x_ids[name] = findAndIncrementId(name);
     }
-    magic("id", (el) => (name, key = null) => {
-      let root = closestIdRoot(el, name);
-      let id = root ? root._x_ids[name] : findAndIncrementId(name);
-      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+    magic("id", (el, { cleanup: cleanup2 }) => (name, key = null) => {
+      let cacheKey = `${name}${key ? `-${key}` : ""}`;
+      return cacheIdByNameOnElement(el, cacheKey, cleanup2, () => {
+        let root = closestIdRoot(el, name);
+        let id = root ? root._x_ids[name] : findAndIncrementId(name);
+        return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+      });
     });
+    interceptClone((from, to) => {
+      if (from._x_id) {
+        to._x_id = from._x_id;
+      }
+    });
+    function cacheIdByNameOnElement(el, cacheKey, cleanup2, callback) {
+      if (!el._x_id)
+        el._x_id = {};
+      if (el._x_id[cacheKey])
+        return el._x_id[cacheKey];
+      let output = callback();
+      el._x_id[cacheKey] = output;
+      cleanup2(() => {
+        delete el._x_id[cacheKey];
+      });
+      return output;
+    }
     magic("el", (el) => el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3006,24 +2990,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el._x_removeModelListeners["default"]();
         let outerGet = el._x_model.get;
         let outerSet = el._x_model.set;
-        let releaseEntanglement = entangle(
-          {
-            get() {
-              return outerGet();
-            },
-            set(value) {
-              outerSet(value);
-            }
+        let releaseEntanglement = entangle({
+          get() {
+            return outerGet();
           },
-          {
-            get() {
-              return innerGet();
-            },
-            set(value) {
-              innerSet(value);
-            }
+          set(value) {
+            outerSet(value);
           }
-        );
+        }, {
+          get() {
+            return innerGet();
+          },
+          set(value) {
+            innerSet(value);
+          }
+        });
         cleanup2(releaseEntanglement);
       });
     });
@@ -3174,9 +3155,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return !Array.isArray(subject) && !isNaN(subject);
     }
     function kebabCase2(subject) {
-      if ([" ", "_"].includes(
-        subject
-      ))
+      if ([" ", "_"].includes(subject))
         return subject;
       return subject.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/[_\s]/, "-").toLowerCase();
     }
@@ -3505,16 +3484,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el._x_isShown = true;
       };
       let clickAwayCompatibleShow = () => setTimeout(show);
-      let toggle = once(
-        (value) => value ? show() : hide(),
-        (value) => {
-          if (typeof el._x_toggleAndCascadeWithTransitions === "function") {
-            el._x_toggleAndCascadeWithTransitions(el, value, show, hide);
-          } else {
-            value ? clickAwayCompatibleShow() : hide();
-          }
+      let toggle = once((value) => value ? show() : hide(), (value) => {
+        if (typeof el._x_toggleAndCascadeWithTransitions === "function") {
+          el._x_toggleAndCascadeWithTransitions(el, value, show, hide);
+        } else {
+          value ? clickAwayCompatibleShow() : hide();
         }
-      );
+      });
       let oldValue;
       let firstTime = true;
       effect3(() => evaluate2((value) => {
@@ -3530,10 +3506,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive2("for", (el, { expression }, { effect: effect3, cleanup: cleanup2 }) => {
       let iteratorNames = parseForExpression(expression);
       let evaluateItems = evaluateLater(el, iteratorNames.items);
-      let evaluateKey = evaluateLater(
-        el,
-        el._x_keyExpression || "index"
-      );
+      let evaluateKey = evaluateLater(el, el._x_keyExpression || "index");
       el._x_prevKeys = [];
       el._x_lookup = {};
       effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
@@ -3749,6 +3722,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let names = evaluate2(expression);
       names.forEach((name) => setIdRoot(el, name));
     });
+    interceptClone((from, to) => {
+      if (from._x_ids) {
+        to._x_ids = from._x_ids;
+      }
+    });
     mapAttributes(startingWith("@", into(prefix("on:"))));
     directive2("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup2 }) => {
       let evaluate2 = expression ? evaluateLater(el, expression) : () => {
@@ -3773,15 +3751,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
-    alpine_default.setReactivityEngine({ reactive: import_reactivity9.reactive, effect: import_reactivity9.effect, release: import_reactivity9.stop, raw: import_reactivity9.toRaw });
+    alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
     var src_default = alpine_default;
     var module_default = src_default;
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3899,9 +3877,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3923,10 +3901,7 @@ var require_module_cjs3 = __commonJS({
       }
       return to;
     };
-    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(
-      isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
-      mod
-    ));
+    var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var require_dist = __commonJS2({
       "node_modules/tabbable/dist/index.js"(exports2) {
@@ -4811,58 +4786,55 @@ var require_module_cjs3 = __commonJS({
           }
         };
       });
-      Alpine21.directive("trap", Alpine21.skipDuringClone(
-        (el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
-          let evaluator = evaluateLater(expression);
-          let oldValue = false;
-          let options = {
-            escapeDeactivates: false,
-            allowOutsideClick: true,
-            fallbackFocus: () => el
+      Alpine21.directive("trap", Alpine21.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+        let evaluator = evaluateLater(expression);
+        let oldValue = false;
+        let options = {
+          escapeDeactivates: false,
+          allowOutsideClick: true,
+          fallbackFocus: () => el
+        };
+        let autofocusEl = el.querySelector("[autofocus]");
+        if (autofocusEl)
+          options.initialFocus = autofocusEl;
+        let trap = (0, import_focus_trap.createFocusTrap)(el, options);
+        let undoInert = () => {
+        };
+        let undoDisableScrolling = () => {
+        };
+        const releaseFocus = () => {
+          undoInert();
+          undoInert = () => {
           };
-          let autofocusEl = el.querySelector("[autofocus]");
-          if (autofocusEl)
-            options.initialFocus = autofocusEl;
-          let trap = (0, import_focus_trap.createFocusTrap)(el, options);
-          let undoInert = () => {
+          undoDisableScrolling();
+          undoDisableScrolling = () => {
           };
-          let undoDisableScrolling = () => {
-          };
-          const releaseFocus = () => {
-            undoInert();
-            undoInert = () => {
-            };
-            undoDisableScrolling();
-            undoDisableScrolling = () => {
-            };
-            trap.deactivate({
-              returnFocus: !modifiers.includes("noreturn")
-            });
-          };
-          effect(() => evaluator((value) => {
-            if (oldValue === value)
-              return;
-            if (value && !oldValue) {
-              if (modifiers.includes("noscroll"))
-                undoDisableScrolling = disableScrolling();
-              if (modifiers.includes("inert"))
-                undoInert = setInert(el);
-              setTimeout(() => {
-                trap.activate();
-              }, 15);
-            }
-            if (!value && oldValue) {
-              releaseFocus();
-            }
-            oldValue = !!value;
-          }));
-          cleanup2(releaseFocus);
-        },
-        (el, { expression, modifiers }, { evaluate }) => {
-          if (modifiers.includes("inert") && evaluate(expression))
-            setInert(el);
-        }
-      ));
+          trap.deactivate({
+            returnFocus: !modifiers.includes("noreturn")
+          });
+        };
+        effect(() => evaluator((value) => {
+          if (oldValue === value)
+            return;
+          if (value && !oldValue) {
+            if (modifiers.includes("noscroll"))
+              undoDisableScrolling = disableScrolling();
+            if (modifiers.includes("inert"))
+              undoInert = setInert(el);
+            setTimeout(() => {
+              trap.activate();
+            }, 15);
+          }
+          if (!value && oldValue) {
+            releaseFocus();
+          }
+          oldValue = !!value;
+        }));
+        cleanup2(releaseFocus);
+      }, (el, { expression, modifiers }, { evaluate }) => {
+        if (modifiers.includes("inert") && evaluate(expression))
+          setInert(el);
+      }));
     }
     function setInert(el) {
       let undos = [];
@@ -4902,9 +4874,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../alpine/packages/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4987,9 +4959,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5068,9 +5040,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../alpine/packages/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6277,37 +6249,34 @@ var require_module_cjs6 = __commonJS({
           to._x_anchor = from._x_anchor;
         }
       });
-      Alpine21.directive("anchor", Alpine21.skipDuringClone(
-        (el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate2 }) => {
-          let { placement, offsetValue, unstyled } = getOptions(modifiers);
-          el._x_anchor = Alpine21.reactive({ x: 0, y: 0 });
-          let reference = evaluate2(expression);
-          if (!reference)
-            throw "Alpine: no element provided to x-anchor...";
-          let compute = () => {
-            let previousValue;
-            computePosition2(reference, el, {
-              placement,
-              middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
-            }).then(({ x, y }) => {
-              unstyled || setStyles(el, x, y);
-              if (JSON.stringify({ x, y }) !== previousValue) {
-                el._x_anchor.x = x;
-                el._x_anchor.y = y;
-              }
-              previousValue = JSON.stringify({ x, y });
-            });
-          };
-          let release = autoUpdate(reference, el, () => compute());
-          cleanup2(() => release());
-        },
-        (el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate2 }) => {
-          let { placement, offsetValue, unstyled } = getOptions(modifiers);
-          if (el._x_anchor) {
-            unstyled || setStyles(el, el._x_anchor.x, el._x_anchor.y);
-          }
+      Alpine21.directive("anchor", Alpine21.skipDuringClone((el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate2 }) => {
+        let { placement, offsetValue, unstyled } = getOptions(modifiers);
+        el._x_anchor = Alpine21.reactive({ x: 0, y: 0 });
+        let reference = evaluate2(expression);
+        if (!reference)
+          throw "Alpine: no element provided to x-anchor...";
+        let compute = () => {
+          let previousValue;
+          computePosition2(reference, el, {
+            placement,
+            middleware: [flip(), shift({ padding: 5 }), offset(offsetValue)]
+          }).then(({ x, y }) => {
+            unstyled || setStyles(el, x, y);
+            if (JSON.stringify({ x, y }) !== previousValue) {
+              el._x_anchor.x = x;
+              el._x_anchor.y = y;
+            }
+            previousValue = JSON.stringify({ x, y });
+          });
+        };
+        let release = autoUpdate(reference, el, () => compute());
+        cleanup2(() => release());
+      }, (el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate2 }) => {
+        let { placement, offsetValue, unstyled } = getOptions(modifiers);
+        if (el._x_anchor) {
+          unstyled || setStyles(el, el._x_anchor.x, el._x_anchor.y);
         }
-      ));
+      }));
     }
     function setStyles(el, x, y) {
       Object.assign(el.style, {
@@ -6608,9 +6577,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6971,9 +6940,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6998,7 +6967,7 @@ var require_module_cjs8 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
+      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -7025,8 +6994,12 @@ var require_module_cjs8 = __commonJS({
           if (el._x_model)
             el._x_model.set(el.value);
         });
-        el.addEventListener("input", () => processInputValue(el));
-        el.addEventListener("blur", () => processInputValue(el, false));
+        const controller = new AbortController();
+        cleanup2(() => {
+          controller.abort();
+        });
+        el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
+        el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
         function processInputValue(el2, shouldRestoreCursor = true) {
           let input = el2.value;
           let template = templateFn(input);
@@ -7060,13 +7033,7 @@ var require_module_cjs8 = __commonJS({
       let unformattedValue = el.value;
       callback();
       let beforeLeftOfCursorBeforeFormatting = unformattedValue.slice(0, cursorPosition);
-      let newPosition = buildUp(
-        template,
-        stripDown(
-          template,
-          beforeLeftOfCursorBeforeFormatting
-        )
-      ).length;
+      let newPosition = buildUp(template, stripDown(template, beforeLeftOfCursorBeforeFormatting)).length;
       el.setSelectionRange(newPosition, newPosition);
     }
     function stripDown(template, input) {
@@ -7180,14 +7147,12 @@ var WeakBag = class {
   }
 };
 function dispatch(el, name, detail = {}, bubbles = true) {
-  el.dispatchEvent(
-    new CustomEvent(name, {
-      detail,
-      bubbles,
-      composed: true,
-      cancelable: true
-    })
-  );
+  el.dispatchEvent(new CustomEvent(name, {
+    detail,
+    bubbles,
+    composed: true,
+    cancelable: true
+  }));
 }
 function isObjecty(subject) {
   return typeof subject === "object" && subject !== null;
@@ -7274,6 +7239,21 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
+var nonce2;
+function getNonce() {
+  if (nonce2)
+    return nonce2;
+  if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
+    nonce2 = window.livewireScriptConfig["nonce"];
+    return nonce2;
+  }
+  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+  if (elWithNonce) {
+    nonce2 = elWithNonce.nonce;
+    return nonce2;
+  }
+  return null;
+}
 function getUpdateUri() {
   return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
 }
@@ -7281,8 +7261,8 @@ function contentIsFromDump(content) {
   return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
 }
 function splitDumpFromContent(content) {
-  let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-  return [dump2, content.replace(dump2, "")];
+  let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+  return [dump, content.replace(dump, "")];
 }
 
 // js/hooks.js
@@ -7347,12 +7327,10 @@ function handleFileUpload(el, property, component, cleanup2) {
   let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
   let progress = (progressEvent) => {
     var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-    el.dispatchEvent(
-      new CustomEvent("livewire-upload-progress", {
-        bubbles: true,
-        detail: { progress: percentCompleted }
-      })
-    );
+    el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
+      bubbles: true,
+      detail: { progress: percentCompleted }
+    }));
   };
   let eventHandler = (e) => {
     if (e.target.files.length === 0)
@@ -7538,37 +7516,20 @@ function upload(component, name, file, finishCallback = () => {
 }, progressCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.upload(
-    name,
-    file,
-    finishCallback,
-    errorCallback,
-    progressCallback
-  );
+  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
 }
 function uploadMultiple(component, name, files, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.uploadMultiple(
-    name,
-    files,
-    finishCallback,
-    errorCallback,
-    progressCallback
-  );
+  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
 }
 function removeUpload(component, name, tmpFilename, finishCallback = () => {
 }, errorCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.removeUpload(
-    name,
-    tmpFilename,
-    finishCallback,
-    errorCallback
-  );
+  uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
 }
 
 // js/features/supportEntangle.js
@@ -7620,9 +7581,7 @@ function generateEntangleFunction(component, cleanup2) {
 function showHtmlModal(html) {
   let page = document.createElement("html");
   page.innerHTML = html;
-  page.querySelectorAll("a").forEach(
-    (a) => a.setAttribute("target", "_top")
-  );
+  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
   let modal = document.getElementById("livewire-error");
   if (typeof modal != "undefined" && modal != null) {
     modal.innerHTML = "";
@@ -7947,6 +7906,7 @@ async function sendRequest(pool) {
     window.location.href = response.url;
   }
   if (contentIsFromDump(content)) {
+    let dump;
     [dump, content] = splitDumpFromContent(content);
     showHtmlModal(dump);
     finishProfile({ content: "{}", failed: true });
@@ -7959,9 +7919,7 @@ async function sendRequest(pool) {
   succeed({ status: response.status, json: JSON.parse(content) });
 }
 function handlePageExpiry() {
-  confirm(
-    "This page has expired.\nWould you like to refresh the page?"
-  ) && window.location.reload();
+  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
 }
 function showFailureModal(content) {
   let html = content;
@@ -8174,6 +8132,11 @@ var Component = class {
   }
   processEffects(effects) {
     trigger("effects", this, effects);
+    trigger("effect", {
+      component: this,
+      effects,
+      cleanup: (i) => this.addCleanup(i)
+    });
   }
   get children() {
     let meta = this.snapshot.memo;
@@ -8434,6 +8397,24 @@ function tryToStoreInSession(timestamp, value) {
   }
 }
 
+// js/plugins/navigate/fetch.js
+function fetchHtml(destination, callback) {
+  let uri = destination.pathname + destination.search;
+  performFetch(uri, (html) => {
+    callback(html);
+  });
+}
+function performFetch(uri, callback) {
+  let options = {};
+  trigger("navigate.request", {
+    url: uri,
+    options
+  });
+  fetch(uri, options).then((i) => i.text()).then((html) => {
+    callback(html);
+  });
+}
+
 // js/plugins/navigate/prefetch.js
 var prefetches = {};
 function prefetchHtml(destination, callback) {
@@ -8442,7 +8423,7 @@ function prefetchHtml(destination, callback) {
     return;
   prefetches[path] = { finished: false, html: null, whenFinished: () => {
   } };
-  fetch(path).then((i) => i.text()).then((html) => {
+  performFetch(path, (html) => {
     callback(html);
   });
 }
@@ -8652,7 +8633,7 @@ function injectStyles() {
       right: 0px;
       width: 100px;
       height: 100%;
-      box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+      box-shadow: 0 0 10px var(--livewire-progress-bar-color, #29d), 0 0 5px var(--livewire-progress-bar-color, #29d);
       opacity: 1.0;
 
       -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -8702,6 +8683,10 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `;
+  nonce = getNonce();
+  if (nonce) {
+    style.nonce = nonce;
+  }
   document.head.appendChild(style);
 }
 
@@ -8731,9 +8716,7 @@ function swapCurrentPageWithNewHtml(html, andThen) {
 function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes2) {
   newBody.querySelectorAll("script").forEach((i) => {
     if (i.hasAttribute("data-navigate-once")) {
-      let hash = simpleHash(
-        ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing)
-      );
+      let hash = simpleHash(ignoreAttributes(i.outerHTML, attributesExemptFromScriptTagHashing));
       if (oldBodyScriptTagHashes2.includes(hash))
         return;
     }
@@ -8756,11 +8739,7 @@ function mergeNewHead(newHead) {
         }
         if (isScript(child)) {
           try {
-            remoteScriptsPromises.push(
-              injectScriptTagAndWaitForItToFullyLoad(
-                cloneScriptTag(child)
-              )
-            );
+            remoteScriptsPromises.push(injectScriptTagAndWaitForItToFullyLoad(cloneScriptTag(child)));
           } catch (error2) {
           }
         } else {
@@ -8839,14 +8818,6 @@ function ignoreAttributes(subject, attributesToRemove) {
   return result.trim();
 }
 
-// js/plugins/navigate/fetch.js
-function fetchHtml(destination, callback) {
-  let uri = destination.pathname + destination.search;
-  fetch(uri).then((i) => i.text()).then((html) => {
-    callback(html);
-  });
-}
-
 // js/plugins/navigate/index.js
 var import_alpinejs6 = __toESM(require_module_cjs());
 var enablePersist = true;
@@ -8855,9 +8826,7 @@ var restoreScroll = true;
 var autofocus = false;
 function navigate_default(Alpine21) {
   Alpine21.navigate = (url) => {
-    navigateTo(
-      createUrlObjectFromString(url)
-    );
+    navigateTo(createUrlObjectFromString(url));
   };
   Alpine21.navigate.disableProgressBar = () => {
     showProgressBar = false;
@@ -9174,26 +9143,24 @@ function start() {
       } });
     });
   });
-  import_alpinejs7.default.interceptInit(
-    import_alpinejs7.default.skipDuringClone((el) => {
-      if (el.hasAttribute("wire:id")) {
-        let component2 = initComponent(el);
-        import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {
-          destroyComponent(component2.id);
-        });
-      }
-      let component = closestComponent(el, false);
-      if (component) {
-        trigger("element.init", { el, component });
-        let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
-        directives.forEach((directive2) => {
-          trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-            import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
-          } });
-        });
-      }
-    })
-  );
+  import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+    if (el.hasAttribute("wire:id")) {
+      let component2 = initComponent(el);
+      import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {
+        destroyComponent(component2.id);
+      });
+    }
+    let component = closestComponent(el, false);
+    if (component) {
+      trigger("element.init", { el, component });
+      let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+      directives.forEach((directive2) => {
+        trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
+          import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
+        } });
+      });
+    }
+  }));
   import_alpinejs7.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
@@ -9222,15 +9189,11 @@ on("element.init", ({ el, component }) => {
         return skip();
       if (node.tagName.toLowerCase() === "button" && node.type === "submit" || node.tagName.toLowerCase() === "select" || node.tagName.toLowerCase() === "input" && (node.type === "checkbox" || node.type === "radio")) {
         if (!node.disabled)
-          cleanupStackByComponentId[component.id].push(
-            () => node.disabled = false
-          );
+          cleanupStackByComponentId[component.id].push(() => node.disabled = false);
         node.disabled = true;
       } else if (node.tagName.toLowerCase() === "input" || node.tagName.toLowerCase() === "textarea") {
         if (!node.readOnly)
-          cleanupStackByComponentId[component.id].push(
-            () => node.readOnly = false
-          );
+          cleanupStackByComponentId[component.id].push(() => node.readOnly = false);
         node.readOnly = true;
       }
     });
@@ -9340,7 +9303,7 @@ on("component.init", ({ component }) => {
     });
   }
 });
-on("effects", (component, effects) => {
+on("effect", ({ component, effects }) => {
   let scripts = effects.scripts;
   if (scripts) {
     Object.entries(scripts).forEach(([key, content]) => {
@@ -9423,9 +9386,7 @@ on("commit", ({ component, succeed }) => {
     if (!download)
       return;
     let urlObject = window.webkitURL || window.URL;
-    let url = urlObject.createObjectURL(
-      base64toBlob(download.content, download.contentType)
-    );
+    let url = urlObject.createObjectURL(base64toBlob(download.content, download.contentType));
     let invisibleLink = document.createElement("a");
     invisibleLink.style.display = "none";
     invisibleLink.href = url;
@@ -9456,7 +9417,7 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
 
 // js/features/supportJsEvaluation.js
 var import_alpinejs10 = __toESM(require_module_cjs());
-on("effects", (component, effects) => {
+on("effect", ({ component, effects }) => {
   let js = effects.js;
   let xjs = effects.xjs;
   if (js) {
@@ -9501,8 +9462,7 @@ on("commit.pooling", ({ commits }) => {
 
 // js/features/supportQueryString.js
 var import_alpinejs11 = __toESM(require_module_cjs());
-on("component.init", ({ component, cleanup: cleanup2 }) => {
-  let effects = component.effects;
+on("effect", ({ component, effects, cleanup: cleanup2 }) => {
   let queryString = effects["url"];
   if (!queryString)
     return;
@@ -9556,7 +9516,7 @@ on("request", ({ options }) => {
     options.headers["X-Socket-ID"] = window.Echo.socketId();
   }
 });
-on("effects", (component, effects) => {
+on("effect", ({ component, effects }) => {
   let listeners2 = effects.listeners || [];
   listeners2.forEach((event) => {
     if (event.startsWith("echo")) {
@@ -9605,6 +9565,22 @@ on("effects", (component, effects) => {
   });
 });
 
+// js/features/supportIsolating.js
+var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+on("component.init", ({ component }) => {
+  let memo = component.snapshot.memo;
+  if (memo.isolate !== true)
+    return;
+  componentsThatAreIsolated.add(component);
+});
+on("commit.pooling", ({ commits }) => {
+  commits.forEach((commit) => {
+    if (!componentsThatAreIsolated.has(commit.component))
+      return;
+    commit.isolate = true;
+  });
+});
+
 // js/features/supportNavigate.js
 shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
 document.addEventListener("alpine:navigated", (e) => {
@@ -9630,7 +9606,7 @@ function shouldHideProgressBar() {
 }
 
 // js/features/supportRedirects.js
-on("effects", (component, effects) => {
+on("effect", ({ component, effects }) => {
   if (!effects["redirect"])
     return;
   let url = effects["redirect"];
@@ -9708,7 +9684,7 @@ function isComponentRootEl(el) {
 }
 
 // js/features/supportMorphDom.js
-on("effects", (component, effects) => {
+on("effect", ({ component, effects }) => {
   let html = effects.html;
   if (!html)
     return;
@@ -9718,7 +9694,7 @@ on("effects", (component, effects) => {
 });
 
 // js/features/supportEvents.js
-on("effects", (component, effects) => {
+on("effect", ({ component, effects }) => {
   registerListeners(component, effects.listeners || []);
   dispatchEvents(component, effects.dispatches || []);
 });
@@ -9827,15 +9803,13 @@ on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component 
 var import_alpinejs15 = __toESM(require_module_cjs());
 import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate]`);
 import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs15.default.interceptInit(
-  import_alpinejs15.default.skipDuringClone((el) => {
-    if (el.hasAttribute("wire:navigate")) {
-      import_alpinejs15.default.bind(el, { ["x-navigate"]: true });
-    } else if (el.hasAttribute("wire:navigate.hover")) {
-      import_alpinejs15.default.bind(el, { ["x-navigate.hover"]: true });
-    }
-  })
-);
+import_alpinejs15.default.interceptInit(import_alpinejs15.default.skipDuringClone((el) => {
+  if (el.hasAttribute("wire:navigate")) {
+    import_alpinejs15.default.bind(el, { ["x-navigate"]: true });
+  } else if (el.hasAttribute("wire:navigate.hover")) {
+    import_alpinejs15.default.bind(el, { ["x-navigate.hover"]: true });
+  }
+}));
 document.addEventListener("alpine:navigating", () => {
   Livewire.all().forEach((component) => {
     component.inscribeSnapshotAndEffectsOnElement();
@@ -10154,9 +10128,7 @@ function dirtyTargets(el) {
     targets.push(directives.get("model").expression);
   }
   if (directives.has("target")) {
-    targets = targets.concat(
-      directives.get("target").expression.split(",").map((s) => s.trim())
-    );
+    targets = targets.concat(directives.get("target").expression.split(",").map((s) => s.trim()));
   }
   return targets;
 }
@@ -10257,10 +10229,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2) {
-  import_alpinejs18.default.evaluate(
-    el,
-    directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()"
-  );
+  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];

@@ -130,6 +130,7 @@ export async function sendRequest(pool) {
      * request.
      */
     if (contentIsFromDump(content)) {
+        let dump
         [dump, content] = splitDumpFromContent(content)
 
         showHtmlModal(dump)

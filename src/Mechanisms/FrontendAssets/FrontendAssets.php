@@ -76,7 +76,7 @@ class FrontendAssets extends Mechanism
     {
         app(static::class)->hasRenderedStyles = true;
 
-        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+        $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\" data-livewire-style" : '';
 
         $progressBarColor = config('livewire.navigate.progress_bar_color', '#2299dd');
 
@@ -182,6 +182,7 @@ class FrontendAssets extends Mechanism
             'csrf' => app()->has('session.store') ? csrf_token() : '',
             'uri' => app('livewire')->getUpdateUri(),
             'progressBar' => $progressBar,
+            'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
         ]);
 
         return <<<HTML

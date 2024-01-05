@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -28,7 +28,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </div>
                     HTML;
                 }
-            }
+            },
         ])
             ->waitForLivewire()
             ->type('@space', 'foo bar')
@@ -37,24 +37,27 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('return !! window.location.search.match(/comma=foo\,bar/)');
     }
 
-     /** @test */
-     public function can_encode_url_containing_reserved_characters()
-     {
-         Livewire::visit([
-             new class extends Component {
-                 #[BaseUrl]
-                 public $exclamation = '';
+    /** @test */
+    public function can_encode_url_containing_reserved_characters()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public $exclamation = '';
 
-                 #[BaseUrl]
-                 public $quote = '';
+                #[BaseUrl]
+                public $quote = '';
 
-                 #[BaseUrl]
-                 public $parentheses = '';
+                #[BaseUrl]
+                public $parentheses = '';
 
-                 #[BaseUrl]
-                 public $asterisk = '';
+                #[BaseUrl]
+                public $asterisk = '';
 
-                 public function render() { return <<<'HTML'
+                public function render()
+                {
+                    return <<<'HTML'
                      <div>
                          <input type="text" dusk="exclamation" wire:model.live="exclamation" />
                          <input type="text" dusk="quote" wire:model.live="quote" />
@@ -62,18 +65,90 @@ class BrowserTest extends \Tests\BrowserTestCase
                          <input type="text" dusk="asterisk" wire:model.live="asterisk" />
                      </div>
                      HTML;
-                 }
-             }
-         ])
-             ->waitForLivewire()
-             ->type('@exclamation', 'foo!')
-             ->type('@parentheses', 'foo(bar)')
-             ->type('@asterisk', 'foo*')
-             ->assertScript('return !! window.location.search.match(/exclamation=foo\!/)')
-             ->assertScript('return !! window.location.search.match(/parentheses=foo\(bar\)/)')
-             ->assertScript('return !! window.location.search.match(/asterisk=foo\*/)')
-         ;
-     }
+                }
+            },
+        ])
+            ->waitForLivewire()
+            ->type('@exclamation', 'foo!')
+            ->type('@parentheses', 'foo(bar)')
+            ->type('@asterisk', 'foo*')
+            ->assertScript('return !! window.location.search.match(/exclamation=foo\!/)')
+            ->assertScript('return !! window.location.search.match(/parentheses=foo\(bar\)/)')
+            ->assertScript('return !! window.location.search.match(/asterisk=foo\*/)')
+        ;
+    }
+
+    /** @test */
+    public function can_use_a_value_other_than_initial_for_except_behavior()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl(except: '')]
+                public $search = '';
+
+                public function mount()
+                {
+                    $this->search = 'foo';
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="input" wire:model.live="search" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringHas('search', 'foo')
+            ->waitForLivewire()->type('@input', 'bar')
+            ->assertQueryStringHas('search', 'bar')
+            ->waitForLivewire()->type('@input', ' ')
+            ->waitForLivewire()->keys('@input', '{backspace}')
+            ->assertQueryStringMissing('search')
+        ;
+    }
+
+    /** @test */
+    public function can_use_except_in_query_string_property()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                protected $queryString = [
+                    'search' => [
+                        'except' => '',
+                        'history' => false,
+                    ],
+                ];
+
+                public $search = '';
+
+                public function mount()
+                {
+                    $this->search = 'foo';
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="input" wire:model.live="search" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringHas('search', 'foo')
+            ->waitForLivewire()->type('@input', 'bar')
+            ->assertQueryStringHas('search', 'bar')
+            ->waitForLivewire()->type('@input', ' ')
+            ->waitForLivewire()->keys('@input', '{backspace}')
+            ->assertQueryStringMissing('search')
+        ;
+    }
 
     /** @test */
     public function can_use_url_on_form_object_properties()
@@ -92,7 +167,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </div>
                     HTML;
                 }
-            }
+            },
         ])
             ->assertQueryStringMissing('foo')
             ->assertQueryStringMissing('bob')
@@ -105,6 +180,66 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('foo', 'baz')
             ->assertQueryStringMissing('bob')
             ->assertQueryStringHas('aliased', 'law')
+        ;
+    }
+
+    /** @test */
+    public function can_use_url_on_enum_object_properties()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public EnumForUrlTesting $foo = EnumForUrlTesting::First;
+
+                public function change()
+                {
+                    $this->foo = EnumForUrlTesting::Second;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="change" dusk="button">Change</button>
+                        <h1 dusk="output">{{ $foo }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->assertSeeIn('@output', 'first')
+            ->waitForLivewire()->click('@button')
+            ->assertQueryStringHas('foo', 'second')
+            ->assertSeeIn('@output', 'second')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'second')
+            ->assertSeeIn('@output', 'second')
+        ;
+    }
+
+    /** @test */
+    public function it_does_not_break_string_typed_properties()
+    {
+        Livewire::withQueryParams(['foo' => 'bar'])
+            ->visit([
+                new class extends Component
+                {
+                    #[BaseUrl]
+                    public string $foo = '';
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <h1 dusk="output">{{ $foo }}</h1>
+                        </div>
+                        HTML;
+                    }
+                },
+            ])
+            ->assertSeeIn('@output', 'bar')
         ;
     }
 
@@ -143,7 +278,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('foo')
             ->waitForLivewire()->type('@foo.input', 'baz')
             ->assertQueryStringHas('foo', 'baz')
-            ;
+        ;
     }
 }
 
@@ -154,4 +289,10 @@ class FormObject extends \Livewire\Form
 
     #[\Livewire\Attributes\Url(as: 'aliased')]
     public $bob = 'lob';
+}
+
+enum EnumForUrlTesting: string
+{
+    case First = 'first';
+    case Second = 'second';
 }

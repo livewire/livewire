@@ -22,6 +22,13 @@ trait HandlesRedirects
         $this->redirect(route($name, $parameters, $absolute), $navigate);
     }
 
+    public function redirectIntended($default = '/', $navigate = false)
+    {
+        $url = session()->pull('url.intended', $default);
+    
+        $this->redirect($url, $navigate);
+    }
+
     public function redirectAction($name, $parameters = [], $absolute = true, $navigate = false)
     {
         $this->redirect(action($name, $parameters, $absolute), $navigate);
