@@ -1,6 +1,6 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { getDirectives } from '@/directives'
-import { on } from '@/events'
+import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
@@ -15,10 +15,21 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
-            callAndClearComponentDebounces(component, () => {
-                // Forward these calls directly to $wire. Let them handle firing the request.
-                Alpine.evaluate(el, '$wire.'+directive.expression, { scope: { $event: e }})
-            })
+            let execute = () => {
+                callAndClearComponentDebounces(component, () => {
+                    // Forward these calls directly to $wire. Let them handle firing the request.
+                    Alpine.evaluate(el, '$wire.'+directive.expression, { scope: { $event: e }})
+                })
+            }
+
+            // Account for the existance of wire:confirm="..." on the action...
+            if (el.__livewire_confirm) {
+                el.__livewire_confirm(() => {
+                    execute()
+                })
+            } else {
+                execute()
+            }
         }
     })
 

@@ -62,7 +62,7 @@ class ImplicitRouteBinding
             ->intersectByKeys($route->parametersWithoutNulls())
             ->map(function ($className, $propName) use ($route) {
                 // If typed public property, resolve the class
-                if($className) {
+                if ($className) {
                     $resolved = $this->resolveParameter($route, $propName, $className);
 
                     // We'll also pass the resolved model back to the route

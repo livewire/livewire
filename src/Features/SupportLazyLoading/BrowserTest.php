@@ -277,7 +277,7 @@ class BrowserTest extends BrowserTestCase
             public function mount() {
                 sleep(1);
             }
-            public function placeholder(array $params = []) { 
+            public function placeholder(array $params = []) {
                 return view('placeholder', $params);
             }
             public function render() {

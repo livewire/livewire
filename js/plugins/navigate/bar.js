@@ -1,7 +1,11 @@
 import NProgress from 'nprogress'
+import { getNonce } from '@/utils'
 
-NProgress.configure({ minimum: 0.1 });
-NProgress.configure({ trickleSpeed: 200 });
+NProgress.configure({
+    minimum: 0.1,
+    trickleSpeed: 200,
+    showSpinner: false,
+})
 
 injectStyles()
 
@@ -78,13 +82,13 @@ function destroyBar() {
 function injectStyles() {
     let style = document.createElement('style')
     style.innerHTML = `/* Make clicks pass-through */
+
     #nprogress {
       pointer-events: none;
     }
 
     #nprogress .bar {
-    //   background: #FC70A9;
-      background: #29d;
+      background: var(--livewire-progress-bar-color, #29d);
 
       position: fixed;
       z-index: 1031;
@@ -102,7 +106,7 @@ function injectStyles() {
       right: 0px;
       width: 100px;
       height: 100%;
-      box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+      box-shadow: 0 0 10px var(--livewire-progress-bar-color, #29d), 0 0 5px var(--livewire-progress-bar-color, #29d);
       opacity: 1.0;
 
       -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -125,8 +129,8 @@ function injectStyles() {
       box-sizing: border-box;
 
       border: solid 2px transparent;
-      border-top-color: #29d;
-      border-left-color: #29d;
+      border-top-color: var(--livewire-progress-bar-color, #29d);
+      border-left-color: var(--livewire-progress-bar-color, #29d);
       border-radius: 50%;
 
       -webkit-animation: nprogress-spinner 400ms linear infinite;
@@ -152,5 +156,11 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `
+
+    nonce = getNonce()
+    if (nonce) {
+      style.nonce = nonce
+    }
+
     document.head.appendChild(style)
 }

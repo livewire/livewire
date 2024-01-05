@@ -1,5 +1,5 @@
 import { directive } from "@/directives"
-import { on } from '@/events'
+import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
 on('morph.added', ({ el }) => {
@@ -7,7 +7,7 @@ on('morph.added', ({ el }) => {
 })
 
 directive('transition', ({ el, directive, component, cleanup }) => {
-    let visibility = Alpine.reactive({ state: false })
+    let visibility = Alpine.reactive({ state: el.__addedByMorph ? false : true })
 
     // We're going to control the element's transition with Alpine transitions...
     Alpine.bind(el, {

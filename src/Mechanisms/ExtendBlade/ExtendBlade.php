@@ -3,10 +3,11 @@
 namespace Livewire\Mechanisms\ExtendBlade;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\invade;
 use function Livewire\on;
 
-class ExtendBlade
+class ExtendBlade extends Mechanism
 {
     protected $directives = [];
     protected $precompilers = [];
@@ -34,15 +35,8 @@ class ExtendBlade
         return ! empty(static::$livewireComponents);
     }
 
-    function register()
-    {
-        //
-    }
-
     function boot()
     {
-        app()->singleton($this::class, fn () => $this);
-
         Blade::directive('this', fn() => "window.Livewire.find('{{ \$_instance->getId() }}')");
 
         on('render', function ($target, $view) {

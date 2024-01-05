@@ -1,8 +1,8 @@
-Review the contribution guide first at: https://laravel-livewire.com/docs/2.x/contribution-guide
+Review the contribution guide first at: https://livewire.laravel.com/docs/contribution-guide
 
 1️⃣ Is this something that is wanted/needed? Did you create a discussion about it first?
 
-2️⃣ Did you create a branch for your fix/feature? (Master branch PR's will be closed)
+2️⃣ Did you create a branch for your fix/feature? (Main branch PR's will be closed)
 
 3️⃣ Does it contain multiple, unrelated changes? Please separate the PRs out.
 

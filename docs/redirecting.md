@@ -41,6 +41,38 @@ class CreatePost extends Component
 
 As you can see, when the `save` action is triggered, a redirect will also be triggered to `/posts`. When Livewire receives this response, it will redirect the user to the new URL on the frontend.
 
+## Redirect to Route
+
+In case you want to redirect to a page using its route name you can use the `redirectRoute`.
+
+For example, if you have a page with the route named `'profile'` like this: 
+
+```php
+    Route::get('/user/profile', function () {
+        // ...
+    })->name('profile');
+```
+
+You can use `redirectRoute` to redirect to that page using the name of the route like so:
+
+```php
+    $this->redirectRoute('profile');
+```
+
+In case you need to pass parameters to the route you may use the second argument of the method `redirectRoute` like so:
+
+```php
+    $this->redirectRoute('profile', ['id' => 1]);
+```
+
+## Redirect to intended
+
+In case you want to redirect the user back to the previous page they were on you can use `redirectIntended`. It accepts an optional default URL as its first argument which is used as a fallback if no previous page can be determined:
+
+```php
+    $this->redirectIntended('/default/url');
+```
+
 ## Redirecting to full-page components
 
 Because Livewire uses Laravel's built-in redirection feature, you can use all of the redirection methods available to you in a typical Laravel application.

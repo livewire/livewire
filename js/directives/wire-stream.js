@@ -1,8 +1,6 @@
 import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
-import { on, trigger } from '@/events'
-
-// Warning: this API is still in development and is subject to change...
+import { on, trigger } from '@/hooks'
 
 directive('stream', ({el, directive, component, cleanup }) => {
     let { expression, modifiers } = directive
@@ -48,7 +46,7 @@ on('request', ({ respond }) => {
 
 async function interceptStreamAndReturnFinalResponse(response, callback) {
     let reader = response.body.getReader()
-    let finalResponse = ''
+    let remainingResponse = ''
 
     while (true) {
         let { done, value: chunk } = await reader.read()
@@ -56,15 +54,15 @@ async function interceptStreamAndReturnFinalResponse(response, callback) {
         let decoder = new TextDecoder
         let output = decoder.decode(chunk)
 
-        let [ streams, remaining ] = extractStreamObjects(output)
+        let [ streams, remaining ] = extractStreamObjects(remainingResponse + output)
 
         streams.forEach(stream => {
             callback(stream)
         })
 
-        finalResponse = finalResponse + remaining
+        remainingResponse = remaining
 
-        if (done) return finalResponse
+        if (done) return remainingResponse
     }
 }
 

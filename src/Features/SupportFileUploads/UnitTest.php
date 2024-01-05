@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Carbon\Carbon;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Livewire\WithFileUploads;
 use Livewire\Livewire;
 use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
@@ -419,7 +420,22 @@ class UnitTest extends \Tests\TestCase
         try {
             $this->withoutExceptionHandling()->post($url);
         } catch (\Throwable $th) {
-            $this->assertEquals('Middleware was hit!', $th->getMessage());
+            $this->assertStringContainsString(DummyMiddleware::class, $th->getMessage());
+        }
+    }
+
+    /** @test */
+    public function the_global_upload_route_middleware_supports_multiple_middleware()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1', DummyMiddleware::class]);
+
+        $url = GenerateSignedUploadUrl::forLocal();
+
+        try {
+            $this->withoutExceptionHandling()->post($url);
+        } catch (\Throwable $th) {
+            $this->assertStringContainsString('throttle:60,1', $th->getMessage());
+            $this->assertStringContainsString(DummyMiddleware::class, $th->getMessage());
         }
     }
 
@@ -427,6 +443,36 @@ class UnitTest extends \Tests\TestCase
     public function can_preview_a_temporary_file_with_a_temporary_signed_url()
     {
         Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        // Due to Livewire object still being in memory, we need to
+        // reset the "shouldDisableBackButtonCache" property back to it's default
+        // which is false to ensure it's not applied to the below route
+        \Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::$disableBackButtonCache = false;
+
+        ob_start();
+        $this->get($photo->temporaryUrl())->sendContent();
+        $rawFileContents = ob_get_clean();
+
+        $this->assertEquals($file->get(), $rawFileContents);
+
+        $this->assertTrue($photo->isPreviewable());
+    }
+
+    /** @test */
+    public function can_preview_a_temporary_file_on_a_remote_storage()
+    {
+        $disk = Storage::fake('tmp-for-tests');
+
+        // A remote storage will always return the short path when calling $disk->path(). To simulate a remote
+        // storage, the fake storage will be recreated with an empty prefix option in order to get the short path even
+        // if it's a local filesystem.
+        Storage::set('tmp-for-tests', new FilesystemAdapter($disk->getDriver(), $disk->getAdapter(), ['prefix' => '']));
 
         $file = UploadedFile::fake()->image('avatar.jpg');
 
@@ -688,7 +734,7 @@ class DummyMiddleware
 {
     public function handle($request, $next)
     {
-        throw new \Exception('Middleware was hit!');
+        throw new \Exception(implode(',', $request->route()->computedMiddleware));
     }
 }
 
