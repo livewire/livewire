@@ -102,4 +102,41 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('search')
         ;
     }
+
+    /** @test */
+    public function can_use_except_in_query_string_property()
+    {
+        Livewire::visit([
+            new class extends Component {
+                protected $queryString = [
+                    'search' => [
+                        'except' => '',
+                        'history' => false,
+                    ],
+                ];
+
+                public $search = '';
+
+                public function mount()
+                {
+                    $this->search = 'foo';
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="input" wire:model.live="search" />
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->assertQueryStringHas('search', 'foo')
+            ->waitForLivewire()->type('@input', 'bar')
+            ->assertQueryStringHas('search', 'bar')
+            ->waitForLivewire()->type('@input', ' ')
+            ->waitForLivewire()->keys('@input', '{backspace}')
+            ->assertQueryStringMissing('search')
+            ;
+    }
 }
