@@ -15,6 +15,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     /** @test */
     public function it_does_not_have_persistent_middleware_memory_leak_when_adding_middleware()
     {
+        $base = Livewire::getPersistentMiddleware();
         Livewire::addPersistentMiddleware('MyMiddleware');
 
         $config = $this->app['config'];
@@ -27,9 +28,15 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         // It hangs around because it is a static variable, so we do expect
         // it to still exist here.
-        $this->assertCount(1, array_filter(Livewire::getPersistentMiddleware(), fn ($middleware) => $middleware === 'MyMiddleware'));
+        $this->assertSame([
+            ...$base,
+            'MyMiddleware',
+        ], Livewire::getPersistentMiddleware());
 
         Livewire::addPersistentMiddleware('MyMiddleware');
-        $this->assertCount(1, array_filter(Livewire::getPersistentMiddleware(), fn ($middleware) => $middleware === 'MyMiddleware'));
+        $this->assertSame([
+            ...$base,
+            'MyMiddleware',
+        ], Livewire::getPersistentMiddleware());
     }
 }
