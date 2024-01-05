@@ -520,4 +520,42 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@remove0')
             ->assertSeeIn('@json', '[]');
     }
+
+    /** @test */
+    public function it_supports_entangling_within_an_alpine_data()
+    {
+        Livewire::visit(new class extends Component
+        {
+            public $count = 0;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <div x-data="test()">
+                            <div>{{ $count }}</div>
+                            <button x-on:click="increment" dusk="increment">Increase</button>
+                            <div x-text="count" dusk="alpine-output"></div>
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                Alpine.data('test', () => ({
+                                    count: @entangle('count').live,
+                                    increment() {
+                                        this.count++
+                                    },
+                                }));
+                            });
+                        </script>
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@alpine-output', '0')
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@alpine-output', '1')
+            ->waitForLivewire()->click('@increment')
+            ->assertSeeIn('@alpine-output', '2')
+            ;
+    }
 }
