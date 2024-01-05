@@ -1275,11 +1275,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let rightSideSafeExpression = /^[\n\s]*if.*\(.*\)/.test(expression.trim()) || /^(let|const)\s/.test(expression.trim()) ? `(async()=>{ ${expression} })()` : expression;
     const safeAsyncFunction = () => {
       try {
-        let func2 = new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
-        Object.defineProperty(func2, "name", {
-          value: `[Alpine] ${expression}`
-        });
-        return func2;
+        return new AsyncFunction(["__self", "scope"], `with (scope) { __self.result = ${rightSideSafeExpression} }; __self.finished = true; return __self.result;`);
       } catch (error2) {
         handleError(error2, el, expression);
         return Promise.resolve();
@@ -2250,7 +2246,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.1",
+    version: "3.13.0",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -2312,8 +2308,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2346,8 +2342,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2437,7 +2433,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (false) {
+      if (activeEffect.options.onTrack) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2501,7 +2497,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (false) {
+      if (effect3.options.onTrigger) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2638,13 +2634,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2706,7 +2702,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2725,7 +2721,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2738,7 +2734,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2783,7 +2779,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2885,6 +2881,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
+  function checkIdentityKeys(target, has2, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has2.call(target, rawKey)) {
+      const type = toRawType(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2917,7 +2920,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3085,7 +3088,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         placeInDom(el._x_teleport, target2, modifiers);
       });
     };
-    cleanup22(() => clone2.remove());
   });
   var teleportContainerDuringClone = document.createElement("div");
   function getTarget(expression) {
@@ -3757,7 +3759,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportEntangle.js
   function generateEntangleFunction(component, cleanup3) {
-    console.log("generateEntangleFunction", cleanup3);
     if (!cleanup3)
       cleanup3 = () => {
       };
@@ -3771,29 +3772,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
           return;
         }
-        let release2 = module_default.entangle({
-          get() {
-            console.log("entangleOuterGet", name, livewireComponent.get(name));
-            return livewireComponent.get(name);
-          },
-          set(value) {
-            console.log("entangleOuterSet", name, value);
-            livewireComponent.set(name, value, isLive);
-          }
-        }, {
-          get() {
-            console.log("entangleInnerGet", name, getter());
-            return getter();
-          },
-          set(value) {
-            console.log("entangleInnerSet", name, value);
-            setter(value);
-          }
-        });
-        console.log("release", name, release2);
-        cleanup3(() => {
-          console.log("cleanUp", name);
-          release2();
+        queueMicrotask(() => {
+          let release2 = module_default.entangle({
+            get() {
+              return livewireComponent.get(name);
+            },
+            set(value) {
+              livewireComponent.set(name, value, isLive);
+            }
+          }, {
+            get() {
+              return getter();
+            },
+            set(value) {
+              setter(value);
+            }
+          });
+          cleanup3(() => release2());
         });
         return livewireComponent.get(name);
       }, (obj) => {
@@ -4055,7 +4050,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "removeUpload": "$removeUpload"
   };
   function generateWireObject(component, state) {
-    console.log("generateWireObject");
     return new Proxy({}, {
       get(target, property) {
         if (property === "__instance")
@@ -4085,7 +4079,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return fallback(component);
   }
   module_default.magic("wire", (el, { cleanup: cleanup3 }) => {
-    console.log("wire", cleanup3);
     let component;
     return new Proxy({}, {
       get(target, property) {
@@ -4114,8 +4107,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return await component.$wire[method](...params);
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
-    let [utilities, cleanup3] = module_default.getElementBoundUtilities(component.el);
-    return generateEntangleFunction(component, cleanup3)(name, live);
+    return generateEntangleFunction(component)(name, live);
   });
   wireProperty("$toggle", (component) => (name, live = true) => {
     return component.$wire.set(name, !component.$wire.get(name), live);
@@ -5544,7 +5536,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let evaluate2 = evaluateLater2(expression);
       let options = {
         rootMargin: getRootMargin(modifiers),
-        threshold: getThreshold(modifiers)
+        threshold: getThreshhold(modifiers)
       };
       let observer2 = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
@@ -5560,7 +5552,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function getThreshold(modifiers) {
+  function getThreshhold(modifiers) {
     if (modifiers.includes("full"))
       return 0.99;
     if (modifiers.includes("half"))
@@ -6452,8 +6444,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             continue;
           }
         }
-        let isIf = (node) => node && node.nodeType === 8 && node.textContent === "[if BLOCK]><![endif]";
-        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === "[if ENDBLOCK]><![endif]";
+        let isIf = (node) => node && node.nodeType === 8 && node.textContent === " __BLOCK__ ";
+        let isEnd = (node) => node && node.nodeType === 8 && node.textContent === " __ENDBLOCK__ ";
         if (isIf(currentTo) && isIf(currentFrom)) {
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
