@@ -13,13 +13,13 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function model_properties_are_persisted()
     {
-        (new Post)::resolveConnection()->enableQueryLog();
+        (new Article)::resolveConnection()->enableQueryLog();
 
         Livewire::test(new class extends \Livewire\Component {
-            public Post $post;
+            public Article $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = Article::first();
             }
 
             public function render() { return <<<'HTML'
@@ -30,7 +30,7 @@ class UnitTest extends \Tests\TestCase
         ->call('$refresh')
         ->assertSee('First');
 
-        $this->assertCount(2, Post::resolveConnection()->getQueryLog());
+        $this->assertCount(2, Article::resolveConnection()->getQueryLog());
     }
 
     /** @test */
@@ -39,10 +39,10 @@ class UnitTest extends \Tests\TestCase
         $this->expectExceptionMessage("Can't set model properties directly");
 
         Livewire::test(new class extends \Livewire\Component {
-            public Post $post;
+            public Article $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = Article::first();
             }
 
             public function render() { return <<<'HTML'
@@ -57,10 +57,10 @@ class UnitTest extends \Tests\TestCase
     public function cant_view_model_data_in_javascript()
     {
         $data = Livewire::test(new class extends \Livewire\Component {
-            public Post $post;
+            public Article $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = Article::first();
             }
 
             public function render() { return <<<'HTML'
@@ -75,10 +75,10 @@ class UnitTest extends \Tests\TestCase
     public function unpersisted_models_can_be_assigned_but_no_data_is_persisted_between_requests()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
-            public Post $post;
+            public Article $post;
 
             public function mount() {
-                $this->post = new Post();
+                $this->post = new Article();
             }
 
             public function render() { return <<<'HTML'
@@ -86,7 +86,7 @@ class UnitTest extends \Tests\TestCase
             HTML; }
         })
         ->call('$refresh')
-        ->assertSet('post', new Post())
+        ->assertSet('post', new Article())
         ;
         
         $data = $component->getData();
@@ -98,14 +98,14 @@ class UnitTest extends \Tests\TestCase
     public function model_properties_are_lazy_loaded()
     {
         $this->markTestSkipped(); // @todo: probably not going to go this route...
-        (new Post)::resolveConnection()->enableQueryLog();
+        (new Article)::resolveConnection()->enableQueryLog();
 
         Livewire::test(new class extends \Livewire\Component {
             #[Lazy]
-            public Post $post;
+            public Article $post;
 
             public function mount() {
-                $this->post = Post::first();
+                $this->post = Article::first();
             }
 
             public function save()
@@ -120,7 +120,7 @@ class UnitTest extends \Tests\TestCase
         ->call('$refresh')
         ->call('save');
 
-        $this->assertCount(2, Post::resolveConnection()->getQueryLog());
+        $this->assertCount(2, Article::resolveConnection()->getQueryLog());
     }
 
 
@@ -128,10 +128,10 @@ class UnitTest extends \Tests\TestCase
     public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
     {
         Relation::morphMap([
-            'post' => Post::class,
+            'post' => Article::class,
         ]);
 
-        $component =  Livewire::test(PostComponent::class);
+        $component =  Livewire::test(ArticleComponent::class);
 
         $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
     }
@@ -139,13 +139,13 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
     {
-        $post = Post::first();
+        $post = Article::first();
 
         Relation::morphMap([
-            'post' => Post::class,
+            'post' => Article::class,
         ]);
 
-        Livewire::test(PostComponent::class)
+        Livewire::test(ArticleComponent::class)
             ->call('$refresh')
             ->assertSet('post', $post);
     }
@@ -209,13 +209,13 @@ class Lazy {
     //
 }
 
-class PostComponent extends \Livewire\Component
+class ArticleComponent extends \Livewire\Component
 {
     public $post;
 
     public function mount()
     {
-        $this->post = Post::first();
+        $this->post = Article::first();
     }
 
     public function render()
@@ -225,7 +225,8 @@ class PostComponent extends \Livewire\Component
         HTML;
     }
 }
-class Post extends Model
+
+class Article extends Model
 {
     use Sushi;
 

@@ -3,8 +3,7 @@ import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'
 
-on('component.init', ({ component, cleanup }) => {
-    let effects = component.effects
+on('effect', ({ component, effects, cleanup }) => {
     let queryString = effects['url']
 
     if (! queryString) return

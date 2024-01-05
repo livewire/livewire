@@ -412,8 +412,8 @@
     return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
   }
   function splitDumpFromContent(content) {
-    let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-    return [dump2, content.replace(dump2, "")];
+    let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+    return [dump, content.replace(dump, "")];
   }
 
   // js/hooks.js
@@ -941,21 +941,17 @@
     observer.disconnect();
     currentlyObserving = false;
   }
-  var recordQueue = [];
-  var willProcessRecordQueue = false;
+  var queuedMutations = [];
   function flushObserver() {
-    recordQueue = recordQueue.concat(observer.takeRecords());
-    if (recordQueue.length && !willProcessRecordQueue) {
-      willProcessRecordQueue = true;
-      queueMicrotask(() => {
-        processRecordQueue();
-        willProcessRecordQueue = false;
-      });
-    }
-  }
-  function processRecordQueue() {
-    onMutate(recordQueue);
-    recordQueue.length = 0;
+    let records = observer.takeRecords();
+    queuedMutations.push(() => records.length > 0 && onMutate(records));
+    let queueLengthWhenTriggered = queuedMutations.length;
+    queueMicrotask(() => {
+      if (queuedMutations.length === queueLengthWhenTriggered) {
+        while (queuedMutations.length > 0)
+          queuedMutations.shift()();
+      }
+    });
   }
   function mutateDom(callback) {
     if (!currentlyObserving)
@@ -2296,8 +2292,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = false ? Object.freeze({}) : {};
-  var EMPTY_ARR = false ? Object.freeze([]) : [];
+  var EMPTY_OBJ = true ? Object.freeze({}) : {};
+  var EMPTY_ARR = true ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2330,8 +2326,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(false ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(true ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2421,7 +2417,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (false) {
+      if (activeEffect.options.onTrack) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2485,7 +2481,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (false) {
+      if (effect3.options.onTrigger) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2622,13 +2618,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (false) {
+      if (true) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2690,7 +2686,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2709,7 +2705,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (false) {
+    } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2722,7 +2718,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2767,7 +2763,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (false) {
+      if (true) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2869,6 +2865,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
+  function checkIdentityKeys(target, has2, key) {
+    const rawKey = toRaw(key);
+    if (rawKey !== key && has2.call(target, rawKey)) {
+      const type = toRawType(target);
+      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+    }
+  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2901,7 +2904,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (false) {
+      if (true) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -4163,6 +4166,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.location.href = response.url;
     }
     if (contentIsFromDump(content)) {
+      let dump;
       [dump, content] = splitDumpFromContent(content);
       showHtmlModal(dump);
       finishProfile({ content: "{}", failed: true });
@@ -4387,6 +4391,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     processEffects(effects) {
       trigger("effects", this, effects);
+      trigger("effect", {
+        component: this,
+        effects,
+        cleanup: (i) => this.addCleanup(i)
+      });
     }
     get children() {
       let meta = this.snapshot.memo;
@@ -7026,6 +7035,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
+  // js/plugins/navigate/fetch.js
+  function fetchHtml(destination, callback) {
+    let uri = destination.pathname + destination.search;
+    performFetch(uri, (html) => {
+      callback(html);
+    });
+  }
+  function performFetch(uri, callback) {
+    let options = {};
+    trigger("navigate.request", {
+      url: uri,
+      options
+    });
+    fetch(uri, options).then((i) => i.text()).then((html) => {
+      callback(html);
+    });
+  }
+
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
   function prefetchHtml(destination, callback) {
@@ -7034,7 +7061,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     prefetches[path] = { finished: false, html: null, whenFinished: () => {
     } };
-    fetch(path).then((i) => i.text()).then((html) => {
+    performFetch(path, (html) => {
       callback(html);
     });
   }
@@ -7242,7 +7269,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       right: 0px;
       width: 100px;
       height: 100%;
-      box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+      box-shadow: 0 0 10px var(--livewire-progress-bar-color, #29d), 0 0 5px var(--livewire-progress-bar-color, #29d);
       opacity: 1.0;
 
       -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -7421,14 +7448,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       result = result.replace(regex, "");
     });
     return result.trim();
-  }
-
-  // js/plugins/navigate/fetch.js
-  function fetchHtml(destination, callback) {
-    let uri = destination.pathname + destination.search;
-    fetch(uri).then((i) => i.text()).then((html) => {
-      callback(html);
-    });
   }
 
   // js/plugins/navigate/index.js
@@ -8063,7 +8082,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // ../alpine/packages/mask/dist/module.esm.js
   function src_default8(Alpine3) {
-    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
+    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
       queueMicrotask(() => {
@@ -8090,8 +8109,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el._x_model)
           el._x_model.set(el.value);
       });
-      el.addEventListener("input", () => processInputValue(el));
-      el.addEventListener("blur", () => processInputValue(el, false));
+      const controller = new AbortController();
+      cleanup3(() => {
+        controller.abort();
+      });
+      el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
+      el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
       function processInputValue(el2, shouldRestoreCursor = true) {
         let input = el2.value;
         let template = templateFn(input);
@@ -8401,7 +8424,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let scripts = effects.scripts;
     if (scripts) {
       Object.entries(scripts).forEach(([key, content]) => {
@@ -8514,7 +8537,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
     if (js) {
@@ -8558,8 +8581,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportQueryString.js
-  on("component.init", ({ component, cleanup: cleanup3 }) => {
-    let effects = component.effects;
+  on("effect", ({ component, effects, cleanup: cleanup3 }) => {
     let queryString = effects["url"];
     if (!queryString)
       return;
@@ -8613,7 +8635,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       options.headers["X-Socket-ID"] = window.Echo.socketId();
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let listeners2 = effects.listeners || [];
     listeners2.forEach((event) => {
       if (event.startsWith("echo")) {
@@ -8662,6 +8684,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
+  // js/features/supportIsolating.js
+  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  on("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.isolate !== true)
+      return;
+    componentsThatAreIsolated.add(component);
+  });
+  on("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      if (!componentsThatAreIsolated.has(commit.component))
+        return;
+      commit.isolate = true;
+    });
+  });
+
   // js/features/supportNavigate.js
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
   document.addEventListener("alpine:navigated", (e) => {
@@ -8687,7 +8725,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportRedirects.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     if (!effects["redirect"])
       return;
     let url = effects["redirect"];
@@ -8764,7 +8802,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportMorphDom.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let html = effects.html;
     if (!html)
       return;
@@ -8774,7 +8812,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportEvents.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     registerListeners(component, effects.listeners || []);
     dispatchEvents(component, effects.dispatches || []);
   });
