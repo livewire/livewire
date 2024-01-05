@@ -7239,6 +7239,21 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
+var nonce2;
+function getNonce() {
+  if (nonce2)
+    return nonce2;
+  if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
+    nonce2 = window.livewireScriptConfig["nonce"];
+    return nonce2;
+  }
+  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+  if (elWithNonce) {
+    nonce2 = elWithNonce.nonce;
+    return nonce2;
+  }
+  return null;
+}
 function getUpdateUri() {
   return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
 }
@@ -8668,6 +8683,10 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `;
+  nonce = getNonce();
+  if (nonce) {
+    style.nonce = nonce;
+  }
   document.head.appendChild(style);
 }
 
