@@ -118,10 +118,11 @@ function containsTargets(payload, targets) {
         }
 
         let hasMatchingUpdate = Object.keys(updates).some(property => {
+            // If the property is nested, like `foo.bar`, we need to check if the root `foo` is the target.
             if (property.includes('.')) {
-                let nestedProperty = property.split('.')[0]
+                let propertyRoot = property.split('.')[0]
 
-                if (nestedProperty === target) return true
+                if (propertyRoot === target) return true
             }
 
             return property === target
