@@ -9112,6 +9112,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       }
       let hasMatchingUpdate = Object.keys(updates).some((property) => {
+        if (property.includes(".")) {
+          let nestedProperty = property.split(".")[0];
+          if (nestedProperty === target)
+            return true;
+        }
         return property === target;
       });
       if (hasMatchingUpdate)
