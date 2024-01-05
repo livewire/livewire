@@ -36,9 +36,8 @@ class UnitTest extends \Tests\TestCase
         $dom = Livewire::test(ComponentWithEntangleDirectiveUsedWithinBladeComponent::class)
             ->html();
 
-        $this->assertStringContainsString("{ foo: window.Livewire.find('", $dom);
-        $this->assertStringContainsString("').entangle('foo') }", $dom);
-        $this->assertStringContainsString("').entangle('bar').live }", $dom);
+        $this->assertStringContainsString("\$wire.entangle('foo') }", $dom);
+        $this->assertStringContainsString("\$wire.entangle('bar').live }", $dom);
     }
 }
 
