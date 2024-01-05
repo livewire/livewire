@@ -158,8 +158,8 @@ class UnitTest extends \Tests\TestCase
 
             public function mount() {
                 $this->posts = new Collection([
-                    Post::first(),
-                    Post::first(),
+                    Article::first(),
+                    Article::first(),
                 ]);
             }
 
@@ -185,7 +185,7 @@ class UnitTest extends \Tests\TestCase
             public Collection $posts;
 
             public function mount() {
-                $this->posts = Post::all()->reverse();
+                $this->posts = Article::all()->reverse();
             }
 
             public function render() { return <<<'HTML'
