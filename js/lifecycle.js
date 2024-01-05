@@ -1,10 +1,11 @@
 import { closestComponent, destroyComponent, initComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
-import { trigger } from './events'
+import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
 import intersect from '@alpinejs/intersect'
+import anchor from '@alpinejs/anchor'
 import navigate from './plugins/navigate'
 import history from './plugins/history'
 import morph from '@alpinejs/morph'
@@ -20,6 +21,7 @@ export function start() {
     Alpine.plugin(history)
     Alpine.plugin(intersect)
     Alpine.plugin(collapse)
+    Alpine.plugin(anchor)
     Alpine.plugin(focus)
     Alpine.plugin(persist)
     Alpine.plugin(navigate)

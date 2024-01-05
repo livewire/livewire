@@ -10,14 +10,15 @@ class InitialRender extends Render
         protected RequestBroker $requestBroker,
     ) {}
 
-    static function make($requestBroker, $name, $params = [], $fromQueryString = [])
+    static function make($requestBroker, $name, $params = [], $fromQueryString = [], $cookies = [], $headers = [])
     {
         $instance = new static($requestBroker);
 
-        return $instance->makeInitialRequest($name, $params, $fromQueryString);
+        return $instance->makeInitialRequest($name, $params, $fromQueryString, $cookies, $headers);
     }
 
-    function makeInitialRequest($name, $params, $fromQueryString = []) {
+    function makeInitialRequest($name, $params, $fromQueryString = [], $cookies = [], $headers = [])
+    {
         $uri = '/livewire-unit-test-endpoint/'.str()->random(20);
 
         $this->registerRouteBeforeExistingRoutes($uri, function () use ($name, $params) {
@@ -27,9 +28,9 @@ class InitialRender extends Render
             ]);
         });
 
-        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $fromQueryString) {
-            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $fromQueryString) {
-                return $requestBroker->call('GET', $uri, $fromQueryString);
+        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $fromQueryString, $cookies, $headers) {
+            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $fromQueryString, $cookies, $headers) {
+                return $requestBroker->addHeaders($headers)->call('GET', $uri, $fromQueryString, $cookies);
             });
         });
 

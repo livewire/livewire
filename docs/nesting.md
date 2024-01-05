@@ -36,6 +36,8 @@ class Dashboard extends Component
 
 On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting#every-component-is-an-island).
 
+For more information about the syntax for rendering components, consult our documentation on [Rendering Components](/docs/components#rendering-components).
+
 ## Passing props to children
 
 Passing data from a parent component to a child component is straightforward. In fact, it's very much like passing props to a typical [Blade component](https://laravel.com/docs/blade#components).
@@ -295,7 +297,7 @@ class TodoInput extends Component
 Now the parent `TodoList` component can treat `TodoInput` like any other input element and bind directly to its value using `wire:model`.
 
 > [!warning]
-> Currently Livewire only support a single `#[Modelable]` attribute, only the first one will be bound.
+> Currently Livewire only supports a single `#[Modelable]` attribute, so only the first one will be bound.
 
 
 ## Listening for events from children
@@ -498,7 +500,7 @@ class Steps extends Component
 
     public function next()
     {
-        $currentIndex = array_search($this->steps, $this->current);
+        $currentIndex = array_search($this->current, $this->steps);
 
         $this->current = $this->steps[$currentIndex + 1];
     }

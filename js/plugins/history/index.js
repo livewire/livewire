@@ -13,7 +13,6 @@ export default function history(Alpine) {
             setter(initial)
 
             if (! usePush) {
-                console.log(getter())
                 Alpine.effect(() => replace(getter()))
             } else {
                 Alpine.effect(() => push(getter()))
@@ -79,7 +78,7 @@ export function track(name, initialSeedValue, alwaysShow = false) {
         },
 
         pop(receiver) { // "popstate" handler...
-            window.addEventListener('popstate', (e) => {
+            let handler = (e) => {
                 if (! e.state || ! e.state.alpine) return
 
                 Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
@@ -98,7 +97,11 @@ export function track(name, initialSeedValue, alwaysShow = false) {
                         lock = false
                     }
                 })
-            })
+            }
+
+            window.addEventListener('popstate', handler)
+
+            return () => window.removeEventListener('popstate', handler)
         }
     }
 }
@@ -180,6 +183,7 @@ function toQueryString(data) {
             if (! isObjecty(iValue)) {
                 entries[key] = encodeURIComponent(iValue)
                     .replaceAll('%20', '+') // Conform to RFC1738
+                    .replaceAll('%2C', ',')
             } else {
                 entries = {...entries, ...buildQueryStringEntries(iValue, entries, key)}
             }

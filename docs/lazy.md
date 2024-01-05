@@ -43,6 +43,9 @@ To enable lazy loading, you can pass the `lazy` parameter into the component:
 
 Now, instead of loading the component right away, Livewire will skip this component, loading the page without it. Then, when the component is visible in the viewport, Livewire will make a network request to fully load this component on the page.
 
+> [!info] Lazy requests are isolated by default
+> Unlike other network requests in Livewire, lazy loading updates are isolated from each other when sent to the server. This keeps lazy loading fast, by loading each component in parrallel when a page loads. [Read more on disabling this behavior here →](#disabling-request-isolation)
+
 ## Rendering placeholder HTML
 
 By default, Livewire will insert an empty `<div></div>` for your component before it is fully loaded. As the component will initially be invisible to users, it can be jarring when the component suddenly appears on the page.
@@ -86,9 +89,12 @@ class Revenue extends Component
 
 Because the above component specifies a "placeholder" by returning HTML from a `placeholder()` method, the user will see an SVG loading spinner on the page until the component is fully loaded.
 
+> [!warning] The placeholder and the component must share the same element type
+> For instance, if your placeholder's root element type is a 'div,' your component must also use a 'div' element.
+
 ### Rendering a placeholder via a view
 
-For more complex loaders (such as skeletons) you can return a `view` from the `placeholder()` similar to `render()`. 
+For more complex loaders (such as skeletons) you can return a `view` from the `placeholder()` similar to `render()`.
 
 ```php
 public function placeholder(array $params = [])
@@ -97,7 +103,7 @@ public function placeholder(array $params = [])
 }
 ```
 
-Any parameters from the component being lazy loaded will be available as an `$params` arugment passed to the `placeholder()` method.
+Any parameters from the component being lazy loaded will be available as an `$params` argument passed to the `placeholder()` method.
 
 ## Lazy loading outside of the viewport
 
@@ -198,6 +204,29 @@ If you want to override lazy loading you can set the `lazy` parameter to `false`
 <livewire:revenue :lazy="false" />
 ```
 
+### Disabling request isolation
+
+If there are multiple lazy-loaded components on the page, each component will make an independant network request, rather than each lazy update being bundled into a single request.
+
+If you want to disabled this isolation behavior and instead bundle all updates together in a single network request you can do so with the `isolate: false` parameter:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\Attributes\Lazy;
+
+#[Lazy(isolate: false)] // [tl! highlight]
+class Revenue extends Component
+{
+    // ...
+}
+```
+
+Now, if there are ten `Revenue` components on the same page, when the page loads, all ten updates will be bundled and sent the server as single network request.
+
 ## Full-page lazy loading
 
 You may want to lazy load full-page Livewire components. You can do this by calling `->lazy()` on the route like so:
@@ -206,7 +235,7 @@ You may want to lazy load full-page Livewire components. You can do this by call
 Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy();
 ```
 
-Or alternatively, if there is a component that is lazy-loaded by default and you would like to opt-out of lazy-loading, you can use the following `enabled: false` parameter:
+Or alternatively, if there is a component that is lazy-loaded by default, and you would like to opt-out of lazy-loading, you can use the following `enabled: false` parameter:
 
 ```php
 Route::get('/dashboard', \App\Livewire\Dashboard::class)->lazy(enabled: false);

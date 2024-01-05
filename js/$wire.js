@@ -1,11 +1,11 @@
-import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEvents'
+import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
+import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
-import { requestCommit, requestCall } from '@/commit'
+import { requestCommit, requestCall } from '@/request'
 import { WeakBag, dataGet, dataSet } from '@/utils'
-import { on, trigger } from '@/events'
+import { on, trigger } from '@/hooks'
 import Alpine from 'alpinejs'
-import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 
 let properties = {}
 let fallback
@@ -22,6 +22,8 @@ function wireFallback(callback) {
 // And I actually like both depending on the scenario...
 let aliases = {
     'on': '$on',
+    'el': '$el',
+    'id': '$id',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -103,6 +105,14 @@ wireProperty('__instance', (component) => component)
 
 wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 
+wireProperty('$el', (component) => {
+    return component.el
+})
+
+wireProperty('$id', (component) => {
+    return component.id
+})
+
 wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
@@ -155,8 +165,7 @@ wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
-wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
-
+wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
@@ -172,7 +181,6 @@ wireProperty('$parent', component => {
 
     return parent.$wire
 })
-
 
 let overriddenMethods = new WeakMap
 

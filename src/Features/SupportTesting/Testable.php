@@ -25,7 +25,7 @@ class Testable
         protected ComponentState $lastState,
     ) {}
 
-    static function create($name, $params = [], $fromQueryString = [])
+    static function create($name, $params = [], $fromQueryString = [], $cookies = [], $headers = [])
     {
         $name = static::normalizeAndRegisterComponentName($name);
 
@@ -36,6 +36,8 @@ class Testable
             $name,
             $params,
             $fromQueryString,
+            $cookies,
+            $headers,
         );
 
         return new static($requestBroker, $initialState);

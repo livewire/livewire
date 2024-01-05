@@ -5,9 +5,10 @@ namespace Livewire\Mechanisms\FrontendAssets;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\on;
 
-class FrontendAssets
+class FrontendAssets extends Mechanism
 {
     public $hasRenderedScripts = false;
     public $hasRenderedStyles = false;
@@ -15,11 +16,6 @@ class FrontendAssets
     public $javaScriptRoute;
 
     public $scriptTagAttributes = [];
-
-    public function register()
-    {
-        app()->singleton($this::class);
-    }
 
     public function boot()
     {
@@ -82,18 +78,22 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\" data-livewire-style" : '';
 
+        $progressBarColor = config('livewire.navigate.progress_bar_color', '#2299dd');
+
+        // Note: the attribute selectors are "doubled" so that they don't get overriden when Tailwind's CDN loads a script tag
+        // BELOW the one Livewire injects...
         $html = <<<HTML
         <!-- Livewire Styles -->
         <style {$nonce}>
-            [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline], [wire\:loading\.block], [wire\:loading\.flex], [wire\:loading\.table], [wire\:loading\.grid], [wire\:loading\.inline-flex] {
+            [wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
                 display: none;
             }
 
-            [wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short], [wire\:loading\.delay\.long], [wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest] {
-                display:none;
+            [wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {
+                display: none;
             }
 
-            [wire\:offline] {
+            [wire\:offline][wire\:offline] {
                 display: none;
             }
 
@@ -101,8 +101,12 @@ class FrontendAssets
                 display: none;
             }
 
+            :root {
+                --livewire-progress-bar-color: {$progressBarColor};
+            }
+
             [x-cloak] {
-                display: none;
+                display: none !important;
             }
         </style>
         HTML;
@@ -162,7 +166,7 @@ class FrontendAssets
         );
 
         return <<<HTML
-        <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-uri="{$updateUri}" {$extraAttributes}></script>
+        <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
@@ -172,7 +176,7 @@ class FrontendAssets
 
         $nonce = isset($options['nonce']) ? " nonce=\"{$options['nonce']}\"" : '';
 
-        $progressBar = config('livewire.navigate.show_progress_bar', true);
+        $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
         $attributes = json_encode([
             'csrf' => app()->has('session.store') ? csrf_token() : '',

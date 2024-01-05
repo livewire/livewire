@@ -34,6 +34,9 @@ $this->dispatch('post-created', title: $post->title);
 
 To listen for an event in a Livewire component, add the `#[On]` attribute above the method you want to be called when a given event is dispatched:
 
+> [!warning] Make sure you import attribute classes
+> Make sure you import any attribute classes. For example, the below `#[On()]` attributes requires the following import `use Livewire\Attributes\On;`.
+
 ```php
 use Livewire\Component;
 use Livewire\Attributes\On; // [tl! highlight]
@@ -77,54 +80,145 @@ class ShowPost extends Component
 
 If the above `$post` model had an ID of `3`, the `refreshPost()` method would only be triggered by an event named: `post-updated.3`.
 
-## Using events within inline scripts
+### Listening for events from specific child components
 
-You can dispatch and listen to events from inline scripts within your component's template.
+Livewire allows you to listen for events directly on individual child components in your Blade template like so:
 
-### Listening for Livewire events in script tags
+```blade
+<div>
+    <livewire:edit-post @saved="$refresh">
 
-For example, we may easily listen for the `post-created` event using:
+    <!-- ... -->
+</div>
+```
+
+In the above scenario, if the `edit-post` child component dispatches a `saved` event, the parent's `$refresh` will be called and the parent will be refreshed.
+
+Instead of passing `$refresh`, you can pass any method you normally would to something like `wire:click`. Here's an example of calling a `close()` method that might do something like close a modal dialog:
+
+```blade
+<livewire:edit-post @saved="close">
+```
+
+If the child dispatched parameters along with the request, for example `$this->dispatch('close', postId: 1)`, you can forward those values to the parent method using the following syntax:
+
+```blade
+<livewire:edit-post @saved="close($event.detail.postId)">
+```
+
+## Using JavaScript to interact with events
+
+Livewire's event system becomes much more powerful when you interact with it from JavaScript inside your application. This unlocks the ability for any other JavaScript in your app to communicate with Livewire components on the page.
+
+### Listening for events inside component scripts
+
+You can easily listen for the `post-created` event inside your component's template from a `@script` directive like so:
+
+```html
+@script
+<script>
+    $wire.on('post-created', () => {
+        //
+    });
+</script>
+@endscript
+```
+
+The above snippet would listen for the `post-created` from the component it's registered within. If the component is no longer on the page, the event listener will no longer be triggered.
+
+[Read more about using JavaScript inside your Livewire components →](/docs/javascript#using-javascript-in-livewire-components)
+
+### Dispatching events from component scripts
+
+Additionally, you can dispatch events from within a component's `@script` like so:
+
+```html
+@script
+<script>
+    $wire.dispatch('post-created');
+</script>
+@endscript
+```
+
+When the above `@script` is run, the `post-created` event will be dispatched to the component it's defined within.
+
+To dispatch the event only to the component where the script resides and not other components on the page (preventing the event from "bubbling" up), you can use `dispatchSelf()`:
+
+```js
+$wire.dispatchSelf('post-created');
+```
+
+You can pass any additional parameters to the event by passing an object as a second argument to `dispatch()`:
+
+```html
+@script
+<script>
+    $wire.dispatch('post-created', { refreshPosts: true });
+</script>
+@endscript
+```
+
+You can now access those event parameters from both your Livewire class and also other JavaScript event listeners.
+
+Here's an example of receiving the `refreshPosts` parameter within a Livewire class:
+
+```php
+use Livewire\Attributes\On;
+
+// ...
+
+#[On('post-created')]
+public function handleNewPost($refreshPosts = false)
+{
+    //
+}
+```
+
+You can also access the `refreshPosts` parameter from a JavaScript event listener from the event's `detail` property:
+
+```html
+@script
+<script>
+    $wire.on('post-created', (event) => {
+        let refreshPosts = event.detail.refreshPosts
+
+        // ...
+    });
+</script>
+@endscript
+```
+
+[Read more about using JavaScript inside your Livewire components →](/docs/javascript#using-javascript-in-livewire-components)
+
+### Listening for Livewire events from global JavaScript
+
+Alternatively, you can listen for Livewire events globally using `Livewire.on` from any script in your application:
 
 ```html
 <script>
-    document.addEventListener('livewire:initialized', () => {
-       @this.on('post-created', (event) => {
+    document.addEventListener('livewire:init', () => {
+       Livewire.on('post-created', (event) => {
            //
        });
     });
 </script>
 ```
 
-The above snippet would listen for the `post-created` from the component its registered within.
+The above snippet would listen for the `post-created` event dispatched from any component on the page.
 
-### Dispatching Livewire events from script tags
-
-Any event dispatched from an inline script is capable of being intercepted by any Livewire component on the page.
-
-For example:
+If you wish to remove this event listener for any reason, you can do so using the returned `cleanup` function:
 
 ```html
 <script>
-    document.addEventListener('livewire:initialized', () => {
-        @this.on('post-created', (event) => {
-            @this.dispatch('refresh-posts'); // [tl! highlight]
+    document.addEventListener('livewire:init', () => {
+        let cleanup = Livewire.on('post-created', (event) => {
+            //
         });
+
+        // Calling "cleanup()" will un-register the above event listener...
+        cleanup();
     });
 </script>
-```
-
-The above snippet would dispatch a "refresh-posts" event after a "post-created" event was triggered from this component.
-
-Like Livewire's `dispatch()` method, you can pass additional data along with the event by passing the data as the second parameter to the method:
-
-```js
-@this.dispatch('notify', { message: 'New post added. });
-```
-
-To dispatch the event only to the component where the script resides and not other components on the page, you can use `dispatchSelf()`:
-
-```js
-@this.dispatchSelf('refresh-posts');
 ```
 
 ## Events in Alpine

@@ -31,6 +31,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('third-asset-page', ThirdAssetPage::class);
             Livewire::component('first-tracked-asset-page', FirstTrackedAssetPage::class);
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
+            Livewire::component('second-remote-asset', SecondRemoteAsset::class);
             Livewire::component('first-scroll-page', FirstScrollPage::class);
             Livewire::component('second-scroll-page', SecondScrollPage::class);
             Livewire::component('parent-component', ParentComponent::class);
@@ -51,6 +52,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
             Route::get('/first-scroll', FirstScrollPage::class)->middleware('web');
             Route::get('/second-scroll', SecondScrollPage::class)->middleware('web');
+            Route::get('/second-remote-asset', SecondRemoteAsset::class)->middleware('web');
 
             Route::get('/first-tracked-asset', FirstTrackedAssetPage::class)->middleware('web');
             Route::get('/second-tracked-asset', SecondTrackedAssetPage::class)->middleware('web');
@@ -74,6 +76,124 @@ class BrowserTest extends \Tests\BrowserTestCase
                 </html>
             HTML));
         };
+    }
+
+    /** @test */
+    public function back_button_works_with_teleports()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render(){ return <<<'HTML'
+                    <div>
+                        On second page
+                    </div>
+                HTML; }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public function render(){
+                return <<<'HTML'
+                    <div x-data="{ outerScopeCount: 0 }">
+                        Livewire component...
+
+                        <template x-teleport="body">
+                            <div>
+                                <span x-text="outerScopeCount" dusk="target"></span>
+                                <button x-on:click="outerScopeCount++" dusk="button">inc</button>
+                            </div>
+                        </template>
+
+                        <a href="/second" wire:navigate dusk="link">Go to second page</a>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@target', '0')
+        ->click('@button')
+        ->assertSeeIn('@target', '1')
+        ->click('@link')
+        ->waitForText('On second page')
+        ->back()
+        ->assertDontSee('On second page')
+        ->assertSeeIn('@target', '0')
+        ->click('@button')
+        ->assertSeeIn('@target', '1')
+        ->forward()
+        ->back()
+        ->assertSeeIn('@target', '0')
+        ->click('@button')
+        ->assertSeeIn('@target', '1')
+        ;
+    }
+
+    /** @test */
+    public function back_button_works_with_teleports_inside_persist()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render(){ return <<<'HTML'
+                    <div>
+                        <div>
+                            On second page
+                        </div>
+
+                        @persist('header')
+                            <div x-data="{ outerScopeCount: 0 }">
+                                <template x-teleport="body">
+                                    <div>
+                                        <span x-text="outerScopeCount" dusk="target"></span>
+                                        <button x-on:click="outerScopeCount++" dusk="button">inc</button>
+                                    </div>
+                                </template>
+                            </div>
+                        @endpersist
+                    </div>
+                HTML; }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public function render(){
+                return <<<'HTML'
+                    <div>
+                        <div>
+                            On first page
+                        </div>
+
+                        @persist('header')
+                            <div x-data="{ outerScopeCount: 0 }">
+                                <template x-teleport="body">
+                                    <div>
+                                        <span x-text="outerScopeCount" dusk="target"></span>
+                                        <button x-on:click="outerScopeCount++" dusk="button">inc</button>
+                                    </div>
+                                </template>
+                            </div>
+                        @endpersist
+
+                        <a href="/second" wire:navigate dusk="link">Go to second page</a>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@target', '0')
+        ->click('@button')
+        ->assertSeeIn('@target', '1')
+        ->click('@link')
+        ->waitForText('On second page')
+        ->assertSeeIn('@target', '1')
+        ->click('@button')
+        ->assertSeeIn('@target', '2')
+        ->back()
+        ->assertSeeIn('@target', '2')
+        ->click('@button')
+        ->assertSeeIn('@target', '3')
+        ->forward()
+        ->assertSeeIn('@target', '3')
+        ->click('@button')
+        ->assertSeeIn('@target', '4')
+        ;
     }
 
     /** @test */
@@ -124,6 +244,44 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->keys('@link.to.second', '{enter}')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    /** @test */
+    public function navigate_is_not_triggered_on_cmd_and_enter()
+    {
+        $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
+
+        $this->browse(function (Browser $browser) use ($key) {
+            $currentWindowHandles = count($browser->driver->getWindowHandles());
+
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->keys('@link.to.second', $key, '{enter}')
+                ->pause(500) // Let navigate run if it was going to (it should not)
+                ->assertSee('On first')
+                ->assertScript('return window._lw_dusk_test');
+
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
+        });
+    }
+
+    /** @test */
     public function can_navigate_to_page_from_child_via_parent_component_without_reloading()
     {
         $this->browse(function (Browser $browser) {
@@ -143,7 +301,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_redirect_without_reloading_from_a_page_that_was_loaded_by_wire_navigate()
+    public function can_redirect_with_reloading_from_a_page_that_was_loaded_by_wire_navigate()
     {
         $this->browse(function ($browser) {
             $browser
@@ -157,7 +315,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
                 ->click('@redirect.to.first')
                 ->waitFor('@link.to.second')
-                ->assertScript('return window._lw_dusk_test')
+                ->assertScript('return window._lw_dusk_test', false)
                 ->assertSee('On first');
         });
     }
@@ -362,11 +520,40 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function livewire_navigated_event_is_fired_on_first_page_load()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/second')
+                ->assertSee('On second')
+                ->assertScript('window.foo_navigated', 'bar');
+        });
+    }
+
+    /** @test */
+    public function livewire_navigated_event_is_fired_after_redirect_without_reloading()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('window.foo_navigated', 'bar');
+        });
+    }
+
+    /** @test */
     public function navigate_is_not_triggered_on_cmd_click()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
 
         $this->browse(function (Browser $browser) use ($key) {
+            $currentWindowHandles = count($browser->driver->getWindowHandles());
+
             $browser
                 ->visit('/first')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
@@ -384,7 +571,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
             ;
 
-            $this->assertCount(2, $browser->driver->getWindowHandles());
+            $this->assertCount($currentWindowHandles + 1, $browser->driver->getWindowHandles());
         });
     }
 
@@ -416,6 +603,62 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ;
         });
     }
+
+    /** @test */
+    public function injected_assets_such_as_nprogress_styles_are_retained_when_the_page_changes()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
+                ->click('@link.to.second')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second')
+                ->assertScript('return window._lw_dusk_test')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2)
+                ->click('@link.to.first')
+                ->waitFor('@link.to.second')
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->assertScript('return document.styleSheets.length', 2);
+        });
+    }
+
+    /** @test */
+    public function remote_assets_loaded_with_the_directive_fully_load_before_component_scripts_and_initialization()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                // There should only be two style blocks, livewire styles and nprogress
+                ->click('@link.to.asset')
+                ->waitFor('@target')
+                ->waitForTextIn('@target', 'bar')
+                ;
+        });
+    }
+
+    protected function registerComponentTestRoutes($routes)
+    {
+        $registered = 0;
+
+        foreach ($routes as $route => $component) {
+            $name = 'route-component-'.$registered++;
+
+            Livewire::component($name, $component);
+
+            Route::get($route, function () use ($name) {
+                return app('livewire')->new($name)();
+            })->middleware('web');
+        }
+    }
 }
 
 class FirstPage extends Component
@@ -440,6 +683,7 @@ class FirstPage extends Component
 
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
+            <a href="/second-remote-asset" wire:navigate.hover dusk="link.to.asset">Go to asset page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
@@ -504,6 +748,12 @@ class SecondPage extends Component
             @endpersist
 
             <script data-navigate-once>window.foo = 'bar';</script>
+
+            <script>
+                document.addEventListener('livewire:navigated', () => {
+                    window.foo_navigated = 'bar'
+                })
+            </script>
         </div>
         HTML;
     }
@@ -567,6 +817,33 @@ class SecondTrackedAssetPage extends Component
     #[\Livewire\Attributes\Layout('test-views::changed-tracked-layout')]
     public function render()
     {
+        return '<div>On second asset page</div>';
+    }
+}
+
+class SecondRemoteAsset extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                <div dusk="target">foo</div>
+            </div>
+
+            @assets
+            <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
+            @endassets
+
+            @script
+            <script>
+                window.datePicker = new Pikaday({ field: $wire.$el.querySelector('[data-picker]') })
+
+                if (window.datePicker) {
+                    document.querySelector('[dusk="target"]').textContent = 'bar'
+                }
+            </script>
+            @endscript
+        HTML;
         return '<div>On second asset page</div>';
     }
 }

@@ -20,9 +20,11 @@ class ComponentWithLoadingDelays extends BaseComponent
 <div>
     <button wire:click="$refresh" dusk="load">Load</button>
 
+    <h1 wire:loading.delay.none dusk="delay-none">Loading delay none</h1>    
     <h1 wire:loading.delay.shortest dusk="delay-shortest">Loading delay shortest</h1>
     <h1 wire:loading.delay.shorter dusk="delay-shorter">Loading delay shorter</h1>
     <h1 wire:loading.delay.short dusk="delay-short">Loading delay short</h1>
+    <h1 wire:loading.delay.default dusk="delay-default">Loading delay default</h1>    
     <h1 wire:loading.delay dusk="delay">Loading delay</h1>
     <h1 wire:loading.delay.long dusk="delay-long">Loading delay long</h1>
     <h1 wire:loading.delay.longer dusk="delay-longer">Loading delay longer</h1>

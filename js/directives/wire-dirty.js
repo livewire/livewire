@@ -1,7 +1,7 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from '@/directives'
 import { dataGet, WeakBag } from '@/utils'
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 let refreshDirtyStatesByComponent = new WeakBag
 
@@ -20,8 +20,10 @@ directive('dirty', ({ el, directive, component }) => {
 
     let oldIsDirty = false
 
+    let initialDisplay = el.style.display
+
     let refreshDirtyState = (isDirty) => {
-        toggleBooleanStateDirective(el, directive, isDirty)
+        toggleBooleanStateDirective(el, directive, isDirty, initialDisplay)
 
         oldIsDirty = isDirty
     }

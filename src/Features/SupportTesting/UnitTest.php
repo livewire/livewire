@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 use PHPUnit\Framework\ExpectationFailedException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -9,7 +11,6 @@ use Illuminate\Testing\TestResponse;
 use Illuminate\Testing\TestView;
 use Livewire\Component;
 use Livewire\Livewire;
-use Tests\TestCase;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -441,6 +442,48 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
+    function assert_has_errors()
+    {
+        Livewire::test(ValidatesDataWithSubmitStub::class)
+            ->call('submit')
+            ->assertHasErrors()
+            ->assertHasErrors('foo')
+            ->assertHasErrors(['foo'])
+            ->assertHasErrors(['foo' => 'required'])
+            ->assertHasErrors(['foo' => 'The foo field is required.'])
+            ->assertHasErrors(['foo' => 'required', 'bar' => 'required'])
+            ->assertHasErrors(['foo' => 'The foo field is required.', 'bar' => 'The bar field is required.'])
+            ->assertHasErrors(['foo' => ['The foo field is required.'], 'bar' => ['The bar field is required.']])
+            ->assertHasErrors(['foo' => function ($rules, $messages) {
+                return in_array('required', $rules) && in_array('The foo field is required.', $messages);
+            }])
+        ;
+    }
+
+    /** @test */
+    function assert_has_errors_with_validation_class()
+    {
+        Livewire::test(ValidatesDataWithCustomRuleStub::class)
+            ->call('submit')
+            ->assertHasErrors()
+            ->assertHasErrors('foo')
+            ->assertHasErrors(['foo'])
+            ->assertHasErrors(['foo' => CustomValidationRule::class])
+            ->assertHasErrors(['foo' => 'My custom message'])
+            ->assertHasErrors(['foo' => function ($rules, $messages) {
+                return in_array(CustomValidationRule::class, $rules) && in_array('My custom message', $messages);
+            }])
+            ->set('foo', true)
+            ->call('submit')
+            ->assertHasNoErrors()
+            ->assertHasNoErrors('foo')
+            ->assertHasNoErrors(['foo'])
+            ->assertHasNoErrors(['foo' => CustomValidationRule::class])
+            ->assertHasNoErrors(['foo' => 'My custom message'])
+        ;
+    }
+
+    /** @test */
     function assert_has_error_with_manually_added_error()
     {
         Livewire::test(ValidatesDataWithSubmitStub::class)
@@ -482,7 +525,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
-    function it_ignores_rules_with_params(){
+    function it_ignores_rules_with_params()
+    {
         Livewire::test(ValidatesDataWithRulesHasParams::class)
             ->call('submit')
             ->assertHasErrors(['foo' => 'min'])
@@ -490,6 +534,63 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->set('foo', 'FOO')
             ->assertHasNoErrors(['foo' => 'min'])
             ->assertHasNoErrors(['foo' => 'min:2']);
+    }
+
+    /** @test */
+    function assert_response_of_calling_method()
+    {
+        Livewire::test(ComponentWithMethodThatReturnsData::class)
+            ->call('foo')
+            ->assertReturned('bar')
+            ->assertReturned(fn ($data) => $data === 'bar');
+    }
+
+    /** @test */
+    public function can_set_cookies_for_use_with_testing()
+    {
+        // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
+        Livewire::withCookies(['colour' => 'blue'])
+            ->withCookie('name', 'Taylor')
+            ->test(new class extends Component {
+                public $colourCookie = '';
+                public $nameCookie = '';
+                public function mount()
+                {
+                    $this->colourCookie = request()->cookie('colour');
+                    $this->nameCookie = request()->cookie('name');
+                }
+
+                public function render()
+                {
+                    return '<div></div>';
+                }
+            })
+            ->assertSet('colourCookie', 'blue')
+            ->assertSet('nameCookie', 'Taylor')
+            ;
+    }
+
+    /** @test */
+    public function can_set_headers_for_use_with_testing()
+    {
+        Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])
+            ->test(new class extends Component {
+                public $colourHeader = '';
+                public $nameHeader = '';
+                public function mount()
+                {
+                    $this->colourHeader = request()->header('colour');
+                    $this->nameHeader = request()->header('name');
+                }
+
+                public function render()
+                {
+                    return '<div></div>';
+                }
+            })
+            ->assertSet('colourHeader', 'blue')
+            ->assertSet('nameHeader', 'Taylor')
+            ;
     }
 }
 
@@ -572,6 +673,33 @@ class DispatchesEventsComponentStub extends Component
     }
 }
 
+class CustomValidationRule implements ValidationRule
+{
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        if ($value === false) {
+            $fail('My custom message');
+        }
+    }
+}
+
+class ValidatesDataWithCustomRuleStub extends Component
+{
+    public bool $foo = false;
+
+    function submit()
+    {
+        $this->validate([
+            'foo' => new CustomValidationRule,
+        ]);
+    }
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
 class ValidatesDataWithSubmitStub extends Component
 {
     public $foo;
@@ -634,4 +762,17 @@ class ValidatesDataWithRulesHasParams extends Component{
 class ComponentWhichReceivesEvent extends Component
 {
 
+}
+
+class ComponentWithMethodThatReturnsData extends Component
+{
+    function foo()
+    {
+        return 'bar';
+    }
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
 }

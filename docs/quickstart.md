@@ -16,6 +16,9 @@ From the root directory of your Laravel app, run the following [Composer](https:
 composer require livewire/livewire
 ```
 
+> [!warning] Make sure Alpine isn't already installed
+> If the application you are using already has AlpineJS installed, you will need to remove it for Livewire to work properly; otherwise, Alpine will be loaded twice and Livewire won't function. For example, if you installed the Laravel Breeze "Blade with Alpine" starter kit, you will need to remove Alpine from `resources/js/app.js`.
+
 ## Create a Livewire component
 
 Livewire provides a convenient Artisan command to generate new components quickly. Run the following command to make a new `Counter` component:
@@ -25,7 +28,7 @@ php artisan make:livewire counter
 ```
 
 This command will generate two new files in your project:
-* `App/Livewire/Counter.php`
+* `app/Livewire/Counter.php`
 * `resources/views/livewire/counter.blade.php`
 
 ## Writing the class
@@ -81,6 +84,10 @@ Open the `resources/views/livewire/counter.blade.php` file and replace its conte
 
 This code will display the value of the `$count` property and two buttons that increment and decrement the `$count` property, respectively.
 
+> [!warning] Livewire components MUST have a single root element
+> In order for Livewire to work, components must have just **one** single element as its root. If multiple root elements are detected, an exception is thrown. It is recommended to use a `<div>` element as in the example. HTML comments count as separate elements and should be put inside the root element.
+> When rendering [full-page components](/docs/components#full-page-components), named slots for the layout file may be put outside the root element. These are removed before the component is rendered.
+
 ## Register a route for the component
 
 Open the `routes/web.php` file in your Laravel application and add the following code:
@@ -130,6 +137,6 @@ With our component class and templates in place, our component is ready to test!
 
 Visit `/counter` in your browser, and you should see a number displayed on the screen with two buttons to increment and decrement the number.
 
-After clicking one of the buttons, you will notice that the count updates in real-time, without the page reloading. This is the magic of Livewire: dynamic frontend applications written entirely in PHP.
+After clicking one of the buttons, you will notice that the count updates in real time, without the page reloading. This is the magic of Livewire: dynamic frontend applications written entirely in PHP.
 
 We've barely scratched the surface of what Livewire is capable of. Keep reading the documentation to see everything Livewire has to offer.

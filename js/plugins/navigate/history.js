@@ -44,8 +44,16 @@ function updateUrl(method, url, html) {
 
     state.alpine._html = key
 
-    // 640k character limit:
-    history[method](state, document.title, url)
+    try {
+        // 640k character limit:
+        history[method](state, document.title, url)
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'SecurityError') {
+            console.error('Livewire: You can\'t use wire:navigate with a link to a different root domain: '+url)
+        }
+
+        console.error(error)
+    }
 }
 
 export function fromSessionStorage(timestamp) {

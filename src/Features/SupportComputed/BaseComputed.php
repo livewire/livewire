@@ -18,6 +18,8 @@ class BaseComputed extends Attribute
         public $persist = false,
         public $seconds = 3600, // 1 hour...
         public $cache = false,
+        public $key = null,
+        public $tags = null,
     ) {}
 
     function boot()
@@ -40,7 +42,7 @@ class BaseComputed extends Attribute
     protected function handleMagicGet($target, $property, $returnValue)
     {
         if ($target !== $this->component) return;
-        if ($property !== $this->getName()) return;
+        if ($this->generatePropertyName($property) !== $this->getName()) return;
 
         if ($this->persist) {
             $returnValue($this->handlePersistedGet());
@@ -83,18 +85,24 @@ class BaseComputed extends Attribute
     {
         $key = $this->generatePersistedKey();
 
-        return Cache::remember($key, $this->seconds, function () {
-            return $this->evaluateComputed();
-        });
+        $closure = fn () => $this->evaluateComputed();
+
+        return match(Cache::supportsTags() && !empty($this->tags)) {
+            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
+            default => Cache::remember($key, $this->seconds, $closure)
+        };
     }
 
     protected function handleCachedGet()
     {
         $key = $this->generateCachedKey();
 
-        return Cache::remember($key, $this->seconds, function () {
-            return $this->evaluateComputed();
-        });
+        $closure = fn () => $this->evaluateComputed();
+
+        return match(Cache::supportsTags() && !empty($this->tags)) {
+            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
+            default => Cache::remember($key, $this->seconds, $closure)
+        };
     }
 
     protected function handlePersistedUnset()
@@ -118,11 +126,25 @@ class BaseComputed extends Attribute
 
     protected function generateCachedKey()
     {
+        if ($this->key) return $this->key;
+
         return 'lw_computed.'.$this->component->getName().'.'.$this->getName();
     }
 
     protected function evaluateComputed()
     {
-        return invade($this->component)->{$this->getName()}();
+        return invade($this->component)->{parent::getName()}();
     }
+
+    public function getName()
+    {
+        return $this->generatePropertyName(parent::getName());
+    }
+
+    private function generatePropertyName($value)
+    {
+        return str($value)->camel()->toString();
+    }
+
+
 }

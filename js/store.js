@@ -1,5 +1,5 @@
 import { Component } from "@/component";
-import { trigger } from "@/events";
+import { trigger } from "@/hooks";
 import { deepClone } from "@/utils"
 
 let components = {}
@@ -9,7 +9,9 @@ export function initComponent(el) {
 
     if (components[component.id]) throw 'Component already registered'
 
-    trigger('component.init', { component })
+    let cleanup = (i) => component.addCleanup(i)
+
+    trigger('component.init', { component, cleanup })
 
     components[component.id] = component
 

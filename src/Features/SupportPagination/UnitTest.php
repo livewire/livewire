@@ -82,6 +82,39 @@ class UnitTest extends \Tests\TestCase
             }
         })->assertSee('Custom pagination theme');
     }
+
+    public function test_calling_pagination_getPage_before_paginate_method_resolve_the_correct_page_number_in_first_visit_or_after_reload()
+    {
+        Livewire::withQueryParams(['page' => 5])->test(new class extends Component {
+            use WithPagination;
+
+            public int $page = 1;
+
+            #[Computed]
+            function posts()
+            {
+                $this->page = $this->getPage();
+                return PaginatorPostTestModel::paginate();
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @foreach ($this->posts as $post)
+                    @endforeach
+
+                    {{ $this->posts->links() }}
+                </div>
+                HTML;
+            }
+        })
+            ->assertSet('page', 5)
+            ->assertSet('paginators.page', 5)
+            ->call('gotoPage', 3)
+            ->assertSet('page', 3)
+            ->assertSet('paginators.page', 3);
+    }
 }
 
 class ComponentWithPaginationStub extends Component

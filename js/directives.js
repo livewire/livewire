@@ -1,5 +1,5 @@
 import Alpine from 'alpinejs'
-import { on } from './events'
+import { on } from './hooks'
 
 export function matchesForLivewireDirective(attributeName) {
     return attributeName.match(new RegExp('wire:'))
@@ -52,11 +52,7 @@ class DirectiveManager {
             // Filter only the livewire directives.
             .filter(name => matchesForLivewireDirective(name))
             // Parse out the type, modifiers, and value from it.
-            .map(name => {
-                const [value, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
-
-                return new Directive(value, modifiers, name, this.el)
-            }))
+            .map(name => extractDirective(this.el, name)))
     }
 }
 
