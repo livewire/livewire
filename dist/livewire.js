@@ -409,7 +409,7 @@
   function getNonce() {
     if (nonce2)
       return nonce2;
-    if (window.livewireScriptConfig["nonce"] ?? false) {
+    if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
       nonce2 = window.livewireScriptConfig["nonce"];
       return nonce2;
     }
