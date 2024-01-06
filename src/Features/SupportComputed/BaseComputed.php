@@ -4,10 +4,10 @@ namespace Livewire\Features\SupportComputed;
 
 use function Livewire\on;
 use function Livewire\off;
+use function Livewire\wrap;
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
-use function Livewire\wrap;
 
 #[\Attribute]
 class BaseComputed extends Attribute
