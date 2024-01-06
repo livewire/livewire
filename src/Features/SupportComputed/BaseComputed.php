@@ -2,12 +2,12 @@
 
 namespace Livewire\Features\SupportComputed;
 
-use function Livewire\invade;
 use function Livewire\on;
 use function Livewire\off;
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
+use function Livewire\wrap;
 
 #[\Attribute]
 class BaseComputed extends Attribute
@@ -133,7 +133,7 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        return invade($this->component)->{parent::getName()}();
+        return wrap($this->component)->{parent::getName()}();
     }
 
     public function getName()
