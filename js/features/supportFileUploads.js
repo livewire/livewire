@@ -218,11 +218,16 @@ class UploadManager {
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
     }
 
-    cancelUpload(name) {
+    cancelUpload(name, cancelledCallback = null) {
         let uploadItem = this.uploadBag.first(name);
 
         if (uploadItem) {
             uploadItem.request.abort();
+
+            if (cancelledCallback) {
+                cancelledCallback()
+            }
+
             this.uploadBag.shift(name).cancelledCallback();
             this.component.$wire.call('_uploadCancelled', name);
         }
