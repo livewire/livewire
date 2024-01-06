@@ -102,7 +102,7 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function cant_remove_a_file_from_an_array_of_files_property_with_mismatched_filename_provided()
+    public function cant_dispatch_the_remove_upload_event_if_the_file_is_not_found_in_the_array_of_files_property()
     {
         $file1 = UploadedFile::fake()->image('avatar1.jpg');
         $file2 = UploadedFile::fake()->image('avatar2.jpg');
