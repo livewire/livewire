@@ -102,6 +102,23 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function cant_remove_a_file_from_an_array_of_files_property_with_mismatched_filename_provided()
+    {
+        $file1 = UploadedFile::fake()->image('avatar1.jpg');
+        $file2 = UploadedFile::fake()->image('avatar2.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photos', [$file1, $file2]);
+
+        $component->call('_removeUpload', 'photos', 'mismatched-filename.png')
+            ->assertNotDispatched('upload:removed', name: 'photos', tmpFilename: 'mismatched-filename.png');
+
+        $tmpFiles = $component->call('$refresh')->viewData('photos');
+
+        $this->assertCount(2, $tmpFiles);
+    }
+
+    /** @test */
     public function if_the_file_property_is_an_array_the_uploaded_file_will_append_to_the_array()
     {
         Storage::fake('avatars');
