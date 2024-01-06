@@ -76,11 +76,12 @@ trait WithFileUploads
         $uploads = $this->getPropertyValue($name);
 
         if (is_array($uploads) && isset($uploads[0]) && $uploads[0] instanceof TemporaryUploadedFile) {
-            $this->dispatch('upload:removed', name: $name, tmpFilename: $tmpFilename)->self();
-
-            app('livewire')->updateProperty($this, $name, array_values(array_filter($uploads, function ($upload) use ($tmpFilename) {
+            app('livewire')->updateProperty($this, $name, array_values(array_filter($uploads, function ($upload) use ($name, $tmpFilename) {
                 if ($upload->getFilename() === $tmpFilename) {
                     $upload->delete();
+
+                    $this->dispatch('upload:removed', name: $name, tmpFilename: $tmpFilename)->self();
+
                     return false;
                 }
 
