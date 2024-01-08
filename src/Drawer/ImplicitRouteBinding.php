@@ -95,18 +95,8 @@ class ImplicitRouteBinding
             return $parameterValue;
         }
 
-        if ($parameterValue instanceof BackedEnum) {
-            return $parameterValue;
-        }
-
-        if ((new ReflectionClass($parameterClassName))->isEnum()) {
-            $enum = $parameterClassName::tryFrom($parameterValue);
-
-            if (is_null($enum)) {
-                throw new BackedEnumCaseNotFoundException($parameterClassName, $parameterValue);
-            }
-
-            return $enum;
+        if($enumValue = $this->resolveEnumParameter($parameterValue, $parameterClassName)) {
+            return $enumValue;
         }
 
         $instance = $this->container->make($parameterClassName);
@@ -124,5 +114,24 @@ class ImplicitRouteBinding
         }
 
         return $model;
+    }
+
+    protected function resolveEnumParameter($parameterValue, $parameterClassName)
+    {
+        if ($parameterValue instanceof BackedEnum) {
+            return $parameterValue;
+        }
+
+        if ((new ReflectionClass($parameterClassName))->isEnum()) {
+            $enumValue = $parameterClassName::tryFrom($parameterValue);
+
+            if (is_null($enumValue)) {
+                throw new BackedEnumCaseNotFoundException($parameterClassName, $parameterValue);
+            }
+
+            return $enumValue;
+        }
+
+        return null;
     }
 }
