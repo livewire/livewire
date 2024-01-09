@@ -207,15 +207,16 @@ For example, if you are looping through an array of posts, you may set the `wire
             <!-- ... -->
         </div>
     @endforeach
+</div>
+```
 
-
-    <!-- When using the directive @livewire, the key is passed by key() function-->
+If you are looping through an array that is rendering Livewire components you may set the key as a component attribute `:key()` or pass the key as a third argument when using the `@livewire` directive.
+```blade
+<div>
     @foreach ($posts as $post)
-        @livewire(
-            \App\Livewire\PostListItem::class,
-            ['post' => $post],
-            key($post->id)
-        )
+        <livewire:post-item :$post :key="$post->id">
+
+        @livewire(PostItem::class, ['post' => $post], key($post->id))
     @endforeach
 </div>
 ```
