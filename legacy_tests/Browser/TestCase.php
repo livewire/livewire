@@ -263,11 +263,7 @@ class TestCase extends BaseTestCase
         parent::browse(function (...$browsers) use ($callback) {
             try {
                 $callback(...$browsers);
-            } catch (Exception $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
-
-                throw $e;
-            } catch (Throwable $e) {
+            } catch (Exception|Throwable $e) {
                 if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
 
                 throw $e;

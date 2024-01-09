@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportModels;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
@@ -149,6 +150,58 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('post', $post);
     }
 
+    /** @test */
+    public function collections_with_duplicate_models_are_available_when_hydrating()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public Collection $posts;
+
+            public function mount() {
+                $this->posts = new Collection([
+                    Article::first(),
+                    Article::first(),
+                ]);
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($posts as $post)
+                    {{ $post->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        })
+        ->assertSee('First-0')
+        ->assertSee('First-1')
+        ->call('$refresh')
+        ->assertSee('First-0')
+        ->assertSee('First-1');
+    }
+
+    /** @test */
+    public function collections_retain_their_order_on_hydration()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public Collection $posts;
+
+            public function mount() {
+                $this->posts = Article::all()->reverse();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($posts as $post)
+                    {{ $post->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        })
+        ->assertSee('Second-0')
+        ->assertSee('First-1')
+        ->call('$refresh')
+        ->assertSee('Second-0')
+        ->assertSee('First-1');
+    }
 }
 
 #[\Attribute]

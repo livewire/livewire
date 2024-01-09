@@ -10,10 +10,7 @@ class FilePreviewController
     {
         abort_unless(request()->hasValidSignature(), 401);
 
-        return Utils::pretendResponseIsFile(
-            FileUploadConfiguration::storage()->path(FileUploadConfiguration::path($filename)),
-            FileUploadConfiguration::mimeType($filename)
-        );
+        return Utils::pretendPreviewResponseIsPreviewFile($filename);
     }
 }
 

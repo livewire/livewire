@@ -7239,6 +7239,21 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
+var nonce2;
+function getNonce() {
+  if (nonce2)
+    return nonce2;
+  if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
+    nonce2 = window.livewireScriptConfig["nonce"];
+    return nonce2;
+  }
+  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+  if (elWithNonce) {
+    nonce2 = elWithNonce.nonce;
+    return nonce2;
+  }
+  return null;
+}
 function getUpdateUri() {
   return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
 }
@@ -7246,8 +7261,8 @@ function contentIsFromDump(content) {
   return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
 }
 function splitDumpFromContent(content) {
-  let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-  return [dump2, content.replace(dump2, "")];
+  let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+  return [dump, content.replace(dump, "")];
 }
 
 // js/hooks.js
@@ -7891,6 +7906,7 @@ async function sendRequest(pool) {
     window.location.href = response.url;
   }
   if (contentIsFromDump(content)) {
+    let dump;
     [dump, content] = splitDumpFromContent(content);
     showHtmlModal(dump);
     finishProfile({ content: "{}", failed: true });
@@ -8617,7 +8633,7 @@ function injectStyles() {
       right: 0px;
       width: 100px;
       height: 100%;
-      box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+      box-shadow: 0 0 10px var(--livewire-progress-bar-color, #29d), 0 0 5px var(--livewire-progress-bar-color, #29d);
       opacity: 1.0;
 
       -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -8667,6 +8683,10 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `;
+  nonce = getNonce();
+  if (nonce) {
+    style.nonce = nonce;
+  }
   document.head.appendChild(style);
 }
 
@@ -9958,7 +9978,12 @@ function containsTargets(payload, targets) {
       });
     }
     let hasMatchingUpdate = Object.keys(updates).some((property) => {
-      return property.startsWith(target);
+      if (property.includes(".")) {
+        let propertyRoot = property.split(".")[0];
+        if (propertyRoot === target)
+          return true;
+      }
+      return property === target;
     });
     if (hasMatchingUpdate)
       return true;

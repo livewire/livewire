@@ -34,6 +34,20 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function intended_redirect()
+    {
+        $this->registerNamedRoute();
+
+        $component = Livewire::test(TriggersRedirectStub::class);
+
+        session()->put('url.intended', route('foo'));
+
+        $component->runAction('triggerRedirectIntended');
+
+        $this->assertEquals(route('foo'), $component->effects['redirect']);
+    }
+
+    /** @test */
     public function action_redirect()
     {
         $this->registerAction();
@@ -195,6 +209,11 @@ class TriggersRedirectStub extends Component
     public function triggerRedirectRoute()
     {
         return $this->redirectRoute('foo');
+    }
+
+    public function triggerRedirectIntended()
+    {
+        return $this->redirectIntended();
     }
 
     public function triggerRedirectAction()

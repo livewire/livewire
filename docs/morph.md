@@ -27,7 +27,7 @@ class Todos extends Component
 ```
 
 ```blade
-<div wire:submit="add">
+<form wire:submit="add">
     <ul>
         @foreach ($todos as $item)
             <li>{{ $item }}</li>
@@ -35,7 +35,7 @@ class Todos extends Component
     </ul>
 
     <input wire:model="todo">
-</div>
+</form>
 ```
 
 The initial render of this component will output the following HTML:
