@@ -157,7 +157,7 @@ function injectStyles() {
     }
     `
 
-    nonce = getNonce()
+    let nonce = getNonce()
     if (nonce) {
       style.nonce = nonce
     }
