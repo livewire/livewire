@@ -6,7 +6,7 @@ import componentException from '@/exceptions/componentException'
 
 export class Component {
     constructor(el) {
-        if (el.__livewire) componentException(`Component already initialized`, el);
+        if (el.__livewire) return el.__livewire;
 
         el.__livewire = this
 
