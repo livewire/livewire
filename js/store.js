@@ -34,14 +34,16 @@ export function hasComponent(id) {
 }
 
 export function findComponent(id, el = null) {
-    let component = components[id]
+    let component = components[id];
 
-    if (! component && el) componentException(`Component ['${id}'] not found on ['${el.__livewire.name}']`, el)
+    if (!component) {
+        let componentName = el ? ` on ['${el.__livewire.name}']` : '';
+        componentException(`Component ['${id}'] not found${componentName}`, el);
+    }
 
-    if (! component && !el) componentException(`Component ['${id}'] not found`)
-
-    return component
+    return component;
 }
+
 
 export function closestComponent(el, strict = true) {
     let closestRoot = Alpine.findClosest(el, i => i.__livewire)
