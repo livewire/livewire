@@ -112,9 +112,8 @@ export class Component {
 
     get children() {
         let meta = this.snapshot.memo
-        let childIds = Object.values(meta.children).map(i => i[1])
 
-        return childIds.map(id => findComponent(id, this.el))
+        return Object.values(meta.children).map(child => findComponent(child[1], child[2], this.el))
     }
 
     inscribeSnapshotAndEffectsOnElement() {
