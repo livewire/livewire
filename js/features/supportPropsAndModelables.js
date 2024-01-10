@@ -72,6 +72,8 @@ function getDeepChildrenWithBindings(component, callback) {
 }
 
 function hasReactiveProps(component) {
+    if (!component) { return }
+
     let meta = component.snapshot.memo
     let props = meta.props
 
@@ -79,6 +81,8 @@ function hasReactiveProps(component) {
 }
 
 function hasWireModelableBindings(component) {
+    if (!component) { return }
+
     let meta = component.snapshot.memo
     let bindings = meta.bindings
 
@@ -86,6 +90,8 @@ function hasWireModelableBindings(component) {
 }
 
 function getDeepChildren(component, callback) {
+    if (!component) { return }
+
     component.children.forEach(child => {
         callback(child)
 

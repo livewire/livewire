@@ -21,7 +21,7 @@ class SupportNestingComponents extends ComponentHook
 
                 $html = "<{$tag} wire:id=\"{$childId}\"></{$tag}>";
 
-                static::setParentChild($parent, $key, $tag, $childId, $name);
+                static::setParentChild($parent, $key, $tag, $childId);
 
                 $hijack($finish($html));
             }
@@ -39,7 +39,7 @@ class SupportNestingComponents extends ComponentHook
 
                     preg_match('/<([a-zA-Z0-9\-]*)/', $html, $matches, PREG_OFFSET_CAPTURE);
                     $tag = $matches[1][0];
-                    static::setParentChild($parent, $key, $tag, $component->getId(), $component->getName());
+                    static::setParentChild($parent, $key, $tag, $component->getId());
                 }
             };
         });
@@ -62,9 +62,9 @@ class SupportNestingComponents extends ComponentHook
     }
 
     function getChildren() { return $this->storeGet('children', []); }
-    function setChild($key, $tag, $id, $name) { $this->storePush('children', [$tag, $id, $name], $key); }
+    function setChild($key, $tag, $id) { $this->storePush('children', [$tag, $id], $key); }
 
-    static function setParentChild($parent, $key, $tag, $id, $name) { store($parent)->push('children', [$tag, $id, $name], $key); }
+    static function setParentChild($parent, $key, $tag, $id) { store($parent)->push('children', [$tag, $id], $key); }
     static function setPreviouslyRenderedChildren($component, $children) { store($component)->set('previousChildren', $children); }
     static function hasPreviouslyRenderedChild($parent, $key) {
         return array_key_exists($key, store($parent)->get('previousChildren', []));
