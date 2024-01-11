@@ -241,15 +241,23 @@ class Testable
         return $this->lastState->getComponent();
     }
 
-    function dump()
+    function dump(?string $toFile = null)
     {
         dump($this->lastState->getHtml());
+
+        if ($toFile) {
+            $this->writeDumpedFile($toFile);
+        }
 
         return $this;
     }
 
-    function dd()
+    function dd(?string $toFile = null)
     {
+        if ($toFile) {
+            $this->writeDumpedFile($toFile);
+        }
+
         dd($this->lastState->getHtml());
     }
 
@@ -278,5 +286,12 @@ class Testable
         $this->lastState->getResponse()->{$method}(...$params);
 
         return $this;
+    }
+
+    protected function writeDumpedFile(string $toFile): void
+    {
+        $filename = str_ends_with($toFile, '.html') ? $toFile : $toFile . '.html';
+
+        file_put_contents(base_path($filename), $this->lastState->getHtml());
     }
 }
