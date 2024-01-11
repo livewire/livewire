@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Livewire\Drawer\Utils;
 
 class FilePreviewController implements HasMiddleware
@@ -11,7 +12,7 @@ class FilePreviewController implements HasMiddleware
 
     public static function middleware()
     {
-        return static::$middleware;
+        return array_map(fn ($middleware) => new Middleware($middleware), static::$middleware);
     }
 
     public function handle($filename)
