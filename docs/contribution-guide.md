@@ -1,92 +1,216 @@
-At Livewire we appreciate and welcome all contributions!
+Hi there and welcome to the Livewire contribution guide. In this guide we are going to take a look at how you can contribute back to Livewire by submitting new features, failing tests, or bug fixes.
 
-If that's something you would be interested in doing, we recommend going through this contribution guide first before
-starting.
+## Setting up Livewire and Alpine locally
+In order to contribute back the easiest way to do this is by ensuring the Livewire and Alpine repositories are setup on your machine locally to easily make changes and run the test suite.
 
-## Setup Livewire locally
+To make this process as easy as possible Livewire provides an CLI command that will setup everything you need. Alternatively you can look at doing the steps manually in the next section.
 
-The first step is to create a fork of Livewire and set it up locally. You should only need to do this the first time.
+#### Prerequisites
+1. You need to have the [Github CLI](https://cli.github.com/) installed on your machine and authenticated with your Github account.
+2. You need to have [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed on your machine.
+#### Installing the Livewire CLI
+First, let's install the CLI as a global dependency using Composer. This will ensure we can run the `livewire-cli` command everywhere.
 
-### Fork Livewire
+````shell
+composer global require livewire/cli
+````
 
-Go to [the Livewire repository on GitHub](https://github.com/livewire/livewire) and fork the Livewire repository.
+#### Forking and cloning the repositories
+The next step is to fork and clone the required repositories using the Livewire CLI. For the best experience it's recommended to run this command from the directory that contains your projects like `~/Sites`, `~/Developer`, `~/Code`, etc.
 
-### Git clone your fork locally
-
-Browse to your fork on GitHub, and click on the "code" button, and copy the provided URL.
-
-Then in your local terminal run `git clone` and pass it your URL and the directory name you want Livewire cloned into.
+Let's run the `setup-source` command to initiate the process:
 
 ```shell
-git clone git@github.com:username/livewire.git ~/packages/livewire
+ Welcome to the Livewire source setup wizard!
+
+ This command will fork and download the Livewire and Alpine repository to your current working directory.
+
+ The best location would probably be your projects folder like ~/Developer, ~/Code, ~/Sites, etc.
+
+ This command is only required if you want to contribute to Livewire core.
 ```
 
-Once finished, `cd` into your local Livewire directory.
+We start by choosing the directories we want to use for the Livewire and Alpine repository. The easiest is to use the defaults and hit `enter` to start the installation process:
 
 ```shell
-cd ~/packages/livewire
+ ┌ Directory to clone Livewire into ────────────────────────────┐
+ │ livewire                                                     │
+ └──────────────────────────────────────────────────────────────┘
+ 
+ ┌ Directory to clone Alpine into ──────────────────────────────┐
+ │ alpine                                                       │
+ └──────────────────────────────────────────────────────────────┘
+ 
+ [√] Livewire repository forked.
+
+ [√] Livewire repository cloned.
+
+ [√] Composer dependencies installed.
+ 
+ [√] Laravel Dusk configured.
+ 
+ [√] Alpine repository forked.
+ 
+ [√] Alpine repository cloned.
+ 
+ [√] Alpine npm dependencies installed.
+
+ [√] Alpine build created.
+
+ [√] Global Alpine link created.
+
+ [√] Livewire and Alpine are linked.
+
+ [√] Livewire build created.
+
+ ----------------------------------
+
+ [√] The Livewire source code is now ready to be worked on.
+
+ From the Livewire directory you can run the following commands:
+
++------------------------------+------------------------------------------+
+| Description                  | Command                                  |
++------------------------------+------------------------------------------+
+| Watch and compile JS changes | npm run watch                            |
+| Run tests                    | ./vendor/bin/phpunit                     |
+| Run Unit tests               | ./vendor/bin/phpunit --testsuite Unit    |
+| Run Browser tests            | ./vendor/bin/phpunit --testsuite Browser |
+| Run Legacy tests             | ./vendor/bin/phpunit --testsuite Legacy  |
++------------------------------+------------------------------------------+
+
+ From the Alpine directory you can run the following commands:
+
++------------------------------+---------------+
+| Description                  | Command       |
++------------------------------+---------------+
+| Watch and compile JS changes | npm run watch |
+| Run tests                    | npm run test  |
++------------------------------+---------------+
 ```
 
-### Install dependencies
-
-Install composer dependencies by running:
+Perfect! We can now watch and compile Javascript changes, run the test suites for both Livewire and Alpine. Give it a try and run the Unit test suite for Livewire:
 
 ```shell
+./vendor/bin/phpunit --testsuite Unit
+```
+
+#### Forking and cloning the repositories manually
+If you don't want to use the CLI command you can run the following commands to setup Livewire manually:
+
+```shell
+# Fork and clone Livewire
+gh repo fork livewire/livewire --default-branch-only --clone=true --remote=false -- livewire
+
+# Switch the working directory to livewire
+cd livewire
+
+# Install all composer dependencies
 composer install
+
+# Ensure Dusk is correctly configured
+vendor/bin/dusk-updater detect --no-interaction
 ```
 
-Install npm dependencies by running:
+To setup Alpine you can run the following commands:
 
 ```shell
+# Fork and clone Alpine
+gh repo fork alpinejs/alpine --default-branch-only --clone=true --remote=false -- alpine
+
+# Switch the working directory to alpine
+cd alpine
+
+# Install all npm dependencies
 npm install
+
+# Build all Alpine packages
+npm run build
+
+# Link all Alpine package locally 
+cd alpine/packages/alpinejs && npm link"
+cd alpine/packages/anchor && npm link"
+cd alpine/packages/collapse && npm link"
+cd alpine/packages/csp && npm link"
+cd alpine/packages/docs && npm link"
+cd alpine/packages/focus && npm link"
+cd alpine/packages/history && npm link"
+cd alpine/packages/intersect && npm link"
+cd alpine/packages/mask && npm link"
+cd alpine/packages/morph && npm link"
+cd alpine/packages/navigate && npm link"
+cd alpine/packages/persist && npm link"
+
+# Switch the working directory back to livewire
+cd ../livewire
+
+# Link all packages
+npm link alpinejs @alpinejs/anchor @alpinejs/collapse @alpinejs/csp @alpinejs/docs @alpinejs/focus @alpinejs/history @alpinejs/intersect @alpinejs/mask @alpinejs/morph @alpinejs/navigate @alpinejs
+
+# Build Livewire
+npm run build
 ```
 
-### Optional: Set up Alpine for local development
+## Contributing a failing test
+It could be that you are experiencing a bug but you have no idea how to solve it. The Livewire core can be quite complex and overwhelming so where do you begin? In this case, the easiest would be to contribute a failing test and have someone with more experience help fix the bug. We do however recommend you to take a look at the core and get a better understanding of how Livewire works.
 
-If you want to work on Alpine packages at the same time, you can clone the
-[Alpine repository](https://github.com/alpinejs/alpine) as well (see above) and use `npm link`:
+Let's take a look at an step by step example. 
+##### 1. Determine where to add your test
+The Livewire core is separated in different folders based on specific Livewire features. For example: 
 
-* `git clone https://github.com/alpinejs/alpine.git ~/packages/alpinejs`
-  (make sure to clone somewhere outside your Livewire repo)
-* In the cloned Alpine repo, run `npm install` and `npm run build`
-* After building successfully, link which ever packages you want to work
-  on `cd packages/alpinejs && npm link && cd ../morph && npm link`
-* In the Livewire repo, `npm link alpinejs @alpinejs/morph`
+```shell
+SupportAccessingParent
+SupportAttributes
+SupportAutoInjectedAssets
+SupportBladeAttributes
+SupportChecksumErrorDebugging
+SupportComputed
+SupportConsoleCommands
+SupportDataBinding
+//...
+```
+
+Try and see if you can locate an feature that is related to the bug you are experiencing. If you can't find any or if you aren't sure which one to pick just choose one and mention in your pull request that you need some assistance with placing the test in the correct feature set.
+
+##### 2. Determine the type of test
+The Livewire test suite consists out of two type of tests:
+1. **Unit tests**: These test focus on the PHP implementation of Livewire.
+2. **Browser tests:** These test run a series of steps inside a real browser and asserting the correct outcome. These tests mostly focus on the Javascript implementation of Livewire.
+If you don't really know which type of test you should pick or when you are unfamiliar with writing tests for Livewire you can start with an browser test and implement the steps you perform in your application and browser to reproduce the bug.
+
+Unit tests should be added to the `UnitTest.php` file and browser tests should be added to `BrowserTest.php`. If one or both of these files do not exist you can create them yourself.
+
+**Unit test**
+
+```php
+use Tests\TestCase;
+
+class UnitTest extends TestCase  
+{  
+    /** @test */  
+    public function livewire_can_run_action(): void  
+    {
+    }
+}
+```
+
+**Browser test**
+
+```php
+use Tests\BrowserTestCase;
+
+class BrowserTest extends BrowserTestCase  
+{  
+    /** @test */  
+    public function livewire_can_run_action()  
+    {
+        // ...
+    }
+}
+```
 
 > [!tip]
-> If you're not updating the JavaScript portions of Livewire in your PR, you don't have to 
-> worry about this for running Dusk tests — a built version of the assets is baked into the repo.
-
-### Configure dusk
-
-A lot of Livewire's tests make use of `orchestral/testbench-dusk` which runs browser tests in Google Chrome (so you will need Chrome to be installed).
-
-To get `orchestral/testbench-dusk` to run, you need to install the latest chrome driver by running:
-
-```shell
-./vendor/bin/testbench-dusk dusk:chrome-driver
-```
-
-You may also need to run:
-
-```shell
-./vendor/bin/dusk-updater update
-```
-
-### Run tests
-
-Once everything is configured, run all tests to make sure everything is working and passing.
-
-To do this, run `phpunit` and confirm everything is running ok.
-
-```shell
-./vendor/bin/phpunit
-```
-
-If the dusk tests don't run and you get an error, make sure you have run the command in
-the [Configure dusk](#configure-dusk) section above.
-
-If you still get an error, the first time you try to run dusk tests, you may also need to close any Google Chrome instances you may have open and try running the tests again. After that, you should be able to leave Chrome open when running tests.
+> Explore existing Unit and Browser tests and learn how tests are written.
 
 ## Bug fix/feature development
 
