@@ -155,7 +155,7 @@ npm run build
 It could be that you are experiencing a bug but you have no idea how to solve it. The Livewire core can be quite complex and overwhelming so where do you begin? In this case, the easiest would be to contribute a failing test and have someone with more experience help fix the bug. We do however recommend you to take a look at the core and get a better understanding of how Livewire works.
 
 Let's take a look at an step by step example. 
-##### 1. Determine where to add your test
+#### 1. Determine where to add your test
 The Livewire core is separated in different folders based on specific Livewire features. For example: 
 
 ```shell
@@ -172,7 +172,7 @@ SupportDataBinding
 
 Try and see if you can locate an feature that is related to the bug you are experiencing. If you can't find any or if you aren't sure which one to pick just choose one and mention in your pull request that you need some assistance with placing the test in the correct feature set.
 
-##### 2. Determine the type of test
+#### 2. Determine the type of test
 The Livewire test suite consists out of two type of tests:
 1. **Unit tests**: These test focus on the PHP implementation of Livewire.
 2. **Browser tests:** These test run a series of steps inside a real browser and asserting the correct outcome. These tests mostly focus on the Javascript implementation of Livewire.
@@ -212,108 +212,62 @@ class BrowserTest extends BrowserTestCase
 > [!tip]
 > Explore existing Unit and Browser tests and learn how tests are written.
 
-## Bug fix/feature development
-
-Now it's time to start working on your bug fix or new feature.
-
-### Create a branch
-
-To start working on a new feature or fix a bug, you should always create a new branch in your fork with the name of your feature or fix.
-
-> [!tip]
-> Always create a new branch for your feature or fix.
-
-Do not use your main branch of your fork as maintainers cannot modify PR's submitted from a main branch on a fork.
-
-> [!warning]
-> Any PR's submitted from a master/main branch will be closed.
-
-### Add failing tests
-
-The next step is to add failing tests for your code. Livewire has both Dusk browser tests and standard PHPUnit unit tests, which can be found throughout the `src/` directory respectively.
-
-Most Livewire features all have their dedicated directory containing the code for a specific feature but it also includes the unit and browser tests for that specific feature.
-
-For example, lets say you are adding some new functionality to Livewire's form objects, in that case, you will add your tests to `src/Features/SupportFormObjects/UnitTest.php`. Please be aware that some existing features may only contain unit or browser tests. If you can't find an existing `UnitTest.php` or `BrowserTest.php` you can go ahead and create the test yourself.
-
-If you are building an entirely new feature for which you think none of the existing tests apply you can create a new `SupportYourFeature` directory and place your tests here.
-
-Livewire runs both PHP and Javascript code, so Dusk browser tests are preferred to ensure everything works as expected, and can be supported with unit tests as required.
-
-See below for an example of how a Livewire Dusk test should be structured:
-
-```php
-/** @test */
-public function it_can_run_foo_action
-{
-    Livewire::visit(new class extends Component {
-        public $count = 0;
-        
-        public function inc() { $this->count++; }
-
-        public function render() { return <<<'HTML'
-        <div>
-            <h1>Count: <span dusk="count">{{ $count }}</span>
-            <button wire:click="inc" dusk="inc">inc</button>
-        </div>
-        HTML;
-    })
-        ->assertSeeIn('@count', 0)
-        ->waitForLivewire()
-        ->click('@inc')
-        ->assertSeeIn('@count', 1);
-}
-```
-
-You can see how to use Dusk in the [Laravel documentation](https://laravel.com/docs/dusk) as well as look at
-Livewire's existing browser tests for further examples.
-
-### Add working code
-
-Livewire has both PHP and javascript code, which you can find in the `src` directory for PHP and the `js` directory for javascript.
-
-Change the code as required to fix the bug or add the new feature, but try to keep changes to a minimum. Consider splitting into multiple PR's if required.
-
-> [!warning]
-> PR's that make too many changes or make unrelated changes may be closed.
-
-If you have updated any of Livewire's javascript code, you will need to recompile the assets.
-To do this run `npm run build`, or you may start a watcher with `npm run watch`.
-
-Compiled javascript assets should be committed with your changes.
-
-> [!tip]
-> If you update any javascript, make sure to recompile assets and commit them.
-
-Once you have finished writing your code, do a review to ensure you haven't left any debugging code and formatting matches the existing style.
-
-### Run tests
-
-The final step before submitting is to run all tests to ensure your changes haven't impacted anything else.
-
-To do this, run `phpunit` and confirm everything is running ok.
+#### 3. Preparing your pull request branch
+Once you've completed your feature or failing test it's time to submit your PR to the Livewire repository. First you need to ensure you commit your changes to a separate branch (do not use `main`). To create a new branch you can use the `git` command:
 
 ```shell
-./vendor/bin/phpunit
+git branch my-feature
+git checkout my-feature
 ```
 
-If the Dusk browser tests don't run, see [Run tests](#setup-run-tests) in the Setup section above for more details
+You can name your branch anything you want but  for future reference it's easier to describe your feature or failing test.
 
-### Submit PR
+Next, commit your changes to your branch, you can use `git add .` to stage all changes followed by `git commit -m "Add my feature"` to commit all changes and add the commit message describing what was committed.
 
-Once all tests pass, then push your branch up to GitHub and submit your PR.
+Almost there, right now your branch is only available on your machine. To create a PR we need to ensure it's pushed to our forked Livewire repository using `git push`.
 
-In your PR description make sure to provide a small example of what your PR does along with a thorough description of the improvement and reasons why it's useful.
+```shell
+git push origin my-feature
 
-Add links to any issues or discussions that are relevant for further details.
+Enumerating objects: 13, done.
+Counting objects: 100% (13/13), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (6/6), done.
 
-> [!tip]
-> For first-time contributors, tests won't run automatically, so they will need to be started by a maintainer.
+To github.com:Username/livewire.git
+ * [new branch]        my-feature -> my-feature
+```
 
-### Thanks for contributing! 🙌
+#### 4. Submitting your pull request
+We are almost there! Open your browser and navigate to the forked Livewire repository (`https://github.com/<your-username>/livewire`). In the center of your screen you will see a new notification **my-feature had recent pushes 1 minute ago** and a button **Compare & pull request**. Click the button to open the pull request form.
 
-And that's it!
+Enter a title that describes your pull request and continue to the description. The text area already contains an pre-defined template. Try to answer every question:
 
-Maintainers will review your PR and give feedback as required.
+```
+Review the contribution guide first at: https://livewire.laravel.com/docs/contribution-guide
+
+1️⃣ Is this something that is wanted/needed? Did you create a discussion about it first?
+Yes, you can find the discussion here: https://github.com/livewire/livewire/discussions/999999
+
+2️⃣ Did you create a branch for your fix/feature? (Main branch PR's will be closed)
+Yes, the branch is named `my-feature`
+
+3️⃣ Does it contain multiple, unrelated changes? Please separate the PRs out.
+No, the changes are only related to my feature.
+
+4️⃣ Does it include tests? (Required)
+Yes
+
+5️⃣ Please include a thorough description (including small code snippets if possible) of the improvement and reasons why it's useful.
+
+These changes will improve memory usage. You can see the benchmark results here:
+
+// ...
+
+```
+
+All done? Hit **Create pull request**  🚀 Congrats! You've created your first contribution 🎉
+
+Maintainers will review your PR and sometimes give feedback or request changes. Please try to address feedback as soon as possible.
 
 Thanks for contributing to Livewire!
