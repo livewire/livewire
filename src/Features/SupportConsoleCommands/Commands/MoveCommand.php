@@ -2,15 +2,22 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
+use Illuminate\Contracts\Console\PromptsForMissingInput;
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\search;
 
-class MoveCommand extends FileManipulationCommand
+class MoveCommand extends FileManipulationCommand implements PromptsForMissingInput
 {
     protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
 
     protected $description = 'Move a Livewire component';
 
-    protected $newParser;
+    protected $parser;
+
+    protected ComponentParserFromExistingComponent $newParser;
 
     public function handle()
     {
@@ -83,7 +90,49 @@ class MoveCommand extends FileManipulationCommand
         }
 
         $this->ensureDirectoryExists($newTestPath);
-        File::move($oldTestPath, $newTestPath);
-        return $newTestPath;
+
+        File::put($newTestPath, $this->newParser->testContents());
+
+        return File::delete($oldTestPath);
+    }
+
+    protected function searchComponent($value):array
+    {
+        $path = ComponentParser::generatePathFromNamespace(config('livewire.class_namespace'));
+        return collect(File::allFiles($path))
+            ->map(fn ($file) => $file->getRelativePathname())
+            ->filter(fn ($file) => str($file)->contains($value, true))
+            ->mapWithKeys(fn ($file, $k) => [str_replace('.php', '', $file) => str_replace('.php', '', $file)])
+            ->toArray();
+    }
+
+    protected function promptForMissingArgumentsUsing(): array
+    {
+        return [
+            'name' => fn () => search(
+        label: 'What is the old name of the component?',
+        options: fn ($value) => strlen($value) > 0
+            ? $this->searchComponent($value)
+            : []
+    ),
+            'new-name' => 'What is the new name of the component?',
+        ];
+    }
+
+    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
+    {
+        if ($this->didReceiveOptions($input)) {
+            return;
+        }
+
+        if(
+            confirm(
+                label: 'Is it an inline component?',
+                default: false
+            )
+        )
+        {
+            $input->setOption('inline', true);
+        }
     }
 }
