@@ -210,6 +210,18 @@ For example, if you are looping through an array of posts, you may set the `wire
 </div>
 ```
 
+If you are looping through an array that is rendering Livewire components you may set the key as a component attribute `:key()` or pass the key as a third argument when using the `@livewire` directive.
+
+```blade
+<div>
+    @foreach ($posts as $post)
+        <livewire:post-item :$post :key="$post->id">
+
+        @livewire(PostItem::class, ['post' => $post], key($post->id))
+    @endforeach
+</div>
+```
+
 ### Binding inputs to properties
 
 One of Livewire's most powerful features is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
