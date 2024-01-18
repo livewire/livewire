@@ -4,8 +4,7 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 class ComponentParserFromExistingComponent extends ComponentParser
 {
-
-    protected ComponentParser $existingParser;
+    protected $existingParser;
 
     public function __construct($classNamespace, $viewPath, $rawCommand, $existingParser)
     {
