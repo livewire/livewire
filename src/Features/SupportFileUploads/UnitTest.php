@@ -134,6 +134,20 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function storing_a_file_uses_uploaded_file_hashname()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('uploadAndSetStoredFilename');
+
+        Storage::disk('avatars')->assertExists($file->hashName());
+    }
+
+    /** @test */
     public function can_get_a_file_original_name()
     {
         $file = UploadedFile::fake()->image('avatar.jpg');
