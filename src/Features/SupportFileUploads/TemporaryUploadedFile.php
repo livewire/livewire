@@ -156,6 +156,15 @@ class TemporaryUploadedFile extends UploadedFile
         return $hash.$meta.$extension;
     }
 
+    public function hashName($path = null)
+    {
+        if (app()->runningUnitTests() && str($this->getfilename())->contains('-hash=')) {
+            return str($this->getFilename())->between('-hash=', '-')->value();
+        }
+
+        return parent::hashName($path);
+    }
+
     public function extractOriginalNameFromFilePath($path)
     {
         return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
