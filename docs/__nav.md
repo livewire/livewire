@@ -21,6 +21,7 @@ Features:
     Pagination: { uri: /docs/pagination, file: /pagination.md }
     URL Query Parameters: { uri: /docs/url, file: /url.md }
     Computed Properties: { uri: /docs/computed-properties, file: /computed-properties.md }
+    Session Properties: { uri: /docs/session-properties, file: /session-properties.md }
     Redirecting: { uri: /docs/redirecting, file: /redirecting.md }
     File Downloads: { uri: /docs/downloads, file: /downloads.md }
     Locked Properties: { uri: /docs/locked, file: /locked.md }

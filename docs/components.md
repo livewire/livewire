@@ -599,7 +599,7 @@ If your [layout file](#layout-files) has any named slots in addition to `$slot`,
 Then, in your component view, define an `<x-slot>` element outside the root element:
 
 ```blade
-<x-slot:lang>fr</x-slot> // This component is in French [!tl highlight]
+<x-slot:lang>fr</x-slot> // This component is in French [tl! highlight]
 
 <div>
     // French content goes here...
