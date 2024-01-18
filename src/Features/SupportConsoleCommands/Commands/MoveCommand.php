@@ -84,9 +84,9 @@ class MoveCommand extends FileManipulationCommand
 
         $this->ensureDirectoryExists($newTestPath);
 
-        File::move($oldTestPath, $newTestPath);
-
         File::put($newTestPath, $this->newParser->testContents());
+
+        File::delete($oldTestPath);
 
         return $newTestPath;
     }
