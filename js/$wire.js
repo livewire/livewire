@@ -1,4 +1,4 @@
-import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
+import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
@@ -36,6 +36,7 @@ let aliases = {
     'upload': '$upload',
     'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
+    'cancelUpload': '$cancelUpload',
 }
 
 export function generateWireObject(component, state) {
@@ -169,6 +170,7 @@ wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
+wireProperty('$cancelUpload', (component) => (...params) => cancelUpload(component, ...params))
 
 let parentMemo = new WeakMap
 
