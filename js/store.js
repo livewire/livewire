@@ -33,11 +33,7 @@ export function hasComponent(id) {
 }
 
 export function findComponent(id) {
-    let component = components[id]
-
-    if (! component) throw 'Component not found: ' + id
-
-    return component
+    return components[id]
 }
 
 export function closestComponent(el, strict = true) {

@@ -5,7 +5,7 @@ import { trigger } from '@/hooks'
 
 export class Component {
     constructor(el) {
-        if (el.__livewire) throw 'Component already initialized';
+        if (el.__livewire) return el.__livewire;
 
         el.__livewire = this
 
