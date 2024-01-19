@@ -9,8 +9,6 @@ trait HandlesPagination
 {
     public $paginators = [];
 
-    protected $paginationInUrl = true;
-
     public function queryStringHandlesPagination()
     {
         // This property is typically provided by the WithoutUrlPagination trait...
