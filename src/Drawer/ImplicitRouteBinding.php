@@ -2,8 +2,8 @@
 
 namespace Livewire\Drawer;
 
-use BackedEnum;
 use Illuminate\Routing\Exceptions\BackedEnumCaseNotFoundException;
+use BackedEnum;
 use ReflectionClass;
 use ReflectionMethod;
 use Livewire\Component;

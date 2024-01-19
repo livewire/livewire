@@ -61,7 +61,6 @@ class ImplicitlyBoundMethod extends BoundMethod
     {
         $paramName = $parameter->getName();
 
-
         // check if we have a candidate for implicit binding
         if (is_null($className = static::getClassForImplicitBinding($parameter))) {
             return;
@@ -80,17 +79,11 @@ class ImplicitlyBoundMethod extends BoundMethod
     {
         $className = static::getParameterClassName($parameter);
 
-        if(is_null($className)){
-            return null;
-        }
+        if (is_null($className)) return null;
 
-        if(static::isEnum($parameter)){
-            return null;
-        }
+        if (static::isEnum($parameter)) return null;
 
-        if (!static::implementsInterface($parameter)) {
-            return $className;
-        }
+        if (! static::implementsInterface($parameter)) return $className;
 
         return null;
     }
@@ -99,24 +92,18 @@ class ImplicitlyBoundMethod extends BoundMethod
     {
         $className = static::getParameterClassName($parameter);
 
-        if(is_null($className)){
-            return null;
-        }
+        if (is_null($className)) return null;
 
-        if(static::isEnum($parameter)){
-            return $className;
-        }
+        if (static::isEnum($parameter)) return $className;
 
-        if (static::implementsInterface($parameter)) {
-            return $className;
-        }
+        if (static::implementsInterface($parameter)) return $className;
 
         return null;
     }
 
     protected static function getImplicitBinding($container, $className, $value)
     {
-        if((new ReflectionClass($className))->isEnum()){
+        if ((new ReflectionClass($className))->isEnum()) {
             return $className::from($value);
         }
 
@@ -133,13 +120,9 @@ class ImplicitlyBoundMethod extends BoundMethod
     {
         $type = $parameter->getType();
 
-        if(!$type){
-            return null;
-        }
+        if (! $type) return null;
 
-        if(! $type instanceof ReflectionNamedType){
-            return null;
-        }
+        if (! $type instanceof ReflectionNamedType) return null;
 
         return (! $type->isBuiltin()) ? $type->getName() : null;
     }
