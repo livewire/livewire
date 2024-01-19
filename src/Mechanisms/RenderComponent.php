@@ -3,7 +3,7 @@
 namespace Livewire\Mechanisms;
 
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Str;
+use Livewire\Livewire;
 
 class RenderComponent extends Mechanism
 {
@@ -14,25 +14,16 @@ class RenderComponent extends Mechanism
 
     public static function livewire($expression)
     {
-        $key = "'" . Str::random(7) . "'";
+        $key = app(\Livewire\Mechanisms\ExtendBlade\DeterministicBladeKeys::class)->generate();
 
-        $pattern = "/,\s*?key\(([\s\S]*)\)/"; //everything between ",key(" and ")"
+        $key = "'{$key}'";
+
+        $pattern = "/,\s*?key\(([\s\S]*)\)/"; // everything between ",key(" and ")"
 
         $expression = preg_replace_callback($pattern, function ($match) use (&$key) {
             $key = trim($match[1]) ?: $key;
             return "";
         }, $expression);
-
-        // If we are inside a Livewire component, we know we're rendering a child.
-        // Therefore, we must create a more deterministic view cache key so that
-        // Livewire children are properly tracked across load balancers.
-        // if (LivewireManager::$currentCompilingViewPath !== null) {
-        //     // $key = '[hash of Blade view path]-[current @livewire directive count]'
-        //     $key = "'l" . crc32(LivewireManager::$currentCompilingViewPath) . "-" . LivewireManager::$currentCompilingChildCounter . "'";
-
-        //     // We'll increment count, so each cache key inside a compiled view is unique.
-        //     LivewireManager::$currentCompilingChildCounter++;
-        // }
 
         return <<<EOT
 <?php
