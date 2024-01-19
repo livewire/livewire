@@ -65,8 +65,6 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function can_cancel_an_upload()
     {
-        // WIP
-
         Storage::persistentFake('tmp-for-tests');
 
         Livewire::visit(new class extends Component {
@@ -99,18 +97,10 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML; }
         })
         ->assertMissing('@preview')
-        ->attach('@upload', __DIR__ . '/browser_test_image_big.png')
+        ->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
         ->pause(10)
         ->click('@cancel')
         ->assertSeeIn('@output', 'cancelled')
-        // ->tap(function () {
-        //     Storage::disk('tmp-for-tests')->assertMissing('photos/photo.png');
-        // })
-        // ->waitForLivewire()
-        // ->click('@save')
-        // ->tap(function () {
-        //     Storage::disk('tmp-for-tests')->assertExists('photos/photo.png');
-        // })
         ;
     }
 }
