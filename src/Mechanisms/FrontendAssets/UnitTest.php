@@ -15,6 +15,10 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringStartsWith('<!-- Livewire Styles -->', $assets->styles());
 
+        $this->assertStringNotContainsString('data-livewire-style', $assets->styles());
+
+        $this->assertStringContainsString('nonce="test" data-livewire-style', $assets->styles(['nonce' => 'test']));
+
         $this->assertTrue($assets->hasRenderedStyles);
     }
 
@@ -45,5 +49,18 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertFalse($assets->hasRenderedScripts);
         $this->assertFalse($assets->hasRenderedStyles);
+    }
+
+    /** @test */
+    public function js_does_not_prepend_slash_for_url()
+    {
+        $url = 'https://example.com/livewire/livewire.js';
+        $this->assertStringStartsWith('<script src="'.$url, FrontendAssets::js(['url' => $url]));
+    }
+
+    public function js_prepends_slash_for_non_url()
+    {
+        $url = 'livewire/livewire.js';
+        $this->assertStringStartsWith('<script src="/'.$url, FrontendAssets::js(['url' => $url]));
     }
 }

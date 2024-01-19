@@ -184,6 +184,29 @@ export function getCsrfToken() {
     throw 'Livewire: No CSRF token detected'
 }
 
+let nonce;
+
+export function getNonce() {
+    if (nonce) return nonce
+
+
+    if (window.livewireScriptConfig && (window.livewireScriptConfig['nonce'] ?? false)) {
+        nonce = window.livewireScriptConfig['nonce']
+
+        return nonce
+    }
+
+    const elWithNonce = document.querySelector('style[data-livewire-style][nonce]')
+
+    if (elWithNonce) {
+        nonce = elWithNonce.nonce
+
+        return nonce
+    }
+
+    return null
+}
+
 /**
  * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
