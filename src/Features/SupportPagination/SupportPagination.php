@@ -3,14 +3,15 @@
 namespace Livewire\Features\SupportPagination;
 
 use function Livewire\invade;
-use Illuminate\Pagination\Cursor;
-use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Pagination\Paginator;
-use Livewire\ComponentHook;
-use Livewire\ComponentHookRegistry;
+use Livewire\WithPagination;
 use Livewire\Features\SupportQueryString\SupportQueryString;
 use Livewire\Features\SupportQueryString\BaseUrl;
-use Livewire\WithPagination;
+use Livewire\Features\SupportPagination\WithoutUrlPagination;
+use Livewire\ComponentHookRegistry;
+use Livewire\ComponentHook;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\Cursor;
 
 class SupportPagination extends ComponentHook
 {
@@ -82,7 +83,11 @@ class SupportPagination extends ComponentHook
 
         $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
 
-        if ($this->getQueryString() === null) return;
+        $shouldSkipUrlTracking = in_array(
+            WithoutUrlPagination::class, class_uses_recursive($this->component)
+        );
+
+        if ($shouldSkipUrlTracking) return;
 
         $this->addUrlHook($pageName, $queryStringDetails);
     }

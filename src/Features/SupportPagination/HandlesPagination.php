@@ -9,8 +9,15 @@ trait HandlesPagination
 {
     public $paginators = [];
 
+    protected $paginationInUrl = true;
+
     public function queryStringHandlesPagination()
     {
+        // This property is typically provided by the WithoutUrlPagination trait...
+        $enableUrl = $this->trackPaginationInUrl ?? true;
+
+        if (! $enableUrl) return [];
+
         return collect($this->paginators)->mapWithKeys(function ($page, $pageName) {
             return ['paginators.'.$pageName => ['history' => true, 'as' => $pageName, 'keep' => false]];
         })->toArray();

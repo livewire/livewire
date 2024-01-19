@@ -2,14 +2,15 @@
 
 namespace Livewire\Features\SupportPagination;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Blade;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-use Livewire\Livewire;
-use Livewire\WithPagination;
-use Sushi\Sushi;
 use Tests\BrowserTestCase;
+use Sushi\Sushi;
+use Livewire\WithoutUrlPagination;
+use Livewire\WithPagination;
+use Livewire\Livewire;
+use Livewire\Component;
+use Livewire\Attributes\Computed;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Database\Eloquent\Model;
 
 class BrowserTest extends BrowserTestCase
 {
@@ -1053,12 +1054,7 @@ class BrowserTest extends BrowserTestCase
     public function test_pagination_query_string_disabled()
     {
         Livewire::visit(new class extends Component {
-            use WithPagination;
-
-            protected function queryString()
-            {
-                return null;
-            }
+            use WithPagination, WithoutUrlPagination;
 
             public function render()
             {
