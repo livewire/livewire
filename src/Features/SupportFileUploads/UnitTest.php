@@ -519,6 +519,7 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file)
             ->viewData('photo');
 
+        $this->expectException(FileNotPreviewableException::class);
         $photo->temporaryUrl();
 
         $this->assertFalse($photo->isPreviewable());
