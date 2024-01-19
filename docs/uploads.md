@@ -332,9 +332,9 @@ Below is an example of wrapping a Livewire file upload in an Alpine component to
 
 ## Cancelling an upload
 
-If an upload is taking a long time, a user may want to cancel it. You can provide this functionality with Livewire's `$wire.cancelUpload()` function in JavaScript.
+If an upload is taking a long time, a user may want to cancel it. You can provide this functionality with Livewire's `$cancelUpload()` function in JavaScript.
 
-Here's an example of creating a "Cancel Upload" button in a Livewire component using Alpine to handle the click event:
+Here's an example of creating a "Cancel Upload" button in a Livewire component using `wire:click` to handle the click event:
 
 ```blade
 <form wire:submit="save">
@@ -342,13 +342,19 @@ Here's an example of creating a "Cancel Upload" button in a Livewire component u
     <input type="file" wire:model="photo">
 
     <!-- Cancel upload button -->
-    <button type="button" x-on:click="$wire.cancelUpload('photo')">Cancel Upload</button>
+    <button type="button" wire:click="$cancelUpload('photo')">Cancel Upload</button>
 
     <!-- ... -->
 </form>
 ```
 
 When "Cancel upload" is pressed, the file upload will request will be aborted and the file input will be cleared. The user can now attempt another upload with a different file.
+
+Alternativaly, you can call `cancelUplaod(...)` from Alpine like so:
+
+```blade
+<button type="button" x-on:click="$wire.cancelUpload('photo')">Cancel Upload</button>
+```
 
 ## JavaScript upload API
 
