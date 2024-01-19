@@ -355,6 +355,7 @@ namespace App\Livewire;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
+use Livewire\Attributes\On;
 
 class TodoList extends Component
 {
