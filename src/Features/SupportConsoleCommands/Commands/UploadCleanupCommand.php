@@ -1,12 +1,12 @@
 <?php
 
-namespace Features\SupportConsoleCommands\Commands;
+namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\Command;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Livewire\WithFileUploads;
 
-class CleanUpCommand extends Command
+class UploadCleanupCommand extends Command
 {
     use WithFileUploads;
 
