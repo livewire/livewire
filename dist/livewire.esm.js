@@ -9131,6 +9131,8 @@ function start() {
   import_alpinejs7.default.plugin(import_mask.default);
   import_alpinejs7.default.addRootSelector(() => "[wire\\:id]");
   import_alpinejs7.default.onAttributesAdded((el, attributes) => {
+    if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     let component = closestComponent(el, false);
     if (!component)
       return;
@@ -9144,6 +9146,8 @@ function start() {
     });
   });
   import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+    if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
       import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {

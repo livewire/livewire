@@ -30,8 +30,9 @@ export function start() {
     Alpine.addRootSelector(() => '[wire\\:id]')
 
     Alpine.onAttributesAdded((el, attributes) => {
-        // if there are no "wire:" directives we don't need to walk the DOM which could be "expensive" on a bigger DOM
-        if (attributes.filter(attribute => matchesForLivewireDirective(attribute.name)).length === 0) return
+        // if there are no "wire:" directives we don't need to process this element any further.
+        // This prevents Livewire from causing general slowness for other Alpine elements on the page...
+        if (! Array.from(attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
         let component = closestComponent(el, false)
 
@@ -50,15 +51,9 @@ export function start() {
 
     Alpine.interceptInit(
         Alpine.skipDuringClone(el => {
-            // if there are no "wire:" directives we don't need to walk the DOM which could be "expensive" on a bigger DOM
-            if (! Array.from(el.attributes)
-                .find(attribute =>
-                    matchesForLivewireDirective(attribute.name) ||
-                    attribute.name.match(new RegExp('x-')) ||
-                    attribute._x_teleportBack
-                )) {
-                return
-            }
+            // if there are no "wire:" directives we don't need to process this element any further.
+            // This prevents Livewire from causing general slowness for other Alpine elements on the page...
+            if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
             if (el.hasAttribute('wire:id')) {
                 let component = initComponent(el)

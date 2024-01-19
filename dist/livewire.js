@@ -8276,6 +8276,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.plugin(module_default8);
     module_default.addRootSelector(() => "[wire\\:id]");
     module_default.onAttributesAdded((el, attributes) => {
+      if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+        return;
       let component = closestComponent(el, false);
       if (!component)
         return;
@@ -8289,6 +8291,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     module_default.interceptInit(module_default.skipDuringClone((el) => {
+      if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+        return;
       if (el.hasAttribute("wire:id")) {
         let component2 = initComponent(el);
         module_default.onAttributeRemoved(el, "wire:id", () => {
