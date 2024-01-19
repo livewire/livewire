@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms;
 
 use Illuminate\Support\Facades\Blade;
-use Livewire\Livewire;
 
 class RenderComponent extends Mechanism
 {
