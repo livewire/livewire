@@ -12,7 +12,7 @@ class UploadCleanupCommand extends Command
 
     protected $signature = 'livewire:upload-cleanup';
 
-    protected $description = 'Clean up all uploaded temporary files';
+    protected $description = 'Cleanup all uploaded temporary files';
 
     public function handle(): void
     {
