@@ -46,7 +46,6 @@ class SupportAutoInjectedAssets extends ComponentHook
 
             if ($assetsHead === '' && $assetsBody === '') return;
 
-
             $html = $handled->response->getContent();
 
             if (str($html)->contains('</html>')) {
