@@ -476,6 +476,7 @@
     let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
     let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
     let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+    let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
     let progress = (progressEvent) => {
       var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
       el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
@@ -488,9 +489,9 @@
         return;
       start3();
       if (e.target.multiple) {
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
       } else {
-        manager.upload(property, e.target.files[0], finish, error2, progress);
+        manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
       }
     };
     el.addEventListener("change", eventHandler);
@@ -498,6 +499,7 @@
       el.value = null;
     };
     el.addEventListener("click", clearFileInputValue);
+    el.addEventListener("livewire-upload-cancel", clearFileInputValue);
     cleanup3(() => {
       el.removeEventListener("change", eventHandler);
       el.removeEventListener("click", clearFileInputValue);
@@ -522,22 +524,24 @@
       this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
       this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
     }
-    upload(name, file, finishCallback, errorCallback, progressCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
       this.setUpload(name, {
         files: [file],
         multiple: false,
         finishCallback,
         errorCallback,
-        progressCallback
+        progressCallback,
+        cancelledCallback
       });
     }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
       this.setUpload(name, {
         files: Array.from(files),
         multiple: true,
         finishCallback,
         errorCallback,
-        progressCallback
+        progressCallback,
+        cancelledCallback
       });
     }
     removeUpload(name, tmpFilename, finishCallback) {
@@ -599,6 +603,7 @@
         }
         this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
       });
+      this.uploadBag.first(name).request = request;
       request.send(formData);
     }
     startUpload(name, uploadObject) {
@@ -620,6 +625,16 @@
       this.uploadBag.shift(name).errorCallback();
       if (this.uploadBag.get(name).length > 0)
         this.startUpload(name, this.uploadBag.last(name));
+    }
+    cancelUpload(name, cancelledCallback = null) {
+      unsetUploadLoading(this.component);
+      let uploadItem = this.uploadBag.first(name);
+      if (uploadItem) {
+        uploadItem.request.abort();
+        this.uploadBag.shift(name).cancelledCallback();
+        if (cancelledCallback)
+          cancelledCallback();
+      }
     }
   };
   var MessageBag = class {
@@ -665,22 +680,29 @@
   function upload(component, name, file, finishCallback = () => {
   }, errorCallback = () => {
   }, progressCallback = () => {
+  }, cancelledCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
+    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
   }
   function uploadMultiple(component, name, files, finishCallback = () => {
   }, errorCallback = () => {
   }, progressCallback = () => {
+  }, cancelledCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
   }
   function removeUpload(component, name, tmpFilename, finishCallback = () => {
   }, errorCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
     uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+  }
+  function cancelUpload(component, name, cancelledCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.cancelUpload(name, cancelledCallback);
   }
 
   // ../alpine/packages/alpinejs/dist/module.esm.js
@@ -4210,7 +4232,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "dispatchSelf": "$dispatchSelf",
     "upload": "$upload",
     "uploadMultiple": "$uploadMultiple",
-    "removeUpload": "$removeUpload"
+    "removeUpload": "$removeUpload",
+    "cancelUpload": "$cancelUpload"
   };
   function generateWireObject(component, state) {
     return new Proxy({}, {
@@ -4307,6 +4330,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$upload", (component) => (...params) => upload(component, ...params));
   wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
   wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+  wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
   var parentMemo = /* @__PURE__ */ new WeakMap();
   wireProperty("$parent", (component) => {
     if (parentMemo.has(component))

@@ -21,7 +21,7 @@ export function handleFileUpload(el, property, component, cleanup) {
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
     let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
-    let cancelled = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancelled', { bubbles: true, detail: { id: component.id, property} }))
+    let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property} }))
     let progress = (progressEvent) => {
         var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
 
@@ -38,9 +38,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancelled)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress, cancelled)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancel)
         }
     }
 
@@ -51,6 +51,9 @@ export function handleFileUpload(el, property, component, cleanup) {
     // Reference: https://stackoverflow.com/questions/12030686/html-input-file-selection-event-not-firing-upon-selecting-the-same-file
     let clearFileInputValue = () => { el.value = null }
     el.addEventListener('click', clearFileInputValue)
+
+    // Clear the input if the uploaded is cancelled...
+    el.addEventListener('livewire-upload-cancel', clearFileInputValue)
 
     cleanup(() => {
         el.removeEventListener('change', eventHandler)
@@ -155,6 +158,7 @@ class UploadManager {
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
         let request = new XMLHttpRequest()
+
         request.open(method, url)
 
         Object.entries(headers).forEach(([key, value]) => {
@@ -219,21 +223,19 @@ class UploadManager {
     }
 
     cancelUpload(name, cancelledCallback = null) {
+        unsetUploadLoading(this.component)
+
         let uploadItem = this.uploadBag.first(name);
 
         if (uploadItem) {
             uploadItem.request.abort();
 
-            if (cancelledCallback) {
-                cancelledCallback()
-            }
-
             this.uploadBag.shift(name).cancelledCallback();
-            this.component.$wire.call('_uploadCancelled', name);
+
+            if (cancelledCallback) cancelledCallback()
         }
     }
 }
-
 
 export default class MessageBag {
     constructor() {
