@@ -7,7 +7,7 @@ let components = {}
 export function initComponent(el) {
     let component = new Component(el)
 
-    if (components[component.id]) throw 'Component already registered'
+    if (components[component.id]) return component
 
     let cleanup = (i) => component.addCleanup(i)
 
