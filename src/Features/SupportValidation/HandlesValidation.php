@@ -254,7 +254,8 @@ trait HandlesValidation
         $this->shortenModelAttributesInsideValidator($ruleKeysToShorten, $validator);
 
         $customValues = $this->getValidationCustomValues();
-        if (!empty($customValues)) {
+
+        if (! empty($customValues)) {
             $validator->addCustomValues($customValues);
         }
 
@@ -284,7 +285,10 @@ trait HandlesValidation
         // First, run sub-validators...
         foreach ($this->getFormObjects() as $form) {
             try {
-                $cumulativeData = array_merge($cumulativeData, $validateForm($form));
+                // Only run sub-validator if the sub-validator has rules...
+                if (filled($form->getRules())) {
+                    $cumulativeData = array_merge($cumulativeData, $validateForm($form));
+                }
             } catch (ValidationException $e) {
                 $cumulativeErrors->merge($e->validator->errors());
 
