@@ -9,7 +9,11 @@ export function fetchHtml(destination, callback) {
 }
 
 export function performFetch(uri, callback) {
-    let options = {}
+    let options = {
+        headers: {
+            'X-Livewire-Navigate': ''
+        }
+    }
 
     trigger('navigate.request', {
         url: uri,

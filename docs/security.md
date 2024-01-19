@@ -358,6 +358,18 @@ class AppServiceProvider extends ServiceProvider
 
 If a Livewire component is loaded on a page that uses the `EnsureUserHasRole` middleware from your application, it will now be persisted and re-applied to any future network requests to that Livewire component.
 
+> [!warning] Middleware arguments are not supported
+> Livewire currently doesn't support middleware arguments for persistent middleware definitions.
+>
+> ```php
+> // Bad...
+> Livewire::addPersistentMiddleware(AuthorizeResource::class.':admin');
+>
+> // Good...
+> Livewire::addPersistentMiddleware(AuthorizeResource::class);
+> ```
+
+
 ### Applying global Livewire middleware
 
 Alternatively, if you wish to apply specific middleware to every single Livewire update network request, you can do so by registering your own Livewire update route with any middleware you wish:

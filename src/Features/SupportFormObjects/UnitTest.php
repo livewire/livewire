@@ -501,6 +501,105 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function allows_form_object_without_rules_without_throwing_an_error()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormWithoutRules $form;
+
+            public $username = '';
+
+            public function rules()
+            {
+                return [
+                    'username' => 'required',
+                ];
+            }
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('username')
+        ;
+    }
+
+    /** @test */
+    function allows_form_object_without_rules_but_can_still_validate_it_with_its_own_rules()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormWithoutRules $form;
+
+            public $username = '';
+
+            public function rules()
+            {
+                return [
+                    'username' => 'required',
+                    'form.title' => 'required',
+                ];
+            }
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('username')
+        ->assertHasErrors('form.title')
+        ;
+    }
+
+    /** @test */
+    function form_object_without_rules_can_still_be_validated_and_return_proper_data()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormWithoutRules $form;
+
+            public $username = '';
+
+            public function rules()
+            {
+                return [
+                    'username' => 'required',
+                    'form.title' => 'required',
+                ];
+            }
+
+            function save()
+            {
+                $data = $this->validate();
+
+                \PHPUnit\Framework\Assert::assertEquals('foo', data_get($data, 'username'));
+                \PHPUnit\Framework\Assert::assertEquals('bar', data_get($data, 'form.title'));
+                \PHPUnit\Framework\Assert::assertEquals('not-found', data_get($data, 'form.content', 'not-found'));
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->set('username', 'foo')
+        ->set('form.title', 'bar')
+        ->call('save')
+        ->assertHasNoErrors('username')
+        ;
+    }
+
+    /** @test */
     function resetting_validation_errors_resets_form_objects_as_well()
     {
         Livewire::test(new class extends Component {
@@ -602,6 +701,13 @@ class PostFormValidateStub extends Form
         'title' => 'required',
         'content' => 'required',
     ];
+}
+
+class PostFormWithoutRules extends Form
+{
+    public $title = '';
+
+    public $content = '';
 }
 
 class PostFormValidateWithInterceptStub extends Form

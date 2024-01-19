@@ -16,11 +16,7 @@ class DuskTestable
     public static $browser;
 
     static function provide() {
-        Route::get('livewire-dusk/{component}', function ($component) {
-            $class = urldecode($component);
-
-            return app()->call(app('livewire')->new($class));
-        })->middleware('web');
+        Route::get('livewire-dusk/{component}', ShowDuskComponent::class)->middleware('web');
 
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
