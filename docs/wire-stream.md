@@ -12,7 +12,7 @@ class CountDown extends Component
 
     public function begin()
     {
-        while ($start >= 0) {
+        while ($this->start >= 0) {
             // Stream the current count to the browser...
             $this->stream(  // [tl! highlight:4]
                 to: 'count',
@@ -30,7 +30,7 @@ class CountDown extends Component
 
     public function render()
     {
-        return <<<HTML
+        return <<<'HTML'
         <div>
             <button wire:click="begin">Start count-down</button>
 
@@ -55,8 +55,8 @@ Here's what's happening from the system's perspective when the button is pressed
 * `$this->stream()` is called and immediately starts a "streamed response" to the browser
 * The browser receives a streamed response with instructions to find the element in the component with `wire:stream="count"`, and replace its contents with the received payload ("3" in the case of the first streamed number)
 * The `sleep(1)` method causes the server to hang for one second
-* The `while` loop is repeated and the process of streaming a new number ever second continues until the `while` condition is falsy
-* When `begin()` has finished running and all the counts have beeen streamed to the browser, Livewire finishes it's request lifecycle, rendering the component and sending the final response to the browser
+* The `while` loop is repeated and the process of streaming a new number every second continues until the `while` condition is falsy
+* When `begin()` has finished running and all the counts have been streamed to the browser, Livewire finishes it's request lifecycle, rendering the component and sending the final response to the browser
 
 ## Streaming chat-bot responses
 
@@ -123,19 +123,19 @@ class ChatBot extends Component
 ```
 
 Here's what's going on in the above example:
-* A user types into a text field labelled "Send a message" to ask the chat-bot a question
-* They press the [Enter] key
+* A user types into a text field labelled "Send a message" to ask the chat-bot a question.
+* They press the [Enter] key.
 * A network request is sent to the server, sets the message to the `$question` property, and clears the `$prompt` property.
 * The response is sent back to the browser and the input is cleared. Because `$this->js('...')` was called, a new request is triggered to the server calling the `ask()` method.
 * The `ask()` method calls on the ChatBot API and receives streamed response partials via the `$partial` parameter in the callback.
-* Each `$partial` get's streamed to the browser into the `wire:stream="answer"` element on the page, showing the answer progressively reveal itself to the user
+* Each `$partial` gets streamed to the browser into the `wire:stream="answer"` element on the page, showing the answer progressively reveal itself to the user.
 * When the entire response is received, the Livewire request finishes and the user receives the full response.
 
 ## Replace vs. append
 
 When streaming content to an element using `$this->stream()`, you can tell Livewire to either replace the contents of the target element with the streamed contents or append them to the existing contents.
 
-Replacing or appending can both be desireable depending on the scenario. For example, when streaming a response from a chatbot, typically appending is desired (and is therefore the default). However, when showing something like a count-down, replacing is more fitting.
+Replacing or appending can both be desirable depending on the scenario. For example, when streaming a response from a chatbot, typically appending is desired (and is therefore the default). However, when showing something like a count-down, replacing is more fitting.
 
 You can configure either by passing the `replace:` parameter to `$this->stream` with a boolean value:
 

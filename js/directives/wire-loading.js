@@ -1,6 +1,6 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 directive('loading', ({ el, directive, component }) => {
     let targets = getTargets(el)
@@ -52,9 +52,10 @@ function applyDelay(directive) {
                 started = true
             }, duration)
         },
-        (callback) => { // Execute or abort...
+        async (callback) => { // Execute or abort...
             if (started) {
-                callback()
+                await callback()
+                started = false
             } else {
                 clearTimeout(timeout)
             }
@@ -117,7 +118,14 @@ function containsTargets(payload, targets) {
         }
 
         let hasMatchingUpdate = Object.keys(updates).some(property => {
-            return property.startsWith(target)
+            // If the property is nested, like `foo.bar`, we need to check if the root `foo` is the target.
+            if (property.includes('.')) {
+                let propertyRoot = property.split('.')[0]
+
+                if (propertyRoot === target) return true
+            }
+
+            return property === target
         })
 
         if (hasMatchingUpdate) return true

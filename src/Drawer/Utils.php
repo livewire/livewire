@@ -4,6 +4,7 @@ namespace Livewire\Drawer;
 
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use function Livewire\invade;
 
 class Utils extends BaseUtils
@@ -51,8 +52,25 @@ class Utils extends BaseUtils
 
     static function pretendResponseIsFile($file, $mimeType = 'application/javascript')
     {
-        $expires = strtotime('+1 year');
         $lastModified = filemtime($file);
+        $headers = static::pretendedResponseIsFileHeaders($file, $mimeType, $lastModified);
+        return response()->file($file, $headers);
+    }
+
+    static function pretendPreviewResponseIsPreviewFile($filename)
+    {
+        $file = FileUploadConfiguration::path($filename);
+        $storage = FileUploadConfiguration::storage();
+        $mimeType = FileUploadConfiguration::mimeType($filename);
+        $lastModified = FileUploadConfiguration::lastModified($file);
+
+        $headers = self::pretendedResponseIsFileHeaders($filename, $mimeType, $lastModified);
+        return $storage->download($file, $filename, $headers);
+    }
+
+    static private function pretendedResponseIsFileHeaders($filename, $mimeType, $lastModified)
+    {
+        $expires = strtotime('+1 year');
         $cacheControl = 'public, max-age=31536000';
 
         if (static::matchesCache($lastModified)) {
@@ -69,11 +87,11 @@ class Utils extends BaseUtils
             'Last-Modified' => static::httpDate($lastModified),
         ];
 
-        if (str($file)->endsWith('.br')) {
+        if (str($filename)->endsWith('.br')) {
             $headers['Content-Encoding'] = 'br';
         }
 
-        return response()->file($file, $headers);
+        return $headers;
     }
 
     static function matchesCache($lastModified)

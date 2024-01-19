@@ -16,6 +16,9 @@ From the root directory of your Laravel app, run the following [Composer](https:
 composer require livewire/livewire
 ```
 
+> [!warning] Make sure Alpine isn't already installed
+> If the application you are using already has AlpineJS installed, you will need to remove it for Livewire to work properly; otherwise, Alpine will be loaded twice and Livewire won't function. For example, if you installed the Laravel Breeze "Blade with Alpine" starter kit, you will need to remove Alpine from `resources/js/app.js`.
+
 ## Create a Livewire component
 
 Livewire provides a convenient Artisan command to generate new components quickly. Run the following command to make a new `Counter` component:
@@ -80,6 +83,10 @@ Open the `resources/views/livewire/counter.blade.php` file and replace its conte
 ```
 
 This code will display the value of the `$count` property and two buttons that increment and decrement the `$count` property, respectively.
+
+> [!warning] Livewire components MUST have a single root element
+> In order for Livewire to work, components must have just **one** single element as its root. If multiple root elements are detected, an exception is thrown. It is recommended to use a `<div>` element as in the example. HTML comments count as separate elements and should be put inside the root element.
+> When rendering [full-page components](/docs/components#full-page-components), named slots for the layout file may be put outside the root element. These are removed before the component is rendered.
 
 ## Register a route for the component
 

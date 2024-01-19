@@ -120,7 +120,7 @@ class ShowPostsTest extends TestCase
 
         Livewire::test(ShowPosts::class)
             ->assertViewHas('posts', function ($posts) {
-                $this->assertEquals(2, count($posts));
+                return count($posts) == 2;
             });
     }
 }
@@ -169,7 +169,7 @@ class ShowPostsTest extends TestCase
         Livewire::actingAs($user)
             ->test(ShowPosts::class)
             ->assertViewHas('posts', function ($posts) {
-                $this->assertEquals(3, count($posts));
+                return count($posts) == 3;
             });
     }
 }
@@ -445,9 +445,15 @@ If you want to test that a specific validation rule has failed, you can pass an 
 $this->assertHasErrors(['title' => ['required']]);
 ```
 
+Or if you'd rather assert a validation message exists, you can do so as well:
+
+```php
+$this->assertHasErrors(['title' => ['The title field is required.']]);
+```
+
 ### Authorization
 
-Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides an `assertUnauthorized()` method to ensure that an authorization check has failed:
+Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
 
 ```php
 <?php
@@ -475,6 +481,12 @@ class UpdatePostTest extends TestCase
             ->set('title', 'Living the lavender life')
             ->call('save')
             ->assertUnauthorized();
+
+        Livewire::actingAs($user)
+            ->test(UpdatePost::class, ['post' => $post])
+            ->set('title', 'Living the lavender life')
+            ->call('save')
+            ->assertForbidden();
     }
 }
 ```
@@ -482,7 +494,8 @@ class UpdatePostTest extends TestCase
 If you prefer, you can also test for explicit status codes that an action in your component may have triggered using `assertStatus()`:
 
 ```php
-->assertStatus(403);
+->assertStatus(401); // Unauthorized
+->assertStatus(403); // Forbidden
 ```
 
 ### Redirects
@@ -640,6 +653,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `Livewire::withQueryParams(['search' => '...'])`                      | Set the test's `search` URL query parameter to the provided value (ex. `?search=...`). Typically in the context of a property using Livewire's [`#[Url]` attribute](/docs/url) |
 | `Livewire::withCookie('color', 'blue')`                      | Set the test's `color` cookie to the provided value (`blue`). |
 | `Livewire::withCookies(['color' => 'blue', 'name' => 'Taylor])`                      | Set the test's `color` and `name` cookies to the provided values (`blue`, `Taylor`). |
+| `Livewire::withHeaders(['X-COLOR' => 'blue', 'X-NAME' => 'Taylor])`                      | Set the test's `X-COLOR` and `X-NAME` headers to the provided values (`blue`, `Taylor`). |
 
 
 ### Interacting with components
@@ -674,17 +688,18 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertHasErrors('title')`                            | Assert that validation has failed for the `title` property                                                                                                                           |
 | `assertHasErrors(['title' => ['required', 'min:6']])`   | Assert that the provided validation rules failed for the `title` property                                                                                                            |
 | `assertHasNoErrors('title')`                          | Assert that there are no validation errors for the `title` property                                                                                                                  |
-| `assertHasNoErrors(['title', ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
+| `assertHasNoErrors(['title' => ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
 | `assertRedirect()`                                    | Assert that a redirect has been triggered from within the component                                                                                                                  |
 | `assertRedirect('/posts')`                            | Assert the component triggered a redirect to the `/posts` endpoint                                                                                                                   |
 | `assertRedirect(ShowPosts::class)`                    | Assert that the component triggered a redirect to the `ShowPosts` component                                                                                                          |
 | `assertNoRedirect()`                                  | Assert that no redirect has been triggered                                                                                                                                           |
 | `assertViewHas('posts')`                              | Assert that the `render()` method has passed a `posts` item to the view data                                                                                                         |
 | `assertViewHas('postCount', 3)`                       | Assert that a `postCount` variable has been passed to the view with a value of `3`                                                                                                   |
-| `assertViewHas('posts', function ($posts) { ... })`   | Assert that `postCount` view data exists and that it passes any assertions declared in the provided callback                                                                         |
+| `assertViewHas('posts', function ($posts) { ... })`   | Assert that `posts` view data exists and that it passes any assertions declared in the provided callback                                                                         |
 | `assertViewIs('livewire.show-posts')`                 | Assert that the component's render method returned the provided view name                                                                                                            |
 | `assertFileDownloaded()`                              | Assert that a file download has been triggered                                                                                                                                       |
 | `assertFileDownloaded($filename)`                     | Assert that a file download matching the provided file name has been triggered                                                                                                       |
+| `assertNoFileDownloaded()`                            | Assert that no file download has been triggered                                                                                                                                       |
 | `assertUnauthorized()`                                | Assert that an authorization exception has been thrown within the component (status code: 401)                                                                                       |
 | `assertForbidden()`                                   | Assert that an error response was triggered with the status code: 403                                                                                                                |
 | `assertStatus(500)`                                   | Assert that the latest response matches the provided status code                                                                                                                     |

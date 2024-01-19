@@ -4,18 +4,8 @@ namespace Livewire\Mechanisms;
 
 use WeakMap;
 
-class DataStore
+class DataStore extends Mechanism
 {
-    function register()
-    {
-        app()->singleton($this::class);
-    }
-
-    function boot()
-    {
-        //
-    }
-
     protected $lookup;
 
     function __construct()
@@ -42,7 +32,7 @@ class DataStore
         }
 
         if ($iKey !== null) {
-            return !! $this->lookup[$instance][$key][$iKey] ?? false;
+            return !! ($this->lookup[$instance][$key][$iKey] ?? false);
         }
 
         return true;

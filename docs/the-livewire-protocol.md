@@ -9,9 +9,9 @@
         "path": "...",
         "method": "...",
         "locale": "...",
-        "children": "...",
+        "children": "..."
     },
-    "checksum": "...",
+    "checksum": "..."
 }
 ```
 

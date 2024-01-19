@@ -119,9 +119,9 @@ class extends Component
     // ...
 ```
 
-#### View Data
+#### Providing additional view data
 
-When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method:
+When using class-based Volt components, the rendered view is the template present in the same file. If you need to pass additional data to the view each time it is rendered, you may use the `with` method. This data will be passed to the view in addition to the component's public properties:
 
 ```blade
 <?php
@@ -144,6 +144,27 @@ new class extends Component {
 <div>
     <!-- ... -->
 </div>
+```
+
+#### Modifying the view instance
+
+Sometimes, you may wish to interact with the view instance directly, for example, to set the view's title using a translated string. To achieve this, you may define a `rendering` method on your component:
+
+```blade
+<?php
+
+use Illuminate\View\View;
+use Livewire\Volt\Component;
+
+new class extends Component {
+    public function rendering(View $view): void
+    {
+        $view->title('Create Post');
+
+        // ...
+    }
+
+    // ...
 ```
 
 ## Rendering and mounting components
@@ -219,6 +240,18 @@ layout('components.layouts.admin');
 title('Users');
 
 // ...
+```
+
+If the title relies on component state or an external dependency, you may pass a closure to the `title` function instead:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title(fn () => 'Users: ' . $this->users->count());
 ```
 
 ## Properties
@@ -320,7 +353,7 @@ $count = computed(function () {
 })->persist();
 ```
 
-By default, Livewire caches the computed computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
+By default, Livewire caches the computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
 
 ```php
 $count = computed(function () {
@@ -603,7 +636,7 @@ $posts = computed(function () {
 ?>
 
 <div>
-    <input wire:model="search" type="search" placeholder="Search posts by title...">
+    <input wire:model.live="search" type="search" placeholder="Search posts by title...">
 
     <h1>Search Results:</h1>
 

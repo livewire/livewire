@@ -1,5 +1,5 @@
 
-Livewire's `wire:navigate` feature makes page navigate much faster, providing an SPA-like experience for your users.
+Livewire's `wire:navigate` feature makes page navigation much faster, providing an SPA-like experience for your users.
 
 This page is a simple reference for the `wire:navigate` directive. Be sure to read the [page on Livewire's Navigate feature](/docs/navigate) for more complete documentation.
 

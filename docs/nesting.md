@@ -36,6 +36,8 @@ class Dashboard extends Component
 
 On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting#every-component-is-an-island).
 
+For more information about the syntax for rendering components, consult our documentation on [Rendering Components](/docs/components#rendering-components).
+
 ## Passing props to children
 
 Passing data from a parent component to a child component is straightforward. In fact, it's very much like passing props to a typical [Blade component](https://laravel.com/docs/blade#components).
@@ -353,6 +355,7 @@ namespace App\Livewire;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
+use Livewire\Attributes\On;
 
 class TodoList extends Component
 {

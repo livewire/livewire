@@ -2,12 +2,14 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Routing\Router;
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\on;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
-class PersistentMiddleware
+class PersistentMiddleware extends Mechanism
 {
     protected static $persistentMiddleware = [
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -22,11 +24,6 @@ class PersistentMiddleware
 
     protected $path;
     protected $method;
-
-    function register()
-    {
-        app()->singleton($this::class, fn () => $this);
-    }
 
     function boot()
     {
@@ -55,12 +52,12 @@ class PersistentMiddleware
 
     function addPersistentMiddleware($middleware)
     {
-        static::$persistentMiddleware = array_merge(static::$persistentMiddleware, (array) $middleware);
+        static::$persistentMiddleware = Router::uniqueMiddleware(array_merge(static::$persistentMiddleware, (array) $middleware));
     }
 
     function setPersistentMiddleware($middleware)
     {
-        static::$persistentMiddleware = (array) $middleware;
+        static::$persistentMiddleware = Router::uniqueMiddleware((array) $middleware);
     }
 
     function getPersistentMiddleware()
