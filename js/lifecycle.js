@@ -51,7 +51,12 @@ export function start() {
     Alpine.interceptInit(
         Alpine.skipDuringClone(el => {
             // if there are no "wire:" directives we don't need to walk the DOM which could be "expensive" on a bigger DOM
-            if (Array.from(el.getAttributeNames()).filter(name => matchesForLivewireDirective(name)).length === 0) {
+            if (! Array.from(el.attributes)
+                .find(attribute =>
+                    matchesForLivewireDirective(attribute.name) ||
+                    attribute.name.match(new RegExp('x-')) ||
+                    attribute._x_teleportBack
+                )) {
                 return
             }
 
