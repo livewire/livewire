@@ -100,17 +100,17 @@ Any changes made to the text input will be automatically synchronized with the `
 
 ## All available modifiers
 
- Modifier          | Description                                                             
+ Modifier          | Description
 -------------------|-------------------------------------------------------------------------
- `.live`           | Send updates as a user types                                            
- `.blur`           | Only send updates on the `blur` event                                   
- `.change`         | Only send updates on the the `change` event                             
- `.lazy`           | An alias for `.change`                                                  
- `.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay      
- `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval  
+ `.live`           | Send updates as a user types
+ `.blur`           | Only send updates on the `blur` event
+ `.change`         | Only send updates on the the `change` event
+ `.lazy`           | An alias for `.change`
+ `.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay
+ `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval
  `.number`         | Cast the text value of an input to `int` on the server
  `.boolean`        | Cast the text value of an input to `bool` on the server
- `.fill`           | Use the initial value provided by a "value" HTML attribute on page-load 
+ `.fill`           | Use the initial value provided by a "value" HTML attribute on page-load
 
 ## Input fields
 
@@ -225,6 +225,32 @@ If you don't have a specific option selected by default, you may want to show a 
 ```
 
 As you can see, there is no "placeholder" attribute for a select menu like there is for text inputs. Instead, you have to add a `disabled` option element as the first option in the list.
+
+### Dependant select dropdowns
+
+Sometimes you may want one select menu to be dependant on another. For example, a list of cities that changes based on which state is selected.
+
+For the most part, this works as you'd expect, however there is one important gotcha: You must add a `wire:key` to the changing select so that Livewire properly refreshes it's value when the options change.
+
+Here's an example of two selects, one for states, one for cities. When the state select changes, the options in the city select will change properly:
+
+```blade
+<!-- States select menu... -->
+<select wire:model.live="selectedState">
+    @foreach (State::all() as $state)
+        <option value="{{ $state->id }}">{{ $state->label }}</option>
+    @endforeach
+</select>
+
+<!-- Cities dependant select menu... -->
+<select wire:model.live="selectedCity" wire:key="{{ $selectedState }}"> <!-- [tl! highlight] -->
+    @foreach (City::whereStateId($selectedState->id)->get() as $city)
+        <option value="{{ $city->id }}">{{ $city->label }}</option>
+    @endforeach
+</select>
+```
+
+Again, the only thing non-standard here is the `wire:key` that has been added to the second select. This ensures that when the state changes, the "selectedCity" value will be reset propertly.
 
 ### Multi-select dropdowns
 
