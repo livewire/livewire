@@ -2,14 +2,15 @@
 
 namespace Livewire\Features\SupportPagination;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Blade;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-use Livewire\Livewire;
-use Livewire\WithPagination;
-use Sushi\Sushi;
 use Tests\BrowserTestCase;
+use Sushi\Sushi;
+use Livewire\WithoutUrlPagination;
+use Livewire\WithPagination;
+use Livewire\Livewire;
+use Livewire\Component;
+use Livewire\Attributes\Computed;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Database\Eloquent\Model;
 
 class BrowserTest extends BrowserTestCase
 {
@@ -1086,6 +1087,45 @@ class BrowserTest extends BrowserTestCase
         ->assertNotInViewPort('#top')
         ->waitForLivewire()->click('@nextPage.before')
         ->assertInViewPort('#top')
+        ;
+    }
+
+    /** @test */
+    public function test_pagination_query_string_disabled()
+    {
+        Livewire::visit(new class extends Component {
+            use WithPagination, WithoutUrlPagination;
+
+            public function render()
+            {
+                return Blade::render(
+                    <<< 'HTML'
+                    <div>
+                        @foreach ($posts as $post)
+                            <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                        @endforeach
+
+                        {{ $posts->links() }}
+                    </div>
+                    HTML,
+                    [
+                        'posts' => Post::paginate(3),
+                    ]
+                );
+            }
+        })
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3')
+            ->assertDontSee('Post #4')
+
+            ->waitForLivewire()->click('@nextPage.before')
+
+            ->assertDontSee('Post #3')
+            ->assertSee('Post #4')
+            ->assertSee('Post #5')
+            ->assertSee('Post #6')
+            ->assertQueryStringMissing('page')
         ;
     }
 }

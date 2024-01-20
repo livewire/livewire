@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
+use Livewire\Livewire;
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
@@ -216,6 +217,29 @@ class UnitTest extends TestCase
     public function only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles(): void
     {
         $this->markTestIncomplete();
+    }
+
+    /** @test */
+    public function response_maintains_original_view_after_asset_injection(): void
+    {
+        Livewire::component('foo', new class extends \Livewire\Component {
+            public function render() {
+                return '<div>Foo!</div>';
+            }
+        });
+
+        $view = view('uses-component')->with('variable', 'cheese');
+
+        Route::get('/with-livewire', fn() => $view);
+
+        $response = $this->get('/with-livewire');
+
+        $this->assertEquals($view, $response->original);
+
+        $response
+            ->assertSee('cheese')
+            ->assertViewIs('uses-component')
+            ->assertViewHas('variable', 'cheese');
     }
 
     protected function compare($forHead, $forBody, string $original, string $expected): void

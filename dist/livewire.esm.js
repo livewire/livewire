@@ -7239,18 +7239,18 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
-var nonce2;
+var nonce;
 function getNonce() {
-  if (nonce2)
-    return nonce2;
+  if (nonce)
+    return nonce;
   if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
-    nonce2 = window.livewireScriptConfig["nonce"];
-    return nonce2;
+    nonce = window.livewireScriptConfig["nonce"];
+    return nonce;
   }
   const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
   if (elWithNonce) {
-    nonce2 = elWithNonce.nonce;
-    return nonce2;
+    nonce = elWithNonce.nonce;
+    return nonce;
   }
   return null;
 }
@@ -7325,6 +7325,7 @@ function handleFileUpload(el, property, component, cleanup2) {
   let start2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
   let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
   let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+  let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
   let progress = (progressEvent) => {
     var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
     el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
@@ -7337,9 +7338,9 @@ function handleFileUpload(el, property, component, cleanup2) {
       return;
     start2();
     if (e.target.multiple) {
-      manager.uploadMultiple(property, e.target.files, finish, error2, progress);
+      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
     } else {
-      manager.upload(property, e.target.files[0], finish, error2, progress);
+      manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
     }
   };
   el.addEventListener("change", eventHandler);
@@ -7347,6 +7348,7 @@ function handleFileUpload(el, property, component, cleanup2) {
     el.value = null;
   };
   el.addEventListener("click", clearFileInputValue);
+  el.addEventListener("livewire-upload-cancel", clearFileInputValue);
   cleanup2(() => {
     el.removeEventListener("change", eventHandler);
     el.removeEventListener("click", clearFileInputValue);
@@ -7371,22 +7373,24 @@ var UploadManager = class {
     this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
     this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
   }
-  upload(name, file, finishCallback, errorCallback, progressCallback) {
+  upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
     this.setUpload(name, {
       files: [file],
       multiple: false,
       finishCallback,
       errorCallback,
-      progressCallback
+      progressCallback,
+      cancelledCallback
     });
   }
-  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
     this.setUpload(name, {
       files: Array.from(files),
       multiple: true,
       finishCallback,
       errorCallback,
-      progressCallback
+      progressCallback,
+      cancelledCallback
     });
   }
   removeUpload(name, tmpFilename, finishCallback) {
@@ -7448,6 +7452,7 @@ var UploadManager = class {
       }
       this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
     });
+    this.uploadBag.first(name).request = request;
     request.send(formData);
   }
   startUpload(name, uploadObject) {
@@ -7469,6 +7474,16 @@ var UploadManager = class {
     this.uploadBag.shift(name).errorCallback();
     if (this.uploadBag.get(name).length > 0)
       this.startUpload(name, this.uploadBag.last(name));
+  }
+  cancelUpload(name, cancelledCallback = null) {
+    unsetUploadLoading(this.component);
+    let uploadItem = this.uploadBag.first(name);
+    if (uploadItem) {
+      uploadItem.request.abort();
+      this.uploadBag.shift(name).cancelledCallback();
+      if (cancelledCallback)
+        cancelledCallback();
+    }
   }
 };
 var MessageBag = class {
@@ -7514,22 +7529,29 @@ function unsetUploadLoading() {
 function upload(component, name, file, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
+}, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
+  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
 }
 function uploadMultiple(component, name, files, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
+}, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
 }
 function removeUpload(component, name, tmpFilename, finishCallback = () => {
 }, errorCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
   uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+}
+function cancelUpload(component, name, cancelledCallback = () => {
+}) {
+  let uploadManager = getUploadManager(component);
+  uploadManager.cancelUpload(name, cancelledCallback);
 }
 
 // js/features/supportEntangle.js
@@ -7951,7 +7973,8 @@ var aliases = {
   "dispatchSelf": "$dispatchSelf",
   "upload": "$upload",
   "uploadMultiple": "$uploadMultiple",
-  "removeUpload": "$removeUpload"
+  "removeUpload": "$removeUpload",
+  "cancelUpload": "$cancelUpload"
 };
 function generateWireObject(component, state) {
   return new Proxy({}, {
@@ -8048,6 +8071,7 @@ wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params))
 wireProperty("$upload", (component) => (...params) => upload(component, ...params));
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
 var parentMemo = /* @__PURE__ */ new WeakMap();
 wireProperty("$parent", (component) => {
   if (parentMemo.has(component))
@@ -8405,7 +8429,11 @@ function fetchHtml(destination, callback) {
   });
 }
 function performFetch(uri, callback) {
-  let options = {};
+  let options = {
+    headers: {
+      "X-Livewire-Navigate": ""
+    }
+  };
   trigger("navigate.request", {
     url: uri,
     options
@@ -8683,9 +8711,9 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `;
-  nonce = getNonce();
-  if (nonce) {
-    style.nonce = nonce;
+  let nonce2 = getNonce();
+  if (nonce2) {
+    style.nonce = nonce2;
   }
   document.head.appendChild(style);
 }
@@ -9131,6 +9159,8 @@ function start() {
   import_alpinejs7.default.plugin(import_mask.default);
   import_alpinejs7.default.addRootSelector(() => "[wire\\:id]");
   import_alpinejs7.default.onAttributesAdded((el, attributes) => {
+    if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     let component = closestComponent(el, false);
     if (!component)
       return;
@@ -9144,6 +9174,8 @@ function start() {
     });
   });
   import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+    if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
       import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {

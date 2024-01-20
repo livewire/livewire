@@ -1,5 +1,7 @@
 <?php
 
+
+
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Closure;
