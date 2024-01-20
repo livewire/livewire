@@ -41,3 +41,28 @@ Because the `#[Session]` attribute has been added to the `$search` property, aft
 
 > [!warning] Performance implications
 > Because Laravel sessions are loaded into memory during every request, you can slow down the performance of your entire application for a given user by storing too much in a user's session.
+
+## Setting a custom key
+
+When using `[#Session]`, Livewire will store the property value in the session using a dynamically generated key that consists of the component name combined with the property name.
+
+This ensures that properties across component instances will use the same session value. It also ensures properties of the same name from different components won't conflict.
+
+If you want full control over what session key Livewire uses for a given property, you can pass the `key:` parameter:
+
+```php
+<?php
+
+use Livewire\Attributes\Session;
+use Livewire\Component;
+
+class ShowPosts extends Component
+{
+    #[Session(key: 'search')] // [tl! highlight]
+    public $search;
+
+    // ...
+}
+```
+
+When Livewire stores and retrieves the value of the `$search` property, it will use the given key: "search".

@@ -9,7 +9,9 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class BaseSession extends LivewireAttribute
 {
-    function __construct() {}
+    function __construct(
+        protected $key = null,
+    ) {}
 
     public function mount($params)
     {
@@ -42,6 +44,6 @@ class BaseSession extends LivewireAttribute
 
     protected function key()
     {
-        return (string) 'lw' . crc32($this->component->getName() . $this->getName());
+        return $this->key ?: (string) 'lw' . crc32($this->component->getName() . $this->getName());
     }
 }
