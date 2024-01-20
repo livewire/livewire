@@ -2,12 +2,56 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Component;
+use Livewire\Attributes\Url;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
     /** @test */
+    public function it_does_not_add_null_values_to_the_query_string_array()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                #[Url]
+                public array $tableFilters = [
+                    'filter_1' => [
+                        'value' => null,
+                    ],
+                    'filter_2' => [
+                        'value' => null,
+                    ],
+                    'filter_3' => [
+                        'value' => null,
+                    ]
+                ];
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="tableFilters.filter_1.value" type="text" dusk="filter_1" />
+
+                    <input wire:model.live="tableFilters.filter_2.value" type="text" dusk="filter_2" />
+
+                    <input wire:model.live="tableFilters.filter_3.value" type="text" dusk="filter_3" />
+                </div>
+                HTML; }
+            },
+        ])
+        ->assertInputValue('@filter_1', '')
+        ->assertInputValue('@filter_2', '')
+        ->assertInputValue('@filter_3', '')
+        ->assertQueryStringMissing('tableFilters')
+        ->type('@filter_1', 'test')
+        ->waitForLivewire()
+        ->assertScript(
+            '(new URLSearchParams(window.location.search)).toString()',
+            'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
+        )
+        ->refresh()
+        ->assertInputValue('@filter_1', 'test')
+        ;
+    }
+
     public function can_encode_url_containing_spaces_and_commas()
     {
         Livewire::visit([

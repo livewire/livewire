@@ -7734,7 +7734,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       },
       set(url, key, value) {
         let data2 = fromQueryString(url.search);
-        data2[key] = value;
+        data2[key] = stripNulls(unwrap(value));
         url.search = toQueryString(data2);
         return url;
       },
@@ -7745,6 +7745,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return url;
       }
     };
+  }
+  function stripNulls(value) {
+    if (!isObjecty(value))
+      return value;
+    for (let key in value) {
+      if (value[key] === null)
+        delete value[key];
+      else
+        value[key] = stripNulls(value[key]);
+    }
+    return value;
   }
   function toQueryString(data2) {
     let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;

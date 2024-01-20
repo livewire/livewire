@@ -9084,7 +9084,7 @@ function queryStringUtils() {
     },
     set(url, key, value) {
       let data = fromQueryString(url.search);
-      data[key] = value;
+      data[key] = stripNulls(unwrap(value));
       url.search = toQueryString(data);
       return url;
     },
@@ -9095,6 +9095,17 @@ function queryStringUtils() {
       return url;
     }
   };
+}
+function stripNulls(value) {
+  if (!isObjecty(value))
+    return value;
+  for (let key in value) {
+    if (value[key] === null)
+      delete value[key];
+    else
+      value[key] = stripNulls(value[key]);
+  }
+  return value;
 }
 function toQueryString(data) {
   let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
