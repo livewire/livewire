@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use Illuminate\Support\Facades\Cache;
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Livewire;
@@ -99,6 +100,78 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    function can_tag_cached_computed_property()
+    {
+        // need to set a cache driver, which can handle tags
+        Cache::setDefaultDriver('array');
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(cache: true, tags: ['foo'])]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function deleteCachedTags() {
+                if (Cache::supportsTags()) {
+                    Cache::tags(['foo'])->flush();
+                }
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSet('count', 1)
+            ->call('deleteCachedTags')
+            ->assertSet('count', 2);
+    }
+
+    /** @test */
+    function can_tag_persisten_computed_property()
+    {
+        // need to set a cache driver, which can handle tags
+        Cache::setDefaultDriver('array');
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(persist: true, tags: ['foo'])]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function deleteCachedTags() {
+                if (Cache::supportsTags()) {
+                    Cache::tags(['foo'])->flush();
+                }
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSet('count', 1)
+            ->call('deleteCachedTags')
+            ->assertSet('count', 2);
+    }
+
+    /** @test */
     function cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);
@@ -175,6 +248,75 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    function computed_property_is_accessible_using_snake_case()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $upperCasedFoo = 'FOO_BAR';
+
+            #[Computed]
+            public function fooBar()
+            {
+                return strtolower($this->upperCasedFoo);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    {{ var_dump($this->foo_bar) }}
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('foo_bar');
+    }
+
+    /** @test */
+    function computed_property_is_accessible_when_using_snake_case_or_camel_case_in_the_method_name_in_the_class()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $upperCasedFoo = 'FOO_BAR';
+
+            #[Computed]
+            public function foo_bar_snake_case_in_component_class()
+            {
+                return strtolower($this->upperCasedFoo);
+            }
+
+            #[Computed]
+            public function fooBarCamelCaseInComponentClass()
+            {
+                return strtolower($this->upperCasedFoo);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <!-- Snake Case in Component Class -->
+                        snake_case_in_component_class_{{ $this->foo_bar_snake_case_in_component_class }}
+
+                        <!-- Camel Case in Blade View -->
+                        camelCaseInBladeView_snake_case_method_{{ $this->fooBarCamelCaseInComponentClass }}
+
+                        <!-- Camel Case in Component Class -->
+                        camel_case_in_component_class_{{ $this->foo_bar_camel_case_in_component_class }}
+
+                        <!-- Camel Case in Blade View -->
+                        camelCaseInBladeView_camel_case_method_{{ $this->fooBarCamelCaseInComponentClass }}
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSeeInOrder([
+                'snake_case_in_component_class_foo_bar',
+                'camelCaseInBladeView_snake_case_method_foo_bar',
+                'camel_case_in_component_class_foo_bar',
+                'camelCaseInBladeView_camel_case_method_foo_bar'
+            ]);
+    }
+
+    /** @test */
     public function computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(ComputedPropertyStub::class)
@@ -185,6 +327,13 @@ class UnitTest extends TestCase
     public function injected_computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(InjectedComputedPropertyStub::class)
+            ->assertSee('bar');
+    }
+
+    /** @test */
+    public function injected_computed_property_attribute_is_accessible_within_blade_view()
+    {
+        Livewire::test(InjectedComputedPropertyWithAttributeStub::class)
             ->assertSee('bar');
     }
 
@@ -328,6 +477,24 @@ class NullIssetComputedPropertyStub extends Component{
         return <<<'HTML'
         <div>
             {{ var_dump(isset($this->foo)) }}
+        </div>
+        HTML;
+    }
+}
+
+class InjectedComputedPropertyWithAttributeStub extends Component
+{
+    #[Computed]
+    public function fooBar(FooDependency $foo)
+    {
+        return $foo->baz;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->foo_bar) }}
         </div>
         HTML;
     }

@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportPageComponents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -367,6 +368,18 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_configure_layout_using_layout_attribute_on_parent_class()
+    {
+        Route::get('/configurable-layout', ComponentForParentClassLayoutAttribute::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertSee('bob')
+            ->assertSee('baz');
+    }
+
+    /** @test */
     public function can_configure_title_using_title_attribute()
     {
         Route::get('/configurable-layout', ComponentForTitleAttribute::class);
@@ -391,6 +404,16 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('I am a header - foo')
             ->assertSee('Hello World')
             ->assertSee('I am a footer - foo');
+    }
+
+    /** @test */
+    public function can_modify_response()
+    {
+        Route::get('/configurable-layout', ComponentWithCustomResponseHeaders::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertHeader('x-livewire', 'awesome');
     }
 
     /** @test */
@@ -535,7 +558,6 @@ class ComponentForConfigurableLayoutTestWithCustomAttributes extends Component
     }
 }
 
-
 class ComponentWithExtendsLayout extends Component
 {
     public function render()
@@ -650,6 +672,14 @@ class ComponentWithCustomParamsAndLayout extends Component
     }
 }
 
+class ComponentWithCustomResponseHeaders extends Component
+{
+    public function render()
+    {
+        return view('null-view')->response(fn(Response $response) => $response->header('x-livewire', 'awesome'));
+    }
+}
+
 class FrameworkModel extends Model
 {
     public function resolveRouteBinding($value, $field = null)
@@ -690,6 +720,11 @@ class ComponentForClassLayoutAttribute extends Component
     {
         return view('show-name');
     }
+}
+
+class ComponentForParentClassLayoutAttribute extends ComponentForClassLayoutAttribute
+{
+    //
 }
 
 class ComponentForTitleAttribute extends Component

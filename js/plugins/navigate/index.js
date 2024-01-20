@@ -68,7 +68,7 @@ export default function (Alpine) {
                     packUpPersistedTeleports(persistedEl)
                 })
 
-                swapCurrentPageWithNewHtml(html, () => {
+                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
                     removeAnyLeftOverStaleTeleportTargets(document.body)
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
@@ -81,10 +81,14 @@ export default function (Alpine) {
 
                     updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination)
 
-                    andAfterAllThis(() => {
-                        autofocus && autofocusElementsWithTheAutofocusAttribute()
+                    afterNewScriptsAreDoneLoading(() => {
+                        andAfterAllThis(() => {
+                            setTimeout(() => {
+                                autofocus && autofocusElementsWithTheAutofocusAttribute()
+                            })
 
-                        nowInitializeAlpineOnTheNewPage(Alpine)
+                            nowInitializeAlpineOnTheNewPage(Alpine)
+                        })
                     })
                 })
             })
@@ -126,7 +130,7 @@ export default function (Alpine) {
     // Because DOMContentLoaded is fired on first load,
     // we should fire alpine:navigated as a replacement as well...
     setTimeout(() => {
-        fireEventForOtherLibariesToHookInto('alpine:navigated', true)
+        fireEventForOtherLibariesToHookInto('alpine:navigated')
     })
 }
 
@@ -142,14 +146,14 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     callback((afterAllThis) => {
         Alpine.startObservingMutations()
 
-        setTimeout(() => {
+        queueMicrotask(() => {
             afterAllThis()
         })
     })
 }
 
-function fireEventForOtherLibariesToHookInto(eventName, init = false) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true, detail: { init } }))
+function fireEventForOtherLibariesToHookInto(eventName) {
+    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }))
 }
 
 function nowInitializeAlpineOnTheNewPage(Alpine) {

@@ -20,9 +20,11 @@ class SupportWireModelingNestedComponents extends ComponentHook
         // in a previous request, capture the value being passed in so we
         // can later set the child's property if it exists in this request.
         on('mount.stub', function ($tag, $id, $params, $parent, $key) {
-            if (! isset($params['wire:model'])) return;
+            $outer = collect($params)->first(function ($value, $key) {
+                return str($key)->startsWith('wire:model');
+            });
 
-            $outer = $params['wire:model'];
+            if (! $outer) return;
 
             static::$outersByComponentId[$id] = [$outer => data_get($parent, $outer)];
         });
@@ -33,9 +35,11 @@ class SupportWireModelingNestedComponents extends ComponentHook
         if (! isset($memo['bindings'])) return;
 
         $bindings = $memo['bindings'];
+        $directives = $memo['bindingsDirectives'];
 
         // Store the bindings for later dehydration...
         store($this->component)->set('bindings', $bindings);
+        store($this->component)->set('bindings-directives', $directives);
 
         // If this child's parent already rendered its stub, retrieve
         // the memo'd value and set it.
@@ -54,6 +58,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
     {
         return function ($html, $replaceHtml) {
             $bindings = store($this->component)->get('bindings', false);
+            $directives = store($this->component)->get('bindings-directives', false);
 
             if (! $bindings) return;
 
@@ -63,11 +68,12 @@ class SupportWireModelingNestedComponents extends ComponentHook
             // this value as an array.
             $outer = array_keys($bindings)[0];
             $inner = array_values($bindings)[0];
+            $directive = array_values($directives)[0];
 
             // Attach the necessary Alpine directives so that the child and
             // parent's JS, ephemeral, values are bound.
             $replaceHtml(Utils::insertAttributesIntoHtmlRoot($html, [
-                'x-model' => '$wire.$parent.'.$outer,
+                $directive =>  '$parent.'.$outer,
                 'x-modelable' => '$wire.'.$inner,
             ]));
         };
@@ -79,7 +85,10 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
         if (! $bindings) return;
 
+        $directives = store($this->component)->get('bindings-directives');
+
         // Add the bindings metadata to the paylad for later reference...
         $context->addMemo('bindings', $bindings);
+        $context->addMemo('bindingsDirectives', $directives);
     }
 }

@@ -101,7 +101,7 @@ class AppServiceProvider extends ServiceProvider
 
 Now that you've seen the broad overview of Component Hooks, here's a more practical example of using them to provide useful functionality for your application.
 
-Let's say you wanted to support the ability return a CSV from any Livewire action and it would automatically trigger a file download. For example, you could return a Csv from a method called `save` inside a `CreatePost` component:
+Let's say you wanted to support the ability return a CSV from any Livewire action, and it would automatically trigger a file download. For example, you could return a Csv from a method called `save` inside a `CreatePost` component:
 
 ```php
 use Livewire\Component;

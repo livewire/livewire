@@ -26,7 +26,7 @@ class EloquentCollectionSynth extends Synth
         $meta['class'] = $class;
         $meta['modelClass'] = $modelClass;
 
-        if ($modelClass && $connection = $this->getConnection($target) !== $modelClass::make()->getConnectionName()) {
+        if ($modelClass && ($connection = $this->getConnection($target)) !== $modelClass::make()->getConnectionName()) {
             $meta['connection'] = $connection;
         }
 

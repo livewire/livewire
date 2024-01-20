@@ -3,7 +3,7 @@
 
 To save you time upgrading, we've included an Artisan command to automate as many parts of the upgrade process as possible.
 
-After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command and you will receive prompts to upgrade each breaking change automatically:
+After [installing Livewire version 3](/docs/upgrading#update-livewire-to-version-3), run the following command, and you will receive prompts to upgrade each breaking change automatically:
 
 ```shell
 php artisan livewire:upgrade
@@ -53,6 +53,8 @@ The following configuration keys have been introduced in version 3:
 'inject_morph_markers' => true,
 
 'navigate' => false,
+
+'pagination_theme' => 'tailwind',
 ```
 
 You can reference [Livewire's new configuration file on GitHub](https://github.com/livewire/livewire/blob/master/config/livewire.php) for additional option descriptions and copy-pastable code.
@@ -122,6 +124,10 @@ You can either move all of your components to the new location or add the follow
 ```php
 'class_namespace' => 'App\\Http\\Livewire',
 ```
+
+### Discovery
+
+With Livewire 3, there is no manifest present, and there is therefore nothing to “discover” in relation to Livewire Components, and you can safely remove any livewire:discover references from your build scripts without issue.
 
 ## Page component layout view
 
@@ -349,7 +355,7 @@ class Dashboard extends Component
 
 The three main changes from Livewire 2 are:
 
-1. `emit()` has been renamed to `dispatch()`
+1. `emit()` has been renamed to `dispatch()` (Likewise `emitTo()` and `emitSelf()` are now `dispatchTo()` and `dispatchSelf()`)
 1. `dispatchBrowserEvent()` has been renamed to `dispatch()`
 2. All event parameters must be named
 

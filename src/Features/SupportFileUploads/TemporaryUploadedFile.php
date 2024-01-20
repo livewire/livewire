@@ -83,15 +83,19 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function temporaryUrl()
     {
+        if (!$this->isPreviewable()) {
+            throw new FileNotPreviewableException($this);
+        }
+
         if ((FileUploadConfiguration::isUsingS3() or FileUploadConfiguration::isUsingGCS()) && ! app()->runningUnitTests()) {
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay()->endOfHour(),
-                ['ResponseContentDisposition' => 'filename="' . $this->getClientOriginalName() . '"']
+                ['ResponseContentDisposition' => 'attachment; filename="' . $this->getClientOriginalName() . '"']
             );
         }
 
-        if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl') || ! $this->isPreviewable()) {
+        if (method_exists($this->storage->getAdapter(), 'getTemporaryUrl')) {
             // This will throw an error because it's not used with S3.
             return $this->storage->temporaryUrl($this->path, now()->addDay());
         }
@@ -154,6 +158,15 @@ class TemporaryUploadedFile extends UploadedFile
         $extension = '.'.$file->guessExtension();
 
         return $hash.$meta.$extension;
+    }
+
+    public function hashName($path = null)
+    {
+        if (app()->runningUnitTests() && str($this->getfilename())->contains('-hash=')) {
+            return str($this->getFilename())->between('-hash=', '-')->value();
+        }
+
+        return parent::hashName($path);
     }
 
     public function extractOriginalNameFromFilePath($path)

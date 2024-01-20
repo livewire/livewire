@@ -49,6 +49,43 @@ As you can see, in addition to limiting the number of posts shown via the `Post:
 
 For more information on pagination using Laravel, check out [Laravel's comprehensive pagination documentation](https://laravel.com/docs/pagination).
 
+## Disabling URL query string tracking
+
+By default, Livewire's paginator tracks the current page in the browser URL's query string like so: `?page=2`.
+
+If you wish to still use Livewire's pagination utility, but disable query string tracking, you can do so using the `WithoutUrlPagination` trait:
+
+```php
+use Livewire\WithoutUrlPagination;
+use Livewire\WithPagination;
+use Livewire\Component;
+
+class ShowPosts extends Component
+{
+    use WithPagination, WithoutUrlPagination; // [tl! highlight]
+
+    // ...
+}
+```
+
+Now, pagination will work as expected, but the current page won't show up in the query string. This also means the current page won't be persisted across page changes.
+
+## Customizing scroll behavior
+
+By default, Livewire's paginator scrolls to the top of the page after every page change.
+
+You can disable this behavior by passing `false` to the `scrollTo` parameter of the `links()` method like so:
+
+```blade
+{{ $posts->links(data: ['scrollTo' => false]) }}
+```
+
+Alternatively, you can provide any CSS selector to the `scrollTo` parameter, and Livewire will find the nearest element matching that selector and scroll to it after each navigation:
+
+```blade
+{{ $posts->links(data: ['scrollTo' => '#paginated-posts']) }}
+```
+
 ## Resetting the page
 
 When sorting or filtering results, it is common to want to reset the page number back to `1`.
