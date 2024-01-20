@@ -7739,7 +7739,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return url;
       },
       remove(url, key) {
-        console.log("remove");
         let data2 = fromQueryString(url.search);
         delete data2[key];
         url.search = toQueryString(data2);

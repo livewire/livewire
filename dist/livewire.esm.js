@@ -9089,7 +9089,6 @@ function queryStringUtils() {
       return url;
     },
     remove(url, key) {
-      console.log("remove");
       let data = fromQueryString(url.search);
       delete data[key];
       url.search = toQueryString(data);

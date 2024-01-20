@@ -83,7 +83,6 @@ export function track(name, initialSeedValue, alwaysShow = false) {
         //     })
         // }
 
-
         strategy(url, name, { value: newValue})
     }
 
@@ -181,7 +180,6 @@ function queryStringUtils() {
             return url
         },
         remove(url, key) {
-            console.log('remove')
             let data = fromQueryString(url.search)
 
             delete data[key]
