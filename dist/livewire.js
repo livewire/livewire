@@ -8481,7 +8481,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       Object.entries(scripts).forEach(([key, content]) => {
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
-          module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+          module_default.dontAutoEvaluateFunctions(() => {
+            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+          });
         });
       });
     }
