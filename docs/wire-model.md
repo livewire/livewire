@@ -226,9 +226,9 @@ If you don't have a specific option selected by default, you may want to show a 
 
 As you can see, there is no "placeholder" attribute for a select menu like there is for text inputs. Instead, you have to add a `disabled` option element as the first option in the list.
 
-### Dependant select dropdowns
+### Dependent select dropdowns
 
-Sometimes you may want one select menu to be dependant on another. For example, a list of cities that changes based on which state is selected.
+Sometimes you may want one select menu to be dependent on another. For example, a list of cities that changes based on which state is selected.
 
 For the most part, this works as you'd expect, however there is one important gotcha: You must add a `wire:key` to the changing select so that Livewire properly refreshes it's value when the options change.
 
@@ -242,7 +242,7 @@ Here's an example of two selects, one for states, one for cities. When the state
     @endforeach
 </select>
 
-<!-- Cities dependant select menu... -->
+<!-- Cities dependent select menu... -->
 <select wire:model.live="selectedCity" wire:key="{{ $selectedState }}"> <!-- [tl! highlight] -->
     @foreach (City::whereStateId($selectedState->id)->get() as $city)
         <option value="{{ $city->id }}">{{ $city->label }}</option>
