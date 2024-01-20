@@ -3,7 +3,7 @@ Livewire makes it easy to persist property values across page refreshes/changes 
 
 By adding `#[Session]` to a property in your component, Livewire will store that property's value in the session every time it changes. This way, when a page is refreshed, Livewire will fetch the latest value from the session and use it in your component.
 
-The `#[Session]` attribute is analogous to the [`#[Url]`](/docs/url) attribute. They are both useful in similar scenarios. The primary difference is `#[Session]` persists values without modifying the URL's query string, and instead stores those values in Laravel's session cookie.
+The `#[Session]` attribute is analogous to the [`#[Url]`](/docs/url) attribute. They are both useful in similar scenarios. The primary difference being `#[Session]` persists values without modifying the URL's query string, which is sometimes desired; sometimes not.
 
 ## Basic usage
 
@@ -39,5 +39,5 @@ class ShowPosts extends Component
 
 Because the `#[Session]` attribute has been added to the `$search` property, after a user enters a search value, they can refresh the page and the search value will be persisted. Every time `$search` is updated, its new value will be stored in the user's session and used across page loads.
 
-> [!warning] Use `#[Session]` sparingly
-> Because Laravel sessions are cookies that are sent back and forth between every network request, you can slow down the performance of your entire application for a given user by storing too much in them. Because of this it's important to use this utility sparingly and ideally only with small datasets.
+> [!warning] Performance implications
+> Because Laravel sessions are loaded into memory during every request, you can slow down the performance of your entire application for a given user by storing too much in a user's session.
