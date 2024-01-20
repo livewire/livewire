@@ -99,7 +99,14 @@ export class Component {
      * users interact with, triggering reactive effects.
      */
     processEffects(effects) {
+        // This is for BC.
         trigger('effects', this, effects)
+
+        trigger('effect', {
+            component: this,
+            effects,
+            cleanup: i => this.addCleanup(i)
+        })
     }
 
     get children() {

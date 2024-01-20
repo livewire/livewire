@@ -2,6 +2,8 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 use PHPUnit\Framework\ExpectationFailedException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -9,7 +11,6 @@ use Illuminate\Testing\TestResponse;
 use Illuminate\Testing\TestView;
 use Livewire\Component;
 use Livewire\Livewire;
-use Tests\TestCase;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -440,7 +441,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             });
     }
 
-
     /** @test */
     function assert_has_errors()
     {
@@ -457,7 +457,30 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertHasErrors(['foo' => function ($rules, $messages) {
                 return in_array('required', $rules) && in_array('The foo field is required.', $messages);
             }])
-            ;
+        ;
+    }
+
+    /** @test */
+    function assert_has_errors_with_validation_class()
+    {
+        Livewire::test(ValidatesDataWithCustomRuleStub::class)
+            ->call('submit')
+            ->assertHasErrors()
+            ->assertHasErrors('foo')
+            ->assertHasErrors(['foo'])
+            ->assertHasErrors(['foo' => CustomValidationRule::class])
+            ->assertHasErrors(['foo' => 'My custom message'])
+            ->assertHasErrors(['foo' => function ($rules, $messages) {
+                return in_array(CustomValidationRule::class, $rules) && in_array('My custom message', $messages);
+            }])
+            ->set('foo', true)
+            ->call('submit')
+            ->assertHasNoErrors()
+            ->assertHasNoErrors('foo')
+            ->assertHasNoErrors(['foo'])
+            ->assertHasNoErrors(['foo' => CustomValidationRule::class])
+            ->assertHasNoErrors(['foo' => 'My custom message'])
+        ;
     }
 
     /** @test */
@@ -642,6 +665,33 @@ class DispatchesEventsComponentStub extends Component
     function dispatchFooToAComponentAsAModel()
     {
         $this->dispatch('foo')->to(ComponentWhichReceivesEvent::class);
+    }
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+class CustomValidationRule implements ValidationRule
+{
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        if ($value === false) {
+            $fail('My custom message');
+        }
+    }
+}
+
+class ValidatesDataWithCustomRuleStub extends Component
+{
+    public bool $foo = false;
+
+    function submit()
+    {
+        $this->validate([
+            'foo' => new CustomValidationRule,
+        ]);
     }
 
     function render()

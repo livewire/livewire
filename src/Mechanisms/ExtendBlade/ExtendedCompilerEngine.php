@@ -36,9 +36,7 @@ class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
                 extract($__data, EXTR_SKIP);
                 include $__path;
             }, $component, $component)();
-        } catch (\Exception $e) {
-            $this->handleViewException($e, $obLevel);
-        } catch (\Throwable $e) {
+        } catch (\Exception|\Throwable $e) {
             $this->handleViewException($e, $obLevel);
         }
 

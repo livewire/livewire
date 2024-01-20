@@ -2,24 +2,18 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Validator;
 
-class FileUploadController
+class FileUploadController implements HasMiddleware
 {
-    public function getMiddleware()
+    public static function middleware()
     {
-        /**
-         * Laravel requires the returned array to contain an array for each
-         * middleware with `middleware` and `options` keys. So we'll map
-         * through the file upload config middleware and format them.
-         */
-        return array_map(
-            fn($middleware) => [
-                'middleware' => $middleware,
-                'options' => [],
-            ],
-            (array) FileUploadConfiguration::middleware()
-        );
+        return array_map(fn ($middleware) => new Middleware($middleware), array_merge(
+            ['web'],
+            (array) FileUploadConfiguration::middleware(),
+        ));
     }
 
     public function handle()

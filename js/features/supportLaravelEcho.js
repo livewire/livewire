@@ -7,7 +7,7 @@ on('request', ({ options }) => {
     }
 })
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     let listeners = effects.listeners || []
 
     listeners.forEach(event => {

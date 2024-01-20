@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Stringable;
 use Livewire\Component;
@@ -151,6 +152,57 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.selected', UnitSuit::Diamonds)
         ->set('form.selected', null)
         ->assertSet('form.selected', null)
+        ;
+    }
+
+    /** @test */
+    public function it_bypasses_synthesizer_hydration_when_deleting()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public $suits;
+            public $dates;
+            public $objects;
+
+            public function mount() {
+                $this->suits = UnitSuit::cases();
+                $this->objects = [
+                    (object) ['foo' => 'bar'],
+                    (object) ['bing' => 'buzz'],
+                    (object) ['ping' => 'pong'],
+                ];
+                $this->dates = [
+                    Carbon::make('2001-01-01'),
+                    Carbon::make('2002-02-02'),
+                    Carbon::make('2003-03-03'),
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <!--  -->
+                </div>
+                HTML;
+            }
+        })
+            // simulate a client side unsets by setting the '__rm__' value
+            ->set('objects.1', '__rm__')
+            ->assertSet('objects', [
+                0 => (object) ['foo' => 'bar'],
+                2 => (object) ['ping' => 'pong'],
+            ])
+            ->set('dates.1', '__rm__')
+            ->assertSet('dates', [
+                0 => Carbon::make('2001-01-01'),
+                2 => Carbon::make('2003-03-03'),
+            ])
+            ->set('suits.1', '__rm__')
+            ->assertSet('suits', [
+                0 => UnitSuit::Hearts,
+                2 => UnitSuit::Clubs,
+                3 => UnitSuit::Spades,
+            ])
         ;
     }
 }

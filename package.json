@@ -12,6 +12,7 @@
         "esbuild": "^0.14.49"
     },
     "dependencies": {
+        "@alpinejs/anchor": "^3.13.3",
         "@alpinejs/collapse": "^3.10.5",
         "@alpinejs/focus": "^3.10.5",
         "@alpinejs/intersect": "^3.10.5",
