@@ -9341,7 +9341,9 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        import_alpinejs9.default.dontAutoEvaluateFunctions(() => {
+          import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        });
       });
     });
   }

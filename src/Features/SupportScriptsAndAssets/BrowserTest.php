@@ -324,29 +324,28 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function functions_loaded_in_scripts_are_not_loaded_before_called()
+    public function functions_loaded_in_scripts_are_not_auto_evaluated()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public function render() { return <<<'HTML'
-            <div x-data>
-
+            <div>
                 <div dusk="output"></div>
-                <div dusk="debug"></div>
             </div>
 
             @script
                 <script>
                     function run() {
-                        document.querySelector('[dusk="output"]').innerHTML = 'it works';
+                        document.querySelector('[dusk="output"]').textContent = 'evaluated';
                     }
-                     document.querySelector('[dusk="debug"]').textContent = 'evaluated';
+
+                    document.querySelector('[dusk="output"]').textContent = 'initialized';
                 </script>
             @endscript
             HTML; }
         })
-            ->waitForText('evaluated')
-            ->assertSeeIn('@debug', 'evaluated')
-            ->assertDontSeeIn('@output', 'it works')
+            ->waitForText('initialized')
+            ->assertSeeIn('@output', 'initialized')
+            ->assertDontSeeIn('@output', 'evaluated')
         ;
     }
     /** @test */
