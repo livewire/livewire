@@ -2,8 +2,9 @@
 
 namespace Livewire\Features\SupportQueryString;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Component;
+use Livewire\Attributes\Url;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -13,22 +14,17 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit([
             new class extends \Livewire\Component {
                 #[Url]
-                public ?array $tableFilters = null;
-
-                public function mount()
-                {
-                    $this->tableFilters = [
-                        'filter_1' => [
-                            'value' => null,
-                        ],
-                        'filter_2' => [
-                            'value' => null,
-                        ],
-                        'filter_3' => [
-                            'value' => null,
-                        ]
-                    ];
-                }
+                public array $tableFilters = [
+                    'filter_1' => [
+                        'value' => null,
+                    ],
+                    'filter_2' => [
+                        'value' => null,
+                    ],
+                    'filter_3' => [
+                        'value' => null,
+                    ]
+                ];
 
                 public function render() { return <<<'HTML'
                 <div>
@@ -50,7 +46,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript(
             '(new URLSearchParams(window.location.search)).toString()',
             'tableFilters%5Bfilter_1%5D%5Bvalue%5D=test'
-        );
+        )
+        ->refresh()
+        ->assertInputValue('@filter_1', 'test')
+        ;
     }
 
     public function can_encode_url_containing_spaces_and_commas()

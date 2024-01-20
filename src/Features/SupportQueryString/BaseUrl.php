@@ -41,9 +41,30 @@ class BaseUrl extends LivewireAttribute
             ? json_decode(json_encode($initialValue), true)
             : json_decode($initialValue, true);
 
+        // If only part of an array is present in the query string,
+        // we want to merge instead of override the value...
+        if (is_array($decoded) && is_array($original = $this->getValue())) {
+            $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
+        }
+
         $value = $decoded === null ? $initialValue : $decoded;
 
         $this->setValue($value);
+    }
+
+    protected function recursivelyMergeArraysWithoutAppendingDuplicateValues(&$array1, &$array2)
+    {
+        $merged = $array1;
+
+        foreach ($array2 as $key => &$value) {
+            if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
+                $merged[$key] = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($merged[$key], $value);
+            } else {
+                $merged[$key] = $value;
+            }
+        }
+
+        return $merged;
     }
 
     public function pushQueryStringEffect($context)
