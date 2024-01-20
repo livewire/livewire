@@ -1,5 +1,5 @@
-import { on } from '@/events'
-import { dispatchSelf } from './supportEvents'
+import { on } from '@/hooks'
+import { dispatchSelf } from '@/events'
 
 on('request', ({ options }) => {
     if (window.Echo) {
@@ -7,7 +7,7 @@ on('request', ({ options }) => {
     }
 })
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     let listeners = effects.listeners || []
 
     listeners.forEach(event => {

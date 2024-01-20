@@ -3,14 +3,14 @@
 namespace Livewire\Features\SupportPagination;
 
 use function Livewire\invade;
-use Illuminate\Pagination\Cursor;
-use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Pagination\Paginator;
-use Livewire\ComponentHook;
-use Livewire\ComponentHookRegistry;
-use Livewire\Features\SupportQueryString\SupportQueryString;
-use Livewire\Features\SupportQueryString\BaseUrl;
 use Livewire\WithPagination;
+use Livewire\Features\SupportQueryString\SupportQueryString;
+use Livewire\Features\SupportPagination\WithoutUrlPagination;
+use Livewire\ComponentHookRegistry;
+use Livewire\ComponentHook;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\Cursor;
 
 class SupportPagination extends ComponentHook
 {
@@ -82,6 +82,12 @@ class SupportPagination extends ComponentHook
 
         $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
 
+        $shouldSkipUrlTracking = in_array(
+            WithoutUrlPagination::class, class_uses_recursive($this->component)
+        );
+
+        if ($shouldSkipUrlTracking) return;
+
         $this->addUrlHook($pageName, $queryStringDetails);
     }
 
@@ -108,7 +114,14 @@ class SupportPagination extends ComponentHook
         $history = $queryStringDetails['history'];
         $keep = $queryStringDetails['keep'];
 
-        $this->component->setPropertyAttribute($key, new BaseUrl(as: $alias, history: $history, keep: $keep));
+        $attribute = new PaginationUrl(as: $alias, history: $history, keep: $keep);
+
+        $this->component->setPropertyAttribute($key, $attribute);
+
+        // We need to manually call this in case it's a Lazy component,
+        // in which case the `mount()` lifecycle hook isn't called.
+        // This means it can be called twice, but that's fine...
+        $attribute->setPropertyFromQueryString();
     }
 
     protected function paginationView()

@@ -195,6 +195,11 @@ Supported PHP types:
 | Carbon | `Carbon\Carbon` |
 | Stringable | `Illuminate\Support\Stringable` |
 
+> [!warning] Eloquent Collections and Models
+> When storing Eloquent Collections and Models in Livewire properties, additional query constraints like select(...) will not be re-applied on subsequent requests.
+>
+> See [Eloquent constraints aren't preserved between requests](#eloquent-constraints-arent-preserved-between-requests) for more details
+
 Here's a quick example of setting properties as these various types:
 
 ```php
@@ -281,10 +286,10 @@ class Customer implements Wireable
         ];
     }
 
-    public static function fromLivewire($data)
+    public static function fromLivewire($value)
     {
-        $name = $data['name'];
-        $age = $data['age'];
+        $name = $value['name'];
+        $age = $value['age'];
 
         return new static($name, $age);
     }
@@ -537,7 +542,7 @@ For example, suppose you have a Livewire component that defines a public propert
     "type": "model",
     "class": "App\Models\Post",
     "key": 1,
-    "relationships": [].
+    "relationships": []
 }
 ```
 
@@ -572,7 +577,7 @@ Now, when the Eloquent model is "dehydrated" (serialized), the original class na
     "class": "App\Models\Post", // [tl! remove]
     "class": "post", // [tl! add]
     "key": 1,
-    "relationships": [].
+    "relationships": []
 }
 ```
 
@@ -694,7 +699,7 @@ class ShowTodos extends Component
 }
 ```
 
-You might wonder, why not just call `$this->todos()` as a method directly where you need to? Why use `#[Computed]` in the first place?
+You might wonder why not just call `$this->todos()` as a method directly where you need to? Why use `#[Computed]` in the first place?
 
 The reason is that computed properties have a performance advantage, since they are automatically cached after their first usage during a single request. This means you can freely access `$this->todos` within your component and be assured that the actual method will only be called once, so that you don't run an expensive query multiple times in the same request.
 

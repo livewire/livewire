@@ -25,7 +25,7 @@ class FileManipulationCommandParserUnitTest extends \Tests\TestCase
         $this->assertEquals($this->normalizeDirectories(resource_path('views/'.$viewPath)), $this->normalizeDirectories($parser->viewPath()));
     }
 
-    public function classPathProvider()
+    public static function classPathProvider()
     {
         return [
             [

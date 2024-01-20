@@ -11,6 +11,30 @@ use Tests\BrowserTestCase;
 class BrowserTest extends BrowserTestCase
 {
     /** @test */
+    public function can_persist_entangled_data()
+    {
+        Livewire::visit(new class extends Component {
+            public $input;
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <div x-data="{ value: $persist(@entangle('input')) }">
+                            <input dusk="input" x-model="value" />
+                        </div>
+                    </div>
+                BLADE;
+            }
+        })
+            ->type('@input', 'Hello World')
+            ->assertScript('localStorage.getItem("_x_value") == \'"Hello World"\'')
+            ->tap(fn ($b) => $b->refresh())
+            ->assertScript("localStorage.getItem('_x_value')", '"Hello World"')
+            ;
+    }
+
+    /** @test */
     public function is_not_live_by_default()
     {
         Livewire::visit(new class extends Component {

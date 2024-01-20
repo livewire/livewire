@@ -37,4 +37,13 @@ trait TestsFileDownloads
 
         return $this;
     }
+
+    public function assertNoFileDownloaded()
+    {
+        $downloadEffect = data_get($this->effects, 'download');
+
+        PHPUnit::assertNull($downloadEffect);
+
+        return $this;
+    }
 }

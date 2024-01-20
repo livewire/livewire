@@ -44,3 +44,6 @@ Now, when the above Livewire template is rendered on the page, the _contents_ po
 
 > [!warning] You must teleport outside the component
 > Livewire only supports teleporting HTML outside your components. For example, teleporting a modal to the `<body>` tag is fine, but teleporting it to another element within your component will not work.
+
+> [!warning] Teleporting only works with a single root element
+> Make sure you only include a single root element inside your `@teleport` statement.

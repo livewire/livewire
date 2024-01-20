@@ -2,6 +2,9 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use Closure;
+use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Contracts\Validation\ValidationRule;
 use function Livewire\store;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Support\Str;
@@ -40,23 +43,63 @@ trait TestsValidation
 
         foreach ($keys as $key => $value) {
             if (is_int($key)) {
-                PHPUnit::assertTrue($errors->has($value), "Component missing error: $value");
+                $this->makeErrorAssertion($value);
             } else {
-                $failed = $this->failedRules() ?: [];
-                $rules = array_keys(Arr::get($failed, $key, []));
-
-                foreach ((array) $value as $rule) {
-                    if (Str::contains($rule, ':')){
-                        $rule = Str::before($rule, ':');
-                    }
-
-                    PHPUnit::assertContains(Str::studly($rule), $rules, "Component has no [{$rule}] errors for [{$key}] attribute.");
-                }
+                $this->makeErrorAssertion($key, $value);
             }
         }
 
         return $this;
     }
+
+    protected function makeErrorAssertion($key = null, $value = null) {
+        $errors = $this->errors();
+
+        $messages = $errors->get($key);
+
+        $failed = $this->failedRules() ?: [];
+        $failedRules = array_keys(Arr::get($failed, $key, []));
+        $failedRules = array_map(function (string $rule) {
+            if (is_a($rule, ValidationRule::class, true) || is_a($rule, Rule::class, true)) {
+                return $rule;
+            }
+
+            return Str::snake($rule);
+        }, $failedRules);
+
+        PHPUnit::assertTrue($errors->isNotEmpty(), 'Component has no errors.');
+
+        if (is_null($value)) {
+            PHPUnit::assertTrue($errors->has($key), "Component missing error: $key");
+        } elseif ($value instanceof Closure) {
+            PHPUnit::assertTrue($value($failedRules, $messages));
+        } elseif (is_array($value)) {
+            foreach ((array) $value as $ruleOrMessage) {
+                $this->assertErrorMatchesRuleOrMessage($failedRules, $messages, $key, $ruleOrMessage);
+            }
+        } else {
+            $this->assertErrorMatchesRuleOrMessage($failedRules, $messages, $key, $value);
+        }
+
+        return $this;
+    }
+
+    protected function assertErrorMatchesRuleOrMessage($rules, $messages, $key, $ruleOrMessage)
+    {
+        if (Str::contains($ruleOrMessage, ':')){
+            $ruleOrMessage = Str::before($ruleOrMessage, ':');
+        }
+
+        if (in_array($ruleOrMessage, $rules)) {
+            PHPUnit::assertTrue(true);
+
+            return;
+        }
+
+        // If the provided rule/message isn't a failed rule, let's check to see if it's a message...
+        PHPUnit::assertContains($ruleOrMessage, $messages, "Component has no matching failed rule or error message [{$ruleOrMessage}] for [{$key}] attribute.");
+    }
+
 
     public function assertHasNoErrors($keys = [])
     {

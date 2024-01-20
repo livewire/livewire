@@ -8,6 +8,9 @@ composer require livewire/livewire
 
 That's it — really. If you want more customization options, keep reading. Otherwise, you can jump right into using Livewire.
 
+> [!warning] `/livewire/livewire.js` returning a 404 status code
+> By default, Livewire exposes a route in your application to serve its JavaScript assets from: `/livewire/livewire.js`. This is fine for most applications, however, if you are using Nginx with a custom configuration, you may receive a 404 from this endpoint. To fix this issue, you can either [compile Livewire's JavaScript assets yourself](#manually-bundling-livewire-and-alpine), or [configure Nginx to allow for this](https://benjamincrozat.com/livewire-js-404-not-found).
+
 ## Publishing the configuration file
 
 Livewire is "zero-config", meaning you can use it by following conventions, without any additional configuration. However, if needed, you can publish and customize Livewire's configuration file by running the following Artisan command:
@@ -48,7 +51,7 @@ Though rarely required, you may disable Livewire's auto-injecting asset behavior
 'inject_assets' => false,
 ```
 
-If you'd rather force Livewire to inject it's assets on a single page or multiple pages, you can call the following global method from the current route or from a service provider.
+If you'd rather force Livewire to inject its assets on a single page or multiple pages, you can call the following global method from the current route or from a service provider.
 
 ```php
 \Livewire\Livewire::forceAssetInjection();
@@ -146,3 +149,6 @@ Alpine.plugin(Clipboard)
 
 Livewire.start()
 ```
+
+> [!warning] Not compatible with Laravel Mix
+> Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. We recommend you switch to Vite if you need this ability.

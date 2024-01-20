@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
+use PHPUnit\Framework\Attributes\{Test, DataProvider};
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
         Livewire::component('foo', new class extends \Livewire\Component {
@@ -22,11 +23,11 @@ class UnitTest extends \Tests\TestCase
             <livewire:foo />
         ');
 
-        $this->assertCount(2, explode('__BLOCK__', $output));
-        $this->assertCount(2, explode('__ENDBLOCK__', $output));
+        $this->assertCount(2, explode('<!--[if BLOCK]><![endif]-->', $output));
+        $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
 
-    /** @test */
+    #[Test]
     public function handles_custom_blade_conditional_directives()
     {
         Blade::if('foo', function () {
@@ -41,25 +42,23 @@ class UnitTest extends \Tests\TestCase
         </div>
         HTML);
 
-        $this->assertOccurrences(1, '__BLOCK__', $output);
-        $this->assertOccurrences(1, '__ENDBLOCK__', $output);
+        $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
+        $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
-    /**
-     * @test
-     * @dataProvider templatesProvider
-     **/
-    function foo($occurances, $template, $expectedCompiled = null)
+    #[Test]
+    #[DataProvider('templatesProvider')]
+    function foo($occurrences, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 
-        $this->assertOccurrences($occurances, '__BLOCK__', $compiled);
-        $this->assertOccurrences($occurances, '__ENDBLOCK__', $compiled);
+        $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
+        $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
 
         $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
     }
 
-    public function templatesProvider()
+    public static function templatesProvider()
     {
         return [
             0 => [

@@ -203,6 +203,7 @@ function toQueryString(data) {
             if (! isObjecty(iValue)) {
                 entries[key] = encodeURIComponent(iValue)
                     .replaceAll('%20', '+') // Conform to RFC1738
+                    .replaceAll('%2C', ',')
             } else {
                 entries = {...entries, ...buildQueryStringEntries(iValue, entries, key)}
             }

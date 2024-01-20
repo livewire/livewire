@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\Mechanisms;
+namespace Livewire\Mechanisms\CompileLivewireTags;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
 
-class CompileLivewireTagsUnitTest extends \Tests\TestCase
+class UnitTest extends \Tests\TestCase
 {
     /** @test */
     public function can_compile_livewire_self_closing_tags()

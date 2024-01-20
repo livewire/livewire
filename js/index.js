@@ -1,9 +1,9 @@
-import { dispatchGlobal as dispatch, dispatchTo, on } from './features/supportEvents'
-import { directive } from './directives'
+import { dispatchGlobal as dispatch, dispatchTo, on } from './events'
 import { find, first, getByName, all } from './store'
-import { on as hook, trigger } from './events'
-import { dispatch as doDispatch } from './utils'
 import { start, stop, rescan } from './lifecycle'
+import { dispatch as doDispatch } from './utils'
+import { on as hook, trigger } from './hooks'
+import { directive } from './directives'
 import Alpine from 'alpinejs'
 
 let Livewire = {
@@ -20,6 +20,9 @@ let Livewire = {
     trigger,
     dispatch,
     on,
+    get navigate() {
+        return Alpine.navigate
+    }
 }
 
 if (window.Livewire) console.warn('Detected multiple instances of Livewire running')
