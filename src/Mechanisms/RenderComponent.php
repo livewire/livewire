@@ -13,9 +13,7 @@ class RenderComponent extends Mechanism
 
     public static function livewire($expression)
     {
-        $key = app(\Livewire\Mechanisms\ExtendBlade\DeterministicBladeKeys::class)->generate();
-
-        $key = "'{$key}'";
+        $key = null;
 
         $pattern = "/,\s*?key\(([\s\S]*)\)/"; // everything between ",key(" and ")"
 
@@ -23,6 +21,11 @@ class RenderComponent extends Mechanism
             $key = trim($match[1]) ?: $key;
             return "";
         }, $expression);
+
+        if (! $key) {
+            $key = app(\Livewire\Mechanisms\ExtendBlade\DeterministicBladeKeys::class)->generate();
+            $key = "'{$key}'";
+        }
 
         return <<<EOT
 <?php
