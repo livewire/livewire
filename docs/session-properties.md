@@ -24,8 +24,8 @@ class ShowPosts extends Component
     protected function posts()
     {
         return $this->search === ''
-            ? Post::all();
-            ? Post::where('title', 'like', '%'.$this->search.'%');
+            ? Post::all()
+            : Post::where('title', 'like', '%'.$this->search.'%');
     }
 
     public function render()
