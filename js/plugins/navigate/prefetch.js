@@ -10,15 +10,16 @@ export function prefetchHtml(destination, callback) {
 
     prefetches[path] = { finished: false, html: null, whenFinished: () => {} }
 
-    performFetch(path, html => {
-        callback(html)
+    performFetch(path, (html, routedUri) => {
+        callback(html, routedUri)
     })
 }
 
-export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination) {
+export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
     let state = prefetches[destination.pathname]
     state.html = html
     state.finished = true
+    state.finalDestination = finalDestination
     state.whenFinished()
 }
 
@@ -29,17 +30,19 @@ export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 
     if (prefetches[uri].finished) {
         let html = prefetches[uri].html
+        let finalDestination = prefetches[uri].finalDestination
 
         delete prefetches[uri]
 
-        return receive(html)
+        return receive(html, finalDestination)
     } else {
         prefetches[uri].whenFinished = () => {
             let html = prefetches[uri].html
+            let finalDestination = prefetches[uri].finalDestination
 
             delete prefetches[uri]
 
-            receive(html)
+            receive(html, finalDestination)
         }
     }
 }
