@@ -1,8 +1,8 @@
 import { overrideMethod } from '@/$wire'
-import { on } from '@/events'
+import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 
-on('effects', (component, effects) => {
+on('effect', ({ component, effects }) => {
     let js = effects.js
     let xjs = effects.xjs
 

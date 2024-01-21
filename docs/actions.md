@@ -47,6 +47,34 @@ In the above example, when a user submits the form by clicking "Save", `wire:sub
 
 In essence, actions are a way to easily map user interactions to server-side functionality without the hassle of submitting and handling AJAX requests manually.
 
+## Refreshing a component
+
+Sometimes you may want to trigger a simple "refresh" of your component. For example, if you have a component checking the status of something in the database, you may want to show a button to your users allowing them to refresh the displayed results.
+
+You can do this using Livewire's simple `$refresh` action anywhere you would normally reference your own component method:
+
+```blade
+<button type="button" wire:click="$refresh">...</button>
+```
+
+When the `$refresh` action is triggered, Livewire will make a server-roundtrip and re-render your component without calling any methods.
+
+It's important to note that any pending data updates in your component (for example `wire:model` bindings) will be applied on the server when the component is refreshed.
+
+Internally, Livewire uses the name "commit" to refer to any time a Livewire component is updated on the server. If you prefer this terminology, you can use the `$commit` helper instead of `$refresh`. The two are identical.
+
+```blade
+<button type="button" wire:click="$commit">...</button>
+```
+
+You can also trigger a component refresh using AlpineJS in your Livewire component:
+
+```blade
+<button type="button" x-on:click="$wire.$refresh()">...</button>
+```
+
+Learn more by reading the [documentation for using Alpine inside Livewire](/docs/alpine).
+
 ## Confirming an action
 
 When allowing users to perform dangerous actions—such as deleting a post from the database—you may want to show them a confirmation alert to verify that they wish to perform that action.
@@ -176,7 +204,7 @@ In this example, the `setPostContent` action is called whenever the `trix-change
 > Within Livewire event handlers, you can access the event object via `$event`. This is useful for referencing information on the event. For example, you can access the element that triggered the event via `$event.target`.
 
 > [!warning]
-> The Trix demo code above is incomplete and only useful as a demonstration of event listeners. If used verbatim, a network request would be fired on every single key stroke. A more performant implementation would be:
+> The Trix demo code above is incomplete and only useful as a demonstration of event listeners. If used verbatim, a network request would be fired on every single keystroke. A more performant implementation would be:
 >
 > ```blade
 > <trix-editor
@@ -469,7 +497,7 @@ class SearchPosts extends Component
     public $query = '';
 
     #[Js] // [tl! highlight:6]
-    public function reset()
+    public function resetQuery()
     {
         return <<<'JS'
             $wire.query = '';
@@ -489,7 +517,7 @@ class SearchPosts extends Component
 <div>
     <input wire:model.live="query">
 
-    <button wire:click="reset">Reset Search</button> <!-- [tl! highlight] -->
+    <button wire:click="resetQuery">Reset Search</button> <!-- [tl! highlight] -->
 
     @foreach ($posts as $post)
         <!-- ... -->

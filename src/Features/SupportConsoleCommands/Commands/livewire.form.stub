@@ -2,7 +2,7 @@
 
 namespace DummyNamespace;
 
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class DummyClass extends Form

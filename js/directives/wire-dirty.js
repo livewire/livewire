@@ -1,7 +1,7 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from '@/directives'
 import { dataGet, WeakBag } from '@/utils'
-import { on } from '@/events'
+import { on } from '@/hooks'
 
 let refreshDirtyStatesByComponent = new WeakBag
 

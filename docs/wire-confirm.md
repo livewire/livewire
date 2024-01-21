@@ -21,7 +21,7 @@ When a user clicks "Delete post", Livewire will trigger a confirmation dialog (T
 
 For even more dangerous actions such as deleting a user's account entirely, you may want to present them with a confirmation prompt which they would need to type in a specific string of characters to confirm the action.
 
-Livewire provides a helpful `.prompt` modifier, that when applied to `wire:confirm`, it will prompt the user for input and only confirm the action if the input matches (case sensitive) the provided string (designated by a "|" (pipe) character at the end if the `wire:confirm` value):
+Livewire provides a helpful `.prompt` modifier, that when applied to `wire:confirm`, it will prompt the user for input and only confirm the action if the input matches (case-sensitive) the provided string (designated by a "|" (pipe) character at the end if the `wire:confirm` value):
 
 ```blade
 <button

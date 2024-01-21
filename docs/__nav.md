@@ -13,6 +13,7 @@ Essentials:
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
     Testing: { uri: /docs/testing, file: /testing.md }
 Features:
+    Alpine: { uri: /docs/alpine, file: /alpine.md }
     Navigate: { uri: /docs/navigate, file: /navigate.md }
     Lazy Loading: { uri: /docs/lazy, file: /lazy.md }
     Validation: { uri: /docs/validation, file: /validation.md }
@@ -20,9 +21,11 @@ Features:
     Pagination: { uri: /docs/pagination, file: /pagination.md }
     URL Query Parameters: { uri: /docs/url, file: /url.md }
     Computed Properties: { uri: /docs/computed-properties, file: /computed-properties.md }
+    Session Properties: { uri: /docs/session-properties, file: /session-properties.md }
     Redirecting: { uri: /docs/redirecting, file: /redirecting.md }
     File Downloads: { uri: /docs/downloads, file: /downloads.md }
     Locked Properties: { uri: /docs/locked, file: /locked.md }
+    Request Bundling: { uri: /docs/bundling, file: /bundling.md }
     Offline States: { uri: /docs/offline, file: /offline.md }
     Teleport: { uri: /docs/teleport, file: /teleport.md }
 HTML Directives:
@@ -44,8 +47,10 @@ Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
+    Security: { uri: /docs/security, file: /security.md }
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
+    Contribution Guide: { uri: /docs/contribution-guide, file: /contribution-guide.md }
 Packages:
     Volt: { uri: /docs/volt, file: /volt.md }
 ---

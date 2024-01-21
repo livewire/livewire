@@ -30,7 +30,7 @@ class CountDown extends Component
 
     public function render()
     {
-        return <<<HTML
+        return <<<'HTML'
         <div>
             <button wire:click="begin">Start count-down</button>
 
@@ -135,7 +135,7 @@ Here's what's going on in the above example:
 
 When streaming content to an element using `$this->stream()`, you can tell Livewire to either replace the contents of the target element with the streamed contents or append them to the existing contents.
 
-Replacing or appending can both be desireable depending on the scenario. For example, when streaming a response from a chatbot, typically appending is desired (and is therefore the default). However, when showing something like a count-down, replacing is more fitting.
+Replacing or appending can both be desirable depending on the scenario. For example, when streaming a response from a chatbot, typically appending is desired (and is therefore the default). However, when showing something like a count-down, replacing is more fitting.
 
 You can configure either by passing the `replace:` parameter to `$this->stream` with a boolean value:
 

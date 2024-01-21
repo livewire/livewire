@@ -156,8 +156,7 @@ Sometimes, you may wish to interact with the view instance directly, for example
 use Illuminate\View\View;
 use Livewire\Volt\Component;
 
-class extends Component
-{
+new class extends Component {
     public function rendering(View $view): void
     {
         $view->title('Create Post');
@@ -241,6 +240,18 @@ layout('components.layouts.admin');
 title('Users');
 
 // ...
+```
+
+If the title relies on component state or an external dependency, you may pass a closure to the `title` function instead:
+
+```php
+use function Livewire\Volt\{layout, state, title};
+
+state('users');
+
+layout('components.layouts.admin');
+
+title(fn () => 'Users: ' . $this->users->count());
 ```
 
 ## Properties
@@ -342,7 +353,7 @@ $count = computed(function () {
 })->persist();
 ```
 
-By default, Livewire caches the computed computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
+By default, Livewire caches the computed property's value for 3600 seconds. You may customize this value by providing the desired number of seconds to the `persist` method:
 
 ```php
 $count = computed(function () {
@@ -625,7 +636,7 @@ $posts = computed(function () {
 ?>
 
 <div>
-    <input wire:model="search" type="search" placeholder="Search posts by title...">
+    <input wire:model.live="search" type="search" placeholder="Search posts by title...">
 
     <h1>Search Results:</h1>
 

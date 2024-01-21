@@ -210,6 +210,18 @@ For example, if you are looping through an array of posts, you may set the `wire
 </div>
 ```
 
+If you are looping through an array that is rendering Livewire components you may set the key as a component attribute `:key()` or pass the key as a third argument when using the `@livewire` directive.
+
+```blade
+<div>
+    @foreach ($posts as $post)
+        <livewire:post-item :$post :key="$post->id">
+
+        @livewire(PostItem::class, ['post' => $post], key($post->id))
+    @endforeach
+</div>
+```
+
 ### Binding inputs to properties
 
 One of Livewire's most powerful features is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
@@ -298,8 +310,14 @@ You can include a Livewire component in your Blade templates using the `<livewir
 <livewire:create-post />
 ```
 
+If the component class is nested deeper within the `app/Livewire/` directory, you may use the `.` character to indicate directory nesting. For example, if we assume a component is located at `app/Livewire/EditorPosts/CreatePost.php`, we may render it like so:
+
+```blade
+<livewire:editor-posts.create-post />
+```
+
 > [!warning] You must use kebab-case
-> As you can see in the snippet above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
+> As you can see in the snippets above, you must use the _kebab-cased_ version of the component name. Using the _StudlyCase_ version of the name (`<livewire:CreatePost />`) is invalid and won't be recognized by Livewire.
 
 
 ### Passing data into components
@@ -386,6 +404,14 @@ Now, when you visit the `/posts/create` path in your browser, the `CreatePost` c
 ### Layout files
 
 Remember that full-page components will use your application's layout, typically defined in the `resources/views/components/layouts/app.blade.php` file.
+
+You may create this file if it doesn't already exist by running the following command:
+
+```shell
+php artisan livewire:layout
+```
+
+This command will generate a file called `resources/views/components/layouts/app.blade.php`.
 
 Ensure you have created a Blade file at this location and included a `{{ $slot }}` placeholder:
 
@@ -561,6 +587,38 @@ public function render()
 }
 ```
 
+### Setting additional layout file slots
+
+If your [layout file](#layout-files) has any named slots in addition to `$slot`, you can set their content in your Blade view by defining `<x-slot>`s outside your root element. For example, if you want to be able to set the page language for each component individually, you can add a dynamic `$lang` slot into the opening HTML tag in your layout file:
+
+```blade
+<!-- resources/views/components/layouts/app.blade.php -->
+
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', $lang ?? app()->getLocale()) }}"> // [tl! highlight]
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{{ $title ?? 'Page Title' }}</title>
+    </head>
+    <body>
+        {{ $slot }}
+    </body>
+</html>
+```
+
+Then, in your component view, define an `<x-slot>` element outside the root element:
+
+```blade
+<x-slot:lang>fr</x-slot> // This component is in French [tl! highlight]
+
+<div>
+    // French content goes here...
+</div>
+```
+
+
 ### Accessing route parameters
 
 When working with full-page components, you may need to access route parameters within your Livewire component.
@@ -689,3 +747,58 @@ class ShowPost extends Component
     }
 }
 ```
+
+## Using JavaScript
+
+There are many instances where the built-in Livewire and Alpine utilities aren't enough to accomplish your goals inside your Livewire components.
+
+Fortunately, Livewire provides many useful extension points and utilities to interact with bespoke JavaScript. You can learn from the exhaustive reference on [the JavaScript documentation page](/docs/javascript). But for now, here are a few useful ways to use your own JavaScript inside your Livewire components.
+
+### Executing scripts
+
+Livewire provides a helpful `@script` directive that, when wrapping a `<script>` element, will execute the given JavaScript when your component is initialized on the page.
+
+Here is an example of a simple `@script` that uses JavaScript's `setInterval()` to refresh your component every two seconds:
+
+```blade
+@script
+<script>
+    setInterval(() => {
+        $wire.$refresh()
+    }, 2000)
+</script>
+@endscript
+```
+
+You'll notice we are using an object called `$wire` inside the `<script>` to control the component. Livewire automatically makes this object available inside any `@script`s. If you're unfamiliar with `$wire`, you can learn more about `$wire` in the following documentation:
+* [Accessing properties from JavaScript](/docs/properties#accessing-properties-from-javascript)
+* [Calling Livewire actions from JS/Alpine](/docs/actions#calling-actions-from-alpine)
+* [The `$wire` object reference](/docs/javascript#the-wire-object)
+
+### Loading assets
+
+In addition to one-off `@script`s, Livewire provides a helpful `@assets` utility to easily load any script/style dependencies on the page.
+
+It also ensures that the provided assets are loaded only once per browser page, unlike `@script`, which executes every time a new instance of that Livewire component is initialized.
+
+Here is an example of using `@assets` to load a date picker library called [Pikaday](https://github.com/Pikaday/Pikaday) and initialize it inside your component using `@script`:
+
+```blade
+<div>
+    <input type="text" data-picker>
+</div>
+
+@assets
+<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js" defer></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+@endassets
+
+@script
+<script>
+    new Pikaday({ field: $wire.$el.querySelector('[data-picker]') });
+</script>
+@endscript
+```
+
+> [!info] Using `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside Blade components
+> If you are using [Blade components](https://laravel.com/docs/blade#components) to extract parts of your markup, you can use `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` inside them as well; even if there are multiple Blade components inside the same Livewire component. However, `@verbatim@script@endverbatim` and `@verbatim@assets@endverbatim` are currently only supported in the context of a Livewire component, meaning if you use the given Blade component outside of Livewire entirely, those scripts and assets won't be loaded on the page.

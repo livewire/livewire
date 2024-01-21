@@ -42,5 +42,11 @@ class RequestBroker
     {
         return $this->withoutExceptionHandling($except);
     }
-}
 
+    function addHeaders(array $headers)
+    {
+        $this->serverVariables = $this->transformHeadersToServerVars($headers);
+
+        return $this;
+    }
+}

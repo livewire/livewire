@@ -4,6 +4,7 @@ _runtime_components.json
 SCRATCH.md
 COMMIT_MSG.aim.txt
 composer.lock
+.phpunit.cache/
 .phpunit.result.cache
 .idea
 phpunit.xml

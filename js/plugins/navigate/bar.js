@@ -1,7 +1,11 @@
 import NProgress from 'nprogress'
+import { getNonce } from '@/utils'
 
-NProgress.configure({ minimum: 0.1 });
-NProgress.configure({ trickleSpeed: 200 });
+NProgress.configure({
+    minimum: 0.1,
+    trickleSpeed: 200,
+    showSpinner: false,
+})
 
 injectStyles()
 
@@ -102,7 +106,7 @@ function injectStyles() {
       right: 0px;
       width: 100px;
       height: 100%;
-      box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+      box-shadow: 0 0 10px var(--livewire-progress-bar-color, #29d), 0 0 5px var(--livewire-progress-bar-color, #29d);
       opacity: 1.0;
 
       -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -152,5 +156,11 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `
+
+    let nonce = getNonce()
+    if (nonce) {
+      style.nonce = nonce
+    }
+
     document.head.appendChild(style)
 }

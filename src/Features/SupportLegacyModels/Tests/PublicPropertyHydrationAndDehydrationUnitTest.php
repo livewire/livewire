@@ -778,7 +778,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         Comment::create(['id' => 3, 'comment' => 'Comment 3', 'post_id' => 2, 'author_id' => 1]);
         Comment::create(['id' => 4, 'comment' => 'Comment 4', 'post_id' => 2, 'author_id' => 2]);
 
-        $models = Author::with(['posts'])->get();
+        $models = Author::with(['posts', 'posts.comments'])->get();
 
         $rules = [
             'models.*.title' => '',
@@ -816,10 +816,10 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
         $this->assertEquals($expected[0]['posts'][0]['title'], $results[0][0]['posts'][0][0][0]['title']);
-        $this->assertArrayNotHasKey('comments', $results[0][0]['posts'][0][0][0]);
+        $this->assertArrayHasKey('comments', $results[0][0]['posts'][0][0][0]);
 
         $this->assertEquals($expected[0]['posts'][1]['title'], $results[0][0]['posts'][0][1][0]['title']);
-        $this->assertArrayNotHasKey('comments', $results[0][0]['posts'][0][1][0]);
+        $this->assertArrayHasKey('comments', $results[0][0]['posts'][0][1][0]);
 
         $this->assertEquals($expected[1]['title'], $results[1][0]['title']);
         $this->assertEquals($expected[1]['email'], $results[1][0]['email']);
@@ -850,7 +850,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $this->assertEquals($expected['title'], $results['title']);
         $this->assertEquals($expected['email'], $results['email']);
-        $this->assertArrayNotHasKey('foo', $results);
+        $this->assertEquals($expected['foo'], $results['foo']);
     }
 
     /** @test */
@@ -871,7 +871,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $results = $component->snapshot['data']['model'][0];
 
-        $this->assertArrayNotHasKey('name', $results);
+        $this->assertEquals($expected['name'], $results['name']);
     }
 
     /** @test */

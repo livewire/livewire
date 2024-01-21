@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
+use PHPUnit\Framework\Attributes\{Test, DataProvider};
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
         Livewire::component('foo', new class extends \Livewire\Component {
@@ -26,7 +27,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
 
-    /** @test */
+    #[Test]
     public function handles_custom_blade_conditional_directives()
     {
         Blade::if('foo', function () {
@@ -45,21 +46,19 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
-    /**
-     * @test
-     * @dataProvider templatesProvider
-     **/
-    function foo($occurances, $template, $expectedCompiled = null)
+    #[Test]
+    #[DataProvider('templatesProvider')]
+    function foo($occurrences, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 
-        $this->assertOccurrences($occurances, '<!--[if BLOCK]><![endif]-->', $compiled);
-        $this->assertOccurrences($occurances, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
+        $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
+        $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
 
         $expectedCompiled && $this->assertEquals($expectedCompiled, $compiled);
     }
 
-    public function templatesProvider()
+    public static function templatesProvider()
     {
         return [
             0 => [
