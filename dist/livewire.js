@@ -2329,8 +2329,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var specialBooleanAttrs = `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly`;
   var isBooleanAttr2 = /* @__PURE__ */ makeMap(specialBooleanAttrs + `,async,autofocus,autoplay,controls,default,defer,disabled,hidden,loop,open,required,reversed,scoped,seamless,checked,muted,multiple,selected`);
-  var EMPTY_OBJ = true ? Object.freeze({}) : {};
-  var EMPTY_ARR = true ? Object.freeze([]) : [];
+  var EMPTY_OBJ = false ? Object.freeze({}) : {};
+  var EMPTY_ARR = false ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var isArray2 = Array.isArray;
@@ -2363,8 +2363,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var targetMap = /* @__PURE__ */ new WeakMap();
   var effectStack = [];
   var activeEffect;
-  var ITERATE_KEY = Symbol(true ? "iterate" : "");
-  var MAP_KEY_ITERATE_KEY = Symbol(true ? "Map key iterate" : "");
+  var ITERATE_KEY = Symbol(false ? "iterate" : "");
+  var MAP_KEY_ITERATE_KEY = Symbol(false ? "Map key iterate" : "");
   function isEffect(fn) {
     return fn && fn._isEffect === true;
   }
@@ -2454,7 +2454,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
-      if (activeEffect.options.onTrack) {
+      if (false) {
         activeEffect.options.onTrack({
           effect: activeEffect,
           target,
@@ -2518,7 +2518,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     const run = (effect3) => {
-      if (effect3.options.onTrigger) {
+      if (false) {
         effect3.options.onTrigger({
           effect: effect3,
           target,
@@ -2655,13 +2655,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyHandlers = {
     get: readonlyGet,
     set(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
     },
     deleteProperty(target, key) {
-      if (true) {
+      if (false) {
         console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
       }
       return true;
@@ -2723,7 +2723,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3.call(target, key);
@@ -2742,7 +2742,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!hadKey) {
       key = toRaw(key);
       hadKey = has2.call(target, key);
-    } else if (true) {
+    } else if (false) {
       checkIdentityKeys(target, has2, key);
     }
     const oldValue = get3 ? get3.call(target, key) : void 0;
@@ -2755,7 +2755,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function clear() {
     const target = toRaw(this);
     const hadItems = target.size !== 0;
-    const oldTarget = true ? isMap(target) ? new Map(target) : new Set(target) : void 0;
+    const oldTarget = false ? isMap(target) ? new Map(target) : new Set(target) : void 0;
     const result = target.clear();
     if (hadItems) {
       trigger2(target, "clear", void 0, void 0, oldTarget);
@@ -2800,7 +2800,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReadonlyMethod(type) {
     return function(...args) {
-      if (true) {
+      if (false) {
         const key = args[0] ? `on key "${args[0]}" ` : ``;
         console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
       }
@@ -2902,13 +2902,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has2, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has2.call(target, rawKey)) {
-      const type = toRawType(target);
-      console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-    }
-  }
   var reactiveMap = /* @__PURE__ */ new WeakMap();
   var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
   var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -2941,7 +2934,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject2(target)) {
-      if (true) {
+      if (false) {
         console.warn(`value cannot be made reactive: ${String(target)}`);
       }
       return target;
@@ -3380,6 +3373,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (event instanceof CustomEvent && event.detail !== void 0)
         return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
       else if (el.type === "checkbox") {
+        console.log(currentValue);
         if (Array.isArray(currentValue)) {
           let newValue = null;
           if (modifiers.includes("number")) {
@@ -7074,68 +7068,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/plugins/navigate/fetch.js
-  function fetchHtml(destination, callback) {
-    let uri = destination.pathname + destination.search;
-    performFetch(uri, (html) => {
-      callback(html);
-    });
-  }
-  function performFetch(uri, callback) {
-    let options = {
-      headers: {
-        "X-Livewire-Navigate": ""
-      }
-    };
-    trigger("navigate.request", {
-      url: uri,
-      options
-    });
-    fetch(uri, options).then((i) => i.text()).then((html) => {
-      callback(html);
-    });
-  }
-
-  // js/plugins/navigate/prefetch.js
-  var prefetches = {};
-  function prefetchHtml(destination, callback) {
-    let path = destination.pathname;
-    if (prefetches[path])
-      return;
-    prefetches[path] = { finished: false, html: null, whenFinished: () => {
-    } };
-    performFetch(path, (html) => {
-      callback(html);
-    });
-  }
-  function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination) {
-    let state = prefetches[destination.pathname];
-    state.html = html;
-    state.finished = true;
-    state.whenFinished();
-  }
-  function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let uri = destination.pathname + destination.search;
-    if (!prefetches[uri])
-      return ifNoPrefetchExists();
-    if (prefetches[uri].finished) {
-      let html = prefetches[uri].html;
-      delete prefetches[uri];
-      return receive(html);
-    } else {
-      prefetches[uri].whenFinished = () => {
-        let html = prefetches[uri].html;
-        delete prefetches[uri];
-        receive(html);
-      };
-    }
-  }
-
   // js/plugins/navigate/links.js
   function whenThisLinkIsPressed(el, callback) {
+    let isProgrammaticClick = (e) => !e.isTrusted;
     let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
     let isNotPlainEnterKey = (e) => e.which !== 13 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
     el.addEventListener("click", (e) => {
+      if (isProgrammaticClick(e)) {
+        e.preventDefault();
+        callback((whenReleased) => whenReleased());
+        return;
+      }
       if (isNotPlainLeftClick(e))
         return;
       e.preventDefault();
@@ -7157,9 +7100,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (isNotPlainEnterKey(e))
         return;
       e.preventDefault();
-      callback((whenReleased) => {
-        whenReleased();
-      });
+      callback((whenReleased) => whenReleased());
     });
   }
   function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
@@ -7179,6 +7120,70 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createUrlObjectFromString(urlString) {
     return new URL(urlString, document.baseURI);
+  }
+
+  // js/plugins/navigate/fetch.js
+  function fetchHtml(destination, callback) {
+    let uri = destination.pathname + destination.search;
+    performFetch(uri, (html, finalDestination) => {
+      callback(html, finalDestination);
+    });
+  }
+  function performFetch(uri, callback) {
+    let options = {
+      headers: {
+        "X-Livewire-Navigate": ""
+      }
+    };
+    trigger("navigate.request", {
+      url: uri,
+      options
+    });
+    let finalDestination;
+    fetch(uri, options).then((response) => {
+      finalDestination = createUrlObjectFromString(response.url);
+      return response.text();
+    }).then((html) => {
+      callback(html, finalDestination);
+    });
+  }
+
+  // js/plugins/navigate/prefetch.js
+  var prefetches = {};
+  function prefetchHtml(destination, callback) {
+    let path = destination.pathname;
+    if (prefetches[path])
+      return;
+    prefetches[path] = { finished: false, html: null, whenFinished: () => {
+    } };
+    performFetch(path, (html, routedUri) => {
+      callback(html, routedUri);
+    });
+  }
+  function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
+    let state = prefetches[destination.pathname];
+    state.html = html;
+    state.finished = true;
+    state.finalDestination = finalDestination;
+    state.whenFinished();
+  }
+  function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
+    let uri = destination.pathname + destination.search;
+    if (!prefetches[uri])
+      return ifNoPrefetchExists();
+    if (prefetches[uri].finished) {
+      let html = prefetches[uri].html;
+      let finalDestination = prefetches[uri].finalDestination;
+      delete prefetches[uri];
+      return receive(html, finalDestination);
+    } else {
+      prefetches[uri].whenFinished = () => {
+        let html = prefetches[uri].html;
+        let finalDestination = prefetches[uri].finalDestination;
+        delete prefetches[uri];
+        receive(html, finalDestination);
+      };
+    }
   }
 
   // js/plugins/navigate/teleport.js
@@ -7514,14 +7519,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let shouldPrefetchOnHover = modifiers.includes("hover");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
         let destination = extractDestinationFromLink(el);
-        prefetchHtml(destination, (html) => {
-          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+        prefetchHtml(destination, (html, finalDestination) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
       });
       whenThisLinkIsPressed(el, (whenItIsReleased) => {
         let destination = extractDestinationFromLink(el);
-        prefetchHtml(destination, (html) => {
-          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+        prefetchHtml(destination, (html, finalDestination) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
           navigateTo(destination);
@@ -7530,7 +7535,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function navigateTo(destination) {
       showProgressBar && showAndStartProgressBar();
-      fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
+      fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
         fireEventForOtherLibariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
@@ -7546,7 +7551,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             });
             restoreScrollPositionOrScrollToTop();
             fireEventForOtherLibariesToHookInto("alpine:navigated");
-            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
+            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
