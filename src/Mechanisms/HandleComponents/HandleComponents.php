@@ -287,10 +287,19 @@ class HandleComponents extends Mechanism
 
     protected function updateProperties($component, $updates, $data, $context)
     {
+        $finishes = [];
+
         foreach ($updates as $path => $value) {
             $value = $this->hydrateForUpdate($data, $path, $value, $context);
 
-            $this->updateProperty($component, $path, $value, $context);
+            // We only want to run "updated" hooks after all properties have
+            // been updated so that each individual hook has the ability
+            // to overwrite the updated states of other properties...
+            $finishes[] = $this->updateProperty($component, $path, $value, $context);
+        }
+
+        foreach ($finishes as $finish) {
+            $finish();
         }
     }
 
@@ -314,7 +323,7 @@ class HandleComponents extends Mechanism
             );
         }
 
-        $finish();
+        return $finish;
     }
 
     protected function hydrateForUpdate($raw, $path, $value, $context)

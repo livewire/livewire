@@ -72,8 +72,7 @@ class BrowserTest extends BrowserTestCase
             }
         })
             ->select('@barSelect', 'one')
-            ->select('@fooSelect', 'one')
-            ->waitForLivewire()
+            ->waitForLivewire()->select('@fooSelect', 'one')
             ->assertSelected('@barSelect', '')
         ;
     }
