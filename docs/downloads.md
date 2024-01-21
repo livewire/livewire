@@ -106,3 +106,35 @@ public function does_not_download_invoice_if_unauthorised()
         ->assertNoFileDownloaded();
 }
 ```
+
+You can test to ensure a downloaded file contains a string using the `->assertFileDownloadedContains()` method:
+
+```php
+use App\Models\Invoice;
+
+/** @test */
+public function download_invoice_contains_text()
+{
+    $invoice = Invoice::factory();
+
+    Livewire::test(ShowInvoice::class)
+        ->call('download')
+        ->assertFileDownloadedContains('text that should be there');
+}
+```
+
+You can also test to ensure a downloaded file does not contain a string using the `->assertFileDownloadedNotContains()` method:
+
+```php
+use App\Models\Invoice;
+
+/** @test */
+public function download_invoice_does_not_contain_text()
+{
+    $invoice = Invoice::factory();
+
+    Livewire::test(ShowInvoice::class)
+        ->call('download')
+        ->assertFileDownloadedNotContains('text that should be missing');
+}
+```
