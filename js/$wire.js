@@ -117,9 +117,15 @@ wireProperty('$id', (component) => {
 wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
-    return live
-        ? await requestCommit(component)
-        : Promise.resolve()
+    // If "live", send a request, queueing the property update to happen first
+    // on the server, then trickle back down to the client and get merged...
+    if (live) {
+        component.queueUpdate(property, value)
+
+        return await requestCommit(component)
+    }
+
+    return Promise.resolve()
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {
