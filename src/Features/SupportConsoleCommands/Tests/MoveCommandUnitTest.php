@@ -39,6 +39,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
 
         $this->assertFalse(File::exists($this->livewireClassesPath('Bob.php')));
     }
+
     /** @test */
     public function component_with_test_is_renamed_by_move_command()
     {

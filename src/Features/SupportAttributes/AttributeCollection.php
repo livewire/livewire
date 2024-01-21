@@ -14,7 +14,7 @@ class AttributeCollection extends Collection
 
         $reflected = new ReflectionObject($subTarget ?? $component);
 
-        foreach ($reflected->getAttributes(Attribute::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+        foreach (static::getClassAttributesRecursively($reflected) as $attribute) {
             $instance->push(tap($attribute->newInstance(), function ($attribute) use ($component, $subTarget) {
                 $attribute->__boot($component, AttributeLevel::ROOT, null, null, $subTarget);
             }));
@@ -37,5 +37,19 @@ class AttributeCollection extends Collection
         }
 
         return $instance;
+    }
+
+    protected static function getClassAttributesRecursively($reflected) {
+        $attributes = [];
+
+        while ($reflected) {
+            foreach ($reflected->getAttributes(Attribute::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+                $attributes[] = $attribute;
+            }
+
+            $reflected = $reflected->getParentClass();
+        }
+
+        return $attributes;
     }
 }

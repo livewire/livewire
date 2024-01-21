@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
+    var require_shared_cjs_prod = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = Object.freeze({});
-        var EMPTY_ARR = Object.freeze([]);
+        var EMPTY_OBJ = {};
+        var EMPTY_ARR = [];
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_shared_cjs_prod();
         } else {
-          module2.exports = require_shared_cjs();
+          module2.exports = null;
         }
       }
     });
-    var require_reactivity_cjs = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
+    var require_reactivity_cjs_prod = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("iterate");
-        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
+        var ITERATE_KEY = Symbol("");
+        var MAP_KEY_ITERATE_KEY = Symbol("");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,14 +558,6 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
-            if (activeEffect.options.onTrack) {
-              activeEffect.options.onTrack({
-                effect: activeEffect,
-                target,
-                type,
-                key
-              });
-            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -622,17 +614,6 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
-            if (effect4.options.onTrigger) {
-              effect4.options.onTrigger({
-                effect: effect4,
-                target,
-                key,
-                type,
-                newValue,
-                oldValue,
-                oldTarget
-              });
-            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -726,7 +707,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value);
               }
             }
             return result;
@@ -734,10 +715,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          const oldValue = target[key];
+          target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
@@ -762,15 +743,9 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
-            {
-              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           },
           deleteProperty(target, key) {
-            {
-              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           }
         };
@@ -837,15 +812,13 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value);
           }
           return this;
         }
@@ -856,23 +829,20 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
-          const oldValue = get3 ? get3.call(target, key) : void 0;
+          get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
         function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
-          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0);
           }
           return result;
         }
@@ -914,10 +884,6 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
-            {
-              const key = args[0] ? `on key "${args[0]}" ` : ``;
-              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
-            }
             return type === "delete" ? false : this;
           };
         }
@@ -1022,13 +988,6 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
-        function checkIdentityKeys(target, has2, key) {
-          const rawKey = toRaw2(key);
-          if (rawKey !== key && has2.call(target, rawKey)) {
-            const type = shared.toRawType(target);
-            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-          }
-        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1067,9 +1026,6 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
-            {
-              console.warn(`value cannot be made reactive: ${String(target)}`);
-            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1143,7 +1099,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", void 0);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1181,9 +1137,6 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
-          if (!isProxy(object)) {
-            console.warn(`toRefs() expects a reactive object but received a plain one.`);
-          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1240,9 +1193,7 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = () => {
-              console.warn("Write operation failed: computed value is readonly");
-            };
+            setter = shared.NOOP;
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1281,10 +1232,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_reactivity_cjs_prod();
         } else {
-          module2.exports = require_reactivity_cjs();
+          module2.exports = null;
         }
       }
     });
@@ -3305,6 +3256,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (event instanceof CustomEvent && event.detail !== void 0)
           return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
         else if (el.type === "checkbox") {
+          console.log(currentValue);
           if (Array.isArray(currentValue)) {
             let newValue = null;
             if (modifiers.includes("number")) {
@@ -7239,6 +7191,21 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
+var nonce;
+function getNonce() {
+  if (nonce)
+    return nonce;
+  if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
+    nonce = window.livewireScriptConfig["nonce"];
+    return nonce;
+  }
+  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+  if (elWithNonce) {
+    nonce = elWithNonce.nonce;
+    return nonce;
+  }
+  return null;
+}
 function getUpdateUri() {
   return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
 }
@@ -7246,8 +7213,8 @@ function contentIsFromDump(content) {
   return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
 }
 function splitDumpFromContent(content) {
-  let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-  return [dump2, content.replace(dump2, "")];
+  let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+  return [dump, content.replace(dump, "")];
 }
 
 // js/hooks.js
@@ -7310,6 +7277,7 @@ function handleFileUpload(el, property, component, cleanup2) {
   let start2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
   let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
   let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+  let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
   let progress = (progressEvent) => {
     var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
     el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
@@ -7322,9 +7290,9 @@ function handleFileUpload(el, property, component, cleanup2) {
       return;
     start2();
     if (e.target.multiple) {
-      manager.uploadMultiple(property, e.target.files, finish, error2, progress);
+      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
     } else {
-      manager.upload(property, e.target.files[0], finish, error2, progress);
+      manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
     }
   };
   el.addEventListener("change", eventHandler);
@@ -7332,6 +7300,7 @@ function handleFileUpload(el, property, component, cleanup2) {
     el.value = null;
   };
   el.addEventListener("click", clearFileInputValue);
+  el.addEventListener("livewire-upload-cancel", clearFileInputValue);
   cleanup2(() => {
     el.removeEventListener("change", eventHandler);
     el.removeEventListener("click", clearFileInputValue);
@@ -7356,22 +7325,24 @@ var UploadManager = class {
     this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
     this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
   }
-  upload(name, file, finishCallback, errorCallback, progressCallback) {
+  upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
     this.setUpload(name, {
       files: [file],
       multiple: false,
       finishCallback,
       errorCallback,
-      progressCallback
+      progressCallback,
+      cancelledCallback
     });
   }
-  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
     this.setUpload(name, {
       files: Array.from(files),
       multiple: true,
       finishCallback,
       errorCallback,
-      progressCallback
+      progressCallback,
+      cancelledCallback
     });
   }
   removeUpload(name, tmpFilename, finishCallback) {
@@ -7433,6 +7404,7 @@ var UploadManager = class {
       }
       this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
     });
+    this.uploadBag.first(name).request = request;
     request.send(formData);
   }
   startUpload(name, uploadObject) {
@@ -7454,6 +7426,16 @@ var UploadManager = class {
     this.uploadBag.shift(name).errorCallback();
     if (this.uploadBag.get(name).length > 0)
       this.startUpload(name, this.uploadBag.last(name));
+  }
+  cancelUpload(name, cancelledCallback = null) {
+    unsetUploadLoading(this.component);
+    let uploadItem = this.uploadBag.first(name);
+    if (uploadItem) {
+      uploadItem.request.abort();
+      this.uploadBag.shift(name).cancelledCallback();
+      if (cancelledCallback)
+        cancelledCallback();
+    }
   }
 };
 var MessageBag = class {
@@ -7499,22 +7481,29 @@ function unsetUploadLoading() {
 function upload(component, name, file, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
+}, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
+  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
 }
 function uploadMultiple(component, name, files, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
+}, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
 }
 function removeUpload(component, name, tmpFilename, finishCallback = () => {
 }, errorCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
   uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+}
+function cancelUpload(component, name, cancelledCallback = () => {
+}) {
+  let uploadManager = getUploadManager(component);
+  uploadManager.cancelUpload(name, cancelledCallback);
 }
 
 // js/features/supportEntangle.js
@@ -7891,6 +7880,7 @@ async function sendRequest(pool) {
     window.location.href = response.url;
   }
   if (contentIsFromDump(content)) {
+    let dump;
     [dump, content] = splitDumpFromContent(content);
     showHtmlModal(dump);
     finishProfile({ content: "{}", failed: true });
@@ -7935,7 +7925,8 @@ var aliases = {
   "dispatchSelf": "$dispatchSelf",
   "upload": "$upload",
   "uploadMultiple": "$uploadMultiple",
-  "removeUpload": "$removeUpload"
+  "removeUpload": "$removeUpload",
+  "cancelUpload": "$cancelUpload"
 };
 function generateWireObject(component, state) {
   return new Proxy({}, {
@@ -8032,6 +8023,7 @@ wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params))
 wireProperty("$upload", (component) => (...params) => upload(component, ...params));
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
 var parentMemo = /* @__PURE__ */ new WeakMap();
 wireProperty("$parent", (component) => {
   if (parentMemo.has(component))
@@ -8381,46 +8373,17 @@ function tryToStoreInSession(timestamp, value) {
   }
 }
 
-// js/plugins/navigate/prefetch.js
-var prefetches = {};
-function prefetchHtml(destination, callback) {
-  let path = destination.pathname;
-  if (prefetches[path])
-    return;
-  prefetches[path] = { finished: false, html: null, whenFinished: () => {
-  } };
-  fetch(path).then((i) => i.text()).then((html) => {
-    callback(html);
-  });
-}
-function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination) {
-  let state = prefetches[destination.pathname];
-  state.html = html;
-  state.finished = true;
-  state.whenFinished();
-}
-function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-  let uri = destination.pathname + destination.search;
-  if (!prefetches[uri])
-    return ifNoPrefetchExists();
-  if (prefetches[uri].finished) {
-    let html = prefetches[uri].html;
-    delete prefetches[uri];
-    return receive(html);
-  } else {
-    prefetches[uri].whenFinished = () => {
-      let html = prefetches[uri].html;
-      delete prefetches[uri];
-      receive(html);
-    };
-  }
-}
-
 // js/plugins/navigate/links.js
 function whenThisLinkIsPressed(el, callback) {
+  let isProgrammaticClick = (e) => !e.isTrusted;
   let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
   let isNotPlainEnterKey = (e) => e.which !== 13 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
   el.addEventListener("click", (e) => {
+    if (isProgrammaticClick(e)) {
+      e.preventDefault();
+      callback((whenReleased) => whenReleased());
+      return;
+    }
     if (isNotPlainLeftClick(e))
       return;
     e.preventDefault();
@@ -8442,9 +8405,7 @@ function whenThisLinkIsPressed(el, callback) {
     if (isNotPlainEnterKey(e))
       return;
     e.preventDefault();
-    callback((whenReleased) => {
-      whenReleased();
-    });
+    callback((whenReleased) => whenReleased());
   });
 }
 function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
@@ -8464,6 +8425,70 @@ function extractDestinationFromLink(linkEl) {
 }
 function createUrlObjectFromString(urlString) {
   return new URL(urlString, document.baseURI);
+}
+
+// js/plugins/navigate/fetch.js
+function fetchHtml(destination, callback) {
+  let uri = destination.pathname + destination.search;
+  performFetch(uri, (html, finalDestination) => {
+    callback(html, finalDestination);
+  });
+}
+function performFetch(uri, callback) {
+  let options = {
+    headers: {
+      "X-Livewire-Navigate": ""
+    }
+  };
+  trigger("navigate.request", {
+    url: uri,
+    options
+  });
+  let finalDestination;
+  fetch(uri, options).then((response) => {
+    finalDestination = createUrlObjectFromString(response.url);
+    return response.text();
+  }).then((html) => {
+    callback(html, finalDestination);
+  });
+}
+
+// js/plugins/navigate/prefetch.js
+var prefetches = {};
+function prefetchHtml(destination, callback) {
+  let path = destination.pathname;
+  if (prefetches[path])
+    return;
+  prefetches[path] = { finished: false, html: null, whenFinished: () => {
+  } };
+  performFetch(path, (html, routedUri) => {
+    callback(html, routedUri);
+  });
+}
+function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
+  let state = prefetches[destination.pathname];
+  state.html = html;
+  state.finished = true;
+  state.finalDestination = finalDestination;
+  state.whenFinished();
+}
+function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
+  let uri = destination.pathname + destination.search;
+  if (!prefetches[uri])
+    return ifNoPrefetchExists();
+  if (prefetches[uri].finished) {
+    let html = prefetches[uri].html;
+    let finalDestination = prefetches[uri].finalDestination;
+    delete prefetches[uri];
+    return receive(html, finalDestination);
+  } else {
+    prefetches[uri].whenFinished = () => {
+      let html = prefetches[uri].html;
+      let finalDestination = prefetches[uri].finalDestination;
+      delete prefetches[uri];
+      receive(html, finalDestination);
+    };
+  }
 }
 
 // js/plugins/navigate/teleport.js
@@ -8599,7 +8624,7 @@ function injectStyles() {
       right: 0px;
       width: 100px;
       height: 100%;
-      box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+      box-shadow: 0 0 10px var(--livewire-progress-bar-color, #29d), 0 0 5px var(--livewire-progress-bar-color, #29d);
       opacity: 1.0;
 
       -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -8649,6 +8674,10 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `;
+  let nonce2 = getNonce();
+  if (nonce2) {
+    style.nonce = nonce2;
+  }
   document.head.appendChild(style);
 }
 
@@ -8780,19 +8809,6 @@ function ignoreAttributes(subject, attributesToRemove) {
   return result.trim();
 }
 
-// js/plugins/navigate/fetch.js
-function fetchHtml(destination, callback) {
-  let uri = destination.pathname + destination.search;
-  let options = {};
-  trigger("navigate.request", {
-    url: uri,
-    options
-  });
-  fetch(uri, options).then((i) => i.text()).then((html) => {
-    callback(html);
-  });
-}
-
 // js/plugins/navigate/index.js
 var import_alpinejs6 = __toESM(require_module_cjs());
 var enablePersist = true;
@@ -8811,14 +8827,14 @@ function navigate_default(Alpine21) {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
-      prefetchHtml(destination, (html) => {
-        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+      prefetchHtml(destination, (html, finalDestination) => {
+        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
     });
     whenThisLinkIsPressed(el, (whenItIsReleased) => {
       let destination = extractDestinationFromLink(el);
-      prefetchHtml(destination, (html) => {
-        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+      prefetchHtml(destination, (html, finalDestination) => {
+        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
       whenItIsReleased(() => {
         navigateTo(destination);
@@ -8827,7 +8843,7 @@ function navigate_default(Alpine21) {
   });
   function navigateTo(destination) {
     showProgressBar && showAndStartProgressBar();
-    fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
+    fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
@@ -8843,7 +8859,7 @@ function navigate_default(Alpine21) {
           });
           restoreScrollPositionOrScrollToTop();
           fireEventForOtherLibariesToHookInto("alpine:navigated");
-          updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
+          updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -9031,7 +9047,7 @@ function queryStringUtils() {
     },
     set(url, key, value) {
       let data = fromQueryString(url.search);
-      data[key] = value;
+      data[key] = stripNulls(unwrap(value));
       url.search = toQueryString(data);
       return url;
     },
@@ -9042,6 +9058,17 @@ function queryStringUtils() {
       return url;
     }
   };
+}
+function stripNulls(value) {
+  if (!isObjecty(value))
+    return value;
+  for (let key in value) {
+    if (value[key] === null)
+      delete value[key];
+    else
+      value[key] = stripNulls(value[key]);
+  }
+  return value;
 }
 function toQueryString(data) {
   let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
@@ -9106,6 +9133,8 @@ function start() {
   import_alpinejs7.default.plugin(import_mask.default);
   import_alpinejs7.default.addRootSelector(() => "[wire\\:id]");
   import_alpinejs7.default.onAttributesAdded((el, attributes) => {
+    if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     let component = closestComponent(el, false);
     if (!component)
       return;
@@ -9119,6 +9148,8 @@ function start() {
     });
   });
   import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+    if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
       import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {
@@ -9284,7 +9315,9 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        import_alpinejs9.default.dontAutoEvaluateFunctions(() => {
+          import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        });
       });
     });
   }
@@ -9953,7 +9986,12 @@ function containsTargets(payload, targets) {
       });
     }
     let hasMatchingUpdate = Object.keys(updates).some((property) => {
-      return property.startsWith(target);
+      if (property.includes(".")) {
+        let propertyRoot = property.split(".")[0];
+        if (propertyRoot === target)
+          return true;
+      }
+      return property === target;
     });
     if (hasMatchingUpdate)
       return true;

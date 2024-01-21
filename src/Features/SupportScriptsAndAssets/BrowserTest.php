@@ -322,4 +322,30 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForTextIn('@foo', 'received')
         ;
     }
+
+    /** @test */
+    public function functions_loaded_in_scripts_are_not_auto_evaluated()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <div dusk="output"></div>
+            </div>
+
+            @script
+                <script>
+                    function run() {
+                        document.querySelector('[dusk="output"]').textContent = 'evaluated';
+                    }
+
+                    document.querySelector('[dusk="output"]').textContent = 'initialized';
+                </script>
+            @endscript
+            HTML; }
+        })
+            ->waitForText('initialized')
+            ->assertSeeIn('@output', 'initialized')
+            ->assertDontSeeIn('@output', 'evaluated')
+        ;
+    }
 }

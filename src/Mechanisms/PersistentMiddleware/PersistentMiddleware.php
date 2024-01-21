@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
 use function Livewire\on;
 use Illuminate\Support\Str;
@@ -51,12 +52,12 @@ class PersistentMiddleware extends Mechanism
 
     function addPersistentMiddleware($middleware)
     {
-        static::$persistentMiddleware = array_merge(static::$persistentMiddleware, (array) $middleware);
+        static::$persistentMiddleware = Router::uniqueMiddleware(array_merge(static::$persistentMiddleware, (array) $middleware));
     }
 
     function setPersistentMiddleware($middleware)
     {
-        static::$persistentMiddleware = (array) $middleware;
+        static::$persistentMiddleware = Router::uniqueMiddleware((array) $middleware);
     }
 
     function getPersistentMiddleware()

@@ -90,3 +90,19 @@ public function can_download_invoice()
         ->assertFileDownloaded('invoice.pdf');
 }
 ```
+
+You can also test to ensure a file was not downloaded using the `->assertNoFileDownloaded()` method:
+
+```php
+use App\Models\Invoice;
+
+/** @test */
+public function does_not_download_invoice_if_unauthorised()
+{
+    $invoice = Invoice::factory();
+
+    Livewire::test(ShowInvoice::class)
+        ->call('download')
+        ->assertNoFileDownloaded();
+}
+```

@@ -159,6 +159,57 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Loading...')
         ;
     }
+	
+	/** @test */
+    function wire_loading_targets_single_correct_element()
+    {
+		/*
+		 * Previously 
+		 */
+        Livewire::visit(new class extends Component {
+
+			public $myModel;
+
+			public function mount()
+			{
+				$this->myModel = [
+					'prop' => 'one',
+					'prop2' => 'two',
+				];
+			}
+
+			public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                sleep(2);
+            }
+			
+			public function render()
+			{
+			    return <<<'HTML'
+                <div>
+                	<input type="text" wire:model.live="myModel.prop" dusk="input">
+                	<div wire:loading wire:target="myModel.prop">Loading "prop"...</div>
+                	<input type="text" wire:model.live="myModel.prop2" dusk="input2">
+                	<div wire:loading wire:target="myModel.prop2">Loading "prop2"...</div>
+                	<div wire:loading wire:target="myModel">Loading "myModel"...</div>
+                </div>
+                HTML;
+            }
+			
+        })
+        ->type('@input', 'Foo')
+		->waitForText('Loading "prop"...')
+        ->assertSee('Loading "prop"...')
+        ->assertSee('Loading "myModel"...')
+        ->assertDontSee('Loading "prop2"...')
+
+        ->type('@input2', 'Hello Caleb')
+		->waitForText('Loading "prop2"...')
+        ->assertSee('Loading "prop2"...')
+        ->assertSee('Loading "myModel"...')
+        ->assertDontSee('Loading "prop"...')
+        ;
+    }
 }
 
 class PostFormStub extends Form
