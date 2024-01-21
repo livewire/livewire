@@ -1,5 +1,5 @@
 import { diff } from '@/utils'
-import { on, trigger } from '@/events'
+import { on, trigger } from '@/hooks'
 
 /**
  * A commit represents an individual component updating itself server-side...
@@ -38,9 +38,11 @@ export class Commit {
         // the new front-end state so that we can update the server atomically...
         let propertiesDiff = diff(this.component.canonical, this.component.ephemeral)
 
+        let updates = this.component.mergeQueuedUpdates(propertiesDiff)
+
         let payload = {
             snapshot: this.component.snapshotEncoded,
-            updates: propertiesDiff,
+            updates: updates,
             calls: this.calls.map(i => ({
                 path: i.path,
                 method: i.method,
@@ -81,7 +83,7 @@ export class Commit {
             respond()
 
             // Take the new snapshot and merge it into the existing one...
-            this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff)
+            this.component.mergeNewSnapshot(snapshot, effects, updates)
 
             // Trigger any side effects from the payload like "morph" and "dispatch event"...
             this.component.processEffects(this.component.effects)

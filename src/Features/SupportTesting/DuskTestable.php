@@ -16,11 +16,7 @@ class DuskTestable
     public static $browser;
 
     static function provide() {
-        Route::get('livewire-dusk/{component}', function ($component) {
-            $class = urldecode($component);
-
-            return app()->call(app('livewire')->new($class));
-        })->middleware('web');
+        Route::get('livewire-dusk/{component}', ShowDuskComponent::class)->middleware('web');
 
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
@@ -28,8 +24,8 @@ class DuskTestable
 
             $tweakApplication = $testCase::tweakApplicationHook();
 
-            invade($testCase)->tweakApplication(function () use ($tweakApplication) {
-                config()->set('app.debug', true);
+            invade($testCase)->beforeServingApplication(function ($app, $config) use ($tweakApplication) {
+                $config->set('app.debug', true);
 
                 if (is_callable($tweakApplication)) $tweakApplication();
 
@@ -120,11 +116,11 @@ class DuskTestable
 
             $components = null;
 
-            try { 
+            try {
                 if (\Orchestra\Testbench\phpunit_version_compare('10.0', '>=')) {
-                    (new $testClass($method))->$method(); 
+                    (new $testClass($method))->$method();
                 } else {
-                    (new $testClass())->$method(); 
+                    (new $testClass())->$method();
                 }
             } catch (\Exception $e) {
                 if (! $e->isDuskShortcircuit) throw $e;

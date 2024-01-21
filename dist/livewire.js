@@ -405,6 +405,21 @@
     }
     throw "Livewire: No CSRF token detected";
   }
+  var nonce;
+  function getNonce() {
+    if (nonce)
+      return nonce;
+    if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
+      nonce = window.livewireScriptConfig["nonce"];
+      return nonce;
+    }
+    const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+    if (elWithNonce) {
+      nonce = elWithNonce.nonce;
+      return nonce;
+    }
+    return null;
+  }
   function getUpdateUri() {
     return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
   }
@@ -412,11 +427,11 @@
     return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
   }
   function splitDumpFromContent(content) {
-    let dump2 = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-    return [dump2, content.replace(dump2, "")];
+    let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+    return [dump, content.replace(dump, "")];
   }
 
-  // js/events.js
+  // js/hooks.js
   var listeners = [];
   function on(name, callback) {
     if (!listeners[name])
@@ -459,6 +474,250 @@
       }
     }
     return latest;
+  }
+
+  // js/features/supportFileUploads.js
+  var uploadManagers = /* @__PURE__ */ new WeakMap();
+  function getUploadManager(component) {
+    if (!uploadManagers.has(component)) {
+      let manager = new UploadManager(component);
+      uploadManagers.set(component, manager);
+      manager.registerListeners();
+    }
+    return uploadManagers.get(component);
+  }
+  function handleFileUpload(el, property, component, cleanup3) {
+    let manager = getUploadManager(component);
+    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
+    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+    let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
+    let progress = (progressEvent) => {
+      var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
+      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
+        bubbles: true,
+        detail: { progress: percentCompleted }
+      }));
+    };
+    let eventHandler = (e) => {
+      if (e.target.files.length === 0)
+        return;
+      start3();
+      if (e.target.multiple) {
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
+      } else {
+        manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
+      }
+    };
+    el.addEventListener("change", eventHandler);
+    let clearFileInputValue = () => {
+      el.value = null;
+    };
+    el.addEventListener("click", clearFileInputValue);
+    el.addEventListener("livewire-upload-cancel", clearFileInputValue);
+    cleanup3(() => {
+      el.removeEventListener("change", eventHandler);
+      el.removeEventListener("click", clearFileInputValue);
+    });
+  }
+  var UploadManager = class {
+    constructor(component) {
+      this.component = component;
+      this.uploadBag = new MessageBag();
+      this.removeBag = new MessageBag();
+    }
+    registerListeners() {
+      this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
+        setUploadLoading(this.component, name);
+        this.handleSignedUrl(name, url);
+      });
+      this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
+        setUploadLoading(this.component, name);
+        this.handleS3PreSignedUrl(name, payload);
+      });
+      this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
+      this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
+      this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
+    }
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+      this.setUpload(name, {
+        files: [file],
+        multiple: false,
+        finishCallback,
+        errorCallback,
+        progressCallback,
+        cancelledCallback
+      });
+    }
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+      this.setUpload(name, {
+        files: Array.from(files),
+        multiple: true,
+        finishCallback,
+        errorCallback,
+        progressCallback,
+        cancelledCallback
+      });
+    }
+    removeUpload(name, tmpFilename, finishCallback) {
+      this.removeBag.push(name, {
+        tmpFilename,
+        finishCallback
+      });
+      this.component.$wire.call("_removeUpload", name, tmpFilename);
+    }
+    setUpload(name, uploadObject) {
+      this.uploadBag.add(name, uploadObject);
+      if (this.uploadBag.get(name).length === 1) {
+        this.startUpload(name, uploadObject);
+      }
+    }
+    handleSignedUrl(name, url) {
+      let formData = new FormData();
+      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
+      let headers = {
+        "Accept": "application/json"
+      };
+      let csrfToken = getCsrfToken();
+      if (csrfToken)
+        headers["X-CSRF-TOKEN"] = csrfToken;
+      this.makeRequest(name, formData, "post", url, headers, (response) => {
+        return response.paths;
+      });
+    }
+    handleS3PreSignedUrl(name, payload) {
+      let formData = this.uploadBag.first(name).files[0];
+      let headers = payload.headers;
+      if ("Host" in headers)
+        delete headers.Host;
+      let url = payload.url;
+      this.makeRequest(name, formData, "put", url, headers, (response) => {
+        return [payload.path];
+      });
+    }
+    makeRequest(name, formData, method, url, headers, retrievePaths) {
+      let request = new XMLHttpRequest();
+      request.open(method, url);
+      Object.entries(headers).forEach(([key, value]) => {
+        request.setRequestHeader(key, value);
+      });
+      request.upload.addEventListener("progress", (e) => {
+        e.detail = {};
+        e.detail.progress = Math.round(e.loaded * 100 / e.total);
+        this.uploadBag.first(name).progressCallback(e);
+      });
+      request.addEventListener("load", () => {
+        if ((request.status + "")[0] === "2") {
+          let paths = retrievePaths(request.response && JSON.parse(request.response));
+          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+          return;
+        }
+        let errors = null;
+        if (request.status === 422) {
+          errors = request.response;
+        }
+        this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+      });
+      this.uploadBag.first(name).request = request;
+      request.send(formData);
+    }
+    startUpload(name, uploadObject) {
+      let fileInfos = uploadObject.files.map((file) => {
+        return { name: file.name, size: file.size, type: file.type };
+      });
+      this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+      setUploadLoading(this.component, name);
+    }
+    markUploadFinished(name, tmpFilenames) {
+      unsetUploadLoading(this.component);
+      let uploadObject = this.uploadBag.shift(name);
+      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+    markUploadErrored(name) {
+      unsetUploadLoading(this.component);
+      this.uploadBag.shift(name).errorCallback();
+      if (this.uploadBag.get(name).length > 0)
+        this.startUpload(name, this.uploadBag.last(name));
+    }
+    cancelUpload(name, cancelledCallback = null) {
+      unsetUploadLoading(this.component);
+      let uploadItem = this.uploadBag.first(name);
+      if (uploadItem) {
+        uploadItem.request.abort();
+        this.uploadBag.shift(name).cancelledCallback();
+        if (cancelledCallback)
+          cancelledCallback();
+      }
+    }
+  };
+  var MessageBag = class {
+    constructor() {
+      this.bag = {};
+    }
+    add(name, thing) {
+      if (!this.bag[name]) {
+        this.bag[name] = [];
+      }
+      this.bag[name].push(thing);
+    }
+    push(name, thing) {
+      this.add(name, thing);
+    }
+    first(name) {
+      if (!this.bag[name])
+        return null;
+      return this.bag[name][0];
+    }
+    last(name) {
+      return this.bag[name].slice(-1)[0];
+    }
+    get(name) {
+      return this.bag[name];
+    }
+    shift(name) {
+      return this.bag[name].shift();
+    }
+    call(name, ...params) {
+      (this.listeners[name] || []).forEach((callback) => {
+        callback(...params);
+      });
+    }
+    has(name) {
+      return Object.keys(this.listeners).includes(name);
+    }
+  };
+  function setUploadLoading() {
+  }
+  function unsetUploadLoading() {
+  }
+  function upload(component, name, file, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }, cancelledCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
+  }
+  function uploadMultiple(component, name, files, finishCallback = () => {
+  }, errorCallback = () => {
+  }, progressCallback = () => {
+  }, cancelledCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
+  }
+  function removeUpload(component, name, tmpFilename, finishCallback = () => {
+  }, errorCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+  }
+  function cancelUpload(component, name, cancelledCallback = () => {
+  }) {
+    let uploadManager = getUploadManager(component);
+    uploadManager.cancelUpload(name, cancelledCallback);
   }
 
   // ../alpine/packages/alpinejs/dist/module.esm.js
@@ -719,21 +978,17 @@
     observer.disconnect();
     currentlyObserving = false;
   }
-  var recordQueue = [];
-  var willProcessRecordQueue = false;
+  var queuedMutations = [];
   function flushObserver() {
-    recordQueue = recordQueue.concat(observer.takeRecords());
-    if (recordQueue.length && !willProcessRecordQueue) {
-      willProcessRecordQueue = true;
-      queueMicrotask(() => {
-        processRecordQueue();
-        willProcessRecordQueue = false;
-      });
-    }
-  }
-  function processRecordQueue() {
-    onMutate(recordQueue);
-    recordQueue.length = 0;
+    let records = observer.takeRecords();
+    queuedMutations.push(() => records.length > 0 && onMutate(records));
+    let queueLengthWhenTriggered = queuedMutations.length;
+    queueMicrotask(() => {
+      if (queuedMutations.length === queueLengthWhenTriggered) {
+        while (queuedMutations.length > 0)
+          queuedMutations.shift()();
+      }
+    });
   }
   function mutateDom(callback) {
     if (!currentlyObserving)
@@ -976,7 +1231,7 @@
     }
   }
   function handleError(error2, el, expression = void 0) {
-    Object.assign(error2, { el, expression });
+    error2 = Object.assign(error2 ?? { message: "No error message given." }, { el, expression });
     console.warn(`Alpine Expression Error: ${error2.message}
 
 ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
@@ -2761,11 +3016,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!el._x_ids[name])
       el._x_ids[name] = findAndIncrementId(name);
   }
-  magic("id", (el) => (name, key = null) => {
-    let root = closestIdRoot(el, name);
-    let id = root ? root._x_ids[name] : findAndIncrementId(name);
-    return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+  magic("id", (el, { cleanup: cleanup22 }) => (name, key = null) => {
+    let cacheKey = `${name}${key ? `-${key}` : ""}`;
+    return cacheIdByNameOnElement(el, cacheKey, cleanup22, () => {
+      let root = closestIdRoot(el, name);
+      let id = root ? root._x_ids[name] : findAndIncrementId(name);
+      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+    });
   });
+  interceptClone((from, to) => {
+    if (from._x_id) {
+      to._x_id = from._x_id;
+    }
+  });
+  function cacheIdByNameOnElement(el, cacheKey, cleanup22, callback) {
+    if (!el._x_id)
+      el._x_id = {};
+    if (el._x_id[cacheKey])
+      return el._x_id[cacheKey];
+    let output = callback();
+    el._x_id[cacheKey] = output;
+    cleanup22(() => {
+      delete el._x_id[cacheKey];
+    });
+    return output;
+  }
   magic("el", (el) => el);
   warnMissingPluginMagic("Focus", "focus", "focus");
   warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3522,6 +3797,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let names = evaluate22(expression);
     names.forEach((name) => setIdRoot(el, name));
   });
+  interceptClone((from, to) => {
+    if (from._x_ids) {
+      to._x_ids = from._x_ids;
+    }
+  });
   mapAttributes(startingWith("@", into(prefix("on:"))));
   directive("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup22 }) => {
     let evaluate22 = expression ? evaluateLater(el, expression) : () => {
@@ -3712,9 +3992,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     toRequestPayload() {
       let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
+      let updates = this.component.mergeQueuedUpdates(propertiesDiff);
       let payload = {
         snapshot: this.component.snapshotEncoded,
-        updates: propertiesDiff,
+        updates,
         calls: this.calls.map((i) => ({
           path: i.path,
           method: i.method,
@@ -3743,7 +4024,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let handleResponse = (response) => {
         let { snapshot, effects } = response;
         respond();
-        this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
+        this.component.mergeNewSnapshot(snapshot, effects, updates);
         this.component.processEffects(this.component.effects);
         if (effects["returns"]) {
           let returns = effects["returns"];
@@ -3923,6 +4204,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.location.href = response.url;
     }
     if (contentIsFromDump(content)) {
+      let dump;
       [dump, content] = splitDumpFromContent(content);
       showHtmlModal(dump);
       finishProfile({ content: "{}", failed: true });
@@ -3940,228 +4222,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function showFailureModal(content) {
     let html = content;
     showHtmlModal(html);
-  }
-
-  // js/features/supportFileUploads.js
-  var uploadManagers = /* @__PURE__ */ new WeakMap();
-  function getUploadManager(component) {
-    if (!uploadManagers.has(component)) {
-      let manager = new UploadManager(component);
-      uploadManagers.set(component, manager);
-      manager.registerListeners();
-    }
-    return uploadManagers.get(component);
-  }
-  function handleFileUpload(el, property, component, cleanup3) {
-    let manager = getUploadManager(component);
-    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
-    let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
-    let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
-    let progress = (progressEvent) => {
-      var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-      el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
-        bubbles: true,
-        detail: { progress: percentCompleted }
-      }));
-    };
-    let eventHandler = (e) => {
-      if (e.target.files.length === 0)
-        return;
-      start3();
-      if (e.target.multiple) {
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress);
-      } else {
-        manager.upload(property, e.target.files[0], finish, error2, progress);
-      }
-    };
-    el.addEventListener("change", eventHandler);
-    let clearFileInputValue = () => {
-      el.value = null;
-    };
-    el.addEventListener("click", clearFileInputValue);
-    cleanup3(() => {
-      el.removeEventListener("change", eventHandler);
-      el.removeEventListener("click", clearFileInputValue);
-    });
-  }
-  var UploadManager = class {
-    constructor(component) {
-      this.component = component;
-      this.uploadBag = new MessageBag();
-      this.removeBag = new MessageBag();
-    }
-    registerListeners() {
-      this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
-        setUploadLoading(this.component, name);
-        this.handleSignedUrl(name, url);
-      });
-      this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
-        setUploadLoading(this.component, name);
-        this.handleS3PreSignedUrl(name, payload);
-      });
-      this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
-      this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
-      this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
-    }
-    upload(name, file, finishCallback, errorCallback, progressCallback) {
-      this.setUpload(name, {
-        files: [file],
-        multiple: false,
-        finishCallback,
-        errorCallback,
-        progressCallback
-      });
-    }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
-      this.setUpload(name, {
-        files: Array.from(files),
-        multiple: true,
-        finishCallback,
-        errorCallback,
-        progressCallback
-      });
-    }
-    removeUpload(name, tmpFilename, finishCallback) {
-      this.removeBag.push(name, {
-        tmpFilename,
-        finishCallback
-      });
-      this.component.$wire.call("_removeUpload", name, tmpFilename);
-    }
-    setUpload(name, uploadObject) {
-      this.uploadBag.add(name, uploadObject);
-      if (this.uploadBag.get(name).length === 1) {
-        this.startUpload(name, uploadObject);
-      }
-    }
-    handleSignedUrl(name, url) {
-      let formData = new FormData();
-      Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
-      let headers = {
-        "Accept": "application/json"
-      };
-      let csrfToken = getCsrfToken();
-      if (csrfToken)
-        headers["X-CSRF-TOKEN"] = csrfToken;
-      this.makeRequest(name, formData, "post", url, headers, (response) => {
-        return response.paths;
-      });
-    }
-    handleS3PreSignedUrl(name, payload) {
-      let formData = this.uploadBag.first(name).files[0];
-      let headers = payload.headers;
-      if ("Host" in headers)
-        delete headers.Host;
-      let url = payload.url;
-      this.makeRequest(name, formData, "put", url, headers, (response) => {
-        return [payload.path];
-      });
-    }
-    makeRequest(name, formData, method, url, headers, retrievePaths) {
-      let request = new XMLHttpRequest();
-      request.open(method, url);
-      Object.entries(headers).forEach(([key, value]) => {
-        request.setRequestHeader(key, value);
-      });
-      request.upload.addEventListener("progress", (e) => {
-        e.detail = {};
-        e.detail.progress = Math.round(e.loaded * 100 / e.total);
-        this.uploadBag.first(name).progressCallback(e);
-      });
-      request.addEventListener("load", () => {
-        if ((request.status + "")[0] === "2") {
-          let paths = retrievePaths(request.response && JSON.parse(request.response));
-          this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
-          return;
-        }
-        let errors = null;
-        if (request.status === 422) {
-          errors = request.response;
-        }
-        this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
-      });
-      request.send(formData);
-    }
-    startUpload(name, uploadObject) {
-      let fileInfos = uploadObject.files.map((file) => {
-        return { name: file.name, size: file.size, type: file.type };
-      });
-      this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
-      setUploadLoading(this.component, name);
-    }
-    markUploadFinished(name, tmpFilenames) {
-      unsetUploadLoading(this.component);
-      let uploadObject = this.uploadBag.shift(name);
-      uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
-      if (this.uploadBag.get(name).length > 0)
-        this.startUpload(name, this.uploadBag.last(name));
-    }
-    markUploadErrored(name) {
-      unsetUploadLoading(this.component);
-      this.uploadBag.shift(name).errorCallback();
-      if (this.uploadBag.get(name).length > 0)
-        this.startUpload(name, this.uploadBag.last(name));
-    }
-  };
-  var MessageBag = class {
-    constructor() {
-      this.bag = {};
-    }
-    add(name, thing) {
-      if (!this.bag[name]) {
-        this.bag[name] = [];
-      }
-      this.bag[name].push(thing);
-    }
-    push(name, thing) {
-      this.add(name, thing);
-    }
-    first(name) {
-      if (!this.bag[name])
-        return null;
-      return this.bag[name][0];
-    }
-    last(name) {
-      return this.bag[name].slice(-1)[0];
-    }
-    get(name) {
-      return this.bag[name];
-    }
-    shift(name) {
-      return this.bag[name].shift();
-    }
-    call(name, ...params) {
-      (this.listeners[name] || []).forEach((callback) => {
-        callback(...params);
-      });
-    }
-    has(name) {
-      return Object.keys(this.listeners).includes(name);
-    }
-  };
-  function setUploadLoading() {
-  }
-  function unsetUploadLoading() {
-  }
-  function upload(component, name, file, finishCallback = () => {
-  }, errorCallback = () => {
-  }, progressCallback = () => {
-  }) {
-    let uploadManager = getUploadManager(component);
-    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
-  }
-  function uploadMultiple(component, name, files, finishCallback = () => {
-  }, errorCallback = () => {
-  }, progressCallback = () => {
-  }) {
-    let uploadManager = getUploadManager(component);
-    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
-  }
-  function removeUpload(component, name, tmpFilename, finishCallback = () => {
-  }, errorCallback = () => {
-  }) {
-    let uploadManager = getUploadManager(component);
-    uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
   }
 
   // js/$wire.js
@@ -4188,7 +4248,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "dispatchSelf": "$dispatchSelf",
     "upload": "$upload",
     "uploadMultiple": "$uploadMultiple",
-    "removeUpload": "$removeUpload"
+    "removeUpload": "$removeUpload",
+    "cancelUpload": "$cancelUpload"
   };
   function generateWireObject(component, state) {
     return new Proxy({}, {
@@ -4248,7 +4309,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
-    return live ? await requestCommit(component) : Promise.resolve();
+    if (live) {
+      component.queueUpdate(property, value);
+      return await requestCommit(component);
+    }
+    return Promise.resolve();
   });
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
@@ -4285,6 +4350,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$upload", (component) => (...params) => upload(component, ...params));
   wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
   wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+  wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
   var parentMemo = /* @__PURE__ */ new WeakMap();
   wireProperty("$parent", (component) => {
     if (parentMemo.has(component))
@@ -4335,6 +4401,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.canonical = extractData(deepClone(this.snapshot.data));
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
+      this.queuedUpdates = {};
       this.$wire = generateWireObject(this, this.reactive);
       this.cleanups = [];
       this.processEffects(this.effects);
@@ -4356,6 +4423,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return dirty;
     }
+    queueUpdate(propertyName, value) {
+      this.queuedUpdates[propertyName] = value;
+    }
+    mergeQueuedUpdates(diff2) {
+      Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
+        Object.entries(diff2).forEach(([diffKey, diffValue]) => {
+          if (diffKey.startsWith(updateValue)) {
+            delete diff2[diffKey];
+          }
+        });
+        diff2[updateKey] = updateValue;
+      });
+      this.queuedUpdates = [];
+      return diff2;
+    }
     applyUpdates(object, updates) {
       for (let key in updates) {
         dataSet(object, key, updates[key]);
@@ -4369,6 +4451,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     processEffects(effects) {
       trigger("effects", this, effects);
+      trigger("effect", {
+        component: this,
+        effects,
+        cleanup: (i) => this.addCleanup(i)
+      });
     }
     get children() {
       let meta = this.snapshot.memo;
@@ -4446,46 +4533,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return Object.values(components);
   }
 
-  // js/features/supportEvents.js
-  on("effects", (component, effects) => {
-    registerListeners(component, effects.listeners || []);
-    dispatchEvents(component, effects.dispatches || []);
-  });
-  function registerListeners(component, listeners2) {
-    listeners2.forEach((name) => {
-      let handler4 = (e) => {
-        if (e.__livewire)
-          e.__livewire.receivedBy.push(component);
-        component.$wire.call("__dispatch", name, e.detail || {});
-      };
-      window.addEventListener(name, handler4);
-      component.addCleanup(() => window.removeEventListener(name, handler4));
-      component.el.addEventListener(name, (e) => {
-        if (!e.__livewire)
-          return;
-        if (e.bubbles)
-          return;
-        if (e.__livewire)
-          e.__livewire.receivedBy.push(component.id);
-        component.$wire.call("__dispatch", name, e.detail || {});
-      });
-    });
-  }
-  function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to }) => {
-      if (self)
-        dispatchSelf(component, name, params);
-      else if (to)
-        dispatchTo(to, name, params);
-      else
-        dispatch3(component, name, params);
-    });
-  }
-  function dispatchEvent(target, name, params, bubbles = true) {
-    let e = new CustomEvent(name, { bubbles, detail: params });
-    e.__livewire = { name, params, receivedBy: [] };
-    target.dispatchEvent(e);
-  }
+  // js/events.js
   function dispatch3(component, name, params) {
     dispatchEvent(component.el, name, params);
   }
@@ -4516,6 +4564,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return () => {
       window.removeEventListener(eventName, handler4);
     };
+  }
+  function dispatchEvent(target, name, params, bubbles = true) {
+    let e = new CustomEvent(name, { bubbles, detail: params });
+    e.__livewire = { name, params, receivedBy: [] };
+    target.dispatchEvent(e);
   }
 
   // js/directives.js
@@ -7042,46 +7095,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
-  // js/plugins/navigate/prefetch.js
-  var prefetches = {};
-  function prefetchHtml(destination, callback) {
-    let path = destination.pathname;
-    if (prefetches[path])
-      return;
-    prefetches[path] = { finished: false, html: null, whenFinished: () => {
-    } };
-    fetch(path).then((i) => i.text()).then((html) => {
-      callback(html);
-    });
-  }
-  function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination) {
-    let state = prefetches[destination.pathname];
-    state.html = html;
-    state.finished = true;
-    state.whenFinished();
-  }
-  function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let uri = destination.pathname + destination.search;
-    if (!prefetches[uri])
-      return ifNoPrefetchExists();
-    if (prefetches[uri].finished) {
-      let html = prefetches[uri].html;
-      delete prefetches[uri];
-      return receive(html);
-    } else {
-      prefetches[uri].whenFinished = () => {
-        let html = prefetches[uri].html;
-        delete prefetches[uri];
-        receive(html);
-      };
-    }
-  }
-
   // js/plugins/navigate/links.js
   function whenThisLinkIsPressed(el, callback) {
+    let isProgrammaticClick = (e) => !e.isTrusted;
     let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
     let isNotPlainEnterKey = (e) => e.which !== 13 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
     el.addEventListener("click", (e) => {
+      if (isProgrammaticClick(e)) {
+        e.preventDefault();
+        callback((whenReleased) => whenReleased());
+        return;
+      }
       if (isNotPlainLeftClick(e))
         return;
       e.preventDefault();
@@ -7103,9 +7127,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (isNotPlainEnterKey(e))
         return;
       e.preventDefault();
-      callback((whenReleased) => {
-        whenReleased();
-      });
+      callback((whenReleased) => whenReleased());
     });
   }
   function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
@@ -7125,6 +7147,70 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function createUrlObjectFromString(urlString) {
     return new URL(urlString, document.baseURI);
+  }
+
+  // js/plugins/navigate/fetch.js
+  function fetchHtml(destination, callback) {
+    let uri = destination.pathname + destination.search;
+    performFetch(uri, (html, finalDestination) => {
+      callback(html, finalDestination);
+    });
+  }
+  function performFetch(uri, callback) {
+    let options = {
+      headers: {
+        "X-Livewire-Navigate": ""
+      }
+    };
+    trigger("navigate.request", {
+      url: uri,
+      options
+    });
+    let finalDestination;
+    fetch(uri, options).then((response) => {
+      finalDestination = createUrlObjectFromString(response.url);
+      return response.text();
+    }).then((html) => {
+      callback(html, finalDestination);
+    });
+  }
+
+  // js/plugins/navigate/prefetch.js
+  var prefetches = {};
+  function prefetchHtml(destination, callback) {
+    let path = destination.pathname;
+    if (prefetches[path])
+      return;
+    prefetches[path] = { finished: false, html: null, whenFinished: () => {
+    } };
+    performFetch(path, (html, routedUri) => {
+      callback(html, routedUri);
+    });
+  }
+  function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
+    let state = prefetches[destination.pathname];
+    state.html = html;
+    state.finished = true;
+    state.finalDestination = finalDestination;
+    state.whenFinished();
+  }
+  function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
+    let uri = destination.pathname + destination.search;
+    if (!prefetches[uri])
+      return ifNoPrefetchExists();
+    if (prefetches[uri].finished) {
+      let html = prefetches[uri].html;
+      let finalDestination = prefetches[uri].finalDestination;
+      delete prefetches[uri];
+      return receive(html, finalDestination);
+    } else {
+      prefetches[uri].whenFinished = () => {
+        let html = prefetches[uri].html;
+        let finalDestination = prefetches[uri].finalDestination;
+        delete prefetches[uri];
+        receive(html, finalDestination);
+      };
+    }
   }
 
   // js/plugins/navigate/teleport.js
@@ -7258,7 +7344,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       right: 0px;
       width: 100px;
       height: 100%;
-      box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+      box-shadow: 0 0 10px var(--livewire-progress-bar-color, #29d), 0 0 5px var(--livewire-progress-bar-color, #29d);
       opacity: 1.0;
 
       -webkit-transform: rotate(3deg) translate(0px, -4px);
@@ -7308,6 +7394,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       100% { transform: rotate(360deg); }
     }
     `;
+    let nonce2 = getNonce();
+    if (nonce2) {
+      style.nonce = nonce2;
+    }
     document.head.appendChild(style);
   }
 
@@ -7439,14 +7529,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return result.trim();
   }
 
-  // js/plugins/navigate/fetch.js
-  function fetchHtml(destination, callback) {
-    let uri = destination.pathname + destination.search;
-    fetch(uri).then((i) => i.text()).then((html) => {
-      callback(html);
-    });
-  }
-
   // js/plugins/navigate/index.js
   var enablePersist = true;
   var showProgressBar = true;
@@ -7464,14 +7546,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let shouldPrefetchOnHover = modifiers.includes("hover");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
         let destination = extractDestinationFromLink(el);
-        prefetchHtml(destination, (html) => {
-          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+        prefetchHtml(destination, (html, finalDestination) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
       });
       whenThisLinkIsPressed(el, (whenItIsReleased) => {
         let destination = extractDestinationFromLink(el);
-        prefetchHtml(destination, (html) => {
-          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+        prefetchHtml(destination, (html, finalDestination) => {
+          storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
           navigateTo(destination);
@@ -7480,7 +7562,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function navigateTo(destination) {
       showProgressBar && showAndStartProgressBar();
-      fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
+      fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
         fireEventForOtherLibariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
@@ -7496,7 +7578,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             });
             restoreScrollPositionOrScrollToTop();
             fireEventForOtherLibariesToHookInto("alpine:navigated");
-            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
+            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
@@ -7684,7 +7766,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       },
       set(url, key, value) {
         let data2 = fromQueryString(url.search);
-        data2[key] = value;
+        data2[key] = stripNulls(unwrap(value));
         url.search = toQueryString(data2);
         return url;
       },
@@ -7695,6 +7777,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return url;
       }
     };
+  }
+  function stripNulls(value) {
+    if (!isObjecty(value))
+      return value;
+    for (let key in value) {
+      if (value[key] === null)
+        delete value[key];
+      else
+        value[key] = stripNulls(value[key]);
+    }
+    return value;
   }
   function toQueryString(data2) {
     let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
@@ -8079,7 +8172,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // ../alpine/packages/mask/dist/module.esm.js
   function src_default8(Alpine3) {
-    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2 }) => {
+    Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
       queueMicrotask(() => {
@@ -8106,8 +8199,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el._x_model)
           el._x_model.set(el.value);
       });
-      el.addEventListener("input", () => processInputValue(el));
-      el.addEventListener("blur", () => processInputValue(el, false));
+      const controller = new AbortController();
+      cleanup3(() => {
+        controller.abort();
+      });
+      el.addEventListener("input", () => processInputValue(el), {
+        signal: controller.signal,
+        capture: true
+      });
+      el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
       function processInputValue(el2, shouldRestoreCursor = true) {
         let input = el2.value;
         let template = templateFn(input);
@@ -8250,6 +8350,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.plugin(module_default8);
     module_default.addRootSelector(() => "[wire\\:id]");
     module_default.onAttributesAdded((el, attributes) => {
+      if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+        return;
       let component = closestComponent(el, false);
       if (!component)
         return;
@@ -8263,6 +8365,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     module_default.interceptInit(module_default.skipDuringClone((el) => {
+      if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+        return;
       if (el.hasAttribute("wire:id")) {
         let component2 = initComponent(el);
         module_default.onAttributeRemoved(el, "wire:id", () => {
@@ -8417,13 +8521,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let scripts = effects.scripts;
     if (scripts) {
       Object.entries(scripts).forEach(([key, content]) => {
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
-          module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+          module_default.dontAutoEvaluateFunctions(() => {
+            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+          });
         });
       });
     }
@@ -8530,7 +8636,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
     if (js) {
@@ -8549,28 +8655,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportLazyLoading.js
   var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
   on("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.lazyLoaded === void 0)
       return;
+    componentsThatAreLazy.add(component);
     if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
       componentsThatWantToBeBundled.add(component);
     }
   });
   on("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
+      if (!componentsThatAreLazy.has(commit.component))
+        return;
       if (componentsThatWantToBeBundled.has(commit.component)) {
         commit.isolate = false;
         componentsThatWantToBeBundled.delete(commit.component);
       } else {
         commit.isolate = true;
       }
+      componentsThatAreLazy.delete(commit.component);
     });
   });
 
   // js/features/supportQueryString.js
-  on("component.init", ({ component, cleanup: cleanup3 }) => {
-    let effects = component.effects;
+  on("effect", ({ component, effects, cleanup: cleanup3 }) => {
     let queryString = effects["url"];
     if (!queryString)
       return;
@@ -8624,7 +8734,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       options.headers["X-Socket-ID"] = window.Echo.socketId();
     }
   });
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let listeners2 = effects.listeners || [];
     listeners2.forEach((event) => {
       if (event.startsWith("echo")) {
@@ -8673,6 +8783,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
+  // js/features/supportIsolating.js
+  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  on("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.isolate !== true)
+      return;
+    componentsThatAreIsolated.add(component);
+  });
+  on("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      if (!componentsThatAreIsolated.has(commit.component))
+        return;
+      commit.isolate = true;
+    });
+  });
+
   // js/features/supportNavigate.js
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
   document.addEventListener("alpine:navigated", (e) => {
@@ -8698,7 +8824,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportRedirects.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     if (!effects["redirect"])
       return;
     let url = effects["redirect"];
@@ -8775,7 +8901,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportMorphDom.js
-  on("effects", (component, effects) => {
+  on("effect", ({ component, effects }) => {
     let html = effects.html;
     if (!html)
       return;
@@ -8783,6 +8909,42 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       morph2(component, component.el, html);
     });
   });
+
+  // js/features/supportEvents.js
+  on("effect", ({ component, effects }) => {
+    registerListeners(component, effects.listeners || []);
+    dispatchEvents(component, effects.dispatches || []);
+  });
+  function registerListeners(component, listeners2) {
+    listeners2.forEach((name) => {
+      let handler4 = (e) => {
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component);
+        component.$wire.call("__dispatch", name, e.detail || {});
+      };
+      window.addEventListener(name, handler4);
+      component.addCleanup(() => window.removeEventListener(name, handler4));
+      component.el.addEventListener(name, (e) => {
+        if (!e.__livewire)
+          return;
+        if (e.bubbles)
+          return;
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component.id);
+        component.$wire.call("__dispatch", name, e.detail || {});
+      });
+    });
+  }
+  function dispatchEvents(component, dispatches) {
+    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+      if (self)
+        dispatchSelf(component, name, params);
+      else if (to)
+        dispatchTo(to, name, params);
+      else
+        dispatch3(component, name, params);
+    });
+  }
 
   // js/directives/wire-transition.js
   on("morph.added", ({ el }) => {
@@ -9030,7 +9192,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       }
       let hasMatchingUpdate = Object.keys(updates).some((property) => {
-        return property.startsWith(target);
+        if (property.includes(".")) {
+          let propertyRoot = property.split(".")[0];
+          if (propertyRoot === target)
+            return true;
+        }
+        return property === target;
       });
       if (hasMatchingUpdate)
         return true;

@@ -45,6 +45,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 return (new FirstPage)();
             })->middleware('web');
             Route::get('/first-outside', FirstPageWithLinkOutside::class)->middleware('web');
+            Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
@@ -645,6 +646,38 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    /** @test */
+    public function redirects_are_reflected_properly_in_the_url()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->click('@redirect.to.second.link')
+                ->waitForText('On second')
+                ->assertPathIs('/second')
+            ;
+        });
+    }
+
+    /** @test */
+    public function can_programmatically_click_navigate_links()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->tap(function ($browser) {
+                    $browser->script(<<<'JS'
+                        document.querySelector('a[href="/second"]').click()
+                    JS);
+                })
+                ->waitForText('On second')
+                ->assertPathIs('/second')
+            ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -685,6 +718,7 @@ class FirstPage extends Component
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <a href="/second-remote-asset" wire:navigate.hover dusk="link.to.asset">Go to asset page</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
+            <a href="/redirect-to-second" wire:navigate dusk="redirect.to.second.link">Redirect to second page from link</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
             <livewire:first-page-child />

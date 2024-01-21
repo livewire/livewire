@@ -1,6 +1,6 @@
 import { closestComponent, destroyComponent, initComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
-import { trigger } from './events'
+import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
@@ -30,6 +30,10 @@ export function start() {
     Alpine.addRootSelector(() => '[wire\\:id]')
 
     Alpine.onAttributesAdded((el, attributes) => {
+        // if there are no "wire:" directives we don't need to process this element any further.
+        // This prevents Livewire from causing general slowness for other Alpine elements on the page...
+        if (! Array.from(attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
+
         let component = closestComponent(el, false)
 
         if (! component) return
@@ -47,6 +51,10 @@ export function start() {
 
     Alpine.interceptInit(
         Alpine.skipDuringClone(el => {
+            // if there are no "wire:" directives we don't need to process this element any further.
+            // This prevents Livewire from causing general slowness for other Alpine elements on the page...
+            if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
+
             if (el.hasAttribute('wire:id')) {
                 let component = initComponent(el)
 

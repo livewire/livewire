@@ -210,6 +210,18 @@ For example, if you are looping through an array of posts, you may set the `wire
 </div>
 ```
 
+If you are looping through an array that is rendering Livewire components you may set the key as a component attribute `:key()` or pass the key as a third argument when using the `@livewire` directive.
+
+```blade
+<div>
+    @foreach ($posts as $post)
+        <livewire:post-item :$post :key="$post->id">
+
+        @livewire(PostItem::class, ['post' => $post], key($post->id))
+    @endforeach
+</div>
+```
+
 ### Binding inputs to properties
 
 One of Livewire's most powerful features is "data binding": the ability to automatically keep properties in-sync with form inputs on the page.
@@ -298,7 +310,7 @@ You can include a Livewire component in your Blade templates using the `<livewir
 <livewire:create-post />
 ```
 
-If the component class is nested deeper within the ``app/Livewire/`` directory, you may use the ``.`` character to indicate directory nesting. For example, if we assume a component is located at ``app/Livewire/EditorPosts/CreatePost.php``, we may render it like so:
+If the component class is nested deeper within the `app/Livewire/` directory, you may use the `.` character to indicate directory nesting. For example, if we assume a component is located at `app/Livewire/EditorPosts/CreatePost.php`, we may render it like so:
 
 ```blade
 <livewire:editor-posts.create-post />
@@ -599,7 +611,7 @@ If your [layout file](#layout-files) has any named slots in addition to `$slot`,
 Then, in your component view, define an `<x-slot>` element outside the root element:
 
 ```blade
-<x-slot:lang>fr</x-slot> // This component is in French [!tl highlight]
+<x-slot:lang>fr</x-slot> // This component is in French [tl! highlight]
 
 <div>
     // French content goes here...

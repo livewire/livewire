@@ -445,6 +445,12 @@ If you want to test that a specific validation rule has failed, you can pass an 
 $this->assertHasErrors(['title' => ['required']]);
 ```
 
+Or if you'd rather assert a validation message exists, you can do so as well:
+
+```php
+$this->assertHasErrors(['title' => ['The title field is required.']]);
+```
+
 ### Authorization
 
 Authorizing actions relying on untrusted input in your Livewire components is [essential](/docs/properties#authorizing-the-input). Livewire provides `assertUnauthorized()` and `assertForbidden()` methods to ensure that an authentication or authorization check has failed:
@@ -682,7 +688,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertHasErrors('title')`                            | Assert that validation has failed for the `title` property                                                                                                                           |
 | `assertHasErrors(['title' => ['required', 'min:6']])`   | Assert that the provided validation rules failed for the `title` property                                                                                                            |
 | `assertHasNoErrors('title')`                          | Assert that there are no validation errors for the `title` property                                                                                                                  |
-| `assertHasNoErrors(['title', ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
+| `assertHasNoErrors(['title' => ['required', 'min:6']])` | Assert that the provided validation rules haven't failed for the `title` property                                                                                                    |
 | `assertRedirect()`                                    | Assert that a redirect has been triggered from within the component                                                                                                                  |
 | `assertRedirect('/posts')`                            | Assert the component triggered a redirect to the `/posts` endpoint                                                                                                                   |
 | `assertRedirect(ShowPosts::class)`                    | Assert that the component triggered a redirect to the `ShowPosts` component                                                                                                          |
@@ -693,6 +699,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertViewIs('livewire.show-posts')`                 | Assert that the component's render method returned the provided view name                                                                                                            |
 | `assertFileDownloaded()`                              | Assert that a file download has been triggered                                                                                                                                       |
 | `assertFileDownloaded($filename)`                     | Assert that a file download matching the provided file name has been triggered                                                                                                       |
+| `assertNoFileDownloaded()`                            | Assert that no file download has been triggered                                                                                                                                       |
 | `assertUnauthorized()`                                | Assert that an authorization exception has been thrown within the component (status code: 401)                                                                                       |
 | `assertForbidden()`                                   | Assert that an error response was triggered with the status code: 403                                                                                                                |
 | `assertStatus(500)`                                   | Assert that the latest response matches the provided status code                                                                                                                     |

@@ -1,7 +1,7 @@
 import { dataSet, deepClone, deeplyEqual, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponent } from '@/store'
-import { trigger } from '@/events'
+import { trigger } from '@/hooks'
 
 export class Component {
     constructor(el) {
@@ -34,6 +34,8 @@ export class Component {
         this.ephemeral = extractData(deepClone(this.snapshot.data))
         // "reactive" is just ephemeral, except when you mutate it, front-ends like Vue react.
         this.reactive = Alpine.reactive(this.ephemeral)
+
+        this.queuedUpdates = {}
 
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
@@ -77,6 +79,32 @@ export class Component {
         return dirty
     }
 
+    queueUpdate(propertyName, value) {
+        // These updates will be applied first on the server
+        // on the next request, then trickle back to the
+        // client on the next request that gets sent.
+        this.queuedUpdates[propertyName] = value
+    }
+
+    mergeQueuedUpdates(diff) {
+        // Before adding queuedUpdates into the diff list, we will remove any diffs
+        // that will be overriden by the queued update. Queued updates will take
+        // priority against ephemeral updates that have happend since them...
+        Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
+            Object.entries(diff).forEach(([diffKey, diffValue]) => {
+                if (diffKey.startsWith(updateValue)) {
+                    delete diff[diffKey]
+                }
+            })
+
+            diff[updateKey] = updateValue
+        })
+
+        this.queuedUpdates = []
+
+        return diff
+    }
+
     applyUpdates(object, updates) {
         for (let key in updates) {
             dataSet(object, key, updates[key])
@@ -99,7 +127,14 @@ export class Component {
      * users interact with, triggering reactive effects.
      */
     processEffects(effects) {
+        // This is for BC.
         trigger('effects', this, effects)
+
+        trigger('effect', {
+            component: this,
+            effects,
+            cleanup: i => this.addCleanup(i)
+        })
     }
 
     get children() {
