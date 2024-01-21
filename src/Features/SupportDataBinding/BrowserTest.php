@@ -38,6 +38,45 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    function can_update_bound_value_from_lifecyle_hook()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = null;
+
+            public $bar = null;
+
+            public function updatedFoo(): void
+            {
+                $this->bar = null;
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <select wire:model.live="foo" dusk="fooSelect">
+                            <option value=""></option>
+                            <option value="one">One</option>
+                            <option value="two">Two</option>
+                            <option value="three">Three</option>
+                        </select>
+
+                        <select wire:model="bar" dusk="barSelect">
+                            <option value=""></option>
+                            <option value="one">One</option>
+                            <option value="two">Two</option>
+                            <option value="three">Three</option>
+                        </select>
+                    </div>
+                BLADE;
+            }
+        })
+            ->select('@barSelect', 'one')
+            ->waitForLivewire()->select('@fooSelect', 'one')
+            ->assertSelected('@barSelect', '')
+        ;
+    }
+
     public function updates_dependent_select_options_correctly_when_wire_key_is_applied()
     {
         Livewire::visit(new class extends Component {
