@@ -120,7 +120,7 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
-        component.queueUpdate(property, value   )
+        component.queueUpdate(property, value)
 
         return await requestCommit(component)
     }
