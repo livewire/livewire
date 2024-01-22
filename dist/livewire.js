@@ -1013,16 +1013,16 @@
       deferredMutations = deferredMutations.concat(mutations);
       return;
     }
-    let addedNodes = [];
-    let removedNodes = [];
+    let addedNodes = /* @__PURE__ */ new Set();
+    let removedNodes = /* @__PURE__ */ new Set();
     let addedAttributes = /* @__PURE__ */ new Map();
     let removedAttributes = /* @__PURE__ */ new Map();
     for (let i = 0; i < mutations.length; i++) {
       if (mutations[i].target._x_ignoreMutationObserver)
         continue;
       if (mutations[i].type === "childList") {
-        mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.push(node));
-        mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.push(node));
+        mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.add(node));
+        mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.add(node));
       }
       if (mutations[i].type === "attributes") {
         let el = mutations[i].target;
@@ -1055,7 +1055,7 @@
       onAttributeAddeds.forEach((i) => i(el, attrs));
     });
     for (let node of removedNodes) {
-      if (addedNodes.includes(node))
+      if (addedNodes.has(node))
         continue;
       onElRemoveds.forEach((i) => i(node));
       destroyTree(node);
@@ -1065,8 +1065,6 @@
       node._x_ignore = true;
     });
     for (let node of addedNodes) {
-      if (removedNodes.includes(node))
-        continue;
       if (!node.isConnected)
         continue;
       delete node._x_ignoreSelf;
@@ -1344,7 +1342,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return {
       before(directive22) {
         if (!directiveHandlers[directive22]) {
-          console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
+          console.warn(String.raw`Cannot find directive \`${directive22}\`. \`${name}\` will use the default order of execution`);
           return;
         }
         const pos = directiveOrder.indexOf(directive22);
@@ -2265,7 +2263,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.3",
+    version: "3.13.4",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3339,7 +3337,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       setValue(getInputValue(el, modifiers, e, getValue()));
     });
     if (modifiers.includes("fill")) {
-      if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
+      if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
         el.dispatchEvent(new Event(event, {}));
       }
     }
@@ -5611,9 +5609,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         allowOutsideClick: true,
         fallbackFocus: () => el
       };
-      let autofocusEl = el.querySelector("[autofocus]");
-      if (autofocusEl)
-        options.initialFocus = autofocusEl;
+      if (modifiers.includes("noautofocus")) {
+        options.initialFocus = false;
+      } else {
+        let autofocusEl = el.querySelector("[autofocus]");
+        if (autofocusEl)
+          options.initialFocus = autofocusEl;
+      }
       let trap = createFocusTrap(el, options);
       let undoInert = () => {
       };

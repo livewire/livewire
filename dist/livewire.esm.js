@@ -1290,6 +1290,7 @@ var require_module_cjs = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
+      Alpine: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
@@ -1585,16 +1586,16 @@ var require_module_cjs = __commonJS({
         deferredMutations = deferredMutations.concat(mutations);
         return;
       }
-      let addedNodes = [];
-      let removedNodes = [];
+      let addedNodes = /* @__PURE__ */ new Set();
+      let removedNodes = /* @__PURE__ */ new Set();
       let addedAttributes = /* @__PURE__ */ new Map();
       let removedAttributes = /* @__PURE__ */ new Map();
       for (let i = 0; i < mutations.length; i++) {
         if (mutations[i].target._x_ignoreMutationObserver)
           continue;
         if (mutations[i].type === "childList") {
-          mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.push(node));
-          mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.push(node));
+          mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.add(node));
+          mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.add(node));
         }
         if (mutations[i].type === "attributes") {
           let el = mutations[i].target;
@@ -1627,7 +1628,7 @@ var require_module_cjs = __commonJS({
         onAttributeAddeds.forEach((i) => i(el, attrs));
       });
       for (let node of removedNodes) {
-        if (addedNodes.includes(node))
+        if (addedNodes.has(node))
           continue;
         onElRemoveds.forEach((i) => i(node));
         destroyTree(node);
@@ -1637,8 +1638,6 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
-        if (removedNodes.includes(node))
-          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -1916,7 +1915,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return {
         before(directive22) {
           if (!directiveHandlers[directive22]) {
-            console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
+            console.warn(String.raw`Cannot find directive \`${directive22}\`. \`${name}\` will use the default order of execution`);
             return;
           }
           const pos = directiveOrder.indexOf(directive22);
@@ -2837,7 +2836,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.3",
+      version: "3.13.4",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3264,7 +3263,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         setValue(getInputValue(el, modifiers, e, getValue()));
       });
       if (modifiers.includes("fill")) {
-        if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
+        if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
           el.dispatchEvent(new Event(event, {}));
         }
       }
@@ -3779,12 +3778,13 @@ var require_module_cjs2 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
+      collapse: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      Alpine21.directive("collapse", collapse2);
-      collapse2.inline = (el, { modifiers }) => {
+      Alpine21.directive("collapse", collapse3);
+      collapse3.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
         el._x_doShow = () => {
@@ -3792,7 +3792,7 @@ var require_module_cjs2 = __commonJS({
         el._x_doHide = () => {
         };
       };
-      function collapse2(el, { modifiers }) {
+      function collapse3(el, { modifiers }) {
         let duration = modifierValue(modifiers, "duration", 250) / 1e3;
         let floor = modifierValue(modifiers, "min", 0);
         let fullyHide = !modifiers.includes("min");
@@ -4670,7 +4670,8 @@ var require_module_cjs3 = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default
+      default: () => module_default,
+      focus: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
@@ -4794,9 +4795,13 @@ var require_module_cjs3 = __commonJS({
           allowOutsideClick: true,
           fallbackFocus: () => el
         };
-        let autofocusEl = el.querySelector("[autofocus]");
-        if (autofocusEl)
-          options.initialFocus = autofocusEl;
+        if (modifiers.includes("noautofocus")) {
+          options.initialFocus = false;
+        } else {
+          let autofocusEl = el.querySelector("[autofocus]");
+          if (autofocusEl)
+            options.initialFocus = autofocusEl;
+        }
         let trap = (0, import_focus_trap.createFocusTrap)(el, options);
         let undoInert = () => {
         };
@@ -4896,11 +4901,12 @@ var require_module_cjs4 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default
+      default: () => module_default,
+      persist: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      let persist2 = () => {
+      let persist3 = () => {
         let alias;
         let storage;
         try {
@@ -4934,8 +4940,8 @@ var require_module_cjs4 = __commonJS({
           };
         });
       };
-      Object.defineProperty(Alpine21, "$persist", { get: () => persist2() });
-      Alpine21.magic("persist", persist2);
+      Object.defineProperty(Alpine21, "$persist", { get: () => persist3() });
+      Alpine21.magic("persist", persist3);
       Alpine21.persist = (key, { get, set }, storage = localStorage) => {
         let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
         set(initial);
@@ -4981,7 +4987,8 @@ var require_module_cjs5 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default
+      default: () => module_default,
+      intersect: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
@@ -5062,6 +5069,7 @@ var require_module_cjs6 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
+      anchor: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
@@ -6600,7 +6608,7 @@ var require_module_cjs7 = __commonJS({
     var module_exports = {};
     __export(module_exports, {
       default: () => module_default,
-      morph: () => morph3
+      morph: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
@@ -6963,6 +6971,7 @@ var require_module_cjs8 = __commonJS({
     var module_exports = {};
     __export(module_exports, {
       default: () => module_default,
+      mask: () => src_default,
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
