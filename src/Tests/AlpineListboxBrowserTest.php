@@ -59,9 +59,11 @@ class AlpineListboxBrowserTest extends \Tests\BrowserTestCase
             //     return $this->driver->executeScript("return !! window.alpineUiLoaded");
             // })
             ->click('@openListbox')
+            ->assertSeeIn('@updatesCount', '1')
             ->pressAndWaitFor('@listboxOption', 5)
-            ->assertDontSeeIn('@updatesCount', '0')
-            ->assertDontSeeIn('@updatesCount', '1')
+            ->assertDontSeeIn('@updatesCount', '2')
+            ->assertDontSeeIn('@updatesCount', '3')
+            ->assertDontSeeIn('@updatesCount', '4')
         ;
     }
 }
