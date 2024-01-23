@@ -2,12 +2,13 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use Livewire\Mechanisms\Mechanism;
 use function Livewire\{ invade, store, trigger, wrap };
-use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
-use Livewire\Exceptions\MethodNotFoundException;
-use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
+use Livewire\Drawer\Utils;
+use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Livewire;
+use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Mechanisms\Mechanism;
 use ReflectionUnionType;
 
 class HandleComponents extends Mechanism
@@ -261,13 +262,19 @@ class HandleComponents extends Mechanism
     {
         $viewPath = config('livewire.view_path', resource_path('views/livewire'));
 
-        $dotName = $component->getName();
+        if (method_exists($component, 'render')) {
+            $viewOrString = wrap($component)->render();
+        } else {
+            $dotName = $component->getName();
+            $fileName = str($dotName)->replace('.', '/')->__toString();
+            $viewName = Livewire::resolveViewName($component);
 
-        $fileName = str($dotName)->replace('.', '/')->__toString();
-
-        $viewOrString = method_exists($component, 'render')
-            ? wrap($component)->render()
-            : View::file($viewPath . '/' . $fileName . '.blade.php');
+            if ($viewName) {
+                $viewOrString = app('view')->make($viewName);
+            } else {
+                $viewOrString = View::file($viewPath . '/' . $fileName . '.blade.php');
+            }
+        }
 
         $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
 

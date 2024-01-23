@@ -67,6 +67,16 @@ class LivewireManager
         return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
     }
 
+    public function resolveViewNameUsing($resolver)
+    {
+        app(ComponentRegistry::class)->resolveMissingViewName($resolver);
+    }
+
+    public function resolveViewName($component)
+    {
+        return app(ComponentRegistry::class)->resolveViewName($component);
+    }
+
     function mount($name, $params = [], $key = null)
     {
         return app(HandleComponents::class)->mount($name, $params, $key);

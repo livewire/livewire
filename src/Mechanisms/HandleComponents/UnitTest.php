@@ -205,6 +205,18 @@ class UnitTest extends \Tests\TestCase
             ])
         ;
     }
+
+    /** @test */
+    public function it_resolves_view_name_using_callback()
+    {
+        Livewire::resolveViewNameUsing(function ($component) {
+            $this->assertInstanceOf(BasicComponentWithoutRenderMethod::class, $component);
+
+            return 'null-view';
+        });
+
+        Livewire::test(BasicComponentWithoutRenderMethod::class)->assertViewIs('null-view');
+    }
 }
 
 class BasicComponent extends Component
@@ -247,4 +259,8 @@ class CountForm extends Form
 class SuitForm extends Form
 {
     public UnitSuit $selected;
+}
+
+class BasicComponentWithoutRenderMethod extends Component
+{
 }

@@ -10,6 +10,7 @@ class ComponentRegistry extends Mechanism
     protected $missingComponentResolvers = [];
     protected $nonAliasedClasses = [];
     protected $aliases = [];
+    protected $missingViewNameResolver = null;
 
     function component($name, $class = null)
     {
@@ -79,6 +80,16 @@ class ComponentRegistry extends Mechanism
     function resolveMissingComponent($resolver)
     {
         $this->missingComponentResolvers[] = $resolver;
+    }
+
+    function resolveMissingViewName($resolver)
+    {
+        $this->missingViewNameResolver = $resolver;
+    }
+
+    function resolveViewName(Component $component) : ?string
+    {
+        return $this->missingViewNameResolver ? call_user_func($this->missingViewNameResolver, $component) : null;
     }
 
     protected function getNameAndClass($nameComponentOrClass)
