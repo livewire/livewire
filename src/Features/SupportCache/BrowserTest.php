@@ -37,4 +37,30 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@count', '2')
             ;
     }
+
+    /** @test */
+    public function it_removes_cached_property_when_ttl_is_passed()
+    {
+        Livewire::visit(new class extends Component {
+            #[Cache(ttl: 1)]
+            public $count = 0;
+
+            public function increment()
+            {
+                usleep(1001);
+                $this->count++;
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button dusk="button" wire:click="increment">+</button>
+                <span dusk="count">{{ $count }}</span>
+            </div>
+            HTML; }
+        })
+            ->assertSeeIn('@count', '0')
+            ->waitForLivewire()->click('@button')
+            ->assertDontSeeIn('@count', '0')
+            ;
+    }
 }
