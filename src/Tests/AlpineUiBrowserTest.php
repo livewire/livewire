@@ -93,7 +93,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
                                     })
                             },
                             updates: 0,
-                        }" x-modelable="selected" wire:model.live="value" x-effect="console.log(value); updates++">
+                        }" x-modelable="selected" wire:model.live="value" x-effect="console.log(selected); updates++">
                         <div>updates: <span x-text="updates" dusk="updatesCount"></span></div>
 
                         <div x-combobox x-model="selected">
