@@ -3,10 +3,10 @@
 namespace Livewire\Attributes;
 
 use Attribute;
-use Livewire\Features\SupportSession\BaseSession;
+use Livewire\Features\SupportCache\BaseCache;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class Cache extends BaseSession
+class Cache extends BaseCache
 {
     //
 }

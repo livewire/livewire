@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportSession;
+namespace Livewire\Features\SupportCache;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Attribute;
