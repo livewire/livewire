@@ -175,7 +175,6 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->tinker()
             ->assertQueryStringMissing('search')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
