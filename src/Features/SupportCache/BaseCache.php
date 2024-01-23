@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportSession;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Attribute;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class BaseCache extends LivewireAttribute
@@ -12,15 +13,16 @@ class BaseCache extends LivewireAttribute
     function __construct(
         protected $key = null,
         protected $ttl = null,
+        protected $private = false,
     ) {}
 
     public function mount($params)
     {
         if (! $this->exists()) return;
 
-        $fromSession = $this->read();
+        $fromCache = $this->read();
 
-        $this->setValue($fromSession);
+        $this->setValue($fromCache);
     }
 
     public function dehydrate($context)
@@ -45,6 +47,8 @@ class BaseCache extends LivewireAttribute
 
     protected function key()
     {
-        return $this->key ?: (string) 'lw' . crc32($this->component->getName() . $this->getName());
+        $key = $this->key ?: (string) 'lw' . crc32($this->component->getName() . $this->getName());
+
+        return $this->private ? Session::getId() . '-' . $key : $key;
     }
 }
