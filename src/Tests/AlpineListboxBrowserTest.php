@@ -55,9 +55,9 @@ class AlpineListboxBrowserTest extends \Tests\BrowserTestCase
             }
         })
             ->waitForLivewireToLoad()
-            ->waitUsing(6, 25, function () {
-                return $this->driver->executeScript("return !! window.alpineUiLoaded");
-            })
+            // ->waitUsing(6, 25, function () {
+            //     return $this->driver->executeScript("return !! window.alpineUiLoaded");
+            // })
             ->click('@openListbox')
             ->pressAndWaitFor('@listboxOption', 5)
             ->assertDontSeeIn('@updatesCount', '0')
