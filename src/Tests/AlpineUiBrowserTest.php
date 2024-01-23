@@ -11,12 +11,14 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
     public function component_with_listbox_and_wire_model_live_should_not_cause_infinite_loop()
     {
         Livewire::visit(new class extends Component {
-            public ?array $value = null;
+            public ?array $foo = null;
 
             function render() {
                 return <<<'HTML'
                 <div>
-                    <script src="https://unpkg.com/@alpinejs/ui@3.13.4-beta.0/dist/cdn.min.js"></script>
+                    <script src="http://alpine.test/packages/ui/dist/cdn.js"></script>
+
+                    <button wire:click="$refresh">refresh</button>
 
                     <div
                         x-data="{
@@ -27,7 +29,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
                                 disabled: false,
                             }],
                             updates: 0,
-                        }" x-modelable="value" wire:model.live="value" x-effect="console.log(value); updates++">
+                        }" x-modelable="value" wire:model.live="foo" x-effect="console.log(value); updates++">
                         <div>updates: <span x-text="updates" dusk="updatesCount"></span></div>
 
                         <div x-listbox x-model="value">
@@ -58,10 +60,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
             ->click('@openListbox')
             ->assertSeeIn('@updatesCount', '1')
             ->pressAndWaitFor('@listboxOption', 5)
-            ->assertDontSeeIn('@updatesCount', '1')
-            ->assertDontSeeIn('@updatesCount', '2')
-            ->assertDontSeeIn('@updatesCount', '3')
-            ->assertDontSeeIn('@updatesCount', '4')
+            ->assertSeeIn('@updatesCount', '2')
         ;
     }
 
@@ -138,8 +137,8 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
             ->click('@openCombobox')
             ->assertSeeIn('@updatesCount', '1')
             ->pressAndWaitFor('@comboboxOption', 5)
+            ->assertSeeIn('@updatesCount', '2')
             ->assertDontSeeIn('@updatesCount', '1')
-            ->assertDontSeeIn('@updatesCount', '2')
             ->assertDontSeeIn('@updatesCount', '3')
             ->assertDontSeeIn('@updatesCount', '4')
         ;
