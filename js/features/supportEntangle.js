@@ -39,7 +39,7 @@ export function generateEntangleFunction(component, cleanup) {
 
                 cleanup(() => release())
 
-            return livewireComponent.get(name)
+            return cloneIfObject(livewireComponent.get(name))
         }, obj => {
             Object.defineProperty(obj, 'live', {
                 get() {
@@ -52,4 +52,10 @@ export function generateEntangleFunction(component, cleanup) {
 
         return interceptor(livewirePropertyValue)
     }
+}
+
+function cloneIfObject(value) {
+    return typeof value === 'object'
+        ? JSON.parse(JSON.stringify(value))
+        : value
 }

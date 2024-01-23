@@ -2138,14 +2138,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let outerHash;
     let innerHash;
     let reference = effect(() => {
-      const outer = outerGet();
-      const inner = innerGet();
+      let outer = outerGet();
+      let inner = innerGet();
       if (firstRun) {
         innerSet(cloneIfObject(outer));
         firstRun = false;
       } else {
-        const outerHashLatest = JSON.stringify(outer);
-        const innerHashLatest = JSON.stringify(inner);
+        let outerHashLatest = JSON.stringify(outer);
+        let innerHashLatest = JSON.stringify(inner);
         if (outerHashLatest !== outerHash) {
           innerSet(cloneIfObject(outer));
         } else if (outerHashLatest !== innerHashLatest) {
@@ -3852,7 +3852,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           }
         });
         cleanup3(() => release2());
-        return livewireComponent.get(name);
+        return cloneIfObject2(livewireComponent.get(name));
       }, (obj) => {
         Object.defineProperty(obj, "live", {
           get() {
@@ -3863,6 +3863,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return interceptor2(livewirePropertyValue);
     };
+  }
+  function cloneIfObject2(value) {
+    return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
   }
 
   // js/request/modal.js

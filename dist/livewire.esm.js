@@ -2662,18 +2662,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let outerHash;
       let innerHash;
       let reference = effect(() => {
-        const outer = outerGet();
-        const inner = innerGet();
+        let outer = outerGet();
+        let inner = innerGet();
         if (firstRun) {
-          innerSet(cloneIfObject(outer));
+          innerSet(cloneIfObject2(outer));
           firstRun = false;
         } else {
-          const outerHashLatest = JSON.stringify(outer);
-          const innerHashLatest = JSON.stringify(inner);
+          let outerHashLatest = JSON.stringify(outer);
+          let innerHashLatest = JSON.stringify(inner);
           if (outerHashLatest !== outerHash) {
-            innerSet(cloneIfObject(outer));
+            innerSet(cloneIfObject2(outer));
           } else if (outerHashLatest !== innerHashLatest) {
-            outerSet(cloneIfObject(inner));
+            outerSet(cloneIfObject2(inner));
           } else {
           }
         }
@@ -2684,7 +2684,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         release(reference);
       };
     }
-    function cloneIfObject(value) {
+    function cloneIfObject2(value) {
       return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
     }
     function plugin(callback) {
@@ -7549,7 +7549,7 @@ function generateEntangleFunction(component, cleanup2) {
         }
       });
       cleanup2(() => release());
-      return livewireComponent.get(name);
+      return cloneIfObject(livewireComponent.get(name));
     }, (obj) => {
       Object.defineProperty(obj, "live", {
         get() {
@@ -7560,6 +7560,9 @@ function generateEntangleFunction(component, cleanup2) {
     });
     return interceptor(livewirePropertyValue);
   };
+}
+function cloneIfObject(value) {
+  return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
 }
 
 // js/request/modal.js
