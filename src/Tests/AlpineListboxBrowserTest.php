@@ -16,7 +16,7 @@ class AlpineListboxBrowserTest extends \Tests\BrowserTestCase
             function render() {
                 return <<<'HTML'
                 <div>
-                    <script defer src="https://unpkg.com/@alpinejs/ui@3.13.4-beta.0/dist/cdn.min.js"></script>
+                    <script onload="window.alpineUiLoaded = true" src="https://unpkg.com/@alpinejs/ui@3.13.4-beta.0/dist/cdn.min.js"></script>
 
                     <div
                         x-data="{
@@ -54,7 +54,12 @@ class AlpineListboxBrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-            ->waitForLivewire()->click('@openListbox')->pressAndWaitFor('@listboxOption', 5)
+            ->waitForLivewireToLoad()
+            ->waitUsing(6, 25, function () {
+                return $this->driver->executeScript("return !! window.alpineUiLoaded");
+            })
+            ->click('@openListbox')
+            ->pressAndWaitFor('@listboxOption', 5)
             ->assertDontSeeIn('@updatesCount', '0')
             ->assertDontSeeIn('@updatesCount', '1')
         ;
