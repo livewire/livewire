@@ -16,7 +16,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
             function render() {
                 return <<<'HTML'
                 <div>
-                    <script src="http://alpine.test/packages/ui/dist/cdn.js"></script>
+                    <script src="https://unpkg.com/@alpinejs/ui@3.13.4-beta.0/dist/cdn.min.js"></script>
 
                     <button wire:click="$refresh">refresh</button>
 
