@@ -113,6 +113,21 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function mount_method_receives_route_and_implicit_enum_nullable_binding_and_dependency_injection()
+    {
+        Livewire::test(ComponentWithEnumMountInjections::class, [
+            'foo',
+            'enum' => null,
+        ])->assertSeeText('http://localhost/some-url:foo');
+
+        Livewire::component(ComponentWithEnumMountInjections::class);
+
+        Route::get('/foo/{enum}', ComponentWithEnumMountInjections::class);
+
+        $this->withoutExceptionHandling()->get('/foo/enum-first')->assertSeeText('http://localhost/some-url:enum-first:param-default');
+    }
+
+    /** @test */
     public function action_receives_implicit_model_binding()
     {
         $component = Livewire::test(ComponentWithBindings::class)
@@ -291,9 +306,9 @@ class ComponentWithEnumMountInjections extends Component
 {
     public $name;
 
-    public function mount(UrlGenerator $generator, EnumToBeBound $enum, $param = 'param-default')
+    public function mount(UrlGenerator $generator, ?EnumToBeBound $enum, $param = 'param-default')
     {
-        $this->name = collect([$generator->to('/some-url'), $enum->value, $param])->join(':');
+        $this->name = collect([$generator->to('/some-url'), $enum?->value, $param])->filter(fn($value) => !is_null($value))->join(':');
     }
 
     public function render()
