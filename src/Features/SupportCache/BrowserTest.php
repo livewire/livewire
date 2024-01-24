@@ -47,7 +47,6 @@ class BrowserTest extends BrowserTestCase
 
             public function increment()
             {
-                usleep(1001);
                 $this->count++;
             }
 
@@ -58,9 +57,13 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         })
+
             ->assertSeeIn('@count', '0')
             ->waitForLivewire()->click('@button')
-            ->assertDontSeeIn('@count', '0')
+            ->assertSeeIn('@count', '1')
+            ->pause(1000)
+            ->refresh()
+            ->assertSeeIn('@count', '0')
             ;
     }
 }
