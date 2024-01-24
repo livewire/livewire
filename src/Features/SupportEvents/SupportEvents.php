@@ -114,11 +114,9 @@ class SupportEvents extends ComponentHook
     static function replaceDynamicPlaceholders($event, $component)
     {
         return preg_replace_callback('/\{(.*)\}/U', function ($matches) use ($component) {
-            $value = data_get($component, $matches[1], function () use ($matches) {
+            return data_get($component, $matches[1], function () use ($matches) {
                 throw new \Exception('Unable to evaluate dynamic event name placeholder: '.$matches[0]);
             });
-
-            return $value;
         }, $event);
     }
 }
