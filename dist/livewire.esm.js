@@ -1638,6 +1638,8 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
+        if (removedNodes.has(node))
+          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -2709,31 +2711,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
       let firstRun = true;
       let outerHash;
+      let innerHash;
       let reference = effect(() => {
-        const outer = outerGet();
-        const inner = innerGet();
+        let outer = outerGet();
+        let inner = innerGet();
         if (firstRun) {
-          innerSet(cloneIfObject(outer));
+          innerSet(cloneIfObject2(outer));
           firstRun = false;
-          outerHash = JSON.stringify(outer);
         } else {
-          const outerHashLatest = JSON.stringify(outer);
+          let outerHashLatest = JSON.stringify(outer);
+          let innerHashLatest = JSON.stringify(inner);
           if (outerHashLatest !== outerHash) {
-            innerSet(cloneIfObject(outer));
-            outerHash = outerHashLatest;
+            innerSet(cloneIfObject2(outer));
+          } else if (outerHashLatest !== innerHashLatest) {
+            outerSet(cloneIfObject2(inner));
           } else {
-            outerSet(cloneIfObject(inner));
-            outerHash = JSON.stringify(inner);
           }
         }
-        JSON.stringify(innerGet());
-        JSON.stringify(outerGet());
+        outerHash = JSON.stringify(outerGet());
+        innerHash = JSON.stringify(innerGet());
       });
       return () => {
         release(reference);
       };
     }
-    function cloneIfObject(value) {
+    function cloneIfObject2(value) {
       return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
     }
     function plugin(callback) {
@@ -2836,7 +2838,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.4",
+      version: "3.13.5",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -7598,7 +7600,7 @@ function generateEntangleFunction(component, cleanup2) {
         }
       });
       cleanup2(() => release());
-      return livewireComponent.get(name);
+      return cloneIfObject(livewireComponent.get(name));
     }, (obj) => {
       Object.defineProperty(obj, "live", {
         get() {
@@ -7609,6 +7611,9 @@ function generateEntangleFunction(component, cleanup2) {
     });
     return interceptor(livewirePropertyValue);
   };
+}
+function cloneIfObject(value) {
+  return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
 }
 
 // js/request/modal.js
@@ -9045,7 +9050,7 @@ function history2(Alpine21) {
 function track(name, initialSeedValue, alwaysShow = false) {
   let { has, get, set, remove } = queryStringUtils();
   let url = new URL(window.location.href);
-  let isInitiallyPresentInUrl = has(url, name);
+  let isInitiallyPresentInUrl = has(url, name) && get(url, name) === initialSeedValue;
   let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
   let initialValueMemo = JSON.stringify(initialValue);
   let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
