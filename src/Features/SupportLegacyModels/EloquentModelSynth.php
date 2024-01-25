@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Database\ClassMorphViolationException;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -20,8 +21,13 @@ class EloquentModelSynth extends Synth
     {
         $class = $target::class;
 
-        // If no alias is found, this just returns the class name
-        $alias = $target->getMorphClass();
+        try {
+            // If no alias is found, this just returns the class name
+            $alias = $target->getMorphClass();
+        } catch (ClassMorphViolationException $e) {
+            // If the model is not using morph classes, this exception is thrown
+            $alias = $class;
+        }
 
         $meta = [];
 

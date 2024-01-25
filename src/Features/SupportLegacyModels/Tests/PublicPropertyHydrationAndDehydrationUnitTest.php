@@ -102,6 +102,19 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()
+    {
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
+
+        // reset morph
+        Relation::morphMap([], false);
+        Relation::requireMorphMap();
+
+        $component = Livewire::test(PostComponent::class);
+        $this->assertEquals('Livewire\Features\SupportLegacyModels\Tests\Post', $component->snapshot['data']['post'][1]['class']);
+    }
+
+    /** @test */
     public function an_eloquent_model_properties_with_deep_relations_and_single_relations_can_have_dirty_data_reapplied()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
@@ -123,15 +136,14 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->set('model.posts.0.description', 'Description 1 Post')
             ->set('model.posts.0.content', 'Content 1 Post')
             ->set('model.posts.0.comments.1.comment', '2 Comment')
-            ->set('model.posts.0.comments.1.author.name', 'gniht')
-            ;
+            ->set('model.posts.0.comments.1.author.name', 'gniht');
 
         $updatedModel = $component->get('model');
 
         $this->assertEquals('oof', $updatedModel->title);
         $this->assertEquals('rab', $updatedModel->name);
         $this->assertEquals('zab', $updatedModel->email);
-        $this->assertEquals('1 Post', $updatedModel->posts[0]->title, );
+        $this->assertEquals('1 Post', $updatedModel->posts[0]->title,);
         $this->assertEquals('Description 1 Post', $updatedModel->posts[0]->description);
         $this->assertEquals('Content 1 Post', $updatedModel->posts[0]->content);
         $this->assertEquals('2 Comment', $updatedModel->posts[0]->comments[1]->comment);
@@ -164,15 +176,14 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->set('model.posts.0.content', 'Content 1 Post')
             ->set('model.posts.0.comments.1.comment', '2 Comment')
             ->set('model.posts.0.comments.1.author.name', 'gniht')
-            ->set('model.posts.0.otherComments.1.comment', '2 Other Comment')
-            ;
+            ->set('model.posts.0.otherComments.1.comment', '2 Other Comment');
 
         $updatedModel = $component->get('model');
 
         $this->assertEquals('oof', $updatedModel->title);
         $this->assertEquals('rab', $updatedModel->name);
         $this->assertEquals('zab', $updatedModel->email);
-        $this->assertEquals('1 Post', $updatedModel->posts[0]->title, );
+        $this->assertEquals('1 Post', $updatedModel->posts[0]->title,);
         $this->assertEquals('Description 1 Post', $updatedModel->posts[0]->description);
         $this->assertEquals('Content 1 Post', $updatedModel->posts[0]->content);
         $this->assertEquals('2 Comment', $updatedModel->posts[0]->comments[1]->comment);
@@ -186,8 +197,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $model = new Author();
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model])
-            ->set('model.name', [])
-            ;
+            ->set('model.name', []);
 
         $updatedModel = $component->get('model');
 
