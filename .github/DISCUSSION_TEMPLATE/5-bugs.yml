@@ -51,7 +51,7 @@ body:
     id: example-repository
     attributes:
       label: Repository or Wirebox URL
-      description: Please provide the URL of public [repository](https://github.com/new) or [Wirebox](https://wirebox.app) that contains a fresh Laravel and Livewire installation that only contains the code that reproduces the bug. **Please do not link to your actual project**, only share an example that reproduces the bug with the least amount of code.
+      description: Please provide the URL of public [repository](https://github.com/new) or [Wirebox](https://wirebox.app) that contains a fresh Laravel and Livewire installation that only contains the code that reproduces the bug. **Please do not link to your actual project**, only share an example that reproduces the bug with the least amount of code. **Make sure your Wirebox is set to public**.
     validations:
       required: true
       
