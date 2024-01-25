@@ -228,6 +228,50 @@ You can easily refresh a Livewire component (trigger network roundtrip to re-ren
 <button type="button" x-on:click="$wire.$refresh()">
 ```
 
+## Sharing state between Livewire and Alpine: `@entangle`
+
+Livewire has an incredibly powerful feature called "entangle" that allows you to "entangle" a Livewire and Alpine property together. With entanglement, when one value changes, the other will also be changed.
+
+To demonstrate, consider this dropdown example with its `showDropdown` property entangled between Livewire and Alpine. By using entanglement, we are now able to control the state of the dropdown from both Alpine AND Livewire.
+
+```php
+class Dropdown extends Component
+{
+    public $showDropdown = false;
+ 
+    public function archive()
+    {
+        ...
+        $this->showDropdown = false;
+    }
+ 
+    public function delete()
+    {
+        ...
+        $this->showDropdown = false;
+    }
+}
+```
+```html
+<div x-data="{ open: @entangle('showDropdown') }">
+    <button @click="open = true">Show More...</button>
+ 
+    <ul x-show="open" @click.outside="open = false">
+        <li><button wire:click="archive">Archive</button></li>
+        <li><button wire:click="delete">Delete</button></li>
+    </ul>
+</div>
+```
+
+Now a user can toggle on the dropdown immediately with Alpine, but when they click a Livewire action like "Archive", the dropdown will be told to close from Livewire. Both Alpine and Livewire are welcome to manipulate their respective properties, and the other will automatically update.
+
+By default, updating the state is deferred until the next Livewire request. If you need to update the state as soon as the user clicks, chain the `.live` modifier like so:
+
+```html
+<div x-data="{ open: @entangle('showDropdown').live }">
+    ...
+```
+
 ## Manually bundling Alpine in your JavaScript build
 
 By default, Livewire and Alpine's JavaScript is injected onto each Livewire page automatically.
