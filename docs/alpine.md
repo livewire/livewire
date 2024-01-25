@@ -228,7 +228,7 @@ You can easily refresh a Livewire component (trigger network roundtrip to re-ren
 <button type="button" x-on:click="$wire.$refresh()">
 ```
 
-## Sharing state between Livewire and Alpine: `@entangle`
+## Sharing state between Livewire and Alpine: `$wire.entangle`
 
 Livewire has an incredibly powerful feature called "entangle" that allows you to "entangle" a Livewire and Alpine property together. With entanglement, when one value changes, the other will also be changed.
 
@@ -253,7 +253,7 @@ class Dropdown extends Component
 }
 ```
 ```html
-<div x-data="{ open: @entangle('showDropdown') }">
+<div x-data="{ open: $wire.entangle('showDropdown') }">
     <button @click="open = true">Show More...</button>
  
     <ul x-show="open" @click.outside="open = false">
@@ -268,9 +268,12 @@ Now a user can toggle on the dropdown immediately with Alpine, but when they cli
 By default, updating the state is deferred until the next Livewire request. If you need to update the state as soon as the user clicks, chain the `.live` modifier like so:
 
 ```html
-<div x-data="{ open: @entangle('showDropdown').live }">
+<div x-data="{ open: $wire.entangle('showDropdown').live }">
     ...
 ```
+
+> [!warning] Refrain from using @entangle
+> There currently is a [known issue](https://github.com/livewire/livewire/pull/6833#issuecomment-1902260844) when using @entangle in combination elements that get removed. Make sure to use `$wire.entangle` instead to avoid this issue.
 
 ## Manually bundling Alpine in your JavaScript build
 
