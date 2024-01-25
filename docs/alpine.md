@@ -228,52 +228,63 @@ You can easily refresh a Livewire component (trigger network roundtrip to re-ren
 <button type="button" x-on:click="$wire.$refresh()">
 ```
 
-## Sharing state between Livewire and Alpine: `$wire.entangle`
+## Sharing state using `$wire.entangle`
 
-Livewire has an incredibly powerful feature called "entangle" that allows you to "entangle" a Livewire and Alpine property together. With entanglement, when one value changes, the other will also be changed.
+In most cases, `$wire` is all you need for interacting with Livewire state from Alpine. However, Livewire provides an additional `$wire.entangle()` utililty that can be used to keep values from Livewire in-sync with values in Alpine.
 
-To demonstrate, consider this dropdown example with its `showDropdown` property entangled between Livewire and Alpine. By using entanglement, we are now able to control the state of the dropdown from both Alpine AND Livewire.
+To demonstrate, consider this dropdown example with its `showDropdown` property entangled between Livewire and Alpine using `$wire.entangle()`. By using entanglement, we are now able to control the state of the dropdown from both Alpine and Livewire:
+
 
 ```php
-class Dropdown extends Component
+use Livewire\Component;
+
+class PostDropdown extends Component
 {
     public $showDropdown = false;
- 
+
     public function archive()
     {
-        ...
+        // ...
+
         $this->showDropdown = false;
     }
- 
+
     public function delete()
     {
-        ...
+        // ...
+
         $this->showDropdown = false;
     }
 }
 ```
-```html
+
+```blade
 <div x-data="{ open: $wire.entangle('showDropdown') }">
-    <button @click="open = true">Show More...</button>
- 
-    <ul x-show="open" @click.outside="open = false">
+    <button x-on:click="open = true">Show More...</button>
+
+    <ul x-show="open" x-on:click.outside="open = false">
         <li><button wire:click="archive">Archive</button></li>
+
         <li><button wire:click="delete">Delete</button></li>
     </ul>
 </div>
 ```
 
-Now a user can toggle on the dropdown immediately with Alpine, but when they click a Livewire action like "Archive", the dropdown will be told to close from Livewire. Both Alpine and Livewire are welcome to manipulate their respective properties, and the other will automatically update.
+A user can now toggle the dropdown immediately with Alpine, but when they click a Livewire action like "Archive", the dropdown will be told to close from Livewire. Both Alpine and Livewire are welcome to manipulate their respective properties, and the other will automatically update.
 
-By default, updating the state is deferred until the next Livewire request. If you need to update the state as soon as the user clicks, chain the `.live` modifier like so:
+By default, updating the state is deferred (changes on the client, but not immediately on the server) until the next Livewire request. If you need to update the state server-side as soon as the user clicks, chain the `.live` modifier like so:
 
-```html
+```blade
 <div x-data="{ open: $wire.entangle('showDropdown').live }">
     ...
+</div>
 ```
 
-> [!warning] Refrain from using @entangle
-> There currently is a [known issue](https://github.com/livewire/livewire/pull/6833#issuecomment-1902260844) when using @entangle in combination elements that get removed. Make sure to use `$wire.entangle` instead to avoid this issue.
+> [!tip] You might not need `$wire.entangle`
+> In most cases, you can achieve what you want by using `$wire` to directly access Livewire properties from Alpine rather than entangling them. Entangling two properties rather than relying on one can cause predictibility and performance issues when using deeply nested objects that change frequently. For this reason, `$wire.entangle` has been de-emphasized in Livewire's documentation starting with version 3.
+
+> [!warning] Refrain from using the @@entangle directive
+> In Livewire version 2, it was recommended to use Blade's `@@entangle` directive. That is no longer the case in v3. `$wire.entangle()` is preffered as it is a more robust utility and avoids certain [issues when removing DOM elements](https://github.com/livewire/livewire/pull/6833#issuecomment-1902260844).
 
 ## Manually bundling Alpine in your JavaScript build
 
