@@ -113,18 +113,19 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function mount_method_receives_route_and_implicit_enum_nullable_binding_and_dependency_injection()
+    public function mount_method_receives_route_and_implicit_enum_optional_binding_and_dependency_injection()
     {
-        Livewire::test(ComponentWithEnumMountInjections::class, [
+        Livewire::test(ComponentWithOptionalEnumMountInjections::class, [
             'foo',
             'enum' => null,
         ])->assertSeeText('http://localhost/some-url:foo');
 
-        Livewire::component(ComponentWithEnumMountInjections::class);
+        Livewire::component(ComponentWithOptionalEnumMountInjections::class);
 
-        Route::get('/foo/{enum}', ComponentWithEnumMountInjections::class);
+        Route::get('/foo/{enum?}', ComponentWithOptionalEnumMountInjections::class);
 
-        $this->withoutExceptionHandling()->get('/foo/enum-first')->assertSeeText('http://localhost/some-url:enum-first:param-default');
+        $this->get('/foo/enum-first')->assertSeeText('http://localhost/some-url:enum-first:param-default');
+        $this->get('/foo')->assertSeeText('http://localhost/some-url:param-default');
     }
 
     /** @test */
@@ -306,7 +307,22 @@ class ComponentWithEnumMountInjections extends Component
 {
     public $name;
 
-    public function mount(UrlGenerator $generator, ?EnumToBeBound $enum, $param = 'param-default')
+    public function mount(UrlGenerator $generator, EnumToBeBound $enum, $param = 'param-default')
+    {
+        $this->name = collect([$generator->to('/some-url'), $enum->value, $param])->join(':');
+    }
+
+    public function render()
+    {
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class ComponentWithOptionalEnumMountInjections extends Component
+{
+    public $name;
+
+    public function mount(UrlGenerator $generator, ?EnumToBeBound $enum = null, $param = 'param-default')
     {
         $this->name = collect([$generator->to('/some-url'), $enum?->value, $param])->filter(fn($value) => !is_null($value))->join(':');
     }
