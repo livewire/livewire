@@ -112,6 +112,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $component = Livewire::test(PostComponent::class);
         $this->assertEquals('Livewire\Features\SupportLegacyModels\Tests\Post', $component->snapshot['data']['post'][1]['class']);
+        Relation::requireMorphMap(false);
     }
 
     /** @test */
