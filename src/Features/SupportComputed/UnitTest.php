@@ -174,8 +174,8 @@ class UnitTest extends TestCase
     /** @test */
     function can_tag_persisted_computed_with_custom_key_property()
     {
-        // need to set a cache driver, which can handle tags
         Cache::setDefaultDriver('array');
+
         Livewire::test(new class extends TestComponent {
             public $count = 0;
 
