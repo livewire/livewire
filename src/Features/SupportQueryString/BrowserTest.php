@@ -356,7 +356,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_unset_the_variable_when_using_dot_notation_without_except()
+    public function can_unset_the_array_key_when_using_dot_notation_without_except()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
@@ -396,7 +396,96 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_unset_the_variable_when_using_dot_notation_with_except()
+    public function can_unset_the_array_key_when_with_except()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public array $tableFilters = [];
+
+                protected function queryString() {
+                    return [
+                        'tableFilters' => [
+                            'filter_1' => [
+                                'value' => [
+                                    'as' => 'filter',
+                                    'except' => '',
+                                ],
+                            ]
+                        ],
+                    ];
+                }
+
+                public function clear()
+                {
+                    unset($this->tableFilters['filter_1']['value']);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="tableFilters.filter_1.value" type="text" dusk="filter" />
+
+                    <span dusk="output">@json($tableFilters)</span>
+
+                    <button dusk="clear" wire:click="clear">Clear</button>
+                </div>
+                HTML; }
+            },
+        ])
+            ->assertInputValue('@filter', '')
+            ->waitForLivewire()->type('@filter', 'foo')
+            ->assertSeeIn('@output', '{"filter_1":{"value":"foo"}}')
+            ->waitForLivewire()->click('@clear')
+            ->assertInputValue('@filter', '')
+            ->assertQueryStringMissing('filter')
+        ;
+    }
+
+    /** @test */
+    public function can_unset_the_array_key_when_without_except()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public array $tableFilters = [];
+
+                protected function queryString() {
+                    return [
+                        'tableFilters' => [
+                            'filter_1' => [
+                                'value' => [
+                                    'as' => 'filter',
+                                ],
+                            ]
+                        ],
+                    ];
+                }
+
+                public function clear()
+                {
+                    unset($this->tableFilters['filter_1']['value']);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="tableFilters.filter_1.value" type="text" dusk="filter" />
+
+                    <span dusk="output">@json($tableFilters)</span>
+
+                    <button dusk="clear" wire:click="clear">Clear</button>
+                </div>
+                HTML; }
+            },
+        ])
+            ->assertInputValue('@filter', '')
+            ->waitForLivewire()->type('@filter', 'foo')
+            ->assertSeeIn('@output', '{"filter_1":{"value":"foo"}}')
+            ->waitForLivewire()->click('@clear')
+            ->assertInputValue('@filter', '')
+            ->assertQueryStringMissing('filter')
+        ;
+    }
+
+    /** @test */
+    public function can_unset_the_array_key_when_using_dot_notation_with_except()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
