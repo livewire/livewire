@@ -121,6 +121,8 @@ class BaseComputed extends Attribute
 
     protected function generatePersistedKey()
     {
+        if ($this->key) return $this->key;
+
         return 'lw_computed.'.$this->component->getId().'.'.$this->getName();
     }
 

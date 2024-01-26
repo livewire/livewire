@@ -172,6 +172,36 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    function can_tag_persisted_computed_with_custom_key_property()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(persist: true, key: 'baz')]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSet('count', 1);
+
+        $this->assertTrue(Cache::has('baz'));
+    }
+
+    /** @test */
     function cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);
