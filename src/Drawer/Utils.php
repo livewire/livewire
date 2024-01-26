@@ -54,6 +54,11 @@ class Utils extends BaseUtils
     {
         $lastModified = filemtime($file);
         $headers = static::pretendedResponseIsFileHeaders($file, $mimeType, $lastModified);
+
+        if (static::matchesCache($lastModified)) {
+            return response('', 304, $headers);
+        }
+
         return response()->file($file, $headers);
     }
 
@@ -65,6 +70,11 @@ class Utils extends BaseUtils
         $lastModified = FileUploadConfiguration::lastModified($file);
 
         $headers = self::pretendedResponseIsFileHeaders($filename, $mimeType, $lastModified);
+
+        if (static::matchesCache($lastModified)) {
+                return response('', 304, $headers);
+        }
+
         return $storage->download($file, $filename, $headers);
     }
 
@@ -74,10 +84,10 @@ class Utils extends BaseUtils
         $cacheControl = 'public, max-age=31536000';
 
         if (static::matchesCache($lastModified)) {
-            return response()->make('', 304, [
+            return [
                 'Expires' => static::httpDate($expires),
                 'Cache-Control' => $cacheControl,
-            ]);
+            ];
         }
 
         $headers = [
