@@ -7778,9 +7778,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       },
       set(url, key, value) {
         let data2 = fromQueryString(url.search);
-        if (value === void 0) {
-          debugger;
-        }
         data2[key] = stripNulls(unwrap(value));
         url.search = toQueryString(data2);
         return url;

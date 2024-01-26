@@ -180,9 +180,6 @@ function queryStringUtils() {
         set(url, key, value) {
             let data = fromQueryString(url.search)
 
-            if (value === undefined) {
-                debugger
-            }
             data[key] = stripNulls(unwrap(value))
 
             url.search = toQueryString(data)
