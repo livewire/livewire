@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportSession;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Illuminate\Support\Facades\Session;
 use Attribute;
+use Livewire\Features\SupportSession\Contracts\SessionPrefix;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class BaseSession extends LivewireAttribute
@@ -44,6 +45,14 @@ class BaseSession extends LivewireAttribute
 
     protected function key()
     {
-        return $this->key ?: (string) 'lw' . crc32($this->component->getName() . $this->getName());
+        $prefix = '';
+
+        if ($this->component instanceof SessionPrefix) {
+            $prefix = $this->component->sessionPrefix();
+        }
+
+        return str($prefix)
+            ->append($this->key ?: (string) 'lw' . crc32($this->component->getName() . $this->getName()))
+            ->toString();
     }
 }
