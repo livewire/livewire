@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportSession;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Illuminate\Support\Facades\Session;
 use Attribute;
-use Livewire\Features\SupportSession\Contracts\SessionPrefix;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class BaseSession extends LivewireAttribute
@@ -45,14 +44,21 @@ class BaseSession extends LivewireAttribute
 
     protected function key()
     {
-        $prefix = '';
-
-        if ($this->component instanceof SessionPrefix) {
-            $prefix = $this->component->sessionPrefix();
+        if (! $this->key) {
+            return (string) 'lw' . crc32($this->component->getName() . $this->getName());
         }
 
-        return str($prefix)
-            ->append($this->key ?: (string) 'lw' . crc32($this->component->getName() . $this->getName()))
-            ->toString();
+        $key = self::replaceDynamicPlaceholders($this->key, $this->component);
+
+        return $key;
+    }
+
+    static function replaceDynamicPlaceholders($key, $component)
+    {
+        return preg_replace_callback('/\{(.*)\}/U', function ($matches) use ($component) {
+            return data_get($component, $matches[1], function () use ($matches) {
+                throw new \Exception('Unable to evaluate dynamic session key placeholder: '.$matches[0]);
+            });
+        }, $key);
     }
 }

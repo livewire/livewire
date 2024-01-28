@@ -7,30 +7,42 @@ use Livewire\Attributes\Session;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Tests\TestComponent;
-use Livewire\Features\SupportSession\Contracts\SessionPrefix;
 
 class UnitTest extends TestCase
 {
     /** @test */
-    public function it_uses_the_session_key_method_if_contract_is_implemented()
+    public function it_creates_a_session_key()
     {
-        Livewire::test(new class extends TestComponent implements SessionPrefix {
-            #[Session(key: 'baz')]
+        $component = Livewire::test(new class extends TestComponent {
+            #[Session]
             public $count = 0;
-
-            public function sessionPrefix(): string
-            {
-                return 'foo';
-            }
 
             function render() {
                 return <<<'HTML'
                     <div>foo{{ $count }}</div>
                 HTML;
             }
-        })
-            ->call('$refresh');
+        });
 
-        $this->assertTrue(FacadesSession::has('foobaz'));
+        $this->assertTrue(FacadesSession::has('lw'.crc32($component->instance()->getName().'count')));
+    }
+
+    /** @test */
+    public function it_creates_a_dynamic_session_id()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $post = ['id' => 2];
+
+            #[Session(key: 'baz.{post.id}')]
+            public $count = 0;
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $count }}</div>
+                HTML;
+            }
+        });
+
+        $this->assertTrue(FacadesSession::has('baz.2'));
     }
 }
