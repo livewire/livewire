@@ -202,6 +202,34 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('Second-0')
         ->assertSee('First-1');
     }
+
+    /** @test */
+    public function it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()
+    {
+        // reset morph
+        Relation::morphMap([], false);
+        Relation::requireMorphMap();
+
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public $post;
+
+            public function mount()
+            {
+                $this->post = Article::first();
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div></div>
+                HTML;
+            }
+        });
+
+        $this->assertEquals(Article::class, $component->snapshot['data']['post'][1]['class']);
+
+        Relation::requireMorphMap(false);
+    }
 }
 
 #[\Attribute]

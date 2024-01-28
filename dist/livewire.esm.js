@@ -9009,7 +9009,7 @@ function history2(Alpine21) {
 function track(name, initialSeedValue, alwaysShow = false) {
   let { has, get, set, remove } = queryStringUtils();
   let url = new URL(window.location.href);
-  let isInitiallyPresentInUrl = has(url, name) && get(url, name) === initialSeedValue;
+  let isInitiallyPresentInUrl = has(url, name);
   let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
   let initialValueMemo = JSON.stringify(initialValue);
   let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;

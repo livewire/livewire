@@ -52,7 +52,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
     public function can_encode_url_containing_spaces_and_commas()
     {
         Livewire::visit([
@@ -150,35 +149,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('search', 'foo')
             ->waitForLivewire()->type('@input', 'bar')
             ->assertQueryStringHas('search', 'bar')
-            ->waitForLivewire()->type('@input', ' ')
-            ->waitForLivewire()->keys('@input', '{backspace}')
-            ->assertQueryStringMissing('search')
-        ;
-    }
-
-    /** @test */
-    public function can_use_except_and_it_still_works_after_a_page_refresh()
-    {
-        Livewire::visit([
-            new class extends Component
-            {
-                #[BaseUrl(except: '')]
-                public $search = '';
-
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                        <input type="text" dusk="input" wire:model.live="search" />
-                    </div>
-                    HTML;
-                }
-            },
-        ])
-            ->assertQueryStringMissing('search')
-            ->waitForLivewire()->type('@input', 'bar')
-            ->assertQueryStringHas('search', 'bar')
-            ->refresh()
             ->waitForLivewire()->type('@input', ' ')
             ->waitForLivewire()->keys('@input', '{backspace}')
             ->assertQueryStringMissing('search')

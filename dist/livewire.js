@@ -7691,7 +7691,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function track2(name, initialSeedValue, alwaysShow = false) {
     let { has: has2, get: get3, set: set3, remove } = queryStringUtils();
     let url = new URL(window.location.href);
-    let isInitiallyPresentInUrl = has2(url, name) && get3(url, name) === initialSeedValue;
+    let isInitiallyPresentInUrl = has2(url, name);
     let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
     let initialValueMemo = JSON.stringify(initialValue);
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
