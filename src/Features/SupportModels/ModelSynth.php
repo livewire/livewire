@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportModels;
 
+use Illuminate\Database\ClassMorphViolationException;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
@@ -17,8 +18,15 @@ class ModelSynth extends Synth {
     }
 
     function dehydrate($target) {
-        // If no alias is found, this just returns the class name
-        $alias = $target->getMorphClass();
+        $class = $target::class;
+        
+        try {
+            // If no alias is found, this just returns the class name
+            $alias = $target->getMorphClass();
+        } catch (ClassMorphViolationException $e) {
+            // If the model is not using morph classes, this exception is thrown
+            $alias = $class;
+        }
 
         $serializedModel = $target->exists
             ? (array) $this->getSerializedPropertyValue($target)
