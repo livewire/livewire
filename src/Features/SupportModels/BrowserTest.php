@@ -125,6 +125,35 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@typedPostsInitializedIsEloquentCollection', 'true')
             ;
     }
+
+    /** @test */
+    public function x_for_breaking_on_deferred_load() {
+        Livewire::visit([
+            new class extends Component
+            {
+                public bool $load = false;
+
+                public function loadPosts(): void
+                {
+                    $this->load = true;
+                }
+
+                public function render()
+                {
+                    return view('alpinejs-data-with-xfor', [
+                        'posts' => $this->load
+                            ? BrowserTestPost::all()
+                            : collect()
+                    ]);
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->click('@loadPosts')
+            ->assertSee('Post #1')
+            ->assertSee('Post #2')
+            ->assertSee('Post #3');
+    }
 }
 
 class BrowserTestPost extends Model
