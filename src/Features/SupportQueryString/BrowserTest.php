@@ -186,6 +186,31 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function initial_values_loaded_from_querystring_are_not_removed_from_querystring_on_load_if_they_are_different_to_the_default()
+    {
+        Livewire::withQueryParams(['perPage' => 25])->visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public $perPage = '15';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="input" wire:model.live="perPage" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertQueryStringHas('perPage', '25')
+            ->assertInputValue('@input', '25')
+        ;
+    }
+
+    /** @test */
     public function can_use_except_in_query_string_property()
     {
         Livewire::visit([
