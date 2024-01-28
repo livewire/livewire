@@ -64,12 +64,12 @@ class FrontendAssets extends Mechanism
 
     public function returnJavaScriptAsFile()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.js');
+        return Utils::pretendResponseIsFile(dirname(__DIR__, 3) . '/dist/livewire.js');
     }
 
     public function maps()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.js.map');
+        return Utils::pretendResponseIsFile(dirname(__DIR__, 3) . '/dist/livewire.js.map');
     }
 
     public static function styles($options = [])
@@ -149,7 +149,7 @@ class FrontendAssets extends Mechanism
         $url = (string) str($url)->start('/');
 
         // Add the build manifest hash to it...
-        $manifest = json_decode(file_get_contents(__DIR__.'/../../../dist/manifest.json'), true);
+        $manifest = json_decode(file_get_contents(dirname(__DIR__, 3) . '/dist/manifest.json'), true);
         $versionHash = $manifest['/livewire.js'];
         $url = "{$url}?id={$versionHash}";
 
