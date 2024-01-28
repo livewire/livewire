@@ -48,9 +48,7 @@ class BaseSession extends LivewireAttribute
             return (string) 'lw' . crc32($this->component->getName() . $this->getName());
         }
 
-        $key = self::replaceDynamicPlaceholders($this->key, $this->component);
-
-        return $key;
+        return self::replaceDynamicPlaceholders($this->key, $this->component);
     }
 
     static function replaceDynamicPlaceholders($key, $component)
