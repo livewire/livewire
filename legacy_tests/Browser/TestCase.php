@@ -25,6 +25,7 @@ use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Exception;
 use Closure;
+use Livewire\Features\SupportTesting\ShowDuskComponent;
 
 class TestCase extends BaseTestCase
 {
@@ -141,11 +142,7 @@ class TestCase extends BaseTestCase
             //     return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
             // })->middleware('web')->name('dynamic-component');
 
-            Route::get('/livewire-dusk/{component}', function ($component) {
-                $class = urldecode($component);
-
-                return app()->call(new $class);
-            })->middleware('web');
+            Route::get('/livewire-dusk/{component}', ShowDuskComponent::class)->middleware('web');
 
             Route::middleware('web')->get('/entangle-turbo', function () {
                 return view('turbo', [

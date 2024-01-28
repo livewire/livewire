@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
+    var require_shared_cjs_prod = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = Object.freeze({});
-        var EMPTY_ARR = Object.freeze([]);
+        var EMPTY_OBJ = {};
+        var EMPTY_ARR = [];
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_shared_cjs_prod();
         } else {
-          module2.exports = require_shared_cjs();
+          module2.exports = null;
         }
       }
     });
-    var require_reactivity_cjs = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
+    var require_reactivity_cjs_prod = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("iterate");
-        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
+        var ITERATE_KEY = Symbol("");
+        var MAP_KEY_ITERATE_KEY = Symbol("");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,14 +558,6 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
-            if (activeEffect.options.onTrack) {
-              activeEffect.options.onTrack({
-                effect: activeEffect,
-                target,
-                type,
-                key
-              });
-            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -622,17 +614,6 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
-            if (effect4.options.onTrigger) {
-              effect4.options.onTrigger({
-                effect: effect4,
-                target,
-                key,
-                type,
-                newValue,
-                oldValue,
-                oldTarget
-              });
-            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -726,7 +707,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger2(target, "set", key, value);
               }
             }
             return result;
@@ -734,10 +715,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          const oldValue = target[key];
+          target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
@@ -762,15 +743,9 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
-            {
-              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           },
           deleteProperty(target, key) {
-            {
-              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
-            }
             return true;
           }
         };
@@ -837,15 +812,13 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger2(target, "set", key, value);
           }
           return this;
         }
@@ -856,23 +829,20 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
-          } else {
-            checkIdentityKeys(target, has2, key);
           }
-          const oldValue = get3 ? get3.call(target, key) : void 0;
+          get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key, void 0);
           }
           return result;
         }
         function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
-          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0, oldTarget);
+            trigger2(target, "clear", void 0, void 0);
           }
           return result;
         }
@@ -914,10 +884,6 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
-            {
-              const key = args[0] ? `on key "${args[0]}" ` : ``;
-              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
-            }
             return type === "delete" ? false : this;
           };
         }
@@ -1022,13 +988,6 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
-        function checkIdentityKeys(target, has2, key) {
-          const rawKey = toRaw2(key);
-          if (rawKey !== key && has2.call(target, rawKey)) {
-            const type = shared.toRawType(target);
-            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
-          }
-        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1067,9 +1026,6 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
-            {
-              console.warn(`value cannot be made reactive: ${String(target)}`);
-            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1143,7 +1099,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", ref2.value);
+          trigger2(toRaw2(ref2), "set", "value", void 0);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1181,9 +1137,6 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
-          if (!isProxy(object)) {
-            console.warn(`toRefs() expects a reactive object but received a plain one.`);
-          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1240,9 +1193,7 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = () => {
-              console.warn("Write operation failed: computed value is readonly");
-            };
+            setter = shared.NOOP;
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1281,15 +1232,16 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (false) {
-          module2.exports = null;
+        if (true) {
+          module2.exports = require_reactivity_cjs_prod();
         } else {
-          module2.exports = require_reactivity_cjs();
+          module2.exports = null;
         }
       }
     });
     var module_exports = {};
     __export(module_exports, {
+      Alpine: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
@@ -1585,16 +1537,16 @@ var require_module_cjs = __commonJS({
         deferredMutations = deferredMutations.concat(mutations);
         return;
       }
-      let addedNodes = [];
-      let removedNodes = [];
+      let addedNodes = /* @__PURE__ */ new Set();
+      let removedNodes = /* @__PURE__ */ new Set();
       let addedAttributes = /* @__PURE__ */ new Map();
       let removedAttributes = /* @__PURE__ */ new Map();
       for (let i = 0; i < mutations.length; i++) {
         if (mutations[i].target._x_ignoreMutationObserver)
           continue;
         if (mutations[i].type === "childList") {
-          mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.push(node));
-          mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.push(node));
+          mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.add(node));
+          mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.add(node));
         }
         if (mutations[i].type === "attributes") {
           let el = mutations[i].target;
@@ -1627,7 +1579,7 @@ var require_module_cjs = __commonJS({
         onAttributeAddeds.forEach((i) => i(el, attrs));
       });
       for (let node of removedNodes) {
-        if (addedNodes.includes(node))
+        if (addedNodes.has(node))
           continue;
         onElRemoveds.forEach((i) => i(node));
         destroyTree(node);
@@ -1637,7 +1589,7 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
-        if (removedNodes.includes(node))
+        if (removedNodes.has(node))
           continue;
         if (!node.isConnected)
           continue;
@@ -1803,7 +1755,7 @@ var require_module_cjs = __commonJS({
       }
     }
     function handleError(error2, el, expression = void 0) {
-      Object.assign(error2, { el, expression });
+      error2 = Object.assign(error2 != null ? error2 : { message: "No error message given." }, { el, expression });
       console.warn(`Alpine Expression Error: ${error2.message}
 
 ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
@@ -1916,7 +1868,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return {
         before(directive22) {
           if (!directiveHandlers[directive22]) {
-            console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
+            console.warn(String.raw`Cannot find directive \`${directive22}\`. \`${name}\` will use the default order of execution`);
             return;
           }
           const pos = directiveOrder.indexOf(directive22);
@@ -2710,31 +2662,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
       let firstRun = true;
       let outerHash;
+      let innerHash;
       let reference = effect(() => {
-        const outer = outerGet();
-        const inner = innerGet();
+        let outer = outerGet();
+        let inner = innerGet();
         if (firstRun) {
-          innerSet(cloneIfObject(outer));
+          innerSet(cloneIfObject2(outer));
           firstRun = false;
-          outerHash = JSON.stringify(outer);
         } else {
-          const outerHashLatest = JSON.stringify(outer);
+          let outerHashLatest = JSON.stringify(outer);
+          let innerHashLatest = JSON.stringify(inner);
           if (outerHashLatest !== outerHash) {
-            innerSet(cloneIfObject(outer));
-            outerHash = outerHashLatest;
+            innerSet(cloneIfObject2(outer));
+          } else if (outerHashLatest !== innerHashLatest) {
+            outerSet(cloneIfObject2(inner));
           } else {
-            outerSet(cloneIfObject(inner));
-            outerHash = JSON.stringify(inner);
           }
         }
-        JSON.stringify(innerGet());
-        JSON.stringify(outerGet());
+        outerHash = JSON.stringify(outerGet());
+        innerHash = JSON.stringify(innerGet());
       });
       return () => {
         release(reference);
       };
     }
-    function cloneIfObject(value) {
+    function cloneIfObject2(value) {
       return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
     }
     function plugin(callback) {
@@ -2837,7 +2789,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.3",
+      version: "3.13.5",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3264,7 +3216,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         setValue(getInputValue(el, modifiers, e, getValue()));
       });
       if (modifiers.includes("fill")) {
-        if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
+        if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
           el.dispatchEvent(new Event(event, {}));
         }
       }
@@ -3532,13 +3484,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isObject2(items)) {
           items = Object.entries(items).map(([key, value]) => {
             let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-            evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
+            evaluateKey((value2) => {
+              if (keys.includes(value2))
+                warn("Duplicate key on x-for", el);
+              keys.push(value2);
+            }, { scope: { index: key, ...scope2 } });
             scopes.push(scope2);
           });
         } else {
           for (let i = 0; i < items.length; i++) {
             let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-            evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
+            evaluateKey((value) => {
+              if (keys.includes(value))
+                warn("Duplicate key on x-for", el);
+              keys.push(value);
+            }, { scope: { index: i, ...scope2 } });
             scopes.push(scope2);
           }
         }
@@ -3586,7 +3546,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let marker = document.createElement("div");
           mutateDom(() => {
             if (!elForSpot)
-              warn(`x-for ":key" is undefined or invalid`, templateEl);
+              warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
             elForSpot.after(marker);
             elInSpot.after(elForSpot);
             elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -3779,12 +3739,13 @@ var require_module_cjs2 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
+      collapse: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      Alpine21.directive("collapse", collapse2);
-      collapse2.inline = (el, { modifiers }) => {
+      Alpine21.directive("collapse", collapse3);
+      collapse3.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
         el._x_doShow = () => {
@@ -3792,7 +3753,7 @@ var require_module_cjs2 = __commonJS({
         el._x_doHide = () => {
         };
       };
-      function collapse2(el, { modifiers }) {
+      function collapse3(el, { modifiers }) {
         let duration = modifierValue(modifiers, "duration", 250) / 1e3;
         let floor = modifierValue(modifiers, "min", 0);
         let fullyHide = !modifiers.includes("min");
@@ -4670,7 +4631,8 @@ var require_module_cjs3 = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default
+      default: () => module_default,
+      focus: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
@@ -4794,9 +4756,13 @@ var require_module_cjs3 = __commonJS({
           allowOutsideClick: true,
           fallbackFocus: () => el
         };
-        let autofocusEl = el.querySelector("[autofocus]");
-        if (autofocusEl)
-          options.initialFocus = autofocusEl;
+        if (modifiers.includes("noautofocus")) {
+          options.initialFocus = false;
+        } else {
+          let autofocusEl = el.querySelector("[autofocus]");
+          if (autofocusEl)
+            options.initialFocus = autofocusEl;
+        }
         let trap = (0, import_focus_trap.createFocusTrap)(el, options);
         let undoInert = () => {
         };
@@ -4896,11 +4862,12 @@ var require_module_cjs4 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default
+      default: () => module_default,
+      persist: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
-      let persist2 = () => {
+      let persist3 = () => {
         let alias;
         let storage;
         try {
@@ -4934,8 +4901,8 @@ var require_module_cjs4 = __commonJS({
           };
         });
       };
-      Object.defineProperty(Alpine21, "$persist", { get: () => persist2() });
-      Alpine21.magic("persist", persist2);
+      Object.defineProperty(Alpine21, "$persist", { get: () => persist3() });
+      Alpine21.magic("persist", persist3);
       Alpine21.persist = (key, { get, set }, storage = localStorage) => {
         let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
         set(initial);
@@ -4981,7 +4948,8 @@ var require_module_cjs5 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default
+      default: () => module_default,
+      intersect: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine21) {
@@ -5062,6 +5030,7 @@ var require_module_cjs6 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
+      anchor: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
@@ -6600,7 +6569,7 @@ var require_module_cjs7 = __commonJS({
     var module_exports = {};
     __export(module_exports, {
       default: () => module_default,
-      morph: () => morph3
+      morph: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
@@ -6963,6 +6932,7 @@ var require_module_cjs8 = __commonJS({
     var module_exports = {};
     __export(module_exports, {
       default: () => module_default,
+      mask: () => src_default,
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
@@ -6998,7 +6968,10 @@ var require_module_cjs8 = __commonJS({
         cleanup2(() => {
           controller.abort();
         });
-        el.addEventListener("input", () => processInputValue(el), { signal: controller.signal });
+        el.addEventListener("input", () => processInputValue(el), {
+          signal: controller.signal,
+          capture: true
+        });
         el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
         function processInputValue(el2, shouldRestoreCursor = true) {
           let input = el2.value;
@@ -7239,6 +7212,21 @@ function getCsrfToken() {
   }
   throw "Livewire: No CSRF token detected";
 }
+var nonce;
+function getNonce() {
+  if (nonce)
+    return nonce;
+  if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
+    nonce = window.livewireScriptConfig["nonce"];
+    return nonce;
+  }
+  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+  if (elWithNonce) {
+    nonce = elWithNonce.nonce;
+    return nonce;
+  }
+  return null;
+}
 function getUpdateUri() {
   return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
 }
@@ -7310,6 +7298,7 @@ function handleFileUpload(el, property, component, cleanup2) {
   let start2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
   let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
   let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+  let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
   let progress = (progressEvent) => {
     var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
     el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
@@ -7322,9 +7311,9 @@ function handleFileUpload(el, property, component, cleanup2) {
       return;
     start2();
     if (e.target.multiple) {
-      manager.uploadMultiple(property, e.target.files, finish, error2, progress);
+      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
     } else {
-      manager.upload(property, e.target.files[0], finish, error2, progress);
+      manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
     }
   };
   el.addEventListener("change", eventHandler);
@@ -7332,6 +7321,7 @@ function handleFileUpload(el, property, component, cleanup2) {
     el.value = null;
   };
   el.addEventListener("click", clearFileInputValue);
+  el.addEventListener("livewire-upload-cancel", clearFileInputValue);
   cleanup2(() => {
     el.removeEventListener("change", eventHandler);
     el.removeEventListener("click", clearFileInputValue);
@@ -7356,22 +7346,24 @@ var UploadManager = class {
     this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
     this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
   }
-  upload(name, file, finishCallback, errorCallback, progressCallback) {
+  upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
     this.setUpload(name, {
       files: [file],
       multiple: false,
       finishCallback,
       errorCallback,
-      progressCallback
+      progressCallback,
+      cancelledCallback
     });
   }
-  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
     this.setUpload(name, {
       files: Array.from(files),
       multiple: true,
       finishCallback,
       errorCallback,
-      progressCallback
+      progressCallback,
+      cancelledCallback
     });
   }
   removeUpload(name, tmpFilename, finishCallback) {
@@ -7433,6 +7425,7 @@ var UploadManager = class {
       }
       this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
     });
+    this.uploadBag.first(name).request = request;
     request.send(formData);
   }
   startUpload(name, uploadObject) {
@@ -7454,6 +7447,16 @@ var UploadManager = class {
     this.uploadBag.shift(name).errorCallback();
     if (this.uploadBag.get(name).length > 0)
       this.startUpload(name, this.uploadBag.last(name));
+  }
+  cancelUpload(name, cancelledCallback = null) {
+    unsetUploadLoading(this.component);
+    let uploadItem = this.uploadBag.first(name);
+    if (uploadItem) {
+      uploadItem.request.abort();
+      this.uploadBag.shift(name).cancelledCallback();
+      if (cancelledCallback)
+        cancelledCallback();
+    }
   }
 };
 var MessageBag = class {
@@ -7499,22 +7502,29 @@ function unsetUploadLoading() {
 function upload(component, name, file, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
+}, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback);
+  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
 }
 function uploadMultiple(component, name, files, finishCallback = () => {
 }, errorCallback = () => {
 }, progressCallback = () => {
+}, cancelledCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
-  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback);
+  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
 }
 function removeUpload(component, name, tmpFilename, finishCallback = () => {
 }, errorCallback = () => {
 }) {
   let uploadManager = getUploadManager(component);
   uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+}
+function cancelUpload(component, name, cancelledCallback = () => {
+}) {
+  let uploadManager = getUploadManager(component);
+  uploadManager.cancelUpload(name, cancelledCallback);
 }
 
 // js/features/supportEntangle.js
@@ -7549,7 +7559,7 @@ function generateEntangleFunction(component, cleanup2) {
         }
       });
       cleanup2(() => release());
-      return livewireComponent.get(name);
+      return cloneIfObject(livewireComponent.get(name));
     }, (obj) => {
       Object.defineProperty(obj, "live", {
         get() {
@@ -7560,6 +7570,9 @@ function generateEntangleFunction(component, cleanup2) {
     });
     return interceptor(livewirePropertyValue);
   };
+}
+function cloneIfObject(value) {
+  return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
 }
 
 // js/request/modal.js
@@ -7680,9 +7693,10 @@ var Commit = class {
   }
   toRequestPayload() {
     let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
+    let updates = this.component.mergeQueuedUpdates(propertiesDiff);
     let payload = {
       snapshot: this.component.snapshotEncoded,
-      updates: propertiesDiff,
+      updates,
       calls: this.calls.map((i) => ({
         path: i.path,
         method: i.method,
@@ -7711,7 +7725,7 @@ var Commit = class {
     let handleResponse = (response) => {
       let { snapshot, effects } = response;
       respond();
-      this.component.mergeNewSnapshot(snapshot, effects, propertiesDiff);
+      this.component.mergeNewSnapshot(snapshot, effects, updates);
       this.component.processEffects(this.component.effects);
       if (effects["returns"]) {
         let returns = effects["returns"];
@@ -7936,7 +7950,8 @@ var aliases = {
   "dispatchSelf": "$dispatchSelf",
   "upload": "$upload",
   "uploadMultiple": "$uploadMultiple",
-  "removeUpload": "$removeUpload"
+  "removeUpload": "$removeUpload",
+  "cancelUpload": "$cancelUpload"
 };
 function generateWireObject(component, state) {
   return new Proxy({}, {
@@ -7996,7 +8011,11 @@ wireProperty("$id", (component) => {
 });
 wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
-  return live ? await requestCommit(component) : Promise.resolve();
+  if (live) {
+    component.queueUpdate(property, value);
+    return await requestCommit(component);
+  }
+  return Promise.resolve();
 });
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
@@ -8033,6 +8052,7 @@ wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params))
 wireProperty("$upload", (component) => (...params) => upload(component, ...params));
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
 var parentMemo = /* @__PURE__ */ new WeakMap();
 wireProperty("$parent", (component) => {
   if (parentMemo.has(component))
@@ -8083,6 +8103,7 @@ var Component = class {
     this.canonical = extractData(deepClone(this.snapshot.data));
     this.ephemeral = extractData(deepClone(this.snapshot.data));
     this.reactive = Alpine.reactive(this.ephemeral);
+    this.queuedUpdates = {};
     this.$wire = generateWireObject(this, this.reactive);
     this.cleanups = [];
     this.processEffects(this.effects);
@@ -8103,6 +8124,21 @@ var Component = class {
       this.reactive[rootKey] = newData[rootKey];
     });
     return dirty;
+  }
+  queueUpdate(propertyName, value) {
+    this.queuedUpdates[propertyName] = value;
+  }
+  mergeQueuedUpdates(diff2) {
+    Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
+      Object.entries(diff2).forEach(([diffKey, diffValue]) => {
+        if (diffKey.startsWith(updateValue)) {
+          delete diff2[diffKey];
+        }
+      });
+      diff2[updateKey] = updateValue;
+    });
+    this.queuedUpdates = [];
+    return diff2;
   }
   applyUpdates(object, updates) {
     for (let key in updates) {
@@ -8382,64 +8418,17 @@ function tryToStoreInSession(timestamp, value) {
   }
 }
 
-// js/plugins/navigate/fetch.js
-function fetchHtml(destination, callback) {
-  let uri = destination.pathname + destination.search;
-  performFetch(uri, (html) => {
-    callback(html);
-  });
-}
-function performFetch(uri, callback) {
-  let options = {};
-  trigger("navigate.request", {
-    url: uri,
-    options
-  });
-  fetch(uri, options).then((i) => i.text()).then((html) => {
-    callback(html);
-  });
-}
-
-// js/plugins/navigate/prefetch.js
-var prefetches = {};
-function prefetchHtml(destination, callback) {
-  let path = destination.pathname;
-  if (prefetches[path])
-    return;
-  prefetches[path] = { finished: false, html: null, whenFinished: () => {
-  } };
-  performFetch(path, (html) => {
-    callback(html);
-  });
-}
-function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination) {
-  let state = prefetches[destination.pathname];
-  state.html = html;
-  state.finished = true;
-  state.whenFinished();
-}
-function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-  let uri = destination.pathname + destination.search;
-  if (!prefetches[uri])
-    return ifNoPrefetchExists();
-  if (prefetches[uri].finished) {
-    let html = prefetches[uri].html;
-    delete prefetches[uri];
-    return receive(html);
-  } else {
-    prefetches[uri].whenFinished = () => {
-      let html = prefetches[uri].html;
-      delete prefetches[uri];
-      receive(html);
-    };
-  }
-}
-
 // js/plugins/navigate/links.js
 function whenThisLinkIsPressed(el, callback) {
+  let isProgrammaticClick = (e) => !e.isTrusted;
   let isNotPlainLeftClick = (e) => e.which > 1 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
   let isNotPlainEnterKey = (e) => e.which !== 13 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
   el.addEventListener("click", (e) => {
+    if (isProgrammaticClick(e)) {
+      e.preventDefault();
+      callback((whenReleased) => whenReleased());
+      return;
+    }
     if (isNotPlainLeftClick(e))
       return;
     e.preventDefault();
@@ -8461,9 +8450,7 @@ function whenThisLinkIsPressed(el, callback) {
     if (isNotPlainEnterKey(e))
       return;
     e.preventDefault();
-    callback((whenReleased) => {
-      whenReleased();
-    });
+    callback((whenReleased) => whenReleased());
   });
 }
 function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
@@ -8483,6 +8470,70 @@ function extractDestinationFromLink(linkEl) {
 }
 function createUrlObjectFromString(urlString) {
   return new URL(urlString, document.baseURI);
+}
+
+// js/plugins/navigate/fetch.js
+function fetchHtml(destination, callback) {
+  let uri = destination.pathname + destination.search;
+  performFetch(uri, (html, finalDestination) => {
+    callback(html, finalDestination);
+  });
+}
+function performFetch(uri, callback) {
+  let options = {
+    headers: {
+      "X-Livewire-Navigate": ""
+    }
+  };
+  trigger("navigate.request", {
+    url: uri,
+    options
+  });
+  let finalDestination;
+  fetch(uri, options).then((response) => {
+    finalDestination = createUrlObjectFromString(response.url);
+    return response.text();
+  }).then((html) => {
+    callback(html, finalDestination);
+  });
+}
+
+// js/plugins/navigate/prefetch.js
+var prefetches = {};
+function prefetchHtml(destination, callback) {
+  let path = destination.pathname;
+  if (prefetches[path])
+    return;
+  prefetches[path] = { finished: false, html: null, whenFinished: () => {
+  } };
+  performFetch(path, (html, routedUri) => {
+    callback(html, routedUri);
+  });
+}
+function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
+  let state = prefetches[destination.pathname];
+  state.html = html;
+  state.finished = true;
+  state.finalDestination = finalDestination;
+  state.whenFinished();
+}
+function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
+  let uri = destination.pathname + destination.search;
+  if (!prefetches[uri])
+    return ifNoPrefetchExists();
+  if (prefetches[uri].finished) {
+    let html = prefetches[uri].html;
+    let finalDestination = prefetches[uri].finalDestination;
+    delete prefetches[uri];
+    return receive(html, finalDestination);
+  } else {
+    prefetches[uri].whenFinished = () => {
+      let html = prefetches[uri].html;
+      let finalDestination = prefetches[uri].finalDestination;
+      delete prefetches[uri];
+      receive(html, finalDestination);
+    };
+  }
 }
 
 // js/plugins/navigate/teleport.js
@@ -8668,6 +8719,10 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `;
+  let nonce2 = getNonce();
+  if (nonce2) {
+    style.nonce = nonce2;
+  }
   document.head.appendChild(style);
 }
 
@@ -8817,14 +8872,14 @@ function navigate_default(Alpine21) {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
-      prefetchHtml(destination, (html) => {
-        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+      prefetchHtml(destination, (html, finalDestination) => {
+        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
     });
     whenThisLinkIsPressed(el, (whenItIsReleased) => {
       let destination = extractDestinationFromLink(el);
-      prefetchHtml(destination, (html) => {
-        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination);
+      prefetchHtml(destination, (html, finalDestination) => {
+        storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
       whenItIsReleased(() => {
         navigateTo(destination);
@@ -8833,7 +8888,7 @@ function navigate_default(Alpine21) {
   });
   function navigateTo(destination) {
     showProgressBar && showAndStartProgressBar();
-    fetchHtmlOrUsePrefetchedHtml(destination, (html) => {
+    fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
@@ -8849,7 +8904,7 @@ function navigate_default(Alpine21) {
           });
           restoreScrollPositionOrScrollToTop();
           fireEventForOtherLibariesToHookInto("alpine:navigated");
-          updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination);
+          updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -8954,7 +9009,7 @@ function history2(Alpine21) {
 function track(name, initialSeedValue, alwaysShow = false) {
   let { has, get, set, remove } = queryStringUtils();
   let url = new URL(window.location.href);
-  let isInitiallyPresentInUrl = has(url, name);
+  let isInitiallyPresentInUrl = has(url, name) && get(url, name) === initialSeedValue;
   let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
   let initialValueMemo = JSON.stringify(initialValue);
   let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
@@ -8967,6 +9022,8 @@ function track(name, initialSeedValue, alwaysShow = false) {
       return;
     let url2 = new URL(window.location.href);
     if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
+      url2 = remove(url2, name);
+    } else if (newValue === void 0) {
       url2 = remove(url2, name);
     } else {
       url2 = set(url2, name, newValue);
@@ -9017,6 +9074,8 @@ function push(url, key, object) {
   window.history.pushState(state, "", url.toString());
 }
 function unwrap(object) {
+  if (object === void 0)
+    return void 0;
   return JSON.parse(JSON.stringify(object));
 }
 function queryStringUtils() {
@@ -9037,7 +9096,7 @@ function queryStringUtils() {
     },
     set(url, key, value) {
       let data = fromQueryString(url.search);
-      data[key] = value;
+      data[key] = stripNulls(unwrap(value));
       url.search = toQueryString(data);
       return url;
     },
@@ -9048,6 +9107,17 @@ function queryStringUtils() {
       return url;
     }
   };
+}
+function stripNulls(value) {
+  if (!isObjecty(value))
+    return value;
+  for (let key in value) {
+    if (value[key] === null)
+      delete value[key];
+    else
+      value[key] = stripNulls(value[key]);
+  }
+  return value;
 }
 function toQueryString(data) {
   let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
@@ -9112,6 +9182,8 @@ function start() {
   import_alpinejs7.default.plugin(import_mask.default);
   import_alpinejs7.default.addRootSelector(() => "[wire\\:id]");
   import_alpinejs7.default.onAttributesAdded((el, attributes) => {
+    if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     let component = closestComponent(el, false);
     if (!component)
       return;
@@ -9125,6 +9197,8 @@ function start() {
     });
   });
   import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+    if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
+      return;
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
       import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {
@@ -9290,7 +9364,9 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        import_alpinejs9.default.dontAutoEvaluateFunctions(() => {
+          import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        });
       });
     });
   }
@@ -9959,7 +10035,12 @@ function containsTargets(payload, targets) {
       });
     }
     let hasMatchingUpdate = Object.keys(updates).some((property) => {
-      return property.startsWith(target);
+      if (property.includes(".")) {
+        let propertyRoot = property.split(".")[0];
+        if (propertyRoot === target)
+          return true;
+      }
+      return property === target;
     });
     if (hasMatchingUpdate)
       return true;

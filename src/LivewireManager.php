@@ -100,7 +100,9 @@ class LivewireManager
     {
         $dummyContext = new ComponentContext($component, false);
 
-        return app(HandleComponents::class)->updateProperty($component, $path, $value, $dummyContext);
+        $updatedHook = app(HandleComponents::class)->updateProperty($component, $path, $value, $dummyContext);
+
+        $updatedHook();
     }
 
     function isLivewireRequest()

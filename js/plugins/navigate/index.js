@@ -33,16 +33,16 @@ export default function (Alpine) {
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
-            prefetchHtml(destination, html => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination)
+            prefetchHtml(destination, (html, finalDestination) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             })
         })
 
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
 
-            prefetchHtml(destination, html => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination)
+            prefetchHtml(destination, (html, finalDestination) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             })
 
             whenItIsReleased(() => {
@@ -54,7 +54,7 @@ export default function (Alpine) {
     function navigateTo(destination) {
         showProgressBar && showAndStartProgressBar()
 
-        fetchHtmlOrUsePrefetchedHtml(destination, html => {
+        fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
             fireEventForOtherLibariesToHookInto('alpine:navigating')
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
@@ -79,7 +79,7 @@ export default function (Alpine) {
 
                     fireEventForOtherLibariesToHookInto('alpine:navigated')
 
-                    updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination)
+                    updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {

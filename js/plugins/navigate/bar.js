@@ -1,4 +1,5 @@
 import NProgress from 'nprogress'
+import { getNonce } from '@/utils'
 
 NProgress.configure({
     minimum: 0.1,
@@ -155,5 +156,11 @@ function injectStyles() {
       100% { transform: rotate(360deg); }
     }
     `
+
+    let nonce = getNonce()
+    if (nonce) {
+      style.nonce = nonce
+    }
+
     document.head.appendChild(style)
 }

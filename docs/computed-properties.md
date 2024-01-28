@@ -6,6 +6,9 @@ Computed properties are particularly useful in combination with component's publ
 
 To create a computed property, you can add the `#[Computed]` attribute above any method in your Livewire component. Once the attribute has been added to the method, you can access it like any other property.
 
+> [!warning] Make sure you import attribute classes
+> Make sure you import any attribute classes. For example, the below `#[Computed]` attribute requires the following import `use Livewire\Attributes\Computed;`.
+
 For example, here's a `ShowUser` component that uses a computed property named `user()` to access a `User` Eloquent model based on a property named `$userId`:
 
 ```php
@@ -52,6 +55,9 @@ Because the `#[Computed]` attribute has been added to the `user()` method, the v
 
 > [!info] Must use `$this` in your template
 > Unlike normal properties, computed properties aren't directly available inside your component's template. Instead, you must access them on the `$this` object. For example, a computed property named `posts()` must be accessed via `$this->posts` inside your template.
+
+> [!warning] Computed properties are not supported on `Livewire\Form` objects.
+> Trying to use a Computed property within a [Form](https://livewire.laravel.com/docs/forms) will result in an error when you attempt to access the property in blade using $form->property syntax.
 
 ## Performance advantage
 

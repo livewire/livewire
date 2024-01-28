@@ -1,3 +1,4 @@
+import { isObjecty } from "@/utils"
 
 export default function history(Alpine) {
     Alpine.magic('queryString', (el, { interceptor }) =>  {
@@ -41,7 +42,7 @@ export function track(name, initialSeedValue, alwaysShow = false) {
     let { has, get, set, remove } = queryStringUtils()
 
     let url = new URL(window.location.href)
-    let isInitiallyPresentInUrl = has(url, name)
+    let isInitiallyPresentInUrl = has(url, name) && get(url, name) === initialSeedValue
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
     let initialValueMemo = JSON.stringify(initialValue)
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo
@@ -57,11 +58,35 @@ export function track(name, initialSeedValue, alwaysShow = false) {
 
         let url = new URL(window.location.href)
 
+        // This block of code is what needs to be changed for this failing test to pass:
         if (! alwaysShow && ! isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
+            url = remove(url, name)
+        // This is so that when deeply nested values are tracked, but their parent array/object
+        // is removed, we can handle it gracefully by removing the entry from the URL instead
+        // of letting it get set to `?someKey=undefined` which causes issues on refresh...
+        } else if (newValue === undefined) {
             url = remove(url, name)
         } else {
             url = set(url, name, newValue)
         }
+
+        // Right now, the above block, checks a few conditions and updates/removes an entry from the query string.
+        // The new strategy needs to be something like:
+        // - If "alwaysShow" is toggled on, then just "set" the whole thing with no deep diff
+        // - Otherwise, run a deep comparison callback (given the original value and new value).
+        //   - The callback recieves two params (leaf name and value)
+        //   - Check leaf name and value for existance in the original URL from page load. If it's there, just call "set"
+        //   - Check leaf name and value for equivelance to original name and value, if equal, call "remove", otherwise, "set"
+
+        // That code will look something like this:
+
+        // if (alwaysShow) {
+        //     set(url, name, newValue)
+        // } else {
+        //     deepCompare(name, newValue, originalValue, (leafName, leafValue) => {
+        //         // ....
+        //     })
+        // }
 
         strategy(url, name, { value: newValue})
     }
@@ -127,6 +152,8 @@ function push(url, key, object) {
 }
 
 function unwrap(object) {
+    if (object === undefined) return undefined
+
     return JSON.parse(JSON.stringify(object))
 }
 
@@ -153,7 +180,7 @@ function queryStringUtils() {
         set(url, key, value) {
             let data = fromQueryString(url.search)
 
-            data[key] = value
+            data[key] = stripNulls(unwrap(value))
 
             url.search = toQueryString(data)
 
@@ -169,6 +196,17 @@ function queryStringUtils() {
             return url
         },
     }
+}
+
+function stripNulls(value) {
+    if (! isObjecty(value)) return value
+
+    for (let key in value) {
+        if (value[key] === null) delete value[key]
+        else value[key] = stripNulls(value[key])
+    }
+
+    return value
 }
 
 // This function converts JavaScript data to bracketed query string notation...

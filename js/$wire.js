@@ -1,4 +1,4 @@
-import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
+import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent, findComponent } from '@/store'
@@ -36,6 +36,7 @@ let aliases = {
     'upload': '$upload',
     'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
+    'cancelUpload': '$cancelUpload',
 }
 
 export function generateWireObject(component, state) {
@@ -116,9 +117,15 @@ wireProperty('$id', (component) => {
 wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
-    return live
-        ? await requestCommit(component)
-        : Promise.resolve()
+    // If "live", send a request, queueing the property update to happen first
+    // on the server, then trickle back down to the client and get merged...
+    if (live) {
+        component.queueUpdate(property, value)
+
+        return await requestCommit(component)
+    }
+
+    return Promise.resolve()
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {
@@ -169,6 +176,7 @@ wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
+wireProperty('$cancelUpload', (component) => (...params) => cancelUpload(component, ...params))
 
 let parentMemo = new WeakMap
 

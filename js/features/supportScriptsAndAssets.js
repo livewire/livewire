@@ -6,7 +6,7 @@ let executedScripts = new WeakMap
 let executedAssets = new Set
 
 on('payload.intercept', async ({ assets }) => {
-    if(!assets) return
+    if(! assets) return
 
     for (let [key, asset] of Object.entries(assets)) {
         await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
@@ -36,7 +36,9 @@ on('effect', ({ component, effects }) => {
             onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
                 let scriptContent = extractScriptTagContent(content)
 
-                Alpine.evaluate(component.el, scriptContent, { '$wire': component.$wire })
+                Alpine.dontAutoEvaluateFunctions(() => {
+                    Alpine.evaluate(component.el, scriptContent, { '$wire': component.$wire })
+                })
             })
         })
     }
