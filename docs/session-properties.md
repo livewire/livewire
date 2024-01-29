@@ -67,7 +67,7 @@ class ShowPosts extends Component
 
 When Livewire stores and retrieves the value of the `$search` property, it will use the given key: "search".
 
-Additionally, if you want to generate they key dynamically from other properties in your component, you can do so using the following curly bracket notation:
+Additionally, if you want to generate the key dynamically from other properties in your component, you can do so using the following curly bracket notation:
 
 ```php
 <?php
