@@ -387,6 +387,13 @@ class UnitTest extends TestCase
         Livewire::test(NullIssetComputedPropertyStub::class)
             ->assertSee('false');
     }
+
+    /** @test */
+    public function injected_computed_property_attribute_is_accessible_within_blade_view()
+    {
+        Livewire::test(InjectedComputedPropertyWithAttributeStub::class)
+            ->assertSee('bar');
+    }
 }
 
 class ComputedPropertyStub extends Component
@@ -500,6 +507,24 @@ class NullIssetComputedPropertyStub extends Component{
         return <<<'HTML'
         <div>
             {{ var_dump(isset($this->foo)) }}
+        </div>
+        HTML;
+    }
+}
+
+class InjectedComputedPropertyWithAttributeStub extends Component
+{
+    #[Computed]
+    public function fooBar(FooDependency $foo)
+    {
+        return $foo->baz;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->foo_bar) }}
         </div>
         HTML;
     }
