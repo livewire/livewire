@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportRedirects;
 
+use Livewire\Attributes\Modelable;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\ComponentHook;
 use Livewire\Component;
@@ -43,6 +44,13 @@ class SupportRedirects extends ComponentHook
         }
 
         if (! $to) {
+            // Skip if coming from modelable attribute
+            $attributes = $this->component->getAttributes();
+            foreach ($attributes as $attribute) {
+                if ($attribute instanceof Modelable) {
+                    return;
+                }
+            }
             // If there was no redirect. Clear flash session data.
             if (app()->has('session.store')) {
                 session()->forget(session()->get('_flash.new'));
