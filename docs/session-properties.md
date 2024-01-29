@@ -66,3 +66,26 @@ class ShowPosts extends Component
 ```
 
 When Livewire stores and retrieves the value of the `$search` property, it will use the given key: "search".
+
+Additionally, if you want to generate they key dynamically from other properties in your component, you can do so using the following curly bracket notation:
+
+```php
+<?php
+
+use Livewire\Attributes\Session;
+use Livewire\Component;
+use App\Models\Author;
+
+class ShowPosts extends Component
+{
+    public Author $author;
+
+    #[Session(key: 'search-{author.id}')] // [tl! highlight]
+    public $search;
+
+    // ...
+}
+```
+
+In the above example, if the `$author` model's id is "4", the session key will become: `search-4`
+
