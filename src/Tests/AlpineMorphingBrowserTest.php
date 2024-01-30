@@ -88,4 +88,39 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@count', '1');
         ;
     }
+
+    /**
+     * @test
+     */
+    public function alpine_property_persists_on_array_item_reorder()
+    {
+        return Livewire::visit(new class extends Component {
+            private array $items = [
+                ['id' => 1, 'title' => 'Say hello', 'complete' => false],
+                ['id' => 2, 'title' => 'Add test', 'complete' => false],
+                ['id' => 3, 'title' => 'Fix problem', 'complete' => false]
+            ];
+
+            function render() {
+                return view('item-reorder-alpine-error', [
+                    // Complete items at the bottom
+                    'items' => collect($this->items)->sortBy('complete')->toArray()
+                ]);
+            }
+
+            public function complete(int $index): void
+            {
+                $this->items[$index]['complete'] = true;
+            }
+        })
+            // Click on the top two items and mark them as complete.
+            ->click('@complete-0')
+            ->pause(500)
+            ->click('@complete-1')
+            ->pause(500)
+
+            // Error thrown in console, and Alpine fails and shows the hidden text when it should not.
+            ->assertMissing('@hidden');
+//            ->assertConsoleLogMissingWarning('show is not defined');
+    }
 }
