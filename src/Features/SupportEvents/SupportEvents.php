@@ -20,7 +20,7 @@ class SupportEvents extends ComponentHook
             $names = static::getListenerEventNames($this->component);
 
             if (! in_array($name, $names)) {
-                throw new \Exception('Handler for event: ' . $name . ' does not exist');
+                throw new \Exception('Handler for event ' . $name . ' does not exist');
             }
 
             $method = static::getListenerMethodName($this->component, $name);
