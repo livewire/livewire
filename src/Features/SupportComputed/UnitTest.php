@@ -394,6 +394,20 @@ class UnitTest extends TestCase
         Livewire::test(InjectedComputedPropertyWithAttributeStub::class)
             ->assertSee('bar');
     }
+
+    /** @test */
+    public function call_computed_dynamic_property_non_public_method()
+    {
+        Livewire::test(CallComputedDynamicPropertyNonPublicMethod::class)
+            ->assertSee('bar');
+    }
+
+    /** @test */
+    public function call_computed_property_attribute_non_public_method()
+    {
+        Livewire::test(CallComputedPropertyAttributeNonPublicMethod::class)
+            ->assertSee('bar');
+    }
 }
 
 class ComputedPropertyStub extends Component
@@ -525,6 +539,58 @@ class InjectedComputedPropertyWithAttributeStub extends Component
         return <<<'HTML'
         <div>
             {{ var_dump($this->foo_bar) }}
+        </div>
+        HTML;
+    }
+}
+
+class CallComputedDynamicPropertyNonPublicMethod extends Component
+{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    protected function getProtectedFooBarProperty()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    private function getPrivateFooBarProperty()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->protected_foo_bar) }}
+            {{ var_dump($this->private_foo_bar) }}
+        </div>
+        HTML;
+    }
+}
+
+class CallComputedPropertyAttributeNonPublicMethod extends Component
+{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    #[Computed]
+    protected function protectedFooBar()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    #[Computed]
+    private function privateFooBar()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->protected_foo_bar) }}
+            {{ var_dump($this->private_foo_bar) }}
         </div>
         HTML;
     }
