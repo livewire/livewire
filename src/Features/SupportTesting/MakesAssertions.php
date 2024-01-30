@@ -2,9 +2,10 @@
 
 namespace Livewire\Features\SupportTesting;
 
-use Illuminate\Testing\Constraints\SeeInOrder;
-use PHPUnit\Framework\Assert as PHPUnit;
+use ReflectionClass;
 use Illuminate\Support\Arr;
+use PHPUnit\Framework\Assert as PHPUnit;
+use Illuminate\Testing\Constraints\SeeInOrder;
 
 trait MakesAssertions
 {
@@ -147,6 +148,18 @@ trait MakesAssertions
         } else {
             PHPUnit::assertEquals($value, $data);
         }
+
+        return $this;
+    }
+
+    public function assertPropertyHasAttribute($property, $attribute, ...$arguments)
+    {
+        $reflect = (new ReflectionClass($this->instance()))->getProperty($property);
+
+        $attributes = collect($reflect->getAttributes($attribute))
+            ->mapWithKeys(fn ($data, $key) => [$key => ['name' => $data->getName(), 'arguments' => $data->getArguments()]]);
+
+        PHPUnit::assertNotEmpty($attributes->where('name', $attribute)->where('arguments', $arguments));
 
         return $this;
     }

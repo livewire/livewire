@@ -3,14 +3,16 @@
 namespace Livewire\Features\SupportTesting;
 
 use Closure;
-use Illuminate\Contracts\Validation\ValidationRule;
-use PHPUnit\Framework\ExpectationFailedException;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Testing\TestResponse;
-use Illuminate\Testing\TestView;
-use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Component;
+use Tests\TestComponent;
+use Illuminate\Testing\TestView;
+use Livewire\Attributes\Session;
+use Illuminate\Testing\TestResponse;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\ExpectationFailedException;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -591,6 +593,38 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertSet('colourHeader', 'blue')
             ->assertSet('nameHeader', 'Taylor')
             ;
+    }
+
+    /** @test */
+    public function tests_if_an_attribute_exists()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Session]
+            public $count = 0;
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $count }}</div>
+                HTML;
+            }
+        })
+            ->assertPropertyHasAttribute('count', Session::class);
+    }
+
+    /** @test */
+    public function tests_if_an_attribute_values_match()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Session(key: 'foo')]
+            public $count = 0;
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $count }}</div>
+                HTML;
+            }
+        })
+            ->assertPropertyHasAttribute('count', Session::class, key: 'foo');
     }
 }
 
