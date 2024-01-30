@@ -1,102 +1,8 @@
 Hi there and welcome to the Livewire contribution guide. In this guide we are going to take a look at how you can contribute back to Livewire by submitting new features, failing tests, or bug fixes.
-
 ## Setting up Livewire and Alpine locally
 In order to contribute back the easiest way to do this is by ensuring the Livewire and Alpine repositories are setup on your machine locally to easily make changes and run the test suite.
-
-To make this process as easy as possible Livewire provides an CLI command that will setup everything you need. Alternatively you can look at doing the steps manually in the next section.
-
-#### Prerequisites
-1. You need to have the [Github CLI](https://cli.github.com/) installed on your machine and authenticated with your Github account.
-2. You need to have [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed on your machine.
-#### Installing the Livewire CLI
-First, let's install the CLI as a global dependency using Composer. This will ensure we can run the `livewire-cli` command everywhere.
-
-````shell
-composer global require livewire/cli
-````
-
 #### Forking and cloning the repositories
-The next step is to fork and clone the required repositories using the Livewire CLI. For the best experience it's recommended to run this command from the directory that contains your projects like `~/Sites`, `~/Developer`, `~/Code`, etc.
-
-Let's run the `setup-source` command to initiate the process:
-
-```shell
- Welcome to the Livewire source setup wizard!
-
- This command will fork and download the Livewire and Alpine repository to your current working directory.
-
- The best location would probably be your projects folder like ~/Developer, ~/Code, ~/Sites, etc.
-
- This command is only required if you want to contribute to Livewire core.
-```
-
-We start by choosing the directories we want to use for the Livewire and Alpine repository. The easiest is to use the defaults and hit `enter` to start the installation process:
-
-```shell
- ┌ Directory to clone Livewire into ────────────────────────────┐
- │ livewire                                                     │
- └──────────────────────────────────────────────────────────────┘
- 
- ┌ Directory to clone Alpine into ──────────────────────────────┐
- │ alpine                                                       │
- └──────────────────────────────────────────────────────────────┘
- 
- [√] Livewire repository forked.
-
- [√] Livewire repository cloned.
-
- [√] Composer dependencies installed.
- 
- [√] Laravel Dusk configured.
- 
- [√] Alpine repository forked.
- 
- [√] Alpine repository cloned.
- 
- [√] Alpine npm dependencies installed.
-
- [√] Alpine build created.
-
- [√] Global Alpine link created.
-
- [√] Livewire and Alpine are linked.
-
- [√] Livewire build created.
-
- ----------------------------------
-
- [√] The Livewire source code is now ready to be worked on.
-
- From the Livewire directory you can run the following commands:
-
-+------------------------------+------------------------------------------+
-| Description                  | Command                                  |
-+------------------------------+------------------------------------------+
-| Watch and compile JS changes | npm run watch                            |
-| Run tests                    | ./vendor/bin/phpunit                     |
-| Run Unit tests               | ./vendor/bin/phpunit --testsuite Unit    |
-| Run Browser tests            | ./vendor/bin/phpunit --testsuite Browser |
-| Run Legacy tests             | ./vendor/bin/phpunit --testsuite Legacy  |
-+------------------------------+------------------------------------------+
-
- From the Alpine directory you can run the following commands:
-
-+------------------------------+---------------+
-| Description                  | Command       |
-+------------------------------+---------------+
-| Watch and compile JS changes | npm run watch |
-| Run tests                    | npm run test  |
-+------------------------------+---------------+
-```
-
-Perfect! We can now watch and compile Javascript changes, run the test suites for both Livewire and Alpine. Give it a try and run the Unit test suite for Livewire:
-
-```shell
-./vendor/bin/phpunit --testsuite Unit
-```
-
-#### Forking and cloning the repositories manually
-If you don't want to use the CLI command you can run the following commands to setup Livewire manually:
+To get up and running the first step is to fork and clone the repositories. The easiest is to use the [Github CLI](https://cli.github.com/) but if you can also do this manually by clicking the "Fork" button on the Github  [repository page](https://github.com/livewire/livewire).
 
 ```shell
 # Fork and clone Livewire
@@ -112,7 +18,7 @@ composer install
 vendor/bin/dusk-updater detect --no-interaction
 ```
 
-To setup Alpine you can run the following commands:
+To setup Alpine make sure you have [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed and run the following commands (to manually fork visit the [repository page](https://github.com/alpinejs/alpine)):
 
 ```shell
 # Fork and clone Alpine
