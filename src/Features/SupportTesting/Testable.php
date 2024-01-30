@@ -165,6 +165,11 @@ class Testable
         return $this->update();
     }
 
+    function refresh()
+    {
+        return $this->update();
+    }
+
     function update($calls = [], $updates = [])
     {
         $newState = SubsequentRender::make(
