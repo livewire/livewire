@@ -12,6 +12,7 @@ Essentials:
     Lifecycle Hooks: { uri: /docs/lifecycle-hooks, file: /lifecycle-hooks.md }
     Nesting Components: { uri: /docs/nesting, file: /nesting.md }
     Testing: { uri: /docs/testing, file: /testing.md }
+    Troubleshooting: { uri: /docs/troubleshooting, file: /troubleshooting.md }
 Features:
     Alpine: { uri: /docs/alpine, file: /alpine.md }
     Navigate: { uri: /docs/navigate, file: /navigate.md }
