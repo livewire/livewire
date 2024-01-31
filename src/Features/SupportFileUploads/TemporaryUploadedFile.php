@@ -30,6 +30,11 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->storage->path(FileUploadConfiguration::directory());
     }
 
+    public function getDisk(): string
+    {
+        return $this->disk;
+    }
+
     public function isValid(): bool
     {
         return true;
@@ -67,6 +72,11 @@ class TemporaryUploadedFile extends UploadedFile
     public function getRealPath(): string
     {
         return $this->storage->path($this->path);
+    }
+
+    public function getStoragePath(): string
+    {
+        return $this->path;
     }
 
     public function getClientOriginalName(): string

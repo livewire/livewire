@@ -175,6 +175,33 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function can_get_disk()
+    {
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $photo);
+        $this->assertEquals('tmp-for-tests', $photo->getDisk());
+    }
+
+    /** @test */
+    public function can_get_storage_path()
+    {
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $photo);
+        $this->assertStringStartsNotWith('livewire-tmp', $photo->getRealPath());
+        $this->assertStringStartsWith('livewire-tmp', $photo->getStoragePath());
+    }
+
+    /** @test */
     public function can_set_a_file_as_a_property_using_the_s3_driver_and_store_it()
     {
         config()->set('livewire.temporary_file_upload.disk', 's3');
@@ -822,4 +849,3 @@ class FileUploadInArrayComponent extends FileUploadComponent
         unset($this->obj['file_uploads'][$key]);
     }
 }
-
