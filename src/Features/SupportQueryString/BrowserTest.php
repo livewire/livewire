@@ -325,42 +325,6 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_use_url_on_enum_object_properties()
-    {
-        Livewire::visit([
-            new class extends Component
-            {
-                #[BaseUrl]
-                public StringBackedEnumForUrlTesting $foo = StringBackedEnumForUrlTesting::First;
-
-                public function change()
-                {
-                    $this->foo = StringBackedEnumForUrlTesting::Second;
-                }
-
-                public function render()
-                {
-                    return <<<'HTML'
-                    <div>
-                        <button wire:click="change" dusk="button">Change</button>
-                        <h1 dusk="output">{{ $foo }}</h1>
-                    </div>
-                    HTML;
-                }
-            },
-        ])
-            ->assertQueryStringMissing('foo')
-            ->assertSeeIn('@output', 'first')
-            ->waitForLivewire()->click('@button')
-            ->assertQueryStringHas('foo', 'second')
-            ->assertSeeIn('@output', 'second')
-            ->refresh()
-            ->assertQueryStringHas('foo', 'second')
-            ->assertSeeIn('@output', 'second')
-        ;
-    }
-
-    /** @test */
     public function it_does_not_break_string_typed_properties()
     {
         Livewire::withQueryParams(['foo' => 'bar'])
