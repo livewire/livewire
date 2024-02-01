@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use function Livewire\invade;
 use function Livewire\on;
 use function Livewire\off;
-use function Livewire\wrap;
 
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
@@ -121,6 +121,8 @@ class BaseComputed extends Attribute
 
     protected function generatePersistedKey()
     {
+        if ($this->key) return $this->key;
+
         return 'lw_computed.'.$this->component->getId().'.'.$this->getName();
     }
 
@@ -133,7 +135,7 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        return wrap($this->component)->{parent::getName()}();
+        return invade($this->component)->{parent::getName()}();
     }
 
     public function getName()

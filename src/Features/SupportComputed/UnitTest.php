@@ -172,6 +172,36 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    function can_tag_persisted_computed_with_custom_key_property()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(persist: true, key: 'baz')]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSet('count', 1);
+
+        $this->assertTrue(Cache::has('baz'));
+    }
+
+    /** @test */
     function cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);
@@ -331,13 +361,6 @@ class UnitTest extends TestCase
     }
 
     /** @test */
-    public function injected_computed_property_attribute_is_accessible_within_blade_view()
-    {
-        Livewire::test(InjectedComputedPropertyWithAttributeStub::class)
-            ->assertSee('bar');
-    }
-
-    /** @test */
     public function computed_property_is_memoized_after_its_accessed()
     {
         Livewire::test(MemoizedComputedPropertyStub::class)
@@ -477,24 +500,6 @@ class NullIssetComputedPropertyStub extends Component{
         return <<<'HTML'
         <div>
             {{ var_dump(isset($this->foo)) }}
-        </div>
-        HTML;
-    }
-}
-
-class InjectedComputedPropertyWithAttributeStub extends Component
-{
-    #[Computed]
-    public function fooBar(FooDependency $foo)
-    {
-        return $foo->baz;
-    }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div>
-            {{ var_dump($this->foo_bar) }}
         </div>
         HTML;
     }

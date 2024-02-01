@@ -170,6 +170,10 @@ class ComponentRegistry extends Mechanism
             ->map(fn ($segment) => (string) str($segment)->studly())
             ->join('\\');
 
+        if (empty($rootNamespace)) {
+            return $class;
+        }
+
         return '\\' . $rootNamespace . '\\' . $class;
     }
 

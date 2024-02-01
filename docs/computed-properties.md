@@ -56,6 +56,9 @@ Because the `#[Computed]` attribute has been added to the `user()` method, the v
 > [!info] Must use `$this` in your template
 > Unlike normal properties, computed properties aren't directly available inside your component's template. Instead, you must access them on the `$this` object. For example, a computed property named `posts()` must be accessed via `$this->posts` inside your template.
 
+> [!warning] Computed properties are not supported on `Livewire\Form` objects.
+> Trying to use a Computed property within a [Form](https://livewire.laravel.com/docs/forms) will result in an error when you attempt to access the property in blade using $form->property syntax.
+
 ## Performance advantage
 
 You may be asking yourself: why use computed properties at all? Why not just call the method directly?

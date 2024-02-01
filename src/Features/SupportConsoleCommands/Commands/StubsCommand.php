@@ -44,6 +44,16 @@ class StubsCommand extends Command
             file_get_contents(__DIR__.'/livewire.pest.stub')
         );
 
+        file_put_contents(
+            $stubsPath.'/livewire.form.stub',
+            file_get_contents(__DIR__.'/livewire.form.stub')
+        );
+
+        file_put_contents(
+            $stubsPath.'/livewire.attribute.stub',
+            file_get_contents(__DIR__.'/livewire.attribute.stub')
+        );
+
         $this->info('Stubs published successfully.');
     }
 }

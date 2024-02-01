@@ -20,7 +20,7 @@ class SupportEvents extends ComponentHook
             $names = static::getListenerEventNames($this->component);
 
             if (! in_array($name, $names)) {
-                throw new \Exception('EventHandlerDoesNotExist'); // @todo...
+                throw new \Exception('Handler for event ' . $name . ' does not exist');
             }
 
             $method = static::getListenerMethodName($this->component, $name);
@@ -113,14 +113,10 @@ class SupportEvents extends ComponentHook
 
     static function replaceDynamicPlaceholders($event, $component)
     {
-        return preg_replace_callback('/\{.*\}/U', function ($matches) use ($component) {
-            $value = str($matches[0])->between('{', '}')->toString();
-
-            $value = data_get($component, $value, function () use ($matches) {
+        return preg_replace_callback('/\{(.*)\}/U', function ($matches) use ($component) {
+            return data_get($component, $matches[1], function () use ($matches) {
                 throw new \Exception('Unable to evaluate dynamic event name placeholder: '.$matches[0]);
             });
-
-            return $value;
         }, $event);
     }
 }
