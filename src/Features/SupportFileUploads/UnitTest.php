@@ -728,6 +728,8 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function hacky_user_can_create_a_functional_temporary_uploaded_file_for_testing_purpose()
     {
+        // this test should be removed once a better DX is implemented
+
         // fake results come from \Illuminate\Http\UploadedFile
         $fileWithContent = TemporaryUploadedFile::fake()->createWithContent('example.txt', 'some content');
         $fileWithoutContent = TemporaryUploadedFile::fake()->create('example.mp3', 1024, 'audio/mpeg');
