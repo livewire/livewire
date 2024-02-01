@@ -47,7 +47,7 @@ class BaseUrl extends LivewireAttribute
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 
-        $value = $decoded === null ? $initialValue : $decoded;
+        $value = $decoded === null && $initialValue !== 'null' ? $initialValue : $decoded;
 
         $this->setValue($value);
     }
