@@ -726,10 +726,8 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function user_can_create_a_functional_temporary_uploaded_file_for_testing_purpose()
+    public function hacky_user_can_create_a_functional_temporary_uploaded_file_for_testing_purpose()
     {
-
-
         // fake results come from \Illuminate\Http\UploadedFile
         $fileWithContent = TemporaryUploadedFile::fake()->createWithContent('example.txt', 'some content');
         $fileWithoutContent = TemporaryUploadedFile::fake()->create('example.mp3', 1024, 'audio/mpeg');
@@ -750,6 +748,24 @@ class UnitTest extends \Tests\TestCase
         $fileWithContent = TemporaryUploadedFile::createFromLivewire($fileWithContent->getFilename());
         $fileWithoutContent = TemporaryUploadedFile::createFromLivewire($fileWithoutContent->getFilename());
         $fileWithRealImage = TemporaryUploadedFile::createFromLivewire($fileWithRealImage->getFilename());
+
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $fileWithContent);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $fileWithoutContent);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $fileWithRealImage);
+
+        $this->assertEquals('some content', $fileWithContent->getContent());
+        $this->assertEquals('', $fileWithoutContent->getContent());
+        $this->assertTrue(!! imagecreatefromstring($fileWithRealImage->getContent()));
+
+        // add more assertions for name, extension, mimeType, path and so on
+    }
+
+    /** @test */
+    public function user_can_create_a_functional_temporary_uploaded_file_for_testing_purpose()
+    {
+        $fileWithContent = TemporaryUploadedFile::fake()->createWithContent('example.txt', 'some content');
+        $fileWithoutContent = TemporaryUploadedFile::fake()->create('example.mp3', 1024, 'audio/mpeg');
+        $fileWithRealImage = TemporaryUploadedFile::fake()->image('example.jpg', 20, 20);
 
         $this->assertInstanceOf(TemporaryUploadedFile::class, $fileWithContent);
         $this->assertInstanceOf(TemporaryUploadedFile::class, $fileWithoutContent);
