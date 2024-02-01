@@ -519,6 +519,52 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('filter')
         ;
     }
+
+    /** @test */
+    public function can_handle_null_value_in_querystring()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[Url]
+                public $foo;
+
+                public function setFoo()
+                {
+                    $this->foo = 'bar';
+                }
+
+                public function unsetFoo()
+                {
+                    $this->foo = null;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
+                        <span dusk="output">{{ $foo }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output', 'bar')
+            ->assertQueryStringHas('foo', 'bar')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'bar')
+            ->waitForLivewire()->click('@unsetButton')
+            ->assertSeeNothingIn('@output')
+            ->assertQueryStringHas('foo', 'null')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'null')
+            ->assertSeeNothingIn('@output')
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
