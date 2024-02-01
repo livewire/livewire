@@ -201,7 +201,6 @@ class BrowserTest extends BrowserTestCase
                 HTML);
             }
         })
-            ->tinker()
             ->waitForLivewire()->click('@button')
             ->assertSeeIn('@text', '[object Object],[object Object],[object Object]')
             ->assertScript('document.getElementById(\'root\').querySelectorAll(\'div\').length', 3)
