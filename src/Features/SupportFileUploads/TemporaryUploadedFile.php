@@ -82,7 +82,6 @@ class TemporaryUploadedFile extends UploadedFile
     public function getPathname(): string
     {
         return $this->getRealPath();
-
     }
 
     public function getClientOriginalName(): string
