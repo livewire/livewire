@@ -170,8 +170,8 @@ Because Livewire "replaces" the current history, pressing the "back" button in t
 To force Livewire to use `history.pushState` when updating the URL, you can provide the `history` parameter to the `#[Url]` attribute:
 
 ```php
+use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\With\Url;
 
 class ShowUsers extends Component
 {
