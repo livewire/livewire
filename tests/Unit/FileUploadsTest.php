@@ -323,6 +323,22 @@ class FileUploadsTest extends TestCase
     }
 
     /** @test */
+    public function invalid_file_extension_can_validate_dimensions()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()
+            ->create('not-a-png-image.pdf', 512, 512);
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('validateUploadWithDimensions')
+            ->assertHasErrors(['photo' => 'dimensions']);
+
+        Storage::disk('avatars')->assertMissing('uploaded-not-a-png-image.png');
+    }
+
+    /** @test */
     public function temporary_files_older_than_24_hours_are_cleaned_up_on_every_new_upload()
     {
         Storage::fake('avatars');
