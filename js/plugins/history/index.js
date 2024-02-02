@@ -42,7 +42,7 @@ export function track(name, initialSeedValue, alwaysShow = false) {
     let { has, get, set, remove } = queryStringUtils()
 
     let url = new URL(window.location.href)
-    let isInitiallyPresentInUrl = has(url, name) && get(url, name) === initialSeedValue
+    let isInitiallyPresentInUrl = has(url, name)
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
     let initialValueMemo = JSON.stringify(initialValue)
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo
@@ -60,6 +60,11 @@ export function track(name, initialSeedValue, alwaysShow = false) {
 
         // This block of code is what needs to be changed for this failing test to pass:
         if (! alwaysShow && ! isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
+            url = remove(url, name)
+        // This is so that when deeply nested values are tracked, but their parent array/object
+        // is removed, we can handle it gracefully by removing the entry from the URL instead
+        // of letting it get set to `?someKey=undefined` which causes issues on refresh...
+        } else if (newValue === undefined) {
             url = remove(url, name)
         } else {
             url = set(url, name, newValue)
@@ -147,6 +152,8 @@ function push(url, key, object) {
 }
 
 function unwrap(object) {
+    if (object === undefined) return undefined
+
     return JSON.parse(JSON.stringify(object))
 }
 

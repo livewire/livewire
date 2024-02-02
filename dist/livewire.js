@@ -3607,13 +3607,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (isObject22(items)) {
         items = Object.entries(items).map(([key, value]) => {
           let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-          evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
+          evaluateKey((value2) => {
+            if (keys.includes(value2))
+              warn("Duplicate key on x-for", el);
+            keys.push(value2);
+          }, { scope: { index: key, ...scope2 } });
           scopes.push(scope2);
         });
       } else {
         for (let i = 0; i < items.length; i++) {
           let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-          evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
+          evaluateKey((value) => {
+            if (keys.includes(value))
+              warn("Duplicate key on x-for", el);
+            keys.push(value);
+          }, { scope: { index: i, ...scope2 } });
           scopes.push(scope2);
         }
       }
@@ -3661,7 +3669,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let marker = document.createElement("div");
         mutateDom(() => {
           if (!elForSpot)
-            warn(`x-for ":key" is undefined or invalid`, templateEl);
+            warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
           elForSpot.after(marker);
           elInSpot.after(elForSpot);
           elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -7690,7 +7698,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function track2(name, initialSeedValue, alwaysShow = false) {
     let { has: has2, get: get3, set: set3, remove } = queryStringUtils();
     let url = new URL(window.location.href);
-    let isInitiallyPresentInUrl = has2(url, name) && get3(url, name) === initialSeedValue;
+    let isInitiallyPresentInUrl = has2(url, name);
     let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
     let initialValueMemo = JSON.stringify(initialValue);
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
@@ -7703,6 +7711,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       let url2 = new URL(window.location.href);
       if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
+        url2 = remove(url2, name);
+      } else if (newValue === void 0) {
         url2 = remove(url2, name);
       } else {
         url2 = set3(url2, name, newValue);
@@ -7753,6 +7763,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     window.history.pushState(state, "", url.toString());
   }
   function unwrap(object) {
+    if (object === void 0)
+      return void 0;
     return JSON.parse(JSON.stringify(object));
   }
   function queryStringUtils() {
@@ -8766,8 +8778,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           event_name
         ] = event_parts;
         if (["channel", "private", "encryptedPrivate"].includes(channel_type)) {
-          window.Echo[channel_type](channel).listen(event_name, (e) => {
-            dispatchSelf(component, event, [e]);
+          let handler4 = (e) => dispatchSelf(component, event, [e]);
+          window.Echo[channel_type](channel).listen(event_name, handler4);
+          component.addCleanup(() => {
+            window.Echo[channel_type](channel).stopListening(event_name, handler4);
           });
         } else if (channel_type == "presence") {
           if (["here", "joining", "leaving"].includes(event_name)) {
@@ -8775,8 +8789,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               dispatchSelf(component, event, [e]);
             });
           } else {
-            window.Echo.join(channel).listen(event_name, (e) => {
-              dispatchSelf(component, event, [e]);
+            let handler4 = (e) => dispatchSelf(component, event, [e]);
+            window.Echo.join(channel).listen(event_name, handler4);
+            component.addCleanup(() => {
+              window.Echo[channel_type](channel).stopListening(event_name, handler4);
             });
           }
         } else if (channel_type == "notification") {
@@ -8913,7 +8929,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!html)
       return;
     queueMicrotask(() => {
-      morph2(component, component.el, html);
+      queueMicrotask(() => {
+        morph2(component, component.el, html);
+      });
     });
   });
 

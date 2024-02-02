@@ -44,6 +44,19 @@ class BaseSession extends LivewireAttribute
 
     protected function key()
     {
-        return $this->key ?: (string) 'lw' . crc32($this->component->getName() . $this->getName());
+        if (! $this->key) {
+            return (string) 'lw' . crc32($this->component->getName() . $this->getName());
+        }
+
+        return self::replaceDynamicPlaceholders($this->key, $this->component);
+    }
+
+    static function replaceDynamicPlaceholders($key, $component)
+    {
+        return preg_replace_callback('/\{(.*)\}/U', function ($matches) use ($component) {
+            return data_get($component, $matches[1], function () use ($matches) {
+                throw new \Exception('Unable to evaluate dynamic session key placeholder: '.$matches[0]);
+            });
+        }, $key);
     }
 }

@@ -52,7 +52,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
     public function can_encode_url_containing_spaces_and_commas()
     {
         Livewire::visit([
@@ -157,31 +156,27 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_use_except_and_it_still_works_after_a_page_refresh()
+    public function initial_values_loaded_from_querystring_are_not_removed_from_querystring_on_load_if_they_are_different_to_the_default()
     {
-        Livewire::visit([
+        Livewire::withQueryParams(['perPage' => 25])->visit([
             new class extends Component
             {
-                #[BaseUrl(except: '')]
-                public $search = '';
+                #[BaseUrl]
+                public $perPage = '15';
 
                 public function render()
                 {
                     return <<<'HTML'
                     <div>
-                        <input type="text" dusk="input" wire:model.live="search" />
+                        <input type="text" dusk="input" wire:model.live="perPage" />
                     </div>
                     HTML;
                 }
             },
         ])
-            ->assertQueryStringMissing('search')
-            ->waitForLivewire()->type('@input', 'bar')
-            ->assertQueryStringHas('search', 'bar')
-            ->refresh()
-            ->waitForLivewire()->type('@input', ' ')
-            ->waitForLivewire()->keys('@input', '{backspace}')
-            ->assertQueryStringMissing('search')
+            ->waitForLivewireToLoad()
+            ->assertQueryStringHas('perPage', '25')
+            ->assertInputValue('@input', '25')
         ;
     }
 
@@ -258,17 +253,17 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_use_url_on_enum_object_properties()
+    public function can_use_url_on_string_backed_enum_object_properties()
     {
         Livewire::visit([
             new class extends Component
             {
                 #[BaseUrl]
-                public EnumForUrlTesting $foo = EnumForUrlTesting::First;
+                public StringBackedEnumForUrlTesting $foo = StringBackedEnumForUrlTesting::First;
 
                 public function change()
                 {
-                    $this->foo = EnumForUrlTesting::Second;
+                    $this->foo = StringBackedEnumForUrlTesting::Second;
                 }
 
                 public function render()
@@ -290,6 +285,42 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->refresh()
             ->assertQueryStringHas('foo', 'second')
             ->assertSeeIn('@output', 'second')
+        ;
+    }
+
+    /** @test */
+    public function can_use_url_on_integer_backed_enum_object_properties()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public IntegerBackedEnumForUrlTesting $foo = IntegerBackedEnumForUrlTesting::First;
+
+                public function change()
+                {
+                    $this->foo = IntegerBackedEnumForUrlTesting::Second;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="change" dusk="button">Change</button>
+                        <h1 dusk="output">{{ $foo }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->assertSeeIn('@output', '1')
+            ->waitForLivewire()->click('@button')
+            ->assertQueryStringHas('foo', '2')
+            ->assertSeeIn('@output', '2')
+            ->refresh()
+            ->assertQueryStringHas('foo', '2')
+            ->assertSeeIn('@output', '2')
         ;
     }
 
@@ -354,6 +385,176 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('foo', 'baz')
         ;
     }
+
+    /** @test */
+    public function can_unset_the_array_key_when_using_dot_notation_without_except()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public array $tableFilters = [];
+
+                protected function queryString() {
+                    return [
+                        'tableFilters.filter_1.value' => [
+                            'as' => 'filter',
+                        ],
+                    ];
+                }
+
+                public function clear()
+                {
+                    unset($this->tableFilters['filter_1']['value']);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="tableFilters.filter_1.value" type="text" dusk="filter" />
+
+                    <span dusk="output">@json($tableFilters)</span>
+
+                    <button dusk="clear" wire:click="clear">Clear</button>
+                </div>
+                HTML; }
+            },
+        ])
+            ->assertInputValue('@filter', '')
+            ->waitForLivewire()->type('@filter', 'foo')
+            ->assertSeeIn('@output', '{"filter_1":{"value":"foo"}}')
+            ->waitForLivewire()->click('@clear')
+            ->assertInputValue('@filter', '')
+            ->assertQueryStringMissing('filter')
+        ;
+    }
+
+    /** @test */
+    public function can_unset_the_array_key_when_with_except()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public array $tableFilters = [];
+
+                protected function queryString() {
+                    return [
+                        'tableFilters' => [
+                            'filter_1' => [
+                                'value' => [
+                                    'as' => 'filter',
+                                    'except' => '',
+                                ],
+                            ]
+                        ],
+                    ];
+                }
+
+                public function clear()
+                {
+                    unset($this->tableFilters['filter_1']['value']);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="tableFilters.filter_1.value" type="text" dusk="filter" />
+
+                    <span dusk="output">@json($tableFilters)</span>
+
+                    <button dusk="clear" wire:click="clear">Clear</button>
+                </div>
+                HTML; }
+            },
+        ])
+            ->assertInputValue('@filter', '')
+            ->waitForLivewire()->type('@filter', 'foo')
+            ->assertSeeIn('@output', '{"filter_1":{"value":"foo"}}')
+            ->waitForLivewire()->click('@clear')
+            ->assertInputValue('@filter', '')
+            ->assertQueryStringMissing('filter')
+        ;
+    }
+
+    /** @test */
+    public function can_unset_the_array_key_when_without_except()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public array $tableFilters = [];
+
+                protected function queryString() {
+                    return [
+                        'tableFilters' => [
+                            'filter_1' => [
+                                'value' => [
+                                    'as' => 'filter',
+                                ],
+                            ]
+                        ],
+                    ];
+                }
+
+                public function clear()
+                {
+                    unset($this->tableFilters['filter_1']['value']);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="tableFilters.filter_1.value" type="text" dusk="filter" />
+
+                    <span dusk="output">@json($tableFilters)</span>
+
+                    <button dusk="clear" wire:click="clear">Clear</button>
+                </div>
+                HTML; }
+            },
+        ])
+            ->assertInputValue('@filter', '')
+            ->waitForLivewire()->type('@filter', 'foo')
+            ->assertSeeIn('@output', '{"filter_1":{"value":"foo"}}')
+            ->waitForLivewire()->click('@clear')
+            ->assertInputValue('@filter', '')
+            ->assertQueryStringMissing('filter')
+        ;
+    }
+
+    /** @test */
+    public function can_unset_the_array_key_when_using_dot_notation_with_except()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public array $tableFilters = [];
+
+                protected function queryString() {
+                    return [
+                        'tableFilters.filter_1.value' => [
+                            'as' => 'filter',
+                            'except' => ''
+                        ],
+                    ];
+                }
+
+                public function clear()
+                {
+                    unset($this->tableFilters['filter_1']['value']);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="tableFilters.filter_1.value" type="text" dusk="filter" />
+
+                    <span dusk="output">@json($tableFilters)</span>
+
+                    <button dusk="clear" wire:click="clear">Clear</button>
+                </div>
+                HTML; }
+            },
+        ])
+            ->assertInputValue('@filter', '')
+            ->waitForLivewire()->type('@filter', 'foo')
+            ->assertSeeIn('@output', '{"filter_1":{"value":"foo"}}')
+            ->waitForLivewire()->click('@clear')
+            ->assertInputValue('@filter', '')
+            ->assertQueryStringMissing('filter')
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
@@ -365,8 +566,14 @@ class FormObject extends \Livewire\Form
     public $bob = 'lob';
 }
 
-enum EnumForUrlTesting: string
+enum StringBackedEnumForUrlTesting: string
 {
     case First = 'first';
     case Second = 'second';
+}
+
+enum IntegerBackedEnumForUrlTesting: int
+{
+    case First = 1;
+    case Second = 2;
 }

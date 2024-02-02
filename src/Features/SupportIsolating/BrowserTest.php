@@ -54,9 +54,9 @@ class BrowserTest extends BrowserTestCase
         })
         ->waitForLivewire()->click('@trigger')
         ->tap(function ($b) {
-            $time1 = (float) $b->text('@time-1');
-            $time2 = (float) $b->text('@time-2');
-            $time3 = (float) $b->text('@time-3');
+            $time1 = (float) $b->waitFor('@time-1')->text('@time-1');
+            $time2 = (float) $b->waitFor('@time-2')->text('@time-2');
+            $time3 = (float) $b->waitFor('@time-3')->text('@time-3');
 
             $this->assertNotEquals($time1, $time2);
             $this->assertNotEquals($time2, $time3);
