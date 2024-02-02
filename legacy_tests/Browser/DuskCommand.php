@@ -27,7 +27,7 @@ class DuskCommand extends Command
         $this->setName('dusk');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $file = (new ReflectionClass($this->testCase))->getFilename();
 

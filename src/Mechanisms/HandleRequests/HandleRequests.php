@@ -96,7 +96,7 @@ class HandleRequests extends Mechanism
             'assets' => SupportScriptsAndAssets::getAssets(),
         ];
 
-        $finish = trigger('profile.response', $response);
+        $finish = trigger('response', $response);
 
         return $finish($response);
     }

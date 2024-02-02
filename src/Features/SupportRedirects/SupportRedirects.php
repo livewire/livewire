@@ -2,13 +2,31 @@
 
 namespace Livewire\Features\SupportRedirects;
 
+use Livewire\Attributes\Modelable;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\ComponentHook;
 use Livewire\Component;
+use function Livewire\on;
 
 class SupportRedirects extends ComponentHook
 {
     public static $redirectorCacheStack = [];
+    public static $atLeastOneComponentHasRedirected = false;
+
+    public static function provide()
+    {
+        // Wait until all components have been processed...
+        on('response', function () {
+            // If there was no redirect. Clear flash session data.
+            if (! static::$atLeastOneComponentHasRedirected && app()->has('session.store')) {
+                session()->forget(session()->get('_flash.new'));
+            }
+        });
+
+        on('flush-state', function () {
+            static::$atLeastOneComponentHasRedirected = false;
+        });
+    }
 
     public function boot()
     {
@@ -42,16 +60,11 @@ class SupportRedirects extends ComponentHook
             abort(redirect($to));
         }
 
-        if (! $to) {
-            // If there was no redirect. Clear flash session data.
-            if (app()->has('session.store')) {
-                session()->forget(session()->get('_flash.new'));
-            }
-
-            return;
-        }
+        if (! $to) return;
 
         $context->addEffect('redirect', $to);
         $usingNavigate && $context->addEffect('redirectUsingNavigate', true);
+
+        static::$atLeastOneComponentHasRedirected = true;
     }
 }
