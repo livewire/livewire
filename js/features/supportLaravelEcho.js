@@ -59,7 +59,7 @@ on('effect', ({ component, effects }) => {
                     window.Echo.join(channel).listen(event_name, handler)
 
                     component.addCleanup(() => {
-                        window.Echo[channel_type](channel).stopListening(event_name, handler)
+                        window.Echo.leaveChannel(channel)
                     })
                 }
             } else if (channel_type == 'notification') {
