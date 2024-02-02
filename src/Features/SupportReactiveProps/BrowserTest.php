@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportReactiveProps;
 
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Livewire\Component;
 
@@ -217,5 +218,79 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitFor('@child.count')
             ->assertSeeIn('@child.count', 0)
         ;
+    }
+
+    /** @test */
+    public function can_skip_child_render_when_unchanged_reactive_prop()
+    {
+        $test = Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+                public $reactive = 0;
+
+                public function incCount() { $this->count++; }
+                public function incReactive() { $this->reactive++; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <h1>Parent count: <span dusk="parent.count">{{ $count }}</span>
+                        <h1>Parent reactive: <span dusk="parent.reactive">{{ $reactive }}</span>
+
+                        <button wire:click="incCount" dusk="parent.incCount">incCount</button>
+                        <button wire:click="incReactive" dusk="parent.incReactive">incReactive</button>
+
+                        <livewire:child :$count :$reactive />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $count;
+
+                #[BaseReactive]
+                public $reactive;
+
+                public function render() {
+                    $random = Str::random();
+
+                    return <<<HTML
+                        <div>
+                            <h1>Child count: <span dusk="child.count">{{ \$count }}</span>
+                            <h1>Child reactive: <span dusk="child.reactive">{{ \$reactive }}</span>
+                            <h1>Random: <span dusk="child.random">{$random}</span>
+                        </div>
+                    HTML;
+                }
+            }
+        ]);
+
+        $test
+            ->assertSeeIn('@parent.count', 0)
+            ->assertSeeIn('@parent.reactive', 0)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.reactive', 0);
+
+        $random1 = $test->text('@child.random');
+
+        $test
+            ->waitForLivewire()->click('@parent.incCount')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@parent.reactive', 0)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.reactive', 0);
+
+        $random2 = $test->text('@child.random');
+
+        $test
+            ->waitForLivewire()->click('@parent.incReactive')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@parent.reactive', 1)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.reactive', 1);
+
+        $random3 = $test->text('@child.random');
+
+        $this->assertSame($random1, $random2);
+        $this->assertNotSame($random2, $random3);
     }
 }
