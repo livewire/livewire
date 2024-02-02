@@ -2,11 +2,11 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Illuminate\Support\Facades\Route;
-use Livewire\Attributes\Modelable;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
+use Livewire\Attributes\Reactive;
+use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends BrowserTestCase
 {
@@ -32,7 +32,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function session_flash_persist_when_redirecting_with_child_component_that_has_property_modelable()
+    public function session_flash_persists_when_redirecting_from_request_with_multiple_components_in_the_same_request()
     {
         config()->set('session.driver', 'file');
 
@@ -42,48 +42,46 @@ class BrowserTest extends BrowserTestCase
             new class extends Component {
                 public $foo = 0;
 
-                public function render() { return <<<'HTML'
-                <div>
-                    <h1> Form : </h1>
-                    <form wire:submit="save">
-                        <livewire:child wire:model="foo" />
-                        <button type="submit" dusk="submit-form">save</button>
-                    </form>
-                </div>
-                HTML; }
-
-                public function save()
+                public function doRedirect()
                 {
-                    session()->flash('alertMessage', 'session flash data persist');
+                    session()->flash('alert', 'Session flash data');
+
                     $this->redirect('/redirect');
                 }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <h1>Parent</h1>
+
+                    <button wire:click="doRedirect" dusk="button">Do redirect</button>
+
+                    <livewire:child :$foo />
+                </div>
+                HTML; }
             },
             'child' => new class extends Component {
-                #[Modelable]
-                public $bar;
+                #[Reactive]
+                public $foo;
 
                 public function render() { return <<<'HTML'
                 <div>
                     <label>Child</label>
-                    <input type="text" wire:model="bar" />
                 </div>
                 HTML; }
             }
         ])
-        ->waitForLivewireToLoad()
-        ->click('@submit-form')
-        ->waitForNavigate()
-        ->waitForLivewireToLoad()
-        ->assertSeeIn('@session-message', 'session flash data persist');
+        ->click('@button')
+        ->waitForTextIn('@session-message', 'Session flash data');
     }
 }
 
 class RedirectComponent extends Component {
     public function render() { return <<<'HTML'
         <div>
-            <h1>redirected page</h1>
+            <h1>Redirected page</h1>
+
             <div dusk="session-message">
-                @session('alertMessage')
+                @session('alert')
                     {{ $value }}
                 @endsession
             </div>
