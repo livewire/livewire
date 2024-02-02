@@ -218,6 +218,57 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForText('Boot count: 1');
         ;
     }
+
+    /** @test */
+    public function nested_components_can_be_removed_and_readded_to_dom()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div id="root" x-data>
+                        <button dusk="button" @click="
+                            nestedElement = document.getElementById('removable')
+                            nestedElement.remove();
+
+                            setTimeout(() => {
+                                document.getElementById('root').appendChild(nestedElement);
+                                window.readded = true;
+                            }, 2000);
+                        ">remove and re-add child</button>
+
+                        <div id="removable">
+                            <livewire:child/>
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $clicked = false;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div dusk="child">
+                        <button dusk="child-button" wire:click="$set('clicked', true)">child button</button>
+                        <p dusk="child-text">@js($clicked)</p>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->assertPresent('@child')
+        ->assertScript('Livewire.all().length', 2)
+        ->click('@button')
+        ->waitUntil('window.readded', 5, true)
+        ->assertPresent('@child')
+        ->assertScript('Livewire.all().length', 2)
+        ->assertSeeIn('@child-text', 'false')
+        ->waitForLivewire()->click('@child-button')
+        ->assertSeeIn('@child-text', 'true');
+    }
 }
 
 class Page extends Component
