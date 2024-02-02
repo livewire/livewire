@@ -230,6 +230,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function incCount() { $this->count++; }
                 public function incReactive() { $this->reactive++; }
+                public function setReactive() { $this->reactive = $this->reactive; }
 
                 public function render() { return <<<'HTML'
                     <div>
@@ -238,6 +239,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                         <button wire:click="incCount" dusk="parent.incCount">incCount</button>
                         <button wire:click="incReactive" dusk="parent.incReactive">incReactive</button>
+                        <button wire:click="setReactive" dusk="parent.setReactive">setReactive</button>
 
                         <livewire:child :$count :$reactive />
                     </div>
@@ -290,7 +292,17 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         $random3 = $test->text('@child.random');
 
+        $test
+            ->waitForLivewire()->click('@parent.setReactive')
+            ->assertSeeIn('@parent.count', 1)
+            ->assertSeeIn('@parent.reactive', 1)
+            ->assertSeeIn('@child.count', 0)
+            ->assertSeeIn('@child.reactive', 1);
+
+        $random4 = $test->text('@child.random');
+
         $this->assertSame($random1, $random2);
         $this->assertNotSame($random2, $random3);
+        $this->assertSame($random3, $random4);
     }
 }
