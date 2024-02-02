@@ -91,6 +91,32 @@ By adding `wire:target` to the following `wire:loading` element, you can instruc
 
 When the above "Remove" button is pressed, the "Removing post..." message will be displayed to the user. However, the message will not be displayed when the "Save" button is pressed.
 
+### Targeting multiple specific actions
+
+In situations where you would like wire:loading to react to multiple but not all actions on a page, you can pass multiple actions into wire:target, separated by a comma.
+
+For example, consider the scenario below, where in addition to the "Save" and "Remove" buttons, we also have an input field that we would like to validate right after the user has updated it.
+Without wire:target, the "Updating post..." message would be displayed during the validation.
+By adding wire:target with multiple actions, we can display the message when the post is saved or removed, but not during the validation.
+
+```blade
+<form wire:submit="save">
+    <input type="text" wire:model.blur="postTitle">
+    
+    <!-- ... -->
+
+    <button type="submit">Save</button>
+
+    <button type="button" wire:click="remove">Remove</button>
+
+    <div wire:loading wire:target="save,remove">  <!-- [tl! highlight:2] -->
+        Updating post...
+    </div>
+</form>
+```
+
+When the above "Remove" or "Save" buttons are pressed, the "Updating post..." message will be displayed to the user. However, changing the postTitle property wont display the message.
+
 ### Targeting action parameters
 
 In situations where the same action is triggered with different parameters from multiple places on a page, you can further scope `wire:target` to a specific action by passing in additional parameters. For example, consider the following scenario where a "Remove" button exists for each post on the page:
