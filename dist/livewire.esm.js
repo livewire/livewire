@@ -3533,13 +3533,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isObject2(items)) {
           items = Object.entries(items).map(([key, value]) => {
             let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-            evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
+            evaluateKey((value2) => {
+              if (keys.includes(value2))
+                warn("Duplicate key on x-for", el);
+              keys.push(value2);
+            }, { scope: { index: key, ...scope2 } });
             scopes.push(scope2);
           });
         } else {
           for (let i = 0; i < items.length; i++) {
             let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-            evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
+            evaluateKey((value) => {
+              if (keys.includes(value))
+                warn("Duplicate key on x-for", el);
+              keys.push(value);
+            }, { scope: { index: i, ...scope2 } });
             scopes.push(scope2);
           }
         }
@@ -3587,7 +3595,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let marker = document.createElement("div");
           mutateDom(() => {
             if (!elForSpot)
-              warn(`x-for ":key" is undefined or invalid`, templateEl);
+              warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
             elForSpot.after(marker);
             elInSpot.after(elForSpot);
             elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
