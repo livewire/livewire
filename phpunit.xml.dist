@@ -21,5 +21,6 @@
     </testsuites>
     <php>
         <env name="CACHE_STORE" value="file"/>
+        <env name="SESSION_DRIVER" value="file"/>
     </php>
 </phpunit>
