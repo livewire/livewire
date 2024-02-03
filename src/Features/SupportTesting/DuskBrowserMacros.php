@@ -64,9 +64,92 @@ class DuskBrowserMacros
             PHPUnit::assertContains(
                 $className,
                 explode(' ', $this->attribute($selector, 'class')),
-                "Element [{$fullSelector}] missing class [{$className}]."
+                "Element [{$fullSelector}] is missing required class [{$className}]."
             );
 
+            return $this;
+        };
+    }
+
+    public function assertClassMissing()
+    {
+        return function ($selector, $className) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            PHPUnit::assertNotContains(
+                $className,
+                explode(' ', $this->attribute($selector, 'class')),
+                "Element [{$fullSelector}] has class that must be missing [{$className}]."
+            );
+
+            return $this;
+        };
+    }
+
+    public function assertMissingClass()
+    {
+        // Map to existing method
+        return $this->assertClassMissing();
+    }
+
+    /**
+     * Ensures all classes in array are present
+     */
+    public function assertHasAllClasses()
+    {
+        return function ($selector, array $classNames) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            $invalidClasses = array_diff($classNames, explode(' ', $this->attribute($selector, 'class')));
+
+            PHPUnit::assertEmpty(
+                $invalidClasses,
+                "Element [{$fullSelector}] is missing required classes [".implode(" ", $invalidClasses)."]."
+            );
+            
+            return $this;
+        };
+
+    }
+
+    /**
+     * Ensures only classes in array are present
+     */
+    public function assertHasOnlyClasses()
+    {
+        return function ($selector, array $classNames) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            $invalidClasses = array_diff(explode(' ', $this->attribute($selector, 'class')), $classNames);
+
+            PHPUnit::assertEmpty(
+                $invalidClasses,
+                "Element [{$fullSelector}] has classes that must not be present [".implode(" ", $invalidClasses)."]."
+            );
+    
+            return $this;
+        };
+    }
+
+    /**
+     * Ensures all classes in array are missing
+     */
+    public function assertMissingAllClasses()
+    {
+        return function ($selector, array $classNames) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $fullSelector = $this->resolver->format($selector);
+
+            $invalidClasses = array_intersect($classNames, explode(' ', $this->attribute($selector, 'class')));
+
+            PHPUnit::assertEmpty(
+                $invalidClasses,
+                "Element [{$fullSelector}] has classes that must be missing [".implode(" ", $invalidClasses)."]."
+            );
+            
             return $this;
         };
     }
@@ -128,22 +211,6 @@ class DuskBrowserMacros
             )[0];
 
             PHPUnit::assertEquals($invert ? false : true, $result);
-
-            return $this;
-        };
-    }
-
-    public function assertClassMissing()
-    {
-        return function ($selector, $className) {
-            /** @var \Laravel\Dusk\Browser $this */
-            $fullSelector = $this->resolver->format($selector);
-
-            PHPUnit::assertNotContains(
-                $className,
-                explode(' ', $this->attribute($selector, 'class')),
-                "Element [{$fullSelector}] has class [{$className}]."
-            );
 
             return $this;
         };
