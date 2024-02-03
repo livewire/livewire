@@ -1,7 +1,8 @@
 Hi there and welcome to the Livewire contribution guide. In this guide, we are going to take a look at how you can contribute to Livewire by submitting new features, fixing failing tests, or resolving bugs.
-## Setting up Livewire and Alpine locally
 
+## Setting up Livewire and Alpine locally
 To contribute, the easiest way is to ensure that the Livewire and Alpine repositories are set up on your local machine. This will allow you to make changes and run the test suite with ease.
+
 ### Forking and cloning the repositories
 To get started, the first step is to fork and clone the repositories. The easiest way to do this is by using the [Github CLI](https://cli.github.com/), but you can also perform these steps manually by clicking the "Fork" button on the Github [repository page](https://github.com/livewire/livewire).
 
@@ -34,19 +35,19 @@ npm install
 # Build all Alpine packages
 npm run build
 
-# Link all Alpine package locally 
-cd alpine/packages/alpinejs && npm link"
-cd alpine/packages/anchor && npm link"
-cd alpine/packages/collapse && npm link"
-cd alpine/packages/csp && npm link"
-cd alpine/packages/docs && npm link"
-cd alpine/packages/focus && npm link"
-cd alpine/packages/history && npm link"
-cd alpine/packages/intersect && npm link"
-cd alpine/packages/mask && npm link"
-cd alpine/packages/morph && npm link"
-cd alpine/packages/navigate && npm link"
-cd alpine/packages/persist && npm link"
+# Link all Alpine packages locally
+cd alpine/packages/alpinejs && npm link
+cd alpine/packages/anchor && npm link
+cd alpine/packages/collapse && npm link
+cd alpine/packages/csp && npm link
+cd alpine/packages/docs && npm link
+cd alpine/packages/focus && npm link
+cd alpine/packages/history && npm link
+cd alpine/packages/intersect && npm link
+cd alpine/packages/mask && npm link
+cd alpine/packages/morph && npm link
+cd alpine/packages/navigate && npm link
+cd alpine/packages/persist && npm link
 
 # Switch the working directory back to livewire
 cd ../livewire
@@ -62,23 +63,24 @@ npm run build
 
 If you're encountering a bug and are unsure about how to solve it, especially given the complexity of the Livewire core, you might be wondering where to start. In such cases, the easiest approach is to contribute a failing test. This way, someone with more experience can assist in identifying and fixing the bug. Nonetheless, we do recommend that you also explore the core to gain a better understanding of how Livewire operates.
 
-Let's take a step-by-step example.
-#### 1. Determine Where to Add Your Test
+Let's take a step-by-step approach.
+
+#### 1. Determine where to add your test
 The Livewire core is divided into different folders, each corresponding to specific Livewire features. For example:
 
 ```shell
-SupportAccessingParent
-SupportAttributes
-SupportAutoInjectedAssets
-SupportBladeAttributes
-SupportChecksumErrorDebugging
-SupportComputed
-SupportConsoleCommands
-SupportDataBinding
+src/Features/SupportAccessingParent
+src/Features/SupportAttributes
+src/Features/SupportAutoInjectedAssets
+src/Features/SupportBladeAttributes
+src/Features/SupportChecksumErrorDebugging
+src/Features/SupportComputed
+src/Features/SupportConsoleCommands
+src/Features/SupportDataBinding
 //...
 ```
 
-Try to locate a feature that is related to the bug you are experiencing. If you can't find an appropriate one or if you're unsure about which one to select, you can simply choose one and mention in your pull request that you require assistance with placing the test in the correct feature set.
+Try to locate a feature that is related to the bug you are experiencing. If you can't find an appropriate folder or if you're unsure about which one to select, you can simply choose one and mention in your pull request that you require assistance with placing the test in the correct feature set.
 
 #### 2. Determine the type of test
 The Livewire test suite consists of two types of tests:
@@ -95,11 +97,12 @@ Unit tests should be added to the `UnitTest.php` file, and browser tests should 
 ```php
 use Tests\TestCase;
 
-class UnitTest extends TestCase  
-{  
-    /** @test */  
-    public function livewire_can_run_action(): void  
+class UnitTest extends TestCase
+{
+    /** @test */
+    public function livewire_can_run_action(): void
     {
+       // ...
     }
 }
 ```
@@ -109,25 +112,24 @@ class UnitTest extends TestCase
 ```php
 use Tests\BrowserTestCase;
 
-class BrowserTest extends BrowserTestCase  
-{  
-    /** @test */  
-    public function livewire_can_run_action()  
+class BrowserTest extends BrowserTestCase
+{
+    /** @test */
+    public function livewire_can_run_action()
     {
         // ...
     }
 }
 ```
 
-> [!tip]
-> Explore existing Unit and Browser tests and learn how tests are written.
+> [!tip] Not sure how to write tests?
+> You can learn a lot by explore existing Unit and Browser tests to learn how tests are written. Even copying and pasting an existing test is a great starting point for writing your own test.
 
 #### 3. Preparing your pull request branch
 Once you have completed your feature or failing test, it's time to submit your Pull Request (PR) to the Livewire repository. First, ensure that you commit your changes to a separate branch (avoid using `main`). To create a new branch, you can use the `git` command:
 
 ```shell
-git branch my-feature
-git checkout my-feature
+git checkout -b my-feature
 ```
 
 You can name your branch anything you want, but for future reference, it's helpful to use a descriptive name that reflects your feature or failing test.
