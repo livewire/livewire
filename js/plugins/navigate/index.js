@@ -178,7 +178,8 @@ function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
         })
     }
 
-    // Set Alpine in motion to destroy itself on the page, without
-    // disturbing any persisted elements...
+    // Set Alpine in motion to destroy itself on the page. If this proves
+    // to be a performance issue at some point (walking the DOM tree),
+    // we can be more surgical about cleaning up x-for/if instead...
     Alpine.destroyTree(document.body, walker)
 }
