@@ -171,4 +171,39 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@text', '1')
         ;
     }
+
+    /** @test */
+    public function can_use_event_data_in_alpine_for_loop_without_throwing_errors()
+    {
+        Livewire::visit(new class extends Component {
+            function fetchItems()
+            {
+                $this->dispatch('items-fetched', items: [
+                    ['id' => 1, 'name' => 'test 1'],
+                    ['id' => 2, 'name' => 'test 2'],
+                    ['id' => 3, 'name' => 'test 3'],
+                ]);
+            }
+
+            function render()
+            {
+                return Blade::render(<<<'HTML'
+                <div x-data="{ items: [] }" @items-fetched.window="items = $event.detail.items">
+                    <button wire:click="fetchItems" dusk="button">Fetch Items</button>
+                    <div dusk="text" x-text="items"></div>
+                    <div id="root">
+                        <h1 dusk="texst" x-text="items"></h1>
+                        <template x-for="item in items" :key="item.id">
+                            <div x-text="item.name"></div>
+                        </template>
+                    </div>
+                </div>
+                HTML);
+            }
+        })
+            ->waitForLivewire()->click('@button')
+            ->assertSeeIn('@text', '[object Object],[object Object],[object Object]')
+            ->assertScript('document.getElementById(\'root\').querySelectorAll(\'div\').length', 3)
+            ->assertConsoleLogMissingWarning('item is not defined');
+    }
 }

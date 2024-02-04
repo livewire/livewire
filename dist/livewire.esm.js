@@ -9689,7 +9689,7 @@ on("effect", ({ component, effects }) => {
           let handler = (e) => dispatchSelf(component, event, [e]);
           window.Echo.join(channel).listen(event_name, handler);
           component.addCleanup(() => {
-            window.Echo[channel_type](channel).stopListening(event_name, handler);
+            window.Echo.leaveChannel(channel);
           });
         }
       } else if (channel_type == "notification") {
@@ -9827,7 +9827,9 @@ on("effect", ({ component, effects }) => {
   if (!html)
     return;
   queueMicrotask(() => {
-    morph2(component, component.el, html);
+    queueMicrotask(() => {
+      morph2(component, component.el, html);
+    });
   });
 });
 

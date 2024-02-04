@@ -8820,7 +8820,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let handler4 = (e) => dispatchSelf(component, event, [e]);
             window.Echo.join(channel).listen(event_name, handler4);
             component.addCleanup(() => {
-              window.Echo[channel_type](channel).stopListening(event_name, handler4);
+              window.Echo.leaveChannel(channel);
             });
           }
         } else if (channel_type == "notification") {
@@ -8957,7 +8957,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!html)
       return;
     queueMicrotask(() => {
-      morph2(component, component.el, html);
+      queueMicrotask(() => {
+        morph2(component, component.el, html);
+      });
     });
   });
 
