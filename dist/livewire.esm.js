@@ -253,48 +253,48 @@ var require_module_cjs = __commonJS({
         function escapeHtmlComment(src) {
           return src.replace(commentStripRE, "");
         }
-        function looseCompareArrays(a2, b) {
-          if (a2.length !== b.length)
+        function looseCompareArrays(a, b) {
+          if (a.length !== b.length)
             return false;
           let equal = true;
-          for (let i = 0; equal && i < a2.length; i++) {
-            equal = looseEqual(a2[i], b[i]);
+          for (let i = 0; equal && i < a.length; i++) {
+            equal = looseEqual(a[i], b[i]);
           }
           return equal;
         }
-        function looseEqual(a2, b) {
-          if (a2 === b)
+        function looseEqual(a, b) {
+          if (a === b)
             return true;
-          let aValidType = isDate(a2);
+          let aValidType = isDate(a);
           let bValidType = isDate(b);
           if (aValidType || bValidType) {
-            return aValidType && bValidType ? a2.getTime() === b.getTime() : false;
+            return aValidType && bValidType ? a.getTime() === b.getTime() : false;
           }
-          aValidType = isArray2(a2);
+          aValidType = isArray2(a);
           bValidType = isArray2(b);
           if (aValidType || bValidType) {
-            return aValidType && bValidType ? looseCompareArrays(a2, b) : false;
+            return aValidType && bValidType ? looseCompareArrays(a, b) : false;
           }
-          aValidType = isObject2(a2);
+          aValidType = isObject2(a);
           bValidType = isObject2(b);
           if (aValidType || bValidType) {
             if (!aValidType || !bValidType) {
               return false;
             }
-            const aKeysCount = Object.keys(a2).length;
+            const aKeysCount = Object.keys(a).length;
             const bKeysCount = Object.keys(b).length;
             if (aKeysCount !== bKeysCount) {
               return false;
             }
-            for (const key in a2) {
-              const aHasKey = a2.hasOwnProperty(key);
+            for (const key in a) {
+              const aHasKey = a.hasOwnProperty(key);
               const bHasKey = b.hasOwnProperty(key);
-              if (aHasKey && !bHasKey || !aHasKey && bHasKey || !looseEqual(a2[key], b[key])) {
+              if (aHasKey && !bHasKey || !aHasKey && bHasKey || !looseEqual(a[key], b[key])) {
                 return false;
               }
             }
           }
-          return String(a2) === String(b);
+          return String(a) === String(b);
         }
         function looseIndexOf(arr, val) {
           return arr.findIndex((item) => looseEqual(item, val));
@@ -2103,8 +2103,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       DEFAULT,
       "teleport"
     ];
-    function byPriority(a2, b) {
-      let typeA = directiveOrder.indexOf(a2.type) === -1 ? DEFAULT : a2.type;
+    function byPriority(a, b) {
+      let typeA = directiveOrder.indexOf(a.type) === -1 ? DEFAULT : a.type;
       let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
       return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
     }
@@ -4034,8 +4034,8 @@ var require_module_cjs3 = __commonJS({
           }
           return node.tabIndex;
         };
-        var sortOrderedTabbables = function sortOrderedTabbables2(a2, b) {
-          return a2.tabIndex === b.tabIndex ? a2.documentOrder - b.documentOrder : a2.tabIndex - b.tabIndex;
+        var sortOrderedTabbables = function sortOrderedTabbables2(a, b) {
+          return a.tabIndex === b.tabIndex ? a.documentOrder - b.documentOrder : a.tabIndex - b.tabIndex;
         };
         var isInput = function isInput2(node) {
           return node.tagName === "INPUT";
@@ -5515,12 +5515,12 @@ var require_module_cjs6 = __commonJS({
                 }
               };
             }
-            let resetPlacement = (_overflowsData$filter = overflowsData.filter((d) => d.overflows[0] <= 0).sort((a2, b) => a2.overflows[1] - b.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
+            let resetPlacement = (_overflowsData$filter = overflowsData.filter((d) => d.overflows[0] <= 0).sort((a, b) => a.overflows[1] - b.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
             if (!resetPlacement) {
               switch (fallbackStrategy) {
                 case "bestFit": {
                   var _overflowsData$map$so;
-                  const placement2 = (_overflowsData$map$so = overflowsData.map((d) => [d.placement, d.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0)]).sort((a2, b) => a2[1] - b[1])[0]) == null ? void 0 : _overflowsData$map$so[0];
+                  const placement2 = (_overflowsData$map$so = overflowsData.map((d) => [d.placement, d.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0)]).sort((a, b) => a[1] - b[1])[0]) == null ? void 0 : _overflowsData$map$so[0];
                   if (placement2) {
                     resetPlacement = placement2;
                   }
@@ -7717,7 +7717,7 @@ function showHtmlModal(html) {
   let page = document.createElement("html");
   page.innerHTML = html;
   page.querySelectorAll("a").forEach(
-    (a2) => a2.setAttribute("target", "_top")
+    (a) => a.setAttribute("target", "_top")
   );
   let modal = document.getElementById("livewire-error");
   if (typeof modal != "undefined" && modal != null) {
@@ -8987,9 +8987,9 @@ function isScript(el) {
   return el.tagName.toLowerCase() === "script";
 }
 function simpleHash(str) {
-  return str.split("").reduce((a2, b) => {
-    a2 = (a2 << 5) - a2 + b.charCodeAt(0);
-    return a2 & a2;
+  return str.split("").reduce((a, b) => {
+    a = (a << 5) - a + b.charCodeAt(0);
+    return a & a;
   }, 0);
 }
 function ignoreAttributes(subject, attributesToRemove) {
@@ -9159,9 +9159,7 @@ function track(name, initialSeedValue, alwaysShow = false) {
   let { has, get, set, remove } = queryStringUtils();
   let url = new URL(window.location.href);
   let isInitiallyPresentInUrl = has(url, name);
-  console.warn("isInitiallyPresentInUrl", isInitiallyPresentInUrl);
   let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
-  console.warn("initialValue", isInitiallyPresentInUrl);
   let initialValueMemo = JSON.stringify(initialValue);
   let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
   if (alwaysShow)
@@ -9236,7 +9234,6 @@ function queryStringUtils() {
       if (!search)
         return false;
       let data = fromQueryString(search);
-      console.warn("has", url.search, JSON.stringify(data));
       return Object.keys(data).includes(key);
     },
     get(url, key) {
@@ -9287,9 +9284,7 @@ function toQueryString(data) {
     return entries2;
   };
   let entries = buildQueryStringEntries(data);
-  a = Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
-  console.warn(a);
-  return a;
+  return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
 }
 function fromQueryString(search) {
   search = search.replace("?", "");
@@ -9691,10 +9686,8 @@ on("effect", ({ component, effects, cleanup: cleanup2 }) => {
       as = name;
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
     let { initial, replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow);
-    console.warn(window.location.search);
     if (use === "replace") {
       let effectReference = import_alpinejs11.default.effect(() => {
-        console.warn("replace - ", dataGet(component.reactive, name), " - ", JSON.stringify(component.reactive));
         replace2(dataGet(component.reactive, name));
       });
       cleanup2(() => import_alpinejs11.default.release(effectReference));

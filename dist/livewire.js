@@ -1535,8 +1535,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     DEFAULT,
     "teleport"
   ];
-  function byPriority(a2, b) {
-    let typeA = directiveOrder.indexOf(a2.type) === -1 ? DEFAULT : a2.type;
+  function byPriority(a, b) {
+    let typeA = directiveOrder.indexOf(a.type) === -1 ? DEFAULT : a.type;
     let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
     return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
   }
@@ -3958,7 +3958,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let page = document.createElement("html");
     page.innerHTML = html;
     page.querySelectorAll("a").forEach(
-      (a2) => a2.setAttribute("target", "_top")
+      (a) => a.setAttribute("target", "_top")
     );
     let modal = document.getElementById("livewire-error");
     if (typeof modal != "undefined" && modal != null) {
@@ -4895,8 +4895,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return node.tabIndex;
   };
-  var sortOrderedTabbables = function sortOrderedTabbables2(a2, b) {
-    return a2.tabIndex === b.tabIndex ? a2.documentOrder - b.documentOrder : a2.tabIndex - b.tabIndex;
+  var sortOrderedTabbables = function sortOrderedTabbables2(a, b) {
+    return a.tabIndex === b.tabIndex ? a.documentOrder - b.documentOrder : a.tabIndex - b.tabIndex;
   };
   var isInput = function isInput2(node) {
     return node.tagName === "INPUT";
@@ -6273,12 +6273,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               }
             };
           }
-          let resetPlacement = (_overflowsData$filter = overflowsData.filter((d) => d.overflows[0] <= 0).sort((a2, b) => a2.overflows[1] - b.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
+          let resetPlacement = (_overflowsData$filter = overflowsData.filter((d) => d.overflows[0] <= 0).sort((a, b) => a.overflows[1] - b.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
           if (!resetPlacement) {
             switch (fallbackStrategy) {
               case "bestFit": {
                 var _overflowsData$map$so;
-                const placement2 = (_overflowsData$map$so = overflowsData.map((d) => [d.placement, d.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0)]).sort((a2, b) => a2[1] - b[1])[0]) == null ? void 0 : _overflowsData$map$so[0];
+                const placement2 = (_overflowsData$map$so = overflowsData.map((d) => [d.placement, d.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0)]).sort((a, b) => a[1] - b[1])[0]) == null ? void 0 : _overflowsData$map$so[0];
                 if (placement2) {
                   resetPlacement = placement2;
                 }
@@ -7614,9 +7614,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return el.tagName.toLowerCase() === "script";
   }
   function simpleHash(str) {
-    return str.split("").reduce((a2, b) => {
-      a2 = (a2 << 5) - a2 + b.charCodeAt(0);
-      return a2 & a2;
+    return str.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
     }, 0);
   }
   function ignoreAttributes(subject, attributesToRemove) {
@@ -7785,9 +7785,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let { has: has2, get: get3, set: set3, remove } = queryStringUtils();
     let url = new URL(window.location.href);
     let isInitiallyPresentInUrl = has2(url, name);
-    console.warn("isInitiallyPresentInUrl", isInitiallyPresentInUrl);
     let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
-    console.warn("initialValue", isInitiallyPresentInUrl);
     let initialValueMemo = JSON.stringify(initialValue);
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
     if (alwaysShow)
@@ -7862,7 +7860,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (!search)
           return false;
         let data2 = fromQueryString(search);
-        console.warn("has", url.search, JSON.stringify(data2));
         return Object.keys(data2).includes(key);
       },
       get(url, key) {
@@ -7913,9 +7910,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return entries2;
     };
     let entries = buildQueryStringEntries(data2);
-    a = Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
-    console.warn(a);
-    return a;
+    return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
   }
   function fromQueryString(search) {
     search = search.replace("?", "");
@@ -8814,10 +8809,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         as = name;
       let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
       let { initial, replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow);
-      console.warn(window.location.search);
       if (use === "replace") {
         let effectReference = module_default.effect(() => {
-          console.warn("replace - ", dataGet(component.reactive, name), " - ", JSON.stringify(component.reactive));
           replace2(dataGet(component.reactive, name));
         });
         cleanup3(() => module_default.release(effectReference));

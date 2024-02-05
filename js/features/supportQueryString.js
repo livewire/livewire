@@ -17,14 +17,9 @@ on('effect', ({ component, effects, cleanup }) => {
 
         let { initial, replace, push, pop } = track(as, initialValue, alwaysShow)
 
-        console.warn(window.location.search);
-
         if (use === 'replace') {
             let effectReference = Alpine.effect(() => {
-                console.warn('replace - ', dataGet(component.reactive, name), ' - ', JSON.stringify(component.reactive));
-                // if (dataGet(component.reactive, name) !== null) {
-                    replace(dataGet(component.reactive, name))
-                // }
+                replace(dataGet(component.reactive, name))
             })
 
             cleanup(() => Alpine.release(effectReference))

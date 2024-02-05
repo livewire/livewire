@@ -43,9 +43,7 @@ export function track(name, initialSeedValue, alwaysShow = false) {
 
     let url = new URL(window.location.href)
     let isInitiallyPresentInUrl = has(url, name)
-    console.warn('isInitiallyPresentInUrl', isInitiallyPresentInUrl);
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
-    console.warn('initialValue', isInitiallyPresentInUrl);
     let initialValueMemo = JSON.stringify(initialValue)
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo
 
@@ -167,7 +165,6 @@ function queryStringUtils() {
             if (! search) return false
 
             let data = fromQueryString(search)
-            console.warn('has', url.search, JSON.stringify(data));
 
             return Object.keys(data).includes(key)
         },
@@ -237,10 +234,7 @@ function toQueryString(data) {
 
     let entries = buildQueryStringEntries(data)
 
-    a = Object.entries(entries).map(([key, value]) => `${key}=${value}`).join('&')
-    console.warn(a);
-
-    return a;
+    return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join('&')
 }
 
 // This function converts bracketed query string notation back to JS data...
