@@ -43,7 +43,9 @@ export function track(name, initialSeedValue, alwaysShow = false) {
 
     let url = new URL(window.location.href)
     let isInitiallyPresentInUrl = has(url, name)
+    console.warn('isInitiallyPresentInUrl', isInitiallyPresentInUrl);
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
+    console.warn('initialValue', isInitiallyPresentInUrl);
     let initialValueMemo = JSON.stringify(initialValue)
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo
 
@@ -165,6 +167,7 @@ function queryStringUtils() {
             if (! search) return false
 
             let data = fromQueryString(search)
+            console.warn('has', url.search, JSON.stringify(data));
 
             return Object.keys(data).includes(key)
         },
@@ -218,7 +221,9 @@ function toQueryString(data) {
         Object.entries(data).forEach(([iKey, iValue]) => {
             let key = baseKey === '' ? iKey : `${baseKey}[${iKey}]`
 
-            if (! isObjecty(iValue)) {
+            if (iValue === null) {
+                entries[key] = '';
+            } else if (! isObjecty(iValue)) {
                 entries[key] = encodeURIComponent(iValue)
                     .replaceAll('%20', '+') // Conform to RFC1738
                     .replaceAll('%2C', ',')
@@ -232,8 +237,10 @@ function toQueryString(data) {
 
     let entries = buildQueryStringEntries(data)
 
+    a = Object.entries(entries).map(([key, value]) => `${key}=${value}`).join('&')
+    console.warn(a);
 
-    return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join('&')
+    return a;
 }
 
 // This function converts bracketed query string notation back to JS data...
@@ -263,9 +270,6 @@ function fromQueryString(search) {
     let data = {}
 
     entries.forEach(([key, value]) => {
-        // Query string params don't always have values... (`?foo=`)
-        if (! value) return
-
         value = decodeURIComponent(value.replaceAll('+', '%20'))
 
         if (! key.includes('[')) {
@@ -280,4 +284,3 @@ function fromQueryString(search) {
 
     return data
 }
-

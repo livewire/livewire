@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportQueryString;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
+use ReflectionClass;
 
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
@@ -13,10 +14,23 @@ class BaseUrl extends LivewireAttribute
         public $history = false,
         public $keep = false,
         public $except = null,
+        public $nullable = null,
     ) {}
 
     public function mount()
     {
+        if ($this->nullable === null) {
+            $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+
+            if ($reflectionClass->hasProperty($this->getSubName())) {
+                $property = $reflectionClass->getProperty($this->getSubName());
+
+                $this->nullable = $property->getType()?->allowsNull() ?? false;
+            } else {
+                $this->nullable = false;
+            }
+        }
+
         $this->setPropertyFromQueryString();
     }
 
@@ -47,7 +61,11 @@ class BaseUrl extends LivewireAttribute
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 
-        $value = $decoded === null && $initialValue !== 'null' ? $initialValue : $decoded;
+        if ($initialValue === '') {
+            $value = $this->nullable ? null : $initialValue;
+        } else {
+            $value = $decoded === null ? $initialValue : $decoded;
+        }
 
         $this->setValue($value);
     }
@@ -94,7 +112,13 @@ class BaseUrl extends LivewireAttribute
     public function getFromUrlQueryString($name, $default = null)
     {
         if (! app('livewire')->isLivewireRequest()) {
-            return request()->query($this->urlName(), $default);
+            $value = request()->query($this->urlName(), $default);
+
+            if (array_key_exists($name, request()->query()) && $value === $default) {
+                return '';
+            }
+
+            return $value;
         }
 
         // If this is a subsequent ajax request, we can't use Laravel's standard "request()->query()"...
@@ -117,4 +141,3 @@ class BaseUrl extends LivewireAttribute
         return $query[$key] ?? $default;
     }
 }
-
