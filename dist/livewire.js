@@ -3528,6 +3528,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   interceptClone((from, to) => {
+    debugger;
     if (from._x_dataStack) {
       to._x_dataStack = from._x_dataStack;
       to.setAttribute("data-has-alpine-state", true);
@@ -7255,6 +7256,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       skip();
     });
   }
+  function isTeleportTarget(el) {
+    return el.hasAttribute("data-teleport-target");
+  }
 
   // js/plugins/navigate/scroll.js
   function storeScrollInformationInHtmlBeforeNavigatingAway() {
@@ -7316,6 +7320,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       module_default.destroyTree(el);
     });
     els = {};
+  }
+  function isPersistedElement(el) {
+    return el.hasAttribute("x-persist");
   }
 
   // js/plugins/navigate/bar.js
@@ -7589,6 +7596,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         fireEventForOtherLibariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
+        cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -7663,6 +7671,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function autofocusElementsWithTheAutofocusAttribute() {
     document.querySelector("[autofocus]") && document.querySelector("[autofocus]").focus();
+  }
+  function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
+    let walker = function(root, callback) {
+      module_default.walk(root, (el, skip) => {
+        if (isPersistedElement(el))
+          skip();
+        if (isTeleportTarget(el))
+          skip();
+        else
+          callback(el, skip);
+      });
+    };
+    module_default.destroyTree(document.body, walker);
   }
 
   // js/plugins/history/index.js
@@ -8800,7 +8821,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let handler4 = (e) => dispatchSelf(component, event, [e]);
             window.Echo.join(channel).listen(event_name, handler4);
             component.addCleanup(() => {
-              window.Echo[channel_type](channel).stopListening(event_name, handler4);
+              window.Echo.leaveChannel(channel);
             });
           }
         } else if (channel_type == "notification") {
