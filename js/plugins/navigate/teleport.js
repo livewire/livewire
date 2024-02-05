@@ -27,3 +27,7 @@ export function unPackPersistedTeleports(persistedEl) {
         skip()
     })
 }
+
+export function isTeleportTarget(el) {
+    return el.hasAttribute('data-teleport-target')
+}
