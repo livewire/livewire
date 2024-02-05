@@ -1,4 +1,12 @@
 
+let restoration = {
+    lookup: {},
+
+    store() {
+        let key = (new Date).getTime()
+    }
+}
+
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // Create a history state entry for the initial page load.
     // (This is so later hitting back can restore this page).
@@ -15,7 +23,8 @@ export function whenTheBackOrForwardButtonIsClicked(callback) {
 
         if (! alpine._html) return
 
-        let html = fromSessionStorage(alpine._html)
+        // let html = fromSessionStorage(alpine._html)
+        let html = alpine._html
 
         callback(html)
     })
@@ -34,15 +43,15 @@ export function replaceUrl(url, html) {
 }
 
 function updateUrl(method, url, html) {
-    let key = (new Date).getTime()
+    // let key = (new Date).getTime()
 
-    tryToStoreInSession(key, html)
+    // tryToStoreInSession(key, html)
 
     let state = history.state || {}
 
     if (! state.alpine) state.alpine = {}
 
-    state.alpine._html = key
+    state.alpine._html = html
 
     try {
         // 640k character limit:
