@@ -3454,7 +3454,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     interceptClone((from, to) => {
-      debugger;
       if (from._x_dataStack) {
         to._x_dataStack = from._x_dataStack;
         to.setAttribute("data-has-alpine-state", true);
