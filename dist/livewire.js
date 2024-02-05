@@ -3528,6 +3528,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   interceptClone((from, to) => {
+    debugger;
     if (from._x_dataStack) {
       to._x_dataStack = from._x_dataStack;
       to.setAttribute("data-has-alpine-state", true);
@@ -3704,7 +3705,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         };
         mutateDom(() => {
           lastEl.after(clone2);
-          initTree(clone2);
+          skipDuringClone(() => initTree(clone2))();
         });
         if (typeof key === "object") {
           warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3784,7 +3785,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       addScopeToNode(clone2, {}, el);
       mutateDom(() => {
         el.after(clone2);
-        initTree(clone2);
+        skipDuringClone(() => initTree(clone2))();
       });
       el._x_currentIfEl = clone2;
       el._x_undoIf = () => {
