@@ -89,13 +89,11 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function alpine_property_persists_on_array_item_reorder()
     {
         return Livewire::visit(new class extends Component {
-            private array $items = [
+            public array $items = [
                 ['id' => 1, 'title' => 'foo', 'complete' => false],
                 ['id' => 2, 'title' => 'bar', 'complete' => false],
                 ['id' => 3, 'title' => 'baz', 'complete' => false]
