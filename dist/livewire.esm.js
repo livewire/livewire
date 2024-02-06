@@ -1511,17 +1511,27 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
+          if (el2._x_inited) {
+            if (el2._x_ignore)
+              skip();
+            return;
+          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          el2._x_ignore && skip();
+          if (el2._x_ignore) {
+            skip();
+          } else {
+            el2._x_inited = true;
+          }
         });
       });
     }
-    function destroyTree(root) {
-      walk(root, (el) => {
+    function destroyTree(root, walker = walk) {
+      walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
+        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1664,8 +1674,6 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
-        if (removedNodes.has(node))
-          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -3669,7 +3677,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            initTree(clone2);
+            skipDuringClone(() => initTree(clone2))();
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3749,7 +3757,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          initTree(clone2);
+          skipDuringClone(() => initTree(clone2))();
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
@@ -8697,6 +8705,9 @@ function unPackPersistedTeleports(persistedEl) {
     skip();
   });
 }
+function isTeleportTarget(el) {
+  return el.hasAttribute("data-teleport-target");
+}
 
 // js/plugins/navigate/scroll.js
 function storeScrollInformationInHtmlBeforeNavigatingAway() {
@@ -8759,6 +8770,9 @@ function putPersistantElementsBack(callback) {
     import_alpinejs5.default.destroyTree(el);
   });
   els = {};
+}
+function isPersistedElement(el) {
+  return el.hasAttribute("x-persist");
 }
 
 // js/plugins/navigate/bar.js
@@ -9041,6 +9055,7 @@ function navigate_default(Alpine21) {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
+      cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       preventAlpineFromPickingUpDomChanges(Alpine21, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -9115,6 +9130,19 @@ function nowInitializeAlpineOnTheNewPage(Alpine21) {
 }
 function autofocusElementsWithTheAutofocusAttribute() {
   document.querySelector("[autofocus]") && document.querySelector("[autofocus]").focus();
+}
+function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
+  let walker = function(root, callback) {
+    import_alpinejs6.default.walk(root, (el, skip) => {
+      if (isPersistedElement(el))
+        skip();
+      if (isTeleportTarget(el))
+        skip();
+      else
+        callback(el, skip);
+    });
+  };
+  import_alpinejs6.default.destroyTree(document.body, walker);
 }
 
 // js/plugins/history/index.js
@@ -9769,7 +9797,7 @@ on("effect", ({ component, effects }) => {
           let handler = (e) => dispatchSelf(component, event, [e]);
           window.Echo.join(channel).listen(event_name, handler);
           component.addCleanup(() => {
-            window.Echo[channel_type](channel).stopListening(event_name, handler);
+            window.Echo.leaveChannel(channel);
           });
         }
       } else if (channel_type == "notification") {
@@ -9907,7 +9935,9 @@ on("effect", ({ component, effects }) => {
   if (!html)
     return;
   queueMicrotask(() => {
-    morph2(component, component.el, html);
+    queueMicrotask(() => {
+      morph2(component, component.el, html);
+    });
   });
 });
 

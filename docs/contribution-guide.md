@@ -1,195 +1,185 @@
-At Livewire we appreciate and welcome all contributions!
+Hi there and welcome to the Livewire contribution guide. In this guide, we are going to take a look at how you can contribute to Livewire by submitting new features, fixing failing tests, or resolving bugs.
 
-If that's something you would be interested in doing, we recommend going through this contribution guide first before
-starting.
+## Setting up Livewire and Alpine locally
+To contribute, the easiest way is to ensure that the Livewire and Alpine repositories are set up on your local machine. This will allow you to make changes and run the test suite with ease.
 
-## Setup Livewire locally
-
-The first step is to create a fork of Livewire and set it up locally. You should only need to do this the first time.
-
-### Fork Livewire
-
-Go to [the Livewire repository on GitHub](https://github.com/livewire/livewire) and fork the Livewire repository.
-
-### Git clone your fork locally
-
-Browse to your fork on GitHub, and click on the "code" button, and copy the provided URL.
-
-Then in your local terminal run `git clone` and pass it your URL and the directory name you want Livewire cloned into.
+### Forking and cloning the repositories
+To get started, the first step is to fork and clone the repositories. The easiest way to do this is by using the [Github CLI](https://cli.github.com/), but you can also perform these steps manually by clicking the "Fork" button on the Github [repository page](https://github.com/livewire/livewire).
 
 ```shell
-git clone git@github.com:username/livewire.git ~/packages/livewire
-```
+# Fork and clone Livewire
+gh repo fork livewire/livewire --default-branch-only --clone=true --remote=false -- livewire
 
-Once finished, `cd` into your local Livewire directory.
+# Switch the working directory to livewire
+cd livewire
 
-```shell
-cd ~/packages/livewire
-```
-
-### Install dependencies
-
-Install composer dependencies by running:
-
-```shell
+# Install all composer dependencies
 composer install
+
+# Ensure Dusk is correctly configured
+vendor/bin/dusk-updater detect --no-interaction
 ```
 
-Install npm dependencies by running:
+To set up Alpine, make sure you have [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) installed, and then run the following commands. If you prefer to fork manually, you can visit the [repository page](https://github.com/alpinejs/alpine).
 
 ```shell
+# Fork and clone Alpine
+gh repo fork alpinejs/alpine --default-branch-only --clone=true --remote=false -- alpine
+
+# Switch the working directory to alpine
+cd alpine
+
+# Install all npm dependencies
 npm install
+
+# Build all Alpine packages
+npm run build
+
+# Link all Alpine packages locally
+cd alpine/packages/alpinejs && npm link
+cd alpine/packages/anchor && npm link
+cd alpine/packages/collapse && npm link
+cd alpine/packages/csp && npm link
+cd alpine/packages/docs && npm link
+cd alpine/packages/focus && npm link
+cd alpine/packages/history && npm link
+cd alpine/packages/intersect && npm link
+cd alpine/packages/mask && npm link
+cd alpine/packages/morph && npm link
+cd alpine/packages/navigate && npm link
+cd alpine/packages/persist && npm link
+
+# Switch the working directory back to livewire
+cd ../livewire
+
+# Link all packages
+npm link alpinejs @alpinejs/anchor @alpinejs/collapse @alpinejs/csp @alpinejs/docs @alpinejs/focus @alpinejs/history @alpinejs/intersect @alpinejs/mask @alpinejs/morph @alpinejs/navigate @alpinejs
+
+# Build Livewire
+npm run build
 ```
 
-### Optional: Set up Alpine for local development
+## Contributing a Failing Test
 
-If you want to work on Alpine packages at the same time, you can clone the
-[Alpine repository](https://github.com/alpinejs/alpine) as well (see above) and use `npm link`:
+If you're encountering a bug and are unsure about how to solve it, especially given the complexity of the Livewire core, you might be wondering where to start. In such cases, the easiest approach is to contribute a failing test. This way, someone with more experience can assist in identifying and fixing the bug. Nonetheless, we do recommend that you also explore the core to gain a better understanding of how Livewire operates.
 
-* `git clone https://github.com/alpinejs/alpine.git ~/packages/alpinejs`
-  (make sure to clone somewhere outside your Livewire repo)
-* In the cloned Alpine repo, run `npm install` and `npm run build`
-* After building successfully, link which ever packages you want to work
-  on `cd packages/alpinejs && npm link && cd ../morph && npm link`
-* In the Livewire repo, `npm link alpinejs @alpinejs/morph`
+Let's take a step-by-step approach.
 
-> [!tip]
-> If you're not updating the JavaScript portions of Livewire in your PR, you don't have to 
-> worry about this for running Dusk tests — a built version of the assets is baked into the repo.
-
-### Configure dusk
-
-A lot of Livewire's tests make use of `orchestral/testbench-dusk` which runs browser tests in Google Chrome (so you will need Chrome to be installed).
-
-To get `orchestral/testbench-dusk` to run, you need to install the latest chrome driver by running:
+#### 1. Determine where to add your test
+The Livewire core is divided into different folders, each corresponding to specific Livewire features. For example:
 
 ```shell
-./vendor/bin/testbench-dusk dusk:chrome-driver
+src/Features/SupportAccessingParent
+src/Features/SupportAttributes
+src/Features/SupportAutoInjectedAssets
+src/Features/SupportBladeAttributes
+src/Features/SupportChecksumErrorDebugging
+src/Features/SupportComputed
+src/Features/SupportConsoleCommands
+src/Features/SupportDataBinding
+//...
 ```
 
-You may also need to run:
+Try to locate a feature that is related to the bug you are experiencing. If you can't find an appropriate folder or if you're unsure about which one to select, you can simply choose one and mention in your pull request that you require assistance with placing the test in the correct feature set.
 
-```shell
-./vendor/bin/dusk-updater update
-```
+#### 2. Determine the type of test
+The Livewire test suite consists of two types of tests:
 
-### Run tests
+1. **Unit tests**: These tests focus on the PHP implementation of Livewire.
+2. **Browser tests**: These tests run a series of steps inside a real browser and assert the correct outcome. They mainly focus on the Javascript implementation of Livewire.
 
-Once everything is configured, run all tests to make sure everything is working and passing.
+If you're unsure about which type of test to choose or if you're unfamiliar with writing tests for Livewire, you can start with a browser test. Implement the steps you perform in your application and browser to reproduce the bug.
 
-To do this, run `phpunit` and confirm everything is running ok.
+Unit tests should be added to the `UnitTest.php` file, and browser tests should be added to `BrowserTest.php`. If one or both of these files do not exist, you can create them yourself.
 
-```shell
-./vendor/bin/phpunit
-```
-
-If the dusk tests don't run and you get an error, make sure you have run the command in
-the [Configure dusk](#configure-dusk) section above.
-
-If you still get an error, the first time you try to run dusk tests, you may also need to close any Google Chrome instances you may have open and try running the tests again. After that, you should be able to leave Chrome open when running tests.
-
-## Bug fix/feature development
-
-Now it's time to start working on your bug fix or new feature.
-
-### Create a branch
-
-To start working on a new feature or fix a bug, you should always create a new branch in your fork with the name of your feature or fix.
-
-> [!tip]
-> Always create a new branch for your feature or fix.
-
-Do not use your main branch of your fork as maintainers cannot modify PR's submitted from a main branch on a fork.
-
-> [!warning]
-> Any PR's submitted from a master/main branch will be closed.
-
-### Add failing tests
-
-The next step is to add failing tests for your code. Livewire has both Dusk browser tests and standard PHPUnit unit tests, which can be found throughout the `src/` directory respectively.
-
-Most Livewire features all have their dedicated directory containing the code for a specific feature but it also includes the unit and browser tests for that specific feature.
-
-For example, lets say you are adding some new functionality to Livewire's form objects, in that case, you will add your tests to `src/Features/SupportFormObjects/UnitTest.php`. Please be aware that some existing features may only contain unit or browser tests. If you can't find an existing `UnitTest.php` or `BrowserTest.php` you can go ahead and create the test yourself.
-
-If you are building an entirely new feature for which you think none of the existing tests apply you can create a new `SupportYourFeature` directory and place your tests here.
-
-Livewire runs both PHP and Javascript code, so Dusk browser tests are preferred to ensure everything works as expected, and can be supported with unit tests as required.
-
-See below for an example of how a Livewire Dusk test should be structured:
+**Unit test**
 
 ```php
-/** @test */
-public function it_can_run_foo_action
-{
-    Livewire::visit(new class extends Component {
-        public $count = 0;
-        
-        public function inc() { $this->count++; }
+use Tests\TestCase;
 
-        public function render() { return <<<'HTML'
-        <div>
-            <h1>Count: <span dusk="count">{{ $count }}</span>
-            <button wire:click="inc" dusk="inc">inc</button>
-        </div>
-        HTML;
-    })
-        ->assertSeeIn('@count', 0)
-        ->waitForLivewire()
-        ->click('@inc')
-        ->assertSeeIn('@count', 1);
+class UnitTest extends TestCase
+{
+    /** @test */
+    public function livewire_can_run_action(): void
+    {
+       // ...
+    }
 }
 ```
 
-You can see how to use Dusk in the [Laravel documentation](https://laravel.com/docs/dusk) as well as look at
-Livewire's existing browser tests for further examples.
+**Browser test**
 
-### Add working code
+```php
+use Tests\BrowserTestCase;
 
-Livewire has both PHP and javascript code, which you can find in the `src` directory for PHP and the `js` directory for javascript.
-
-Change the code as required to fix the bug or add the new feature, but try to keep changes to a minimum. Consider splitting into multiple PR's if required.
-
-> [!warning]
-> PR's that make too many changes or make unrelated changes may be closed.
-
-If you have updated any of Livewire's javascript code, you will need to recompile the assets.
-To do this run `npm run build`, or you may start a watcher with `npm run watch`.
-
-Compiled javascript assets should be committed with your changes.
-
-> [!tip]
-> If you update any javascript, make sure to recompile assets and commit them.
-
-Once you have finished writing your code, do a review to ensure you haven't left any debugging code and formatting matches the existing style.
-
-### Run tests
-
-The final step before submitting is to run all tests to ensure your changes haven't impacted anything else.
-
-To do this, run `phpunit` and confirm everything is running ok.
-
-```shell
-./vendor/bin/phpunit
+class BrowserTest extends BrowserTestCase
+{
+    /** @test */
+    public function livewire_can_run_action()
+    {
+        // ...
+    }
+}
 ```
 
-If the Dusk browser tests don't run, see [Run tests](#setup-run-tests) in the Setup section above for more details
+> [!tip] Not sure how to write tests?
+> You can learn a lot by explore existing Unit and Browser tests to learn how tests are written. Even copying and pasting an existing test is a great starting point for writing your own test.
 
-### Submit PR
+#### 3. Preparing your pull request branch
+Once you have completed your feature or failing test, it's time to submit your Pull Request (PR) to the Livewire repository. First, ensure that you commit your changes to a separate branch (avoid using `main`). To create a new branch, you can use the `git` command:
 
-Once all tests pass, then push your branch up to GitHub and submit your PR.
+```shell
+git checkout -b my-feature
+```
 
-In your PR description make sure to provide a small example of what your PR does along with a thorough description of the improvement and reasons why it's useful.
+You can name your branch anything you want, but for future reference, it's helpful to use a descriptive name that reflects your feature or failing test.
 
-Add links to any issues or discussions that are relevant for further details.
+Next, commit your changes to your branch. You can use `git add .` to stage all changes and then `git commit -m "Add my feature"` to commit all changes with a descriptive commit message.
 
-> [!tip]
-> For first-time contributors, tests won't run automatically, so they will need to be started by a maintainer.
+However, your branch is currently only available on your local machine. To create a Pull Request, you need to push your branch to your forked Livewire repository using `git push`.
 
-### Thanks for contributing! 🙌
+```shell
+git push origin my-feature
 
-And that's it!
+Enumerating objects: 13, done.
+Counting objects: 100% (13/13), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (6/6), done.
 
-Maintainers will review your PR and give feedback as required.
+To github.com:Username/livewire.git
+ * [new branch]        my-feature -> my-feature
+```
 
-Thanks for contributing to Livewire!
+#### 4. Submitting your pull request
+We're almost there! Open your web browser and navigate to your forked Livewire repository (`https://github.com/<your-username>/livewire`). In the center of your screen, you will see a new notification: "**my-feature had recent pushes 1 minute ago**" along with a button that says "**Compare & pull request**." Click the button to open the pull request form.
+
+In the form, provide a title that describes your pull request and then proceed to the description section. The text area already contains a predefined template. Try to answer every question:
+
+```
+Review the contribution guide first at: https://livewire.laravel.com/docs/contribution-guide
+
+1️⃣ Is this something that is wanted/needed? Did you create a discussion about it first?
+Yes, you can find the discussion here: https://github.com/livewire/livewire/discussions/999999
+
+2️⃣ Did you create a branch for your fix/feature? (Main branch PR's will be closed)
+Yes, the branch is named `my-feature`
+
+3️⃣ Does it contain multiple, unrelated changes? Please separate the PRs out.
+No, the changes are only related to my feature.
+
+4️⃣ Does it include tests? (Required)
+Yes
+
+5️⃣ Please include a thorough description (including small code snippets if possible) of the improvement and reasons why it's useful.
+
+These changes will improve memory usage. You can see the benchmark results here:
+
+// ...
+
+```
+
+All set? Click on **Create pull request** 🚀 Congratulations! You've successfully created your first contribution 🎉
+
+The maintainers will review your PR and may provide feedback or request changes. Please make an effort to address any feedback as soon as possible.
+
+Thank you for contributing to Livewire!

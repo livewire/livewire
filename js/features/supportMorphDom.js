@@ -5,9 +5,12 @@ on('effect', ({ component, effects }) => {
     let html = effects.html
     if (! html) return
 
-    // Doing this so all the state of components in a nested tree has a chance
-    // to update on synthetic's end. (mergeSnapshots kinda deal).
+    // Wrapping this in a double queueMicrotask. The first one puts it after all
+    // other "effect" hooks, and the second one puts it after all reactive
+    // Alpine effects (that are processed via flushJobs in scheduler).
     queueMicrotask(() => {
-        morph(component, component.el, html)
+        queueMicrotask(() => {
+            morph(component, component.el, html)
+        })
     })
 })

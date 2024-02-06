@@ -253,17 +253,17 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_use_url_on_enum_object_properties()
+    public function can_use_url_on_string_backed_enum_object_properties()
     {
         Livewire::visit([
             new class extends Component
             {
                 #[BaseUrl]
-                public EnumForUrlTesting $foo = EnumForUrlTesting::First;
+                public StringBackedEnumForUrlTesting $foo = StringBackedEnumForUrlTesting::First;
 
                 public function change()
                 {
-                    $this->foo = EnumForUrlTesting::Second;
+                    $this->foo = StringBackedEnumForUrlTesting::Second;
                 }
 
                 public function render()
@@ -285,6 +285,42 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->refresh()
             ->assertQueryStringHas('foo', 'second')
             ->assertSeeIn('@output', 'second')
+        ;
+    }
+
+    /** @test */
+    public function can_use_url_on_integer_backed_enum_object_properties()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public IntegerBackedEnumForUrlTesting $foo = IntegerBackedEnumForUrlTesting::First;
+
+                public function change()
+                {
+                    $this->foo = IntegerBackedEnumForUrlTesting::Second;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="change" dusk="button">Change</button>
+                        <h1 dusk="output">{{ $foo }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->assertSeeIn('@output', '1')
+            ->waitForLivewire()->click('@button')
+            ->assertQueryStringHas('foo', '2')
+            ->assertSeeIn('@output', '2')
+            ->refresh()
+            ->assertQueryStringHas('foo', '2')
+            ->assertSeeIn('@output', '2')
         ;
     }
 
@@ -693,8 +729,14 @@ class FormObject extends \Livewire\Form
     public $bob = 'lob';
 }
 
-enum EnumForUrlTesting: string
+enum StringBackedEnumForUrlTesting: string
 {
     case First = 'first';
     case Second = 'second';
+}
+
+enum IntegerBackedEnumForUrlTesting: int
+{
+    case First = 1;
+    case Second = 2;
 }
