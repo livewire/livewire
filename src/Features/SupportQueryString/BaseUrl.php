@@ -19,17 +19,7 @@ class BaseUrl extends LivewireAttribute
 
     public function mount()
     {
-        if ($this->nullable === null) {
-            $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
-
-            if ($reflectionClass->hasProperty($this->getSubName())) {
-                $property = $reflectionClass->getProperty($this->getSubName());
-
-                $this->nullable = $property->getType()?->allowsNull() ?? false;
-            } else {
-                $this->nullable = false;
-            }
-        }
+        $this->nullable = $this->determineNullability();
 
         $this->setPropertyFromQueryString();
     }
@@ -39,6 +29,23 @@ class BaseUrl extends LivewireAttribute
         if (! $context->mounting) return;
 
         $this->pushQueryStringEffect($context);
+    }
+
+    protected function determineNullability()
+    {
+        // It's nullable if they passed it in like: #[Url(nullable: true)]
+        if ($this->nullable !== null) return $this->nullable;
+
+        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+
+        // It's nullable if there's a nullable typehint like: public ?string $foo;
+        if ($reflectionClass->hasProperty($this->getSubName())) {
+            $property = $reflectionClass->getProperty($this->getSubName());
+
+            return $property->getType()?->allowsNull() ?? false;
+        }
+
+        return false;
     }
 
     public function setPropertyFromQueryString()
@@ -61,8 +68,10 @@ class BaseUrl extends LivewireAttribute
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 
+        // Handle empty strings differently depending on if this
+        // field is considered "nullable" by typehint or API.
         if ($initialValue === '') {
-            $value = $this->nullable ? null : $initialValue;
+            $value = $this->nullable ? null : '';
         } else {
             $value = $decoded === null ? $initialValue : $decoded;
         }
