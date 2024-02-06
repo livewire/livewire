@@ -7529,7 +7529,6 @@ var MessageBag = class {
       this.bag[name] = [];
     }
     this.bag[name].push(thing);
-    console.log("bag", name, thing);
   }
   push(name, thing) {
     this.add(name, thing);
@@ -10106,23 +10105,19 @@ function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLo
     startLoading();
   });
   window.addEventListener("livewire-upload-transfer", (e) => {
-    console.log("transferLoading", e);
     if (eventMismatch(e))
       return;
-    console.log("transferStartLoading", e);
     startLoading();
   });
   window.addEventListener("livewire-upload-finish", (e) => {
     if (eventMismatch(e))
       return;
     endLoading();
-    console.log("fileFinishLoading");
   });
   window.addEventListener("livewire-upload-error", (e) => {
     if (eventMismatch(e))
       return;
     endLoading();
-    console.log("fileErrorFinishLoading");
   });
 }
 function containsTargets(payload, targets) {

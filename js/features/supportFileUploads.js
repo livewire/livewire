@@ -74,18 +74,12 @@ class UploadManager {
             // We have to add reduntant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
-
-            // console.log(this.uploadBag)
-            // setTimeout(this.uploadBag.first(name).transferCallback)
-
             setUploadLoading(this.component, name)
 
             this.handleSignedUrl(name, url)
         })
 
         this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
-            // this.uploadBag.first(name).transferCallback()
-
             setUploadLoading(this.component, name)
 
             this.handleS3PreSignedUrl(name, payload)
@@ -204,8 +198,6 @@ class UploadManager {
         this.uploadBag.first(name).request = request
 
         request.send(formData)
-
-        // this.uploadBag.first(name).transferCallback()
     }
 
     startUpload(name, uploadObject) {
@@ -214,8 +206,6 @@ class UploadManager {
         })
 
         this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple);
-
-        // this.uploadBag.first(name).transferCallback()
 
         setUploadLoading(this.component, name)
     }
@@ -263,7 +253,6 @@ export default class MessageBag {
         }
 
         this.bag[name].push(thing)
-        console.log('bag', name, thing)
     }
 
     push(name, thing) {
