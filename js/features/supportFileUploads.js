@@ -18,7 +18,6 @@ export function handleFileUpload(el, property, component, cleanup) {
     let manager = getUploadManager(component)
 
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
-    let transfer = () => el.dispatchEvent(new CustomEvent('livewire-upload-transfer', { bubbles: true, detail: { id: component.id, property} }))
     let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
     let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property} }))
@@ -38,9 +37,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel, transfer)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress, cancel, transfer)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancel)
         }
     }
 
@@ -89,7 +88,7 @@ class UploadManager {
         this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
-    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
         this.setUpload(name, {
             files: [file],
             multiple: false,
@@ -97,11 +96,10 @@ class UploadManager {
             errorCallback,
             progressCallback,
             cancelledCallback,
-            transferCallback
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
@@ -109,7 +107,6 @@ class UploadManager {
             errorCallback,
             progressCallback,
             cancelledCallback,
-            transferCallback
         })
     }
 
@@ -159,14 +156,6 @@ class UploadManager {
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
-        // The double queueMicrotask is here to ensure that the transferCallback is triggered
-        // after the DOM has been morphed. Without this, morph removes the loading states.
-        queueMicrotask(() => {
-            queueMicrotask(() => {
-                this.uploadBag.first(name).transferCallback()
-            })
-        })
-
         let request = new XMLHttpRequest()
 
         request.open(method, url)
@@ -309,7 +298,6 @@ export function upload(
     errorCallback = () => { },
     progressCallback = () => { },
     cancelledCallback = () => { },
-    transferCallback = () => { }
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -320,7 +308,6 @@ export function upload(
         errorCallback,
         progressCallback,
         cancelledCallback,
-        transferCallback
     )
 }
 
@@ -332,7 +319,6 @@ export function uploadMultiple(
     errorCallback = () => { },
     progressCallback = () => { },
     cancelledCallback = () => { },
-    transferCallback = () => { }
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -343,7 +329,6 @@ export function uploadMultiple(
         errorCallback,
         progressCallback,
         cancelledCallback,
-        transferCallback
     )
 }
 
