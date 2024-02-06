@@ -1,5 +1,3 @@
-import { on, trigger } from "@/hooks"
-
 shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
 
 document.addEventListener('alpine:navigated', e => {
@@ -29,4 +27,3 @@ function shouldHideProgressBar() {
 
     return false
 }
-

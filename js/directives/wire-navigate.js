@@ -1,4 +1,3 @@
-import { directive } from "@/directives"
 import Alpine from 'alpinejs'
 
 Alpine.addInitSelector(() => `[wire\\:navigate]`)
