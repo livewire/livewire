@@ -103,4 +103,41 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@output', 'cancelled')
         ;
     }
+
+    /** @test */
+    public function an_element_targeting_a_file_upload_retains_loading_state_until_the_upload_has_finished()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component
+        {
+            use \Livewire\WithFileUploads;
+
+            public $photo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="file" wire:model="photo" dusk="upload" />
+
+                        <p wire:loading wire:target="photo" id="loading" dusk="loading">Loading</p>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->tap(fn ($b) => $b->script([
+            "window.Livewire.first().on('livewire-upload-progress', () => { console.log('test', document.getElementById('loading').style.display === 'inline-block', 'other'); window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block' })",
+        ]))
+        ->assertMissing('@loading')
+
+        ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image_big.jpg')
+
+        // Wait for Upload to finish
+        ->waitUntilMissing('@loading')
+        // Assert that the loading element was displayed while `livewire-upload-progress` was emitted
+        ->assertScript('window.loadingWasDisplayed', true)
+        ;
+    }
 }
