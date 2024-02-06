@@ -127,8 +127,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         })
         ->waitForLivewireToLoad()
+        // Set a script to record if the loading element was displayed when `livewire-upload-progress` was fired
         ->tap(fn ($b) => $b->script([
-            "window.Livewire.first().on('livewire-upload-progress', () => { console.log('test', document.getElementById('loading').style.display === 'inline-block', 'other'); window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block' })",
+            "window.Livewire.first().on('livewire-upload-progress', () => { window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block' })",
         ]))
         ->assertMissing('@loading')
 
