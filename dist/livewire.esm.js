@@ -1518,8 +1518,8 @@ var require_module_cjs = __commonJS({
         });
       });
     }
-    function destroyTree(root) {
-      walk(root, (el) => {
+    function destroyTree(root, walker = walk) {
+      walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
       });
@@ -3669,7 +3669,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            initTree(clone2);
+            skipDuringClone(() => initTree(clone2))();
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3749,7 +3749,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          initTree(clone2);
+          skipDuringClone(() => initTree(clone2))();
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
@@ -8696,6 +8696,9 @@ function unPackPersistedTeleports(persistedEl) {
     skip();
   });
 }
+function isTeleportTarget(el) {
+  return el.hasAttribute("data-teleport-target");
+}
 
 // js/plugins/navigate/scroll.js
 function storeScrollInformationInHtmlBeforeNavigatingAway() {
@@ -8758,6 +8761,9 @@ function putPersistantElementsBack(callback) {
     import_alpinejs4.default.destroyTree(el);
   });
   els = {};
+}
+function isPersistedElement(el) {
+  return el.hasAttribute("x-persist");
 }
 
 // js/plugins/navigate/bar.js
@@ -9039,6 +9045,7 @@ function navigate_default(Alpine19) {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
+      cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -9113,6 +9120,19 @@ function nowInitializeAlpineOnTheNewPage(Alpine19) {
 }
 function autofocusElementsWithTheAutofocusAttribute() {
   document.querySelector("[autofocus]") && document.querySelector("[autofocus]").focus();
+}
+function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
+  let walker = function(root, callback) {
+    import_alpinejs6.default.walk(root, (el, skip) => {
+      if (isPersistedElement(el))
+        skip();
+      if (isTeleportTarget(el))
+        skip();
+      else
+        callback(el, skip);
+    });
+  };
+  import_alpinejs6.default.destroyTree(document.body, walker);
 }
 
 // js/plugins/history/index.js
