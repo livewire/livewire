@@ -19,6 +19,7 @@ export function handleFileUpload(el, property, component, cleanup) {
     let manager = getUploadManager(component)
 
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
+    let transfer = () => el.dispatchEvent(new CustomEvent('livewire-upload-transfer', { bubbles: true, detail: { id: component.id, property} }))
     let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
     let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property} }))
@@ -38,9 +39,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel, transfer)
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress, cancel)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancel, transfer)
         }
     }
 
@@ -73,12 +74,18 @@ class UploadManager {
             // We have to add reduntant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
+
+            // console.log(this.uploadBag)
+            // setTimeout(this.uploadBag.first(name).transferCallback)
+
             setUploadLoading(this.component, name)
 
             this.handleSignedUrl(name, url)
         })
 
         this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
+            // this.uploadBag.first(name).transferCallback()
+
             setUploadLoading(this.component, name)
 
             this.handleS3PreSignedUrl(name, payload)
@@ -89,25 +96,27 @@ class UploadManager {
         this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
-    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback) {
         this.setUpload(name, {
             files: [file],
             multiple: false,
             finishCallback,
             errorCallback,
             progressCallback,
-            cancelledCallback
+            cancelledCallback,
+            transferCallback
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
             finishCallback,
             errorCallback,
             progressCallback,
-            cancelledCallback
+            cancelledCallback,
+            transferCallback
         })
     }
 
@@ -157,6 +166,8 @@ class UploadManager {
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
+        queueMicrotask(() => queueMicrotask(this.uploadBag.first(name).transferCallback))
+
         let request = new XMLHttpRequest()
 
         request.open(method, url)
@@ -193,6 +204,8 @@ class UploadManager {
         this.uploadBag.first(name).request = request
 
         request.send(formData)
+
+        // this.uploadBag.first(name).transferCallback()
     }
 
     startUpload(name, uploadObject) {
@@ -201,6 +214,8 @@ class UploadManager {
         })
 
         this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple);
+
+        // this.uploadBag.first(name).transferCallback()
 
         setUploadLoading(this.component, name)
     }
@@ -248,6 +263,7 @@ export default class MessageBag {
         }
 
         this.bag[name].push(thing)
+        console.log('bag', name, thing)
     }
 
     push(name, thing) {
@@ -298,7 +314,8 @@ export function upload(
     finishCallback = () => { },
     errorCallback = () => { },
     progressCallback = () => { },
-    cancelledCallback = () => { }
+    cancelledCallback = () => { },
+    transferCallback = () => { }
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -308,7 +325,8 @@ export function upload(
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        transferCallback
     )
 }
 
@@ -319,7 +337,8 @@ export function uploadMultiple(
     finishCallback = () => { },
     errorCallback = () => { },
     progressCallback = () => { },
-    cancelledCallback = () => { }
+    cancelledCallback = () => { },
+    transferCallback = () => { }
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -329,7 +348,8 @@ export function uploadMultiple(
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        transferCallback
     )
 }
 

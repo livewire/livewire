@@ -93,16 +93,27 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
         startLoading()
     })
 
+    window.addEventListener('livewire-upload-transfer', e => {
+        // debugger
+        console.log('transferLoading', e)
+        if (eventMismatch(e)) return
+        console.log('transferStartLoading', e)
+
+        startLoading()
+    })
+
     window.addEventListener('livewire-upload-finish', e => {
         if (eventMismatch(e)) return
 
         endLoading()
+        console.log('fileFinishLoading')
     })
 
     window.addEventListener('livewire-upload-error', e => {
         if (eventMismatch(e)) return
 
         endLoading()
+        console.log('fileErrorFinishLoading')
     })
 }
 

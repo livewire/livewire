@@ -489,6 +489,7 @@
   function handleFileUpload(el, property, component, cleanup3) {
     let manager = getUploadManager(component);
     let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+    let transfer = () => el.dispatchEvent(new CustomEvent("livewire-upload-transfer", { bubbles: true, detail: { id: component.id, property } }));
     let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
     let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
     let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
@@ -504,9 +505,9 @@
         return;
       start3();
       if (e.target.multiple) {
-        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
+        manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel, transfer);
       } else {
-        manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
+        manager.upload(property, e.target.files[0], finish, error2, progress, cancel, transfer);
       }
     };
     el.addEventListener("change", eventHandler);
@@ -539,24 +540,26 @@
       this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
       this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
     }
-    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback) {
       this.setUpload(name, {
         files: [file],
         multiple: false,
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        transferCallback
       });
     }
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback) {
       this.setUpload(name, {
         files: Array.from(files),
         multiple: true,
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
+        transferCallback
       });
     }
     removeUpload(name, tmpFilename, finishCallback) {
@@ -596,6 +599,7 @@
       });
     }
     makeRequest(name, formData, method, url, headers, retrievePaths) {
+      queueMicrotask(() => queueMicrotask(this.uploadBag.first(name).transferCallback));
       let request = new XMLHttpRequest();
       request.open(method, url);
       Object.entries(headers).forEach(([key, value]) => {
@@ -661,6 +665,7 @@
         this.bag[name] = [];
       }
       this.bag[name].push(thing);
+      console.log("bag", name, thing);
     }
     push(name, thing) {
       this.add(name, thing);
@@ -696,17 +701,19 @@
   }, errorCallback = () => {
   }, progressCallback = () => {
   }, cancelledCallback = () => {
+  }, transferCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
+    uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback);
   }
   function uploadMultiple(component, name, files, finishCallback = () => {
   }, errorCallback = () => {
   }, progressCallback = () => {
   }, cancelledCallback = () => {
+  }, transferCallback = () => {
   }) {
     let uploadManager = getUploadManager(component);
-    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
+    uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, transferCallback);
   }
   function removeUpload(component, name, tmpFilename, finishCallback = () => {
   }, errorCallback = () => {
@@ -9225,15 +9232,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       startLoading();
     });
+    window.addEventListener("livewire-upload-transfer", (e) => {
+      console.log("transferLoading", e);
+      if (eventMismatch(e))
+        return;
+      console.log("transferStartLoading", e);
+      startLoading();
+    });
     window.addEventListener("livewire-upload-finish", (e) => {
       if (eventMismatch(e))
         return;
       endLoading();
+      console.log("fileFinishLoading");
     });
     window.addEventListener("livewire-upload-error", (e) => {
       if (eventMismatch(e))
         return;
       endLoading();
+      console.log("fileErrorFinishLoading");
     });
   }
   function containsTargets(payload, targets) {
