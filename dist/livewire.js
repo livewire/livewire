@@ -599,7 +599,11 @@
       });
     }
     makeRequest(name, formData, method, url, headers, retrievePaths) {
-      queueMicrotask(() => queueMicrotask(this.uploadBag.first(name).transferCallback));
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          this.uploadBag.first(name).transferCallback();
+        });
+      });
       let request = new XMLHttpRequest();
       request.open(method, url);
       Object.entries(headers).forEach(([key, value]) => {

@@ -160,7 +160,13 @@ class UploadManager {
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
-        queueMicrotask(() => queueMicrotask(this.uploadBag.first(name).transferCallback))
+        // The double queueMicrotask is here to ensure that the transferCallback is triggered
+        // after the DOM has been morphed. Without this, morph removes the loading states.
+        queueMicrotask(() => {
+            queueMicrotask(() => {
+                this.uploadBag.first(name).transferCallback()
+            })
+        })
 
         let request = new XMLHttpRequest()
 
