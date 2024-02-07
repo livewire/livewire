@@ -95,7 +95,7 @@ class UploadManager {
             finishCallback,
             errorCallback,
             progressCallback,
-            cancelledCallback
+            cancelledCallback,
         })
     }
 
@@ -106,7 +106,7 @@ class UploadManager {
             finishCallback,
             errorCallback,
             progressCallback,
-            cancelledCallback
+            cancelledCallback,
         })
     }
 
@@ -297,7 +297,7 @@ export function upload(
     finishCallback = () => { },
     errorCallback = () => { },
     progressCallback = () => { },
-    cancelledCallback = () => { }
+    cancelledCallback = () => { },
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -307,7 +307,7 @@ export function upload(
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
     )
 }
 
@@ -318,7 +318,7 @@ export function uploadMultiple(
     finishCallback = () => { },
     errorCallback = () => { },
     progressCallback = () => { },
-    cancelledCallback = () => { }
+    cancelledCallback = () => { },
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -328,7 +328,7 @@ export function uploadMultiple(
         finishCallback,
         errorCallback,
         progressCallback,
-        cancelledCallback
+        cancelledCallback,
     )
 }
 
