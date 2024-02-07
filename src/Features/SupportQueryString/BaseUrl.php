@@ -70,7 +70,7 @@ class BaseUrl extends LivewireAttribute
 
         // Handle empty strings differently depending on if this
         // field is considered "nullable" by typehint or API.
-        if ($initialValue === '') {
+        if ($initialValue === null) {
             $value = $this->nullable ? null : '';
         } else {
             $value = $decoded === null ? $initialValue : $decoded;
@@ -123,8 +123,12 @@ class BaseUrl extends LivewireAttribute
         if (! app('livewire')->isLivewireRequest()) {
             $value = request()->query($this->urlName(), $default);
 
+            // If the property is present in the querystring without a value, then Laravel returns
+            // the $default value. We want to return null in this case, so we can differentiate
+            // between "not present" and "present with no value". If the request is a Livewire
+            // request, we don't have that issue as we use PHP's parse_str function.
             if (array_key_exists($name, request()->query()) && $value === $default) {
-                return '';
+                return null;
             }
 
             return $value;
