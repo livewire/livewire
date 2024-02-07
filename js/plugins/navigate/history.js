@@ -1,11 +1,33 @@
 
-let restoration = {
-    lookup: {},
+let backButtonCache = {
+    lookup: [],
 
-    store() {
-        let key = (new Date).getTime()
-    }
+    currentIndex: null,
+
+    retrieve(idx) {
+        this.currentIndex = idx
+
+        return this.lookup[idx]
+    },
+
+    add(html) {
+        this.lookup[]
+
+        this.lookup.push(html)
+
+        return key
+    },
 }
+
+let key = backButtonCache.add(html)
+
+let key = backButtonCache.add(html)
+
+// Each visit puts something new in the cache and gets a key for it, storing that in the history state
+// Hitting the back button, gets a key out of the history state, looks up the html and returns it
+// Hitting forward, does the same - gets it out of the cache lookup
+// If you hit back a bunch, and then visit a new page
+    // Everything in the cache "forward" of the current page should get released
 
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // Create a history state entry for the initial page load.
@@ -23,8 +45,7 @@ export function whenTheBackOrForwardButtonIsClicked(callback) {
 
         if (! alpine._html) return
 
-        // let html = fromSessionStorage(alpine._html)
-        let html = alpine._html
+        let html = fromSessionStorage(alpine._html)
 
         callback(html)
     })
@@ -43,15 +64,15 @@ export function replaceUrl(url, html) {
 }
 
 function updateUrl(method, url, html) {
-    // let key = (new Date).getTime()
+    let key = (new Date).getTime()
 
-    // tryToStoreInSession(key, html)
+    tryToStoreInSession(key, html)
 
     let state = history.state || {}
 
     if (! state.alpine) state.alpine = {}
 
-    state.alpine._html = html
+    state.alpine._html = key
 
     try {
         // 640k character limit:
