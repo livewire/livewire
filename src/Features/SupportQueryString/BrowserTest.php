@@ -555,6 +555,169 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('filter')
         ;
     }
+
+    /** @test */
+    public function can_handle_empty_querystring_value_as_empty_string()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[Url]
+                public $foo;
+
+                public function setFoo()
+                {
+                    $this->foo = 'bar';
+                }
+
+                public function unsetFoo()
+                {
+                    $this->foo = '';
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
+                        <span dusk="output">@js($foo)</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output', '\'bar\'')
+            ->assertQueryStringHas('foo', 'bar')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'bar')
+            ->waitForLivewire()->click('@unsetButton')
+            ->assertSeeIn('@output', '\'\'')
+            ->assertQueryStringHas('foo', '')
+            ->refresh()
+            ->assertSeeIn('@output', '\'\'')
+            ->assertQueryStringHas('foo', '');
+    }
+
+    /** @test */
+    public function can_handle_empty_querystring_value_as_null()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[Url(nullable: true)]
+                public $foo;
+
+                public function setFoo()
+                {
+                    $this->foo = 'bar';
+                }
+
+                public function unsetFoo()
+                {
+                    $this->foo = null;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
+                        <span dusk="output">@js($foo)</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output', '\'bar\'')
+            ->assertQueryStringHas('foo', 'bar')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'bar')
+            ->waitForLivewire()->click('@unsetButton')
+            ->assertSeeIn('@output', 'null')
+            ->assertQueryStringHas('foo', '')
+            ->refresh()
+            ->assertSeeIn('@output', 'null')
+            ->assertQueryStringHas('foo', '');
+    }
+
+    /** @test */
+    public function can_handle_empty_querystring_value_as_null_or_empty_string_based_on_typehinting_of_property()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[Url]
+                public ?string $nullableFoo;
+
+                #[Url]
+                public string $notNullableFoo;
+
+                #[Url]
+                public $notTypehintingFoo;
+
+                public function setFoo()
+                {
+                    $this->nullableFoo = 'bar';
+                    $this->notNullableFoo = 'bar';
+                    $this->notTypehintingFoo = 'bar';
+                }
+
+                public function unsetFoo()
+                {
+                    $this->nullableFoo = null;
+                    $this->notNullableFoo = '';
+                    $this->notTypehintingFoo = null;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
+                        <span dusk="output-nullableFoo">@js($nullableFoo)</span>
+                        <span dusk="output-notNullableFoo">@js($notNullableFoo)</span>
+                        <span dusk="output-notTypehintingFoo">@js($notTypehintingFoo)</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('nullableFoo')
+            ->assertQueryStringMissing('notNullableFoo')
+            ->assertQueryStringMissing('notTypehintingFoo')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output-nullableFoo', '\'bar\'')
+            ->assertSeeIn('@output-notNullableFoo', '\'bar\'')
+            ->assertSeeIn('@output-notTypehintingFoo', '\'bar\'')
+            ->assertQueryStringHas('nullableFoo', 'bar')
+            ->assertQueryStringHas('notNullableFoo', 'bar')
+            ->assertQueryStringHas('notTypehintingFoo', 'bar')
+            ->refresh()
+            ->assertQueryStringHas('nullableFoo', 'bar')
+            ->assertQueryStringHas('notNullableFoo', 'bar')
+            ->assertQueryStringHas('notTypehintingFoo', 'bar')
+            ->waitForLivewire()->click('@unsetButton')
+            ->assertSeeIn('@output-nullableFoo', 'null')
+            ->assertSeeIn('@output-notNullableFoo', '\'\'')
+            ->assertSeeIn('@output-notTypehintingFoo', 'null')
+            ->assertQueryStringHas('nullableFoo', '')
+            ->assertQueryStringHas('notNullableFoo', '')
+            ->assertQueryStringHas('notTypehintingFoo', '')
+            ->refresh()
+            ->assertSeeIn('@output-nullableFoo', 'null')
+            ->assertSeeIn('@output-notNullableFoo', '\'\'')
+            ->assertSeeIn('@output-notTypehintingFoo', '\'\'')
+            ->assertQueryStringHas('nullableFoo', '')
+            ->assertQueryStringHas('notNullableFoo', '')
+            ->assertQueryStringHas('notTypehintingFoo', '');
+    }
 }
 
 class FormObject extends \Livewire\Form

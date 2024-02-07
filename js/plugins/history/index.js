@@ -218,7 +218,9 @@ function toQueryString(data) {
         Object.entries(data).forEach(([iKey, iValue]) => {
             let key = baseKey === '' ? iKey : `${baseKey}[${iKey}]`
 
-            if (! isObjecty(iValue)) {
+            if (iValue === null) {
+                entries[key] = '';
+            } else if (! isObjecty(iValue)) {
                 entries[key] = encodeURIComponent(iValue)
                     .replaceAll('%20', '+') // Conform to RFC1738
                     .replaceAll('%2C', ',')
@@ -231,7 +233,6 @@ function toQueryString(data) {
     }
 
     let entries = buildQueryStringEntries(data)
-
 
     return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join('&')
 }
@@ -263,9 +264,6 @@ function fromQueryString(search) {
     let data = {}
 
     entries.forEach(([key, value]) => {
-        // Query string params don't always have values... (`?foo=`)
-        if (! value) return
-
         value = decodeURIComponent(value.replaceAll('+', '%20'))
 
         if (! key.includes('[')) {
@@ -280,4 +278,3 @@ function fromQueryString(search) {
 
     return data
 }
-

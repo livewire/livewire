@@ -9199,7 +9199,9 @@ function toQueryString(data) {
   let buildQueryStringEntries = (data2, entries2 = {}, baseKey = "") => {
     Object.entries(data2).forEach(([iKey, iValue]) => {
       let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
-      if (!isObjecty2(iValue)) {
+      if (iValue === null) {
+        entries2[key] = "";
+      } else if (!isObjecty2(iValue)) {
         entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+").replaceAll("%2C", ",");
       } else {
         entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
@@ -9226,8 +9228,6 @@ function fromQueryString(search) {
   let entries = search.split("&").map((i) => i.split("="));
   let data = {};
   entries.forEach(([key, value]) => {
-    if (!value)
-      return;
     value = decodeURIComponent(value.replaceAll("+", "%20"));
     if (!key.includes("[")) {
       data[key] = value;
