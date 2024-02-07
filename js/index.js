@@ -1,7 +1,6 @@
 import { dispatchGlobal as dispatch, dispatchTo, on } from './events'
 import { find, first, getByName, all } from './store'
 import { start, stop, rescan } from './lifecycle'
-import { dispatch as doDispatch } from './utils'
 import { on as hook, trigger } from './hooks'
 import { directive } from './directives'
 import Alpine from 'alpinejs'

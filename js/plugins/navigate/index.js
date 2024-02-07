@@ -7,7 +7,6 @@ import { isPersistedElement, putPersistantElementsBack, storePersistantElementsF
 import { finishAndHideProgressBar, showAndStartProgressBar } from "./bar"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
-import Alpine from "alpinejs"
 
 let enablePersist = true
 let showProgressBar = true
@@ -27,7 +26,7 @@ export default function (Alpine) {
 
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
 
-    Alpine.directive('navigate', (el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+    Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {

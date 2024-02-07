@@ -6,8 +6,8 @@ use function Livewire\wrap;
 use function Livewire\store;
 use function Livewire\invade;
 use Livewire\Features\SupportAttributes\AttributeLevel;
-use Livewire\Features\SupportAttributes\AttributeCollection;
 use Livewire\ComponentHook;
+use Livewire\Exceptions\EventHandlerDoesNotExist;
 use Livewire\Mechanisms\HandleComponents\BaseRenderless;
 
 class SupportEvents extends ComponentHook
@@ -20,7 +20,7 @@ class SupportEvents extends ComponentHook
             $names = static::getListenerEventNames($this->component);
 
             if (! in_array($name, $names)) {
-                throw new \Exception('Handler for event ' . $name . ' does not exist');
+                throw new EventHandlerDoesNotExist($name);
             }
 
             $method = static::getListenerMethodName($this->component, $name);
