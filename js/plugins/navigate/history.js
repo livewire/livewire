@@ -2,32 +2,35 @@
 let backButtonCache = {
     lookup: [],
 
-    currentIndex: null,
+    currentIndex: 0,
 
     retrieve(idx) {
         this.currentIndex = idx
 
-        return this.lookup[idx]
+        let html = this.lookup[idx]
+
+        if (html === undefined) throw 'No back button cache found for current index: ' + this.currentIndex
+
+        return html
     },
 
-    add(html) {
-        this.lookup[]
+    replace(html) {
+        this.lookup[this.currentIndex] = html
 
-        this.lookup.push(html)
+        return this.currentIndex
+    },
 
-        return key
+    push(html) {
+        // Delete everything forward of this point in time...
+        this.lookup.splice(this.currentIndex + 1)
+
+        let idx = this.lookup.push(html) - 1
+
+        this.currentIndex = idx
+
+        return this.currentIndex
     },
 }
-
-let key = backButtonCache.add(html)
-
-let key = backButtonCache.add(html)
-
-// Each visit puts something new in the cache and gets a key for it, storing that in the history state
-// Hitting the back button, gets a key out of the history state, looks up the html and returns it
-// Hitting forward, does the same - gets it out of the cache lookup
-// If you hit back a bunch, and then visit a new page
-    // Everything in the cache "forward" of the current page should get released
 
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // Create a history state entry for the initial page load.
@@ -43,9 +46,10 @@ export function whenTheBackOrForwardButtonIsClicked(callback) {
 
         let alpine = state.alpine || {}
 
-        if (! alpine._html) return
+        if (alpine._html === undefined) return
 
-        let html = fromSessionStorage(alpine._html)
+        let html = backButtonCache.retrieve(alpine._html)
+        // let html = fromSessionStorage(alpine._html)
 
         callback(html)
     })
@@ -64,9 +68,9 @@ export function replaceUrl(url, html) {
 }
 
 function updateUrl(method, url, html) {
-    let key = (new Date).getTime()
-
-    tryToStoreInSession(key, html)
+    let key = method === 'pushState'
+        ? backButtonCache.push(html)
+        : backButtonCache.replace(html)
 
     let state = history.state || {}
 
@@ -86,32 +90,3 @@ function updateUrl(method, url, html) {
     }
 }
 
-export function fromSessionStorage(timestamp) {
-    let state = JSON.parse(sessionStorage.getItem('alpine:'+timestamp))
-
-    return state
-}
-
-function tryToStoreInSession(timestamp, value) {
-    // sessionStorage has a max storage limit (usally 5MB).
-    // If we meet that limit, we'll start removing entries
-    // (oldest first), until there's enough space to store
-    // the new one.
-    try {
-        sessionStorage.setItem('alpine:'+timestamp, JSON.stringify(value))
-    } catch (error) {
-        // 22 is Chrome, 1-14 is other browsers.
-        if (! [22, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(error.code)) return
-
-        let oldestTimestamp = Object.keys(sessionStorage)
-            .map(key => Number(key.replace('alpine:', '')))
-            .sort()
-            .shift()
-
-        if (! oldestTimestamp) return
-
-        sessionStorage.removeItem('alpine:'+oldestTimestamp)
-
-        tryToStoreInSession(timestamp, value)
-    }
-}

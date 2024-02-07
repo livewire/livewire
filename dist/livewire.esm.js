@@ -8417,6 +8417,27 @@ var import_intersect = __toESM(require_module_cjs5());
 var import_anchor = __toESM(require_module_cjs6());
 
 // js/plugins/navigate/history.js
+var backButtonCache = {
+  lookup: [],
+  currentIndex: 0,
+  retrieve(idx) {
+    this.currentIndex = idx;
+    let html = this.lookup[idx];
+    if (html === void 0)
+      throw "No back button cache found for current index: " + this.currentIndex;
+    return html;
+  },
+  replace(html) {
+    this.lookup[this.currentIndex] = html;
+    return this.currentIndex;
+  },
+  push(html) {
+    this.lookup.splice(this.currentIndex + 1);
+    let idx = this.lookup.push(html) - 1;
+    this.currentIndex = idx;
+    return this.currentIndex;
+  }
+};
 function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
   let url = new URL(window.location.href, document.baseURI);
   replaceUrl(url, document.documentElement.outerHTML);
@@ -8425,9 +8446,9 @@ function whenTheBackOrForwardButtonIsClicked(callback) {
   window.addEventListener("popstate", (e) => {
     let state = e.state || {};
     let alpine = state.alpine || {};
-    if (!alpine._html)
+    if (alpine._html === void 0)
       return;
-    let html = fromSessionStorage(alpine._html);
+    let html = backButtonCache.retrieve(alpine._html);
     callback(html);
   });
 }
@@ -8441,8 +8462,7 @@ function replaceUrl(url, html) {
   updateUrl("replaceState", url, html);
 }
 function updateUrl(method, url, html) {
-  let key = new Date().getTime();
-  tryToStoreInSession(key, html);
+  let key = method === "pushState" ? backButtonCache.push(html) : backButtonCache.replace(html);
   let state = history.state || {};
   if (!state.alpine)
     state.alpine = {};
@@ -8454,23 +8474,6 @@ function updateUrl(method, url, html) {
       console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
     }
     console.error(error2);
-  }
-}
-function fromSessionStorage(timestamp) {
-  let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
-  return state;
-}
-function tryToStoreInSession(timestamp, value) {
-  try {
-    sessionStorage.setItem("alpine:" + timestamp, JSON.stringify(value));
-  } catch (error2) {
-    if (![22, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(error2.code))
-      return;
-    let oldestTimestamp = Object.keys(sessionStorage).map((key) => Number(key.replace("alpine:", ""))).sort().shift();
-    if (!oldestTimestamp)
-      return;
-    sessionStorage.removeItem("alpine:" + oldestTimestamp);
-    tryToStoreInSession(timestamp, value);
   }
 }
 
