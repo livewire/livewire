@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
 use Livewire\Component;
+use Livewire\Features\SupportValidation\BaseValidate;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -139,6 +140,50 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitUntilMissing('@loading')
         // Assert that the loading element was displayed while `livewire-upload-progress` was emitted
         ->assertScript('window.loadingWasDisplayed', true)
+        ;
+    }
+
+    /** @test */
+    public function file_upload_being_renderless_is_not_impacted_by_real_time_validation()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component
+        {
+            use \Livewire\WithFileUploads;
+
+            #[BaseValidate(['required', 'min:3'])]
+            public $foo;
+
+            public $photo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model="foo" dusk="foo" />
+
+                        <span>@error('foo') {{ $message }} @enderror</span>
+
+                        <input type="file" wire:model="photo" dusk="upload" />
+
+                        <div>
+                            @if ($photo)
+                                Preview
+                                <img src="{{ $photo->temporaryUrl() }}" dusk="preview">
+                            @endif
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertNotPresent('@preview')
+
+        ->type('@foo', 'ba')
+
+        ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image_big.jpg')
+
+        ->waitFor('@preview')->assertVisible('@preview')
         ;
     }
 }
