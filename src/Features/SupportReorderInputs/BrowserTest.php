@@ -36,7 +36,7 @@ class BrowserTest extends BrowserTestCase
                     <div>
                         <ul>
                             @foreach($items as $index => $item)
-                            <li wire:key='key-{{ $item['id'] }}'>
+                            <li wire:key="key-{{ $item['id'] }}">
                                 <input dusk="input{{ $item['id'] }}" type="text" wire:model.live="items.{{ $index }}.value">
                             </li>
                             @endforeach
@@ -51,18 +51,18 @@ class BrowserTest extends BrowserTestCase
             // Check data has been bound correctly
             ->assertInputValue('@input1', 'first')
             ->assertInputValue('@input2', 'second')
-            ->type('@input1', 'first updated')
-            ->waitForLivewire()
+            ->waitForLivewire()->type('@input1', 'first updated')
+            
             ->assertInputValue('@input2', 'second')
             // Swap the data array around
-            ->click("@button")
-            ->waitForLivewire()
+            ->waitForLivewire()->click("@button")
+            
             // Check initial bound data is correct
             ->assertInputValue('@input1', 'first')
             ->assertInputValue('@input2', 'second')
             // Update one input
-            ->type('@input1', 'first updated')
-            ->waitForLivewire()
+            ->waitForLivewire()->type('@input1', 'first updated')
+            
             // Check second input has not changed value too
             ->assertInputValue('@input2', 'second')
         ;
