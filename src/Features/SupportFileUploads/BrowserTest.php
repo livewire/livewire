@@ -163,7 +163,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
                         <input type="text" wire:model="foo" dusk="foo" />
 
-                        <span>@error('foo') {{ $message }} @enderror</span>
+                        <div>
+                            @error('foo')
+                                <span dusk="error">{{ $message }}</span>
+                            @enderror
+                        </div>
 
                         <input type="file" wire:model="photo" dusk="upload" />
 
@@ -178,12 +182,14 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         })
         ->assertNotPresent('@preview')
+        ->assertNotPresent('@error')
 
         ->type('@foo', 'ba')
 
         ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image_big.jpg')
 
         ->waitFor('@preview')->assertVisible('@preview')
+        ->assertVisible('@error')
         ;
     }
 }
