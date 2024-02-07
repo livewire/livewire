@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
 use Livewire\Component;
+use Livewire\Features\SupportValidation\BaseValidate;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -101,6 +102,94 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(10)
         ->click('@cancel')
         ->assertSeeIn('@output', 'cancelled')
+        ;
+    }
+
+    /** @test */
+    public function an_element_targeting_a_file_upload_retains_loading_state_until_the_upload_has_finished()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component
+        {
+            use \Livewire\WithFileUploads;
+
+            public $photo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="file" wire:model="photo" dusk="upload" />
+
+                        <p wire:loading wire:target="photo" id="loading" dusk="loading">Loading</p>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        // Set a script to record if the loading element was displayed when `livewire-upload-progress` was fired
+        ->tap(fn ($b) => $b->script([
+            "window.Livewire.first().on('livewire-upload-progress', () => { window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block' })",
+        ]))
+        ->assertMissing('@loading')
+
+        ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image_big.jpg')
+
+        // Wait for Upload to finish
+        ->waitUntilMissing('@loading')
+        // Assert that the loading element was displayed while `livewire-upload-progress` was emitted
+        ->assertScript('window.loadingWasDisplayed', true)
+        ;
+    }
+
+    /** @test */
+    public function file_upload_being_renderless_is_not_impacted_by_real_time_validation()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component
+        {
+            use \Livewire\WithFileUploads;
+
+            #[BaseValidate(['required', 'min:3'])]
+            public $foo;
+
+            public $photo;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model="foo" dusk="foo" />
+
+                        <div>
+                            @error('foo')
+                                <span dusk="error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <input type="file" wire:model="photo" dusk="upload" />
+
+                        <div>
+                            @if ($photo)
+                                Preview
+                                <img src="{{ $photo->temporaryUrl() }}" dusk="preview">
+                            @endif
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertNotPresent('@preview')
+        ->assertNotPresent('@error')
+
+        ->type('@foo', 'ba')
+
+        ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image_big.jpg')
+
+        ->waitFor('@preview')->assertVisible('@preview')
+        ->assertVisible('@error')
         ;
     }
 }
