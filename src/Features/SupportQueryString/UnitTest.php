@@ -35,6 +35,15 @@ class UnitTest extends \Tests\TestCase
 
             function render() { return '<div></div>'; }
         })->assertSet('foo', '');
+
+        Livewire::withQueryParams([
+            'foo' => null,
+        ])->test(new class extends Component {
+            #[BaseUrl(nullable: false)]
+            public ?string $foo;
+
+            function render() { return '<div></div>'; }
+        })->assertSet('foo', '');
     }
 
     /** @test */
@@ -45,6 +54,15 @@ class UnitTest extends \Tests\TestCase
         ])->test(new class extends Component {
             #[BaseUrl]
             public ?string $foo;
+
+            function render() { return '<div></div>'; }
+        })->assertSet('foo', null);
+
+        Livewire::withQueryParams([
+            'foo' => null,
+        ])->test(new class extends Component {
+            #[BaseUrl(nullable: true)]
+            public $foo;
 
             function render() { return '<div></div>'; }
         })->assertSet('foo', null);
