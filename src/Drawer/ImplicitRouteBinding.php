@@ -109,7 +109,15 @@ class ImplicitRouteBinding
             )) {
                 throw (new ModelNotFoundException())->setModel(get_class($instance), [$parameterValue]);
             }
-        } elseif (! $model = $instance->resolveRouteBinding($parameterValue, $route->bindingFieldFor($parameterName))) {
+        } } elseif (
+            !$route->allowsTrashedBindings()
+            && ! $model = $instance->resolveRouteBinding($parameterValue, $route->bindingFieldFor($parameterName))
+        ) {
+            throw (new ModelNotFoundException())->setModel(get_class($instance), [$parameterValue]);
+        } elseif (
+            $route->allowsTrashedBindings()
+            && ! $model = $instance->resolveSoftDeletableRouteBinding($parameterValue, $route->bindingFieldFor($parameterName))
+        ) {
             throw (new ModelNotFoundException())->setModel(get_class($instance), [$parameterValue]);
         }
 
