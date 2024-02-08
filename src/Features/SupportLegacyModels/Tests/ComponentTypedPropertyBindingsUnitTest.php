@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
-use Livewire\Features\SupportAttributes\Attribute;
 use Livewire\Livewire;
 
 class ComponentTypedPropertyBindingsUnitTest extends \Tests\TestCase
