@@ -8,11 +8,12 @@ use Livewire\Drawer\Utils;
 
 class FilePreviewController implements HasMiddleware
 {
-    public static array $middleware = ['web'];
-
     public static function middleware()
     {
-        return array_map(fn ($middleware) => new Middleware($middleware), static::$middleware);
+        return array_map(fn ($middleware) => new Middleware($middleware), array_merge(
+            ['web'],
+            (array) FileUploadConfiguration::middleware(),
+        ));
     }
 
     public function handle($filename)
