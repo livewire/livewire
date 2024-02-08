@@ -6,6 +6,9 @@ use Illuminate\Testing\Constraints\SeeInOrder;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Support\Arr;
 
+/**
+ * @method self assertSeeInOrder(array $values, bool $escape) $this
+ */
 trait MakesAssertions
 {
     function assertSee($values, $escape = true, $stripInitialData = true)
