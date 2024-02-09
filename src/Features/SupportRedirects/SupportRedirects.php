@@ -16,10 +16,19 @@ class SupportRedirects extends ComponentHook
     public static function provide()
     {
         // Wait until all components have been processed...
-        on('response', function () {
+        on('response', function ($response) {
             // If there was no redirect. Clear flash session data.
             if (! static::$atLeastOneComponentHasRedirected && app()->has('session.store')) {
-                session()->forget(session()->get('_flash.new'));
+                foreach ($response['components'] as $component) {
+                    $snapshot = json_decode($component['snapshot']);
+                    $id = $snapshot->memo->id;
+                    if (session()->has('_is_subsequent_request_for_'.$id)) {
+                        session()->forget(session()->get('_flash.new'));
+                        break;
+                    } else {
+                        session()->flash('_is_subsequent_request_for_'.$id, true);
+                    }
+                }
             }
         });
 
