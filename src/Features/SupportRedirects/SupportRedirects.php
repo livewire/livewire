@@ -21,8 +21,8 @@ class SupportRedirects extends ComponentHook
             if (! static::$atLeastOneComponentHasRedirected && app()->has('session.store')) {
                 foreach ($response['components'] as $component) {
                     $snapshot = json_decode($component['snapshot']);
-                    $id = $snapshot->memo->id;
-                    if (session()->has('_is_subsequent_request_for_'.$id)) {
+                    $id = $snapshot?->memo?->id;
+                    if (! $id || session()->has('_is_subsequent_request_for_'.$id)) {
                         session()->forget(session()->get('_flash.new'));
                         break;
                     } else {
