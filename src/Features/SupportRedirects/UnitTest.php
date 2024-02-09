@@ -186,6 +186,48 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull($component->effects['html'] ?? null);
     }
 
+    /** @test */
+    public function flash_data_is_available_after_render()
+    {
+        session()->flash('foo', 'bar');
+        $this->assertEquals('bar', session()->get('foo'));
+
+        Livewire::test(RenderOnRedirectWithSkipRenderMethod::class)->call('$refresh');
+
+        $this->assertEquals('bar', session()->get('foo'));
+    }
+
+    /** @test */
+    public function flash_data_is_unavailable_after_subsequent_requests()
+    {
+        session()->flash('foo', 'bar');
+        $this->assertEquals('bar', session()->get('foo'));
+
+        $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
+        $component->call('$refresh');
+
+        $this->assertEquals('bar', session()->get('foo'));
+
+        $component->call('$refresh');
+
+        $this->assertNull(session()->get('foo'));
+    }
+
+    /** @test */
+    public function flash_data_is_available_after_render_of_multiple_components()
+    {
+        session()->flash('foo', 'bar');
+        $this->assertEquals('bar', session()->get('foo'));
+
+        $component1 = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
+        $component1->call('$refresh');
+
+        $component2 = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
+        $component2->call('$refresh');
+
+        $this->assertEquals('bar', session()->get('foo'));
+    }
+
     protected function registerNamedRoute()
     {
         Route::get('foo', function () {
