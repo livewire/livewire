@@ -8417,23 +8417,32 @@ var import_intersect = __toESM(require_module_cjs5());
 var import_anchor = __toESM(require_module_cjs6());
 
 // js/plugins/navigate/history.js
-var backButtonCache = {
+var Snapshot = class {
+  constructor(url, html) {
+    this.url = url;
+    this.html = html;
+  }
+};
+var snapshotCache = {
   lookup: [],
   currentIndex: 0,
+  has(idx) {
+    return this.lookup[idx] !== void 0;
+  },
   retrieve(idx) {
     this.currentIndex = idx;
-    let html = this.lookup[idx];
-    if (html === void 0)
+    let snapshot = this.lookup[idx];
+    if (snapshot === void 0)
       throw "No back button cache found for current index: " + this.currentIndex;
-    return html;
+    return snapshot;
   },
-  replace(html) {
-    this.lookup[this.currentIndex] = html;
+  replace(snapshot) {
+    this.lookup[this.currentIndex] = snapshot;
     return this.currentIndex;
   },
-  push(html) {
+  push(snapshot) {
     this.lookup.splice(this.currentIndex + 1);
-    let idx = this.lookup.push(html) - 1;
+    let idx = this.lookup.push(snapshot) - 1;
     this.currentIndex = idx;
     return this.currentIndex;
   }
@@ -8442,14 +8451,18 @@ function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
   let url = new URL(window.location.href, document.baseURI);
   replaceUrl(url, document.documentElement.outerHTML);
 }
-function whenTheBackOrForwardButtonIsClicked(callback) {
+function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
+  let fallback2;
+  registerFallback((i) => fallback2 = i);
   window.addEventListener("popstate", (e) => {
     let state = e.state || {};
     let alpine = state.alpine || {};
-    if (alpine._html === void 0)
-      return;
-    let html = backButtonCache.retrieve(alpine._html);
-    callback(html);
+    if (snapshotCache.has(alpine.snapshotIdx)) {
+      let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
+      handleHtml(snapshot.html);
+    } else {
+      fallback2(alpine.url);
+    }
   });
 }
 function updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination) {
@@ -8462,11 +8475,12 @@ function replaceUrl(url, html) {
   updateUrl("replaceState", url, html);
 }
 function updateUrl(method, url, html) {
-  let key = method === "pushState" ? backButtonCache.push(html) : backButtonCache.replace(html);
+  let key = method === "pushState" ? snapshotCache.push(new Snapshot(url, html)) : snapshotCache.replace(new Snapshot(url, html));
   let state = history.state || {};
   if (!state.alpine)
     state.alpine = {};
-  state.alpine._html = key;
+  state.alpine.url = url.toString();
+  state.alpine.snapshotIdx = key;
   try {
     history[method](state, document.title, url);
   } catch (error2) {
@@ -8950,7 +8964,7 @@ function navigate_default(Alpine19) {
       });
     });
   });
-  function navigateTo(destination) {
+  function navigateTo(destination, shouldPushToHistoryState = true) {
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
@@ -8969,7 +8983,11 @@ function navigate_default(Alpine19) {
           });
           restoreScrollPositionOrScrollToTop();
           fireEventForOtherLibariesToHookInto("alpine:navigated");
-          updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+          if (shouldPushToHistoryState) {
+            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+          } else {
+            replaceUrl(finalDestination, html);
+          }
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -8982,7 +9000,13 @@ function navigate_default(Alpine19) {
       });
     });
   }
-  whenTheBackOrForwardButtonIsClicked((html) => {
+  whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
+    ifThePageBeingVisitedHasntBeenCached((url) => {
+      let destination = createUrlObjectFromString(url);
+      let shouldPushToHistoryState = false;
+      navigateTo(destination, shouldPushToHistoryState);
+    });
+  }, (html) => {
     storeScrollInformationInHtmlBeforeNavigatingAway();
     preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
       enablePersist && storePersistantElementsForLater((persistedEl) => {

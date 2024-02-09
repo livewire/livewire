@@ -1,30 +1,41 @@
 
-let backButtonCache = {
+class Snapshot {
+    constructor(url, html) {
+        this.url = url
+        this.html = html
+    }
+}
+
+let snapshotCache = {
     lookup: [],
 
     currentIndex: 0,
 
+    has(idx) {
+        return this.lookup[idx] !== undefined
+    },
+
     retrieve(idx) {
         this.currentIndex = idx
 
-        let html = this.lookup[idx]
+        let snapshot = this.lookup[idx]
 
-        if (html === undefined) throw 'No back button cache found for current index: ' + this.currentIndex
+        if (snapshot === undefined) throw 'No back button cache found for current index: ' + this.currentIndex
 
-        return html
+        return snapshot
     },
 
-    replace(html) {
-        this.lookup[this.currentIndex] = html
+    replace(snapshot) {
+        this.lookup[this.currentIndex] = snapshot
 
         return this.currentIndex
     },
 
-    push(html) {
+    push(snapshot) {
         // Delete everything forward of this point in time...
         this.lookup.splice(this.currentIndex + 1)
 
-        let idx = this.lookup.push(html) - 1
+        let idx = this.lookup.push(snapshot) - 1
 
         this.currentIndex = idx
 
@@ -40,18 +51,23 @@ export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     replaceUrl(url, document.documentElement.outerHTML)
 }
 
-export function whenTheBackOrForwardButtonIsClicked(callback) {
+export function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
+    let fallback
+
+    registerFallback(i => fallback = i)
+
     window.addEventListener('popstate', e => {
         let state = e.state || {}
 
         let alpine = state.alpine || {}
 
-        if (alpine._html === undefined) return
+        if (snapshotCache.has(alpine.snapshotIdx)) {
+            let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
-        let html = backButtonCache.retrieve(alpine._html)
-        // let html = fromSessionStorage(alpine._html)
-
-        callback(html)
+            handleHtml(snapshot.html)
+        } else {
+            fallback(alpine.url)
+        }
     })
 }
 
@@ -69,14 +85,15 @@ export function replaceUrl(url, html) {
 
 function updateUrl(method, url, html) {
     let key = method === 'pushState'
-        ? backButtonCache.push(html)
-        : backButtonCache.replace(html)
+        ? snapshotCache.push(new Snapshot(url, html))
+        : snapshotCache.replace(new Snapshot(url, html))
 
     let state = history.state || {}
 
     if (! state.alpine) state.alpine = {}
 
-    state.alpine._html = key
+    state.alpine.url = url.toString()
+    state.alpine.snapshotIdx = key
 
     try {
         // 640k character limit:

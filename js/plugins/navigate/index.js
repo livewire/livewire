@@ -1,4 +1,4 @@
-import { updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
+import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
@@ -50,7 +50,7 @@ export default function (Alpine) {
         })
     })
 
-    function navigateTo(destination) {
+    function navigateTo(destination, shouldPushToHistoryState = true) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
@@ -80,7 +80,11 @@ export default function (Alpine) {
 
                     fireEventForOtherLibariesToHookInto('alpine:navigated')
 
-                    updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
+                    if (shouldPushToHistoryState) {
+                        updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
+                    } else {
+                        replaceUrl(finalDestination, html)
+                    }
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
@@ -96,7 +100,25 @@ export default function (Alpine) {
         })
     }
 
-    whenTheBackOrForwardButtonIsClicked((html) => {
+    // @todo:
+    // Current problem:
+    // - Visit 3 pages consequitively
+    // - Hit back button 3 times (all good)
+    // - Hit forward button 3 times (all good)
+    // - Hit back button 1 time (all good)
+    // - Hit "$refresh"
+    // - Hit forward (makes a request to the server)
+    // - Hit back (doesn't update the HTML but doesn't throw an error and updates the URL)
+
+    whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
+        ifThePageBeingVisitedHasntBeenCached((url) => {
+            let destination = createUrlObjectFromString(url)
+
+            let shouldPushToHistoryState = false
+
+            navigateTo(destination, shouldPushToHistoryState)
+        })
+    }, (html) => {
         // @todo: see if there's a way to update the current HTML BEFORE
         // the back button is hit, and not AFTER:
         storeScrollInformationInHtmlBeforeNavigatingAway()
