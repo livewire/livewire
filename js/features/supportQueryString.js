@@ -1,5 +1,5 @@
 import { on } from '@/hooks'
-import { dataGet, dataSet } from '@/utils'
+import { dataGet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'
 
@@ -15,7 +15,7 @@ on('effect', ({ component, effects, cleanup }) => {
 
         let initialValue = [false, null, undefined].includes(except) ? dataGet(component.ephemeral, name) : except
 
-        let { initial, replace, push, pop } = track(as, initialValue, alwaysShow)
+        let { replace, push, pop } = track(as, initialValue, alwaysShow)
 
         if (use === 'replace') {
             let effectReference = Alpine.effect(() => {

@@ -65,16 +65,16 @@ abstract class Attribute
             throw new \Exception('Can\'t set the value of a non-property attribute.');
         }
 
-        if ($enum = $this->tryingToSetStringToEnum($value)) {
+        if ($enum = $this->tryingToSetStringOrIntegerToEnum($value)) {
             $value = $enum::from($value);
         }
 
         data_set($this->component, $this->levelName, $value);
     }
 
-    protected function tryingToSetStringToEnum($subject)
+    protected function tryingToSetStringOrIntegerToEnum($subject)
     {
-        if (! is_string($subject)) return;
+        if (! is_string($subject) && ! is_int($subject)) return;
 
         $target = $this->subTarget ?? $this->component;
 

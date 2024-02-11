@@ -88,4 +88,53 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@count', '1');
         ;
     }
+
+    /** @test */
+    public function alpine_property_persists_on_array_item_reorder()
+    {
+        return Livewire::visit(new class extends Component {
+            public array $items = [
+                ['id' => 1, 'title' => 'foo', 'complete' => false],
+                ['id' => 2, 'title' => 'bar', 'complete' => false],
+                ['id' => 3, 'title' => 'baz', 'complete' => false]
+            ];
+
+            public function getItems()
+            {
+                return $this->items;
+            }
+
+            public function complete(int $index): void
+            {
+                $this->items[$index]['complete'] = true;
+            }
+
+            function render() {
+                return <<<'HTML'
+                    <div>
+                        @foreach (collect($this->getItems())->sortBy('complete')->toArray() as $index => $item)
+                            <div wire:key="{{$item['id']}}" x-data="{show: false}">
+                                <div>{{ $item['title'] }} (completed: @json($item['complete']))</div>
+
+                                <div x-show="show" x-cloak dusk="hidden">
+                                    (I shouldn't be visible): {{ $item['title'] }}
+                                </div>
+
+                                <button dusk="complete-{{ $index }}" wire:click="complete({{ $index }})">complete</button>
+                            </div>
+                        @endforeach
+                    </div>
+                HTML;
+            }
+        })
+            // Click on the top two items and mark them as complete.
+            ->click('@complete-0')
+            ->pause(500)
+            ->click('@complete-1')
+            ->pause(500)
+
+            // Error thrown in console, and Alpine fails and shows the hidden text when it should not.
+            ->assertMissing('@hidden');
+            // ->assertConsoleLogMissingWarning('show is not defined');
+    }
 }

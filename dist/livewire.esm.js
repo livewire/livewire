@@ -43,8 +43,8 @@ var require_module_cjs = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_shared_cjs_prod = __commonJS2({
-      "node_modules/@vue/shared/dist/shared.cjs.prod.js"(exports2) {
+    var require_shared_cjs = __commonJS2({
+      "node_modules/@vue/shared/dist/shared.cjs.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         function makeMap(str, expectsLowerCase) {
@@ -318,8 +318,8 @@ var require_module_cjs = __commonJS({
           "optionalChaining",
           "nullishCoalescingOperator"
         ];
-        var EMPTY_OBJ = {};
-        var EMPTY_ARR = [];
+        var EMPTY_OBJ = Object.freeze({});
+        var EMPTY_ARR = Object.freeze([]);
         var NOOP = () => {
         };
         var NO = () => false;
@@ -452,23 +452,23 @@ var require_module_cjs = __commonJS({
     var require_shared = __commonJS2({
       "node_modules/@vue/shared/index.js"(exports2, module2) {
         "use strict";
-        if (true) {
-          module2.exports = require_shared_cjs_prod();
-        } else {
+        if (false) {
           module2.exports = null;
+        } else {
+          module2.exports = require_shared_cjs();
         }
       }
     });
-    var require_reactivity_cjs_prod = __commonJS2({
-      "node_modules/@vue/reactivity/dist/reactivity.cjs.prod.js"(exports2) {
+    var require_reactivity_cjs = __commonJS2({
+      "node_modules/@vue/reactivity/dist/reactivity.cjs.js"(exports2) {
         "use strict";
         Object.defineProperty(exports2, "__esModule", { value: true });
         var shared = require_shared();
         var targetMap = /* @__PURE__ */ new WeakMap();
         var effectStack = [];
         var activeEffect;
-        var ITERATE_KEY = Symbol("");
-        var MAP_KEY_ITERATE_KEY = Symbol("");
+        var ITERATE_KEY = Symbol("iterate");
+        var MAP_KEY_ITERATE_KEY = Symbol("Map key iterate");
         function isEffect(fn) {
           return fn && fn._isEffect === true;
         }
@@ -558,6 +558,14 @@ var require_module_cjs = __commonJS({
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
             activeEffect.deps.push(dep);
+            if (activeEffect.options.onTrack) {
+              activeEffect.options.onTrack({
+                effect: activeEffect,
+                target,
+                type,
+                key
+              });
+            }
           }
         }
         function trigger2(target, type, key, newValue, oldValue, oldTarget) {
@@ -614,6 +622,17 @@ var require_module_cjs = __commonJS({
             }
           }
           const run = (effect4) => {
+            if (effect4.options.onTrigger) {
+              effect4.options.onTrigger({
+                effect: effect4,
+                target,
+                key,
+                type,
+                newValue,
+                oldValue,
+                oldTarget
+              });
+            }
             if (effect4.options.scheduler) {
               effect4.options.scheduler(effect4);
             } else {
@@ -707,7 +726,7 @@ var require_module_cjs = __commonJS({
               if (!hadKey) {
                 trigger2(target, "add", key, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value);
+                trigger2(target, "set", key, value, oldValue);
               }
             }
             return result;
@@ -715,10 +734,10 @@ var require_module_cjs = __commonJS({
         }
         function deleteProperty(target, key) {
           const hadKey = shared.hasOwn(target, key);
-          target[key];
+          const oldValue = target[key];
           const result = Reflect.deleteProperty(target, key);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
@@ -743,9 +762,15 @@ var require_module_cjs = __commonJS({
         var readonlyHandlers = {
           get: readonlyGet,
           set(target, key) {
+            {
+              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
+            }
             return true;
           },
           deleteProperty(target, key) {
+            {
+              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
+            }
             return true;
           }
         };
@@ -812,13 +837,15 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
+          } else {
+            checkIdentityKeys(target, has2, key);
           }
           const oldValue = get3.call(target, key);
           target.set(key, value);
           if (!hadKey) {
             trigger2(target, "add", key, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value);
+            trigger2(target, "set", key, value, oldValue);
           }
           return this;
         }
@@ -829,20 +856,23 @@ var require_module_cjs = __commonJS({
           if (!hadKey) {
             key = toRaw2(key);
             hadKey = has2.call(target, key);
+          } else {
+            checkIdentityKeys(target, has2, key);
           }
-          get3 ? get3.call(target, key) : void 0;
+          const oldValue = get3 ? get3.call(target, key) : void 0;
           const result = target.delete(key);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0);
+            trigger2(target, "delete", key, void 0, oldValue);
           }
           return result;
         }
         function clear() {
           const target = toRaw2(this);
           const hadItems = target.size !== 0;
+          const oldTarget = shared.isMap(target) ? new Map(target) : new Set(target);
           const result = target.clear();
           if (hadItems) {
-            trigger2(target, "clear", void 0, void 0);
+            trigger2(target, "clear", void 0, void 0, oldTarget);
           }
           return result;
         }
@@ -884,6 +914,10 @@ var require_module_cjs = __commonJS({
         }
         function createReadonlyMethod(type) {
           return function(...args) {
+            {
+              const key = args[0] ? `on key "${args[0]}" ` : ``;
+              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
+            }
             return type === "delete" ? false : this;
           };
         }
@@ -988,6 +1022,13 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
+        function checkIdentityKeys(target, has2, key) {
+          const rawKey = toRaw2(key);
+          if (rawKey !== key && has2.call(target, rawKey)) {
+            const type = shared.toRawType(target);
+            console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
+          }
+        }
         var reactiveMap = /* @__PURE__ */ new WeakMap();
         var shallowReactiveMap = /* @__PURE__ */ new WeakMap();
         var readonlyMap = /* @__PURE__ */ new WeakMap();
@@ -1026,6 +1067,9 @@ var require_module_cjs = __commonJS({
         }
         function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
           if (!shared.isObject(target)) {
+            {
+              console.warn(`value cannot be made reactive: ${String(target)}`);
+            }
             return target;
           }
           if (target["__v_raw"] && !(isReadonly2 && target["__v_isReactive"])) {
@@ -1099,7 +1143,7 @@ var require_module_cjs = __commonJS({
           return new RefImpl(rawValue, shallow);
         }
         function triggerRef(ref2) {
-          trigger2(toRaw2(ref2), "set", "value", void 0);
+          trigger2(toRaw2(ref2), "set", "value", ref2.value);
         }
         function unref(ref2) {
           return isRef(ref2) ? ref2.value : ref2;
@@ -1137,6 +1181,9 @@ var require_module_cjs = __commonJS({
           return new CustomRefImpl(factory);
         }
         function toRefs(object) {
+          if (!isProxy(object)) {
+            console.warn(`toRefs() expects a reactive object but received a plain one.`);
+          }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
           for (const key in object) {
             ret[key] = toRef(object, key);
@@ -1193,7 +1240,9 @@ var require_module_cjs = __commonJS({
           let setter;
           if (shared.isFunction(getterOrOptions)) {
             getter = getterOrOptions;
-            setter = shared.NOOP;
+            setter = () => {
+              console.warn("Write operation failed: computed value is readonly");
+            };
           } else {
             getter = getterOrOptions.get;
             setter = getterOrOptions.set;
@@ -1232,10 +1281,10 @@ var require_module_cjs = __commonJS({
     var require_reactivity = __commonJS2({
       "node_modules/@vue/reactivity/index.js"(exports2, module2) {
         "use strict";
-        if (true) {
-          module2.exports = require_reactivity_cjs_prod();
-        } else {
+        if (false) {
           module2.exports = null;
+        } else {
+          module2.exports = require_reactivity_cjs();
         }
       }
     });
@@ -1436,17 +1485,27 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
+          if (el2._x_inited) {
+            if (el2._x_ignore)
+              skip();
+            return;
+          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          el2._x_ignore && skip();
+          if (el2._x_ignore) {
+            skip();
+          } else {
+            el2._x_inited = true;
+          }
         });
       });
     }
-    function destroyTree(root) {
-      walk(root, (el) => {
+    function destroyTree(root, walker = walk) {
+      walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
+        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1589,8 +1648,6 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
-        if (removedNodes.has(node))
-          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -2776,7 +2833,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return obj;
     }
-    var Alpine21 = {
+    var Alpine19 = {
       get reactive() {
         return reactive;
       },
@@ -2842,7 +2899,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       data,
       bind: bind2
     };
-    var alpine_default = Alpine21;
+    var alpine_default = Alpine19;
     var import_reactivity10 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
@@ -3573,7 +3630,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            initTree(clone2);
+            skipDuringClone(() => initTree(clone2))();
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3653,7 +3710,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          initTree(clone2);
+          skipDuringClone(() => initTree(clone2))();
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
@@ -3743,8 +3800,8 @@ var require_module_cjs2 = __commonJS({
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine21) {
-      Alpine21.directive("collapse", collapse3);
+    function src_default(Alpine19) {
+      Alpine19.directive("collapse", collapse3);
       collapse3.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
@@ -3764,7 +3821,7 @@ var require_module_cjs2 = __commonJS({
         if (!el._x_isShown)
           el.style.overflow = "hidden";
         let setFunction = (el2, styles) => {
-          let revertFunction = Alpine21.setStyles(el2, styles);
+          let revertFunction = Alpine19.setStyles(el2, styles);
           return styles.height ? () => {
           } : revertFunction;
         };
@@ -3787,7 +3844,7 @@ var require_module_cjs2 = __commonJS({
             if (current === full) {
               current = floor;
             }
-            Alpine21.transition(el, Alpine21.setStyles, {
+            Alpine19.transition(el, Alpine19.setStyles, {
               during: transitionStyles,
               start: { height: current + "px" },
               end: { height: full + "px" }
@@ -3801,7 +3858,7 @@ var require_module_cjs2 = __commonJS({
           }, after = () => {
           }) {
             let full = el.getBoundingClientRect().height;
-            Alpine21.transition(el, setFunction, {
+            Alpine19.transition(el, setFunction, {
               during: transitionStyles,
               start: { height: full + "px" },
               end: { height: floor + "px" }
@@ -4637,14 +4694,14 @@ var require_module_cjs3 = __commonJS({
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
     var import_tabbable = __toESM2(require_dist());
-    function src_default(Alpine21) {
+    function src_default(Alpine19) {
       let lastFocused;
       let currentFocused;
       window.addEventListener("focusin", () => {
         lastFocused = currentFocused;
         currentFocused = document.activeElement;
       });
-      Alpine21.magic("focus", (el) => {
+      Alpine19.magic("focus", (el) => {
         let within = el;
         return {
           __noscroll: false,
@@ -4748,7 +4805,7 @@ var require_module_cjs3 = __commonJS({
           }
         };
       });
-      Alpine21.directive("trap", Alpine21.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("trap", Alpine19.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup: cleanup2 }) => {
         let evaluator = evaluateLater(expression);
         let oldValue = false;
         let options = {
@@ -4866,7 +4923,7 @@ var require_module_cjs4 = __commonJS({
       persist: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine21) {
+    function src_default(Alpine19) {
       let persist3 = () => {
         let alias;
         let storage;
@@ -4881,11 +4938,11 @@ var require_module_cjs4 = __commonJS({
             setItem: dummy.set.bind(dummy)
           };
         }
-        return Alpine21.interceptor((initialValue, getter, setter, path, key) => {
+        return Alpine19.interceptor((initialValue, getter, setter, path, key) => {
           let lookup = alias || `_x_${path}`;
           let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
           setter(initial);
-          Alpine21.effect(() => {
+          Alpine19.effect(() => {
             let value = getter();
             storageSet(lookup, value, storage);
             setter(value);
@@ -4901,12 +4958,12 @@ var require_module_cjs4 = __commonJS({
           };
         });
       };
-      Object.defineProperty(Alpine21, "$persist", { get: () => persist3() });
-      Alpine21.magic("persist", persist3);
-      Alpine21.persist = (key, { get, set }, storage = localStorage) => {
+      Object.defineProperty(Alpine19, "$persist", { get: () => persist3() });
+      Alpine19.magic("persist", persist3);
+      Alpine19.persist = (key, { get, set }, storage = localStorage) => {
         let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
         set(initial);
-        Alpine21.effect(() => {
+        Alpine19.effect(() => {
           let value = get();
           storageSet(key, value, storage);
           set(value);
@@ -4952,8 +5009,8 @@ var require_module_cjs5 = __commonJS({
       intersect: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine21) {
-      Alpine21.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+    function src_default(Alpine19) {
+      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -6207,20 +6264,20 @@ var require_module_cjs6 = __commonJS({
         platform: platformWithCache
       });
     };
-    function src_default(Alpine21) {
-      Alpine21.magic("anchor", (el) => {
+    function src_default(Alpine19) {
+      Alpine19.magic("anchor", (el) => {
         if (!el._x_anchor)
           throw "Alpine: No x-anchor directive found on element using $anchor...";
         return el._x_anchor;
       });
-      Alpine21.interceptClone((from, to) => {
+      Alpine19.interceptClone((from, to) => {
         if (from && from._x_anchor && !to._x_anchor) {
           to._x_anchor = from._x_anchor;
         }
       });
-      Alpine21.directive("anchor", Alpine21.skipDuringClone((el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate2 }) => {
+      Alpine19.directive("anchor", Alpine19.skipDuringClone((el, { expression, modifiers, value }, { cleanup: cleanup2, evaluate: evaluate2 }) => {
         let { placement, offsetValue, unstyled } = getOptions(modifiers);
-        el._x_anchor = Alpine21.reactive({ x: 0, y: 0 });
+        el._x_anchor = Alpine19.reactive({ x: 0, y: 0 });
         let reference = evaluate2(expression);
         if (!reference)
           throw "Alpine: no element provided to x-anchor...";
@@ -6902,8 +6959,8 @@ var require_module_cjs7 = __commonJS({
       to.setAttribute("id", fromId);
       to.id = fromId;
     }
-    function src_default(Alpine21) {
-      Alpine21.morph = morph3;
+    function src_default(Alpine19) {
+      Alpine19.morph = morph3;
     }
     var module_default = src_default;
   }
@@ -6936,8 +6993,8 @@ var require_module_cjs8 = __commonJS({
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine21) {
-      Alpine21.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+    function src_default(Alpine19) {
+      Alpine19.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -6946,7 +7003,7 @@ var require_module_cjs8 = __commonJS({
             effect(() => {
               templateFn = (input) => {
                 let result;
-                Alpine21.dontAutoEvaluateFunctions(() => {
+                Alpine19.dontAutoEvaluateFunctions(() => {
                   evaluator((value2) => {
                     result = typeof value2 === "function" ? value2(input) : value2;
                   }, { scope: {
@@ -7236,51 +7293,6 @@ function contentIsFromDump(content) {
 function splitDumpFromContent(content) {
   let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
   return [dump, content.replace(dump, "")];
-}
-
-// js/hooks.js
-var listeners = [];
-function on(name, callback) {
-  if (!listeners[name])
-    listeners[name] = [];
-  listeners[name].push(callback);
-  return () => {
-    listeners[name] = listeners[name].filter((i) => i !== callback);
-  };
-}
-function trigger(name, ...params) {
-  let callbacks = listeners[name] || [];
-  let finishers = [];
-  for (let i = 0; i < callbacks.length; i++) {
-    let finisher = callbacks[i](...params);
-    if (isFunction(finisher))
-      finishers.push(finisher);
-  }
-  return (result) => {
-    return runFinishers(finishers, result);
-  };
-}
-async function triggerAsync(name, ...params) {
-  let callbacks = listeners[name] || [];
-  let finishers = [];
-  for (let i = 0; i < callbacks.length; i++) {
-    let finisher = await callbacks[i](...params);
-    if (isFunction(finisher))
-      finishers.push(finisher);
-  }
-  return (result) => {
-    return runFinishers(finishers, result);
-  };
-}
-function runFinishers(finishers, result) {
-  let latest = result;
-  for (let i = 0; i < finishers.length; i++) {
-    let iResult = finishers[i](latest);
-    if (iResult !== void 0) {
-      latest = iResult;
-    }
-  }
-  return latest;
 }
 
 // js/features/supportFileUploads.js
@@ -7575,6 +7587,51 @@ function cloneIfObject(value) {
   return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
 }
 
+// js/hooks.js
+var listeners = [];
+function on(name, callback) {
+  if (!listeners[name])
+    listeners[name] = [];
+  listeners[name].push(callback);
+  return () => {
+    listeners[name] = listeners[name].filter((i) => i !== callback);
+  };
+}
+function trigger(name, ...params) {
+  let callbacks = listeners[name] || [];
+  let finishers = [];
+  for (let i = 0; i < callbacks.length; i++) {
+    let finisher = callbacks[i](...params);
+    if (isFunction(finisher))
+      finishers.push(finisher);
+  }
+  return (result) => {
+    return runFinishers(finishers, result);
+  };
+}
+async function triggerAsync(name, ...params) {
+  let callbacks = listeners[name] || [];
+  let finishers = [];
+  for (let i = 0; i < callbacks.length; i++) {
+    let finisher = await callbacks[i](...params);
+    if (isFunction(finisher))
+      finishers.push(finisher);
+  }
+  return (result) => {
+    return runFinishers(finishers, result);
+  };
+}
+function runFinishers(finishers, result) {
+  let latest = result;
+  for (let i = 0; i < finishers.length; i++) {
+    let iResult = finishers[i](latest);
+    if (iResult !== void 0) {
+      latest = iResult;
+    }
+  }
+  return latest;
+}
+
 // js/request/modal.js
 function showHtmlModal(html) {
   let page = document.createElement("html");
@@ -7834,7 +7891,7 @@ function bufferPoolingForFiveMs(commit, callback) {
 var commitBus = new CommitBus();
 async function requestCommit(component) {
   let commit = commitBus.add(component);
-  let promise = new Promise((resolve, reject) => {
+  let promise = new Promise((resolve) => {
     commit.addResolver(resolve);
   });
   promise.commit = commit;
@@ -7842,7 +7899,7 @@ async function requestCommit(component) {
 }
 async function requestCall(component, method, params) {
   let commit = commitBus.add(component);
-  let promise = new Promise((resolve, reject) => {
+  let promise = new Promise((resolve) => {
     commit.addCall(method, params, (value) => resolve(value));
   });
   promise.commit = commit;
@@ -8048,7 +8105,7 @@ wireProperty("$commit", (component) => async () => await requestCommit(component
 wireProperty("$on", (component) => (...params) => listen(component, ...params));
 wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
 wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
-wireProperty("$dispatchTo", (component) => (...params) => dispatchTo(...params));
+wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
 wireProperty("$upload", (component) => (...params) => upload(component, ...params));
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
@@ -8274,7 +8331,6 @@ function dispatchEvent(target, name, params, bubbles = true) {
 }
 
 // js/directives.js
-var import_alpinejs3 = __toESM(require_module_cjs());
 function matchesForLivewireDirective(attributeName) {
   return attributeName.match(new RegExp("wire:"));
 }
@@ -8537,24 +8593,27 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 }
 
 // js/plugins/navigate/teleport.js
-var import_alpinejs4 = __toESM(require_module_cjs());
+var import_alpinejs3 = __toESM(require_module_cjs());
 function packUpPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs3.default.mutateDom(() => {
     persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
   });
 }
 function removeAnyLeftOverStaleTeleportTargets(body) {
-  import_alpinejs4.default.mutateDom(() => {
+  import_alpinejs3.default.mutateDom(() => {
     body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
   });
 }
 function unPackPersistedTeleports(persistedEl) {
-  import_alpinejs4.default.walk(persistedEl, (el, skip) => {
+  import_alpinejs3.default.walk(persistedEl, (el, skip) => {
     if (!el._x_teleport)
       return;
     el._x_teleportPutBack();
     skip();
   });
+}
+function isTeleportTarget(el) {
+  return el.hasAttribute("data-teleport-target");
 }
 
 // js/plugins/navigate/scroll.js
@@ -8587,14 +8646,14 @@ function restoreScrollPositionOrScrollToTop() {
 }
 
 // js/plugins/navigate/persist.js
-var import_alpinejs5 = __toESM(require_module_cjs());
+var import_alpinejs4 = __toESM(require_module_cjs());
 var els = {};
 function storePersistantElementsForLater(callback) {
   els = {};
   document.querySelectorAll("[x-persist]").forEach((i) => {
     els[i.getAttribute("x-persist")] = i;
     callback(i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs4.default.mutateDom(() => {
       i.remove();
     });
   });
@@ -8608,16 +8667,19 @@ function putPersistantElementsBack(callback) {
     usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
     callback(old, i);
-    import_alpinejs5.default.mutateDom(() => {
+    import_alpinejs4.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
   Object.entries(els).forEach(([key, el]) => {
     if (usedPersists.includes(key))
       return;
-    import_alpinejs5.default.destroyTree(el);
+    import_alpinejs4.default.destroyTree(el);
   });
   els = {};
+}
+function isPersistedElement(el) {
+  return el.hasAttribute("x-persist");
 }
 
 // js/plugins/navigate/bar.js
@@ -8855,20 +8917,19 @@ function ignoreAttributes(subject, attributesToRemove) {
 }
 
 // js/plugins/navigate/index.js
-var import_alpinejs6 = __toESM(require_module_cjs());
 var enablePersist = true;
 var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
-function navigate_default(Alpine21) {
-  Alpine21.navigate = (url) => {
+function navigate_default(Alpine19) {
+  Alpine19.navigate = (url) => {
     navigateTo(createUrlObjectFromString(url));
   };
-  Alpine21.navigate.disableProgressBar = () => {
+  Alpine19.navigate.disableProgressBar = () => {
     showProgressBar = false;
   };
-  Alpine21.addInitSelector(() => `[${Alpine21.prefixed("navigate")}]`);
-  Alpine21.directive("navigate", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+  Alpine19.addInitSelector(() => `[${Alpine19.prefixed("navigate")}]`);
+  Alpine19.directive("navigate", (el, { modifiers }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
@@ -8892,8 +8953,9 @@ function navigate_default(Alpine21) {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
+      cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-      preventAlpineFromPickingUpDomChanges(Alpine21, (andAfterAllThis) => {
+      preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
         });
@@ -8910,7 +8972,7 @@ function navigate_default(Alpine21) {
               setTimeout(() => {
                 autofocus && autofocusElementsWithTheAutofocusAttribute();
               });
-              nowInitializeAlpineOnTheNewPage(Alpine21);
+              nowInitializeAlpineOnTheNewPage(Alpine19);
             });
           });
         });
@@ -8919,7 +8981,7 @@ function navigate_default(Alpine21) {
   }
   whenTheBackOrForwardButtonIsClicked((html) => {
     storeScrollInformationInHtmlBeforeNavigatingAway();
-    preventAlpineFromPickingUpDomChanges(Alpine21, (andAfterAllThis) => {
+    preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
       enablePersist && storePersistantElementsForLater((persistedEl) => {
         packUpPersistedTeleports(persistedEl);
       });
@@ -8932,7 +8994,7 @@ function navigate_default(Alpine21) {
         fireEventForOtherLibariesToHookInto("alpine:navigated");
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
-          nowInitializeAlpineOnTheNewPage(Alpine21);
+          nowInitializeAlpineOnTheNewPage(Alpine19);
         });
       });
     });
@@ -8946,10 +9008,10 @@ function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
     fetchHtml(fromDestination, callback);
   });
 }
-function preventAlpineFromPickingUpDomChanges(Alpine21, callback) {
-  Alpine21.stopObservingMutations();
+function preventAlpineFromPickingUpDomChanges(Alpine19, callback) {
+  Alpine19.stopObservingMutations();
   callback((afterAllThis) => {
-    Alpine21.startObservingMutations();
+    Alpine19.startObservingMutations();
     queueMicrotask(() => {
       afterAllThis();
     });
@@ -8958,8 +9020,8 @@ function preventAlpineFromPickingUpDomChanges(Alpine21, callback) {
 function fireEventForOtherLibariesToHookInto(eventName) {
   document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
 }
-function nowInitializeAlpineOnTheNewPage(Alpine21) {
-  Alpine21.initTree(document.body, void 0, (el, skip) => {
+function nowInitializeAlpineOnTheNewPage(Alpine19) {
+  Alpine19.initTree(document.body, void 0, (el, skip) => {
     if (el._x_wasPersisted)
       skip();
   });
@@ -8967,10 +9029,23 @@ function nowInitializeAlpineOnTheNewPage(Alpine21) {
 function autofocusElementsWithTheAutofocusAttribute() {
   document.querySelector("[autofocus]") && document.querySelector("[autofocus]").focus();
 }
+function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
+  let walker = function(root, callback) {
+    Alpine.walk(root, (el, skip) => {
+      if (isPersistedElement(el))
+        skip();
+      if (isTeleportTarget(el))
+        skip();
+      else
+        callback(el, skip);
+    });
+  };
+  Alpine.destroyTree(document.body, walker);
+}
 
 // js/plugins/history/index.js
-function history2(Alpine21) {
-  Alpine21.magic("queryString", (el, { interceptor }) => {
+function history2(Alpine19) {
+  Alpine19.magic("queryString", (el, { interceptor }) => {
     let alias;
     let alwaysShow = false;
     let usePush = false;
@@ -8979,9 +9054,9 @@ function history2(Alpine21) {
       let { initial, replace: replace2, push: push2, pop } = track(queryKey, initialSeedValue, alwaysShow);
       setter(initial);
       if (!usePush) {
-        Alpine21.effect(() => replace2(getter()));
+        Alpine19.effect(() => replace2(getter()));
       } else {
-        Alpine21.effect(() => push2(getter()));
+        Alpine19.effect(() => push2(getter()));
         pop(async (newValue) => {
           setter(newValue);
           let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
@@ -9004,7 +9079,7 @@ function history2(Alpine21) {
       };
     });
   });
-  Alpine21.history = { track };
+  Alpine19.history = { track };
 }
 function track(name, initialSeedValue, alwaysShow = false) {
   let { has, get, set, remove } = queryStringUtils();
@@ -9124,7 +9199,9 @@ function toQueryString(data) {
   let buildQueryStringEntries = (data2, entries2 = {}, baseKey = "") => {
     Object.entries(data2).forEach(([iKey, iValue]) => {
       let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
-      if (!isObjecty2(iValue)) {
+      if (iValue === null) {
+        entries2[key] = "";
+      } else if (!isObjecty2(iValue)) {
         entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+").replaceAll("%2C", ",");
       } else {
         entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
@@ -9151,8 +9228,6 @@ function fromQueryString(search) {
   let entries = search.split("&").map((i) => i.split("="));
   let data = {};
   entries.forEach(([key, value]) => {
-    if (!value)
-      return;
     value = decodeURIComponent(value.replaceAll("+", "%20"));
     if (!key.includes("[")) {
       data[key] = value;
@@ -9167,21 +9242,21 @@ function fromQueryString(search) {
 // js/lifecycle.js
 var import_morph = __toESM(require_module_cjs7());
 var import_mask = __toESM(require_module_cjs8());
-var import_alpinejs7 = __toESM(require_module_cjs());
+var import_alpinejs5 = __toESM(require_module_cjs());
 function start() {
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs7.default.plugin(import_morph.default);
-  import_alpinejs7.default.plugin(history2);
-  import_alpinejs7.default.plugin(import_intersect.default);
-  import_alpinejs7.default.plugin(import_collapse.default);
-  import_alpinejs7.default.plugin(import_anchor.default);
-  import_alpinejs7.default.plugin(import_focus.default);
-  import_alpinejs7.default.plugin(import_persist2.default);
-  import_alpinejs7.default.plugin(navigate_default);
-  import_alpinejs7.default.plugin(import_mask.default);
-  import_alpinejs7.default.addRootSelector(() => "[wire\\:id]");
-  import_alpinejs7.default.onAttributesAdded((el, attributes) => {
+  import_alpinejs5.default.plugin(import_morph.default);
+  import_alpinejs5.default.plugin(history2);
+  import_alpinejs5.default.plugin(import_intersect.default);
+  import_alpinejs5.default.plugin(import_collapse.default);
+  import_alpinejs5.default.plugin(import_anchor.default);
+  import_alpinejs5.default.plugin(import_focus.default);
+  import_alpinejs5.default.plugin(import_persist2.default);
+  import_alpinejs5.default.plugin(navigate_default);
+  import_alpinejs5.default.plugin(import_mask.default);
+  import_alpinejs5.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs5.default.onAttributesAdded((el, attributes) => {
     if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
     let component = closestComponent(el, false);
@@ -9192,16 +9267,16 @@ function start() {
         return;
       let directive2 = extractDirective(el, attribute.name);
       trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-        import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
   });
-  import_alpinejs7.default.interceptInit(import_alpinejs7.default.skipDuringClone((el) => {
+  import_alpinejs5.default.interceptInit(import_alpinejs5.default.skipDuringClone((el) => {
     if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
     if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
-      import_alpinejs7.default.onAttributeRemoved(el, "wire:id", () => {
+      import_alpinejs5.default.onAttributeRemoved(el, "wire:id", () => {
         destroyComponent(component2.id);
       });
     }
@@ -9211,12 +9286,12 @@ function start() {
       let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
       directives.forEach((directive2) => {
         trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-          import_alpinejs7.default.onAttributeRemoved(el, directive2.raw, callback);
+          import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
     }
   }));
-  import_alpinejs7.default.start();
+  import_alpinejs5.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
@@ -9226,10 +9301,10 @@ function rescan() {
 }
 
 // js/index.js
-var import_alpinejs19 = __toESM(require_module_cjs());
+var import_alpinejs17 = __toESM(require_module_cjs());
 
 // js/features/supportDisablingFormsDuringRequest.js
-var import_alpinejs8 = __toESM(require_module_cjs());
+var import_alpinejs6 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
 on("element.init", ({ el, component }) => {
   let directives = getDirectives(el);
@@ -9237,7 +9312,7 @@ on("element.init", ({ el, component }) => {
     return;
   el.addEventListener("submit", () => {
     cleanupStackByComponentId[component.id] = [];
-    import_alpinejs8.default.walk(component.el, (node, skip) => {
+    import_alpinejs6.default.walk(component.el, (node, skip) => {
       if (!el.contains(node))
         return;
       if (node.hasAttribute("wire:ignore"))
@@ -9336,7 +9411,7 @@ function getDeepChildren(component, callback) {
 }
 
 // js/features/supportScriptsAndAssets.js
-var import_alpinejs9 = __toESM(require_module_cjs());
+var import_alpinejs7 = __toESM(require_module_cjs());
 var executedScripts = /* @__PURE__ */ new WeakMap();
 var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
@@ -9364,8 +9439,8 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs9.default.dontAutoEvaluateFunctions(() => {
-          import_alpinejs9.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+        import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
+          import_alpinejs7.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
         });
       });
     });
@@ -9437,7 +9512,7 @@ function cloneScriptTag2(el) {
 }
 
 // js/features/supportFileDownloads.js
-on("commit", ({ component, succeed }) => {
+on("commit", ({ succeed }) => {
   succeed(({ effects }) => {
     let download = effects.download;
     if (!download)
@@ -9473,20 +9548,20 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs10 = __toESM(require_module_cjs());
+var import_alpinejs8 = __toESM(require_module_cjs());
 on("effect", ({ component, effects }) => {
   let js = effects.js;
   let xjs = effects.xjs;
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs10.default.evaluate(component.el, body);
+        import_alpinejs8.default.evaluate(component.el, body);
       });
     });
   }
   if (xjs) {
     xjs.forEach((expression) => {
-      import_alpinejs10.default.evaluate(component.el, expression);
+      import_alpinejs8.default.evaluate(component.el, expression);
     });
   }
 });
@@ -9518,7 +9593,7 @@ on("commit.pooling", ({ commits }) => {
 });
 
 // js/features/supportQueryString.js
-var import_alpinejs11 = __toESM(require_module_cjs());
+var import_alpinejs9 = __toESM(require_module_cjs());
 on("effect", ({ component, effects, cleanup: cleanup2 }) => {
   let queryString = effects["url"];
   if (!queryString)
@@ -9528,12 +9603,12 @@ on("effect", ({ component, effects, cleanup: cleanup2 }) => {
     if (!as)
       as = name;
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
-    let { initial, replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow);
+    let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow);
     if (use === "replace") {
-      let effectReference = import_alpinejs11.default.effect(() => {
+      let effectReference = import_alpinejs9.default.effect(() => {
         replace2(dataGet(component.reactive, name));
       });
-      cleanup2(() => import_alpinejs11.default.release(effectReference));
+      cleanup2(() => import_alpinejs9.default.release(effectReference));
     } else if (use === "push") {
       let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
         let beforeValue = dataGet(component2.canonical, name);
@@ -9612,7 +9687,7 @@ on("effect", ({ component, effects }) => {
           let handler = (e) => dispatchSelf(component, event, [e]);
           window.Echo.join(channel).listen(event_name, handler);
           component.addCleanup(() => {
-            window.Echo[channel_type](channel).stopListening(event_name, handler);
+            window.Echo.leaveChannel(channel);
           });
         }
       } else if (channel_type == "notification") {
@@ -9667,7 +9742,7 @@ function shouldHideProgressBar() {
 }
 
 // js/features/supportRedirects.js
-on("effect", ({ component, effects }) => {
+on("effect", ({ effects }) => {
   if (!effects["redirect"])
     return;
   let url = effects["redirect"];
@@ -9677,7 +9752,7 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/morph.js
-var import_alpinejs12 = __toESM(require_module_cjs());
+var import_alpinejs10 = __toESM(require_module_cjs());
 function morph2(component, el, html) {
   let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
   let wrapper = document.createElement(wrapperTag);
@@ -9691,7 +9766,7 @@ function morph2(component, el, html) {
   let to = wrapper.firstElementChild;
   to.__livewire = component;
   trigger("morph", { el, toEl: to, component });
-  import_alpinejs12.default.morph(el, to, {
+  import_alpinejs10.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip) => {
       if (isntElement(el2))
         return;
@@ -9705,7 +9780,7 @@ function morph2(component, el, html) {
       if (isComponentRootEl(el2))
         toEl.__livewire = component;
     },
-    updated: (el2, toEl) => {
+    updated: (el2) => {
       if (isntElement(el2))
         return;
       trigger("morph.updated", { el: el2, component });
@@ -9750,7 +9825,9 @@ on("effect", ({ component, effects }) => {
   if (!html)
     return;
   queueMicrotask(() => {
-    morph2(component, component.el, html);
+    queueMicrotask(() => {
+      morph2(component, component.el, html);
+    });
   });
 });
 
@@ -9791,13 +9868,13 @@ function dispatchEvents(component, dispatches) {
 }
 
 // js/directives/wire-transition.js
-var import_alpinejs13 = __toESM(require_module_cjs());
+var import_alpinejs11 = __toESM(require_module_cjs());
 on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
-  let visibility = import_alpinejs13.default.reactive({ state: el.__addedByMorph ? false : true });
-  import_alpinejs13.default.bind(el, {
+  let visibility = import_alpinejs11.default.reactive({ state: el.__addedByMorph ? false : true });
+  import_alpinejs11.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {
       return visibility.state;
@@ -9833,7 +9910,7 @@ function callAndClearComponentDebounces(component, callback) {
 }
 
 // js/directives/wire-wildcard.js
-var import_alpinejs14 = __toESM(require_module_cjs());
+var import_alpinejs12 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
     return;
@@ -9841,11 +9918,11 @@ on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component 
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
     attribute = attribute + ".prevent";
   }
-  let cleanupBinding = import_alpinejs14.default.bind(el, {
+  let cleanupBinding = import_alpinejs12.default.bind(el, {
     [attribute](e) {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs14.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+          import_alpinejs12.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
         });
       };
       if (el.__livewire_confirm) {
@@ -9861,14 +9938,14 @@ on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component 
 });
 
 // js/directives/wire-navigate.js
-var import_alpinejs15 = __toESM(require_module_cjs());
-import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs15.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs15.default.interceptInit(import_alpinejs15.default.skipDuringClone((el) => {
+var import_alpinejs13 = __toESM(require_module_cjs());
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
-    import_alpinejs15.default.bind(el, { ["x-navigate"]: true });
+    import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
-    import_alpinejs15.default.bind(el, { ["x-navigate.hover"]: true });
+    import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
   }
 }));
 document.addEventListener("alpine:navigating", () => {
@@ -10078,7 +10155,7 @@ function quickHash(subject) {
 }
 
 // js/directives/wire-stream.js
-directive("stream", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
+directive("stream", ({ el, directive: directive2, cleanup: cleanup2 }) => {
   let { expression, modifiers } = directive2;
   let off = on("stream", ({ name, content, replace: replace2 }) => {
     if (name !== expression)
@@ -10200,7 +10277,7 @@ function dirtyTargets(el) {
 }
 
 // js/directives/wire-model.js
-var import_alpinejs16 = __toESM(require_module_cjs());
+var import_alpinejs14 = __toESM(require_module_cjs());
 directive("model", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
   let { expression, modifiers } = directive2;
   if (!expression) {
@@ -10218,7 +10295,7 @@ directive("model", ({ el, directive: directive2, component, cleanup: cleanup2 })
   let isDebounced = modifiers.includes("debounce");
   let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-  import_alpinejs16.default.bind(el, {
+  import_alpinejs14.default.bind(el, {
     ["@change"]() {
       isLazy && update();
     },
@@ -10274,15 +10351,15 @@ function debounce(func, wait) {
 }
 
 // js/directives/wire-init.js
-var import_alpinejs17 = __toESM(require_module_cjs());
+var import_alpinejs15 = __toESM(require_module_cjs());
 directive("init", ({ el, directive: directive2 }) => {
   let fullMethod = directive2.expression ?? "$refresh";
-  import_alpinejs17.default.evaluate(el, `$wire.${fullMethod}`);
+  import_alpinejs15.default.evaluate(el, `$wire.${fullMethod}`);
 });
 
 // js/directives/wire-poll.js
-var import_alpinejs18 = __toESM(require_module_cjs());
-directive("poll", ({ el, directive: directive2, component }) => {
+var import_alpinejs16 = __toESM(require_module_cjs());
+directive("poll", ({ el, directive: directive2 }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
     triggerComponentRequest(el, directive2);
@@ -10295,7 +10372,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2) {
-  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+  import_alpinejs16.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];
@@ -10399,7 +10476,7 @@ var Livewire2 = {
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {
-    return import_alpinejs19.default.navigate;
+    return import_alpinejs17.default.navigate;
   }
 };
 if (window.Livewire)
@@ -10407,13 +10484,13 @@ if (window.Livewire)
 if (window.Alpine)
   console.warn("Detected multiple instances of Alpine running");
 window.Livewire = Livewire2;
-window.Alpine = import_alpinejs19.default;
+window.Alpine = import_alpinejs17.default;
 if (window.livewireScriptConfig === void 0) {
   document.addEventListener("DOMContentLoaded", () => {
     Livewire2.start();
   });
 }
-var export_Alpine = import_alpinejs19.default;
+var export_Alpine = import_alpinejs17.default;
 export {
   export_Alpine as Alpine,
   Livewire2 as Livewire

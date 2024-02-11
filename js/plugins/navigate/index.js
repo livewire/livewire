@@ -1,13 +1,12 @@
 import { updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
-import { packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
+import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
-import { putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
+import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, showAndStartProgressBar } from "./bar"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
-import Alpine from "alpinejs"
 
 let enablePersist = true
 let showProgressBar = true
@@ -27,7 +26,7 @@ export default function (Alpine) {
 
     Alpine.addInitSelector(() => `[${Alpine.prefixed('navigate')}]`)
 
-    Alpine.directive('navigate', (el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+    Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
@@ -60,6 +59,8 @@ export default function (Alpine) {
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
             showProgressBar && finishAndHideProgressBar()
+
+            cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
 
             updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
@@ -164,4 +165,20 @@ function nowInitializeAlpineOnTheNewPage(Alpine) {
 
 function autofocusElementsWithTheAutofocusAttribute() {
     document.querySelector('[autofocus]') && document.querySelector('[autofocus]').focus()
+}
+
+function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
+    // Create a new tree walker that skips persisted elements...
+    let walker = function (root, callback) {
+        Alpine.walk(root, (el, skip) => {
+            if (isPersistedElement(el)) skip()
+            if (isTeleportTarget(el)) skip()
+            else callback(el, skip)
+        })
+    }
+
+    // Set Alpine in motion to destroy itself on the page. If this proves
+    // to be a performance issue at some point (walking the DOM tree),
+    // we can be more surgical about cleaning up x-for/if instead...
+    Alpine.destroyTree(document.body, walker)
 }

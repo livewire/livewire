@@ -253,17 +253,17 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_use_url_on_enum_object_properties()
+    public function can_use_url_on_string_backed_enum_object_properties()
     {
         Livewire::visit([
             new class extends Component
             {
                 #[BaseUrl]
-                public EnumForUrlTesting $foo = EnumForUrlTesting::First;
+                public StringBackedEnumForUrlTesting $foo = StringBackedEnumForUrlTesting::First;
 
                 public function change()
                 {
-                    $this->foo = EnumForUrlTesting::Second;
+                    $this->foo = StringBackedEnumForUrlTesting::Second;
                 }
 
                 public function render()
@@ -285,6 +285,42 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->refresh()
             ->assertQueryStringHas('foo', 'second')
             ->assertSeeIn('@output', 'second')
+        ;
+    }
+
+    /** @test */
+    public function can_use_url_on_integer_backed_enum_object_properties()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public IntegerBackedEnumForUrlTesting $foo = IntegerBackedEnumForUrlTesting::First;
+
+                public function change()
+                {
+                    $this->foo = IntegerBackedEnumForUrlTesting::Second;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="change" dusk="button">Change</button>
+                        <h1 dusk="output">{{ $foo }}</h1>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->assertSeeIn('@output', '1')
+            ->waitForLivewire()->click('@button')
+            ->assertQueryStringHas('foo', '2')
+            ->assertSeeIn('@output', '2')
+            ->refresh()
+            ->assertQueryStringHas('foo', '2')
+            ->assertSeeIn('@output', '2')
         ;
     }
 
@@ -519,6 +555,169 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('filter')
         ;
     }
+
+    /** @test */
+    public function can_handle_empty_querystring_value_as_empty_string()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[Url]
+                public $foo;
+
+                public function setFoo()
+                {
+                    $this->foo = 'bar';
+                }
+
+                public function unsetFoo()
+                {
+                    $this->foo = '';
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
+                        <span dusk="output">@js($foo)</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output', '\'bar\'')
+            ->assertQueryStringHas('foo', 'bar')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'bar')
+            ->waitForLivewire()->click('@unsetButton')
+            ->assertSeeIn('@output', '\'\'')
+            ->assertQueryStringHas('foo', '')
+            ->refresh()
+            ->assertSeeIn('@output', '\'\'')
+            ->assertQueryStringHas('foo', '');
+    }
+
+    /** @test */
+    public function can_handle_empty_querystring_value_as_null()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[Url(nullable: true)]
+                public $foo;
+
+                public function setFoo()
+                {
+                    $this->foo = 'bar';
+                }
+
+                public function unsetFoo()
+                {
+                    $this->foo = null;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
+                        <span dusk="output">@js($foo)</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('foo')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output', '\'bar\'')
+            ->assertQueryStringHas('foo', 'bar')
+            ->refresh()
+            ->assertQueryStringHas('foo', 'bar')
+            ->waitForLivewire()->click('@unsetButton')
+            ->assertSeeIn('@output', 'null')
+            ->assertQueryStringHas('foo', '')
+            ->refresh()
+            ->assertSeeIn('@output', 'null')
+            ->assertQueryStringHas('foo', '');
+    }
+
+    /** @test */
+    public function can_handle_empty_querystring_value_as_null_or_empty_string_based_on_typehinting_of_property()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                #[Url]
+                public ?string $nullableFoo;
+
+                #[Url]
+                public string $notNullableFoo;
+
+                #[Url]
+                public $notTypehintingFoo;
+
+                public function setFoo()
+                {
+                    $this->nullableFoo = 'bar';
+                    $this->notNullableFoo = 'bar';
+                    $this->notTypehintingFoo = 'bar';
+                }
+
+                public function unsetFoo()
+                {
+                    $this->nullableFoo = null;
+                    $this->notNullableFoo = '';
+                    $this->notTypehintingFoo = null;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <button wire:click="unsetFoo" dusk="unsetButton">Unset foo</button>
+                        <span dusk="output-nullableFoo">@js($nullableFoo)</span>
+                        <span dusk="output-notNullableFoo">@js($notNullableFoo)</span>
+                        <span dusk="output-notTypehintingFoo">@js($notTypehintingFoo)</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringMissing('nullableFoo')
+            ->assertQueryStringMissing('notNullableFoo')
+            ->assertQueryStringMissing('notTypehintingFoo')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output-nullableFoo', '\'bar\'')
+            ->assertSeeIn('@output-notNullableFoo', '\'bar\'')
+            ->assertSeeIn('@output-notTypehintingFoo', '\'bar\'')
+            ->assertQueryStringHas('nullableFoo', 'bar')
+            ->assertQueryStringHas('notNullableFoo', 'bar')
+            ->assertQueryStringHas('notTypehintingFoo', 'bar')
+            ->refresh()
+            ->assertQueryStringHas('nullableFoo', 'bar')
+            ->assertQueryStringHas('notNullableFoo', 'bar')
+            ->assertQueryStringHas('notTypehintingFoo', 'bar')
+            ->waitForLivewire()->click('@unsetButton')
+            ->assertSeeIn('@output-nullableFoo', 'null')
+            ->assertSeeIn('@output-notNullableFoo', '\'\'')
+            ->assertSeeIn('@output-notTypehintingFoo', 'null')
+            ->assertQueryStringHas('nullableFoo', '')
+            ->assertQueryStringHas('notNullableFoo', '')
+            ->assertQueryStringHas('notTypehintingFoo', '')
+            ->refresh()
+            ->assertSeeIn('@output-nullableFoo', 'null')
+            ->assertSeeIn('@output-notNullableFoo', '\'\'')
+            ->assertSeeIn('@output-notTypehintingFoo', '\'\'')
+            ->assertQueryStringHas('nullableFoo', '')
+            ->assertQueryStringHas('notNullableFoo', '')
+            ->assertQueryStringHas('notTypehintingFoo', '');
+    }
 }
 
 class FormObject extends \Livewire\Form
@@ -530,8 +729,14 @@ class FormObject extends \Livewire\Form
     public $bob = 'lob';
 }
 
-enum EnumForUrlTesting: string
+enum StringBackedEnumForUrlTesting: string
 {
     case First = 'first';
     case Second = 'second';
+}
+
+enum IntegerBackedEnumForUrlTesting: int
+{
+    case First = 1;
+    case Second = 2;
 }

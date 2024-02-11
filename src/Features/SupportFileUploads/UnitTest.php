@@ -772,6 +772,18 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals($first_url, $second_url);
     }
+
+    /** @test */
+    public function file_content_can_be_retrieved_from_temporary_uploaded_files()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileReadContentComponent::class)
+            ->set('file', $file)
+            ->assertSet('content', $file->getContent());
+    }
 }
 
 class DummyMiddleware
@@ -880,6 +892,19 @@ class FileUploadInArrayComponent extends FileUploadComponent
 
     public function removePhoto($key) {
         unset($this->obj['file_uploads'][$key]);
+    }
+}
+
+class FileReadContentComponent extends FileUploadComponent
+{
+    use WithFileUploads;
+
+    public $file;
+    public $content = '';
+
+    public function updatedFile()
+    {
+        $this->content = $this->file->getContent();
     }
 }
 
