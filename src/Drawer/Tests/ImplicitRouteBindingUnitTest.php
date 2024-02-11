@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportLegacyModels\Tests;
+namespace Livewire\Drawer\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -8,10 +8,8 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
 
-class ComponentTypedPropertyBindingsUnitTest extends \Tests\TestCase
+class ImplicitRouteBindingUnitTest extends \Tests\TestCase
 {
-    use Concerns\EnableLegacyModels;
-
     /** @test */
     public function props_are_set_via_mount()
     {
@@ -81,13 +79,14 @@ class PropBoundModel extends Model
 
     public function resolveRouteBinding($value, $field = null)
     {
-        $this->value = "via-route:$value";
+        $this->value = "via-route:{$value}";
+
         return $this;
     }
 
     public function resolveChildRouteBinding($childType, $value, $field)
     {
-        return new static("via-parent:$value");
+        return new static("via-parent:{$value}");
     }
 }
 
@@ -180,7 +179,8 @@ class PropBoundModelWithSoftDelete extends Model
 
     public function resolveSoftDeletableRouteBinding($value, $field = null)
     {
-        $this->value = "via-route:trashed:$value";
+        $this->value = "via-route:trashed:{$value}";
+
         return $this;
     }
 }
