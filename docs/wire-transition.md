@@ -48,6 +48,16 @@ Currently, `wire:transition` is only supported on a single element inside a Blad
 
 If one of the above comment `<li>` elements were to get removed, you would expect Livewire to transition it out. However, because of hurdles with Livewire's underlying "morph" mechanism, this will not be the case. There is currently no way to transition dynamic lists in Livewire using `wire:transition`.
 
+As an alternative, you can use [AutoAnimate](https://auto-animate.formkit.com) library with this [Alpine.js wrapper](https://github.com/marcreichel/alpine-auto-animate). Here is a example code below:
+
+```blade
+<ul x-auto-animate>
+    @foreach ($post->comments as $comment)
+        <li wire:key="{{ $comment->id }}">{{ $comment->content }}</li>
+    @endforeach
+</ul>
+```
+
 ## Default transition style
 
 By default, Livewire applies both an opacity and a scale CSS transition to elements with `wire:transtion`. Here's a visual preview:
