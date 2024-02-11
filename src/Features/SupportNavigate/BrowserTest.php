@@ -468,13 +468,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertNotInViewPort('@first-target')
                 ->scrollTo('@first-target')
                 ->assertInViewPort('@first-target')
+
                 ->click('@link.to.second')
                 ->waitForText('On second')
                 ->assertNotInViewPort('@second-target')
                 ->scrollTo('@second-target')
+
                 ->back()
+                ->waitForText('On first')
                 ->assertInViewPort('@first-target')
+
                 ->forward()
+                ->waitForText('On second')
                 ->assertInViewPort('@second-target')
             ;
         });
