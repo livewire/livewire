@@ -43,7 +43,7 @@ export function morph(component, el, html) {
             if (isComponentRootEl(el)) toEl.__livewire = component
         },
 
-        updated: (el, toEl) => {
+        updated: (el) => {
             if (isntElement(el)) return
 
             trigger('morph.updated', { el, component })

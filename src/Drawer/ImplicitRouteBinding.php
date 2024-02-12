@@ -104,12 +104,16 @@ class ImplicitRouteBinding
         $parent = $route->parentOfParameter($parameterName);
 
         if ($parent instanceof UrlRoutable && array_key_exists($parameterName, $route->bindingFields())) {
-            if (! $model = $parent->resolveChildRouteBinding(
-                $parameterName, $parameterValue, $route->bindingFieldFor($parameterName)
-            )) {
-                throw (new ModelNotFoundException())->setModel(get_class($instance), [$parameterValue]);
+            $model = $parent->resolveChildRouteBinding($parameterName, $parameterValue, $route->bindingFieldFor($parameterName));
+        } else {
+            if ($route->allowsTrashedBindings()) {
+                $model = $instance->resolveSoftDeletableRouteBinding($parameterValue, $route->bindingFieldFor($parameterName));
+            } else {
+                $model = $instance->resolveRouteBinding($parameterValue, $route->bindingFieldFor($parameterName));
             }
-        } elseif (! $model = $instance->resolveRouteBinding($parameterValue, $route->bindingFieldFor($parameterName))) {
+        }
+
+        if (! $model) {
             throw (new ModelNotFoundException())->setModel(get_class($instance), [$parameterValue]);
         }
 

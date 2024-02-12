@@ -15,7 +15,7 @@ let commitBus = new CommitBus
 export async function requestCommit(component) {
     let commit = commitBus.add(component)
 
-    let promise = new Promise((resolve, reject) => {
+    let promise = new Promise((resolve) => {
         commit.addResolver(resolve)
     })
 
@@ -30,7 +30,7 @@ export async function requestCommit(component) {
 export async function requestCall(component, method, params) {
     let commit = commitBus.add(component)
 
-    let promise = new Promise((resolve, reject) => {
+    let promise = new Promise((resolve) => {
         commit.addCall(method, params, value => resolve(value))
     })
 
@@ -160,4 +160,3 @@ function showFailureModal(content) {
 
     showHtmlModal(html)
 }
-
