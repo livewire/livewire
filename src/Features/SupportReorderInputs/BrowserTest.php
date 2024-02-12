@@ -18,15 +18,15 @@ class BrowserTest extends BrowserTestCase
 
             public function mount() {
                 $this->items = [
-                    ['id' => 1,  'value' => 'first'],
-                    ['id' => 2,  'value' => 'second'],
+                    1 => ['id' => 1,  'value' => 'first'],
+                    2 => ['id' => 2,  'value' => 'second'],
                 ];
             }
 
             public function swap() {
                 $this->items = [
-                    ['id' => 2,  'value' => 'second'],
-                    ['id' => 1,  'value' => 'first'],
+                    2 => ['id' => 2,  'value' => 'second'],
+                    1 => ['id' => 1,  'value' => 'first'],
                 ];
             }
 
@@ -52,17 +52,17 @@ class BrowserTest extends BrowserTestCase
             ->assertInputValue('@input1', 'first')
             ->assertInputValue('@input2', 'second')
             ->waitForLivewire()->type('@input1', 'first updated')
-            
+
             ->assertInputValue('@input2', 'second')
             // Swap the data array around
             ->waitForLivewire()->click("@button")
-            
+
             // Check initial bound data is correct
             ->assertInputValue('@input1', 'first')
             ->assertInputValue('@input2', 'second')
             // Update one input
             ->waitForLivewire()->type('@input1', 'first updated')
-            
+
             // Check second input has not changed value too
             ->assertInputValue('@input2', 'second')
         ;
