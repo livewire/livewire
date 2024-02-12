@@ -12,7 +12,7 @@ class LivewireRouteCachingUnitTest extends TestCase
     /** @test */
     public function livewire_script_route_is_cacheable(): void
     {
-        $route = $this->getRoute('livewire/livewire.js');
+        $route = $this->getRoute('livewire/livewire.min.js');
 
         $this->cacheRoute($route, 'Livewire\Mechanisms\FrontendAssets\FrontendAssets@returnJavaScriptAsFile', "Failed to cache route 'livewire/livewire.js'");
     }
