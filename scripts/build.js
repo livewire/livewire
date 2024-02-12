@@ -29,6 +29,7 @@ fs.writeFileSync(__dirname+'/../dist/manifest.json', `
 build({
     entryPoints: [`js/index.js`],
     outfile: `dist/livewire.min.js`,
+    sourcemap: 'linked',
     bundle: true,
     minify: true,
     platform: 'browser',

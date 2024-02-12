@@ -20,8 +20,12 @@ class FrontendAssets extends Mechanism
     public function boot()
     {
         app($this::class)->setScriptRoute(function ($handle) {
-            return Route::get('/livewire/livewire.js', $handle);
+            return config('app.debug')
+                ? Route::get('/livewire/livewire.js', $handle)
+                : Route::get('/livewire/livewire.min.js', $handle);
         });
+
+        Route::get('/livewire/livewire.min.js.map', [static::class, 'maps']);
 
         Blade::directive('livewireScripts', [static::class, 'livewireScripts']);
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
@@ -64,12 +68,16 @@ class FrontendAssets extends Mechanism
 
     public function returnJavaScriptAsFile()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.js');
+        return Utils::pretendResponseIsFile(
+            config('app.debug')
+                ? __DIR__.'/../../../dist/livewire.js'
+                : __DIR__.'/../../../dist/livewire.min.js'
+        );
     }
 
     public function maps()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.js.map');
+        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.min.js.map');
     }
 
     public static function styles($options = [])
