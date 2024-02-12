@@ -105,6 +105,20 @@ trait MakesAssertions
         return $this;
     }
 
+    function assertSetStrict($name, $value)
+    {
+        $this->assertSet($name, $value, true);
+
+        return $this;
+    }
+
+    function assertNotSetStrict($name, $value)
+    {
+        $this->assertNotSet($name, $value, true);
+
+        return $this;
+    }
+
     function assertCount($name, $value)
     {
         PHPUnit::assertCount($value, $this->get($name));

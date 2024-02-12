@@ -152,8 +152,8 @@ class UnitTest extends TestCase
             return Blade::render('<html></html>');
         });
 
-        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.js');
-        $this->get('/with-livewire')->assertDontSee('/livewire/livewire.js');
+        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.min.js');
+        $this->get('/with-livewire')->assertDontSee('/livewire/livewire.min.js');
     }
 
     /** @test */
@@ -170,11 +170,11 @@ class UnitTest extends TestCase
         });
 
         \Livewire\Livewire::forceAssetInjection();
-        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
 
         \Livewire\Livewire::flushState();
         \Livewire\Livewire::forceAssetInjection();
-        $this->get('/without-livewire')->assertSee('/livewire/livewire.js');
+        $this->get('/without-livewire')->assertSee('/livewire/livewire.min.js');
     }
 
     /** @test */
@@ -188,8 +188,8 @@ class UnitTest extends TestCase
             return '<html></html>';
         });
 
-        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.js');
-        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
+        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.min.js');
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
     }
 
     /** @test */
@@ -203,8 +203,8 @@ class UnitTest extends TestCase
             return '<html></html>';
         });
 
-        $this->get('/without-persist')->assertDontSee('/livewire/livewire.js');
-        $this->get('/with-persist')->assertSee('/livewire/livewire.js');
+        $this->get('/without-persist')->assertDontSee('/livewire/livewire.min.js');
+        $this->get('/with-persist')->assertSee('/livewire/livewire.min.js');
     }
 
     /** @test */
