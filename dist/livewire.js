@@ -8743,10 +8743,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         cleanup3(() => module_default.release(effectReference));
       } else if (use === "push") {
-        let forgetCommitHandler = on2("commit", ({ component: component2, succeed }) => {
-          let beforeValue = dataGet(component2.canonical, name);
+        let forgetCommitHandler = on2("commit", ({ component: commitComponent, succeed }) => {
+          if (component !== commitComponent)
+            return;
+          let beforeValue = dataGet(component.canonical, name);
           succeed(() => {
-            let afterValue = dataGet(component2.canonical, name);
+            let afterValue = dataGet(component.canonical, name);
             if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
               return;
             push2(afterValue);

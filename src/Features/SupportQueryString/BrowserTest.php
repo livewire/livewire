@@ -723,12 +723,40 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function can_set_the_correct_query_string_parameter_when_multiple_instances_of_the_same_component_are_used()
     {
         Livewire::visit([
-            MultiComponentPage::class,
-            'first-component' => MultiComponent::class,
-            'second-component' => MultiComponent::class,
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child queryParameterName="foo" />
+                        <livewire:child queryParameterName="bar" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $queryParameterName;
+                public $value = '';
+
+                protected function queryString()
+                {
+                    return [
+                        'value' => ['as' => $this->queryParameterName],
+                    ];
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input wire:model.live="value" type="text" dusk="input" />
+                    </div>
+                    HTML;
+                }
+            },
         ])
-            ->waitForLivewire()->type('@first-component.input', 'test')
-            ->assertQueryStringHas('foo', 'test')
+            ->waitForLivewire()->type('input', 'test')
+            ->assertQueryStringHas('foo', 'test') // Type into the first component's input...
             ->assertQueryStringMissing('bar')
         ;
     }
@@ -753,39 +781,4 @@ enum IntegerBackedEnumForUrlTesting: int
 {
     case First = 1;
     case Second = 2;
-}
-
-class MultiComponentPage extends Component
-{
-    public function render()
-    {
-        return <<<'HTML'
-        <div>
-            <livewire:multi-component queryParameterName="foo" />
-            <livewire:multi-component queryParameterName="bar" />
-        </div>
-        HTML;
-    }
-}
-
-class MultiComponent extends Component
-{
-    public $queryParameterName;
-    public $value = '';
-
-    protected function queryString()
-    {
-        return [
-            'value' => ['as' => $this->queryParameterName],
-        ];
-    }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div>
-            <input wire:model.live="value" type="text" dusk="input" />
-        </div>
-        HTML;
-    }
 }
