@@ -718,6 +718,48 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('notNullableFoo', '')
             ->assertQueryStringHas('notTypehintingFoo', '');
     }
+
+    /** @test */
+    public function can_set_the_correct_query_string_parameter_when_multiple_instances_of_the_same_component_are_used()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child queryParameterName="foo" />
+                        <livewire:child queryParameterName="bar" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $queryParameterName;
+                public $value = '';
+
+                protected function queryString()
+                {
+                    return [
+                        'value' => ['as' => $this->queryParameterName],
+                    ];
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input wire:model.live="value" type="text" dusk="input" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewire()->type('input', 'test')
+            ->assertQueryStringHas('foo', 'test') // Type into the first component's input...
+            ->assertQueryStringMissing('bar')
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form

@@ -9610,10 +9610,12 @@ on("effect", ({ component, effects, cleanup: cleanup2 }) => {
       });
       cleanup2(() => import_alpinejs9.default.release(effectReference));
     } else if (use === "push") {
-      let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
-        let beforeValue = dataGet(component2.canonical, name);
+      let forgetCommitHandler = on("commit", ({ component: commitComponent, succeed }) => {
+        if (component !== commitComponent)
+          return;
+        let beforeValue = dataGet(component.canonical, name);
         succeed(() => {
-          let afterValue = dataGet(component2.canonical, name);
+          let afterValue = dataGet(component.canonical, name);
           if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
             return;
           push2(afterValue);
