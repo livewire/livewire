@@ -20,7 +20,7 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
         let cache = cachedDisplay ?? window
             .getComputedStyle(el, null)
             .getPropertyValue('display')
-            
+
         let display = (['inline', 'block', 'table', 'flex', 'grid', 'inline-flex']
             .filter(i => directive.modifiers.includes(i))[0] || 'inline-block')
 

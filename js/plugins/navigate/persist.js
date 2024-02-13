@@ -46,3 +46,7 @@ export function putPersistantElementsBack(callback) {
     // Release unused persists for garbage collection...
     els = {}
 }
+
+export function isPersistedElement(el) {
+    return el.hasAttribute('x-persist')
+}

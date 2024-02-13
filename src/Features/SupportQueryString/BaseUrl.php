@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportQueryString;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\Features\SupportFormObjects\Form;
+use ReflectionClass;
 
 #[\Attribute]
 class BaseUrl extends LivewireAttribute
@@ -13,10 +14,13 @@ class BaseUrl extends LivewireAttribute
         public $history = false,
         public $keep = false,
         public $except = null,
+        public $nullable = null,
     ) {}
 
     public function mount()
     {
+        $this->nullable = $this->determineNullability();
+
         $this->setPropertyFromQueryString();
     }
 
@@ -25,6 +29,23 @@ class BaseUrl extends LivewireAttribute
         if (! $context->mounting) return;
 
         $this->pushQueryStringEffect($context);
+    }
+
+    protected function determineNullability()
+    {
+        // It's nullable if they passed it in like: #[Url(nullable: true)]
+        if ($this->nullable !== null) return $this->nullable;
+
+        $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
+
+        // It's nullable if there's a nullable typehint like: public ?string $foo;
+        if ($reflectionClass->hasProperty($this->getSubName())) {
+            $property = $reflectionClass->getProperty($this->getSubName());
+
+            return $property->getType()?->allowsNull() ?? false;
+        }
+
+        return false;
     }
 
     public function setPropertyFromQueryString()
@@ -47,7 +68,13 @@ class BaseUrl extends LivewireAttribute
             $decoded = $this->recursivelyMergeArraysWithoutAppendingDuplicateValues($original, $decoded);
         }
 
-        $value = $decoded === null ? $initialValue : $decoded;
+        // Handle empty strings differently depending on if this
+        // field is considered "nullable" by typehint or API.
+        if ($initialValue === null) {
+            $value = $this->nullable ? null : '';
+        } else {
+            $value = $decoded === null ? $initialValue : $decoded;
+        }
 
         $this->setValue($value);
     }
@@ -94,7 +121,17 @@ class BaseUrl extends LivewireAttribute
     public function getFromUrlQueryString($name, $default = null)
     {
         if (! app('livewire')->isLivewireRequest()) {
-            return request()->query($this->urlName(), $default);
+            $value = request()->query($this->urlName(), $default);
+
+            // If the property is present in the querystring without a value, then Laravel returns
+            // the $default value. We want to return null in this case, so we can differentiate
+            // between "not present" and "present with no value". If the request is a Livewire
+            // request, we don't have that issue as we use PHP's parse_str function.
+            if (array_key_exists($name, request()->query()) && $value === $default) {
+                return null;
+            }
+
+            return $value;
         }
 
         // If this is a subsequent ajax request, we can't use Laravel's standard "request()->query()"...
@@ -117,4 +154,3 @@ class BaseUrl extends LivewireAttribute
         return $query[$key] ?? $default;
     }
 }
-
