@@ -9294,10 +9294,6 @@ function start() {
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
-function stop() {
-}
-function rescan() {
-}
 
 // js/index.js
 var import_alpinejs17 = __toESM(require_module_cjs());
@@ -10466,8 +10462,6 @@ var Livewire2 = {
   directive,
   dispatchTo,
   start,
-  stop,
-  rescan,
   first,
   find,
   getByName,

@@ -8434,10 +8434,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
     dispatch(document, "livewire:initialized");
   }
-  function stop2() {
-  }
-  function rescan() {
-  }
 
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
@@ -9592,8 +9588,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     directive: directive2,
     dispatchTo,
     start: start2,
-    stop: stop2,
-    rescan,
     first,
     find,
     getByName,
