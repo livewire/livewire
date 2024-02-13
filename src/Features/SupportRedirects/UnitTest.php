@@ -192,7 +192,7 @@ class UnitTest extends \Tests\TestCase
         session()->flash('foo', 'bar');
         $this->assertEquals('bar', session()->get('foo'));
 
-        Livewire::test(RenderOnRedirectWithSkipRenderMethod::class)->call('$refresh');
+        Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
 
         $this->assertEquals('bar', session()->get('foo'));
     }
@@ -204,7 +204,6 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('bar', session()->get('foo'));
 
         $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
-        $component->call('$refresh');
 
         $this->assertEquals('bar', session()->get('foo'));
 
@@ -220,12 +219,14 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('bar', session()->get('foo'));
 
         $component1 = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
-        $component1->call('$refresh');
 
         $component2 = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class);
-        $component2->call('$refresh');
 
         $this->assertEquals('bar', session()->get('foo'));
+
+        $component1->call('$refresh');
+
+        $this->assertNull(session()->get('foo'));
     }
 
     protected function registerNamedRoute()
@@ -338,6 +339,10 @@ HTML;
 
 class RenderOnRedirectWithSkipRenderMethod extends Component
 {
+    function mount() {
+
+    }
+
     function triggerRedirect()
     {
         $this->skipRender();
