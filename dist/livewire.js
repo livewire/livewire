@@ -5772,7 +5772,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
-    Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
+    Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate3 = evaluateLater2(expression);
       let options = {
         rootMargin: getRootMargin(modifiers),
@@ -5790,7 +5790,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup3(() => {
         observer2.disconnect();
       });
-    });
+    }));
   }
   function getThreshold(modifiers) {
     if (modifiers.includes("full"))

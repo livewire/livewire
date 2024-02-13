@@ -5008,7 +5008,7 @@ var require_module_cjs5 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("intersect", Alpine19.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5026,7 +5026,7 @@ var require_module_cjs5 = __commonJS({
         cleanup2(() => {
           observer.disconnect();
         });
-      });
+      }));
     }
     function getThreshold(modifiers) {
       if (modifiers.includes("full"))
