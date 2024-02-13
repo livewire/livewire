@@ -2953,12 +2953,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function getArrayOfRefObject(el) {
     let refObjects = [];
-    let currentEl = el;
-    while (currentEl) {
-      if (currentEl._x_refs)
-        refObjects.push(currentEl._x_refs);
-      currentEl = currentEl.parentNode;
-    }
+    findClosest(el, (i) => {
+      if (i._x_refs)
+        refObjects.push(i._x_refs);
+    });
     return refObjects;
   }
   var globalIdMemo = {};
