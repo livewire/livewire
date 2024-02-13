@@ -235,7 +235,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                             setTimeout(() => {
                                 document.getElementById('root').appendChild(nestedElement);
                                 window.readded = true;
-                            }, 2000);
+                            }, 750);
                         ">remove and re-add child</button>
 
                         <div id="removable">
