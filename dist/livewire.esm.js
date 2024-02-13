@@ -8232,6 +8232,7 @@ var Component = class {
     this.cleanups.push(cleanup2);
   }
   cleanup() {
+    delete this.el.__livewire;
     while (this.cleanups.length > 0) {
       this.cleanups.pop()();
     }

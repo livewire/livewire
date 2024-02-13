@@ -4492,6 +4492,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.cleanups.push(cleanup3);
     }
     cleanup() {
+      delete this.el.__livewire;
       while (this.cleanups.length > 0) {
         this.cleanups.pop()();
       }
