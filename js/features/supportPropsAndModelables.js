@@ -1,4 +1,3 @@
-import { findComponent } from "../store";
 import { on } from '@/hooks'
 
 // Ensure that all child components with reactive props (even deeply nested)

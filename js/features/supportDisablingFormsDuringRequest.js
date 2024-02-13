@@ -1,6 +1,5 @@
 import { getDirectives } from '@/directives'
 import { on } from '@/hooks'
-import { Livewire } from '@/index'
 import Alpine from 'alpinejs'
 
 let cleanupStackByComponentId = {}

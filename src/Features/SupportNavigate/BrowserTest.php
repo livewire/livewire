@@ -76,6 +76,8 @@ class BrowserTest extends \Tests\BrowserTestCase
                     </body>
                 </html>
             HTML));
+
+            Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
         };
     }
 
@@ -466,13 +468,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertNotInViewPort('@first-target')
                 ->scrollTo('@first-target')
                 ->assertInViewPort('@first-target')
+
                 ->click('@link.to.second')
                 ->waitForText('On second')
                 ->assertNotInViewPort('@second-target')
                 ->scrollTo('@second-target')
+
                 ->back()
+                ->waitForText('On first')
                 ->assertInViewPort('@first-target')
+
                 ->forward()
+                ->waitForText('On second')
                 ->assertInViewPort('@second-target')
             ;
         });
@@ -600,8 +607,28 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForTextIn('@text-parent', 'test')
                 ->waitForLivewire()->type('@text-input', 'testing')
                 ->waitForTextIn('@text-child', 'testing')
-                ->waitForTextIn('@text-parent', 'testing')
-                ;
+                ->waitForTextIn('@text-parent', 'testing');
+        });
+    }
+
+    /** @test */
+    public function alpine_for_loop_still_functions_after_navigation()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/page-with-alpine-for-loop')
+                ->assertSeeIn('@text', 'a,b,c')
+                ->assertScript('document.getElementById(\'alpine-for-loop\').querySelectorAll(\'p\').length', 3)
+                ->assertConsoleLogMissingWarning('value is not defined')
+
+                ->waitForNavigate()->click('@link.to.second')
+                ->assertSee('On second')
+
+                ->back()
+                ->assertSeeIn('@text', 'a,b,c')
+                ->assertScript('document.getElementById(\'alpine-for-loop\').querySelectorAll(\'p\').length', 3)
+                ->assertConsoleLogMissingWarning('value is not defined')
+            ;
         });
     }
 
@@ -992,6 +1019,25 @@ class PageWithLinkAway extends Component
             <a wire:navigate dusk="link.away" href="/page-without-livewire-component">
                 Link to page without Livewire component
             </a>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithAlpineForLoop extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-alpine-for-loop" x-data="{ items: ['a', 'b', 'c'] }">
+            <a href="/second" wire:navigate dusk="link.to.second">Go to second page</a>
+            <div dusk="text" x-text="items"></div>
+            <div id="alpine-for-loop">
+                <template x-for="(value, index) in items" :key="index">
+                    <p x-text="value"></p>
+                </template>
+            </div>
         </div>
         HTML;
     }

@@ -33,6 +33,7 @@ class Form implements Arrayable
             return $this->parentValidate($rules, $messages, $attributes);
         } catch (ValidationException $e) {
             invade($e->validator)->messages = $this->prefixErrorBag(invade($e->validator)->messages);
+            invade($e->validator)->failedRules = $this->prefixArray(invade($e->validator)->failedRules);
 
             throw $e;
         }
@@ -62,6 +63,11 @@ class Form implements Arrayable
         $raw = Arr::prependKeysWith($raw, $this->getPropertyName().'.');
 
         return new MessageBag($raw);
+    }
+
+    protected function prefixArray($array)
+    {
+        return Arr::prependKeysWith($array, $this->getPropertyName().'.');
     }
 
     public function addError($key, $message)

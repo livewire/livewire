@@ -1,4 +1,3 @@
-import Alpine from 'alpinejs'
 import { on } from './hooks'
 
 export function matchesForLivewireDirective(attributeName) {

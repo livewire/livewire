@@ -1,5 +1,4 @@
 import { callAndClearComponentDebounces } from '@/debounce'
-import { getDirectives } from '@/directives'
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 

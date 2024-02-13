@@ -91,6 +91,28 @@ By adding `wire:target` to the following `wire:loading` element, you can instruc
 
 When the above "Remove" button is pressed, the "Removing post..." message will be displayed to the user. However, the message will not be displayed when the "Save" button is pressed.
 
+### Targeting multiple actions
+
+You may find yourself in a situation where you would like `wire:loading` to react to some, but not all, actions on a page. In these cases you can pass multiple actions into `wire:target` separated by a comma. For example:
+
+``blade
+<form wire:submit="save">
+    <input type="text" wire:model.blur="title">
+
+    <!-- ... -->
+
+    <button type="submit">Save</button>
+
+    <button type="button" wire:click="remove">Remove</button>
+
+    <div wire:loading wire:target="save, remove">  <!-- [tl! highlight:2] -->
+        Updating post...
+    </div>
+</form>
+```
+
+The loading indicator ("Updating post...") will now only be shown when the "Remove" or "Save" button are pressed, and not when the `$title` field is being sent to the server.
+
 ### Targeting action parameters
 
 In situations where the same action is triggered with different parameters from multiple places on a page, you can further scope `wire:target` to a specific action by passing in additional parameters. For example, consider the following scenario where a "Remove" button exists for each post on the page:

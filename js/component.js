@@ -1,4 +1,4 @@
-import { dataSet, deepClone, deeplyEqual, diff, extractData} from '@/utils'
+import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -167,6 +167,8 @@ export class Component {
     }
 
     cleanup() {
+        delete this.el.__livewire
+
         while (this.cleanups.length > 0) {
             this.cleanups.pop()()
         }

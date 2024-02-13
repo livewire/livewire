@@ -1,4 +1,4 @@
-import { on, trigger } from '@/hooks'
+import { trigger } from '@/hooks'
 import { RequestPool } from './pool'
 import { Commit } from './commit'
 
@@ -139,4 +139,3 @@ function bufferPoolingForFiveMs(commit, callback) {
         buffersByCommit.delete(commit)
     }, 5))
 }
-
