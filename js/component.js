@@ -167,6 +167,8 @@ export class Component {
     }
 
     cleanup() {
+        delete this.el.__livewire
+
         while (this.cleanups.length > 0) {
             this.cleanups.pop()()
         }
