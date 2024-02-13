@@ -1485,17 +1485,27 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
+          if (el2._x_inited) {
+            if (el2._x_ignore)
+              skip();
+            return;
+          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          el2._x_ignore && skip();
+          if (el2._x_ignore) {
+            skip();
+          } else {
+            el2._x_inited = true;
+          }
         });
       });
     }
-    function destroyTree(root) {
-      walk(root, (el) => {
+    function destroyTree(root, walker = walk) {
+      walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
+        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1638,8 +1648,6 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
-        if (removedNodes.has(node))
-          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -2916,12 +2924,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getArrayOfRefObject(el) {
       let refObjects = [];
-      let currentEl = el;
-      while (currentEl) {
-        if (currentEl._x_refs)
-          refObjects.push(currentEl._x_refs);
-        currentEl = currentEl.parentNode;
-      }
+      findClosest(el, (i) => {
+        if (i._x_refs)
+          refObjects.push(i._x_refs);
+      });
       return refObjects;
     }
     var globalIdMemo = {};
@@ -3622,7 +3628,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            initTree(clone2);
+            skipDuringClone(() => initTree(clone2))();
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3702,7 +3708,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          initTree(clone2);
+          skipDuringClone(() => initTree(clone2))();
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
@@ -8226,6 +8232,7 @@ var Component = class {
     this.cleanups.push(cleanup2);
   }
   cleanup() {
+    delete this.el.__livewire;
     while (this.cleanups.length > 0) {
       this.cleanups.pop()();
     }
