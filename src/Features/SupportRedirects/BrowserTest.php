@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportRedirects;
 
+use Livewire\Attributes\On;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -72,6 +73,64 @@ class BrowserTest extends BrowserTestCase
         ])
         ->click('@button')
         ->waitForTextIn('@session-message', 'Session flash data');
+    }
+
+    /** @test */
+    public function session_flash_clearing_on_subsequent_requests()
+    {
+        config()->set('session.driver', 'file');
+
+        Livewire::visit([
+            new class extends Component {
+                public $foo = 0;
+
+                public function mount()
+                {
+                    session()->flash('alert', 'Session flash data');
+                }
+
+                #[On('rerender')]
+                public function rerender() {
+                    $this->foo++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <h1>Parent</h1>
+
+                    <div dusk="foo">{{$foo}}</div>
+
+                    <livewire:child />
+
+                    <div dusk="session-message">
+                        @if(session()->has('alert'))
+                            Flash exists
+                        @else
+                            Flash cleared
+                        @endif
+                    </div>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends Component {
+
+                public function rerenderParent()
+                {
+                    $this->dispatch('rerender');
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="rerenderParent" dusk="button">Make subsequent request</button>
+                </div>
+                HTML; }
+            }
+        ])
+            ->waitForTextIn('@foo', '0')
+            ->waitForTextIn('@session-message', 'Flash exists')
+            ->waitForLivewire()->click('@button')
+            ->waitForTextIn('@foo', '1')
+            ->waitForTextIn('@session-message', 'Flash cleared');
     }
 }
 
