@@ -339,10 +339,6 @@ HTML;
 
 class RenderOnRedirectWithSkipRenderMethod extends Component
 {
-    function mount() {
-
-    }
-
     function triggerRedirect()
     {
         $this->skipRender();
