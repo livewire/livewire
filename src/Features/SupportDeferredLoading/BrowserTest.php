@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as AuthUser;
 class BrowserTest extends BrowserTestCase
 {
     /** @test */
-    public function can_defer_loading_a_collection_of_models_in_blade()
+    public function can_defer_loading_of_a_collection_of_models_in_blade()
     {
         Livewire::visit(new class extends Component {
             public bool $load = false;
@@ -53,7 +53,7 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
-    public function can_defer_loading_a_collection_of_models_into_alpine_state()
+    public function can_defer_loading_of_a_collection_of_models_into_alpine_state()
     {
         Livewire::visit(new class extends Component {
             public bool $load = false;
