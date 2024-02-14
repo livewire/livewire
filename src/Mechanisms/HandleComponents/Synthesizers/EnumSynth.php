@@ -16,7 +16,7 @@ class EnumSynth extends Synth {
     static function hydrateFromType($type, $value) {
         if ($value === '') return null;
 
-        return $type::from($value);
+        return $type::tryFrom($value);
     }
 
     function dehydrate($target) {
@@ -31,6 +31,6 @@ class EnumSynth extends Synth {
 
         $class = $meta['class'];
 
-        return $class::from($value);
+        return $class::tryFrom($value);
     }
 }
