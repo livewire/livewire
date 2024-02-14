@@ -78,13 +78,11 @@ class BrowserTest extends BrowserTestCase
                     <div>
                         <button dusk="load" wire:click="loadUsers">Load Users</button>
                         <div x-data="{ users: @js($this->users) }">
-                            <template x-if="users.length > 0">
-                                <ul>
-                                    <template x-for="user in users" :key="user.id">
-                                        <li x-text="user.name"></li>
-                                    </template>
-                                </ul>
-                            </template>
+                            <ul>
+                                <template x-for="user in users" :key="user.id">
+                                    <li x-text="user.name"></li>
+                                </template>
+                            </ul>
                         </div>
                     </div>
                 BLADE;
