@@ -47,6 +47,23 @@ class UnitTest extends \Tests\TestCase
     }
 
     #[Test]
+    public function handles_if_statements_with_calculation_inside()
+    {
+        Livewire::component('foo', new class extends \Livewire\Component {
+            public $someProperty = 1.5;
+
+            public function render() {
+                return '<div> @if ($someProperty > 0) <span> {{ $someProperty }} </span> @endif </div>';
+            }
+        });
+
+        $output = Blade::render('<livewire:foo />');
+
+        $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
+        $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
+    }
+
+    #[Test]
     #[DataProvider('templatesProvider')]
     function foo($occurrences, $template, $expectedCompiled = null)
     {
