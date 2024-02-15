@@ -350,7 +350,7 @@ Here's an example of creating a "Cancel Upload" button in a Livewire component u
 
 When "Cancel upload" is pressed, the file upload will request will be aborted and the file input will be cleared. The user can now attempt another upload with a different file.
 
-Alternativaly, you can call `cancelUpload(...)` from Alpine like so:
+Alternatively, you can call `cancelUpload(...)` from Alpine like so:
 
 ```blade
 <button type="button" x-on:click="$wire.cancelUpload('photo')">Cancel Upload</button>
