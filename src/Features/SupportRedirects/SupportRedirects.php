@@ -11,20 +11,20 @@ use function Livewire\on;
 class SupportRedirects extends ComponentHook
 {
     public static $redirectorCacheStack = [];
-    public static $atLeastOneComponentHasRedirected = false;
+    public static $atLeastOneMountedComponentHasRedirected = false;
 
     public static function provide()
     {
         // Wait until all components have been processed...
-        on('response', function () {
-            // If there was no redirect. Clear flash session data.
-            if (! static::$atLeastOneComponentHasRedirected && app()->has('session.store')) {
+        on('response', function ($response) {
+            // If there was no redirect on a subsequent component update, clear flash session data.
+            if (! static::$atLeastOneMountedComponentHasRedirected && app()->has('session.store')) {
                 session()->forget(session()->get('_flash.new'));
             }
         });
 
         on('flush-state', function () {
-            static::$atLeastOneComponentHasRedirected = false;
+            static::$atLeastOneMountedComponentHasRedirected = false;
         });
     }
 
@@ -65,6 +65,8 @@ class SupportRedirects extends ComponentHook
         $context->addEffect('redirect', $to);
         $usingNavigate && $context->addEffect('redirectUsingNavigate', true);
 
-        static::$atLeastOneComponentHasRedirected = true;
+        if (! $context->isMounting()) {
+            static::$atLeastOneMountedComponentHasRedirected = true;
+        }
     }
 }

@@ -15,6 +15,11 @@ class ComponentContext
         public $mounting = false,
     ) {}
 
+    public function isMounting()
+    {
+        return $this->mounting;
+    }
+
     public function addEffect($key, $value)
     {
         if (is_array($key)) {
