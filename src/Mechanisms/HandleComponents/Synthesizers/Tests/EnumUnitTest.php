@@ -23,7 +23,9 @@ class EnumUnitTest extends \Tests\TestCase
         $testable = Livewire::test(ComponentWithNullablePublicEnumCaster::class)
             ->assertSet('status', null, true)
             ->updateProperty('status', 'Be excellent to each other')
-            ->assertSet('status', TestingEnum::TEST);
+            ->assertSet('status', TestingEnum::TEST)
+            ->updateProperty('status', '')
+            ->assertSet('status', null, true);
 
         $this->expectException(ValueError::class);
         $testable->updateProperty('status', 'Be excellent excellent to each other');
