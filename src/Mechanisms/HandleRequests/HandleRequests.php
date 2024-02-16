@@ -14,7 +14,7 @@ class HandleRequests extends Mechanism
 
     function boot()
     {
-        if (!$this-updateRoute) {
+        if (!$this->updateRoute) {
             app($this::class)->setUpdateRoute(function ($handle) {
                 return Route::post('/livewire/update', $handle)->middleware('web');
             });
