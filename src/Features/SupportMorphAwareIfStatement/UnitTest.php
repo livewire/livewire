@@ -2,18 +2,21 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use PHPUnit\Framework\Attributes\{Test, DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
     #[Test]
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
-        Livewire::component('foo', new class extends \Livewire\Component {
-            public function render() {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
                 return '<div>@if (true) <div @if (true) @endif></div> @endif</div>';
             }
         });
@@ -49,25 +52,52 @@ class UnitTest extends \Tests\TestCase
     #[Test]
     public function handles_if_statements_with_calculation_inside()
     {
-        Livewire::component('foo', new class extends \Livewire\Component {
-            public $someProperty = 1.5;
+        $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
+        // $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
+        // ray()->clearScreen();
+        $output = $this->render(
+            $template,
+            ['someProperty' => 1.5],
+        );
 
-            public function render() {
-                return '<div> @if ($someProperty > 0) <span> {{ $someProperty }} </span> @endif </div>';
-            }
-        });
+        // $expected = '<div> <!--[if BLOCK]><![endif]--> <span> 1.5 </span>  <!--[if ENDBLOCK]><![endif]--> </div>';
 
-        $output = Blade::render('<livewire:foo />');
+        // ray($this->compileStatements($template));
+
+        // ray($output, $expected);
 
         $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
     #[Test]
-    #[DataProvider('templatesProvider')]
-    function foo($occurrences, $template, $expectedCompiled = null)
+    public function foo2()
     {
+        ray()->clearScreen();
+
+        $index = 26;//19 - `@empty`, 20 - why is `@unlessfoo` skipped?, 25
+        [$occurrences, $template] = static::templatesProvider()[$index];
+
         $compiled = $this->compile($template);
+        // $compiled = SupportMorphAwareIfStatement::compileStatements($template);
+
+        ray('foo', $template, $compiled);
+
+        $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
+        $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
+    }
+
+    #[Test]
+    #[DataProvider('templatesProvider')]
+    public function foo($occurrences, $template, $expectedCompiled = null)
+    {
+        // $compiled = $this->compile($template);
+
+        $compiled = SupportMorphAwareIfStatement::compileStatements($template);
+
+        ray()->count('test');
+        ray(ray()->counterValue('test') - 1);
+        ray('foo', $template, $compiled);
 
         $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
         $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
@@ -371,6 +401,16 @@ class UnitTest extends \Tests\TestCase
                 @ENDIF
                 HTML
             ],
+            26 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @if ($someProperty > 0)
+                        <span> {{ $someProperty }} </span>
+                    @endif
+                </div>
+                HTML
+            ],
         ];
     }
 
@@ -383,6 +423,24 @@ class UnitTest extends \Tests\TestCase
         $undo();
 
         return $html;
+    }
+
+    protected function render($string, $data = [])
+    {
+        $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
+
+        $html = Blade::render($string, $data);
+
+        $undo();
+
+        return $html;
+    }
+
+    protected function compileStatements($template)
+    {
+        $bladeCompiler = app('blade.compiler');
+
+        return $bladeCompiler->compileStatements($template);
     }
 
     protected function assertOccurrences($expected, $needle, $haystack)
