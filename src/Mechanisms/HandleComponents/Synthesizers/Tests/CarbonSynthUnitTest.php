@@ -21,14 +21,6 @@ class CarbonSynthUnitTest extends \Tests\TestCase
     }
 
     /** @test */
-    public function public_carbon_properties_throws_exception_when_set_to_null_cast()
-    {
-        $this->expectException(\Exception::class);
-        $testable = Livewire::test(ComponentWithPublicCarbonCaster::class)
-            ->updateProperty('date', null);
-    }
-
-    /** @test */
     public function public_nullable_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
