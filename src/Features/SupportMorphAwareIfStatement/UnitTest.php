@@ -53,28 +53,12 @@ class UnitTest extends \Tests\TestCase
     public function handles_if_statements_with_calculation_inside()
     {
         $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
+
         $output = $this->compile($template);
 
         $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
-
-    // #[Test]
-    // public function foo2()
-    // {
-    //     ray()->clearScreen();
-
-    //     $index = 26;//19 - `@empty`, 20 - why is `@unlessfoo` skipped?, 25
-    //     [$occurrences, $template] = static::templatesProvider()[$index];
-
-    //     $compiled = $this->compile($template);
-    //     // $compiled = SupportMorphAwareIfStatement::compileStatements($template);
-
-    //     ray('foo', $template, $compiled);
-
-    //     $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
-    //     $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
-    // }
 
     #[Test]
     #[DataProvider('templatesProvider')]
@@ -348,24 +332,24 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
-            // 21 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (0 < 1) bar="bob" @endif></div>
-            //     HTML
-            // ],
-            // 22 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
-            //     HTML
-            // ],
-            // 23 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (1 > 0) bar="bob" @endif></div>
-            //     HTML
-            // ],
+            21 => [
+                0,
+                <<<'HTML'
+                <div @if (0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            22 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            23 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0) bar="bob" @endif></div>
+                HTML
+            ],
             24 => [
                 1,
                 <<<'HTML'
