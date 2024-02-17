@@ -53,51 +53,34 @@ class UnitTest extends \Tests\TestCase
     public function handles_if_statements_with_calculation_inside()
     {
         $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
-        // $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
-        // ray()->clearScreen();
-        $output = $this->render(
-            $template,
-            ['someProperty' => 1.5],
-        );
-
-        // $expected = '<div> <!--[if BLOCK]><![endif]--> <span> 1.5 </span>  <!--[if ENDBLOCK]><![endif]--> </div>';
-
-        // ray($this->compileStatements($template));
-
-        // ray($output, $expected);
+        $output = $this->compile($template);
 
         $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
-    #[Test]
-    public function foo2()
-    {
-        ray()->clearScreen();
+    // #[Test]
+    // public function foo2()
+    // {
+    //     ray()->clearScreen();
 
-        $index = 26;//19 - `@empty`, 20 - why is `@unlessfoo` skipped?, 25
-        [$occurrences, $template] = static::templatesProvider()[$index];
+    //     $index = 26;//19 - `@empty`, 20 - why is `@unlessfoo` skipped?, 25
+    //     [$occurrences, $template] = static::templatesProvider()[$index];
 
-        $compiled = $this->compile($template);
-        // $compiled = SupportMorphAwareIfStatement::compileStatements($template);
+    //     $compiled = $this->compile($template);
+    //     // $compiled = SupportMorphAwareIfStatement::compileStatements($template);
 
-        ray('foo', $template, $compiled);
+    //     ray('foo', $template, $compiled);
 
-        $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
-        $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
-    }
+    //     $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
+    //     $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);
+    // }
 
     #[Test]
     #[DataProvider('templatesProvider')]
     public function foo($occurrences, $template, $expectedCompiled = null)
     {
-        // $compiled = $this->compile($template);
-
-        $compiled = SupportMorphAwareIfStatement::compileStatements($template);
-
-        ray()->count('test');
-        ray(ray()->counterValue('test') - 1);
-        ray('foo', $template, $compiled);
+        $compiled = $this->compile($template);
 
         $this->assertOccurrences($occurrences, '<!--[if BLOCK]><![endif]-->', $compiled);
         $this->assertOccurrences($occurrences, '<!--[if ENDBLOCK]><![endif]-->', $compiled);

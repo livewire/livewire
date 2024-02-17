@@ -19,33 +19,6 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
     public static function registerPrecompilers()
     {
-        $generatePattern = function ($directives) {
-            $directivesPattern = '('
-                .collect($directives)
-                    // Ensure longer directives are in the pattern before shorter ones...
-                    ->sortBy(fn ($directive) => strlen($directive), descending: true)
-                    // Only match directives that are an exact match and not ones that
-                    // simply start with the provided directive here...
-                    ->map(fn ($directive) => $directive.'(?![a-zA-Z])')
-                    // @empty is a special case in that it can be used as a standalone directive
-                    // and also within a @forelese statement. We only want to target when it's standalone
-                    // by enforcing @empty has an opening parenthesis after it when matching...
-                    ->map(fn ($directive) => str($directive)->startsWith('@empty') ? $directive.'[^\S\r\n]*\(' : $directive)
-                    ->join('|')
-            .')';
-
-            $pattern = '/
-                '.$directivesPattern.'  # Blade directives: (@if|@foreach|...)
-                (?!                     # Not followed by:
-                    [^<]*               # ...
-                    (?<![?=-])          # ... (Make sure we don\'t confuse ?>, ->, and =>, with HTML opening tag closings)
-                    >                   # A ">" character that isn\'t preceded by a "<" character (meaning it\'s outside of a tag)
-                )
-            /mUxi';
-
-            return $pattern;
-        };
-
         $directives = [
             '@if' => '@endif',
             '@unless' => '@endunless',
@@ -68,57 +41,30 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 $directives['@'.$conditionalDirective] = '@end'.$conditionalDirective;
             }
 
-            $openings = array_keys($directives);
-            $closings = array_values($directives);
-
-            $entire = static::compileStatements($entire, $openings, $closings);
-
-            // ray($generatePattern($openings));
-            // ray($generatePattern($closings));
-
-            // $entire = preg_replace_callback($generatePattern($openings), function ($matches) {
-            //     $original = $matches[0];
-
-            //     return '<!--[if BLOCK]><![endif]-->'.$original;
-            // }, $entire) ?? $entire;
-
-            // $entire = preg_replace_callback($generatePattern($closings), function ($matches) {
-            //     $original = $matches[0];
-
-            //     return $original.' <!--[if ENDBLOCK]><![endif]-->';
-            // }, $entire) ?? $entire;
+            $entire = static::compileDirectives($entire, $directives);
 
             return $entire;
         });
     }
 
-    public static function compileStatements($template, $openings = null, $closings = null)
+    /*
+     * This method is a modified version of the Blade compiler's `compileStatements` method.
+     * It finds all directives in the template, gets the expression if it has parentheses
+     * and prefixes the opening directives and suffixes the closing directives.
+     */
+    public static function compileDirectives($template, $directives)
     {
-        $directives = [
-            '@if' => '@endif',
-            '@unless' => '@endunless',
-            '@error' => '@enderror',
-            '@isset' => '@endisset',
-            '@empty' => '@endempty',
-            '@auth' => '@endauth',
-            '@guest' => '@endguest',
-            '@switch' => '@endswitch',
-            '@foreach' => '@endforeach',
-            '@forelse' => '@endforelse',
-            '@while' => '@endwhile',
-            '@for' => '@endfor',
-        ];
+        $openings = array_keys($directives);
+        $closings = array_values($directives);
 
-        $openings = $openings ?? array_keys($directives);
-        $closings = $closings ?? array_values($directives);
+        $openingDirectivesPattern = static::directivesPattern($openings);
+        $closingDirectivesPattern = static::directivesPattern($closings);
 
         preg_match_all(
             '/\B@(@?\w+(?:::\w+)?)([ \t]*)(\( ( [\S\s]*? ) \))?/x',
             $template,
             $matches
         );
-
-        // ray($matches);
 
         $offset = 0;
 
@@ -158,41 +104,48 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 $match[4] = $match[4].$rest;
             }
 
-            if (preg_match(static::directivesPattern($openings), $match[0])) { // str($match[0])->startsWith($openings)
-                $found = $match[0];
-
-                $foundEscaped = preg_quote($match[0]);
-
-                $prefix = '<!--[if BLOCK]><![endif]-->';
-
-                $prefixEscaped = preg_quote($prefix);
-
-                $foundWithPrefix = $prefix.$found;
-
-                $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?![^<]*(?<![?=-])>)/mUi";
-
-                $template = preg_replace($pattern, $foundWithPrefix, $template);
-            } elseif (preg_match(static::directivesPattern($closings), $match[0])) { // str($match[0])->startsWith($closings)
-                $found = $match[0];
-
-                $foundEscaped = preg_quote($match[0]);
-
-                $suffix = '<!--[if ENDBLOCK]><![endif]-->';
-
-                $suffixEscaped = preg_quote($suffix);
-
-                $foundWithSuffix = $found.$suffix;
-
-                $pattern = "/{$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
-
-                $template = preg_replace($pattern, $foundWithSuffix, $template);
+            if (preg_match($openingDirectivesPattern, $match[0])) {
+                $template = static::prefixOpeningDirective($match[0], $template);
+            } elseif (preg_match($closingDirectivesPattern, $match[0])) {
+                $template = static::suffixClosingDirective($match[0], $template);
             }
         }
 
         return $template;
     }
 
-    protected static function directivesPattern($directives) {
+    protected static function prefixOpeningDirective($found, $template)
+    {
+        $foundEscaped = preg_quote($found);
+
+        $prefix = '<!--[if BLOCK]><![endif]-->';
+
+        $prefixEscaped = preg_quote($prefix);
+
+        $foundWithPrefix = $prefix.$found;
+
+        $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?![^<]*(?<![?=-])>)/mUi";
+
+        return preg_replace($pattern, $foundWithPrefix, $template);
+    }
+
+    protected static function suffixClosingDirective($found, $template)
+    {
+        $foundEscaped = preg_quote($found);
+
+        $suffix = '<!--[if ENDBLOCK]><![endif]-->';
+
+        $suffixEscaped = preg_quote($suffix);
+
+        $foundWithSuffix = $found.$suffix;
+
+        $pattern = "/{$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+
+        return preg_replace($pattern, $foundWithSuffix, $template);
+    }
+
+    protected static function directivesPattern($directives)
+    {
         $directivesPattern = '('
             .collect($directives)
                 // Ensure longer directives are in the pattern before shorter ones...
@@ -207,10 +160,8 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 ->join('|')
         .')';
 
-        # Blade directives: (@if|@foreach|...)
+        // Blade directives: (@if|@foreach|...)
         $pattern = '/'.$directivesPattern.'/mUxi';
-
-        ray($pattern);
 
         return $pattern;
     }
