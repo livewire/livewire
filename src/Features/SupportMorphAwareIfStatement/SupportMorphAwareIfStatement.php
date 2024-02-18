@@ -60,6 +60,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $openingDirectivesPattern = static::directivesPattern($openings);
         $closingDirectivesPattern = static::directivesPattern($closings);
 
+        // First, let's match ALL blade directives on the page, not just conditionals...
         preg_match_all(
             '/\B@(@?\w+(?:::\w+)?)([ \t]*)(\( ( [\S\s]*? ) \))?/x',
             $template,
@@ -104,6 +105,8 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 $match[4] = $match[4].$rest;
             }
 
+            // Now we can check to see if the current Blade directive is a conditional,
+            // and if so, prefix/suffix it with HTML comment morph markers...
             if (preg_match($openingDirectivesPattern, $match[0])) {
                 $template = static::prefixOpeningDirective($match[0], $template);
             } elseif (preg_match($closingDirectivesPattern, $match[0])) {
