@@ -2,18 +2,21 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use PHPUnit\Framework\Attributes\{Test, DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
     #[Test]
     public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
-        Livewire::component('foo', new class extends \Livewire\Component {
-            public function render() {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
                 return '<div>@if (true) <div @if (true) @endif></div> @endif</div>';
             }
         });
@@ -47,8 +50,19 @@ class UnitTest extends \Tests\TestCase
     }
 
     #[Test]
+    public function handles_if_statements_with_calculation_inside()
+    {
+        $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
+
+        $output = $this->compile($template);
+
+        $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
+        $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
+    }
+
+    #[Test]
     #[DataProvider('templatesProvider')]
-    function foo($occurrences, $template, $expectedCompiled = null)
+    public function foo($occurrences, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 
@@ -318,24 +332,24 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
-            // 21 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (0 < 1) bar="bob" @endif></div>
-            //     HTML
-            // ],
-            // 22 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
-            //     HTML
-            // ],
-            // 23 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (1 > 0) bar="bob" @endif></div>
-            //     HTML
-            // ],
+            21 => [
+                0,
+                <<<'HTML'
+                <div @if (0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            22 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            23 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0) bar="bob" @endif></div>
+                HTML
+            ],
             24 => [
                 1,
                 <<<'HTML'
@@ -354,6 +368,16 @@ class UnitTest extends \Tests\TestCase
                 @ENDIF
                 HTML
             ],
+            26 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @if ($someProperty > 0)
+                        <span> {{ $someProperty }} </span>
+                    @endif
+                </div>
+                HTML
+            ],
         ];
     }
 
@@ -366,6 +390,24 @@ class UnitTest extends \Tests\TestCase
         $undo();
 
         return $html;
+    }
+
+    protected function render($string, $data = [])
+    {
+        $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
+
+        $html = Blade::render($string, $data);
+
+        $undo();
+
+        return $html;
+    }
+
+    protected function compileStatements($template)
+    {
+        $bladeCompiler = app('blade.compiler');
+
+        return $bladeCompiler->compileStatements($template);
     }
 
     protected function assertOccurrences($expected, $needle, $haystack)
