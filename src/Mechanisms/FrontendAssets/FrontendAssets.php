@@ -31,6 +31,15 @@ class FrontendAssets extends Mechanism
         Blade::directive('livewireScriptConfig', [static::class, 'livewireScriptConfig']);
         Blade::directive('livewireStyles', [static::class, 'livewireStyles']);
 
+        app('livewire')->provide(function() {
+            $this->publishes(
+                    [
+                    __DIR__.'/../../../dist' => public_path('vendor/livewire'),
+                ],
+                'livewire:assets',
+            );
+        });
+
         on('flush-state', function () {
             $instance = app(static::class);
 
@@ -163,7 +172,31 @@ class FrontendAssets extends Mechanism
 
         $token = app()->has('session.store') ? csrf_token() : '';
 
+        $assetWarning = null;
+
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
+        
+        // Use static assets if they have been published
+        if (file_exists(public_path('vendor/livewire/manifest.json'))) {
+            $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
+            $versionedFileName = $publishedManifest['/livewire.js'];
+
+            $fileName = config('app.debug') ? '/livewire.js' : '/livewire.min.js';
+
+            $versionedFileName = "{$fileName}?id={$versionedFileName}";
+
+            $assertUrl = config('livewire.asset_url') ?? url("vendor/livewire{$versionedFileName}");
+
+            $url = $assertUrl;
+
+            if ($manifest !== $publishedManifest) {
+                $assetWarning = <<<HTML
+                <script {$nonce}>
+                    console.warn('Livewire: The published Livewire assets are out of date\\n See: https://livewire.laravel.com/docs/installation#publishing-livewires-frontend-assets')
+                </script>
+                HTML;
+            }
+        }
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
@@ -174,6 +207,7 @@ class FrontendAssets extends Mechanism
         );
 
         return <<<HTML
+        {$assetWarning}
         <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
