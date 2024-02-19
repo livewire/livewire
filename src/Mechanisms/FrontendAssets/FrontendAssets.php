@@ -193,7 +193,7 @@ class FrontendAssets extends Mechanism
                 $assetWarning = <<<HTML
                 <script {$nonce}>
                     console.warn('Livewire: The published Livewire assets are out of date\\n See: https://livewire.laravel.com/docs/installation#publishing-livewires-frontend-assets')
-                </script>
+                </script>\n
                 HTML;
             }
         }
@@ -207,8 +207,7 @@ class FrontendAssets extends Mechanism
         );
 
         return <<<HTML
-        {$assetWarning}
-        <script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 
