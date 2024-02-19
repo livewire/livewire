@@ -30,10 +30,9 @@ export function performFetch(uri, callback) {
     }).then(html => {
         callback(html, finalDestination)
     }).catch(error => {
-        // Should we do anything here too? or just add this comment that is used elsewhere?
-        // Should anything be shown to the user maybe?
+        // Let's eat any promise rejects so that we don't
+        // break the rest of Livewire's handling of the response...
 
-            // Let's eat any promise rejects so that we don't
-            // break the rest of Livewire's handling of the response...
+        // Should we do anything here to clean up a failed navigate request?
     });
 }

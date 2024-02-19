@@ -83,34 +83,23 @@ export async function sendRequest(pool) {
     try{
         response = await fetch(updateUri, options)
     } catch (e) {
-        // Should we handle this as an error like below
-        // or just let it go? Does any clean up need
-        // to happen if there is a network failure?
-        // If we want to handle it, what should we put
-        // in `status` and `content` to pass to `fail()`?
-        // Should anything be shown to the user maybe?
+        // Let's eat any promise rejects so that we don't
+        // break the rest of Livewire's handling of the response...
 
-            // finishProfile({ content: '{}', failed: true })
+        finishProfile({ content: '{}', failed: true })
 
-            // let preventDefault = false
+        handleFailure()
 
-            // handleFailure()
+        // Should we fire the fail() hook here, if so what should we use for status and content?
 
-            // fail({
-            //     status: response.status,
-            //     content,
-            //     preventDefault: () => preventDefault = true,
-            // })
-
-        // OR just add this comment (copied from another catch block):
-
-            // Let's eat any promise rejects so that we don't
-            // break the rest of Livewire's handling of the response...
+        // fail({
+        //     status: response.status,
+        //     content,
+        //     preventDefault: () => {},
+        // })
 
         return
     }
-
-    // if (! response) return
 
     let mutableObject = {
         status: response.status,
