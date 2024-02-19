@@ -152,3 +152,28 @@ Livewire.start()
 
 > [!warning] Not compatible with Laravel Mix
 > Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. We recommend you switch to Vite if you need this ability.
+
+## Publishing Livewire's frontend assets
+
+> [!warning] Publishing assets isn't necessary
+> Publishing Livewire's assets isn't necessary for Livewire to run. Only do this if you have a specific need for it.
+
+If you prefer the JavaScript assets to be served by your web server not through Laravel, use the `livewire:publish` command:
+
+```bash
+php artisan livewire:publish --assets
+```
+
+To keep the assets up-to-date and avoid issues in future updates, we highly recommend adding the command to the `post-update-cmd` scripts in your composer.json file:
+
+```json
+{
+    "scripts": {
+        "post-update-cmd": [
+            // Other scripts
+            "@php artisan vendor:publish --tag=livewire:assets --ansi --force"
+        ]
+    }
+}
+```
+
