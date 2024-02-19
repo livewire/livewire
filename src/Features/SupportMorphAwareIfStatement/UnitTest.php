@@ -378,6 +378,16 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            27 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @if (preg_replace('/[^a-zA-Z]+/', '', $spinner))
+                        <span> {{ $someProperty }} </span>
+                    @endif
+                </div>
+                HTML
+            ],
         ];
     }
 
