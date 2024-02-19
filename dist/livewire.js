@@ -1077,15 +1077,15 @@
     has({ objects }, name) {
       if (name == Symbol.unscopables)
         return false;
-      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+      return objects.some((obj) => Reflect.has(obj, name));
     },
     get({ objects }, name, thisProxy) {
       if (name == "toJSON")
         return collapseProxies;
-      return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+      return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
     },
     set({ objects }, name, value, thisProxy) {
-      const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+      const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
       const descriptor = Object.getOwnPropertyDescriptor(target, name);
       if (descriptor?.set && descriptor?.get)
         return Reflect.set(target, name, value, thisProxy);
@@ -4193,7 +4193,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       succeed: (i) => succeedCallbacks.push(i),
       fail: (i) => failCallbacks.push(i)
     });
-    let response = await fetch(updateUri, options);
+    let response;
+    try {
+      response = await fetch(updateUri, options);
+    } catch (e) {
+      finishProfile({ content: "{}", failed: true });
+      handleFailure();
+      return;
+    }
     let mutableObject = {
       status: response.status,
       response
@@ -7194,6 +7201,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return response.text();
     }).then((html) => {
       callback(html, finalDestination);
+    }).catch((error2) => {
     });
   }
 
