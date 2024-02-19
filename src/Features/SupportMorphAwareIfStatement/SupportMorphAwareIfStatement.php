@@ -119,7 +119,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
     protected static function prefixOpeningDirective($found, $template)
     {
-        $foundEscaped = preg_quote($found);
+        $foundEscaped = preg_quote($found, '/');
 
         $prefix = '<!--[if BLOCK]><![endif]-->';
 
@@ -134,7 +134,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
     protected static function suffixClosingDirective($found, $template)
     {
-        $foundEscaped = preg_quote($found);
+        $foundEscaped = preg_quote($found, '/');
 
         $suffix = '<!--[if ENDBLOCK]><![endif]-->';
 
