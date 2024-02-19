@@ -150,6 +150,9 @@ Alpine.plugin(Clipboard)
 Livewire.start()
 ```
 
+> [!tip] Rebuild your assets after composer update
+> Make sure that if you are manually bundling Livewire and Alpine, that you rebuild your assets whenever you run `composer update`.
+
 > [!warning] Not compatible with Laravel Mix
 > Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. We recommend you switch to Vite if you need this ability.
 
