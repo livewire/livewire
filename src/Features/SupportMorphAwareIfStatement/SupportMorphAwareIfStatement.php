@@ -142,7 +142,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         $foundWithSuffix = $found.$suffix;
 
-        $pattern = "/{$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+        $pattern = "/{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
         return preg_replace($pattern, $foundWithSuffix, $template);
     }
