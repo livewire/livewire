@@ -388,7 +388,7 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
-            27 => [
+            28 => [
                 2,
                 <<<'HTML'
                 <div>
@@ -411,6 +411,19 @@ class UnitTest extends \Tests\TestCase
                         <span> <?php echo e($someProperty); ?> </span>
                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                 </div>
+                HTML,
+            ],
+            29 => [
+                1,
+                <<<'HTML'
+                @if ($item > 2 && request()->is(str(url('/'))->replace('\\', '/')))
+                    foo
+                @endif
+                HTML,
+                <<<'HTML'
+                <!--[if BLOCK]><![endif]--><?php if($item > 2 && request()->is(str(url('/'))->replace('\\', '/'))): ?>
+                    foo
+                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                 HTML,
             ],
         ];
