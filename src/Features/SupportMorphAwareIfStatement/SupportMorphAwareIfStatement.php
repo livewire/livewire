@@ -125,7 +125,8 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         $prefixEscaped = preg_quote($prefix);
 
-        $foundWithPrefix = $prefix.$found;
+        // `preg_replace` replacement prop needs `$` and `\` to be escaped
+        $foundWithPrefix = addcslashes($prefix.$found, '$\\');
 
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?![^<]*(?<![?=-])>)/mUi";
 
@@ -140,9 +141,10 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         $suffixEscaped = preg_quote($suffix);
 
-        $foundWithSuffix = $found.$suffix;
+        // `preg_replace` replacement prop needs `$` and `\` to be escaped
+        $foundWithSuffix = addcslashes($found.$suffix, '$\\');
 
-        $pattern = "/{$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+        $pattern = "/{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
         return preg_replace($pattern, $foundWithSuffix, $template);
     }

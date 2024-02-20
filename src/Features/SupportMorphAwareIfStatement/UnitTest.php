@@ -388,6 +388,44 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
+            28 => [
+                2,
+                <<<'HTML'
+                <div>
+                    @forelse([1, 2] as $post)
+                        @for($i=0; $i < 10; $i++)
+                            <span> {{ $i }} </span>
+                        @endfor
+                    @empty
+                        <span> {{ $someProperty }} </span>
+                    @endforelse
+                </div>
+                HTML,
+                <<<'HTML'
+                <div>
+                    <!--[if BLOCK]><![endif]--><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <!--[if BLOCK]><![endif]--><?php for($i=0; $i < 10; $i++): ?>
+                            <span> <?php echo e($i); ?> </span>
+                        <?php endfor; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <span> <?php echo e($someProperty); ?> </span>
+                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                </div>
+                HTML,
+            ],
+            29 => [
+                1,
+                <<<'HTML'
+                @if ($item > 2 && request()->is(str(url('/'))->replace('\\', '/')))
+                    foo
+                @endif
+                HTML,
+                <<<'HTML'
+                <!--[if BLOCK]><![endif]--><?php if($item > 2 && request()->is(str(url('/'))->replace('\\', '/'))): ?>
+                    foo
+                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                HTML,
+            ],
         ];
     }
 
