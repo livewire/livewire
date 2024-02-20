@@ -154,7 +154,7 @@ Livewire.start()
 > Make sure that if you are manually bundling Livewire and Alpine, that you rebuild your assets whenever you run `composer update`.
 
 > [!warning] Not compatible with Laravel Mix
-> Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. We recommend you switch to Vite if you need this ability.
+> Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. Instead, we recommend that you [switch to Vite](https://laravel.com/docs/vite).
 
 ## Publishing Livewire's frontend assets
 
@@ -167,7 +167,7 @@ If you prefer the JavaScript assets to be served by your web server not through 
 php artisan livewire:publish --assets
 ```
 
-To keep the assets up-to-date and avoid issues in future updates, we highly recommend adding the command to the `post-update-cmd` scripts in your composer.json file:
+To keep assets up-to-date and avoid issues in future updates, we strongly recommend that you add the following command to your composer.json file:
 
 ```json
 {
