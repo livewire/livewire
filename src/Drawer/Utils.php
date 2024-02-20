@@ -98,7 +98,7 @@ class Utils extends BaseUtils
 
     static function matchesCache($lastModified)
     {
-        $ifModifiedSince = app(Request::class)->header('if-modified-since');
+        $ifModifiedSince = app(Request::class)->header('if-modified-since') ?? now()->toString();
 
         return $ifModifiedSince !== null && @strtotime($ifModifiedSince) === $lastModified;
     }
