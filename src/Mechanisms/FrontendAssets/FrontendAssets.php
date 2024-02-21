@@ -176,7 +176,7 @@ class FrontendAssets extends Mechanism
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
-        // Use static assets if they have been published
+        // Use static assets if they have been published...
         if (file_exists(public_path('vendor/livewire/manifest.json'))) {
             $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
             $versionedFileName = $publishedManifest['/livewire.js'];
