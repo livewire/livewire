@@ -11,7 +11,7 @@ use function Laravel\Prompts\select;
 
 class MakeCommand extends FileManipulationCommand implements PromptsForMissingInput
 {
-    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--pest} {--stub= : If you have several stubs, stored in subfolders }';
+    protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--pest} {--form} {--stub= : If you have several stubs, stored in subfolders }';
 
     protected $description = 'Create a new Livewire component';
 
@@ -42,8 +42,16 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
         $inline = $this->option('inline');
         $test = $this->option('test') || $this->option('pest');
         $testType = $this->option('pest') ? 'pest' : 'phpunit';
+        $withForm = $this->option('form');
 
         $showWelcomeMessage = $this->isFirstTimeMakingAComponent();
+
+        if($withForm) {
+            $this->call('livewire:form', [
+                'name' => $this->parser->className() . 'Form',
+                '--force' => $force,
+            ]);
+        }
 
         $class = $this->createClass($force, $inline);
         $view = $this->createView($force, $inline);
