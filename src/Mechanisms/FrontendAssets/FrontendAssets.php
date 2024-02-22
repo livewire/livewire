@@ -176,27 +176,7 @@ class FrontendAssets extends Mechanism
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\"" : '';
 
-        // Use static assets if they have been published...
-        if (file_exists(public_path('vendor/livewire/manifest.json'))) {
-            $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
-            $versionedFileName = $publishedManifest['/livewire.js'];
-
-            $fileName = config('app.debug') ? '/livewire.js' : '/livewire.min.js';
-
-            $versionedFileName = "{$fileName}?id={$versionedFileName}";
-
-            $assertUrl = config('livewire.asset_url') ?? url("vendor/livewire{$versionedFileName}");
-
-            $url = $assertUrl;
-
-            if ($manifest !== $publishedManifest) {
-                $assetWarning = <<<HTML
-                <script {$nonce}>
-                    console.warn('Livewire: The published Livewire assets are out of date\\n See: https://livewire.laravel.com/docs/installation#publishing-livewires-frontend-assets')
-                </script>\n
-                HTML;
-            }
-        }
+        [$url, $assetWarning] = static::usePublishedAssetsIfAvailable($url, $manifest, $nonce);
 
         $progressBar = config('livewire.navigate.show_progress_bar', true) ? '' : 'data-no-progress-bar';
 
@@ -229,6 +209,37 @@ class FrontendAssets extends Mechanism
         return <<<HTML
         <script{$nonce} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
         HTML;
+    }
+
+    protected static function usePublishedAssetsIfAvailable($url, $manifest, $nonce)
+    {
+        $assetWarning = null;
+
+        // Check to see if static assets have been published...
+        if (! file_exists(public_path('vendor/livewire/manifest.json'))) {
+            return [$url, $assetWarning];
+        }
+
+        $publishedManifest = json_decode(file_get_contents(public_path('vendor/livewire/manifest.json')), true);
+        $versionedFileName = $publishedManifest['/livewire.js'];
+
+        $fileName = config('app.debug') ? '/livewire.js' : '/livewire.min.js';
+
+        $versionedFileName = "{$fileName}?id={$versionedFileName}";
+
+        $assertUrl = config('livewire.asset_url') ?? url("vendor/livewire{$versionedFileName}");
+
+        $url = $assertUrl;
+
+        if ($manifest !== $publishedManifest) {
+            $assetWarning = <<<HTML
+            <script {$nonce}>
+                console.warn('Livewire: The published Livewire assets are out of date\\n See: https://livewire.laravel.com/docs/installation#publishing-livewires-frontend-assets')
+            </script>\n
+            HTML;
+        }
+
+        return [$url, $assetWarning];
     }
 
     protected static function minify($subject)
