@@ -177,6 +177,16 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
                 $input->setOption('pest', true);
             }
         }
+
+        if(
+            confirm(
+                label: 'Do you want to create a form class?',
+                default: false
+            )
+        )
+        {
+            $input->setOption('form', true);
+        }
     }
 
     private function getReservedName()
