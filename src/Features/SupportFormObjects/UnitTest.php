@@ -144,6 +144,22 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['form.title' => 'required']);
         ;
     }
+    
+    /** @test */
+    function can_validate_a_specific_rule_has_errors_on_update_in_a_form_object()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateOnUpdateStub $form;
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertHasNoErrors()
+            ->set('form.title', 'foo')
+            ->assertHasErrors(['form.title' => 'min'])
+        ;
+    }
 
     /** @test */
     function can_validate_a_form_object_with_root_component_validate_only()
@@ -743,6 +759,16 @@ class PostFormValidateStub extends Form
     protected $rules = [
         'title' => 'required',
         'content' => 'required',
+    ];
+}
+
+class PostFormValidateOnUpdateStub extends Form
+{
+    #[Validate]
+    public $title = '';
+
+    protected $rules = [
+        'title' => 'min:5',
     ];
 }
 
