@@ -426,6 +426,18 @@ class UnitTest extends \Tests\TestCase
                 <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                 HTML,
             ],
+            30 => [
+                1,
+                <<<'HTML'
+                <div> @if (preg_replace('/[^a-zA-Z]+/', '', $spinner))<span> {{ $someProperty }} </span> @endif Else</div>
+                HTML
+            ],
+            31 => [
+                1,
+                <<<'HTML'
+                <div> @for ($i=0; $i<3; $i++)<span> {{ $someProperty }} </span> @endfor Else</div>
+                HTML
+            ]
         ];
     }
 

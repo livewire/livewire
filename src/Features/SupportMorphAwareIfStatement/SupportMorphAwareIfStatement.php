@@ -135,6 +135,10 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
     protected static function suffixClosingDirective($found, $template)
     {
+        // Opening directives can contain a space before the parens, but that causes issues with closing
+        // directives. So we will just remove the trailing space if it exists...
+        $found = rtrim($found);
+
         $foundEscaped = preg_quote($found, '/');
 
         $suffix = '<!--[if ENDBLOCK]><![endif]-->';
