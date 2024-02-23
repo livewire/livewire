@@ -125,6 +125,27 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_validate_a_specific_rule_for_form_object_with_validate_only()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->form->validateOnly('title');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors(['form.title' => 'required']);
+        ;
+    }
+
+    /** @test */
     function can_validate_a_form_object_with_root_component_validate_only()
     {
         Livewire::test(new class extends Component {
