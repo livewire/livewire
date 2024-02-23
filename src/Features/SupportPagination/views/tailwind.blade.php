@@ -8,6 +8,10 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
        (\$el.closest('{$scrollTo}') || document.querySelector('{$scrollTo}')).scrollIntoView()
     JS
     : '';
+
+if (! isset($text)) {
+    $text = true;
+}
 @endphp
 
 <div>
@@ -39,18 +43,24 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                 </span>
             </div>
 
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-sm text-gray-700 leading-5">
-                        <span>{!! __('Showing') !!}</span>
-                        <span class="font-medium">{{ $paginator->firstItem() }}</span>
-                        <span>{!! __('to') !!}</span>
-                        <span class="font-medium">{{ $paginator->lastItem() }}</span>
-                        <span>{!! __('of') !!}</span>
-                        <span class="font-medium">{{ $paginator->total() }}</span>
-                        <span>{!! __('results') !!}</span>
-                    </p>
-                </div>
+            <div @class([
+                'hidden sm:flex-1 sm:flex sm:items-center',
+                'sm:justify-between' => $text,
+                'sm:justify-center' => !$text,
+                ])>
+                @if ($text)
+                    <div>
+                        <p class="text-sm text-gray-700 leading-5">
+                            <span>{!! __('Showing') !!}</span>
+                            <span class="font-medium">{{ $paginator->firstItem() }}</span>
+                            <span>{!! __('to') !!}</span>
+                            <span class="font-medium">{{ $paginator->lastItem() }}</span>
+                            <span>{!! __('of') !!}</span>
+                            <span class="font-medium">{{ $paginator->total() }}</span>
+                            <span>{!! __('results') !!}</span>
+                        </p>
+                    </div>
+                @endif
 
                 <div>
                     <span class="relative z-0 inline-flex rounded-md shadow-sm">
