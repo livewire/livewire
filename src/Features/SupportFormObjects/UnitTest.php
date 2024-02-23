@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Attributes\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\Form;
@@ -99,6 +100,22 @@ class UnitTest extends \Tests\TestCase
         ->assertHasNoErrors()
         ->call('save')
         ->assertHasErrors(['form.title' => 'required'])
+        ;
+    }
+
+    /** @test */
+    function can_validate_a_specific_rule_has_errors_on_update_in_a_form_object()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateOnUpdateStub $form;
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertHasNoErrors()
+            ->set('form.title', 'foo')
+            ->assertHasErrors(['form.title' => 'min'])
         ;
     }
 
@@ -722,6 +739,16 @@ class PostFormValidateStub extends Form
     protected $rules = [
         'title' => 'required',
         'content' => 'required',
+    ];
+}
+
+class PostFormValidateOnUpdateStub extends Form
+{
+    #[Rule]
+    public $title = '';
+
+    protected $rules = [
+        'title' => 'min:5',
     ];
 }
 
