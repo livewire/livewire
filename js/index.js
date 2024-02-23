@@ -1,7 +1,7 @@
 import { dispatchGlobal as dispatch, dispatchTo, on } from './events'
 import { find, first, getByName, all } from './store'
 import { start } from './lifecycle'
-import { on as hook, trigger } from './hooks'
+import { on as hook, trigger, triggerAsync } from './hooks'
 import { directive } from './directives'
 import Alpine from 'alpinejs'
 
@@ -15,6 +15,7 @@ let Livewire = {
     all,
     hook,
     trigger,
+    triggerAsync,
     dispatch,
     on,
     get navigate() {
