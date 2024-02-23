@@ -1290,7 +1290,6 @@ var require_module_cjs = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      Alpine: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
@@ -1376,24 +1375,6 @@ var require_module_cjs = __commonJS({
       return [wrappedEffect, () => {
         cleanup2();
       }];
-    }
-    function watch(getter, callback) {
-      let firstTime = true;
-      let oldValue;
-      let effectReference = effect(() => {
-        let value = getter();
-        JSON.stringify(value);
-        if (!firstTime) {
-          queueMicrotask(() => {
-            callback(value, oldValue);
-            oldValue = value;
-          });
-        } else {
-          oldValue = value;
-        }
-        firstTime = false;
-      });
-      return () => release(effectReference);
     }
     function dispatch3(el, name, detail = {}) {
       el.dispatchEvent(new CustomEvent(name, {
@@ -1485,27 +1466,17 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
-          if (el2._x_inited) {
-            if (el2._x_ignore)
-              skip();
-            return;
-          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          if (el2._x_ignore) {
-            skip();
-          } else {
-            el2._x_inited = true;
-          }
+          el2._x_ignore && skip();
         });
       });
     }
-    function destroyTree(root, walker = walk) {
-      walker(root, (el) => {
+    function destroyTree(root) {
+      walk(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
-        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1561,17 +1532,21 @@ var require_module_cjs = __commonJS({
       observer.disconnect();
       currentlyObserving = false;
     }
-    var queuedMutations = [];
+    var recordQueue = [];
+    var willProcessRecordQueue = false;
     function flushObserver() {
-      let records = observer.takeRecords();
-      queuedMutations.push(() => records.length > 0 && onMutate(records));
-      let queueLengthWhenTriggered = queuedMutations.length;
-      queueMicrotask(() => {
-        if (queuedMutations.length === queueLengthWhenTriggered) {
-          while (queuedMutations.length > 0)
-            queuedMutations.shift()();
-        }
-      });
+      recordQueue = recordQueue.concat(observer.takeRecords());
+      if (recordQueue.length && !willProcessRecordQueue) {
+        willProcessRecordQueue = true;
+        queueMicrotask(() => {
+          processRecordQueue();
+          willProcessRecordQueue = false;
+        });
+      }
+    }
+    function processRecordQueue() {
+      onMutate(recordQueue);
+      recordQueue.length = 0;
     }
     function mutateDom(callback) {
       if (!currentlyObserving)
@@ -1596,16 +1571,16 @@ var require_module_cjs = __commonJS({
         deferredMutations = deferredMutations.concat(mutations);
         return;
       }
-      let addedNodes = /* @__PURE__ */ new Set();
-      let removedNodes = /* @__PURE__ */ new Set();
+      let addedNodes = [];
+      let removedNodes = [];
       let addedAttributes = /* @__PURE__ */ new Map();
       let removedAttributes = /* @__PURE__ */ new Map();
       for (let i = 0; i < mutations.length; i++) {
         if (mutations[i].target._x_ignoreMutationObserver)
           continue;
         if (mutations[i].type === "childList") {
-          mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.add(node));
-          mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.add(node));
+          mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.push(node));
+          mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.push(node));
         }
         if (mutations[i].type === "attributes") {
           let el = mutations[i].target;
@@ -1638,7 +1613,7 @@ var require_module_cjs = __commonJS({
         onAttributeAddeds.forEach((i) => i(el, attrs));
       });
       for (let node of removedNodes) {
-        if (addedNodes.has(node))
+        if (addedNodes.includes(node))
           continue;
         onElRemoveds.forEach((i) => i(node));
         destroyTree(node);
@@ -1648,6 +1623,8 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
+        if (removedNodes.includes(node))
+          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -1695,15 +1672,15 @@ var require_module_cjs = __commonJS({
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Reflect.has(obj, name));
+        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
           return collapseProxies;
-        return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
+        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
+        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return Reflect.set(target, name, value, thisProxy);
@@ -1812,7 +1789,7 @@ var require_module_cjs = __commonJS({
       }
     }
     function handleError(error2, el, expression = void 0) {
-      error2 = Object.assign(error2 != null ? error2 : { message: "No error message given." }, { el, expression });
+      Object.assign(error2, { el, expression });
       console.warn(`Alpine Expression Error: ${error2.message}
 
 ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
@@ -1925,7 +1902,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return {
         before(directive22) {
           if (!directiveHandlers[directive22]) {
-            console.warn(String.raw`Cannot find directive \`${directive22}\`. \`${name}\` will use the default order of execution`);
+            console.warn("Cannot find directive `${directive}`. `${name}` will use the default order of execution");
             return;
           }
           const pos = directiveOrder.indexOf(directive22);
@@ -2719,25 +2696,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function entangle({ get: outerGet, set: outerSet }, { get: innerGet, set: innerSet }) {
       let firstRun = true;
       let outerHash;
-      let innerHash;
       let reference = effect(() => {
-        let outer = outerGet();
-        let inner = innerGet();
+        const outer = outerGet();
+        const inner = innerGet();
         if (firstRun) {
           innerSet(cloneIfObject2(outer));
           firstRun = false;
+          outerHash = JSON.stringify(outer);
         } else {
-          let outerHashLatest = JSON.stringify(outer);
-          let innerHashLatest = JSON.stringify(inner);
+          const outerHashLatest = JSON.stringify(outer);
           if (outerHashLatest !== outerHash) {
             innerSet(cloneIfObject2(outer));
-          } else if (outerHashLatest !== innerHashLatest) {
-            outerSet(cloneIfObject2(inner));
+            outerHash = outerHashLatest;
           } else {
+            outerSet(cloneIfObject2(inner));
+            outerHash = JSON.stringify(inner);
           }
         }
-        outerHash = JSON.stringify(outerGet());
-        innerHash = JSON.stringify(innerGet());
+        JSON.stringify(innerGet());
+        JSON.stringify(outerGet());
       });
       return () => {
         release(reference);
@@ -2846,7 +2823,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.5",
+      version: "3.13.3",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -2894,24 +2871,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cloneNode,
       bound: getBinding,
       $data: scope,
-      watch,
       walk,
       data,
       bind: bind2
     };
     var alpine_default = Alpine19;
-    var import_reactivity10 = __toESM2(require_reactivity());
+    var import_reactivity9 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
-    magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key, callback) => {
+    magic("watch", (el, { evaluateLater: evaluateLater2, effect: effect3 }) => (key, callback) => {
       let evaluate2 = evaluateLater2(key);
-      let getter = () => {
-        let value;
-        evaluate2((i) => value = i);
-        return value;
-      };
-      let unwatch = watch(getter, callback);
-      cleanup2(unwatch);
+      let firstTime = true;
+      let oldValue;
+      let effectReference = effect3(() => evaluate2((value) => {
+        JSON.stringify(value);
+        if (!firstTime) {
+          queueMicrotask(() => {
+            callback(value, oldValue);
+            oldValue = value;
+          });
+        } else {
+          oldValue = value;
+        }
+        firstTime = false;
+      }));
+      el._x_effects.delete(effectReference);
     });
     magic("store", getStores);
     magic("data", (el) => scope(el));
@@ -2924,10 +2908,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getArrayOfRefObject(el) {
       let refObjects = [];
-      findClosest(el, (i) => {
-        if (i._x_refs)
-          refObjects.push(i._x_refs);
-      });
+      let currentEl = el;
+      while (currentEl) {
+        if (currentEl._x_refs)
+          refObjects.push(currentEl._x_refs);
+        currentEl = currentEl.parentNode;
+      }
       return refObjects;
     }
     var globalIdMemo = {};
@@ -2948,31 +2934,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_ids[name])
         el._x_ids[name] = findAndIncrementId(name);
     }
-    magic("id", (el, { cleanup: cleanup2 }) => (name, key = null) => {
-      let cacheKey = `${name}${key ? `-${key}` : ""}`;
-      return cacheIdByNameOnElement(el, cacheKey, cleanup2, () => {
-        let root = closestIdRoot(el, name);
-        let id = root ? root._x_ids[name] : findAndIncrementId(name);
-        return key ? `${name}-${id}-${key}` : `${name}-${id}`;
-      });
+    magic("id", (el) => (name, key = null) => {
+      let root = closestIdRoot(el, name);
+      let id = root ? root._x_ids[name] : findAndIncrementId(name);
+      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
     });
-    interceptClone((from, to) => {
-      if (from._x_id) {
-        to._x_id = from._x_id;
-      }
-    });
-    function cacheIdByNameOnElement(el, cacheKey, cleanup2, callback) {
-      if (!el._x_id)
-        el._x_id = {};
-      if (el._x_id[cacheKey])
-        return el._x_id[cacheKey];
-      let output = callback();
-      el._x_id[cacheKey] = output;
-      cleanup2(() => {
-        delete el._x_id[cacheKey];
-      });
-      return output;
-    }
     magic("el", (el) => el);
     warnMissingPluginMagic("Focus", "focus", "focus");
     warnMissingPluginMagic("Persist", "persist", "persist");
@@ -3271,7 +3237,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         setValue(getInputValue(el, modifiers, e, getValue()));
       });
       if (modifiers.includes("fill")) {
-        if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
+        if ([null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
           el.dispatchEvent(new Event(event, {}));
         }
       }
@@ -3539,21 +3505,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isObject2(items)) {
           items = Object.entries(items).map(([key, value]) => {
             let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-            evaluateKey((value2) => {
-              if (keys.includes(value2))
-                warn("Duplicate key on x-for", el);
-              keys.push(value2);
-            }, { scope: { index: key, ...scope2 } });
+            evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
             scopes.push(scope2);
           });
         } else {
           for (let i = 0; i < items.length; i++) {
             let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-            evaluateKey((value) => {
-              if (keys.includes(value))
-                warn("Duplicate key on x-for", el);
-              keys.push(value);
-            }, { scope: { index: i, ...scope2 } });
+            evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
             scopes.push(scope2);
           }
         }
@@ -3601,7 +3559,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let marker = document.createElement("div");
           mutateDom(() => {
             if (!elForSpot)
-              warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
+              warn(`x-for ":key" is undefined or invalid`, templateEl);
             elForSpot.after(marker);
             elInSpot.after(elForSpot);
             elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -3628,7 +3586,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            skipDuringClone(() => initTree(clone2))();
+            initTree(clone2);
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3708,7 +3666,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          skipDuringClone(() => initTree(clone2))();
+          initTree(clone2);
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
@@ -3737,11 +3695,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let names = evaluate2(expression);
       names.forEach((name) => setIdRoot(el, name));
     });
-    interceptClone((from, to) => {
-      if (from._x_ids) {
-        to._x_ids = from._x_ids;
-      }
-    });
     mapAttributes(startingWith("@", into(prefix("on:"))));
     directive2("on", skipDuringClone((el, { value, modifiers, expression }, { cleanup: cleanup2 }) => {
       let evaluate2 = expression ? evaluateLater(el, expression) : () => {
@@ -3766,7 +3719,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       directive2(directiveName, (el) => warn(`You can't use [x-${directiveName}] without first installing the "${name}" plugin here: https://alpinejs.dev/plugins/${slug}`, el));
     }
     alpine_default.setEvaluator(normalEvaluator);
-    alpine_default.setReactivityEngine({ reactive: import_reactivity10.reactive, effect: import_reactivity10.effect, release: import_reactivity10.stop, raw: import_reactivity10.toRaw });
+    alpine_default.setReactivityEngine({ reactive: import_reactivity9.reactive, effect: import_reactivity9.effect, release: import_reactivity9.stop, raw: import_reactivity9.toRaw });
     var src_default = alpine_default;
     var module_default = src_default;
   }
@@ -3794,13 +3747,12 @@ var require_module_cjs2 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      collapse: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("collapse", collapse3);
-      collapse3.inline = (el, { modifiers }) => {
+      Alpine19.directive("collapse", collapse2);
+      collapse2.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
         el._x_doShow = () => {
@@ -3808,7 +3760,7 @@ var require_module_cjs2 = __commonJS({
         el._x_doHide = () => {
         };
       };
-      function collapse3(el, { modifiers }) {
+      function collapse2(el, { modifiers }) {
         let duration = modifierValue(modifiers, "duration", 250) / 1e3;
         let floor = modifierValue(modifiers, "min", 0);
         let fullyHide = !modifiers.includes("min");
@@ -4686,8 +4638,7 @@ var require_module_cjs3 = __commonJS({
     });
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      focus: () => src_default
+      default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
@@ -4811,13 +4762,9 @@ var require_module_cjs3 = __commonJS({
           allowOutsideClick: true,
           fallbackFocus: () => el
         };
-        if (modifiers.includes("noautofocus")) {
-          options.initialFocus = false;
-        } else {
-          let autofocusEl = el.querySelector("[autofocus]");
-          if (autofocusEl)
-            options.initialFocus = autofocusEl;
-        }
+        let autofocusEl = el.querySelector("[autofocus]");
+        if (autofocusEl)
+          options.initialFocus = autofocusEl;
         let trap = (0, import_focus_trap.createFocusTrap)(el, options);
         let undoInert = () => {
         };
@@ -4917,12 +4864,11 @@ var require_module_cjs4 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      persist: () => src_default
+      default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      let persist3 = () => {
+      let persist2 = () => {
         let alias;
         let storage;
         try {
@@ -4956,8 +4902,8 @@ var require_module_cjs4 = __commonJS({
           };
         });
       };
-      Object.defineProperty(Alpine19, "$persist", { get: () => persist3() });
-      Alpine19.magic("persist", persist3);
+      Object.defineProperty(Alpine19, "$persist", { get: () => persist2() });
+      Alpine19.magic("persist", persist2);
       Alpine19.persist = (key, { get, set }, storage = localStorage) => {
         let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
         set(initial);
@@ -5003,12 +4949,11 @@ var require_module_cjs5 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      default: () => module_default,
-      intersect: () => src_default
+      default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("intersect", Alpine19.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5026,7 +4971,7 @@ var require_module_cjs5 = __commonJS({
         cleanup2(() => {
           observer.disconnect();
         });
-      }));
+      });
     }
     function getThreshold(modifiers) {
       if (modifiers.includes("full"))
@@ -5085,7 +5030,6 @@ var require_module_cjs6 = __commonJS({
     var __toCommonJS = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var module_exports = {};
     __export(module_exports, {
-      anchor: () => src_default,
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
@@ -6624,7 +6568,7 @@ var require_module_cjs7 = __commonJS({
     var module_exports = {};
     __export(module_exports, {
       default: () => module_default,
-      morph: () => src_default
+      morph: () => morph3
     });
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
@@ -6987,12 +6931,11 @@ var require_module_cjs8 = __commonJS({
     var module_exports = {};
     __export(module_exports, {
       default: () => module_default,
-      mask: () => src_default,
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("mask", (el, { value, expression }, { effect, evaluateLater }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -7019,15 +6962,8 @@ var require_module_cjs8 = __commonJS({
           if (el._x_model)
             el._x_model.set(el.value);
         });
-        const controller = new AbortController();
-        cleanup2(() => {
-          controller.abort();
-        });
-        el.addEventListener("input", () => processInputValue(el), {
-          signal: controller.signal,
-          capture: true
-        });
-        el.addEventListener("blur", () => processInputValue(el, false), { signal: controller.signal });
+        el.addEventListener("input", () => processInputValue(el));
+        el.addEventListener("blur", () => processInputValue(el, false));
         function processInputValue(el2, shouldRestoreCursor = true) {
           let input = el2.value;
           let template = templateFn(input);
@@ -10468,6 +10404,7 @@ var Livewire2 = {
   all,
   hook: on,
   trigger,
+  triggerAsync,
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {
