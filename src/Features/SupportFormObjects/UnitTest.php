@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportFormObjects;
 
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Attributes\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\Form;
@@ -744,7 +743,7 @@ class PostFormValidateStub extends Form
 
 class PostFormValidateOnUpdateStub extends Form
 {
-    #[Rule]
+    #[Validate]
     public $title = '';
 
     protected $rules = [
