@@ -7606,8 +7606,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+            fireEventForOtherLibariesToHookInto("alpine:navigated");
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {

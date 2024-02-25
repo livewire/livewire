@@ -78,9 +78,9 @@ export default function (Alpine) {
 
                     restoreScrollPositionOrScrollToTop()
 
-                    fireEventForOtherLibariesToHookInto('alpine:navigated')
-
                     updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
+
+                    fireEventForOtherLibariesToHookInto('alpine:navigated')
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
