@@ -8964,8 +8964,8 @@ function navigate_default(Alpine19) {
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+          fireEventForOtherLibariesToHookInto("alpine:navigated");
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
