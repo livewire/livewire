@@ -32,6 +32,11 @@ trait TestsRedirects
         return $this;
     }
 
+    public function assertRedirectToRoute(string $routeName)
+    {
+        return $this->assertRedirect(route($routeName));
+    }
+
     public function assertNoRedirect()
     {
         PHPUnit::assertTrue(! isset($this->effects['redirect']));
