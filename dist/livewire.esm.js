@@ -10468,6 +10468,7 @@ var Livewire2 = {
   all,
   hook: on,
   trigger,
+  triggerAsync,
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {

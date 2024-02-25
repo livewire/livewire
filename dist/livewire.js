@@ -9594,6 +9594,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     all,
     hook: on2,
     trigger: trigger2,
+    triggerAsync,
     dispatch: dispatchGlobal,
     on: on3,
     get navigate() {
