@@ -1,4 +1,3 @@
-
 class Snapshot {
     constructor(url, html) {
         this.url = url
@@ -7,40 +6,57 @@ class Snapshot {
 }
 
 let snapshotCache = {
-    lookup: [],
+    keys: [],
+    lookup: {},
 
-    currentIndex: 0,
+    limit: 10,
 
-    has(idx) {
-        return this.lookup[idx] !== undefined
+    toKey(location) {
+        return location.toString()
     },
 
-    retrieve(idx) {
-        this.currentIndex = idx
+    has(location) {
+        return this.lookup[location] !== undefined
+    },
 
-        let snapshot = this.lookup[idx]
+    retrieve(location) {
+        let snapshot = this.lookup[location]
 
-        if (snapshot === undefined) throw 'No back button cache found for current index: ' + this.currentIndex
+        if (snapshot === undefined)
+            throw (
+                'No back button cache found for current location: ' +
+                location
+            )
 
         return snapshot
     },
 
-    replace(snapshot) {
-        this.lookup[this.currentIndex] = snapshot
-
-        return this.currentIndex
+    replace(location, snapshot) {
+        if (this.has(location)) {
+            this.lookup[location] = snapshot
+        } else {
+            this.push(location, snapshot)
+        }
     },
 
-    push(snapshot) {
-        // Delete everything forward of this point in time...
-        this.lookup.splice(this.currentIndex + 1)
+    push(location, snapshot) {
+        this.lookup[location] = snapshot
 
-        let idx = this.lookup.push(snapshot) - 1
+        let key = this.toKey(location)
+        let index = this.keys.indexOf(key)
 
-        this.currentIndex = idx
+        if (index > -1) this.keys.splice(index, 1)
 
-        return this.currentIndex
+        this.keys.unshift(key)
+
+        this.trim()
     },
+
+    trim() {
+        for (let key of this.keys.splice(this.limit)) {
+          delete this.lookup[key]
+        }
+    }
 }
 
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
@@ -51,34 +67,33 @@ export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     replaceUrl(url, document.documentElement.outerHTML)
 }
 
-export function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
-    console.log('whenTheBackOrForwardButtonIsClicked')
+export function whenTheBackOrForwardButtonIsClicked(
+    registerFallback,
+    handleHtml
+) {
     let fallback
 
-    registerFallback(i => fallback = i)
+    registerFallback(i => (fallback = i))
 
     window.addEventListener('popstate', e => {
-        console.log('popstate')
         let state = e.state || {}
 
         let alpine = state.alpine || {}
 
-        console.log('id', alpine.snapshotIdx)
-        console.log('snapshotCache', snapshotCache)
+        if (snapshotCache.has(alpine.url)) {
+            let snapshot = snapshotCache.retrieve(alpine.url)
 
-        if (snapshotCache.has(alpine.snapshotIdx)) {
-            let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
-
-            console.log('handleHtml', snapshot)
             handleHtml(snapshot.html)
         } else {
-            console.log('fallback')
             fallback(alpine.url)
         }
     })
 }
 
-export function updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination) {
+export function updateUrlAndStoreLatestHtmlForFutureBackButtons(
+    html,
+    destination
+) {
     pushUrl(destination, html)
 }
 
@@ -91,28 +106,28 @@ export function replaceUrl(url, html) {
 }
 
 function updateUrl(method, url, html) {
-    console.log('updateUrl', method, url, html)
-    let key = method === 'pushState'
-        ? snapshotCache.push(new Snapshot(url, html))
-        : snapshotCache.replace(new Snapshot(url, html))
+    let key =
+        method === 'pushState'
+            ? snapshotCache.push(url, new Snapshot(url, html))
+            : snapshotCache.replace(url, new Snapshot(url, html))
 
-    console.log('snapshotCache', snapshotCache)
     let state = history.state || {}
 
-    if (! state.alpine) state.alpine = {}
+    if (!state.alpine) state.alpine = {}
 
     state.alpine.url = url.toString()
-    state.alpine.snapshotIdx = key
 
     try {
         // 640k character limit:
-        history[method](state, document.title, url)
+        history[method](state, JSON.stringify(document.title), url)
     } catch (error) {
         if (error instanceof DOMException && error.name === 'SecurityError') {
-            console.error('Livewire: You can\'t use wire:navigate with a link to a different root domain: '+url)
+            console.error(
+                "Livewire: You can't use wire:navigate with a link to a different root domain: " +
+                    url
+            )
         }
 
         console.error(error)
     }
 }
-

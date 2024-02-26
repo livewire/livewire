@@ -69,6 +69,12 @@ export default function (Alpine) {
                     packUpPersistedTeleports(persistedEl)
                 })
 
+                if (shouldPushToHistoryState) {
+                    updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
+                } else {
+                    replaceUrl(finalDestination, html)
+                }
+
                 swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
                     removeAnyLeftOverStaleTeleportTargets(document.body)
 
@@ -79,12 +85,6 @@ export default function (Alpine) {
                     restoreScrollPositionOrScrollToTop()
 
                     fireEventForOtherLibariesToHookInto('alpine:navigated')
-
-                    if (shouldPushToHistoryState) {
-                        updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
-                    } else {
-                        replaceUrl(finalDestination, html)
-                    }
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
@@ -153,6 +153,7 @@ export default function (Alpine) {
     // Because DOMContentLoaded is fired on first load,
     // we should fire alpine:navigated as a replacement as well...
     setTimeout(() => {
+        updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
         fireEventForOtherLibariesToHookInto('alpine:navigated')
     })
 }
