@@ -52,20 +52,27 @@ export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
 }
 
 export function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
+    console.log('whenTheBackOrForwardButtonIsClicked')
     let fallback
 
     registerFallback(i => fallback = i)
 
     window.addEventListener('popstate', e => {
+        console.log('popstate')
         let state = e.state || {}
 
         let alpine = state.alpine || {}
 
+        console.log('id', alpine.snapshotIdx)
+        console.log('snapshotCache', snapshotCache)
+
         if (snapshotCache.has(alpine.snapshotIdx)) {
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
+            console.log('handleHtml', snapshot)
             handleHtml(snapshot.html)
         } else {
+            console.log('fallback')
             fallback(alpine.url)
         }
     })
@@ -84,10 +91,12 @@ export function replaceUrl(url, html) {
 }
 
 function updateUrl(method, url, html) {
+    console.log('updateUrl', method, url, html)
     let key = method === 'pushState'
         ? snapshotCache.push(new Snapshot(url, html))
         : snapshotCache.replace(new Snapshot(url, html))
 
+    console.log('snapshotCache', snapshotCache)
     let state = history.state || {}
 
     if (! state.alpine) state.alpine = {}
