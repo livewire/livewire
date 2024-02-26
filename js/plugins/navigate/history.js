@@ -80,6 +80,10 @@ export function whenTheBackOrForwardButtonIsClicked(
 
         let alpine = state.alpine || {}
 
+        // If state is an empty object, then the popstate has probably been triggered
+        // by anchor tags `#my-heading`, so we don't want to handle them.
+        if (Object.keys(state).length === 0) return
+
         if (snapshotCache.has(alpine.url)) {
             let snapshot = snapshotCache.retrieve(alpine.url)
 
