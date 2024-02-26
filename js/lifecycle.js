@@ -87,11 +87,3 @@ export function start() {
 
     dispatch(document, 'livewire:initialized')
 }
-
-export function stop() {
-    // @todo...
-}
-
-export function rescan() {
-    // @todo...
-}

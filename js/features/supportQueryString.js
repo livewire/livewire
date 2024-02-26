@@ -24,7 +24,9 @@ on('effect', ({ component, effects, cleanup }) => {
 
             cleanup(() => Alpine.release(effectReference))
         } else if (use === 'push') {
-            let forgetCommitHandler = on('commit', ({ component, succeed }) => {
+            let forgetCommitHandler = on('commit', ({ component: commitComponent, succeed }) => {
+                if (component !== commitComponent) return
+
                 let beforeValue = dataGet(component.canonical, name)
 
                 succeed(() => {

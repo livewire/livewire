@@ -22,7 +22,6 @@ class PublishCommand extends Command
         } elseif ($this->option('pagination')) {
             $this->publishPagination();
         } else {
-            $this->publishAssets();
             $this->publishConfig();
             $this->publishPagination();
         }

@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\FrontendAssets;
 
+use Illuminate\Support\Facades\Route;
+
 use function Livewire\trigger;
 
 class UnitTest extends \Tests\TestCase
@@ -32,6 +34,88 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringStartsWith('<script src="', $assets->scripts());
 
         $this->assertTrue($assets->hasRenderedScripts);
+    }
+
+    /** @test */
+    public function use_normal_scripts_url_if_app_debug_is_true()
+    {
+        config()->set('app.debug', true);
+
+        $assets = app(FrontendAssets::class);
+
+        // Call boot again, as the script route has to be set after the config is set
+        $assets->boot();
+
+        $this->assertStringContainsString('livewire.js', $assets->scripts());
+    }
+
+    /** @test */
+    public function use_minified_scripts_url_if_app_debug_is_false()
+    {
+        config()->set('app.debug', false);
+
+        $assets = app(FrontendAssets::class);
+
+        // Call boot again, as the script route has to be set after the config is set
+        $assets->boot();
+
+        $this->assertStringContainsString('livewire.min.js', $assets->scripts());
+    }
+
+    /** @test */
+    public function use_normal_scripts_file_if_app_debug_is_true()
+    {
+        config()->set('app.debug', true);
+
+        $assets = app(FrontendAssets::class);
+
+        $fileResponse = $assets->returnJavaScriptAsFile();
+
+        $this->assertEquals('livewire.js', $fileResponse->getFile()->getFilename());
+    }
+
+    /** @test */
+    public function use_minified_scripts_file_if_app_debug_is_false()
+    {
+        config()->set('app.debug', false);
+
+        $assets = app(FrontendAssets::class);
+
+        $fileResponse = $assets->returnJavaScriptAsFile();
+
+        $this->assertEquals('livewire.min.js', $fileResponse->getFile()->getFilename());
+    }
+
+    /** @test */
+    public function if_script_route_has_been_overridden_use_normal_scripts_file_if_app_debug_is_true()
+    {
+        config()->set('app.debug', true);
+
+        $assets = app(FrontendAssets::class);
+
+        $assets->setScriptRoute(function ($handle) {
+            return Route::get('/livewire/livewire.js', $handle);
+        });
+
+        $response = $this->get('/livewire/livewire.js');
+
+        $this->assertEquals('livewire.js', $response->getFile()->getFilename());
+    }
+
+    /** @test */
+    public function if_script_route_has_been_overridden_use_minified_scripts_file_if_app_debug_is_false()
+    {
+        config()->set('app.debug', false);
+
+        $assets = app(FrontendAssets::class);
+
+        $assets->setScriptRoute(function ($handle) {
+            return Route::get('/livewire/livewire.js', $handle);
+        });
+
+        $response = $this->get('/livewire/livewire.js');
+
+        $this->assertEquals('livewire.min.js', $response->getFile()->getFilename());
     }
 
     /** @test */

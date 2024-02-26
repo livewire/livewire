@@ -1695,15 +1695,15 @@ var require_module_cjs = __commonJS({
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+        return objects.some((obj) => Reflect.has(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
           return collapseProxies;
-        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+        return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+        const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return Reflect.set(target, name, value, thisProxy);
@@ -2924,12 +2924,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getArrayOfRefObject(el) {
       let refObjects = [];
-      let currentEl = el;
-      while (currentEl) {
-        if (currentEl._x_refs)
-          refObjects.push(currentEl._x_refs);
-        currentEl = currentEl.parentNode;
-      }
+      findClosest(el, (i) => {
+        if (i._x_refs)
+          refObjects.push(i._x_refs);
+      });
       return refObjects;
     }
     var globalIdMemo = {};
@@ -5010,7 +5008,7 @@ var require_module_cjs5 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("intersect", Alpine19.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5028,7 +5026,7 @@ var require_module_cjs5 = __commonJS({
         cleanup2(() => {
           observer.disconnect();
         });
-      });
+      }));
     }
     function getThreshold(modifiers) {
       if (modifiers.includes("full"))
@@ -8234,6 +8232,7 @@ var Component = class {
     this.cleanups.push(cleanup2);
   }
   cleanup() {
+    delete this.el.__livewire;
     while (this.cleanups.length > 0) {
       this.cleanups.pop()();
     }
@@ -8424,27 +8423,41 @@ var Snapshot = class {
   }
 };
 var snapshotCache = {
-  lookup: [],
-  currentIndex: 0,
-  has(idx) {
-    return this.lookup[idx] !== void 0;
+  keys: [],
+  lookup: {},
+  limit: 10,
+  toKey(location) {
+    return location.toString();
   },
-  retrieve(idx) {
-    this.currentIndex = idx;
-    let snapshot = this.lookup[idx];
+  has(location) {
+    return this.lookup[location] !== void 0;
+  },
+  retrieve(location) {
+    let snapshot = this.lookup[location];
     if (snapshot === void 0)
-      throw "No back button cache found for current index: " + this.currentIndex;
+      throw "No back button cache found for current location: " + location;
     return snapshot;
   },
-  replace(snapshot) {
-    this.lookup[this.currentIndex] = snapshot;
-    return this.currentIndex;
+  replace(location, snapshot) {
+    if (this.has(location)) {
+      this.lookup[location] = snapshot;
+    } else {
+      this.push(location, snapshot);
+    }
   },
-  push(snapshot) {
-    this.lookup.splice(this.currentIndex + 1);
-    let idx = this.lookup.push(snapshot) - 1;
-    this.currentIndex = idx;
-    return this.currentIndex;
+  push(location, snapshot) {
+    this.lookup[location] = snapshot;
+    let key = this.toKey(location);
+    let index = this.keys.indexOf(key);
+    if (index > -1)
+      this.keys.splice(index, 1);
+    this.keys.unshift(key);
+    this.trim();
+  },
+  trim() {
+    for (let key of this.keys.splice(this.limit)) {
+      delete this.lookup[key];
+    }
   }
 };
 function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
@@ -8457,8 +8470,10 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
   window.addEventListener("popstate", (e) => {
     let state = e.state || {};
     let alpine = state.alpine || {};
-    if (snapshotCache.has(alpine.snapshotIdx)) {
-      let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
+    if (Object.keys(state).length === 0)
+      return;
+    if (snapshotCache.has(alpine.url)) {
+      let snapshot = snapshotCache.retrieve(alpine.url);
       handleHtml(snapshot.html);
     } else {
       fallback2(alpine.url);
@@ -8475,14 +8490,13 @@ function replaceUrl(url, html) {
   updateUrl("replaceState", url, html);
 }
 function updateUrl(method, url, html) {
-  let key = method === "pushState" ? snapshotCache.push(new Snapshot(url, html)) : snapshotCache.replace(new Snapshot(url, html));
+  let key = method === "pushState" ? snapshotCache.push(url, new Snapshot(url, html)) : snapshotCache.replace(url, new Snapshot(url, html));
   let state = history.state || {};
   if (!state.alpine)
     state.alpine = {};
   state.alpine.url = url.toString();
-  state.alpine.snapshotIdx = key;
   try {
-    history[method](state, document.title, url);
+    history[method](state, JSON.stringify(document.title), url);
   } catch (error2) {
     if (error2 instanceof DOMException && error2.name === "SecurityError") {
       console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
@@ -8976,6 +8990,11 @@ function navigate_default(Alpine19) {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
         });
+        if (shouldPushToHistoryState) {
+          updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+        } else {
+          replaceUrl(finalDestination, html);
+        }
         swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
@@ -8983,11 +9002,6 @@ function navigate_default(Alpine19) {
           });
           restoreScrollPositionOrScrollToTop();
           fireEventForOtherLibariesToHookInto("alpine:navigated");
-          if (shouldPushToHistoryState) {
-            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
-          } else {
-            replaceUrl(finalDestination, html);
-          }
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -9027,6 +9041,7 @@ function navigate_default(Alpine19) {
     });
   });
   setTimeout(() => {
+    updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
     fireEventForOtherLibariesToHookInto("alpine:navigated");
   });
 }
@@ -9321,10 +9336,6 @@ function start() {
   import_alpinejs5.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
-}
-function stop() {
-}
-function rescan() {
 }
 
 // js/index.js
@@ -9637,10 +9648,12 @@ on("effect", ({ component, effects, cleanup: cleanup2 }) => {
       });
       cleanup2(() => import_alpinejs9.default.release(effectReference));
     } else if (use === "push") {
-      let forgetCommitHandler = on("commit", ({ component: component2, succeed }) => {
-        let beforeValue = dataGet(component2.canonical, name);
+      let forgetCommitHandler = on("commit", ({ component: commitComponent, succeed }) => {
+        if (component !== commitComponent)
+          return;
+        let beforeValue = dataGet(component.canonical, name);
         succeed(() => {
-          let afterValue = dataGet(component2.canonical, name);
+          let afterValue = dataGet(component.canonical, name);
           if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
             return;
           push2(afterValue);
@@ -10492,14 +10505,13 @@ var Livewire2 = {
   directive,
   dispatchTo,
   start,
-  stop,
-  rescan,
   first,
   find,
   getByName,
   all,
   hook: on,
   trigger,
+  triggerAsync,
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {
