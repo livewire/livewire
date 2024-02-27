@@ -10,26 +10,51 @@ class Test extends TestCase
     public function test()
     {
         $this->browse(function ($browser) {
+            // test wire:confirm
             $this->visitLivewireComponent($browser, Component::class)
-                ->type('@input', 'foo')
-                ->assertValue('@input', 'foo')
-                ->click('@submit')
+                ->type('@confirmInput', 'foo')
+                ->assertValue('@confirmInput', 'foo')
+                ->click('@confirmSubmit')
                 ->assertDialogOpened('please confirm')
                 ->dismissDialog()
                 ->pause(150)
-                ->assertValue('@input', 'foo');
+                ->assertValue('@confirmInput', 'foo');
 
             // as the dialog was dismissed, the button should be interactive again
-            $this->assertEquals(null, $browser->attribute('@submit', 'disabled'));
+            $this->assertEquals(null, $browser->attribute('@confirmSubmit', 'disabled'));
             // and so should the input
-            $this->assertEquals(null, $browser->attribute('@submit', 'readonly'));
-            $this->assertEquals(null, $browser->attribute('@submit', 'disabled'));
+            $this->assertEquals(null, $browser->attribute('@confirmSubmit', 'readonly'));
+            $this->assertEquals(null, $browser->attribute('@confirmSubmit', 'disabled'));
 
-            $browser->click('@submit')
+            $browser->click('@confirmSubmit')
                 ->assertDialogOpened('please confirm')
                 ->acceptDialog()
+                ->pause(200)
+                ->assertValue('@confirmInput', 'confirmed');
+
+            // Test wire:confirm.prompt
+            $browser->type('@promptInput', 'foo')
+                ->assertValue('@promptInput', 'foo')
+                ->click('@promptSubmit')
+                ->assertDialogOpened('type PROMPT')
+                ->dismissDialog()
                 ->pause(150)
-                ->assertValue('@input', 'confirmed');
+                ->assertValue('@promptInput', 'foo');
+
+            // as the dialog was dismissed, the button should be interactive again
+            $this->assertEquals(null, $browser->attribute('@promptSubmit', 'disabled'));
+            // and so should the input
+            $this->assertEquals(null, $browser->attribute('@promptSubmit', 'readonly'));
+            $this->assertEquals(null, $browser->attribute('@promptSubmit', 'disabled'));
+
+            $browser->click('@promptSubmit')
+                ->assertDialogOpened('type PROMPT')
+                ->typeInDialog('PROMPT')
+                ->acceptDialog()
+                ->pause(200)
+                ->assertValue('@promptInput', 'confirmed');
+
+            //sleep(10);
         });
     }
 }

@@ -7,11 +7,17 @@ use Livewire\Component as BaseComponent;
 
 class Component extends BaseComponent
 {
-    public ?string $data = null;
+    public ?string $confirmData = null;
+    public ?string $promptData = null;
 
-    public function dummyAction()
+    public function confirmAction()
     {
-        $this->data = 'confirmed';
+        $this->confirmData = 'confirmed';
+    }
+
+    public function promptAction()
+    {
+        $this->promptData = 'confirmed';
     }
 
     public function render()
