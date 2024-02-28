@@ -157,7 +157,6 @@ class BrowserTest extends BrowserTestCase
         $this->assertEquals(null, $browser->attribute('@input', 'readonly'));
         $this->assertEquals(null, $browser->attribute('@checkbox', 'disabled'));
 
-
         $browser->click('@button')
         ->assertDialogOpened('Type foobar')
         ->typeInDialog('foob')
