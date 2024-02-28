@@ -20,7 +20,7 @@ class TestableLivewireCanAssertRedirectToRouteUnitTest extends \Tests\TestCase
     /** @test */
     function can_assert_a_redirect_to_a_route()
     {
-        $component = Livewire::test(RedirectComponent::class);
+        $component = Livewire::test(RedirectRouteComponent::class);
 
         $component->call('performRedirect');
 
@@ -30,7 +30,7 @@ class TestableLivewireCanAssertRedirectToRouteUnitTest extends \Tests\TestCase
     /** @test */
     function can_detect_failed_redirect()
     {
-        $component = Livewire::test(RedirectComponent::class);
+        $component = Livewire::test(RedirectRouteComponent::class);
 
         $this->expectException(\PHPUnit\Framework\AssertionFailedError::class);
 
@@ -38,7 +38,7 @@ class TestableLivewireCanAssertRedirectToRouteUnitTest extends \Tests\TestCase
     }
 }
 
-class RedirectComponent extends Component
+class RedirectRouteComponent extends Component
 {
     function performRedirect()
     {
