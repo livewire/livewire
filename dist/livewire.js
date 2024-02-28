@@ -394,14 +394,19 @@
     return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
   }
   function getCsrfToken() {
-    if (document.querySelector('meta[name="csrf-token"]')) {
-      return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-    }
-    if (document.querySelector("[data-csrf]")) {
-      return document.querySelector("[data-csrf]").getAttribute("data-csrf");
-    }
-    if (window.livewireScriptConfig["csrf"] ?? false) {
-      return window.livewireScriptConfig["csrf"];
+    try {
+      if (document.querySelector('meta[name="csrf-token"]')) {
+        return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+      }
+      if (document.querySelector("[data-csrf]")) {
+        return document.querySelector("[data-csrf]").getAttribute("data-csrf");
+      }
+      if (window.livewireScriptConfig["csrf"] ?? false) {
+        return window.livewireScriptConfig["csrf"];
+      }
+    } catch (error2) {
+      console.error("An error occurred when attempting to get the CSRF token. Please check for unclosed/trailing elements.");
+      console.error(error2);
     }
     throw "Livewire: No CSRF token detected";
   }
@@ -421,7 +426,13 @@
     return null;
   }
   function getUpdateUri() {
-    return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+    try {
+      return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+    } catch (error2) {
+      console.error("An error occurred when attempting to get the update URI. Please check for unclosed/trailing elements.");
+      console.error(error2);
+    }
+    throw "Livewire: No update uri detected";
   }
   function contentIsFromDump(content) {
     return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);

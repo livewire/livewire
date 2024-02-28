@@ -169,16 +169,21 @@ export function getCsrfToken() {
     // Purposely not caching. Fetching it fresh every time ensures we're
     // not depending on a stale session's CSRF token...
 
-    if (document.querySelector('meta[name="csrf-token"]')) {
-        return document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    }
+    try {
+        if (document.querySelector('meta[name="csrf-token"]')) {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
 
-    if (document.querySelector('[data-csrf]')) {
-        return document.querySelector('[data-csrf]').getAttribute('data-csrf')
-    }
+        if (document.querySelector('[data-csrf]')) {
+            return document.querySelector('[data-csrf]').getAttribute('data-csrf')
+        }
 
-    if (window.livewireScriptConfig['csrf'] ?? false) {
-        return window.livewireScriptConfig['csrf']
+        if (window.livewireScriptConfig['csrf'] ?? false) {
+            return window.livewireScriptConfig['csrf']
+        }
+    } catch (error) {
+        console.error('An error occurred when attempting to get the CSRF token. Please check for unclosed/trailing elements.');
+        console.error(error);
     }
 
     throw 'Livewire: No CSRF token detected'
@@ -211,7 +216,15 @@ export function getNonce() {
  * Livewire's update URI. This is configurable via Livewire::setUpdateRoute(...)
  */
 export function getUpdateUri() {
-    return document.querySelector('[data-update-uri]')?.getAttribute('data-update-uri') ?? window.livewireScriptConfig['uri'] ?? null
+    try {
+        return document.querySelector('[data-update-uri]')?.getAttribute('data-update-uri') ?? window.livewireScriptConfig['uri'] ?? null
+    } catch (error) {
+        console.error('An error occurred when attempting to get the update URI. Please check for unclosed/trailing elements.');
+        console.error(error);
+    }
+
+    throw 'Livewire: No update uri detected'
+
 }
 
 export function contentIsFromDump(content) {
