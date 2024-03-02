@@ -166,5 +166,10 @@ function store($instance = null)
         {
             return app(\Livewire\Mechanisms\DataStore::class)->has($this->instance, $key, $iKey);
         }
+
+        function unset($key, $iKey = null)
+        {
+            return app(\Livewire\Mechanisms\DataStore::class)->unset($this->instance, $key, $iKey);
+        }
     };
 }
