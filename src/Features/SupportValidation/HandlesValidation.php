@@ -306,12 +306,8 @@ trait HandlesValidation
             throw $e;
         }
 
-        // If main validation passed, go through other sub-validation exceptions
-        // and throw the first one with the cumulative messages...
-        foreach ($formExceptions as $e) {
-            $e->validator->errors()->merge($cumulativeErrors);
-
-            throw $e;
+        if ($cumulativeErrors->isNotEmpty()) {
+            throw ValidationException::withMessages($cumulativeErrors->toArray());
         }
 
         // All validation has passed, we can return the data...
