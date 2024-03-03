@@ -8557,7 +8557,6 @@ function performFetch(uri, callback) {
     return response.text();
   }).then((html) => {
     callback(html, finalDestination);
-  }).catch((error2) => {
   });
 }
 
@@ -8798,7 +8797,8 @@ function injectStyles() {
 // js/plugins/navigate/page.js
 var oldBodyScriptTagHashes = [];
 var attributesExemptFromScriptTagHashing = [
-  "data-csrf"
+  "data-csrf",
+  "aria-hidden"
 ];
 function swapCurrentPageWithNewHtml(html, andThen) {
   let newDocument = new DOMParser().parseFromString(html, "text/html");
@@ -8920,6 +8920,7 @@ function ignoreAttributes(subject, attributesToRemove) {
     const regex = new RegExp(`${attr}="[^"]*"|${attr}='[^']*'`, "g");
     result = result.replace(regex, "");
   });
+  result = result.replaceAll(" ", "");
   return result.trim();
 }
 
@@ -8972,8 +8973,8 @@ function navigate_default(Alpine19) {
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+          fireEventForOtherLibariesToHookInto("alpine:navigated");
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -10476,6 +10477,7 @@ var Livewire2 = {
   all,
   hook: on,
   trigger,
+  triggerAsync,
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {

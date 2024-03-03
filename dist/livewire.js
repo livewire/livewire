@@ -7201,7 +7201,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return response.text();
     }).then((html) => {
       callback(html, finalDestination);
-    }).catch((error2) => {
     });
   }
 
@@ -7440,7 +7439,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/page.js
   var oldBodyScriptTagHashes = [];
   var attributesExemptFromScriptTagHashing = [
-    "data-csrf"
+    "data-csrf",
+    "aria-hidden"
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = new DOMParser().parseFromString(html, "text/html");
@@ -7562,6 +7562,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       const regex = new RegExp(`${attr}="[^"]*"|${attr}='[^']*'`, "g");
       result = result.replace(regex, "");
     });
+    result = result.replaceAll(" ", "");
     return result.trim();
   }
 
@@ -7614,8 +7615,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+            fireEventForOtherLibariesToHookInto("alpine:navigated");
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
@@ -9602,6 +9603,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     all,
     hook: on2,
     trigger: trigger2,
+    triggerAsync,
     dispatch: dispatchGlobal,
     on: on3,
     get navigate() {

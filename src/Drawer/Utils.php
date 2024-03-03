@@ -100,7 +100,7 @@ class Utils extends BaseUtils
     {
         $ifModifiedSince = app(Request::class)->header('if-modified-since');
 
-        return @strtotime($ifModifiedSince) === $lastModified;
+        return $ifModifiedSince !== null && @strtotime($ifModifiedSince) === $lastModified;
     }
 
     static function httpDate($timestamp)
