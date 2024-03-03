@@ -90,13 +90,11 @@ export async function sendRequest(pool) {
 
         handleFailure()
 
-        // Should we fire the fail() hook here, if so what should we use for status and content?
-
-        // fail({
-        //     status: response.status,
-        //     content,
-        //     preventDefault: () => {},
-        // })
+        fail({
+            status: 503,
+            content: null,
+            preventDefault: () => {},
+        })
 
         return
     }
