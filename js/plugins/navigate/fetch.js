@@ -29,10 +29,5 @@ export function performFetch(uri, callback) {
         return response.text()
     }).then(html => {
         callback(html, finalDestination)
-    }).catch(error => {
-        // Let's eat any promise rejects so that we don't
-        // break the rest of Livewire's handling of the response...
-
-        // Should we do anything here to clean up a failed navigate request?
     });
 }
