@@ -7938,6 +7938,12 @@ async function sendRequest(pool) {
   } catch (e) {
     finishProfile({ content: "{}", failed: true });
     handleFailure();
+    fail({
+      status: 503,
+      content: null,
+      preventDefault: () => {
+      }
+    });
     return;
   }
   let mutableObject = {

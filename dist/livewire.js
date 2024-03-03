@@ -4199,6 +4199,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } catch (e) {
       finishProfile({ content: "{}", failed: true });
       handleFailure();
+      fail({
+        status: 503,
+        content: null,
+        preventDefault: () => {
+        }
+      });
       return;
     }
     let mutableObject = {
