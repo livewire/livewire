@@ -7464,7 +7464,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/page.js
   var oldBodyScriptTagHashes = [];
   var attributesExemptFromScriptTagHashing = [
-    "data-csrf"
+    "data-csrf",
+    "aria-hidden"
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = new DOMParser().parseFromString(html, "text/html");
@@ -7586,6 +7587,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       const regex = new RegExp(`${attr}="[^"]*"|${attr}='[^']*'`, "g");
       result = result.replace(regex, "");
     });
+    result = result.replaceAll(" ", "");
     return result.trim();
   }
 
