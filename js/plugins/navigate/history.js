@@ -31,18 +31,17 @@ let snapshotCache = {
         return snapshot
     },
 
-    replace(location, snapshot) {
-        if (this.has(location)) {
-            this.lookup[location] = snapshot
+    replace(key, snapshot) {
+        if (this.has(key)) {
+            this.lookup[key] = snapshot
         } else {
-            this.push(location, snapshot)
+            this.push(key, snapshot)
         }
     },
 
-    push(location, snapshot) {
-        this.lookup[location] = snapshot
+    push(key, snapshot) {
+        this.lookup[key] = snapshot
 
-        let key = this.toKey(location)
         let index = this.keys.indexOf(key)
 
         if (index > -1) this.keys.splice(index, 1)
@@ -84,10 +83,10 @@ export function whenTheBackOrForwardButtonIsClicked(
         // by anchor tags `#my-heading`, so we don't want to handle them.
         if (Object.keys(state).length === 0) return
 
-        if (! alpine.url) return
+        if (! alpine.snapshotIdx) return
 
-        if (snapshotCache.has(alpine.url)) {
-            let snapshot = snapshotCache.retrieve(alpine.url)
+        if (snapshotCache.has(alpine.snapshotIdx)) {
+            let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
             handleHtml(snapshot.html)
         } else {
@@ -112,15 +111,17 @@ export function replaceUrl(url, html) {
 }
 
 function updateUrl(method, url, html) {
-    let key =
-        method === 'pushState'
-            ? snapshotCache.push(url, new Snapshot(url, html))
-            : snapshotCache.replace(url, new Snapshot(url, html))
+    let key = url.toString() + '-' + (new Date).getTime()
+ 
+    method === 'pushState'
+        ? snapshotCache.push(key, new Snapshot(url, html))
+        : snapshotCache.replace(key, new Snapshot(url, html))
 
     let state = history.state || {}
 
     if (!state.alpine) state.alpine = {}
 
+    state.alpine.snapshotIdx = key
     state.alpine.url = url.toString()
 
     try {
