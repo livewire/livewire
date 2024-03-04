@@ -84,6 +84,8 @@ export function whenTheBackOrForwardButtonIsClicked(
         // by anchor tags `#my-heading`, so we don't want to handle them.
         if (Object.keys(state).length === 0) return
 
+        if (! alpine.url) return
+
         if (snapshotCache.has(alpine.url)) {
             let snapshot = snapshotCache.retrieve(alpine.url)
 

@@ -153,7 +153,6 @@ export default function (Alpine) {
     // Because DOMContentLoaded is fired on first load,
     // we should fire alpine:navigated as a replacement as well...
     setTimeout(() => {
-        updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
         fireEventForOtherLibariesToHookInto('alpine:navigated')
     })
 }
