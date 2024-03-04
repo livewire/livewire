@@ -7067,12 +7067,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
   var snapshotCache = {
+    currentKey: null,
+    currentUrl: null,
     keys: [],
     lookup: {},
     limit: 10,
-    toKey(location) {
-      return location.toString();
-    },
     has(location) {
       return this.lookup[location] !== void 0;
     },
@@ -7082,16 +7081,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         throw "No back button cache found for current location: " + location;
       return snapshot;
     },
-    replace(location, snapshot) {
-      if (this.has(location)) {
-        this.lookup[location] = snapshot;
+    replace(key, snapshot) {
+      if (this.has(key)) {
+        this.lookup[key] = snapshot;
       } else {
-        this.push(location, snapshot);
+        this.push(key, snapshot);
       }
     },
-    push(location, snapshot) {
-      this.lookup[location] = snapshot;
-      let key = this.toKey(location);
+    push(key, snapshot) {
+      this.lookup[key] = snapshot;
       let index = this.keys.indexOf(key);
       if (index > -1)
         this.keys.splice(index, 1);
@@ -7108,6 +7106,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let url = new URL(window.location.href, document.baseURI);
     replaceUrl(url, document.documentElement.outerHTML);
   }
+  function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
+    let html = document.documentElement.outerHTML;
+    snapshotCache.replace(key, new Snapshot(url, html));
+  }
   function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
     let fallback2;
     registerFallback((i) => fallback2 = i);
@@ -7116,11 +7118,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let alpine = state.alpine || {};
       if (Object.keys(state).length === 0)
         return;
-      if (!alpine.url)
+      if (!alpine.snapshotIdx)
         return;
-      if (snapshotCache.has(alpine.url)) {
-        let snapshot = snapshotCache.retrieve(alpine.url);
-        handleHtml(snapshot.html);
+      if (snapshotCache.has(alpine.snapshotIdx)) {
+        let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
+        handleHtml(snapshot.html, snapshotCache.currentUrl, snapshotCache.currentKey);
       } else {
         fallback2(alpine.url);
       }
@@ -7136,13 +7138,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     updateUrl("replaceState", url, html);
   }
   function updateUrl(method, url, html) {
-    let key = method === "pushState" ? snapshotCache.push(url, new Snapshot(url, html)) : snapshotCache.replace(url, new Snapshot(url, html));
+    let key = url.toString() + "-" + Math.random();
+    method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key, new Snapshot(url, html));
     let state = history.state || {};
     if (!state.alpine)
       state.alpine = {};
+    state.alpine.snapshotIdx = key;
     state.alpine.url = url.toString();
     try {
       history[method](state, JSON.stringify(document.title), url);
+      snapshotCache.currentKey = key;
+      snapshotCache.currentUrl = url;
     } catch (error2) {
       if (error2 instanceof DOMException && error2.name === "SecurityError") {
         console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
@@ -7666,8 +7672,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let shouldPushToHistoryState = false;
         navigateTo(destination, shouldPushToHistoryState);
       });
-    }, (html) => {
+    }, (html, currentPageUrl, currentPageKey) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
+      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
