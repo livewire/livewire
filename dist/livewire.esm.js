@@ -8472,6 +8472,8 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
     let alpine = state.alpine || {};
     if (Object.keys(state).length === 0)
       return;
+    if (!alpine.url)
+      return;
     if (snapshotCache.has(alpine.url)) {
       let snapshot = snapshotCache.retrieve(alpine.url);
       handleHtml(snapshot.html);
@@ -9043,7 +9045,6 @@ function navigate_default(Alpine19) {
     });
   });
   setTimeout(() => {
-    updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
     fireEventForOtherLibariesToHookInto("alpine:navigated");
   });
 }

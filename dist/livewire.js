@@ -7116,6 +7116,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let alpine = state.alpine || {};
       if (Object.keys(state).length === 0)
         return;
+      if (!alpine.url)
+        return;
       if (snapshotCache.has(alpine.url)) {
         let snapshot = snapshotCache.retrieve(alpine.url);
         handleHtml(snapshot.html);
@@ -7685,7 +7687,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     setTimeout(() => {
-      updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       fireEventForOtherLibariesToHookInto("alpine:navigated");
     });
   }
