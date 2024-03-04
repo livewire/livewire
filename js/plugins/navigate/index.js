@@ -119,44 +119,44 @@ export default function (Alpine) {
 
                 navigateTo(destination, shouldPushToHistoryState)
             })
-        }, 
-    (html, currentPageUrl, currentPageKey) => {
-        // @todo: see if there's a way to update the current HTML BEFORE
-        // the back button is hit, and not AFTER:
-        storeScrollInformationInHtmlBeforeNavigatingAway()
+        },
+        (html, currentPageUrl, currentPageKey) => {
+            // @todo: see if there's a way to update the current HTML BEFORE
+            // the back button is hit, and not AFTER:
+            storeScrollInformationInHtmlBeforeNavigatingAway()
 
-        // This ensures the current HTML has the latest snapshot
-        fireEventForOtherLibariesToHookInto('alpine:navigating')
+            // This ensures the current HTML has the latest snapshot
+            fireEventForOtherLibariesToHookInto('alpine:navigating')
 
-        // Only update the snapshot and not the history state as the history state
-        // has already changed to the new page due to the popstate event
-        updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey)
+            // Only update the snapshot and not the history state as the history state
+            // has already changed to the new page due to the popstate event
+            updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey)
 
-        preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-            enablePersist && storePersistantElementsForLater(persistedEl => {
-                packUpPersistedTeleports(persistedEl)
-            })
-
-            swapCurrentPageWithNewHtml(html, () => {
-                removeAnyLeftOverStaleTeleportTargets(document.body)
-
-                enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-                    unPackPersistedTeleports(persistedEl)
+            preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
+                enablePersist && storePersistantElementsForLater(persistedEl => {
+                    packUpPersistedTeleports(persistedEl)
                 })
 
-                restoreScrollPositionOrScrollToTop()
+                swapCurrentPageWithNewHtml(html, () => {
+                    removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                fireEventForOtherLibariesToHookInto('alpine:navigated')
+                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                        unPackPersistedTeleports(persistedEl)
+                    })
 
-                andAfterAllThis(() => {
-                    autofocus && autofocusElementsWithTheAutofocusAttribute()
+                    restoreScrollPositionOrScrollToTop()
 
-                    nowInitializeAlpineOnTheNewPage(Alpine)
+                    fireEventForOtherLibariesToHookInto('alpine:navigated')
+
+                    andAfterAllThis(() => {
+                        autofocus && autofocusElementsWithTheAutofocusAttribute()
+
+                        nowInitializeAlpineOnTheNewPage(Alpine)
+                    })
                 })
             })
-
-        })
-    })
+        },
+    )
 
     // Because DOMContentLoaded is fired on first load,
     // we should fire alpine:navigated as a replacement as well...
