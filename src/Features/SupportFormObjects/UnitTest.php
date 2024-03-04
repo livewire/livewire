@@ -81,6 +81,29 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_validate_a_form_with_the_general_validate_function()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->call('save')
+            ->tap(function ($component) {
+                $this->assertCount(1, $component->errors()->get('form.title'));
+                $this->assertCount(1, $component->errors()->get('form.content'));
+            })
+        ;
+    }
+
+    /** @test */
     function can_validate_a_specific_rule_has_errors_in_a_form_object()
     {
         Livewire::test(new class extends Component {

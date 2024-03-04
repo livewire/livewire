@@ -309,7 +309,7 @@ trait HandlesValidation
         // If main validation passed, go through other sub-validation exceptions
         // and throw the first one with the cumulative messages...
         foreach ($formExceptions as $e) {
-            $e->validator->errors()->merge($cumulativeErrors);
+            $e->validator->errors()->merge($cumulativeErrors->unique());
 
             throw $e;
         }
