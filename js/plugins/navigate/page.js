@@ -1,7 +1,8 @@
 let oldBodyScriptTagHashes = []
 
 let attributesExemptFromScriptTagHashing = [
-    'data-csrf'
+    'data-csrf',
+    'aria-hidden',
 ]
 
 export function swapCurrentPageWithNewHtml(html, andThen) {
@@ -197,6 +198,9 @@ function ignoreAttributes(subject, attributesToRemove) {
 
         result = result.replace(regex, '')
     })
+
+    // Remove all whitespace to make things less flaky...
+    result = result.replaceAll(' ', '')
 
     return result.trim()
 }
