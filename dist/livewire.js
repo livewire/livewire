@@ -8454,7 +8454,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
-  on2("element.init", ({ el, component }) => {
+  on2("element.init", ({ el, component }) => setTimeout(() => {
     let directives2 = getDirectives(el);
     if (directives2.missing("submit"))
       return;
@@ -8476,7 +8476,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
     });
-  });
+  }));
   on2("commit", ({ component, respond }) => {
     respond(() => {
       cleanup2(component);
@@ -9072,6 +9072,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el.__livewire_confirm) {
           el.__livewire_confirm(() => {
             execute();
+          }, () => {
+            e.stopImmediatePropagation();
           });
         } else {
           execute();
@@ -9104,7 +9106,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     message = message.replaceAll("\\n", "\n");
     if (message === "")
       message = "Are you sure?";
-    el.__livewire_confirm = (action) => {
+    el.__livewire_confirm = (action, instead) => {
       if (shouldPrompt) {
         let [question, expected] = message.split("|");
         if (!expected) {
@@ -9113,11 +9115,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let input = prompt(question);
           if (input === expected) {
             action();
+          } else {
+            instead();
           }
         }
       } else {
         if (confirm(message))
           action();
+        else
+          instead();
       }
     };
   });
