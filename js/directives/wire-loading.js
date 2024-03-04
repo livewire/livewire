@@ -3,11 +3,13 @@ import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
 
 directive('loading', ({ el, directive, component }) => {
-    let targets = getTargets(el)
+    let flags = { isInverted: false };
+
+    let targets = getTargets(el, flags)
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    whenTargetsArePartOfRequest(component, targets, [
+    whenTargetsArePartOfRequest(component, flags, targets, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
@@ -63,11 +65,11 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
+function whenTargetsArePartOfRequest(component, flags, targets, [ startLoading, endLoading ]) {
     on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
-        if (targets.length > 0 && ! containsTargets(payload, targets)) return
+        if (targets.length > 0 && containsTargets(payload, targets) == flags.isInverted) return
 
         startLoading()
 
@@ -134,7 +136,7 @@ function containsTargets(payload, targets) {
     })
 }
 
-function getTargets(el) {
+function getTargets(el, flags) {
     let directives = getDirectives(el)
 
     let targets = []
@@ -143,6 +145,8 @@ function getTargets(el) {
         let directive = directives.get('target')
 
         let raw = directive.expression
+
+        if (directive.modifiers.includes("except")) flags.isInverted = true
 
         if (raw.includes('(') && raw.includes(')')) {
             targets.push({ target: directive.method, params: quickHash(JSON.stringify(directive.params)) })

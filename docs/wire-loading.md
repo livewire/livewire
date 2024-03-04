@@ -158,6 +158,21 @@ Consider the following example where a form input named `username` uses `wire:mo
 
 The "Checking availability..." message will show when the server is updated with the new username as the user types into the input field.
 
+### Inverted targeting
+
+Inverted targeting with `wire:loading` allows you to display an element when a specified action is not being executed. This is particularly useful when there are more targets that should display a loading indicator than the ones which should not.
+
+```blade
+<button wire:click="process">Process</button>
+<button wire:click="reset">Reset</button>
+
+<div wire:loading wire:target.except="process">
+    Waiting to process...
+</div>
+```
+
+In the code above, the message "Waiting to process..." will be displayed whenever any Livewire action is triggered except for the process action. When the process action is invoked, the message will disappear, indicating that the processing action is underway.
+
 ## Customizing CSS display property
 
 When `wire:loading` is added to an element, Livewire updates the CSS `display` property of the element to show and hide the element. By default, Livewire uses `none` to hide and `inline-block` to show.
