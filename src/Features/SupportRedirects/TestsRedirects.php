@@ -32,9 +32,11 @@ trait TestsRedirects
         return $this;
     }
 
-    public function assertRedirectToRoute(string $routeName)
+    public function assertRedirectToRoute($name, $parameters = [])
     {
-        return $this->assertRedirect(route($routeName));
+        $uri = route($name, $parameters);
+
+        return $this->assertRedirect($uri);
     }
 
     public function assertNoRedirect()
