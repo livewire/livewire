@@ -125,6 +125,7 @@ class UnitTest extends \Tests\TestCase
             'updatingBarBaz' => false,
             'updatedBar' => false,
             'updatedBarBaz' => false,
+            'updatingReference' => false,
         ], $component->lifecycles);
     }
 
@@ -160,6 +161,7 @@ class UnitTest extends \Tests\TestCase
             'updatingBarBaz' => false,
             'updatedBar' => false,
             'updatedBarBaz' => false,
+            'updatingReference' => false,
         ], $component->lifecycles);
     }
 
@@ -213,6 +215,7 @@ class UnitTest extends \Tests\TestCase
             'updatingBarBaz' => false,
             'updatedBar' => true,
             'updatedBarBaz' => false,
+            'updatingReference' => false,
         ], $component->lifecycles);
     }
 
@@ -260,6 +263,44 @@ class UnitTest extends \Tests\TestCase
             'updatingBarBaz' => true,
             'updatedBar' => true,
             'updatedBarBaz' => true,
+            'updatingReference' => false,
+        ], $component->lifecycles);
+    }
+
+    /** @test */
+    public function updating_by_reference()
+    {
+        $component = Livewire::test(ForLifecycleHooks::class, [
+            'expected' => [
+                'updating' => [[
+                    'reference' => 'before',
+                ]],
+                'updated' => [[
+                    'reference' => 'after',
+                ]],
+                'updatingReference' => ['before'],
+                'updatedReference' => ['after'],
+            ]
+        ])->set('reference', 'before');
+
+        $this->assertEquals([
+            'mount' => true,
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'rendering' => 2,
+            'rendered' => 2,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => false,
+            'updatedFoo' => false,
+            'updatingBar' => false,
+            'updatingBarBaz' => false,
+            'updatedBar' => false,
+            'updatedBarBaz' => false,
+            'updatingReference' => true,
+            'updatedReference' => true,
         ], $component->lifecycles);
     }
 }
@@ -307,6 +348,16 @@ class ForProtectedLifecycleHooks extends Component
     }
 
     public function updatedFoo($value)
+    {
+        //
+    }
+
+    public function updatingReference(&$value)
+    {
+        //
+    }
+
+    public function updatedReference($value)
     {
         //
     }
@@ -498,6 +549,8 @@ class ForLifecycleHooks extends Component
 
     public $bar = [];
 
+    public $reference;
+
     public $expected;
 
     public $lifecycles = [
@@ -516,6 +569,7 @@ class ForLifecycleHooks extends Component
         'updatingBarBaz' => false,
         'updatedBar' => false,
         'updatedBarBaz' => false,
+        'updatingReference' => false,
     ];
 
     public function mount(array $expected = [])
@@ -629,6 +683,20 @@ class ForLifecycleHooks extends Component
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
 
         $this->lifecycles['updatedBarBaz'] = true;
+    }
+    public function updatingReference(&$value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updatingReference']), $value);
+
+        $value = 'after';
+        $this->lifecycles['updatingReference'] = true;
+    }
+
+    public function updatedReference($value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updatedReference']), $value);
+
+        $this->lifecycles['updatedReference'] = true;
     }
 
     public function rendering()
