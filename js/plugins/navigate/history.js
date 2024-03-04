@@ -6,14 +6,12 @@ class Snapshot {
 }
 
 let snapshotCache = {
+    currentKey: null,
+    currentUrl: null,
     keys: [],
     lookup: {},
 
     limit: 10,
-
-    toKey(location) {
-        return location.toString()
-    },
 
     has(location) {
         return this.lookup[location] !== undefined
@@ -66,6 +64,12 @@ export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     replaceUrl(url, document.documentElement.outerHTML)
 }
 
+export function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
+    let html = document.documentElement.outerHTML
+
+    snapshotCache.replace(key, new Snapshot(url, html))
+}
+
 export function whenTheBackOrForwardButtonIsClicked(
     registerFallback,
     handleHtml
@@ -88,7 +92,7 @@ export function whenTheBackOrForwardButtonIsClicked(
         if (snapshotCache.has(alpine.snapshotIdx)) {
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
-            handleHtml(snapshot.html)
+            handleHtml(snapshot.html, snapshotCache.currentUrl, snapshotCache.currentKey)
         } else {
             fallback(alpine.url)
         }
@@ -111,8 +115,8 @@ export function replaceUrl(url, html) {
 }
 
 function updateUrl(method, url, html) {
-    let key = url.toString() + '-' + (new Date).getTime()
- 
+    let key = url.toString() + '-' + Math.random()
+
     method === 'pushState'
         ? snapshotCache.push(key, new Snapshot(url, html))
         : snapshotCache.replace(key, new Snapshot(url, html))
@@ -127,6 +131,9 @@ function updateUrl(method, url, html) {
     try {
         // 640k character limit:
         history[method](state, JSON.stringify(document.title), url)
+
+        snapshotCache.currentKey = key
+        snapshotCache.currentUrl = url
     } catch (error) {
         if (error instanceof DOMException && error.name === 'SecurityError') {
             console.error(

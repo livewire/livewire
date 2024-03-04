@@ -1,4 +1,4 @@
-import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
+import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
@@ -110,19 +110,27 @@ export default function (Alpine) {
     // - Hit forward (makes a request to the server)
     // - Hit back (doesn't update the HTML but doesn't throw an error and updates the URL)
 
-    whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
-        ifThePageBeingVisitedHasntBeenCached((url) => {
-            let destination = createUrlObjectFromString(url)
+    whenTheBackOrForwardButtonIsClicked(
+        (ifThePageBeingVisitedHasntBeenCached) => {
+            ifThePageBeingVisitedHasntBeenCached((url) => {
+                let destination = createUrlObjectFromString(url)
 
-            let shouldPushToHistoryState = false
+                let shouldPushToHistoryState = false
 
-            navigateTo(destination, shouldPushToHistoryState)
-        })
-    }, (html) => {
+                navigateTo(destination, shouldPushToHistoryState)
+            })
+        }, 
+    (html, currentPageUrl, currentPageKey) => {
         // @todo: see if there's a way to update the current HTML BEFORE
         // the back button is hit, and not AFTER:
         storeScrollInformationInHtmlBeforeNavigatingAway()
-        // updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
+
+        // This ensures the current HTML has the latest snapshot
+        fireEventForOtherLibariesToHookInto('alpine:navigating')
+
+        // Only update the snapshot and not the history state as the history state
+        // has already changed to the new page due to the popstate event
+        updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey)
 
         preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
             enablePersist && storePersistantElementsForLater(persistedEl => {
