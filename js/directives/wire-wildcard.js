@@ -25,6 +25,8 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
             if (el.__livewire_confirm) {
                 el.__livewire_confirm(() => {
                     execute()
+                }, () => {
+                    e.stopImmediatePropagation()
                 })
             } else {
                 execute()
