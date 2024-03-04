@@ -80,11 +80,12 @@ export async function sendRequest(pool) {
 
     let response
 
-    try{
+    try {
         response = await fetch(updateUri, options)
     } catch (e) {
-        // Let's eat any promise rejects so that we don't
-        // break the rest of Livewire's handling of the response...
+        // If something went wrong with the fetch (particularly
+        // this would happen if the connection went offline)
+        // fail with a 503 and allow Livewire to clean up
 
         finishProfile({ content: '{}', failed: true })
 
