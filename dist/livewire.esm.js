@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -2848,7 +2848,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.5",
+      version: "3.13.6",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -4800,7 +4800,7 @@ var require_module_cjs3 = __commonJS({
             setTimeout(() => {
               if (!el2.hasAttribute("tabindex"))
                 el2.setAttribute("tabindex", "0");
-              el2.focus({ preventScroll: this._noscroll });
+              el2.focus({ preventScroll: this.__noscroll });
             });
           }
         };
@@ -5010,7 +5010,7 @@ var require_module_cjs5 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("intersect", Alpine19.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5028,7 +5028,7 @@ var require_module_cjs5 = __commonJS({
         cleanup2(() => {
           observer.disconnect();
         });
-      });
+      }));
     }
     function getThreshold(modifiers) {
       if (modifiers.includes("full"))

@@ -675,7 +675,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -2230,7 +2230,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.5",
+    version: "3.13.6",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -5631,7 +5631,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           setTimeout(() => {
             if (!el2.hasAttribute("tabindex"))
               el2.setAttribute("tabindex", "0");
-            el2.focus({ preventScroll: this._noscroll });
+            el2.focus({ preventScroll: this.__noscroll });
           });
         }
       };
@@ -5787,7 +5787,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
-    Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
+    Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate3 = evaluateLater2(expression);
       let options = {
         rootMargin: getRootMargin(modifiers),
@@ -5805,7 +5805,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup3(() => {
         observer2.disconnect();
       });
-    });
+    }));
   }
   function getThreshold(modifiers) {
     if (modifiers.includes("full"))
