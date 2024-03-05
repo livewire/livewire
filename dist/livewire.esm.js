@@ -7934,7 +7934,20 @@ async function sendRequest(pool) {
     succeed: (i) => succeedCallbacks.push(i),
     fail: (i) => failCallbacks.push(i)
   });
-  let response = await fetch(updateUri, options);
+  let response;
+  try {
+    response = await fetch(updateUri, options);
+  } catch (e) {
+    finishProfile({ content: "{}", failed: true });
+    handleFailure();
+    fail({
+      status: 503,
+      content: null,
+      preventDefault: () => {
+      }
+    });
+    return;
+  }
   let mutableObject = {
     status: response.status,
     response
@@ -9315,7 +9328,7 @@ var import_alpinejs17 = __toESM(require_module_cjs());
 // js/features/supportDisablingFormsDuringRequest.js
 var import_alpinejs6 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
-on("element.init", ({ el, component }) => {
+on("element.init", ({ el, component }) => setTimeout(() => {
   let directives = getDirectives(el);
   if (directives.missing("submit"))
     return;
@@ -9337,7 +9350,7 @@ on("element.init", ({ el, component }) => {
       }
     });
   });
-});
+}));
 on("commit", ({ component, respond }) => {
   respond(() => {
     cleanup(component);
@@ -9939,6 +9952,8 @@ on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component 
       if (el.__livewire_confirm) {
         el.__livewire_confirm(() => {
           execute();
+        }, () => {
+          e.stopImmediatePropagation();
         });
       } else {
         execute();
@@ -9972,7 +9987,7 @@ directive("confirm", ({ el, directive: directive2 }) => {
   message = message.replaceAll("\\n", "\n");
   if (message === "")
     message = "Are you sure?";
-  el.__livewire_confirm = (action) => {
+  el.__livewire_confirm = (action, instead) => {
     if (shouldPrompt) {
       let [question, expected] = message.split("|");
       if (!expected) {
@@ -9981,11 +9996,15 @@ directive("confirm", ({ el, directive: directive2 }) => {
         let input = prompt(question);
         if (input === expected) {
           action();
+        } else {
+          instead();
         }
       }
     } else {
       if (confirm(message))
         action();
+      else
+        instead();
     }
   };
 });

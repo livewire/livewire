@@ -9,7 +9,7 @@ directive('confirm', ({ el, directive }) => {
 
     if (message === '') message = 'Are you sure?'
 
-    el.__livewire_confirm = (action) => {
+    el.__livewire_confirm = (action, instead) => {
         if (shouldPrompt) {
             let [question, expected] = message.split('|')
 
@@ -20,10 +20,13 @@ directive('confirm', ({ el, directive }) => {
 
                 if (input === expected) {
                     action()
+                } else {
+                    instead()
                 }
             }
         } else {
             if (confirm(message)) action()
+            else instead()
         }
     }
 })
