@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1485,17 +1485,27 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
+          if (el2._x_inited) {
+            if (el2._x_ignore)
+              skip();
+            return;
+          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          el2._x_ignore && skip();
+          if (el2._x_ignore) {
+            skip();
+          } else {
+            el2._x_inited = true;
+          }
         });
       });
     }
-    function destroyTree(root) {
-      walk(root, (el) => {
+    function destroyTree(root, walker = walk) {
+      walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
+        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1638,8 +1648,6 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
-        if (removedNodes.has(node))
-          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -1687,15 +1695,15 @@ var require_module_cjs = __commonJS({
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+        return objects.some((obj) => Reflect.has(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
           return collapseProxies;
-        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+        return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+        const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return Reflect.set(target, name, value, thisProxy);
@@ -1714,6 +1722,8 @@ var require_module_cjs = __commonJS({
       let recurse = (obj, basePath = "") => {
         Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
           if (enumerable === false || value === void 0)
+            return;
+          if (typeof value === "object" && value !== null && value.__v_skip)
             return;
           let path = basePath === "" ? key : `${basePath}.${key}`;
           if (typeof value === "object" && value !== null && value._x_interceptor) {
@@ -2838,7 +2848,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.6",
+      version: "3.13.5",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -2916,12 +2926,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getArrayOfRefObject(el) {
       let refObjects = [];
-      let currentEl = el;
-      while (currentEl) {
-        if (currentEl._x_refs)
-          refObjects.push(currentEl._x_refs);
-        currentEl = currentEl.parentNode;
-      }
+      findClosest(el, (i) => {
+        if (i._x_refs)
+          refObjects.push(i._x_refs);
+      });
       return refObjects;
     }
     var globalIdMemo = {};
@@ -3533,13 +3541,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isObject2(items)) {
           items = Object.entries(items).map(([key, value]) => {
             let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-            evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
+            evaluateKey((value2) => {
+              if (keys.includes(value2))
+                warn("Duplicate key on x-for", el);
+              keys.push(value2);
+            }, { scope: { index: key, ...scope2 } });
             scopes.push(scope2);
           });
         } else {
           for (let i = 0; i < items.length; i++) {
             let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-            evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
+            evaluateKey((value) => {
+              if (keys.includes(value))
+                warn("Duplicate key on x-for", el);
+              keys.push(value);
+            }, { scope: { index: i, ...scope2 } });
             scopes.push(scope2);
           }
         }
@@ -3587,7 +3603,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let marker = document.createElement("div");
           mutateDom(() => {
             if (!elForSpot)
-              warn(`x-for ":key" is undefined or invalid`, templateEl);
+              warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
             elForSpot.after(marker);
             elInSpot.after(elForSpot);
             elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -3614,7 +3630,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            initTree(clone2);
+            skipDuringClone(() => initTree(clone2))();
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3694,7 +3710,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          initTree(clone2);
+          skipDuringClone(() => initTree(clone2))();
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
