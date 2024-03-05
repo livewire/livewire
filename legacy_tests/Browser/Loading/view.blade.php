@@ -27,7 +27,7 @@
     <button wire:click="foo('bar')" dusk="target-button-w-param">targeted button with param</button>
     <button wire:click="foo(@js(['bar' => 'baz']))" dusk="target-button-w-js-object-param">targeted button with JS object param</button>
 
-    <button wire:click="bar" wire:loading.class="foo" dusk="self-target-button">self-targeted button</button>
+    <button wire:click="bar" wire:loading.class="foo  two-spaces-before-this-class-for-test" dusk="self-target-button">self-targeted button</button>
 
     <input type="checkbox" wire:model.live="baz" wire:loading.class="foo" dusk="self-target-model">self-targeted-model input</input>
 
