@@ -148,7 +148,7 @@ Inverted targeting with `wire:loading` allows you to display an element when a s
 </div>
 ```
 
-In the code above, the message "Waiting to process..." will be displayed whenever any Livewire action is triggered except for the process action. When the process action is invoked, the message will disappear, indicating that the processing action is underway.
+In the code above, the message "Waiting to process..." will be displayed whenever any Livewire action is triggered except for the process action. When the process action is invoked, the message won't appear, indicating that the processing action is underway.
 
 ## Customizing CSS display property
 

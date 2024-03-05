@@ -210,6 +210,45 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Loading "prop"...')
         ;
     }
+
+    /** @test */
+    function inverted_wire_target_hides_loading_for_specified_action()
+    {
+        Livewire::visit(new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction" dusk="processButton">Process</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target.except="process" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction()
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ->press('@processButton')
+        ->waitUntilMissingText('Waiting to process...')
+        ->assertDontSee('Waiting to process...')
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ;
+    }
 }
 
 class PostFormStub extends Form

@@ -3,13 +3,15 @@ import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
 
 directive('loading', ({ el, directive, component }) => {
-    let flags = { isInverted: false };
+    let targetsArray = getTargets(el)
 
-    let targets = getTargets(el, flags)
+    let targets = targetsArray.targets
+
+    let isInverted = targetsArray.isInverted
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    whenTargetsArePartOfRequest(component, flags, targets, [
+    whenTargetsArePartOfRequest(component, targets, isInverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
@@ -65,11 +67,11 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, flags, targets, [ startLoading, endLoading ]) {
+function whenTargetsArePartOfRequest(component, targets, isInverted, [ startLoading, endLoading ]) {
     on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
-        if (targets.length > 0 && containsTargets(payload, targets) == flags.isInverted) return
+        if (targets.length > 0 && containsTargets(payload, targets) == isInverted) return
 
         startLoading()
 
@@ -136,17 +138,19 @@ function containsTargets(payload, targets) {
     })
 }
 
-function getTargets(el, flags) {
+function getTargets(el) {
     let directives = getDirectives(el)
 
     let targets = []
+
+    let isInverted = false
 
     if (directives.has('target')) {
         let directive = directives.get('target')
 
         let raw = directive.expression
 
-        if (directive.modifiers.includes("except")) flags.isInverted = true
+        if (directive.modifiers.includes("except")) isInverted = true
 
         if (raw.includes('(') && raw.includes(')')) {
             targets.push({ target: directive.method, params: quickHash(JSON.stringify(directive.params)) })
@@ -169,7 +173,7 @@ function getTargets(el, flags) {
             .forEach(target => targets.push({ target }))
     }
 
-    return targets
+    return {targets, isInverted}
 }
 
 function quickHash(subject) {
