@@ -2230,7 +2230,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.5",
+    version: "3.13.6",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -8400,6 +8400,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/lifecycle.js
   function start2() {
+    setTimeout(() => ensureLivewireScriptIsntMisplaced());
     dispatch(document, "livewire:init");
     dispatch(document, "livewire:initializing");
     module_default.plugin(module_default7);
@@ -8450,6 +8451,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.start();
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
     dispatch(document, "livewire:initialized");
+  }
+  function ensureLivewireScriptIsntMisplaced() {
+    let el = document.querySelector("script[data-update-uri][data-csrf]");
+    if (!el)
+      return;
+    let livewireEl = el.closest("[wire\\:id]");
+    if (livewireEl) {
+      console.warn("Livewire: missing closing tags found. Ensure your template elements contain matching closing tags.", livewireEl);
+    }
   }
 
   // js/features/supportDisablingFormsDuringRequest.js
