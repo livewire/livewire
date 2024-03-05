@@ -9260,6 +9260,7 @@ var import_morph = __toESM(require_module_cjs7());
 var import_mask = __toESM(require_module_cjs8());
 var import_alpinejs5 = __toESM(require_module_cjs());
 function start() {
+  setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
   import_alpinejs5.default.plugin(import_morph.default);
@@ -9310,6 +9311,15 @@ function start() {
   import_alpinejs5.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
+}
+function ensureLivewireScriptIsntMisplaced() {
+  let el = document.querySelector("script[data-update-uri][data-csrf]");
+  if (!el)
+    return;
+  let livewireEl = el.closest("[wire\\:id]");
+  if (livewireEl) {
+    console.warn("Livewire: missing closing tags found. Ensure your template elements contain matching closing tags.", livewireEl);
+  }
 }
 
 // js/index.js

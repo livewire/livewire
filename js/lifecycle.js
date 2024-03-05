@@ -14,6 +14,8 @@ import Alpine from 'alpinejs'
 import { dispatch } from './utils'
 
 export function start() {
+    setTimeout(() => ensureLivewireScriptIsntMisplaced())
+
     dispatch(document, 'livewire:init')
     dispatch(document, 'livewire:initializing')
 
@@ -86,4 +88,22 @@ export function start() {
     setTimeout(() => window.Livewire.initialRenderIsFinished = true)
 
     dispatch(document, 'livewire:initialized')
+}
+
+function ensureLivewireScriptIsntMisplaced() {
+    let el = document.querySelector('script[data-update-uri][data-csrf]')
+
+    // If there is no Livewire-injected script on the page, move on...
+    if (! el) return
+
+    // If there is, let's ensure it's at the top-level. If it's nested
+    // inside a normal element, that probably means that a closing
+    // tag was missing in the template and Chrome moved the tag.
+
+    // We're only checking for "div" here because it's quick and useful...
+    let livewireEl = el.closest('[wire\\:id]')
+
+    if (livewireEl) {
+        console.warn('Livewire: missing closing tags found. Ensure your template elements contain matching closing tags.', livewireEl)
+    }
 }
