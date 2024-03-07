@@ -3774,9 +3774,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3895,9 +3895,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4800,7 +4800,7 @@ var require_module_cjs3 = __commonJS({
             setTimeout(() => {
               if (!el2.hasAttribute("tabindex"))
                 el2.setAttribute("tabindex", "0");
-              el2.focus({ preventScroll: this._noscroll });
+              el2.focus({ preventScroll: this.__noscroll });
             });
           }
         };
@@ -4897,9 +4897,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../alpine/packages/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4983,9 +4983,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5010,7 +5010,7 @@ var require_module_cjs5 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("intersect", Alpine19.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5028,7 +5028,7 @@ var require_module_cjs5 = __commonJS({
         cleanup2(() => {
           observer.disconnect();
         });
-      });
+      }));
     }
     function getThreshold(modifiers) {
       if (modifiers.includes("full"))
@@ -5065,9 +5065,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../alpine/packages/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6966,9 +6966,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
