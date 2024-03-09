@@ -3,10 +3,10 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Support\Traits\Macroable;
-use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
-use Livewire\Features\SupportValidation\TestsValidation;
-use Livewire\Features\SupportRedirects\TestsRedirects;
 use Livewire\Features\SupportEvents\TestsEvents;
+use Livewire\Features\SupportRedirects\TestsRedirects;
+use Livewire\Features\SupportValidation\TestsValidation;
+use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
 
 /** @mixin \Illuminate\Testing\TestResponse */
 
@@ -177,6 +177,7 @@ class Testable
             $this->lastState,
             $calls,
             $updates,
+            app('request')->cookies->all()
         );
 
         $this->lastState = $newState;
