@@ -867,19 +867,10 @@
   }) {
     deferHandlingDirectives(() => {
       walker(el, (el2, skip) => {
-        if (el2._x_inited) {
-          if (el2._x_ignore)
-            skip();
-          return;
-        }
         intercept(el2, skip);
         initInterceptors.forEach((i) => i(el2, skip));
         directives(el2, el2.attributes).forEach((handle) => handle());
-        if (el2._x_ignore) {
-          skip();
-        } else {
-          el2._x_inited = true;
-        }
+        el2._x_ignore && skip();
       });
     });
   }
@@ -887,7 +878,6 @@
     walker(root, (el) => {
       cleanupAttributes(el);
       cleanupElement(el);
-      delete el._x_inited;
     });
   }
   var onAttributeAddeds = [];
@@ -1030,6 +1020,8 @@
       node._x_ignore = true;
     });
     for (let node of addedNodes) {
+      if (removedNodes.has(node))
+        continue;
       if (!node.isConnected)
         continue;
       delete node._x_ignoreSelf;
@@ -1077,7 +1069,7 @@
     has({ objects }, name) {
       if (name == Symbol.unscopables)
         return false;
-      return objects.some((obj) => Reflect.has(obj, name));
+      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
     },
     get({ objects }, name, thisProxy) {
       if (name == "toJSON")
@@ -1085,7 +1077,7 @@
       return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
     },
     set({ objects }, name, value, thisProxy) {
-      const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
+      const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
       const descriptor = Object.getOwnPropertyDescriptor(target, name);
       if (descriptor?.set && descriptor?.get)
         return Reflect.set(target, name, value, thisProxy);
@@ -2230,7 +2222,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.6",
+    version: "3.13.7",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,

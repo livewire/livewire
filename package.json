@@ -12,15 +12,15 @@
         "esbuild": "^0.14.49"
     },
     "dependencies": {
-        "@alpinejs/anchor": "^3.13.6",
-        "@alpinejs/collapse": "^3.13.6",
-        "@alpinejs/focus": "^3.13.6",
-        "@alpinejs/intersect": "^3.13.6",
-        "@alpinejs/mask": "^3.13.6",
-        "@alpinejs/morph": "^3.13.6",
-        "@alpinejs/persist": "^3.13.6",
+        "@alpinejs/anchor": "^3.13.7",
+        "@alpinejs/collapse": "^3.13.7",
+        "@alpinejs/focus": "^3.13.7",
+        "@alpinejs/intersect": "^3.13.7",
+        "@alpinejs/mask": "^3.13.7",
+        "@alpinejs/morph": "^3.13.7",
+        "@alpinejs/persist": "^3.13.7",
         "@vue/reactivity": "^3.2.45",
-        "alpinejs": "^3.13.6",
+        "alpinejs": "^3.13.7",
         "nprogress": "^0.2.0"
     }
 }
