@@ -45,7 +45,18 @@ export default function (Alpine) {
             })
 
             whenItIsReleased(() => {
-                navigateTo(destination)
+                const cancelableEvent = new CustomEvent('alpine:before-navigate', {
+                    cancelable: true,
+                    bubbles: true,
+                    detail: {
+                        url: destination.href
+                    }
+                })
+
+                document.dispatchEvent(cancelableEvent) // Dispatch cancelable event
+                if (!cancelableEvent.defaultPrevented) {
+                    navigateTo(destination)
+                }
             })
         })
     })
