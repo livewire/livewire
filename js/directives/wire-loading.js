@@ -3,15 +3,11 @@ import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
 
 directive('loading', ({ el, directive, component }) => {
-    let targetsArray = getTargets(el)
-
-    let targets = targetsArray.targets
-
-    let isInverted = targetsArray.isInverted
+    let { targets, inverted } = getTargets(el)
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    whenTargetsArePartOfRequest(component, targets, isInverted, [
+    whenTargetsArePartOfRequest(component, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
@@ -67,11 +63,11 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, targets, isInverted, [ startLoading, endLoading ]) {
+function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
     on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
-        if (targets.length > 0 && containsTargets(payload, targets) == isInverted) return
+        if (targets.length > 0 && containsTargets(payload, targets) == inverted) return
 
         startLoading()
 
@@ -143,14 +139,14 @@ function getTargets(el) {
 
     let targets = []
 
-    let isInverted = false
+    let inverted = false
 
     if (directives.has('target')) {
         let directive = directives.get('target')
 
         let raw = directive.expression
 
-        if (directive.modifiers.includes("except")) isInverted = true
+        if (directive.modifiers.includes("except")) inverted = true
 
         if (raw.includes('(') && raw.includes(')')) {
             targets.push({ target: directive.method, params: quickHash(JSON.stringify(directive.params)) })
@@ -173,7 +169,7 @@ function getTargets(el) {
             .forEach(target => targets.push({ target }))
     }
 
-    return {targets, isInverted}
+    return { targets, inverted }
 }
 
 function quickHash(subject) {
