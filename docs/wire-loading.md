@@ -160,7 +160,7 @@ The "Checking availability..." message will show when the server is updated with
 
 ### Excluding specific loading targets
 
-Sometimes you may with to display a loading indicator for every Livewire request _except_ a specific property or action. In these cases you can use the `wire:target.except` modifier like so:
+Sometimes you may wish to display a loading indicator for every Livewire request _except_ a specific property or action. In these cases you can use the `wire:target.except` modifier like so:
 
 ```blade
 <div wire:loading wire:target.except="download">...</div>
