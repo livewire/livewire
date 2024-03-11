@@ -9134,7 +9134,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
     isTruthy = directive3.modifiers.includes("remove") ? !isTruthy : isTruthy;
     if (directive3.modifiers.includes("class")) {
-      let classes = directive3.expression.split(" ");
+      let classes = directive3.expression.split(" ").filter(String);
       if (isTruthy) {
         el.classList.add(...classes);
       } else {
