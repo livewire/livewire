@@ -1485,19 +1485,10 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
-          if (el2._x_inited) {
-            if (el2._x_ignore)
-              skip();
-            return;
-          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          if (el2._x_ignore) {
-            skip();
-          } else {
-            el2._x_inited = true;
-          }
+          el2._x_ignore && skip();
         });
       });
     }
@@ -1505,7 +1496,6 @@ var require_module_cjs = __commonJS({
       walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
-        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1648,6 +1638,8 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
+        if (removedNodes.has(node))
+          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -1695,7 +1687,7 @@ var require_module_cjs = __commonJS({
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Reflect.has(obj, name));
+        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
@@ -1703,7 +1695,7 @@ var require_module_cjs = __commonJS({
         return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
+        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return Reflect.set(target, name, value, thisProxy);
@@ -2848,7 +2840,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.6",
+      version: "3.13.7",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -10013,7 +10005,7 @@ directive("confirm", ({ el, directive: directive2 }) => {
 function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
   isTruthy = directive2.modifiers.includes("remove") ? !isTruthy : isTruthy;
   if (directive2.modifiers.includes("class")) {
-    let classes = directive2.expression.split(" ");
+    let classes = directive2.expression.split(" ").filter(String);
     if (isTruthy) {
       el.classList.add(...classes);
     } else {
@@ -10051,11 +10043,9 @@ directive("offline", ({ el, directive: directive2, cleanup: cleanup2 }) => {
 
 // js/directives/wire-loading.js
 directive("loading", ({ el, directive: directive2, component }) => {
-  let targetsArray = getTargets(el);
-  let targets = targetsArray.targets;
-  let isInverted = targetsArray.isInverted;
+  let { targets, inverted } = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  whenTargetsArePartOfRequest(component, targets, isInverted, [
+  whenTargetsArePartOfRequest(component, targets, inverted, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
@@ -10102,11 +10092,11 @@ function applyDelay(directive2) {
     }
   ];
 }
-function whenTargetsArePartOfRequest(component, targets, isInverted, [startLoading, endLoading]) {
+function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
   on("commit", ({ component: iComponent, commit: payload, respond }) => {
     if (iComponent !== component)
       return;
-    if (targets.length > 0 && containsTargets(payload, targets) == isInverted)
+    if (targets.length > 0 && containsTargets(payload, targets) == inverted)
       return;
     startLoading();
     respond(() => {
@@ -10164,12 +10154,12 @@ function containsTargets(payload, targets) {
 function getTargets(el) {
   let directives = getDirectives(el);
   let targets = [];
-  let isInverted = false;
+  let inverted = false;
   if (directives.has("target")) {
     let directive2 = directives.get("target");
     let raw = directive2.expression;
     if (directive2.modifiers.includes("except"))
-      isInverted = true;
+      inverted = true;
     if (raw.includes("(") && raw.includes(")")) {
       targets.push({ target: directive2.method, params: quickHash(JSON.stringify(directive2.params)) });
     } else if (raw.includes(",")) {
@@ -10183,7 +10173,7 @@ function getTargets(el) {
     let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
   }
-  return { targets, isInverted };
+  return { targets, inverted };
 }
 function quickHash(subject) {
   return btoa(encodeURIComponent(subject));
