@@ -12,7 +12,7 @@ directive('loading', ({ el, directive, component }) => {
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
 
-    whenTargetsArePartOfFileUpload(component, targets, [
+    whenTargetsArePartOfFileUpload(component, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
@@ -77,12 +77,12 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
     })
 }
 
-function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endLoading ]) {
+function whenTargetsArePartOfFileUpload(component, targets, inverted, [ startLoading, endLoading ]) {
     let eventMismatch = e => {
         let { id, property } = e.detail
 
         if (id !== component.id) return true
-        if (targets.length > 0 && ! targets.map(i => i.target).includes(property)) return true
+        if (targets.length > 0 && (targets.map(i => i.target).includes(property) == inverted)) return true
 
         return false
     }

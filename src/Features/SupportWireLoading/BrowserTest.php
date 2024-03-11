@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportWireLoading;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use Livewire\WithFileUploads;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -215,20 +216,32 @@ class BrowserTest extends \Tests\BrowserTestCase
     function inverted_wire_target_hides_loading_for_specified_action()
     {
         Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $file1, $file2;
+
             public function render()
             {
                 return <<<'HTML'
                     <div>
-                        <button wire:click="processFunction" dusk="processButton">Process</button>
+                        <button wire:click="process1Function" dusk="process1Button">Process 1</button>
+                        <button wire:click="process2Function" dusk="process2Button">Process 2</button>
+                        <input type="file" wire:model="file1" dusk="file1Input">
+                        <input type="file" wire:model="file2" dusk="file2Input">
                         <button wire:click="resetFunction" dusk="resetButton">Reset</button>
-                        <div wire:loading wire:target.except="process" dusk="loadingIndicator">
+                        <div wire:loading wire:target.except="file2" dusk="loadingIndicator">
                             Waiting to process...
                         </div>
                     </div>
                 HTML;
             }
 
-            public function processFunction()
+            public function process1Function()
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function process2Function()
             {
                 usleep(500000); // Simulate some processing time.
             }
@@ -241,12 +254,26 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->press('@resetButton')
         ->waitForText('Waiting to process...')
         ->assertSee('Waiting to process...')
-        ->press('@processButton')
+        ->press('@process1Button')
         ->waitUntilMissingText('Waiting to process...')
         ->assertDontSee('Waiting to process...')
         ->press('@resetButton')
         ->waitForText('Waiting to process...')
-        ->assertSee('Waiting to process...')
+        ->press('@process2Button')
+        ->waitUntilMissingText('Waiting to process...')
+        ->assertDontSee('Waiting to process...')
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->attach('@file1Input', __DIR__ . '/browser_test_image.png')
+        ->waitUntilMissingText('Waiting to process...')
+        ->assertDontSee('Waiting to process...')
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->attach('@file2Input', __DIR__ . '/browser_test_image.png')
+        ->waitUntilMissingText('Waiting to process...')
+        ->assertDontSee('Waiting to process...')
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
         ;
     }
 

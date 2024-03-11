@@ -867,10 +867,19 @@
   }) {
     deferHandlingDirectives(() => {
       walker(el, (el2, skip) => {
+        if (el2._x_inited) {
+          if (el2._x_ignore)
+            skip();
+          return;
+        }
         intercept(el2, skip);
         initInterceptors.forEach((i) => i(el2, skip));
         directives(el2, el2.attributes).forEach((handle) => handle());
-        el2._x_ignore && skip();
+        if (el2._x_ignore) {
+          skip();
+        } else {
+          el2._x_inited = true;
+        }
       });
     });
   }
@@ -878,6 +887,7 @@
     walker(root, (el) => {
       cleanupAttributes(el);
       cleanupElement(el);
+      delete el._x_inited;
     });
   }
   var onAttributeAddeds = [];
@@ -1020,8 +1030,6 @@
       node._x_ignore = true;
     });
     for (let node of addedNodes) {
-      if (removedNodes.has(node))
-        continue;
       if (!node.isConnected)
         continue;
       delete node._x_ignoreSelf;
@@ -1069,7 +1077,7 @@
     has({ objects }, name) {
       if (name == Symbol.unscopables)
         return false;
-      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
+      return objects.some((obj) => Reflect.has(obj, name));
     },
     get({ objects }, name, thisProxy) {
       if (name == "toJSON")
@@ -1077,7 +1085,7 @@
       return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
     },
     set({ objects }, name, value, thisProxy) {
-      const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+      const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
       const descriptor = Object.getOwnPropertyDescriptor(target, name);
       if (descriptor?.set && descriptor?.get)
         return Reflect.set(target, name, value, thisProxy);
@@ -2222,7 +2230,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.7",
+    version: "3.13.6",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -9178,7 +9186,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
-    whenTargetsArePartOfFileUpload(component, targets, [
+    whenTargetsArePartOfFileUpload(component, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
@@ -9233,12 +9241,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
+  function whenTargetsArePartOfFileUpload(component, targets, inverted, [startLoading, endLoading]) {
     let eventMismatch = (e) => {
       let { id, property } = e.detail;
       if (id !== component.id)
         return true;
-      if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
+      if (targets.length > 0 && targets.map((i) => i.target).includes(property) == inverted)
         return true;
       return false;
     };
