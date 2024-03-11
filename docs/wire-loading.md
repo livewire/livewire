@@ -95,7 +95,7 @@ When the above "Remove" button is pressed, the "Removing post..." message will b
 
 You may find yourself in a situation where you would like `wire:loading` to react to some, but not all, actions on a page. In these cases you can pass multiple actions into `wire:target` separated by a comma. For example:
 
-``blade
+```blade
 <form wire:submit="save">
     <input type="text" wire:model.blur="title">
 
@@ -158,20 +158,15 @@ Consider the following example where a form input named `username` uses `wire:mo
 
 The "Checking availability..." message will show when the server is updated with the new username as the user types into the input field.
 
-### Inverted targeting
+### Excluding specific loading targets
 
-Inverted targeting with `wire:loading` allows you to display an element when a specified action is not being executed. This is particularly useful when there are more targets that should display a loading indicator than the ones which should not.
+Sometimes you may with to display a loading indicator for every Livewire request _except_ a specific property or action. In these cases you can use the `wire:target.except` modifier like so:
 
 ```blade
-<button wire:click="process">Process</button>
-<button wire:click="reset">Reset</button>
-
-<div wire:loading wire:target.except="process">
-    Waiting to process...
-</div>
+<div wire:loading wire:target.except="download">...</div>
 ```
 
-In the code above, the message "Waiting to process..." will be displayed whenever any Livewire action is triggered except for the process action. When the process action is invoked, the message won't appear, indicating that the processing action is underway.
+The above loading indicator will now be shown for every Livewire update request on the component _except_ the "download" action.
 
 ## Customizing CSS display property
 
