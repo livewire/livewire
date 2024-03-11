@@ -67,7 +67,7 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
     on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
-        if (targets.length > 0 && containsTargets(payload, targets) == inverted) return
+        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
 
         startLoading()
 
@@ -82,7 +82,7 @@ function whenTargetsArePartOfFileUpload(component, targets, inverted, [ startLoa
         let { id, property } = e.detail
 
         if (id !== component.id) return true
-        if (targets.length > 0 && (targets.map(i => i.target).includes(property) == inverted)) return true
+        if (targets.length > 0 && (targets.map(i => i.target).includes(property) === inverted)) return true
 
         return false
     }
