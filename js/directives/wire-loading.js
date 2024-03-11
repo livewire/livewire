@@ -67,7 +67,7 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
     on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
-        if (targets.length > 0 && containsTargets(payload, targets) == inverted) return
+        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
 
         startLoading()
 

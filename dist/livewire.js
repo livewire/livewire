@@ -9225,7 +9225,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     on2("commit", ({ component: iComponent, commit: payload, respond }) => {
       if (iComponent !== component)
         return;
-      if (targets.length > 0 && containsTargets(payload, targets) == inverted)
+      if (targets.length > 0 && containsTargets(payload, targets) === inverted)
         return;
       startLoading();
       respond(() => {
