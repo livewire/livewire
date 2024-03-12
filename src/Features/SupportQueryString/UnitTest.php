@@ -55,12 +55,8 @@ class UnitTest extends \Tests\TestCase
                 ];
             }
         });
-        /** @var \Illuminate\Support\Collection $attributes */
-        $attributes = $component->instance()->getAttributes();
 
-        /** @var BaseUrl $queryFromAttribute */
-        /** @var BaseUrl $queryFromMethod */
-        /** @var BaseUrl $queryFromTrait */
+        $attributes = $component->instance()->getAttributes();
 
         $queryFromAttribute = $attributes->first(fn (BaseUrl $attribute) => $attribute->getName() === 'queryFromAttribute');
         $queryFromMethod = $attributes->first(fn (BaseUrl $attribute) => $attribute->getName() === 'queryFromMethod');
