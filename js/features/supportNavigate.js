@@ -10,6 +10,23 @@ document.addEventListener('alpine:navigating', e => {
     document.dispatchEvent(new CustomEvent('livewire:navigating', { bubbles: true }))
 })
 
+document.addEventListener('alpine:before-navigate', e => {
+    // Forward a "livewire" version of the Alpine event...
+    const cancelableEvent = new CustomEvent('livewire:before-navigate', {
+        cancelable: true,
+        bubbles: true,
+        detail: {
+            url: e.detail.url
+        }
+    })
+
+    document.dispatchEvent(cancelableEvent) // Dispatch cancelable event
+
+    if (cancelableEvent.defaultPrevented) {
+        e.preventDefault()
+    }
+})
+
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate
 
