@@ -787,6 +787,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertInputValue('@first_name', 'foo')
             ->assertInputValue('@last_name', 'bar')
             ->assertInputValue('@email', 'baz')
+            ->type('first_name', 'test')
+            ->waitForLivewire()
+            ->assertQueryStringHas('firstname', 'test')
 
         ;
     }
