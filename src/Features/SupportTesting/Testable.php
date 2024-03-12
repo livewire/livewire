@@ -2,11 +2,11 @@
 
 namespace Livewire\Features\SupportTesting;
 
-use Illuminate\Support\Traits\Macroable;
-use Livewire\Features\SupportEvents\TestsEvents;
-use Livewire\Features\SupportRedirects\TestsRedirects;
-use Livewire\Features\SupportValidation\TestsValidation;
 use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
+use Livewire\Features\SupportValidation\TestsValidation;
+use Livewire\Features\SupportRedirects\TestsRedirects;
+use Livewire\Features\SupportEvents\TestsEvents;
+use Illuminate\Support\Traits\Macroable;
 
 /** @mixin \Illuminate\Testing\TestResponse */
 
