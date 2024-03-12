@@ -10057,7 +10057,7 @@ directive("loading", ({ el, directive: directive2, component }) => {
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
-  whenTargetsArePartOfFileUpload(component, targets, inverted, [
+  whenTargetsArePartOfFileUpload(component, targets, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
@@ -10112,12 +10112,12 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading
     });
   });
 }
-function whenTargetsArePartOfFileUpload(component, targets, inverted, [startLoading, endLoading]) {
+function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
   let eventMismatch = (e) => {
     let { id, property } = e.detail;
     if (id !== component.id)
       return true;
-    if (targets.length > 0 && targets.map((i) => i.target).includes(property) === inverted)
+    if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
       return true;
     return false;
   };

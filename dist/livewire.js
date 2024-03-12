@@ -9186,7 +9186,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
-    whenTargetsArePartOfFileUpload(component, targets, inverted, [
+    whenTargetsArePartOfFileUpload(component, targets, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
@@ -9241,12 +9241,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function whenTargetsArePartOfFileUpload(component, targets, inverted, [startLoading, endLoading]) {
+  function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
     let eventMismatch = (e) => {
       let { id, property } = e.detail;
       if (id !== component.id)
         return true;
-      if (targets.length > 0 && targets.map((i) => i.target).includes(property) === inverted)
+      if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
         return true;
       return false;
     };
