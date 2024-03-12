@@ -3,7 +3,7 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
     isTruthy = directive.modifiers.includes('remove') ? ! isTruthy : isTruthy
 
     if (directive.modifiers.includes('class')) {
-        let classes = directive.expression.split(' ')
+        let classes = directive.expression.split(' ').filter(String)
 
         if (isTruthy) {
             el.classList.add(...classes)

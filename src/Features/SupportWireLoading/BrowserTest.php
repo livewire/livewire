@@ -210,6 +210,42 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Loading "prop"...')
         ;
     }
+
+	/** @test */
+    function wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
+    {
+        Livewire::visit(new class extends Component {
+
+			public $myModel;
+
+			public function mount()
+			{
+				$this->myModel = [
+					'prop' => 'one',
+				];
+			}
+
+			public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                sleep(2);
+            }
+
+			public function render()
+			{
+			    return <<<'HTML'
+                <div>
+                	<input type="text" wire:model.live="myModel.prop" dusk="input">
+                	<div wire:loading.class="foo  bar" wire:target="myModel.prop">{{ $myModel['prop'] }}</div>
+                </div>
+                HTML;
+            }
+
+        })
+        ->type('@input', 'Foo')
+		->waitForText('Foo')
+        ->assertSee('Foo')
+        ;
+    }
 }
 
 class PostFormStub extends Form

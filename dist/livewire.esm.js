@@ -10005,7 +10005,7 @@ directive("confirm", ({ el, directive: directive2 }) => {
 function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
   isTruthy = directive2.modifiers.includes("remove") ? !isTruthy : isTruthy;
   if (directive2.modifiers.includes("class")) {
-    let classes = directive2.expression.split(" ");
+    let classes = directive2.expression.split(" ").filter(String);
     if (isTruthy) {
       el.classList.add(...classes);
     } else {
