@@ -764,7 +764,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     /** @test */
     public function can_pass_array_of_possible_query_string_parameters()
     {
-        Livewire::withQueryParams(['firstname' => 'foo', 'last_name' => 'bar', 'email' => 'baz'])->visit([
+        Livewire::withQueryParams(['firstname' => 'foo', 'last_name' => 'bar', 'email' => 'baz', 'param1' => '1', 'param2' => '2'])->visit([
             new class extends \Livewire\Component {
                 #[Url(as: ['first_name', 'firstname'])]
                 public ?string $firstName;
@@ -775,11 +775,15 @@ class BrowserTest extends \Tests\BrowserTestCase
                 #[Url]
                 public ?string $email;
 
+                #[Url(as: ['param2', 'param1'])]
+                public ?string $param;
+
                 public function render() { return <<<'HTML'
                 <div>
                     <input wire:model.live="firstName" type="text" dusk="first_name" />
                     <input wire:model.live="lastName" type="text" dusk="last_name" />
                     <input wire:model.live="email" type="text" dusk="email" />
+                    <input wire:model.live="param" type="text" dusk="param" />
                 </div>
                 HTML; }
             },
@@ -787,9 +791,19 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertInputValue('@first_name', 'foo')
             ->assertInputValue('@last_name', 'bar')
             ->assertInputValue('@email', 'baz')
-            ->type('first_name', 'test')
+            ->assertInputValue('@param', '2')
+            ->type('@first_name', 'test')
             ->waitForLivewire()
             ->assertQueryStringHas('firstname', 'test')
+            ->type('@param', '3')
+            ->waitForLivewire()
+            ->assertQueryStringHas('param2', '3')
+            ->refresh()
+            ->assertQueryStringHas('firstname', 'test')
+            ->assertInputValue('@first_name', 'test')
+            ->assertQueryStringHas('param2', '3')
+            ->assertInputValue('@param', '3')
+
 
         ;
     }

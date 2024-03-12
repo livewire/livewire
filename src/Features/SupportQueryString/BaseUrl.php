@@ -50,9 +50,7 @@ class BaseUrl extends LivewireAttribute
 
     public function setPropertyFromQueryString()
     {
-        if ($this->as === null && $this->isOnFormObjectProperty()) {
-            $this->as = $this->getSubName();
-        }
+        $this->setAsProperty();
 
         $initialValue = $this->getFromUrlQueryString($this->urlName(), 'noexist');
 
@@ -92,6 +90,31 @@ class BaseUrl extends LivewireAttribute
         }
 
         return $merged;
+    }
+
+    protected function setAsProperty()
+    {
+        if ($this->as === null && $this->isOnFormObjectProperty()) {
+            $this->as = $this->getSubName();
+        }
+
+        if (is_array($this->as)) {
+            $this->as = collect($this->as)
+                ->filter(function ($value) {
+                    if (!app('livewire')->isLivewireRequest()) {
+                        return request()->query->has($value);
+                    }
+
+                    $queryString = parse_url(request()->header('Referer'))['query'] ?? null;
+                    if ($queryString) {
+                        parse_str($queryString, $query);
+                        return array_key_exists($value, $query);
+                    }
+
+                    return false;
+                })
+                ->first();
+        }
     }
 
     public function pushQueryStringEffect($context)
