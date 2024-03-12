@@ -5,6 +5,16 @@ namespace Livewire\Features\SupportQueryString;
 use Livewire\Livewire;
 use Livewire\Component;
 
+trait WithSorting
+{
+    protected function queryStringWithSorting()
+    {
+        return [
+            'queryFromTrait',
+        ];
+    }
+}
+
 class UnitTest extends \Tests\TestCase
 {
     /** @test */
@@ -22,5 +32,42 @@ class UnitTest extends \Tests\TestCase
         });
 
         $this->assertTrue(isset($component->effects['url']));
+    }
+
+    /** @test */
+    function it_correctly_fills_base_url_attribute_properties()
+    {
+        $component = Livewire::test(new class extends Component {
+            use WithSorting;
+
+            #[BaseUrl]
+            public $queryFromAttribute;
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+
+            protected function queryString()
+            {
+                return [
+                    'queryFromMethod',
+                ];
+            }
+        });
+        /** @var \Illuminate\Support\Collection $attributes */
+        $attributes = $component->instance()->getAttributes();
+
+        /** @var BaseUrl $queryFromAttribute */
+        /** @var BaseUrl $queryFromMethod */
+        /** @var BaseUrl $queryFromTrait */
+
+        $queryFromAttribute = $attributes->first(fn (BaseUrl $attribute) => $attribute->getName() === 'queryFromAttribute');
+        $queryFromMethod = $attributes->first(fn (BaseUrl $attribute) => $attribute->getName() === 'queryFromMethod');
+        $queryFromTrait = $attributes->first(fn (BaseUrl $attribute) => $attribute->getName() === 'queryFromTrait');
+
+        $this->assertEquals('queryFromAttribute', $queryFromAttribute->getSubName());
+        $this->assertEquals('queryFromMethod', $queryFromMethod->getSubName());
+        $this->assertEquals('queryFromTrait', $queryFromTrait->getSubName());
     }
 }
