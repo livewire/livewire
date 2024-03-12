@@ -95,7 +95,7 @@ When the above "Remove" button is pressed, the "Removing post..." message will b
 
 You may find yourself in a situation where you would like `wire:loading` to react to some, but not all, actions on a page. In these cases you can pass multiple actions into `wire:target` separated by a comma. For example:
 
-``blade
+```blade
 <form wire:submit="save">
     <input type="text" wire:model.blur="title">
 
@@ -157,6 +157,16 @@ Consider the following example where a form input named `username` uses `wire:mo
 ```
 
 The "Checking availability..." message will show when the server is updated with the new username as the user types into the input field.
+
+### Excluding specific loading targets
+
+Sometimes you may wish to display a loading indicator for every Livewire request _except_ a specific property or action. In these cases you can use the `wire:target.except` modifier like so:
+
+```blade
+<div wire:loading wire:target.except="download">...</div>
+```
+
+The above loading indicator will now be shown for every Livewire update request on the component _except_ the "download" action.
 
 ## Customizing CSS display property
 
