@@ -760,6 +760,36 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('bar')
         ;
     }
+
+    /** @test */
+    public function can_pass_array_of_possible_query_string_parameters()
+    {
+        Livewire::withQueryParams(['firstname' => 'foo', 'last_name' => 'bar', 'email' => 'baz'])->visit([
+            new class extends \Livewire\Component {
+                #[Url(as: ['first_name', 'firstname'])]
+                public ?string $firstName;
+
+                #[Url(as: 'last_name')]
+                public ?string $lastName;
+
+                #[Url]
+                public ?string $email;
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <input wire:model.live="firstName" type="text" dusk="first_name" />
+                    <input wire:model.live="lastName" type="text" dusk="last_name" />
+                    <input wire:model.live="email" type="text" dusk="email" />
+                </div>
+                HTML; }
+            },
+        ])
+            ->assertInputValue('@first_name', 'foo')
+            ->assertInputValue('@last_name', 'bar')
+            ->assertInputValue('@email', 'baz')
+
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
