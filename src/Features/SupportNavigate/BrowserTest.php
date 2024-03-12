@@ -861,11 +861,6 @@ class ThirdPage extends Component
 
 class FourthPage extends Component
 {
-    public function redirectToPageOneUsingNavigate()
-    {
-        return $this->redirect('/first', navigate: true);
-    }
-
     public function render()
     {
         return <<<'HTML'
