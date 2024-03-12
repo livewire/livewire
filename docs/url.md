@@ -138,6 +138,26 @@ class ShowUsers extends Component
 
 Now, when a user types "bob" into the search field, the URL will show: `https://example.com/users?q=bob` instead of `?search=bob`.
 
+Additionally, you can support multiple aliases by providing an array of multiple parameters:
+
+```php
+use Livewire\Attributes\Url;
+use Livewire\Component;
+
+class ShowUser extends Component
+{
+    #[Url(as: ['id', 'contact', 'cid'])]
+    public $contactId = '';
+
+    // ...
+}
+```
+
+Whether the url visited is `https://example.com/users?id=10` or `https://example.com/users?contact=10` or `https://example.com/users?cid=10`, the value of `$contactId` will be set to "10" inside the component. 
+
+
+
+
 ## Excluding certain values
 
 By default, Livewire will only put an entry in the query string when it's value has changed from what it was at initialization. Most of the time, this is the desired behavior, however, there are certain scenarios where you may want more control over which value Livewire excludes from the query string. In these cases you can use the `except` parameter.
