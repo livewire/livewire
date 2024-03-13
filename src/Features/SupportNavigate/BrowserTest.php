@@ -547,13 +547,13 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->visit('/fourth')
                 ->assertSee('On fourth')
                 ->assertScript('window.foo', 'bar')
-                ->assertDontSee('On first')
+                ->assertSee('On fourth')
                 ->click('@link.to.first') // first attempt bar -> baz
                 ->assertScript('window.foo', 'baz')
-                ->assertDontSee('On first')
+                ->assertSee('On fourth')
                 ->click('@link.to.first') // second attempt baz -> bat
                 ->assertScript('window.foo', 'bat')
-                ->assertDontSee('On first')
+                ->assertSee('On fourth')
                 ->click('@link.to.first') // finally navigate
                 ->assertSee('On first')
             ;
