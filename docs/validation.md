@@ -145,7 +145,7 @@ use Livewire\Attributes\Validate;
 public $title;
 ```
 
-Now, when the validation fails for this property, the message will  be "Please provide a post title" instead of "The title field is required".
+Now, when the validation fails for this property, the message will be "Please provide a post title" instead of "The title field is required".
 
 If you wish to add different messages for different rules, you can simply provide multiple `#[Validate]` attributes:
 
@@ -497,7 +497,7 @@ class UpdatePost extends Form
 
 ## Manually controlling validation errors
 
-Livewire's validation utilities should handle most common validation scenarios; however, there are times when you may want full control over the validation messages in your component.
+Livewire's validation utilities should handle the most common validation scenarios; however, there are times when you may want full control over the validation messages in your component.
 
 Below are all the available methods for manipulating the validation errors in your Livewire component:
 

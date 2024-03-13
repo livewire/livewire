@@ -595,7 +595,7 @@ If your [layout file](#layout-files) has any named slots in addition to `$slot`,
 <!-- resources/views/components/layouts/app.blade.php -->
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', $lang ?? app()->getLocale()) }}"> // [tl! highlight]
+<html lang="{{ str_replace('_', '-', $lang ?? app()->getLocale()) }}"> <!-- [tl! highlight] -->
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -611,7 +611,7 @@ If your [layout file](#layout-files) has any named slots in addition to `$slot`,
 Then, in your component view, define an `<x-slot>` element outside the root element:
 
 ```blade
-<x-slot:lang>fr</x-slot> // This component is in French [tl! highlight]
+<x-slot:lang>fr</x-slot> // This component is in French <!-- [tl! highlight] -->
 
 <div>
     // French content goes here...
@@ -726,7 +726,7 @@ The `$post` property will automatically be assigned to the model bound via the r
 
 ### Modifying the response
 
-In some scenarios you might want to modify the response and set a custom response header. You can hook into the response object by calling the `response()` method on the view and use a closure to modify the response object:
+In some scenarios, you might want to modify the response and set a custom response header. You can hook into the response object by calling the `response()` method on the view and use a closure to modify the response object:
 
 ```php
 <?php
