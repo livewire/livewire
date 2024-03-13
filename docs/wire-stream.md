@@ -126,7 +126,7 @@ class ChatBot extends Component
 ```
 
 Here's what's going on in the above example:
-* A user types into a text field labelled "Send a message" to ask the chat-bot a question.
+* A user types into a text field labeled "Send a message" to ask the chat-bot a question.
 * They press the [Enter] key.
 * A network request is sent to the server, sets the message to the `$question` property, and clears the `$prompt` property.
 * The response is sent back to the browser and the input is cleared. Because `$this->js('...')` was called, a new request is triggered to the server calling the `ask()` method.

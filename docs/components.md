@@ -726,7 +726,7 @@ The `$post` property will automatically be assigned to the model bound via the r
 
 ### Modifying the response
 
-In some scenarios you might want to modify the response and set a custom response header. You can hook into the response object by calling the `response()` method on the view and use a closure to modify the response object:
+In some scenarios, you might want to modify the response and set a custom response header. You can hook into the response object by calling the `response()` method on the view and use a closure to modify the response object:
 
 ```php
 <?php

@@ -21,7 +21,7 @@ Below is an example of wrapping an element used by a third-party library in `wir
 </form>
 ```
 
-You can also instruct Livewire to only ignore changes to attributes of the root element rather than observing changes to it's contents using `wire:ignore.self`.
+You can also instruct Livewire to only ignore changes to attributes of the root element rather than observing changes to its contents using `wire:ignore.self`.
 
 ```blade
 <div wire:ignore.self>
