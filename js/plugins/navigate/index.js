@@ -45,18 +45,9 @@ export default function (Alpine) {
             })
 
             whenItIsReleased(() => {
-                const cancelableEvent = new CustomEvent('alpine:before-navigate', {
-                    cancelable: true,
-                    bubbles: true,
-                    detail: {
-                        url: destination.href
-                    }
+                fireCancelableEventBeforeNavigation(destination, () => {
+                    navigateTo(destination);
                 })
-
-                document.dispatchEvent(cancelableEvent) // Dispatch cancelable event
-                if (!cancelableEvent.defaultPrevented) {
-                    navigateTo(destination)
-                }
             })
         })
     })
@@ -162,6 +153,22 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
             afterAllThis()
         })
     })
+}
+
+function fireCancelableEventBeforeNavigation(destination, callback) {
+    const cancelableEvent = new CustomEvent('alpine:before-navigate', {
+        cancelable: true,
+        bubbles: true,
+        detail: {
+            url: destination.href
+        }
+    })
+
+    document.dispatchEvent(cancelableEvent) // Dispatch cancelable event
+
+    if (!cancelableEvent.defaultPrevented) {
+        callback()
+    }
 }
 
 function fireEventForOtherLibariesToHookInto(eventName) {

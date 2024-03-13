@@ -8951,17 +8951,9 @@ function navigate_default(Alpine19) {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
       whenItIsReleased(() => {
-        const cancelableEvent = new CustomEvent("alpine:before-navigate", {
-          cancelable: true,
-          bubbles: true,
-          detail: {
-            url: destination.href
-          }
-        });
-        document.dispatchEvent(cancelableEvent);
-        if (!cancelableEvent.defaultPrevented) {
+        fireCancelableEventBeforeNavigation(destination, () => {
           navigateTo(destination);
-        }
+        });
       });
     });
   });
@@ -9034,6 +9026,19 @@ function preventAlpineFromPickingUpDomChanges(Alpine19, callback) {
       afterAllThis();
     });
   });
+}
+function fireCancelableEventBeforeNavigation(destination, callback) {
+  const cancelableEvent = new CustomEvent("alpine:before-navigate", {
+    cancelable: true,
+    bubbles: true,
+    detail: {
+      url: destination.href
+    }
+  });
+  document.dispatchEvent(cancelableEvent);
+  if (!cancelableEvent.defaultPrevented) {
+    callback();
+  }
 }
 function fireEventForOtherLibariesToHookInto(eventName) {
   document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
