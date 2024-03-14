@@ -7891,7 +7891,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       insertDotNotatedValueIntoData([second, ...rest].join("."), value, data3[first2]);
     };
     let entries = search.split("&").map((i) => i.split("="));
-    let data2 = {};
+    let data2 = /* @__PURE__ */ Object.create(null);
     entries.forEach(([key, value]) => {
       value = decodeURIComponent(value.replaceAll("+", "%20"));
       if (!key.includes("[")) {

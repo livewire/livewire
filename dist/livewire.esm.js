@@ -9249,7 +9249,7 @@ function fromQueryString(search) {
     insertDotNotatedValueIntoData([second, ...rest].join("."), value, data2[first2]);
   };
   let entries = search.split("&").map((i) => i.split("="));
-  let data = {};
+  let data = /* @__PURE__ */ Object.create(null);
   entries.forEach(([key, value]) => {
     value = decodeURIComponent(value.replaceAll("+", "%20"));
     if (!key.includes("[")) {
