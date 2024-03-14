@@ -760,7 +760,52 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringMissing('bar')
         ;
     }
+  
+    /** @test */
+    public function cannot_inject_js_through_query_string()
+    {
+        $this->tweakApplication(function() {
+            app('livewire')->component('foo', new class extends Component {
+                #[Url]
+                public $foo = 'bar';
 
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div>Hi!</div>
+                        <!-- We wrap the alert in a setTimeout so that the injection has a chance to run first... -->
+                        <!-- <script>setTimeout(() => alert('foo'), 100)</script> -->
+                    </div>
+                    HTML;
+                }
+            });
+
+            \Illuminate\Support\Facades\Route::get('/foo', function () {
+                return app('livewire')->new('foo')();
+            })->middleware('web');
+        });
+
+        $this->browse(function ($browser) {
+            $browser->visit('/foo?constructor.prototype.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&__proto__.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&constructor[prototype][html]=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&constructor.prototype.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&__proto__.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&__proto__[html]=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E#constructor.prototype.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&__proto__.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&constructor[prototype][html]=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&constructor.prototype.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&__proto__.html=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E&__proto__[html]=%22%27%3E%3Cimg+src+onerror%3Dalert%281%29%3E');
+
+            try {
+                $alert = $browser->driver->switchTo()->alert()->getText();
+            } catch (\Facebook\WebDriver\Exception\NoSuchAlertException $e) {
+                $this->assertTrue(true);
+
+                return;
+            }
+
+            $browser->waitForDialog();
+            $browser->acceptDialog();
+            $browser->waitForDialog();
+            $browser->acceptDialog();
+
+            $this->assertTrue(false, 'Maliciously injected alert detected');
+        });
+    }
+  
     /** @test */
     public function can_pass_array_of_possible_query_string_parameters()
     {
@@ -802,10 +847,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('firstname', 'test')
             ->assertInputValue('@first_name', 'test')
             ->assertQueryStringHas('param2', '3')
-            ->assertInputValue('@param', '3')
-
-
-        ;
+            ->assertInputValue('@param', '3');
     }
 }
 

@@ -4,7 +4,7 @@ Hi there and welcome to the Livewire contribution guide. In this guide, we are g
 To contribute, the easiest way is to ensure that the Livewire and Alpine repositories are set up on your local machine. This will allow you to make changes and run the test suite with ease.
 
 ### Forking and cloning the repositories
-To get started, the first step is to fork and clone the repositories. The easiest way to do this is by using the [Github CLI](https://cli.github.com/), but you can also perform these steps manually by clicking the "Fork" button on the Github [repository page](https://github.com/livewire/livewire).
+To get started, the first step is to fork and clone the repositories. The easiest way to do this is by using the [GitHub CLI](https://cli.github.com/), but you can also perform these steps manually by clicking the "Fork" button on the GitHub [repository page](https://github.com/livewire/livewire).
 
 ```shell
 # Fork and clone Livewire
@@ -53,7 +53,7 @@ cd alpine/packages/persist && npm link
 cd ../livewire
 
 # Link all packages
-npm link alpinejs @alpinejs/anchor @alpinejs/collapse @alpinejs/csp @alpinejs/docs @alpinejs/focus @alpinejs/history @alpinejs/intersect @alpinejs/mask @alpinejs/morph @alpinejs/navigate @alpinejs
+npm link alpinejs @alpinejs/anchor @alpinejs/collapse @alpinejs/csp @alpinejs/docs @alpinejs/focus @alpinejs/history @alpinejs/intersect @alpinejs/mask @alpinejs/morph @alpinejs/navigate @alpinejs/persist
 
 # Build Livewire
 npm run build

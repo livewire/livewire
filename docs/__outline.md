@@ -89,7 +89,7 @@ Fundamentals:
 	* Basic example
 	* Security concerns
 	* Firing events
-	* Listerns
+	* Listeners
 	* Passing parameters
 	* Scoping events
 		* parent / name / self
