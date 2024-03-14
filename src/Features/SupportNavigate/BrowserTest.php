@@ -705,6 +705,23 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    /** @test */
+    public function wire_loading_targeting_wire_navigate()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->assertDontSee('Loading...')
+                ->click('@link.to.third')
+                ->waitForText('Loading...')
+                ->assertSee('Loading...')
+                ->waitForText('Done loading...')
+                ->assertSee('Done loading...')
+                ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -756,6 +773,10 @@ class FirstPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+
+            <div wire:loading.navigate.delay>
+                Loading...
+            </div>
         </div>
         HTML;
     }

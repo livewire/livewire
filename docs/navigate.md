@@ -72,6 +72,36 @@ The `.hover` modifier will instruct Livewire to prefetch the page after a user h
 > [!warning] Prefetching on hover increases server usage
 > Because not all users will click a link they hover over, adding `.hover` will request pages that may not be needed, though Livewire attempts to mitigate some of this overhead by waiting `60` milliseconds before prefetching the page.
 
+## Showing Loading Indicators During Navigation
+
+Livewire allows you to indicate loading states on parts of your page when navigating between Livewire components using the wire:navigate directive. To utilize this feature, you can add the wire:loading.navigate directive to any element that you want to show during the navigation loading state.
+
+To display an element while a navigation request is loading, add the wire:loading.navigate directive to your element:
+
+```blade
+<div wire:loading.navigate>
+    Loading, please wait...
+</div>
+```
+
+This element will become visible when a link with the wire:navigate directive is clicked and the request is in progress.
+
+### Adding Delays
+
+You can introduce a delay to the appearance of the loading indicator, which can help avoid a flickering effect for very fast navigation transitions. Livewire supports a range of predefined delays you can apply:
+
+```blade
+<div wire:loading.navigate.delay.shortest>...</div> <!-- 50ms delay -->
+<div wire:loading.navigate.delay.shorter>...</div>  <!-- 100ms delay -->
+<div wire:loading.navigate.delay.short>...</div>    <!-- 150ms delay -->
+<div wire:loading.navigate.delay>...</div>          <!-- 200ms default delay -->
+<div wire:loading.navigate.delay.long>...</div>     <!-- 300ms delay -->
+<div wire:loading.navigate.delay.longer>...</div>   <!-- 500ms delay -->
+<div wire:loading.navigate.delay.longest>...</div>  <!-- 1000ms delay -->
+```
+
+By using these delay modifiers, you can tailor the loading experience to match the expected duration of your navigation requests, enhancing the user experience on your site.
+
 ## Persisting elements across page visits
 
 Sometimes, there are parts of a user interface that you need to persist between page loads, such as audio or video players. For example, in a podcasting application, a user may want to keep listening to an episode as they browse other pages.

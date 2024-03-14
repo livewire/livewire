@@ -3,19 +3,26 @@ import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
 
 directive('loading', ({ el, directive, component }) => {
-    let targets = getTargets(el)
-
     let [delay, abortDelay] = applyDelay(directive)
 
-    whenTargetsArePartOfRequest(component, targets, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
-    ])
-
-    whenTargetsArePartOfFileUpload(component, targets, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
-    ])
+    if(directive.modifiers.includes('navigate')) {
+        whenNavigating([
+            () => delay(() => toggleBooleanStateDirective(el, directive, true)),
+            () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        ])
+    } else {
+        let targets = getTargets(el)
+        
+        whenTargetsArePartOfRequest(component, targets, [
+            () => delay(() => toggleBooleanStateDirective(el, directive, true)),
+            () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        ])
+    
+        whenTargetsArePartOfFileUpload(component, targets, [
+            () => delay(() => toggleBooleanStateDirective(el, directive, true)),
+            () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        ])
+    }    
 })
 
 function applyDelay(directive) {
@@ -102,6 +109,16 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
     window.addEventListener('livewire-upload-error', e => {
         if (eventMismatch(e)) return
 
+        endLoading()
+    })
+}
+
+function whenNavigating([ startLoading, endLoading ]) {
+    window.addEventListener('alpine:start-navigating', e => {
+        startLoading()
+    })
+
+    window.addEventListener('alpine:navigating', e => {
         endLoading()
     })
 }

@@ -52,6 +52,7 @@ export default function (Alpine) {
 
     function navigateTo(destination) {
         showProgressBar && showAndStartProgressBar()
+        fireEventForOtherLibariesToHookInto('alpine:start-navigating')
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
             fireEventForOtherLibariesToHookInto('alpine:navigating')

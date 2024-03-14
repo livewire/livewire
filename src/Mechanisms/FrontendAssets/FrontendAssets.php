@@ -102,11 +102,15 @@ class FrontendAssets extends Mechanism
         $html = <<<HTML
         <!-- Livewire Styles -->
         <style {$nonce}>
-            [wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
+            [wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex], [wire\:loading\.navigate][wire\:loading\.navigate] {
                 display: none;
             }
 
             [wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {
+                display: none;
+            }
+
+            [wire\:loading\.navigate\.delay][wire\:loading\.navigate\.delay], [wire\:loading\.navigate\.delay\.none][wire\:loading\.navigate\.delay\.none], [wire\:loading\.navigate\.delay\.shortest][wire\:loading\.navigate\.delay\.shortest], [wire\:loading\.navigate\.delay\.shorter][wire\:loading\.navigate\.delay\.shorter], [wire\:loading\.navigate\.delay\.short][wire\:loading\.navigate\.delay\.short], [wire\:loading\.navigate\.delay\.default][wire\:loading\.navigate\.delay\.default], [wire\:loading\.navigate\.delay\.long][wire\:loading\.navigate\.delay\.long], [wire\:loading\.navigate\.delay\.longer][wire\:loading\.navigate\.delay\.longer], [wire\:loading\.navigate\.delay\.longest][wire\:loading\.navigate\.delay\.longest] {
                 display: none;
             }
 

@@ -29,6 +29,22 @@ Alternatively, you can append `.remove` for the inverse effect, showing an eleme
 <div wire:loading.remove>...</div>
 ```
 
+### Navigating
+
+In addition to showing loading indicators during server requests, Livewire now enables you to display loading indicators when navigating between components using the wire:navigate directive. This enhancement is particularly useful for providing feedback during page transitions, which can enhance user experience in applications that leverage Livewire for SPA-like behavior.
+
+To use this feature, simply append .navigate to the wire:loading directive on any element you wish to show during navigation:
+
+```blade
+<a href="/posts" wire:navigate>Posts</a>
+
+<div wire:loading.navigate>
+    Navigating, please wait...
+</div>
+```
+
+When a user clicks a link with the wire:navigate directive, the specified element will be displayed, providing a visual cue that a navigation process is underway. Once the navigation completes and the new component is loaded, the loading indicator will automatically be hidden.
+
 ## Toggling classes
 
 In addition to toggling the visibility of entire elements, it's often useful to change the styling of an existing element by toggling CSS classes on and off during requests to the server. This technique can be used for things like changing background colors, lowering opacity, triggering spinning animations, and more.
@@ -183,10 +199,11 @@ Below is the complete list of available display values:
 
 On fast connections, updates often happen so quickly that loading indicators only flash briefly on the screen before being removed. In these cases, the indicator is more of a distraction than a helpful affordance.
 
-For this reason, Livewire provides a `.delay` modifier to delay the showing of an indicator. For example, if you add `wire:loading.delay` to an element like so:
+For this reason, Livewire provides a `.delay` modifier to delay the showing of an indicator:
 
 ```blade
 <div wire:loading.delay>...</div>
+<div wire:loading.navigate.delay>...</div>
 ```
 
 The above element will only appear if the request takes over 200 milliseconds. The user will never see the indicator if the request completes before then.

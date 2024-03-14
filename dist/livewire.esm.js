@@ -2848,7 +2848,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.5",
+      version: "3.13.6",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -8965,6 +8965,7 @@ function navigate_default(Alpine19) {
   });
   function navigateTo(destination) {
     showProgressBar && showAndStartProgressBar();
+    fireEventForOtherLibariesToHookInto("alpine:start-navigating");
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
@@ -10041,16 +10042,23 @@ directive("offline", ({ el, directive: directive2, cleanup: cleanup2 }) => {
 
 // js/directives/wire-loading.js
 directive("loading", ({ el, directive: directive2, component }) => {
-  let targets = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  whenTargetsArePartOfRequest(component, targets, [
-    () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
-    () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
-  ]);
-  whenTargetsArePartOfFileUpload(component, targets, [
-    () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
-    () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
-  ]);
+  if (directive2.modifiers.includes("navigate")) {
+    whenNavigating([
+      () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
+      () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
+    ]);
+  } else {
+    let targets = getTargets(el);
+    whenTargetsArePartOfRequest(component, targets, [
+      () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
+      () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
+    ]);
+    whenTargetsArePartOfFileUpload(component, targets, [
+      () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
+      () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
+    ]);
+  }
 });
 function applyDelay(directive2) {
   if (!directive2.modifiers.includes("delay") || directive2.modifiers.includes("none"))
@@ -10124,6 +10132,14 @@ function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLo
   window.addEventListener("livewire-upload-error", (e) => {
     if (eventMismatch(e))
       return;
+    endLoading();
+  });
+}
+function whenNavigating([startLoading, endLoading]) {
+  window.addEventListener("alpine:start-navigating", (e) => {
+    startLoading();
+  });
+  window.addEventListener("alpine:navigating", (e) => {
     endLoading();
   });
 }
