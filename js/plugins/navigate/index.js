@@ -100,16 +100,6 @@ export default function (Alpine) {
         })
     }
 
-    // @todo:
-    // Current problem:
-    // - Visit 3 pages consequitively
-    // - Hit back button 3 times (all good)
-    // - Hit forward button 3 times (all good)
-    // - Hit back button 1 time (all good)
-    // - Hit "$refresh"
-    // - Hit forward (makes a request to the server)
-    // - Hit back (doesn't update the HTML but doesn't throw an error and updates the URL)
-
     whenTheBackOrForwardButtonIsClicked(
         (ifThePageBeingVisitedHasntBeenCached) => {
             ifThePageBeingVisitedHasntBeenCached((url) => {
