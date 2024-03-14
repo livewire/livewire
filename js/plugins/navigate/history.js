@@ -119,7 +119,7 @@ function updateUrl(method, url, html) {
 
     method === 'pushState'
         ? snapshotCache.push(key, new Snapshot(url, html))
-        : snapshotCache.replace(key, new Snapshot(url, html))
+        : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
 
     let state = history.state || {}
 
