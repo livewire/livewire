@@ -9099,6 +9099,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       component.inscribeSnapshotAndEffectsOnElement();
     });
   });
+  directive2("navigate", ({ el, component }) => {
+    whenThisLinkIsPressed(el, (whenItIsReleased) => whenItIsReleased(() => {
+      window.dispatchEvent(new CustomEvent("livewire-navigating-start", { bubbles: true, detail: { id: component.id } }));
+    }));
+    document.addEventListener("alpine:navigating", () => {
+      window.dispatchEvent(new CustomEvent("livewire-navigating-end", { bubbles: true, detail: { id: component.id } }));
+    });
+  });
 
   // js/directives/wire-confirm.js
   directive2("confirm", ({ el, directive: directive3 }) => {
@@ -9173,7 +9181,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("loading", ({ el, directive: directive3, component }) => {
     let [delay3, abortDelay] = applyDelay(directive3);
     if (directive3.modifiers.includes("navigate")) {
-      whenNavigating([
+      whenNavigating(component, [
         () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
       ]);
@@ -9227,6 +9235,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
+  function whenNavigating(component, [startLoading, endLoading]) {
+    let eventMismatch = (e) => {
+      let id = e.detail.id;
+      if (id !== component.id)
+        return true;
+      return false;
+    };
+    window.addEventListener("livewire-navigating-start", (e) => {
+      if (eventMismatch(e))
+        return;
+      startLoading();
+    });
+    window.addEventListener("livewire-navigating-end", (e) => {
+      if (eventMismatch(e))
+        return;
+      endLoading();
+    });
+  }
   function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
     on2("commit", ({ component: iComponent, commit: payload, respond }) => {
       if (iComponent !== component)
@@ -9261,14 +9287,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     window.addEventListener("livewire-upload-error", (e) => {
       if (eventMismatch(e))
         return;
-      endLoading();
-    });
-  }
-  function whenNavigating([startLoading, endLoading]) {
-    window.addEventListener("alpine:start-navigating", (e) => {
-      startLoading();
-    });
-    window.addEventListener("alpine:navigating", (e) => {
       endLoading();
     });
   }

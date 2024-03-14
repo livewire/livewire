@@ -9970,6 +9970,14 @@ document.addEventListener("alpine:navigating", () => {
     component.inscribeSnapshotAndEffectsOnElement();
   });
 });
+directive("navigate", ({ el, component }) => {
+  whenThisLinkIsPressed(el, (whenItIsReleased) => whenItIsReleased(() => {
+    window.dispatchEvent(new CustomEvent("livewire-navigating-start", { bubbles: true, detail: { id: component.id } }));
+  }));
+  document.addEventListener("alpine:navigating", () => {
+    window.dispatchEvent(new CustomEvent("livewire-navigating-end", { bubbles: true, detail: { id: component.id } }));
+  });
+});
 
 // js/directives/wire-confirm.js
 directive("confirm", ({ el, directive: directive2 }) => {
@@ -10044,7 +10052,7 @@ directive("offline", ({ el, directive: directive2, cleanup: cleanup2 }) => {
 directive("loading", ({ el, directive: directive2, component }) => {
   let [delay, abortDelay] = applyDelay(directive2);
   if (directive2.modifiers.includes("navigate")) {
-    whenNavigating([
+    whenNavigating(component, [
       () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
     ]);
@@ -10098,6 +10106,24 @@ function applyDelay(directive2) {
     }
   ];
 }
+function whenNavigating(component, [startLoading, endLoading]) {
+  let eventMismatch = (e) => {
+    let id = e.detail.id;
+    if (id !== component.id)
+      return true;
+    return false;
+  };
+  window.addEventListener("livewire-navigating-start", (e) => {
+    if (eventMismatch(e))
+      return;
+    startLoading();
+  });
+  window.addEventListener("livewire-navigating-end", (e) => {
+    if (eventMismatch(e))
+      return;
+    endLoading();
+  });
+}
 function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
   on("commit", ({ component: iComponent, commit: payload, respond }) => {
     if (iComponent !== component)
@@ -10132,14 +10158,6 @@ function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLo
   window.addEventListener("livewire-upload-error", (e) => {
     if (eventMismatch(e))
       return;
-    endLoading();
-  });
-}
-function whenNavigating([startLoading, endLoading]) {
-  window.addEventListener("alpine:start-navigating", (e) => {
-    startLoading();
-  });
-  window.addEventListener("alpine:navigating", (e) => {
     endLoading();
   });
 }

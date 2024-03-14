@@ -6,7 +6,7 @@ directive('loading', ({ el, directive, component }) => {
     let [delay, abortDelay] = applyDelay(directive)
 
     if(directive.modifiers.includes('navigate')) {
-        whenNavigating([
+        whenNavigating(component, [
             () => delay(() => toggleBooleanStateDirective(el, directive, true)),
             () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
         ])
@@ -70,6 +70,27 @@ function applyDelay(directive) {
     ]
 }
 
+function whenNavigating(component, [ startLoading, endLoading ]) {
+    let eventMismatch = e => {
+        let id = e.detail.id
+        
+        if (id !== component.id) return true
+
+        return false
+    }
+    window.addEventListener('livewire-navigating-start', e => {
+        if (eventMismatch(e)) return
+
+        startLoading()
+    })
+
+    window.addEventListener('livewire-navigating-end', e => {
+        if (eventMismatch(e)) return
+        
+        endLoading()
+    })
+}
+
 function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
     on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
@@ -109,16 +130,6 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
     window.addEventListener('livewire-upload-error', e => {
         if (eventMismatch(e)) return
 
-        endLoading()
-    })
-}
-
-function whenNavigating([ startLoading, endLoading ]) {
-    window.addEventListener('alpine:start-navigating', e => {
-        startLoading()
-    })
-
-    window.addEventListener('alpine:navigating', e => {
         endLoading()
     })
 }

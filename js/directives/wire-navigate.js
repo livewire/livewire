@@ -1,4 +1,6 @@
 import Alpine from 'alpinejs'
+import { directive } from "@/directives"
+import { whenThisLinkIsPressed } from '../plugins/navigate/links.js';
 
 Alpine.addInitSelector(() => `[wire\\:navigate]`)
 Alpine.addInitSelector(() => `[wire\\:navigate\\.hover]`)
@@ -20,3 +22,14 @@ document.addEventListener('alpine:navigating', () => {
         component.inscribeSnapshotAndEffectsOnElement()
     })
 })
+
+directive('navigate', ({ el, component }) => {
+    whenThisLinkIsPressed(el, whenItIsReleased => whenItIsReleased(() => {
+        window.dispatchEvent(new CustomEvent('livewire-navigating-start', { bubbles: true, detail: { id: component.id } }));
+    }));
+
+    document.addEventListener('alpine:navigating', () => {
+        window.dispatchEvent(new CustomEvent('livewire-navigating-end', { bubbles: true, detail: { id: component.id } }));
+    });
+});
+

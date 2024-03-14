@@ -23,6 +23,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('first-page-child', FirstPageChild::class);
+            Livewire::component('first-page-second-child', FirstPageSecondChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('third-page', ThirdPage::class);
@@ -712,10 +713,18 @@ class BrowserTest extends \Tests\BrowserTestCase
             $browser
                 ->visit('/first')
                 ->assertSee('On first')
-                ->assertDontSee('Loading...')
+                ->assertDontSee('Loading in parent...')
+                ->assertDontSee('Loading in child...')
                 ->click('@link.to.third')
-                ->waitForText('Loading...')
-                ->assertSee('Loading...')
+                ->waitForText('Loading in parent...')
+                ->assertSee('Loading in parent...')
+                ->waitForText('Done loading...')
+                ->assertSee('Done loading...')
+                ->back()
+                ->waitForText('On first')
+                ->click('@link.to.third.from.second.child')
+                ->waitForText('Loading in child...')
+                ->assertSee('Loading in child...')
                 ->waitForText('Done loading...')
                 ->assertSee('Done loading...')
                 ;
@@ -767,6 +776,8 @@ class FirstPage extends Component
 
             <livewire:first-page-child />
 
+            <livewire:first-page-second-child />
+
             @persist('foo')
                 <div x-data="{ count: 1 }">
                     <span x-text="count" dusk="count"></span>
@@ -775,7 +786,7 @@ class FirstPage extends Component
             @endpersist
 
             <div wire:loading.navigate.delay>
-                Loading...
+                Loading in parent...
             </div>
         </div>
         HTML;
@@ -792,6 +803,24 @@ class FirstPageChild extends Component
 
             <button type="button" wire:click="$parent.redirectToPageTwoUsingNavigate" dusk="redirect.to.second.from.child">Redirect to second page from child</button>
             <button type="button" x-on:click="console.log($wire.$parent.__instance.id)">shmump up</button>
+        </div>
+        HTML;
+    }
+}
+
+class FirstPageSecondChild extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>Second Child</div>
+
+            <a href="/third" wire:navigate.hover dusk="link.to.third.from.second.child">Go to slow third page</a>
+
+            <div wire:loading.navigate>
+                Loading in child...
+            </div>
         </div>
         HTML;
     }
