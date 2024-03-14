@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1485,27 +1485,17 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
-          if (el2._x_inited) {
-            if (el2._x_ignore)
-              skip();
-            return;
-          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          if (el2._x_ignore) {
-            skip();
-          } else {
-            el2._x_inited = true;
-          }
+          el2._x_ignore && skip();
         });
       });
     }
-    function destroyTree(root, walker = walk) {
-      walker(root, (el) => {
+    function destroyTree(root) {
+      walk(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
-        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1648,6 +1638,8 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
+        if (removedNodes.has(node))
+          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -1695,15 +1687,15 @@ var require_module_cjs = __commonJS({
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Reflect.has(obj, name));
+        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
           return collapseProxies;
-        return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
+        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
+        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return Reflect.set(target, name, value, thisProxy);
@@ -2924,10 +2916,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getArrayOfRefObject(el) {
       let refObjects = [];
-      findClosest(el, (i) => {
-        if (i._x_refs)
-          refObjects.push(i._x_refs);
-      });
+      let currentEl = el;
+      while (currentEl) {
+        if (currentEl._x_refs)
+          refObjects.push(currentEl._x_refs);
+        currentEl = currentEl.parentNode;
+      }
       return refObjects;
     }
     var globalIdMemo = {};
@@ -3539,21 +3533,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isObject2(items)) {
           items = Object.entries(items).map(([key, value]) => {
             let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-            evaluateKey((value2) => {
-              if (keys.includes(value2))
-                warn("Duplicate key on x-for", el);
-              keys.push(value2);
-            }, { scope: { index: key, ...scope2 } });
+            evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
             scopes.push(scope2);
           });
         } else {
           for (let i = 0; i < items.length; i++) {
             let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-            evaluateKey((value) => {
-              if (keys.includes(value))
-                warn("Duplicate key on x-for", el);
-              keys.push(value);
-            }, { scope: { index: i, ...scope2 } });
+            evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
             scopes.push(scope2);
           }
         }
@@ -3601,7 +3587,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let marker = document.createElement("div");
           mutateDom(() => {
             if (!elForSpot)
-              warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
+              warn(`x-for ":key" is undefined or invalid`, templateEl);
             elForSpot.after(marker);
             elInSpot.after(elForSpot);
             elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -3628,7 +3614,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            skipDuringClone(() => initTree(clone2))();
+            initTree(clone2);
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3708,7 +3694,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          skipDuringClone(() => initTree(clone2))();
+          initTree(clone2);
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
@@ -3772,9 +3758,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3893,9 +3879,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4895,9 +4881,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4981,9 +4967,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5008,7 +4994,7 @@ var require_module_cjs5 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("intersect", Alpine19.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5026,7 +5012,7 @@ var require_module_cjs5 = __commonJS({
         cleanup2(() => {
           observer.disconnect();
         });
-      }));
+      });
     }
     function getThreshold(modifiers) {
       if (modifiers.includes("full"))
@@ -5063,9 +5049,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6601,9 +6587,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6964,9 +6950,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7932,7 +7918,20 @@ async function sendRequest(pool) {
     succeed: (i) => succeedCallbacks.push(i),
     fail: (i) => failCallbacks.push(i)
   });
-  let response = await fetch(updateUri, options);
+  let response;
+  try {
+    response = await fetch(updateUri, options);
+  } catch (e) {
+    finishProfile({ content: "{}", failed: true });
+    handleFailure();
+    fail({
+      status: 503,
+      content: null,
+      preventDefault: () => {
+      }
+    });
+    return;
+  }
   let mutableObject = {
     status: response.status,
     response
@@ -9297,6 +9296,7 @@ var import_morph = __toESM(require_module_cjs7());
 var import_mask = __toESM(require_module_cjs8());
 var import_alpinejs5 = __toESM(require_module_cjs());
 function start() {
+  setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
   import_alpinejs5.default.plugin(import_morph.default);
@@ -9348,6 +9348,15 @@ function start() {
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
+function ensureLivewireScriptIsntMisplaced() {
+  let el = document.querySelector("script[data-update-uri][data-csrf]");
+  if (!el)
+    return;
+  let livewireEl = el.closest("[wire\\:id]");
+  if (livewireEl) {
+    console.warn("Livewire: missing closing tags found. Ensure your template elements contain matching closing tags.", livewireEl);
+  }
+}
 
 // js/index.js
 var import_alpinejs17 = __toESM(require_module_cjs());
@@ -9355,7 +9364,7 @@ var import_alpinejs17 = __toESM(require_module_cjs());
 // js/features/supportDisablingFormsDuringRequest.js
 var import_alpinejs6 = __toESM(require_module_cjs());
 var cleanupStackByComponentId = {};
-on("element.init", ({ el, component }) => {
+on("element.init", ({ el, component }) => setTimeout(() => {
   let directives = getDirectives(el);
   if (directives.missing("submit"))
     return;
@@ -9377,7 +9386,7 @@ on("element.init", ({ el, component }) => {
       }
     });
   });
-});
+}));
 on("commit", ({ component, respond }) => {
   respond(() => {
     cleanup(component);
@@ -9979,6 +9988,8 @@ on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component 
       if (el.__livewire_confirm) {
         el.__livewire_confirm(() => {
           execute();
+        }, () => {
+          e.stopImmediatePropagation();
         });
       } else {
         execute();
@@ -10012,7 +10023,7 @@ directive("confirm", ({ el, directive: directive2 }) => {
   message = message.replaceAll("\\n", "\n");
   if (message === "")
     message = "Are you sure?";
-  el.__livewire_confirm = (action) => {
+  el.__livewire_confirm = (action, instead) => {
     if (shouldPrompt) {
       let [question, expected] = message.split("|");
       if (!expected) {
@@ -10021,11 +10032,15 @@ directive("confirm", ({ el, directive: directive2 }) => {
         let input = prompt(question);
         if (input === expected) {
           action();
+        } else {
+          instead();
         }
       }
     } else {
       if (confirm(message))
         action();
+      else
+        instead();
     }
   };
 });
@@ -10034,7 +10049,7 @@ directive("confirm", ({ el, directive: directive2 }) => {
 function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
   isTruthy = directive2.modifiers.includes("remove") ? !isTruthy : isTruthy;
   if (directive2.modifiers.includes("class")) {
-    let classes = directive2.expression.split(" ");
+    let classes = directive2.expression.split(" ").filter(String);
     if (isTruthy) {
       el.classList.add(...classes);
     } else {
@@ -10072,9 +10087,9 @@ directive("offline", ({ el, directive: directive2, cleanup: cleanup2 }) => {
 
 // js/directives/wire-loading.js
 directive("loading", ({ el, directive: directive2, component }) => {
-  let targets = getTargets(el);
+  let { targets, inverted } = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  whenTargetsArePartOfRequest(component, targets, [
+  whenTargetsArePartOfRequest(component, targets, inverted, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
@@ -10121,11 +10136,11 @@ function applyDelay(directive2) {
     }
   ];
 }
-function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
+function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
   on("commit", ({ component: iComponent, commit: payload, respond }) => {
     if (iComponent !== component)
       return;
-    if (targets.length > 0 && !containsTargets(payload, targets))
+    if (targets.length > 0 && containsTargets(payload, targets) === inverted)
       return;
     startLoading();
     respond(() => {
@@ -10183,9 +10198,12 @@ function containsTargets(payload, targets) {
 function getTargets(el) {
   let directives = getDirectives(el);
   let targets = [];
+  let inverted = false;
   if (directives.has("target")) {
     let directive2 = directives.get("target");
     let raw = directive2.expression;
+    if (directive2.modifiers.includes("except"))
+      inverted = true;
     if (raw.includes("(") && raw.includes(")")) {
       targets.push({ target: directive2.method, params: quickHash(JSON.stringify(directive2.params)) });
     } else if (raw.includes(",")) {
@@ -10199,7 +10217,7 @@ function getTargets(el) {
     let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
   }
-  return targets;
+  return { targets, inverted };
 }
 function quickHash(subject) {
   return btoa(encodeURIComponent(subject));

@@ -675,7 +675,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -867,27 +867,17 @@
   }) {
     deferHandlingDirectives(() => {
       walker(el, (el2, skip) => {
-        if (el2._x_inited) {
-          if (el2._x_ignore)
-            skip();
-          return;
-        }
         intercept(el2, skip);
         initInterceptors.forEach((i) => i(el2, skip));
         directives(el2, el2.attributes).forEach((handle) => handle());
-        if (el2._x_ignore) {
-          skip();
-        } else {
-          el2._x_inited = true;
-        }
+        el2._x_ignore && skip();
       });
     });
   }
-  function destroyTree(root, walker = walk) {
-    walker(root, (el) => {
+  function destroyTree(root) {
+    walk(root, (el) => {
       cleanupAttributes(el);
       cleanupElement(el);
-      delete el._x_inited;
     });
   }
   var onAttributeAddeds = [];
@@ -1030,6 +1020,8 @@
       node._x_ignore = true;
     });
     for (let node of addedNodes) {
+      if (removedNodes.has(node))
+        continue;
       if (!node.isConnected)
         continue;
       delete node._x_ignoreSelf;
@@ -1077,15 +1069,15 @@
     has({ objects }, name) {
       if (name == Symbol.unscopables)
         return false;
-      return objects.some((obj) => Reflect.has(obj, name));
+      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
     },
     get({ objects }, name, thisProxy) {
       if (name == "toJSON")
         return collapseProxies;
-      return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
+      return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
     },
     set({ objects }, name, value, thisProxy) {
-      const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
+      const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
       const descriptor = Object.getOwnPropertyDescriptor(target, name);
       if (descriptor?.set && descriptor?.get)
         return Reflect.set(target, name, value, thisProxy);
@@ -2953,10 +2945,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   function getArrayOfRefObject(el) {
     let refObjects = [];
-    findClosest(el, (i) => {
-      if (i._x_refs)
-        refObjects.push(i._x_refs);
-    });
+    let currentEl = el;
+    while (currentEl) {
+      if (currentEl._x_refs)
+        refObjects.push(currentEl._x_refs);
+      currentEl = currentEl.parentNode;
+    }
     return refObjects;
   }
   var globalIdMemo = {};
@@ -3568,21 +3562,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (isObject22(items)) {
         items = Object.entries(items).map(([key, value]) => {
           let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-          evaluateKey((value2) => {
-            if (keys.includes(value2))
-              warn("Duplicate key on x-for", el);
-            keys.push(value2);
-          }, { scope: { index: key, ...scope2 } });
+          evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
           scopes.push(scope2);
         });
       } else {
         for (let i = 0; i < items.length; i++) {
           let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-          evaluateKey((value) => {
-            if (keys.includes(value))
-              warn("Duplicate key on x-for", el);
-            keys.push(value);
-          }, { scope: { index: i, ...scope2 } });
+          evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
           scopes.push(scope2);
         }
       }
@@ -3630,7 +3616,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let marker = document.createElement("div");
         mutateDom(() => {
           if (!elForSpot)
-            warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
+            warn(`x-for ":key" is undefined or invalid`, templateEl);
           elForSpot.after(marker);
           elInSpot.after(elForSpot);
           elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -3657,7 +3643,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         };
         mutateDom(() => {
           lastEl.after(clone2);
-          skipDuringClone(() => initTree(clone2))();
+          initTree(clone2);
         });
         if (typeof key === "object") {
           warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3737,7 +3723,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       addScopeToNode(clone2, {}, el);
       mutateDom(() => {
         el.after(clone2);
-        skipDuringClone(() => initTree(clone2))();
+        initTree(clone2);
       });
       el._x_currentIfEl = clone2;
       el._x_undoIf = () => {
@@ -4193,7 +4179,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       succeed: (i) => succeedCallbacks.push(i),
       fail: (i) => failCallbacks.push(i)
     });
-    let response = await fetch(updateUri, options);
+    let response;
+    try {
+      response = await fetch(updateUri, options);
+    } catch (e) {
+      finishProfile({ content: "{}", failed: true });
+      handleFailure();
+      fail({
+        status: 503,
+        content: null,
+        preventDefault: () => {
+        }
+      });
+      return;
+    }
     let mutableObject = {
       status: response.status,
       response
@@ -4668,7 +4667,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4762,7 +4761,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5711,7 +5710,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5770,9 +5769,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
-    Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
+    Alpine3.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate3 = evaluateLater2(expression);
       let options = {
         rootMargin: getRootMargin(modifiers),
@@ -5790,7 +5789,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       cleanup3(() => {
         observer2.disconnect();
       });
-    }));
+    });
   }
   function getThreshold(modifiers) {
     if (modifiers.includes("full"))
@@ -5825,7 +5824,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -7934,7 +7933,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8270,7 +8269,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default8(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let templateFn = () => expression;
@@ -8437,6 +8436,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/lifecycle.js
   function start2() {
+    setTimeout(() => ensureLivewireScriptIsntMisplaced());
     dispatch(document, "livewire:init");
     dispatch(document, "livewire:initializing");
     module_default.plugin(module_default7);
@@ -8488,10 +8488,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
     dispatch(document, "livewire:initialized");
   }
+  function ensureLivewireScriptIsntMisplaced() {
+    let el = document.querySelector("script[data-update-uri][data-csrf]");
+    if (!el)
+      return;
+    let livewireEl = el.closest("[wire\\:id]");
+    if (livewireEl) {
+      console.warn("Livewire: missing closing tags found. Ensure your template elements contain matching closing tags.", livewireEl);
+    }
+  }
 
   // js/features/supportDisablingFormsDuringRequest.js
   var cleanupStackByComponentId = {};
-  on2("element.init", ({ el, component }) => {
+  on2("element.init", ({ el, component }) => setTimeout(() => {
     let directives2 = getDirectives(el);
     if (directives2.missing("submit"))
       return;
@@ -8513,7 +8522,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
     });
-  });
+  }));
   on2("commit", ({ component, respond }) => {
     respond(() => {
       cleanup2(component);
@@ -9109,6 +9118,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el.__livewire_confirm) {
           el.__livewire_confirm(() => {
             execute();
+          }, () => {
+            e.stopImmediatePropagation();
           });
         } else {
           execute();
@@ -9141,7 +9152,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     message = message.replaceAll("\\n", "\n");
     if (message === "")
       message = "Are you sure?";
-    el.__livewire_confirm = (action) => {
+    el.__livewire_confirm = (action, instead) => {
       if (shouldPrompt) {
         let [question, expected] = message.split("|");
         if (!expected) {
@@ -9150,11 +9161,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let input = prompt(question);
           if (input === expected) {
             action();
+          } else {
+            instead();
           }
         }
       } else {
         if (confirm(message))
           action();
+        else
+          instead();
       }
     };
   });
@@ -9163,7 +9178,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
     isTruthy = directive3.modifiers.includes("remove") ? !isTruthy : isTruthy;
     if (directive3.modifiers.includes("class")) {
-      let classes = directive3.expression.split(" ");
+      let classes = directive3.expression.split(" ").filter(String);
       if (isTruthy) {
         el.classList.add(...classes);
       } else {
@@ -9201,9 +9216,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-loading.js
   directive2("loading", ({ el, directive: directive3, component }) => {
-    let targets = getTargets(el);
+    let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive3);
-    whenTargetsArePartOfRequest(component, targets, [
+    whenTargetsArePartOfRequest(component, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
@@ -9250,11 +9265,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
-  function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
+  function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
     on2("commit", ({ component: iComponent, commit: payload, respond }) => {
       if (iComponent !== component)
         return;
-      if (targets.length > 0 && !containsTargets(payload, targets))
+      if (targets.length > 0 && containsTargets(payload, targets) === inverted)
         return;
       startLoading();
       respond(() => {
@@ -9312,9 +9327,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getTargets(el) {
     let directives2 = getDirectives(el);
     let targets = [];
+    let inverted = false;
     if (directives2.has("target")) {
       let directive3 = directives2.get("target");
       let raw2 = directive3.expression;
+      if (directive3.modifiers.includes("except"))
+        inverted = true;
       if (raw2.includes("(") && raw2.includes(")")) {
         targets.push({ target: directive3.method, params: quickHash(JSON.stringify(directive3.params)) });
       } else if (raw2.includes(",")) {
@@ -9328,7 +9346,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
       directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
-    return targets;
+    return { targets, inverted };
   }
   function quickHash(subject) {
     return btoa(encodeURIComponent(subject));
