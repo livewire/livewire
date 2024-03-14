@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1492,8 +1492,8 @@ var require_module_cjs = __commonJS({
         });
       });
     }
-    function destroyTree(root) {
-      walk(root, (el) => {
+    function destroyTree(root, walker = walk) {
+      walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
       });
@@ -1687,12 +1687,12 @@ var require_module_cjs = __commonJS({
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name));
+        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
           return collapseProxies;
-        return Reflect.get(objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || {}, name, thisProxy);
+        return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
         const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
@@ -1714,6 +1714,8 @@ var require_module_cjs = __commonJS({
       let recurse = (obj, basePath = "") => {
         Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
           if (enumerable === false || value === void 0)
+            return;
+          if (typeof value === "object" && value !== null && value.__v_skip)
             return;
           let path = basePath === "" ? key : `${basePath}.${key}`;
           if (typeof value === "object" && value !== null && value._x_interceptor) {
@@ -2838,7 +2840,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.5",
+      version: "3.13.7",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -2916,12 +2918,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     function getArrayOfRefObject(el) {
       let refObjects = [];
-      let currentEl = el;
-      while (currentEl) {
-        if (currentEl._x_refs)
-          refObjects.push(currentEl._x_refs);
-        currentEl = currentEl.parentNode;
-      }
+      findClosest(el, (i) => {
+        if (i._x_refs)
+          refObjects.push(i._x_refs);
+      });
       return refObjects;
     }
     var globalIdMemo = {};
@@ -3533,13 +3533,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isObject2(items)) {
           items = Object.entries(items).map(([key, value]) => {
             let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
-            evaluateKey((value2) => keys.push(value2), { scope: { index: key, ...scope2 } });
+            evaluateKey((value2) => {
+              if (keys.includes(value2))
+                warn("Duplicate key on x-for", el);
+              keys.push(value2);
+            }, { scope: { index: key, ...scope2 } });
             scopes.push(scope2);
           });
         } else {
           for (let i = 0; i < items.length; i++) {
             let scope2 = getIterationScopeVariables(iteratorNames, items[i], i, items);
-            evaluateKey((value) => keys.push(value), { scope: { index: i, ...scope2 } });
+            evaluateKey((value) => {
+              if (keys.includes(value))
+                warn("Duplicate key on x-for", el);
+              keys.push(value);
+            }, { scope: { index: i, ...scope2 } });
             scopes.push(scope2);
           }
         }
@@ -3587,7 +3595,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let marker = document.createElement("div");
           mutateDom(() => {
             if (!elForSpot)
-              warn(`x-for ":key" is undefined or invalid`, templateEl);
+              warn(`x-for ":key" is undefined or invalid`, templateEl, keyForSpot, lookup);
             elForSpot.after(marker);
             elInSpot.after(elForSpot);
             elForSpot._x_currentIfEl && elForSpot.after(elForSpot._x_currentIfEl);
@@ -3614,7 +3622,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           };
           mutateDom(() => {
             lastEl.after(clone2);
-            initTree(clone2);
+            skipDuringClone(() => initTree(clone2))();
           });
           if (typeof key === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
@@ -3694,7 +3702,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         addScopeToNode(clone2, {}, el);
         mutateDom(() => {
           el.after(clone2);
-          initTree(clone2);
+          skipDuringClone(() => initTree(clone2))();
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
@@ -3758,9 +3766,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3879,9 +3887,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4784,7 +4792,7 @@ var require_module_cjs3 = __commonJS({
             setTimeout(() => {
               if (!el2.hasAttribute("tabindex"))
                 el2.setAttribute("tabindex", "0");
-              el2.focus({ preventScroll: this._noscroll });
+              el2.focus({ preventScroll: this.__noscroll });
             });
           }
         };
@@ -4881,9 +4889,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4967,9 +4975,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4994,7 +5002,7 @@ var require_module_cjs5 = __commonJS({
     });
     module.exports = __toCommonJS(module_exports);
     function src_default(Alpine19) {
-      Alpine19.directive("intersect", (el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
+      Alpine19.directive("intersect", Alpine19.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup: cleanup2 }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5012,7 +5020,7 @@ var require_module_cjs5 = __commonJS({
         cleanup2(() => {
           observer.disconnect();
         });
-      });
+      }));
     }
     function getThreshold(modifiers) {
       if (modifiers.includes("full"))
@@ -5049,9 +5057,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6587,9 +6595,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6950,9 +6958,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../../../.npm-global/lib/node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../../../.npm-global/lib/node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
