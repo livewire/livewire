@@ -872,7 +872,7 @@ class FourthPage extends Component
             <script data-navigate-once>window.foo = 'bar';</script>
 
             <script >
-                document.addEventListener('livewire:before-navigate', (event) => {
+                document.addEventListener('livewire:navigate', (event) => {
                     event.preventDefault();
                     if (window.foo === 'bar') {
                         window.foo = 'baz'

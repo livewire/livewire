@@ -10,9 +10,9 @@ document.addEventListener('alpine:navigating', e => {
     document.dispatchEvent(new CustomEvent('livewire:navigating', { bubbles: true }))
 })
 
-document.addEventListener('alpine:before-navigate', e => {
+document.addEventListener('alpine:navigate', e => {
     // Forward a "livewire" version of the Alpine event...
-    const cancelableEvent = new CustomEvent('livewire:before-navigate', {
+    const cancelableEvent = new CustomEvent('livewire:navigate', {
         cancelable: true,
         bubbles: true,
         detail: {

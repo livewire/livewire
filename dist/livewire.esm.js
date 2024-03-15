@@ -9028,7 +9028,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine19, callback) {
   });
 }
 function fireCancelableEventBeforeNavigation(destination, callback) {
-  const cancelableEvent = new CustomEvent("alpine:before-navigate", {
+  const cancelableEvent = new CustomEvent("alpine:navigate", {
     cancelable: true,
     bubbles: true,
     detail: {
@@ -9756,8 +9756,8 @@ document.addEventListener("alpine:navigated", (e) => {
 document.addEventListener("alpine:navigating", (e) => {
   document.dispatchEvent(new CustomEvent("livewire:navigating", { bubbles: true }));
 });
-document.addEventListener("alpine:before-navigate", (e) => {
-  const cancelableEvent = new CustomEvent("livewire:before-navigate", {
+document.addEventListener("alpine:navigate", (e) => {
+  const cancelableEvent = new CustomEvent("livewire:navigate", {
     cancelable: true,
     bubbles: true,
     detail: {

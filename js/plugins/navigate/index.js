@@ -156,7 +156,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
 }
 
 function fireCancelableEventBeforeNavigation(destination, callback) {
-    const cancelableEvent = new CustomEvent('alpine:before-navigate', {
+    const cancelableEvent = new CustomEvent('alpine:navigate', {
         cancelable: true,
         bubbles: true,
         detail: {
