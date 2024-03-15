@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
-// This synth exists solely to capture empty strings being set to integer properties...
+// This synth exists solely to capture empty strings being set to float properties...
 class FloatSynth extends Synth {
     public static $key = 'float';
 
