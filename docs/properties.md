@@ -188,6 +188,7 @@ In addition to primitive types, Livewire supports common PHP object types used i
 Supported PHP types:
 | Type | Full Class Name |
 |------|-----------------|
+| BackedEnum | `BackedEnum` |
 | Collection | `Illuminate\Support\Collection` |
 | Eloquent Collection | `Illuminate\Database\Eloquent\Collection` |
 | Model | `Illuminate\Database\Model` |
