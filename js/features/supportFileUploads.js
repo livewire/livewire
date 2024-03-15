@@ -45,6 +45,13 @@ export function handleFileUpload(el, property, component, cleanup) {
 
     el.addEventListener('change', eventHandler)
 
+    // If the Livewire property has changed to null or an empty string, then reset the input
+    component.$wire.$watch(property, (value) => {
+        if (value === null || value === '') {
+            el.value = ''
+        }
+    })
+
     // There's a bug in browsers where selecting a file, removing it,
     // then re-adding it doesn't fire the change event. This fixes it.
     // Reference: https://stackoverflow.com/questions/12030686/html-input-file-selection-event-not-firing-upon-selecting-the-same-file
