@@ -11,21 +11,41 @@ class FloatSynthUnitTest extends \Tests\TestCase
     /**
      * @test
      */
-    public function null_value_hydrated_returns_null()
+    public function hydrated_component_with_null_value_returns_null()
     {
         Livewire::test(ComponentWithNullableFloat::class)
             ->set('floatField', null)
-            ->assertSet('floatField', null, true); // Use strict mode
+            ->assertSetStrict('floatField', null);
     }
 
     /**
      * @test
      */
-    public function empty_string_hydrated_returns_null()
+    public function hydrated_component_with_empty_string_returns_null()
     {
         Livewire::test(ComponentWithNullableFloat::class)
             ->set('floatField', "")
-            ->assertSet('floatField', null, true); // Use strict mode
+            ->assertSetStrict('floatField', null);
+    }
+
+    /**
+     * @test
+     */
+    public function hydrated_form_with_null_value_returns_null()
+    {
+        Livewire::test(FormComponentWithNullableFloat::class)
+            ->set('form.floatField', null)
+            ->assertSetStrict('form.floatField', null);
+    }
+
+    /**
+     * @test
+     */
+    public function hydrated_form_with_empty_string_returns_null()
+    {
+        Livewire::test(FormComponentWithNullableFloat::class)
+            ->set('form.floatField', "")
+            ->assertSetStrict('form.floatField', null);
     }
 }
 
@@ -37,4 +57,19 @@ class ComponentWithNullableFloat extends Component
     {
         return view('null-view');
     }
+}
+
+class FormComponentWithNullableFloat extends Component
+{
+    public FormWithNullableFloat $form;
+
+    public function render()
+    {
+        return view('null-view');
+    }
+}
+
+class FormWithNullableFloat extends Form
+{
+    public ?float $floatField = null;
 }
