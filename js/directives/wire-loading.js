@@ -74,7 +74,7 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
         respond(() => {
             endLoading()
         })
-    })
+    }, { once: true })
 }
 
 function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endLoading ]) {
@@ -91,19 +91,19 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
         if (eventMismatch(e)) return
 
         startLoading()
-    })
+    }, { once: true })
 
     window.addEventListener('livewire-upload-finish', e => {
         if (eventMismatch(e)) return
 
         endLoading()
-    })
+    }, { once: true })
 
     window.addEventListener('livewire-upload-error', e => {
         if (eventMismatch(e)) return
 
         endLoading()
-    })
+    }, { once: true })
 }
 
 function containsTargets(payload, targets) {

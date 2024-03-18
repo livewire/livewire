@@ -8,15 +8,19 @@ let listeners = []
 /**
  * Register a callback to run when an event is triggered...
  */
-export function on(name, callback) {
+export function on(name, callback, { once = false } = {}) {
     if (! listeners[name]) listeners[name] = []
 
     listeners[name].push(callback)
 
-    // Return an "off" callback to remove the listener...
-    return () => {
+    const off = () => {
         listeners[name] = listeners[name].filter(i => i !== callback)
     }
+    if (once) {
+        off()
+    }
+    // Return an "off" callback to remove the listener...
+    return off
 }
 
 /**
