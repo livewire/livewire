@@ -9,7 +9,7 @@ import Alpine from 'alpinejs'
 let properties = {}
 let fallback
 
-function wireProperty(name, callback, component = null) {
+function wireProperty(name, callback) {
     properties[name] = callback
 }
 
@@ -104,6 +104,8 @@ Alpine.magic('wire', (el, { cleanup }) => {
 wireProperty('__instance', (component) => component)
 
 wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
+
+wireProperty('$loading', (component) => (property) => component.reactive.__loading)
 
 wireProperty('$el', (component) => {
     return component.el

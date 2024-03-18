@@ -14,3 +14,4 @@ import './supportNavigate';
 import './supportMorphDom';
 import './supportEntangle';
 import './supportEvents';
+import './supportLoading';
