@@ -73,14 +73,9 @@ class ExtendBlade extends Mechanism
             app()->singleton(DeterministicBladeKeys::class);
         });
 
-        // We're using "precompiler" as a hook for the point in time when
-        // Laravel compiles a Blade view...
-        app('blade.compiler')->precompiler(function ($value) {
-            app(DeterministicBladeKeys::class)->interceptCompile(
-                app('blade.compiler'),
-            );
-
-            return $value;
+        // Get the last component path from the compiler everytime it is called
+        on('view:compile', function($component, $path) {
+            app(DeterministicBladeKeys::class)->setLastPath($path);
         });
     }
 

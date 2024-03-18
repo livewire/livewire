@@ -32,8 +32,8 @@ class DeterministicBladeKeys
         return $this->countersByPath[$this->lastPath]++;
     }
 
-    public function interceptCompile(BladeCompiler $compiler)
+    public function setLastPath($path)
     {
-        $this->lastPath = $compiler->getPath();
+        $this->lastPath = $path;
     }
 }

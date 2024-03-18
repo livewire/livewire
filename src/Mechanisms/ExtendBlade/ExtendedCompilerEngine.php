@@ -7,7 +7,11 @@ use function Livewire\trigger;
 class ExtendedCompilerEngine extends \Illuminate\View\Engines\CompilerEngine {
     public function get($path, array $data = [])
     {
-        if (! ExtendBlade::isRenderingLivewireComponent()) return parent::get($path, $data);
+        if (! ExtendBlade::isRenderingLivewireComponent()) {
+            trigger('view:compile', null, $path);
+
+            return parent::get($path, $data);
+        }
 
         $currentComponent = ExtendBlade::currentRendering();
 
