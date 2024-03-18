@@ -805,7 +805,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             $this->assertTrue(false, 'Maliciously injected alert detected');
         });
     }
-  
+
     /** @test */
     public function can_pass_array_of_possible_query_string_parameters()
     {
@@ -823,12 +823,22 @@ class BrowserTest extends \Tests\BrowserTestCase
                 #[Url(as: ['param2', 'param1'])]
                 public ?string $param;
 
+                #[Url(as: ['baz', 'bar', 'foo'])]
+                public ?string $foo;
+
+                public function setFooValue()
+                {
+                    $this->foo = 'hello';
+                }
+
                 public function render() { return <<<'HTML'
                 <div>
                     <input wire:model.live="firstName" type="text" dusk="first_name" />
                     <input wire:model.live="lastName" type="text" dusk="last_name" />
                     <input wire:model.live="email" type="text" dusk="email" />
                     <input wire:model.live="param" type="text" dusk="param" />
+                    <button wire:click="setFooValue()" dusk="fooButton">Set Foo</button>
+                    <input wire:model.live="foo" type="text" dusk="fooValue" />
                 </div>
                 HTML; }
             },
@@ -847,7 +857,16 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('firstname', 'test')
             ->assertInputValue('@first_name', 'test')
             ->assertQueryStringHas('param2', '3')
-            ->assertInputValue('@param', '3');
+            ->assertInputValue('@param', '3')
+            ->assertQueryStringMissing('foo')
+            ->assertQueryStringMissing('baz')
+            ->assertQueryStringMissing('bar')
+            ->waitForLivewire()
+            ->click('@fooButton')
+            ->assertQueryStringHas('baz', 'hello')
+            ->assertInputValue('@fooValue', 'hello')
+        ;
+
     }
 }
 

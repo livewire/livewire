@@ -113,7 +113,7 @@ class BaseUrl extends LivewireAttribute
 
                     return false;
                 })
-                ->first();
+                ->first() ?? $this->as[0];
         }
     }
 
