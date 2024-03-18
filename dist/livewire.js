@@ -7067,18 +7067,72 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default6 = src_default6;
 
   // js/plugins/navigate/history.js
+  var Snapshot = class {
+    constructor(url, html) {
+      this.url = url;
+      this.html = html;
+    }
+  };
+  var snapshotCache = {
+    currentKey: null,
+    currentUrl: null,
+    keys: [],
+    lookup: {},
+    limit: 10,
+    has(location) {
+      return this.lookup[location] !== void 0;
+    },
+    retrieve(location) {
+      let snapshot = this.lookup[location];
+      if (snapshot === void 0)
+        throw "No back button cache found for current location: " + location;
+      return snapshot;
+    },
+    replace(key, snapshot) {
+      if (this.has(key)) {
+        this.lookup[key] = snapshot;
+      } else {
+        this.push(key, snapshot);
+      }
+    },
+    push(key, snapshot) {
+      this.lookup[key] = snapshot;
+      let index = this.keys.indexOf(key);
+      if (index > -1)
+        this.keys.splice(index, 1);
+      this.keys.unshift(key);
+      this.trim();
+    },
+    trim() {
+      for (let key of this.keys.splice(this.limit)) {
+        delete this.lookup[key];
+      }
+    }
+  };
   function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     let url = new URL(window.location.href, document.baseURI);
     replaceUrl(url, document.documentElement.outerHTML);
   }
-  function whenTheBackOrForwardButtonIsClicked(callback) {
+  function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
+    let html = document.documentElement.outerHTML;
+    snapshotCache.replace(key, new Snapshot(url, html));
+  }
+  function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
+    let fallback2;
+    registerFallback((i) => fallback2 = i);
     window.addEventListener("popstate", (e) => {
       let state = e.state || {};
       let alpine = state.alpine || {};
-      if (!alpine._html)
+      if (Object.keys(state).length === 0)
         return;
-      let html = fromSessionStorage(alpine._html);
-      callback(html);
+      if (!alpine.snapshotIdx)
+        return;
+      if (snapshotCache.has(alpine.snapshotIdx)) {
+        let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
+        handleHtml(snapshot.html, snapshotCache.currentUrl, snapshotCache.currentKey);
+      } else {
+        fallback2(alpine.url);
+      }
     });
   }
   function updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination) {
@@ -7091,36 +7145,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     updateUrl("replaceState", url, html);
   }
   function updateUrl(method, url, html) {
-    let key = new Date().getTime();
-    tryToStoreInSession(key, html);
+    let key = url.toString() + "-" + Math.random();
+    method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
     let state = history.state || {};
     if (!state.alpine)
       state.alpine = {};
-    state.alpine._html = key;
+    state.alpine.snapshotIdx = key;
+    state.alpine.url = url.toString();
     try {
-      history[method](state, document.title, url);
+      history[method](state, JSON.stringify(document.title), url);
+      snapshotCache.currentKey = key;
+      snapshotCache.currentUrl = url;
     } catch (error2) {
       if (error2 instanceof DOMException && error2.name === "SecurityError") {
         console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
       }
       console.error(error2);
-    }
-  }
-  function fromSessionStorage(timestamp) {
-    let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
-    return state;
-  }
-  function tryToStoreInSession(timestamp, value) {
-    try {
-      sessionStorage.setItem("alpine:" + timestamp, JSON.stringify(value));
-    } catch (error2) {
-      if (![22, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(error2.code))
-        return;
-      let oldestTimestamp = Object.keys(sessionStorage).map((key) => Number(key.replace("alpine:", ""))).sort().shift();
-      if (!oldestTimestamp)
-        return;
-      sessionStorage.removeItem("alpine:" + oldestTimestamp);
-      tryToStoreInSession(timestamp, value);
     }
   }
 
@@ -7599,7 +7639,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
     });
-    function navigateTo(destination) {
+    function navigateTo(destination, shouldPushToHistoryState = true) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
         fireEventForOtherLibariesToHookInto("alpine:navigating");
@@ -7611,13 +7651,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
           });
+          if (shouldPushToHistoryState) {
+            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+          } else {
+            replaceUrl(finalDestination, html);
+          }
           swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
             removeAnyLeftOverStaleTeleportTargets(document.body);
             enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
-            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
             fireEventForOtherLibariesToHookInto("alpine:navigated");
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
@@ -7631,8 +7675,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
     }
-    whenTheBackOrForwardButtonIsClicked((html) => {
+    whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
+      ifThePageBeingVisitedHasntBeenCached((url) => {
+        let destination = createUrlObjectFromString(url);
+        let shouldPushToHistoryState = false;
+        navigateTo(destination, shouldPushToHistoryState);
+      });
+    }, (html, currentPageUrl, currentPageKey) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
+      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
