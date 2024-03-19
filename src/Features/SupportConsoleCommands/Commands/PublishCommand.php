@@ -3,7 +3,9 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:publish')]
 class PublishCommand extends Command
 {
     protected $signature = 'livewire:publish
