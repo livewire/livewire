@@ -269,7 +269,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Processing...')
         ;
     }
-    
+
     /** @test */
     /**
     function inverted_wire_target_hides_loading_for_file_upload()
@@ -346,6 +346,43 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->type('@input', 'Foo')
 		->waitForText('Foo')
         ->assertSee('Foo')
+        ;
+    }
+
+        /** @test */
+    function wire_loading_can_target_multiple_actions_with_params()
+    {
+        Livewire::visit(new class extends Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="foo('bar')" dusk="fooBtn">Foo</button>
+
+                        <button type="button" wire:click="bar('baz', 'qux')" dusk="barBtn">Bar</button>
+
+                        <span wire:loading wire:target="foo('bar'), bar('baz', 'qux')">Loading...</span>
+                    </div>
+                HTML;
+            }
+
+            public function foo($param)
+            {
+                sleep(.1);
+            }
+            public function bar($param1, $param2)
+            {
+                sleep(.1);
+            }
+        })
+        ->press('@fooBtn')
+        ->waitForText("Loading...")
+        ->assertSee("Loading...")
+        ->waitUntilMissingText("Loading...")
+        ->press('@barBtn')
+        ->waitForText("Loading...")
+        ->assertSee("Loading...")
         ;
     }
 }
