@@ -83,11 +83,9 @@ class CreatePost extends Component
 
     public function save()
     {
-        $this->validate(); // [tl! highlight]
+        $validatedData = $this->validate(); // [tl! highlight]
 
-        Post::create(
-            $this->only(['title', 'content'])
-        );
+        Post::create($validatedData);
 
         return $this->redirect('/posts');
     }
@@ -170,11 +168,9 @@ class CreatePost extends Component
 
     public function save()
     {
-        $this->validate();
+        $validatedData = $this->form->validate() // [tl! highlight]
 
-        Post::create(
-            $this->form->all() // [tl! highlight]
-        );
+        Post::create($validatedData);
 
         return $this->redirect('/posts');
     }
@@ -223,9 +219,9 @@ class PostForm extends Form
 
     public function store() // [tl! highlight:5]
     {
-        $this->validate();
+        $validatedData = $this->validate();
 
-        Post::create($this->all());
+        Post::create($validatedData);
     }
 }
 ```
@@ -314,16 +310,16 @@ class PostForm extends Form
 
     public function store()
     {
-        $this->validate();
+        $validatedData = $this->validate();
 
-        Post::create($this->only(['title', 'content']));
+        Post::create($validatedData);
     }
 
     public function update()
     {
-        $this->post->update(
-            $this->all()
-        );
+        $validatedData = $this->validate();
+
+        $this->post->update($validatedData);
     }
 }
 ```
@@ -357,9 +353,9 @@ class PostForm extends Form
 
     public function store()
     {
-        $this->validate();
+        $validatedData = $this->validate();
 
-        Post::create($this->all());
+        Post::create($validatedData);
 
         $this->reset(); // [tl! highlight]
     }
@@ -412,9 +408,9 @@ class PostForm extends Form
 
     public function update()
     {
-        $this->validate();
+        $validatedData = $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($validatedData);
 
         $this->reset();
     }
@@ -459,9 +455,9 @@ class PostForm extends Form
 
     public function update()
     {
-        $this->validate();
+        $validatedData = $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($validatedData);
 
         $this->reset();
     }
