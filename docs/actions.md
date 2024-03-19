@@ -468,7 +468,7 @@ public function getPostCount()
 Using `$wire`, the action may be invoked and its returned value resolved:
 
 ```blade
-<span x-text="await $wire.getPostCount()"></span>
+<span x-init="$el.innerHTML = await $wire.getPostCount()"></span>
 ```
 
 In this example, if the `getPostCount()` method returns "10", the `<span>` tag will also contain "10".
