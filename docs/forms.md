@@ -168,7 +168,7 @@ class CreatePost extends Component
 
     public function save()
     {
-        $validatedData = $this->form->validate() // [tl! highlight]
+        $validatedData = $this->form->validate(); // [tl! highlight]
 
         Post::create($validatedData);
 
