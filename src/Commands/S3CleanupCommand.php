@@ -5,8 +5,10 @@ namespace Livewire\Commands;
 use Illuminate\Console\Command;
 use League\Flysystem\Cached\CachedAdapter;
 use Livewire\FileUploadConfiguration;
+use Symfony\Component\Console\Attribute\AsCommand;
 use function Livewire\invade;
 
+#[AsCommand(name: 'livewire:configure-s3-upload-cleanup')]
 class S3CleanupCommand extends Command
 {
     protected $signature = 'livewire:configure-s3-upload-cleanup';

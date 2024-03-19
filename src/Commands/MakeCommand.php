@@ -3,7 +3,9 @@
 namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:make')]
 class MakeCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:make {name} {--force} {--inline} {--test} {--stub= : If you have several stubs, stored in subfolders }';
@@ -126,7 +128,7 @@ class MakeCommand extends FileManipulationCommand
     {
         return preg_match("/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/", $name);
     }
-    
+
     public function isReservedClassName($name)
     {
         return array_search(strtolower($name), $this->getReservedName()) !== false;

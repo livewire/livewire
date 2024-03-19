@@ -3,8 +3,10 @@
 namespace Livewire\Commands;
 
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Attribute\AsCommand;
 
 #[\AllowDynamicProperties]
+#[AsCommand(name: 'livewire:move')]
 class MoveCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:move {name} {new-name} {--force} {--inline}';
