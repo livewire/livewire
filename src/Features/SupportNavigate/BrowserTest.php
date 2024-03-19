@@ -273,6 +273,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             $browser
                 ->visit('/first')
                 ->click('@link.to.hashtag')
+                ->waitFor('@link.to.hashtag')
                 ->assertPathIs('/first#foo');
         });
     }
