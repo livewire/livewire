@@ -5770,7 +5770,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return storage.getItem(key) !== null;
   }
   function storageGet(key, storage) {
-    return JSON.parse(storage.getItem(key, storage));
+    let value = storage.getItem(key, storage);
+    if (value === void 0)
+      return;
+    return JSON.parse(value);
   }
   function storageSet(key, value, storage) {
     storage.setItem(key, JSON.stringify(value));
@@ -7633,16 +7636,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
-          fireCancelableEventBeforeNavigation(destination, () => {
-            navigateTo(destination);
-          });
+          navigateTo(destination);
         });
       });
     });
     function navigateTo(destination, shouldPushToHistoryState = true) {
+      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", { url: destination });
+      if (prevented)
+        return;
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-        fireEventForOtherLibariesToHookInto("alpine:navigating");
+        let prevented2 = fireEventForOtherLibariesToHookInto("alpine:navigating");
+        if (prevented2) {
+          showProgressBar && finishAndHideProgressBar();
+          return;
+        }
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
@@ -7721,21 +7729,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireCancelableEventBeforeNavigation(destination, callback) {
-    const cancelableEvent = new CustomEvent("alpine:navigate", {
+  function fireEventForOtherLibariesToHookInto(name, detail) {
+    let event = new CustomEvent(name, {
       cancelable: true,
       bubbles: true,
-      detail: {
-        url: destination.href
-      }
+      detail
     });
-    document.dispatchEvent(cancelableEvent);
-    if (!cancelableEvent.defaultPrevented) {
-      callback();
-    }
-  }
-  function fireEventForOtherLibariesToHookInto(eventName) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
+    document.dispatchEvent(event);
+    return event.defaultPrevented;
   }
   function nowInitializeAlpineOnTheNewPage(Alpine3) {
     Alpine3.initTree(document.body, void 0, (el, skip) => {
@@ -8935,25 +8936,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
-  document.addEventListener("alpine:navigated", (e) => {
-    document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
-  });
-  document.addEventListener("alpine:navigating", (e) => {
-    document.dispatchEvent(new CustomEvent("livewire:navigating", { bubbles: true }));
-  });
-  document.addEventListener("alpine:navigate", (e) => {
-    const cancelableEvent = new CustomEvent("livewire:navigate", {
-      cancelable: true,
-      bubbles: true,
-      detail: {
-        url: e.detail.url
-      }
-    });
-    document.dispatchEvent(cancelableEvent);
-    if (cancelableEvent.defaultPrevented) {
-      e.preventDefault();
+  document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
+  document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
+  document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
+  function forwardEvent(name, original) {
+    let event = new CustomEvent(name, { cancelable: true, bubbles: true, detail: original.detail });
+    document.dispatchEvent(event);
+    if (event.defaultPrevented) {
+      original.preventDefault();
     }
-  });
+  }
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
     if (forceNavigate) {

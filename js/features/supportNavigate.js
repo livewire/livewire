@@ -1,31 +1,19 @@
+
 shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
 
-document.addEventListener('alpine:navigated', e => {
-    // Forward a "livewire" version of the Alpine event...
-    document.dispatchEvent(new CustomEvent('livewire:navigated', { bubbles: true }))
-})
+document.addEventListener('alpine:navigate', e => forwardEvent('livewire:navigate', e))
+document.addEventListener('alpine:navigating', e => forwardEvent('livewire:navigating', e))
+document.addEventListener('alpine:navigated', e => forwardEvent('livewire:navigated', e))
 
-document.addEventListener('alpine:navigating', e => {
-    // Forward a "livewire" version of the Alpine event...
-    document.dispatchEvent(new CustomEvent('livewire:navigating', { bubbles: true }))
-})
+function forwardEvent(name, original) {
+    let event = new CustomEvent(name, { cancelable: true, bubbles: true, detail: original.detail })
 
-document.addEventListener('alpine:navigate', e => {
-    // Forward a "livewire" version of the Alpine event...
-    const cancelableEvent = new CustomEvent('livewire:navigate', {
-        cancelable: true,
-        bubbles: true,
-        detail: {
-            url: e.detail.url
-        }
-    })
+    document.dispatchEvent(event)
 
-    document.dispatchEvent(cancelableEvent) // Dispatch cancelable event
-
-    if (cancelableEvent.defaultPrevented) {
-        e.preventDefault()
+    if (event.defaultPrevented) {
+        original.preventDefault()
     }
-})
+}
 
 export function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate

@@ -45,18 +45,26 @@ export default function (Alpine) {
             })
 
             whenItIsReleased(() => {
-                fireCancelableEventBeforeNavigation(destination, () => {
-                    navigateTo(destination);
-                })
+                navigateTo(destination);
             })
         })
     })
 
     function navigateTo(destination, shouldPushToHistoryState = true) {
+        let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', { url: destination })
+
+        if (prevented) return
+
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-            fireEventForOtherLibariesToHookInto('alpine:navigating')
+            let prevented = fireEventForOtherLibariesToHookInto('alpine:navigating')
+
+            if (prevented) {
+                showProgressBar && finishAndHideProgressBar()
+
+                return
+            }
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
@@ -175,24 +183,16 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     })
 }
 
-function fireCancelableEventBeforeNavigation(destination, callback) {
-    const cancelableEvent = new CustomEvent('alpine:navigate', {
+function fireEventForOtherLibariesToHookInto(name, detail) {
+    let event = new CustomEvent(name, {
         cancelable: true,
         bubbles: true,
-        detail: {
-            url: destination.href
-        }
+        detail,
     })
 
-    document.dispatchEvent(cancelableEvent) // Dispatch cancelable event
+    document.dispatchEvent(event)
 
-    if (!cancelableEvent.defaultPrevented) {
-        callback()
-    }
-}
-
-function fireEventForOtherLibariesToHookInto(eventName) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }))
+    return event.defaultPrevented
 }
 
 function nowInitializeAlpineOnTheNewPage(Alpine) {
