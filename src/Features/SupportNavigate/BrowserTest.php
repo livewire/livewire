@@ -705,6 +705,40 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+        /** @test */
+    public function can_binding_class_attribute_when_navigate_back()
+    {
+        Livewire::visit(new class extends Component {
+            public function render(){
+                return <<<'HTML'
+                    <div>
+                        <style>
+                            .hidden {
+                                display: none;
+                            }
+                        </style>
+
+                        <div x-data="{ show: false }">
+                            <button dusk="show-foo" type="button" @click="show = !show">Show</button>
+                            <span :class="show || 'hidden'">foo</span>
+                        </div>
+
+                        <a :href="window.location.pathname" wire:navigate dusk="navigate-to-same-page">Go to same page</a>
+
+                    </div>
+                HTML;
+            }
+        })
+            ->click('@show-foo')
+            ->click('@show-foo')
+            ->click('@navigate-to-same-page')
+            ->pause(500)
+            ->back()
+            ->pause(500)
+            ->click('@show-foo')
+            ->assertSee('foo');
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
