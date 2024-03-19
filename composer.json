@@ -10,12 +10,13 @@
   ],
   "require": {
     "php": "^8.1",
-    "symfony/http-kernel": "^6.2|^7.0",
     "illuminate/database": "^10.0|^11.0",
     "illuminate/routing": "^10.0|^11.0",
     "illuminate/support": "^10.0|^11.0",
     "illuminate/validation": "^10.0|^11.0",
-    "league/mime-type-detection": "^1.9"
+    "league/mime-type-detection": "^1.9",
+    "symfony/console": "^6.0|^7.0",
+    "symfony/http-kernel": "^6.2|^7.0"
   },
   "require-dev": {
     "psy/psysh": "^0.11.22|^0.12",
