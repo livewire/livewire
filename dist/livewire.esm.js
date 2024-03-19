@@ -1485,10 +1485,19 @@ var require_module_cjs = __commonJS({
     }) {
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
+          if (el2._x_inited) {
+            if (el2._x_ignore)
+              skip();
+            return;
+          }
           intercept(el2, skip);
           initInterceptors.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
-          el2._x_ignore && skip();
+          if (el2._x_ignore) {
+            skip();
+          } else {
+            el2._x_inited = true;
+          }
         });
       });
     }
@@ -1496,6 +1505,7 @@ var require_module_cjs = __commonJS({
       walker(root, (el) => {
         cleanupAttributes(el);
         cleanupElement(el);
+        delete el._x_inited;
       });
     }
     var onAttributeAddeds = [];
@@ -1638,8 +1648,6 @@ var require_module_cjs = __commonJS({
         node._x_ignore = true;
       });
       for (let node of addedNodes) {
-        if (removedNodes.has(node))
-          continue;
         if (!node.isConnected)
           continue;
         delete node._x_ignoreSelf;
@@ -1687,7 +1695,7 @@ var require_module_cjs = __commonJS({
       has({ objects }, name) {
         if (name == Symbol.unscopables)
           return false;
-        return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
+        return objects.some((obj) => Reflect.has(obj, name));
       },
       get({ objects }, name, thisProxy) {
         if (name == "toJSON")
@@ -1695,7 +1703,7 @@ var require_module_cjs = __commonJS({
         return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
       },
       set({ objects }, name, value, thisProxy) {
-        const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
+        const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
         const descriptor = Object.getOwnPropertyDescriptor(target, name);
         if ((descriptor == null ? void 0 : descriptor.set) && (descriptor == null ? void 0 : descriptor.get))
           return Reflect.set(target, name, value, thisProxy);
@@ -2840,7 +2848,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.7",
+      version: "3.13.6",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -10023,6 +10031,14 @@ document.addEventListener("alpine:navigating", () => {
     component.inscribeSnapshotAndEffectsOnElement();
   });
 });
+directive("navigate", ({ el, component }) => {
+  whenThisLinkIsPressed(el, (whenItIsReleased) => whenItIsReleased(() => {
+    window.dispatchEvent(new CustomEvent("livewire-navigating-start", { bubbles: true, detail: { id: component.id } }));
+  }));
+  document.addEventListener("alpine:navigating", () => {
+    window.dispatchEvent(new CustomEvent("livewire-navigating-end", { bubbles: true, detail: { id: component.id } }));
+  });
+});
 
 // js/directives/wire-confirm.js
 directive("confirm", ({ el, directive: directive2 }) => {
@@ -10105,6 +10121,10 @@ directive("loading", ({ el, directive: directive2, component }) => {
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
+  whenTargetIsNavigate(component, targets, [
+    () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
+    () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
+  ]);
 });
 function applyDelay(directive2) {
   if (!directive2.modifiers.includes("delay") || directive2.modifiers.includes("none"))
@@ -10176,6 +10196,26 @@ function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLo
     endLoading();
   });
   window.addEventListener("livewire-upload-error", (e) => {
+    if (eventMismatch(e))
+      return;
+    endLoading();
+  });
+}
+function whenTargetIsNavigate(component, targets, [startLoading, endLoading]) {
+  let eventMismatch = (e) => {
+    let id = e.detail.id;
+    if (id !== component.id)
+      return true;
+    if (targets.length > 0 && !targets.map((i) => i.target).includes("$navigate"))
+      return true;
+    return false;
+  };
+  window.addEventListener("livewire-navigating-start", (e) => {
+    if (eventMismatch(e))
+      return;
+    startLoading();
+  });
+  window.addEventListener("livewire-navigating-end", (e) => {
     if (eventMismatch(e))
       return;
     endLoading();

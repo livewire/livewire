@@ -23,6 +23,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('query-page', QueryPage::class);
             Livewire::component('first-page', FirstPage::class);
             Livewire::component('first-page-child', FirstPageChild::class);
+            Livewire::component('first-page-second-child', FirstPageSecondChild::class);
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('third-page', ThirdPage::class);
@@ -912,6 +913,31 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    /** @test */
+    public function wire_loading_targeting_wire_navigate()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->assertDontSee('Loading in parent...')
+                ->assertDontSee('Loading in child...')
+                ->click('@link.to.third')
+                ->waitForText('Loading in parent...')
+                ->assertSee('Loading in parent...')
+                ->waitForText('Done loading...')
+                ->assertSee('Done loading...')
+                ->back()
+                ->waitForText('On first')
+                ->click('@link.to.third.from.second.child')
+                ->waitForText('Loading in child...')
+                ->assertSee('Loading in child...')
+                ->waitForText('Done loading...')
+                ->assertSee('Done loading...')
+                ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -956,6 +982,8 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
             <livewire:first-page-child />
+            
+            <livewire:first-page-second-child />
 
             @persist('foo')
                 <div x-data="{ count: 1 }">
@@ -963,6 +991,10 @@ class FirstPage extends Component
                     <button x-on:click="count++" dusk="increment">+</button>
                 </div>
             @endpersist
+
+            <div wire:loading.delay wire:target="$navigate">
+                Loading in parent...
+            </div>
         </div>
         HTML;
     }
@@ -978,6 +1010,22 @@ class FirstPageChild extends Component
 
             <button type="button" wire:click="$parent.redirectToPageTwoUsingNavigate" dusk="redirect.to.second.from.child">Redirect to second page from child</button>
             <button type="button" x-on:click="console.log($wire.$parent.__instance.id)">shmump up</button>
+        </div>
+        HTML;
+    }
+}
+
+class FirstPageSecondChild extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>Second Child</div>
+            <a href="/third" wire:navigate.hover dusk="link.to.third.from.second.child">Go to slow third page</a>
+            <div wire:loading wire:target="$navigate">
+                Loading in child...
+            </div>
         </div>
         HTML;
     }

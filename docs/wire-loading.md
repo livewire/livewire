@@ -158,6 +158,21 @@ Consider the following example where a form input named `username` uses `wire:mo
 
 The "Checking availability..." message will show when the server is updated with the new username as the user types into the input field.
 
+### Targeting wire:navigate
+
+In addition to showing loading indicators during server requests, Livewire now enables you to display loading indicators when navigating between components using the wire:navigate directive. This enhancement is particularly useful for providing feedback during page transitions, which can enhance user experience in applications that leverage Livewire for SPA-like behavior.
+
+To use this feature, simply pass `$navigate` to the `wire:target` directive on any element you wish to show during navigation:
+
+```blade
+<a href="/posts" wire:navigate>Posts</a>
+<div wire:loading wire:target="$navigate">
+    Navigating, please wait...
+</div>
+```
+
+When a user clicks a link with the wire:navigate directive, the specified element will be displayed, providing a visual cue that a navigation process is underway. Once the navigation completes and the new component is loaded, the loading indicator will automatically be hidden.
+
 ### Excluding specific loading targets
 
 Sometimes you may wish to display a loading indicator for every Livewire request _except_ a specific property or action. In these cases you can use the `wire:target.except` modifier like so:

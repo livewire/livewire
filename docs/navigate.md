@@ -72,6 +72,21 @@ The `.hover` modifier will instruct Livewire to prefetch the page after a user h
 > [!warning] Prefetching on hover increases server usage
 > Because not all users will click a link they hover over, adding `.hover` will request pages that may not be needed, though Livewire attempts to mitigate some of this overhead by waiting `60` milliseconds before prefetching the page.
 
+## Showing Loading Indicators During Navigation
+
+Livewire allows you to indicate loading states on parts of your page when navigating between Livewire components using the wire:navigate directive.
+
+To use this feature, simply pass `$navigate` to the `wire:target` directive on an element you wish to show during navigation:
+
+```blade
+<a href="/posts" wire:navigate>Posts</a>
+<div wire:loading wire:target="$navigate">
+    Navigating, please wait...
+</div>
+```
+
+This element will become visible when a link with the wire:navigate directive is clicked and the request is in progress.
+
 ## Persisting elements across page visits
 
 Sometimes, there are parts of a user interface that you need to persist between page loads, such as audio or video players. For example, in a podcasting application, a user may want to keep listening to an episode as they browse other pages.
