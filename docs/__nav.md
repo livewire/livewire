@@ -47,6 +47,7 @@ Concepts:
     Hydration: { uri: /docs/hydration, file: /hydration.md }
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
+    Troubleshooting: { uri: /docs/troubleshooting, file: /troubleshooting.md }
     Security: { uri: /docs/security, file: /security.md }
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
@@ -54,28 +55,3 @@ Advanced:
 Packages:
     Volt: { uri: /docs/volt, file: /volt.md }
 ---
-
-Concepts:
-    How Livewire Works: { uri: /docs/ }
-    Understanding Nested Components: { uri: /docs/ }
-    Component Hydration: { uri: /docs/ }
-    Anatomy Of A Request: { uri: /docs/ }
-    DOM diff-patch: { uri: /docs/ }
-UI Components:
-    Dropdown: { uri: /docs/dropdown, file: /dropdown.md }
-    Modal: { uri: /docs/modal, file: /modal.md }
-    Tabs: { uri: /docs/tabs, file: /tabs.md }
-Extending:
-    Synthesizers: { uri: /docs/foo }
-    Wireables: { uri: /docs/foo }
-    Traits: { uri: /docs/foo }
-    Component Hooks: { uri: /docs/foo }
-    JavaScript Hooks: { uri: /docs/foo }
-Deeper Concepts:
-    Best Practices: { uri: /docs/foo }
-    Performance Optimization: { uri: /docs/foo }
-    Component Code Reuse: { uri: /docs/foo }
-    Deployment: { uri: /docs/foo }
-    Troubleshooting: { uri: /docs/foo }
-    Security: { uri: /docs/foo }
-    API Reference: { uri: /docs/foo }
