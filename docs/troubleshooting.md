@@ -1,10 +1,10 @@
-Here at Livewire HQ, we try our best to remove problems from your pathway before you hit them. However, sometimes there are some problems that we can't solve without introducing new ones, and other times there are problems we simply can't anticipate.
+Here at Livewire HQ, we try to remove problems from your pathway before you hit them. However, sometimes, there are some problems that we can't solve without introducing new ones, and other times, there are problems we can't anticipate.
 
-Here is a handful of common errors and scenarios you may find yourself running into in your Livewire apps.
+Here are some common errors and scenarios you may encounter in your Livewire apps.
 
 ## Component mismatches
 
-When interacting with Livewire components on your page, you may encounter odd-behavior or error messages like the following:
+When interacting with Livewire components on your page, you may encounter odd behavior or error messages like the following:
 
 ```
 Error: Component already initialized
@@ -58,7 +58,7 @@ Without the key on the nested Livewire component, Livewire will be unable to mat
 
 Another tricky scenario you may run into is having duplicate keys within the same component. This often results from using model IDs as keys, which can sometimes collide.
 
-Here's an example where we need to add a `post-` and a `author-` prefix to designate each set of keys as unique. Otherwise, if you have a `$post` and `$author` model with the same ID, you would have an ID collision:
+Here's an example where we need to add a `post-` and an `author``-` prefix to designate each set of keys as unique. Otherwise, if you have a `$post` and `$author` model with the same ID, you would have an ID collision:
 
 ```blade
 <div>
@@ -84,9 +84,9 @@ Error: Detected multiple instances of Alpine running
 Alpine Expression Error: $wire is not defined
 ```
 
-If this is the case, you likely have two version of Alpine running on the same page. Livewire includes it's own bundle of Alpine under-the-hood, so you must remove any other versions of Alpine on Livewire pages in your application.
+If this is the case, you likely have two versions of Alpine running on the same page. Livewire includes its own bundle of Alpine under the hood, so you must remove any other versions of Alpine on Livewire pages in your application.
 
-One common scenario this happens is adding Livewire to an existing application that already includes Alpine. For example, if you installed the Laravel Breeze starter kit, then added Livewire later, you would run into this.
+One common scenario in which this happens is adding Livewire to an existing application that already includes Alpine. For example, if you installed the Laravel Breeze starter kit and then added Livewire later, you would run into this.
 
 The fix for this is simple: remove the extra Alpine instance.
 
@@ -106,7 +106,7 @@ Alpine.start();
 
 ### Removing a CDN version of Alpine
 
-Because Livewire version 2 and below didn't include Alpine by default, you may have included an Alpine CDN as a script tag in the head of your layout. In Livewire v3, you can remove this CDN all-together and Livewire will automatically provide Alpine for you:
+Because Livewire version 2 and below didn't include Alpine by default, you may have included an Alpine CDN as a script tag in the head of your layout. In Livewire v3, you can remove this CDN altogether, and Livewire will automatically provide Alpine for you:
 
 ```html
     ...
@@ -118,7 +118,7 @@ Note: you can also remove any additional Alpine plugins, as Livewire includes al
 
 ## Missing `@alpinejs/ui`
 
-Livewire's bundled version of Alpine includes all Alpine plugins EXCEPT `@alpinejs/ui`. If you are using headless components from [Alpine Components](https://alpinejs.dev/components) which relies on this plugin, you may encounter errors like the following:
+Livewire's bundled version of Alpine includes all Alpine plugins EXCEPT `@alpinejs/ui`. If you are using headless components from [Alpine Components](https://alpinejs.dev/components), which relies on this plugin, you may encounter errors like the following:
 
 ```
 Uncaught Alpine: no element provided to x-anchor
