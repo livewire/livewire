@@ -23,4 +23,30 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertTrue(isset($component->effects['url']));
     }
+
+    /** @test */
+    function does_not_fail_with_deprecation()
+    {
+        $this->withoutDeprecationHandling();
+        $component = Livewire::test(new class extends Component
+        {
+            public $foo = '';
+
+            protected function queryString()
+            {
+                return [
+                    'foo',
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                        <div>
+                            <h1 dusk="output">{{ $foo }}</h1>
+                        </div>
+                        HTML;
+            }
+        });
+    }
 }
