@@ -87,7 +87,7 @@ To use this feature, simply pass `$navigate` to the `wire:target` directive on a
 
 This element will become visible when a link with the wire:navigate directive is clicked **in the same Livewire component**.
 
-To extend loading indicators across all Livewire components on a page, use the wire:target="$navigate.global" attribute. This makes the loading indicator visible whenever any wire:navigate directive is activated, regardless of which Livewire component it belongs to.
+To extend loading indicators across all Livewire components on a page, use the `wire:target="$navigate.global"` attribute. This makes the loading indicator visible whenever any wire:navigate directive is activated, regardless of which Livewire component it belongs to.
 
 ## Persisting elements across page visits
 
