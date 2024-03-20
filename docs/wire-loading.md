@@ -171,7 +171,9 @@ To use this feature, simply pass `$navigate` to the `wire:target` directive on a
 </div>
 ```
 
-When a user clicks a link with the wire:navigate directive, the specified element will be displayed, providing a visual cue that a navigation process is underway. Once the navigation completes and the new component is loaded, the loading indicator will automatically be hidden.
+This code snippet demonstrates how to show the loading indicator when a link with the `wire:navigate` directive is clicked **within the same Livewire component**.
+
+To extend loading indicators across all Livewire components on a page, you can use the `wire:target="$navigate.global"` attribute. This will make the loading indicator visible whenever any `wire:navigate` directive is activated, regardless of which Livewire component it belongs to.
 
 ### Excluding specific loading targets
 

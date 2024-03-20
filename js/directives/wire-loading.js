@@ -112,24 +112,24 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
 }
 
 function whenTargetIsNavigate(component, targets, [ startLoading, endLoading ]) {
-    let eventMismatch = e => {
+    let eventMatch = e => {
         let id = e.detail.id
 
-        if (id !== component.id) return true
-        if(targets.length > 0 && ! targets.map(i => i.target).includes('$navigate')) return true
+        if(targets.length > 0) {
+            if(targets.map(i => i.target).includes('$navigate') && id === component.id) return true
+            if(targets.map(i => i.target).includes('$navigate.global')) return true
+        }
 
         return false
     }
     window.addEventListener('livewire-navigating-start', e => {
-        if (eventMismatch(e)) return
-
-        startLoading()
+        if (eventMatch(e)) 
+            startLoading()
     })
 
     window.addEventListener('livewire-navigating-end', e => {
-        if (eventMismatch(e)) return
-
-        endLoading()
+        if (eventMatch(e)) 
+            endLoading()
     })
 }
 

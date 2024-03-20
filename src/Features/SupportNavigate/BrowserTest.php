@@ -922,16 +922,22 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSee('On first')
                 ->assertDontSee('Loading in parent...')
                 ->assertDontSee('Loading in child...')
-                ->click('@link.to.third')
+                ->assertDontSee('Loading in parent global...')
+                ->assertDontSee('Loading in child global...')
+                ->click('@link.to.third.other')
                 ->waitForText('Loading in parent...')
                 ->assertSee('Loading in parent...')
+                ->assertDontSee('Loading in child...')
+                ->assertSee('Loading in parent global...')
+                ->assertSee('Loading in child global...')
                 ->waitForText('Done loading...')
-                ->assertSee('Done loading...')
                 ->back()
-                ->waitForText('On first')
                 ->click('@link.to.third.from.second.child')
                 ->waitForText('Loading in child...')
+                ->assertDontSee('Loading in parent...')
                 ->assertSee('Loading in child...')
+                ->assertSee('Loading in parent global...')
+                ->assertSee('Loading in child global...')
                 ->waitForText('Done loading...')
                 ->assertSee('Done loading...')
                 ;
@@ -982,8 +988,6 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
 
             <livewire:first-page-child />
-            
-            <livewire:first-page-second-child />
 
             @persist('foo')
                 <div x-data="{ count: 1 }">
@@ -992,9 +996,15 @@ class FirstPage extends Component
                 </div>
             @endpersist
 
-            <div wire:loading.delay wire:target="$navigate">
+            <a href="/third" wire:navigate dusk="link.to.third.other">3rd page from parent</a>
+            <div wire:loading wire:target="$navigate">
                 Loading in parent...
             </div>
+            <div wire:loading wire:target="$navigate.global">
+                Loading in parent global...
+            </div>
+            
+            <livewire:first-page-second-child />
         </div>
         HTML;
     }
@@ -1021,10 +1031,12 @@ class FirstPageSecondChild extends Component
     {
         return <<<'HTML'
         <div>
-            <div>Second Child</div>
-            <a href="/third" wire:navigate.hover dusk="link.to.third.from.second.child">Go to slow third page</a>
+            <a href="/third" wire:navigate.hover dusk="link.to.third.from.second.child">3rd page from child</a>
             <div wire:loading wire:target="$navigate">
                 Loading in child...
+            </div>
+            <div wire:loading wire:target="$navigate.global">
+                Loading in child global...
             </div>
         </div>
         HTML;
