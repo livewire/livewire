@@ -58,7 +58,7 @@ Without the key on the nested Livewire component, Livewire will be unable to mat
 
 Another tricky scenario you may run into is having duplicate keys within the same component. This often results from using model IDs as keys, which can sometimes collide.
 
-Here's an example where we need to add a `post-` and an `author``-` prefix to designate each set of keys as unique. Otherwise, if you have a `$post` and `$author` model with the same ID, you would have an ID collision:
+Here's an example where we need to add a `post-` and an `author-` prefix to designate each set of keys as unique. Otherwise, if you have a `$post` and `$author` model with the same ID, you would have an ID collision:
 
 ```blade
 <div>
