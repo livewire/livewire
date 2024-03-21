@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
+use Sushi\Sushi;
 
 class ImplicitRouteBindingUnitTest extends \Tests\TestCase
 {
@@ -65,6 +66,18 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()
             ->get('/foo/with-trashed/route-model')
             ->assertSeeText('prop:via-route:trashed:route-model');
+    }
+
+    /** @test */
+    public function props_are_set_via_implicit_binding_after_404()
+    {
+        Route::get('/foo/{user}', ComponentWithModelPropBindings::class);
+
+        $this->get('/foo/404')
+            ->assertNotFound();
+
+        $this->get('/foo/1')
+            ->assertSeeText('prop:John');
     }
 }
 
@@ -197,4 +210,39 @@ class ComponentWithTrashedPropBindings extends Component
 
         return app('view')->make('show-name-with-this');
     }
+}
+
+
+class ComponentWithModelPropBindings extends Component
+{
+    public User $user;
+
+    public function mount(User $user)
+    {
+        $this->user = $user;
+    }
+
+    public function render()
+    {
+        $this->name = 'prop:'.$this->user->name;
+
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class User extends Model
+{
+    use Sushi;
+
+    protected array $schema = [
+        'id' => 'integer',
+        'name' => 'string',
+    ];
+
+    protected array $rows = [
+        [
+            'id' => 1,
+            'name' => 'John',
+        ],
+    ];
 }
