@@ -262,6 +262,16 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
+    function set_for_backed_enums()
+    {
+        Livewire::test(ComponentWithEnums::class)
+            ->set('backedFooBarEnum', BackedFooBarEnum::FOO->value)
+            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO)
+            ->set('backedFooBarEnum', BackedFooBarEnum::FOO)
+            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO);
+    }
+
+    /** @test */
     function assert_set()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
@@ -299,16 +309,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
         $component->assertNotSet('name', null);
-    }
-
-    /** @test */
-    function assert_set_for_backed_enums()
-    {
-        Livewire::test(ComponentWithEnums::class)
-            ->set('backedFooBarEnum', BackedFooBarEnum::FOO->value)
-            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO)
-            ->set('backedFooBarEnum', BackedFooBarEnum::FOO)
-            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO);
     }
 
     /** @test */
