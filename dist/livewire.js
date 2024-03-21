@@ -9701,14 +9701,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return module_default.navigate;
     }
   };
+  var warnAboutMultipleInstancesOf = (entity) => console.warn(`Detected multiple instances of ${entity} running`);
   if (window.Livewire)
-    console.warn("Detected multiple instances of Livewire running");
+    warnAboutMultipleInstancesOf("Livewire");
   if (window.Alpine)
-    console.warn("Detected multiple instances of Alpine running");
+    warnAboutMultipleInstancesOf("Alpine");
   window.Livewire = Livewire2;
   window.Alpine = module_default;
   if (window.livewireScriptConfig === void 0) {
+    window.Alpine.__fromLivewire = true;
     document.addEventListener("DOMContentLoaded", () => {
+      if (window.Alpine.__fromLivewire === void 0) {
+        warnAboutMultipleInstancesOf("Alpine");
+      }
       Livewire2.start();
     });
   }

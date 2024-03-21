@@ -4,7 +4,9 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:layout')]
 class LayoutCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:layout {--force} {--stub= : If you have several stubs, stored in subfolders }';

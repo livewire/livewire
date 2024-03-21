@@ -4,7 +4,9 @@ namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:stubs')]
 class StubsCommand extends Command
 {
     protected $signature = 'livewire:stubs';
