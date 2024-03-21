@@ -51,20 +51,14 @@ export default function (Alpine) {
     })
 
     function navigateTo(destination, shouldPushToHistoryState = true) {
-        let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', { url: destination })
+        let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', { url: destination, history: shouldPushToHistoryState })
 
         if (prevented) return
 
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-            let prevented = fireEventForOtherLibariesToHookInto('alpine:navigating')
-
-            if (prevented) {
-                showProgressBar && finishAndHideProgressBar()
-
-                return
-            }
+            fireEventForOtherLibariesToHookInto('alpine:navigating')
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
@@ -121,6 +115,8 @@ export default function (Alpine) {
             })
         },
         (html, currentPageUrl, currentPageKey) => {
+            let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', { url: destination, history: shouldPushToHistoryState })
+
             // @todo: see if there's a way to update the current HTML BEFORE
             // the back button is hit, and not AFTER:
             storeScrollInformationInHtmlBeforeNavigatingAway()
