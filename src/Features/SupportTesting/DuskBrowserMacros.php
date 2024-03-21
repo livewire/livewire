@@ -297,6 +297,122 @@ class DuskBrowserMacros
         };
     }
 
+    public function waitForNavigateRequest()
+    {
+        return function ($callback = null) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $id = str()->random();
+
+            $this->script([
+                "window.duskIsWaitingForLivewireNavigateRequestStarted{$id} = false",
+                "window.duskIsWaitingForLivewireNavigateRequestFinished{$id} = true",
+                'let cleanupRequest = () => {}',
+                "cleanupRequest = Livewire.hook('navigate.request', () => {
+                    window.duskIsWaitingForLivewireNavigateRequestStarted{$id} = true
+
+                    cleanupRequest()
+                })",
+                "window.handler{$id} = () => {
+                    if (! window.duskIsWaitingForLivewireNavigateRequestStarted{$id}) {
+                        return
+                    }
+
+                    window.duskIsWaitingForLivewireNavigateRequestFinished{$id} = true
+
+                    document.removeEventListener('livewire:navigated', window.handler{$id})
+
+                    queueMicrotask(() => {
+                        delete window.duskIsWaitingForLivewireNavigateRequestStarted{$id}
+                        delete window.duskIsWaitingForLivewireNavigateRequestFinished{$id}
+                    })
+                }",
+                "document.addEventListener('livewire:navigated', window.handler{$id})",
+            ]);
+
+            if ($callback) {
+                $callback($this);
+
+                return $this->waitUsing(6, 25, function () use ($id) {
+                    return $this->driver->executeScript("return window.duskIsWaitingForLivewireNavigateRequestFinished{$id} === undefined");
+                }, 'Livewire navigate request was never completed');
+            }
+
+            // If no callback is passed, make ->waitForNavigate a higher-order method.
+            return new class($this, $id)
+            {
+                protected $browser;
+                protected $id;
+
+                public function __construct($browser, $id)
+                {
+                    $this->browser = $browser;
+                    $this->id = $id;
+                }
+
+                public function __call($method, $params)
+                {
+                    return tap($this->browser->{$method}(...$params), function ($browser) {
+                        $browser->waitUsing(6, 25, function () use ($browser) {
+                            return $browser->driver->executeScript("return window.duskIsWaitingForLivewireNavigateRequestFinished{$this->id} === undefined");
+                        }, 'Livewire navigate request was never completed');
+                    });
+                }
+            };
+        };
+    }
+
+    public function waitForNoNavigateRequest()
+    {
+        return function ($callback = null) {
+            /** @var \Laravel\Dusk\Browser $this */
+            $id = str()->random();
+
+            $this->script([
+                "window.duskIsWaitingForLivewireNavigateRequestStarted{$id} = true",
+                'let cleanupRequest = () => {}',
+                "cleanupRequest = Livewire.hook('navigate.request', () => {
+                    window.duskIsWaitingForLivewireNavigateRequestStarted{$id} = true
+
+                    cleanupRequest()
+
+                    queueMicrotask(() => {
+                        delete window.duskIsWaitingForLivewireNavigateRequestStarted{$id}
+                    })
+                })",
+            ]);
+
+            if ($callback) {
+                $callback($this);
+
+                return $this->waitUsing(6, 25, function () use ($id) {
+                    return $this->driver->executeScript("return window.duskIsWaitingForLivewireNavigateRequestStarted{$id}");
+                }, 'Livewire navigate request was never completed');
+            }
+
+            // If no callback is passed, make ->waitForNavigate a higher-order method.
+            return new class($this, $id)
+            {
+                protected $browser;
+                protected $id;
+
+                public function __construct($browser, $id)
+                {
+                    $this->browser = $browser;
+                    $this->id = $id;
+                }
+
+                public function __call($method, $params)
+                {
+                    return tap($this->browser->{$method}(...$params), function ($browser) {
+                        $browser->waitUsing(6, 25, function () use ($browser) {
+                            return $browser->driver->executeScript("return window.duskIsWaitingForLivewireNavigateRequestStarted{$this->id}");
+                        }, 'Livewire navigate request was completed');
+                    });
+                }
+            };
+        };
+    }
+
     public function online()
     {
         return function () {
