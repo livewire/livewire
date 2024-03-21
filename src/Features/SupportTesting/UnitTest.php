@@ -302,6 +302,16 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     }
 
     /** @test */
+    function assert_set_for_backed_enums()
+    {
+        Livewire::test(ComponentWithEnums::class)
+            ->set('backedFooBarEnum', BackedFooBarEnum::FOO->value)
+            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO)
+            ->set('backedFooBarEnum', BackedFooBarEnum::FOO)
+            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO);
+    }
+
+    /** @test */
     function assert_set_strict()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
@@ -799,4 +809,20 @@ class ComponentWithMethodThatReturnsData extends Component
     {
         return app('view')->make('null-view');
     }
+}
+
+class ComponentWithEnums extends Component
+{
+    public BackedFooBarEnum $backedFooBarEnum;
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+enum BackedFooBarEnum : string
+{
+    case FOO = 'foo';
+    case BAR = 'bar';
 }

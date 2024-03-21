@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers;
 
+use BackedEnum;
+
 class EnumSynth extends Synth {
     public static $key = 'enm';
 
@@ -28,6 +30,8 @@ class EnumSynth extends Synth {
 
     function hydrate($value, $meta) {
         if ($value === null || $value === '') return null;
+
+        if ($value instanceof BackedEnum) return $value;
 
         $class = $meta['class'];
 
