@@ -1,10 +1,12 @@
 import NProgress from 'nprogress'
 import { getNonce } from '@/utils'
 
+//Setting parent to 'html' to preserve progress bar when body is replaced.
 NProgress.configure({
     minimum: 0.1,
     trickleSpeed: 200,
     showSpinner: false,
+    parent: 'html',
 })
 
 injectStyles()
@@ -14,7 +16,7 @@ export function showAndStartProgressBar() {
     inProgress = true
     // Only show progress bar if it's been a little bit...
     setTimeout(() => {
-        if (! inProgress) return
+        if (!inProgress) return
         NProgress.start()
     }, 150)
 
@@ -25,9 +27,15 @@ export function showAndStartProgressBar() {
 
 export function finishAndHideProgressBar() {
     inProgress = false
-    NProgress.done()
-    NProgress.remove()
 
+    // complete the progressbar
+    NProgress.set(0.99)
+
+    //for a smoother progress finish animation
+    setTimeout(() => {
+        NProgress.done()
+        NProgress.remove()
+    }, 400)
     // finishProgressBar(); destroyBar()
 }
 
@@ -36,7 +44,9 @@ function createBar() {
 
     bar.setAttribute('id', 'alpine-progress-bar')
     bar.setAttribute('x-navigate:persist', 'alpine-progress-bar')
-    bar.setAttribute('style', `
+    bar.setAttribute(
+        'style',
+        `
         width: 100%;
         height: 5px;
         background: black;
@@ -47,17 +57,18 @@ function createBar() {
         transition: all 0.5s ease;
         transform: scaleX(0);
         transform-origin: left;
-    `)
+    `
+    )
 
     document.body.appendChild(bar)
 
     return bar
 }
 
-function incrementBar(goal = .1) {
+function incrementBar(goal = 0.1) {
     let bar = document.getElementById('alpine-progress-bar')
 
-    if (! bar) return
+    if (!bar) return
 
     let percentage = Number(bar.style.transform.match(/scaleX\((.+)\)/)[1])
 
@@ -66,7 +77,7 @@ function incrementBar(goal = .1) {
     bar.style.transform = 'scaleX(' + goal + ')'
 
     setTimeout(() => {
-        incrementBar(percentage + .1)
+        incrementBar(percentage + 0.1)
     }, 50)
 }
 
@@ -159,7 +170,7 @@ function injectStyles() {
 
     let nonce = getNonce()
     if (nonce) {
-      style.nonce = nonce
+        style.nonce = nonce
     }
 
     document.head.appendChild(style)
