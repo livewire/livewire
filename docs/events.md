@@ -135,7 +135,9 @@ Additionally, you can dispatch events from within a component's `@script` like s
 ```html
 @script
 <script>
-    $wire.dispatch('post-created');
+    $nextTick(() => {
+        $wire.dispatch('post-created');
+    });
 </script>
 @endscript
 ```
@@ -153,7 +155,9 @@ You can pass any additional parameters to the event by passing an object as a se
 ```html
 @script
 <script>
-    $wire.dispatch('post-created', { refreshPosts: true });
+    $nextTick(() => {
+        $wire.dispatch('post-created', { refreshPosts: true });
+    });
 </script>
 @endscript
 ```
