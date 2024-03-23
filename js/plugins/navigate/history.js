@@ -21,10 +21,7 @@ let snapshotCache = {
         let snapshot = this.lookup[location]
 
         if (snapshot === undefined)
-            throw (
-                'No back button cache found for current location: ' +
-                location
-            )
+            throw 'No back button cache found for current location: ' + location
 
         return snapshot
     },
@@ -51,9 +48,9 @@ let snapshotCache = {
 
     trim() {
         for (let key of this.keys.splice(this.limit)) {
-          delete this.lookup[key]
+            delete this.lookup[key]
         }
-    }
+    },
 }
 
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
@@ -61,10 +58,21 @@ export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // (This is so later hitting back can restore this page).
     let url = new URL(window.location.href, document.baseURI)
 
-    replaceUrl(url, document.documentElement.outerHTML)
+    const clonedDocumentElement = document.documentElement.cloneNode(true)
+
+    const progress = clonedDocumentElement.querySelector('#nprogress')
+    //removing the progress bar before saving the html;
+    progress && progress.remove()
+
+    replaceUrl(url, clonedDocumentElement.outerHTML)
+    //removing the cloned element from memory
+    clonedDocumentElement.remove()
 }
 
-export function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
+export function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(
+    key,
+    url
+) {
     let html = document.documentElement.outerHTML
 
     snapshotCache.replace(key, new Snapshot(url, html))
@@ -87,12 +95,16 @@ export function whenTheBackOrForwardButtonIsClicked(
         // by anchor tags `#my-heading`, so we don't want to handle them.
         if (Object.keys(state).length === 0) return
 
-        if (! alpine.snapshotIdx) return
+        if (!alpine.snapshotIdx) return
 
         if (snapshotCache.has(alpine.snapshotIdx)) {
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
-            handleHtml(snapshot.html, snapshotCache.currentUrl, snapshotCache.currentKey)
+            handleHtml(
+                snapshot.html,
+                snapshotCache.currentUrl,
+                snapshotCache.currentKey
+            )
         } else {
             fallback(alpine.url)
         }
@@ -119,7 +131,10 @@ function updateUrl(method, url, html) {
 
     method === 'pushState'
         ? snapshotCache.push(key, new Snapshot(url, html))
-        : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
+        : snapshotCache.replace(
+              (key = snapshotCache.currentKey ?? key),
+              new Snapshot(url, html)
+          )
 
     let state = history.state || {}
 
