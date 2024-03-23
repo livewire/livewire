@@ -61,7 +61,15 @@ export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // (This is so later hitting back can restore this page).
     let url = new URL(window.location.href, document.baseURI)
 
-    replaceUrl(url, document.documentElement.outerHTML)
+    const clonedDocumentElement = document.documentElement.cloneNode(true)
+
+    const progress = clonedDocumentElement.querySelector('#nprogress')
+    // Removing the progress bar before saving the HTML.
+    progress && progress.remove()
+
+    replaceUrl(url, clonedDocumentElement.outerHTML)
+    // Removing the cloned element from memory.
+    clonedDocumentElement.remove()
 }
 
 export function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
