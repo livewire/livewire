@@ -25,6 +25,12 @@ class GenerateSignedUploadUrl
         // Flysystem V2+ doesn't allow direct access to client, so we need to invade instead.
         $client = invade($adapter)->client;
 
+        // handle nested adapters like path prefix
+        while (!$client) {
+            $adapter = invade($adapter)->adapter;
+            $client = invade($adapter)->client;
+        }
+
         // Flysystem V2+ doesn't allow direct access to bucket, so we need to invade instead.
         $bucket = invade($adapter)->bucket;
 
