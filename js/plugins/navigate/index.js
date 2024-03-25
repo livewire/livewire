@@ -14,10 +14,17 @@ let restoreScroll = true
 let autofocus = false
 
 export default function (Alpine) {
+
     Alpine.navigate = (url) => {
-        navigateTo(
-            createUrlObjectFromString(url)
-        )
+        let destination = createUrlObjectFromString(url)
+
+        let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+            url: destination, history: false, cached: false,
+         })
+
+        if (prevented) return
+
+        navigateTo(destination)
     }
 
     Alpine.navigate.disableProgressBar = () => {
@@ -45,7 +52,13 @@ export default function (Alpine) {
             })
 
             whenItIsReleased(() => {
-                navigateTo(destination)
+                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                    url: destination, history: false, cached: false,
+                 })
+
+                if (prevented) return
+
+                navigateTo(destination);
             })
         })
     })
@@ -84,8 +97,6 @@ export default function (Alpine) {
 
                     restoreScrollPositionOrScrollToTop()
 
-                    fireEventForOtherLibariesToHookInto('alpine:navigated')
-
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
                             setTimeout(() => {
@@ -93,6 +104,8 @@ export default function (Alpine) {
                             })
 
                             nowInitializeAlpineOnTheNewPage(Alpine)
+
+                            fireEventForOtherLibariesToHookInto('alpine:navigated')
                         })
                     })
                 })
@@ -105,12 +118,26 @@ export default function (Alpine) {
             ifThePageBeingVisitedHasntBeenCached((url) => {
                 let destination = createUrlObjectFromString(url)
 
+                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                    url: destination, history: true, cached: false,
+                 })
+
+                if (prevented) return
+
                 let shouldPushToHistoryState = false
 
                 navigateTo(destination, shouldPushToHistoryState)
             })
         },
-        (html, currentPageUrl, currentPageKey) => {
+        (html, url, currentPageUrl, currentPageKey) => {
+            let destination = createUrlObjectFromString(url)
+
+            let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                url: destination, history: true, cached: true,
+            })
+
+            if (prevented) return
+
             // @todo: see if there's a way to update the current HTML BEFORE
             // the back button is hit, and not AFTER:
             storeScrollInformationInHtmlBeforeNavigatingAway()
@@ -136,12 +163,12 @@ export default function (Alpine) {
 
                     restoreScrollPositionOrScrollToTop()
 
-                    fireEventForOtherLibariesToHookInto('alpine:navigated')
-
                     andAfterAllThis(() => {
                         autofocus && autofocusElementsWithTheAutofocusAttribute()
 
                         nowInitializeAlpineOnTheNewPage(Alpine)
+
+                        fireEventForOtherLibariesToHookInto('alpine:navigated')
                     })
                 })
             })
@@ -173,8 +200,16 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     })
 }
 
-function fireEventForOtherLibariesToHookInto(eventName) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }))
+function fireEventForOtherLibariesToHookInto(name, detail) {
+    let event = new CustomEvent(name, {
+        cancelable: true,
+        bubbles: true,
+        detail,
+    })
+
+    document.dispatchEvent(event)
+
+    return event.defaultPrevented
 }
 
 function nowInitializeAlpineOnTheNewPage(Alpine) {
