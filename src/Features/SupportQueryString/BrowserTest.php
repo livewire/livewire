@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportQueryString;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Url;
+use Livewire\Features\SupportTesting\DuskTestable;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -805,6 +806,45 @@ class BrowserTest extends \Tests\BrowserTestCase
             $this->assertTrue(false, 'Maliciously injected alert detected');
         });
     }
+
+    /** @test */
+    public function it_handles_query_string_params_without_values()
+    {
+        $id = 'a'.str()->random(10);
+
+        DuskTestable::createBrowser($id, [
+            $id => new class extends Component
+            {
+                #[Url]
+                public $foo;
+
+                public function setFoo()
+                {
+                    $this->foo = 'bar';
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                        <span dusk="output">@js($foo)</span>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+        ->visit('/livewire-dusk/'.$id.'?flag')
+        ->storeSource('temp')
+        ->storeConsoleLog('temp')
+        ->assertQueryStringMissing('foo')
+        ->waitForLivewire()->click('@setButton')
+        ->assertSeeIn('@output', '\'bar\'')
+        ->assertQueryStringHas('foo', 'bar')
+        ->refresh()
+        ->assertQueryStringHas('foo', 'bar');
+    }
+
 }
 
 class FormObject extends \Livewire\Form
