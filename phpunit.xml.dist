@@ -22,5 +22,14 @@
     <php>
         <env name="CACHE_STORE" value="file"/>
         <env name="SESSION_DRIVER" value="file"/>
+
+        <env name="S3_ENDPOINT" value=""/>
+        <env name="S3_KEY" value=""/>
+        <env name="S3_SECRET" value=""/>
+        <env name="S3_REGION" value=""/>
+        <env name="S3_BUCKET" value=""/>
+        <env name="S3_VISIBILITY" value=""/>
+        <env name="S3_PREFIX" value="/prefix/"/>
+
     </php>
 </phpunit>

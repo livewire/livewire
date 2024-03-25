@@ -784,6 +784,33 @@ class UnitTest extends \Tests\TestCase
             ->set('file', $file)
             ->assertSet('content', $file->getContent());
     }
+
+    /** @test */
+    public function prefix_config_is_supported()
+    {
+        if (empty(env('S3_KEY'))) {
+            $this->markTestSkipped('S3_* env vars not set for prefix test');
+        }
+
+        config()->set('filesystems.default', 's3');
+        config()->set('filesystems.disks.s3', [
+            'driver' => 's3',
+            'key' => env('S3_KEY'),
+            'secret' => env('S3_SECRET'),
+            'endpoint' => env('S3_ENDPOINT'),
+            'region' => env('S3_REGION'),
+            'bucket' => env('S3_BUCKET'),
+            'visibility' => env('S3_VISIBILITY'),
+            'prefix' => env('S3_PREFIX'),
+        ]);
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $service = new \Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
+        $result = $service->forS3($file, useRealDiskInTests: true);
+
+        $this->assertIsArray($result);
+    }
 }
 
 class DummyMiddleware

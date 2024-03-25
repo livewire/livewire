@@ -7,11 +7,11 @@ use League\Flysystem\WhitespacePathNormalizer;
 
 class FileUploadConfiguration
 {
-    public static function storage()
+    public static function storage($useRealDiskInTests = false)
     {
-        if (app()->runningUnitTests()) {
+        if (!$useRealDiskInTests && app()->runningUnitTests()) {
             // We want to "fake" the first time in a test run, but not again because
-            // ::fake() whipes the storage directory every time its called.
+            // ::fake() wipes the storage directory every time its called.
             rescue(function () {
                 // If the storage disk is not found (meaning it's the first time),
                 // this will throw an error and trip the second callback.
@@ -21,12 +21,12 @@ class FileUploadConfiguration
             });
         }
 
-        return Storage::disk(static::disk());
+        return Storage::disk(static::disk($useRealDiskInTests));
     }
 
-    public static function disk()
+    public static function disk($useRealDiskInTests = false)
     {
-        if (app()->runningUnitTests()) {
+        if (!$useRealDiskInTests && app()->runningUnitTests()) {
             return 'tmp-for-tests';
         }
 

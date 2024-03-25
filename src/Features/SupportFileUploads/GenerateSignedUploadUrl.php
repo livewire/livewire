@@ -15,9 +15,9 @@ class GenerateSignedUploadUrl
         );
     }
 
-    public function forS3($file, $visibility = 'private')
+    public function forS3($file, $visibility = 'private', $useRealDiskInTests = false)
     {
-        $driver = FileUploadConfiguration::storage()->getDriver();
+        $driver = FileUploadConfiguration::storage(useRealDiskInTests: $useRealDiskInTests)->getDriver();
 
         // Flysystem V2+ doesn't allow direct access to adapter, so we need to invade instead.
         $adapter = invade($driver)->adapter;
