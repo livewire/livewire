@@ -53,6 +53,16 @@ class DuskTestable
      */
     static function create($components, $params = [], $queryParams = [])
     {
+        if (static::$shortCircuitCreateCall) {
+            throw new class ($components) extends \Exception {
+                public $components;
+                public $isDuskShortcircuit = true;
+                function __construct($components) {
+                    $this->components = $components;
+                }
+            };
+        }
+
         $components = (array) $components;
 
         $firstComponent = array_shift($components);
