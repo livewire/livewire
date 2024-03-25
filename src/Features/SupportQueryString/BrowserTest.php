@@ -835,8 +835,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
         ])
         ->visit('/livewire-dusk/'.$id.'?flag')
-        ->storeSource('temp')
-        ->storeConsoleLog('temp')
         ->assertQueryStringMissing('foo')
         ->waitForLivewire()->click('@setButton')
         ->assertSeeIn('@output', '\'bar\'')
