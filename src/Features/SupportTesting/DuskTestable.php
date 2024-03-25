@@ -53,6 +53,19 @@ class DuskTestable
      */
     static function create($components, $params = [], $queryParams = [])
     {
+        $components = (array) $components;
+
+        $firstComponent = array_shift($components);
+
+        $id = 'a'.str()->random(10);
+
+        $components = [$id => $firstComponent, ...$components];
+
+        return static::createBrowser($id, $components, $params, $queryParams)->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
+    }
+
+    static function createBrowser($id, $components, $params = [], $queryParams = [])
+    {
         if (static::$shortCircuitCreateCall) {
             throw new class ($components) extends \Exception {
                 public $components;
@@ -63,23 +76,13 @@ class DuskTestable
             };
         }
 
-        $components = (array) $components;
-
-        $firstComponent = array_shift($components);
-
-        $id = 'a'.str()->random(10);
-
-        $components = [$id => $firstComponent, ...$components];
-
         [$class, $method] = static::findTestClassAndMethodThatCalledThis();
 
         static::registerComponentsForNextTest([$id, $class, $method]);
 
         $testCase = invade(static::$currentTestCase);
 
-        static::$browser = $testCase->newBrowser($testCase->createWebDriver());
-
-        return static::$browser->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
+        return static::$browser = $testCase->newBrowser($testCase->createWebDriver());
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
