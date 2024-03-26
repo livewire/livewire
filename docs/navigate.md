@@ -184,11 +184,9 @@ document.addEventListener('livewire:navigated', () => {
 >
 > An easy method to remove an event listener after it runs is to pass the option `{once: true}` as a third parameter to the `addEventListener` function.
 > ```js
-> document.addEventListener(
->     'livewire:navigated',
->     () => { /* your code */ },
->     {once: true}
-> );
+> document.addEventListener('livewire:navigated', () => {
+>     // ...
+> }, { once: true })
 > ```
 
 ## Manually visiting a new page
