@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportTesting;
 
+use BackedEnum;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
 use Livewire\Features\SupportValidation\TestsValidation;
@@ -131,6 +132,8 @@ class Testable
             return $this->upload($name, [$value]);
         } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof \Illuminate\Http\UploadedFile) {
             return $this->upload($name, $value, $isMultiple = true);
+        } elseif ($value instanceof BackedEnum) {
+            $value = $value->value;
         }
 
         return $this->update(updates: [$name => $value]);
