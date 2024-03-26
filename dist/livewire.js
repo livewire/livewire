@@ -312,13 +312,17 @@
       return this.get(key).forEach(callback);
     }
   };
-  function dispatch(el, name, detail = {}, bubbles = true) {
-    el.dispatchEvent(new CustomEvent(name, {
+  function dispatch(target, name, detail = {}, bubbles = true) {
+    target.dispatchEvent(new CustomEvent(name, {
       detail,
       bubbles,
       composed: true,
       cancelable: true
     }));
+  }
+  function listen(target, name, handler4) {
+    target.addEventListener(name, handler4);
+    return () => target.removeEventListener(name, handler4);
   }
   function isObjecty(subject) {
     return typeof subject === "object" && subject !== null;
@@ -4363,7 +4367,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
-  wireProperty("$on", (component) => (...params) => listen(component, ...params));
+  wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
@@ -4570,7 +4574,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       dispatchEvent(target.el, name, params, false);
     });
   }
-  function listen(component, name, callback) {
+  function listen2(component, name, callback) {
     component.el.addEventListener(name, (e) => {
       callback(e.detail);
     });
@@ -9262,17 +9266,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire-loading.js
-  directive2("loading", ({ el, directive: directive3, component }) => {
+  directive2("loading", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {
     let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive3);
-    whenTargetsArePartOfRequest(component, targets, inverted, [
+    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
-    whenTargetsArePartOfFileUpload(component, targets, [
+    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
+    cleanup3(() => {
+      cleanupA();
+      cleanupB();
+    });
   });
   function applyDelay(directive3) {
     if (!directive3.modifiers.includes("delay") || directive3.modifiers.includes("none"))
@@ -9313,7 +9321,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-    on2("commit", ({ component: iComponent, commit: payload, respond }) => {
+    return on2("commit", ({ component: iComponent, commit: payload, respond }) => {
       if (iComponent !== component)
         return;
       if (targets.length > 0 && containsTargets(payload, targets) === inverted)
@@ -9333,21 +9341,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return true;
       return false;
     };
-    window.addEventListener("livewire-upload-start", (e) => {
+    let cleanupA = listen(window, "livewire-upload-start", (e) => {
       if (eventMismatch(e))
         return;
       startLoading();
     });
-    window.addEventListener("livewire-upload-finish", (e) => {
+    let cleanupB = listen(window, "livewire-upload-finish", (e) => {
       if (eventMismatch(e))
         return;
       endLoading();
     });
-    window.addEventListener("livewire-upload-error", (e) => {
+    let cleanupC = listen(window, "livewire-upload-error", (e) => {
       if (eventMismatch(e))
         return;
       endLoading();
     });
+    return () => {
+      cleanupA();
+      cleanupB();
+      cleanupC();
+    };
   }
   function containsTargets(payload, targets) {
     let { updates, calls } = payload;

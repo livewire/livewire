@@ -7125,13 +7125,17 @@ var WeakBag = class {
     return this.get(key).forEach(callback);
   }
 };
-function dispatch(el, name, detail = {}, bubbles = true) {
-  el.dispatchEvent(new CustomEvent(name, {
+function dispatch(target, name, detail = {}, bubbles = true) {
+  target.dispatchEvent(new CustomEvent(name, {
     detail,
     bubbles,
     composed: true,
     cancelable: true
   }));
+}
+function listen(target, name, handler) {
+  target.addEventListener(name, handler);
+  return () => target.removeEventListener(name, handler);
 }
 function isObjecty(subject) {
   return typeof subject === "object" && subject !== null;
@@ -8064,7 +8068,7 @@ wireProperty("$watch", (component) => (path, callback) => {
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => await requestCommit(component));
-wireProperty("$on", (component) => (...params) => listen(component, ...params));
+wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
 wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
 wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
@@ -8271,7 +8275,7 @@ function dispatchTo(componentName, name, params) {
     dispatchEvent(target.el, name, params, false);
   });
 }
-function listen(component, name, callback) {
+function listen2(component, name, callback) {
   component.el.addEventListener(name, (e) => {
     callback(e.detail);
   });
@@ -10091,17 +10095,21 @@ directive("offline", ({ el, directive: directive2, cleanup: cleanup2 }) => {
 });
 
 // js/directives/wire-loading.js
-directive("loading", ({ el, directive: directive2, component }) => {
+directive("loading", ({ el, directive: directive2, component, cleanup: cleanup2 }) => {
   let { targets, inverted } = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
-  whenTargetsArePartOfRequest(component, targets, inverted, [
+  let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
-  whenTargetsArePartOfFileUpload(component, targets, [
+  let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
     () => delay(() => toggleBooleanStateDirective(el, directive2, true)),
     () => abortDelay(() => toggleBooleanStateDirective(el, directive2, false))
   ]);
+  cleanup2(() => {
+    cleanupA();
+    cleanupB();
+  });
 });
 function applyDelay(directive2) {
   if (!directive2.modifiers.includes("delay") || directive2.modifiers.includes("none"))
@@ -10142,7 +10150,7 @@ function applyDelay(directive2) {
   ];
 }
 function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-  on("commit", ({ component: iComponent, commit: payload, respond }) => {
+  return on("commit", ({ component: iComponent, commit: payload, respond }) => {
     if (iComponent !== component)
       return;
     if (targets.length > 0 && containsTargets(payload, targets) === inverted)
@@ -10162,21 +10170,26 @@ function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLo
       return true;
     return false;
   };
-  window.addEventListener("livewire-upload-start", (e) => {
+  let cleanupA = listen(window, "livewire-upload-start", (e) => {
     if (eventMismatch(e))
       return;
     startLoading();
   });
-  window.addEventListener("livewire-upload-finish", (e) => {
+  let cleanupB = listen(window, "livewire-upload-finish", (e) => {
     if (eventMismatch(e))
       return;
     endLoading();
   });
-  window.addEventListener("livewire-upload-error", (e) => {
+  let cleanupC = listen(window, "livewire-upload-error", (e) => {
     if (eventMismatch(e))
       return;
     endLoading();
   });
+  return () => {
+    cleanupA();
+    cleanupB();
+    cleanupC();
+  };
 }
 function containsTargets(payload, targets) {
   let { updates, calls } = payload;
