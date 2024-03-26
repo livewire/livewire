@@ -312,13 +312,17 @@
       return this.get(key).forEach(callback);
     }
   };
-  function dispatch(el, name, detail = {}, bubbles = true) {
-    el.dispatchEvent(new CustomEvent(name, {
+  function dispatch(target, name, detail = {}, bubbles = true) {
+    target.dispatchEvent(new CustomEvent(name, {
       detail,
       bubbles,
       composed: true,
       cancelable: true
     }));
+  }
+  function listen(target, name, handler4) {
+    target.addEventListener(name, handler4);
+    return () => target.removeEventListener(name, handler4);
   }
   function isObjecty(subject) {
     return typeof subject === "object" && subject !== null;

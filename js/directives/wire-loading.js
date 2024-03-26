@@ -1,6 +1,7 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
+import { listen } from '@/utils'
 
 directive('loading', ({ el, directive, component, cleanup }) => {
     let { targets, inverted } = getTargets(el)
