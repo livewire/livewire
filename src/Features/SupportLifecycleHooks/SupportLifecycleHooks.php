@@ -85,6 +85,7 @@ class SupportLifecycleHooks extends ComponentHook
     {
         $protectedMethods = [
             'mount',
+            'exception',
             'hydrate*',
             'dehydrate*',
             'updating*',
