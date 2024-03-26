@@ -45,4 +45,26 @@ class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
 
         $this->assertEquals($firstKey, $secondKey);
     }
+
+    /** @test */
+    public function deterministic_keys_can_still_be_generated_from_blade_strings_not_files()
+    {
+        $contentsA = app('blade.compiler')->compileString(<<<'HTML'
+        <div>
+            <livewire:the-child />
+        </div>
+        HTML);
+
+        // Reset any internal key counters...
+        app('livewire')->flushState();
+
+        $contentsB = app('blade.compiler')->compileString(<<<'HTML'
+        <div>
+            <livewire:the-child />
+        </div>
+        HTML);
+
+        $this->assertStringContainsString('lw-540987236-0', $contentsA);
+        $this->assertStringContainsString('lw-540987236-0', $contentsB);
+    }
 }

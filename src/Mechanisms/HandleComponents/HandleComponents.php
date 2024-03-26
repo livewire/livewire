@@ -20,6 +20,7 @@ class HandleComponents extends Mechanism
         Synthesizers\StdClassSynth::class,
         Synthesizers\ArraySynth::class,
         Synthesizers\IntSynth::class,
+        Synthesizers\FloatSynth::class
     ];
 
     public static $renderStack = [];
