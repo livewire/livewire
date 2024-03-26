@@ -7132,7 +7132,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return;
       if (snapshotCache.has(alpine.snapshotIdx)) {
         let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
-        handleHtml(snapshot.html, snapshotCache.currentUrl, snapshotCache.currentKey);
+        handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey);
       } else {
         fallback2(alpine.url);
       }
@@ -7616,7 +7616,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var autofocus = false;
   function navigate_default(Alpine3) {
     Alpine3.navigate = (url) => {
-      navigateTo(createUrlObjectFromString(url));
+      let destination = createUrlObjectFromString(url);
+      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        url: destination,
+        history: false,
+        cached: false
+      });
+      if (prevented)
+        return;
+      navigateTo(destination);
     };
     Alpine3.navigate.disableProgressBar = () => {
       showProgressBar = false;
@@ -7636,6 +7644,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
+          let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+            url: destination,
+            history: false,
+            cached: false
+          });
+          if (prevented)
+            return;
           navigateTo(destination);
         });
       });
@@ -7663,13 +7678,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
                   autofocus && autofocusElementsWithTheAutofocusAttribute();
                 });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
+                fireEventForOtherLibariesToHookInto("alpine:navigated");
               });
             });
           });
@@ -7679,10 +7694,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
       ifThePageBeingVisitedHasntBeenCached((url) => {
         let destination = createUrlObjectFromString(url);
+        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+          url: destination,
+          history: true,
+          cached: false
+        });
+        if (prevented)
+          return;
         let shouldPushToHistoryState = false;
         navigateTo(destination, shouldPushToHistoryState);
       });
-    }, (html, currentPageUrl, currentPageKey) => {
+    }, (html, url, currentPageUrl, currentPageKey) => {
+      let destination = createUrlObjectFromString(url);
+      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        url: destination,
+        history: true,
+        cached: true
+      });
+      if (prevented)
+        return;
       storeScrollInformationInHtmlBeforeNavigatingAway();
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
@@ -7696,10 +7726,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine3);
+            fireEventForOtherLibariesToHookInto("alpine:navigated");
           });
         });
       });
@@ -7722,8 +7752,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(eventName) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
+  function fireEventForOtherLibariesToHookInto(name, detail) {
+    let event = new CustomEvent(name, {
+      cancelable: true,
+      bubbles: true,
+      detail
+    });
+    document.dispatchEvent(event);
+    return event.defaultPrevented;
   }
   function nowInitializeAlpineOnTheNewPage(Alpine3) {
     Alpine3.initTree(document.body, void 0, (el, skip) => {
@@ -8923,12 +8959,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
-  document.addEventListener("alpine:navigated", (e) => {
-    document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
-  });
-  document.addEventListener("alpine:navigating", (e) => {
-    document.dispatchEvent(new CustomEvent("livewire:navigating", { bubbles: true }));
-  });
+  document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
+  document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
+  document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
+  function forwardEvent(name, original) {
+    let event = new CustomEvent(name, { cancelable: true, bubbles: true, detail: original.detail });
+    document.dispatchEvent(event);
+    if (event.defaultPrevented) {
+      original.preventDefault();
+    }
+  }
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
     if (forceNavigate) {
