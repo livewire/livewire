@@ -87,10 +87,10 @@ Modifier | Description
 --- | ---
 `.in` | Only transition the element "in"
 `.out` | Only transition the element "out"
-`.duration.[?]ms` | Customize the transtion duration in milliseconds
-`.duration.[?]s` | Customize the transtion duration in seconds
-`.delay.[?]ms` | Customize the transtion delay in milliseconds
-`.delay.[?]s` | Customize the transtion delay in seconds
+`.duration.[?]ms` | Customize the transition duration in milliseconds
+`.duration.[?]s` | Customize the transition duration in seconds
+`.delay.[?]ms` | Customize the transition delay in milliseconds
+`.delay.[?]s` | Customize the transition delay in seconds
 `.opacity` | Only apply the opacity transition
 `.scale` | Only apply the scale transition
 `.origin.[top\|bottom\|left\|right]` | Customize the scale "origin" used
@@ -99,7 +99,7 @@ Below is a list of various transition combinations that may help to better visua
 
 **Fade-only transition**
 
-By default Livewire both fades and scales the element when transitioning. You can disable scaling and only fade by adding the `.opacity` modifier. This is useful for things like transitioning a full-page overlay, where adding a scale doesn't make sense.
+By default, Livewire both fades and scales the element when transitioning. You can disable scaling and only fade by adding the `.opacity` modifier. This is useful for things like transitioning a full-page overlay, where adding a scale doesn't make sense.
 
 ```html
 <div wire:transition.opacity>

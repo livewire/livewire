@@ -32,6 +32,13 @@ trait TestsRedirects
         return $this;
     }
 
+    public function assertRedirectToRoute($name, $parameters = [])
+    {
+        $uri = route($name, $parameters);
+
+        return $this->assertRedirect($uri);
+    }
+
     public function assertNoRedirect()
     {
         PHPUnit::assertTrue(! isset($this->effects['redirect']));

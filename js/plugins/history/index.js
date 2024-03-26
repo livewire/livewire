@@ -261,7 +261,10 @@ function fromQueryString(search) {
 
     let entries = search.split('&').map(i => i.split('='))
 
-    let data = {}
+    // let data = {} creates a security (XSS) vulnerability here. We need to use
+    // Object.create(null) instead so that we have a "pure" object that doesnt
+    // inherit Object.prototype and expose the js internals to manipulation.
+    let data = Object.create(null)
 
     entries.forEach(([key, value]) => {
         value = decodeURIComponent(value.replaceAll('+', '%20'))

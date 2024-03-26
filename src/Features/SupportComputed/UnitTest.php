@@ -387,6 +387,54 @@ class UnitTest extends TestCase
         Livewire::test(NullIssetComputedPropertyStub::class)
             ->assertSee('false');
     }
+
+    /** @test */
+    public function it_supports_legacy_computed_properties()
+    {
+        Livewire::test(new class extends TestComponent {
+            public function getFooProperty()
+            {
+                return 'bar';
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('foo', 'bar');
+    }
+
+    /** @test */
+    public function it_supports_unsetting_legacy_computed_properties()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $changeFoo = false;
+
+            public function getFooProperty()
+            {
+                return $this->changeFoo ? 'baz' : 'bar';
+            }
+
+            public function save()
+            {
+                // Access foo to ensure it is memoized.
+                $this->foo;
+
+                $this->changeFoo = true;
+
+                unset($this->foo);
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+            ->assertSet('foo', 'bar')
+            ->call('save')
+            ->assertSet('foo', 'baz');
+    }
 }
 
 class ComputedPropertyStub extends Component
