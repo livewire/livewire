@@ -178,6 +178,17 @@ document.addEventListener('livewire:navigated', () => {
 })
 ```
 
+> [!warning] Event listeners will persist across pages
+>
+> When you attach an event listener to the document it will not be removed when you navigate to a different page. This can lead to unexpected behaviour if you need code to run only after navigating to a specific page, or if you add the same event listener on every page. If you do not remove your event listener it may cause exceptions on other pages when it's looking for elements that do not exist, or you may end up with the event listener executing multiple times per navigation.
+>
+> An easy method to remove an event listener after it runs is to pass the option `{once: true}` as a third parameter to the `addEventListener` function.
+> ```js
+> document.addEventListener('livewire:navigated', () => {
+>     // ...
+> }, { once: true })
+> ```
+
 ## Manually visiting a new page
 
 In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` method to trigger a visit to a new page using JavaScript:
