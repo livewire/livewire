@@ -10073,7 +10073,7 @@ function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = n
   } else {
     let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
     let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
-    display = directive2.modifiers.includes("remove") ? cache : display;
+    display = directive2.modifiers.includes("remove") && !isTruthy ? cache : display;
     el.style.display = isTruthy ? display : "none";
   }
 }
