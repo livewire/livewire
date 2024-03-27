@@ -267,14 +267,13 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_navigate_to_another_page_with_hashtag()
+    public function can_navigate_to_another_page_with_hash_fragment()
     {
         $this->browse(function ($browser) {
             $browser
                 ->visit('/first')
-                ->click('@link.to.hashtag')
-                ->waitFor('@link.to.hashtag')
-                ->assertPathIs('/first#foo');
+                ->waitForNavigate()->click('@link.to.hashtag')
+                ->assertFragmentIs('foo');
         });
     }
 
