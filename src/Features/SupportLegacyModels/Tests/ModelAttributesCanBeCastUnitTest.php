@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
@@ -332,6 +333,26 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSet('model.custom_caster', QuizAnswer::make('e=mc2'))
             ->assertSnapshotSet('model.custom_caster', 'e=mc2');
     }
+
+    /** @test */
+    public function can_cast_enum_attributes_from_model_casts_definition()
+    {
+        Livewire::test(ComponentForModelAttributeCasting::class)
+            ->assertSet('model.enum', null, true)
+            ->assertSnapshotSet('model.enum', null)
+
+            ->set('model.enum', TestingEnum::FOO->value)
+            ->call('validateAttribute', 'model.enum')
+            ->assertHasNoErrors('model.enum')
+            ->assertSet('model.enum', TestingEnum::FOO, true)
+            ->assertSnapshotSet('model.enum', TestingEnum::FOO->value, true)
+
+            ->set('model.enum', '')
+            ->call('validateAttribute', 'model.enum')
+            ->assertHasNoErrors('model.enum')
+            ->assertSet('model.enum', null, true)
+            ->assertSnapshotSet('model.enum', null, true);
+    }
 }
 
 class ModelForAttributeCasting extends \Illuminate\Database\Eloquent\Model
@@ -358,6 +379,7 @@ class ModelForAttributeCasting extends \Illuminate\Database\Eloquent\Model
         'collected_list' => 'collection',
         'object_value' => 'object',
         'custom_caster' => QuizAnswerCaster::class,
+        'enum' => TestingEnum::class,
     ];
 
     public function getRows()
@@ -380,7 +402,8 @@ class ModelForAttributeCasting extends \Illuminate\Database\Eloquent\Model
                 'json_list' => json_encode([1, 2, 3]),
                 'collected_list' => json_encode([true, false]),
                 'object_value' => json_encode(['name' => 'Marian', 'email' => 'marian@likes.pizza']),
-                'custom_caster' => 'dumb answer'
+                'custom_caster' => 'dumb answer',
+                'enum' => null,
             ]
         ];
     }
@@ -431,34 +454,43 @@ class QuizAnswerCaster implements CastsAttributes
     }
 }
 
+enum TestingEnum: string
+{
+    case FOO = 'bar';
+}
+
 class ComponentForModelAttributeCasting extends Component
 {
     public $model;
 
-    protected $rules = [
-        'model.normal_date' => ['required', 'date'],
-        'model.formatted_date' => ['required', 'date'],
-        'model.date_with_time' => ['required', 'date'],
-        'model.timestamped_date' => ['required', 'integer'],
-        'model.integer_number' => ['required', 'integer'],
-        'model.real_number' => ['required', 'numeric'],
-        'model.float_number' => ['required', 'numeric'],
-        'model.double_precision_number' => ['required', 'numeric'],
-        'model.decimal_with_one_digit' => ['required', 'numeric'],
-        'model.decimal_with_two_digits' => ['required', 'numeric'],
-        'model.string_name' => ['required', 'string'],
-        'model.boolean_value' => ['required', 'boolean'],
-        'model.array_list' => ['required', 'array'],
-        'model.array_list.*' => ['required', 'string'],
-        'model.json_list' => ['required', 'array'],
-        'model.json_list.*' => ['required', 'numeric'],
-        'model.collected_list' => ['required'],
-        'model.collected_list.*' => ['required', 'boolean'],
-        'model.object_value' => ['required'],
-        'model.object_value.name' => ['required'],
-        'model.object_value.email' => ['required', 'email'],
-        'model.custom_caster' => ['required']
-    ];
+    public function rules(): array
+    {
+        return [
+            'model.normal_date' => ['required', 'date'],
+            'model.formatted_date' => ['required', 'date'],
+            'model.date_with_time' => ['required', 'date'],
+            'model.timestamped_date' => ['required', 'integer'],
+            'model.integer_number' => ['required', 'integer'],
+            'model.real_number' => ['required', 'numeric'],
+            'model.float_number' => ['required', 'numeric'],
+            'model.double_precision_number' => ['required', 'numeric'],
+            'model.decimal_with_one_digit' => ['required', 'numeric'],
+            'model.decimal_with_two_digits' => ['required', 'numeric'],
+            'model.string_name' => ['required', 'string'],
+            'model.boolean_value' => ['required', 'boolean'],
+            'model.array_list' => ['required', 'array'],
+            'model.array_list.*' => ['required', 'string'],
+            'model.json_list' => ['required', 'array'],
+            'model.json_list.*' => ['required', 'numeric'],
+            'model.collected_list' => ['required'],
+            'model.collected_list.*' => ['required', 'boolean'],
+            'model.object_value' => ['required'],
+            'model.object_value.name' => ['required'],
+            'model.object_value.email' => ['required', 'email'],
+            'model.custom_caster' => ['required'],
+            'model.enum' => ['nullable', Rule::enum(TestingEnum::class)]
+        ];
+    }
 
     public function mount() {
         $this->model = ModelForAttributeCasting::first();
