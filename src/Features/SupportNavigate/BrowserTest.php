@@ -52,6 +52,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
+            Route::get('/fourth', FourthPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -554,6 +555,27 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function livewire_before_navigate_event_is_fired_when_click()
+    {
+        $this->browse(function($browser) {
+            $browser
+                ->visit('/fourth')
+                ->assertSee('On fourth')
+                ->assertScript('window.foo', 'bar')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // first attempt bar -> baz
+                ->assertScript('window.foo', 'baz')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // second attempt baz -> bat
+                ->assertScript('window.foo', 'bat')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // finally navigate
+                ->assertSee('On first')
+            ;
+        });
+    }
+
+    /** @test */
     public function livewire_navigated_event_is_fired_after_redirect_without_reloading()
     {
         $this->browse(function ($browser) {
@@ -1051,6 +1073,36 @@ class ThirdPage extends Component
         return <<<'HTML'
         <div>
             Done loading...
+        </div>
+        HTML;
+    }
+}
+
+class FourthPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On fourth</div>
+
+            <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
+
+            <script data-navigate-once>window.foo = 'bar';</script>
+
+            <script >
+                document.addEventListener('livewire:navigate', (event) => {
+                    event.preventDefault();
+                    if (window.foo === 'bar') {
+                        window.foo = 'baz'
+                    }
+                    else if (window.foo === 'baz') {
+                        window.foo ='bat'
+                    } else {
+                        Alpine.navigate(event.detail.url)
+                    }
+                })
+            </script>
         </div>
         HTML;
     }
