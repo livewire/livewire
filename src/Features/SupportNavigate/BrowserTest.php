@@ -268,6 +268,17 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function can_navigate_to_another_page_with_hash_fragment()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->click('@link.to.hashtag')
+                ->assertFragmentIs('foo');
+        });
+    }
+
+    /** @test */
     public function navigate_is_not_triggered_on_cmd_and_enter()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -970,6 +981,7 @@ class FirstPage extends Component
         <div>
             <div>On first</div>
 
+            <a :href="window.location.pathname + '#foo'" wire:navigate dusk="link.to.hashtag">Go to same page with hashtag</a>
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <a href="/second-remote-asset" wire:navigate.hover dusk="link.to.asset">Go to asset page</a>

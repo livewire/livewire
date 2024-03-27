@@ -7217,10 +7217,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function createUrlObjectFromString(urlString) {
     return new URL(urlString, document.baseURI);
   }
+  function getUriStringFromUrlObject(urlObject) {
+    return urlObject.pathname + urlObject.search + urlObject.hash;
+  }
 
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback) {
-    let uri = destination.pathname + destination.search;
+    let uri = getUriStringFromUrlObject(destination);
     performFetch(uri, (html, finalDestination) => {
       callback(html, finalDestination);
     });
@@ -7237,7 +7240,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     let finalDestination;
     fetch(uri, options).then((response) => {
+      let destination = createUrlObjectFromString(uri);
       finalDestination = createUrlObjectFromString(response.url);
+      if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+        finalDestination.hash = destination.hash;
+      }
       return response.text();
     }).then((html) => {
       callback(html, finalDestination);
@@ -7247,24 +7254,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
   function prefetchHtml(destination, callback) {
-    let path = destination.pathname;
-    if (prefetches[path])
+    let uri = getUriStringFromUrlObject(destination);
+    if (prefetches[uri])
       return;
-    prefetches[path] = { finished: false, html: null, whenFinished: () => {
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => {
     } };
-    performFetch(path, (html, routedUri) => {
+    performFetch(uri, (html, routedUri) => {
       callback(html, routedUri);
     });
   }
   function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
-    let state = prefetches[destination.pathname];
+    let state = prefetches[getUriStringFromUrlObject(destination)];
     state.html = html;
     state.finished = true;
     state.finalDestination = finalDestination;
     state.whenFinished();
   }
   function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let uri = destination.pathname + destination.search;
+    let uri = getUriStringFromUrlObject(destination);
     if (!prefetches[uri])
       return ifNoPrefetchExists();
     if (prefetches[uri].finished) {
