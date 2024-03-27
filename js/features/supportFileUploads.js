@@ -45,8 +45,13 @@ export function handleFileUpload(el, property, component, cleanup) {
 
     el.addEventListener('change', eventHandler)
 
-    // If the Livewire property has changed to null or an empty string, then reset the input
+    // If the Livewire property has changed to null or an empty string, then reset the input...
     component.$wire.$watch(property, (value) => {
+        // This watch will only be released when the component is removed. However, the
+        // actual file-upload element may be removed from the DOM withou the entire
+        // component being removed. In this case, let's just bail early on this.
+        if (! el.isConnected) return
+
         if (value === null || value === '') {
             el.value = ''
         }
