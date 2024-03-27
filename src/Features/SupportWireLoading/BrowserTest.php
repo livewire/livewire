@@ -79,6 +79,36 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    function wire_loading_remove_works_with_renderless_methods()
+    {
+        Livewire::visit(new class extends Component {
+            #[\Livewire\Attributes\Renderless]
+            public function doSomething() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(500000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="doSomething" dusk="button">
+                            <span wire:loading.remove>Do something</span>
+                            <span wire:loading>...</span>
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForText('Do something')
+        ->click('@button')
+        ->waitForText('...')
+        ->assertDontSee('Do something')
+        ->waitForText('Do something')
+        ->assertDontSee('...')
+        ;
+    }
+
+    /** @test */
     function wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {
@@ -269,7 +299,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Processing...')
         ;
     }
-    
+
     /** @test */
     /**
     function inverted_wire_target_hides_loading_for_file_upload()

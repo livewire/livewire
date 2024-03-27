@@ -39,7 +39,7 @@ class BaseUrl extends LivewireAttribute
         $reflectionClass = new ReflectionClass($this->getSubTarget() ?? $this->getComponent());
 
         // It's nullable if there's a nullable typehint like: public ?string $foo;
-        if ($reflectionClass->hasProperty($this->getSubName())) {
+        if ($this->getSubName() && $reflectionClass->hasProperty($this->getSubName())) {
             $property = $reflectionClass->getProperty($this->getSubName());
 
             return $property->getType()?->allowsNull() ?? false;

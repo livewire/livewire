@@ -52,6 +52,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
+            Route::get('/fourth', FourthPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -263,6 +264,17 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.first')
                 ->assertSee('On second')
                 ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    /** @test */
+    public function can_navigate_to_another_page_with_hash_fragment()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->click('@link.to.hashtag')
+                ->assertFragmentIs('foo');
         });
     }
 
@@ -539,6 +551,27 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->visit('/second')
                 ->assertSee('On second')
                 ->assertScript('window.foo_navigated', 'bar');
+        });
+    }
+
+    /** @test */
+    public function livewire_before_navigate_event_is_fired_when_click()
+    {
+        $this->browse(function($browser) {
+            $browser
+                ->visit('/fourth')
+                ->assertSee('On fourth')
+                ->assertScript('window.foo', 'bar')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // first attempt bar -> baz
+                ->assertScript('window.foo', 'baz')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // second attempt baz -> bat
+                ->assertScript('window.foo', 'bat')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // finally navigate
+                ->assertSee('On first')
+            ;
         });
     }
 
@@ -982,6 +1015,7 @@ class FirstPage extends Component
         <div>
             <div>On first</div>
 
+            <a :href="window.location.pathname + '#foo'" wire:navigate dusk="link.to.hashtag">Go to same page with hashtag</a>
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <a href="/second-remote-asset" wire:navigate.hover dusk="link.to.asset">Go to asset page</a>
@@ -1073,6 +1107,36 @@ class ThirdPage extends Component
         return <<<'HTML'
         <div>
             Done loading...
+        </div>
+        HTML;
+    }
+}
+
+class FourthPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On fourth</div>
+
+            <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
+
+            <script data-navigate-once>window.foo = 'bar';</script>
+
+            <script >
+                document.addEventListener('livewire:navigate', (event) => {
+                    event.preventDefault();
+                    if (window.foo === 'bar') {
+                        window.foo = 'baz'
+                    }
+                    else if (window.foo === 'baz') {
+                        window.foo ='bat'
+                    } else {
+                        Alpine.navigate(event.detail.url)
+                    }
+                })
+            </script>
         </div>
         HTML;
     }
