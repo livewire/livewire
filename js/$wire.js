@@ -140,28 +140,13 @@ wireProperty('$toggle', (component) => (name, live = true) => {
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
-    let firstTime = true
-    let oldValue = undefined
+    let getter = () => {
+        return dataGet(component.reactive, path)
+    }
 
-   Alpine.effect(() => {
-    // JSON.stringify touches every single property at any level enabling deep watching
-        let value = dataGet(component.reactive, path)
-        JSON.stringify(value)
+    let unwatch = Alpine.watch(getter, callback)
 
-        if (! firstTime) {
-            // We have to queue this watcher as a microtask so that
-            // the watcher doesn't pick up its own dependencies.
-            queueMicrotask(() => {
-                callback(value, oldValue)
-
-                oldValue = value
-            })
-        } else {
-            oldValue = value
-        }
-
-        firstTime = false
-    })
+    component.addCleanup(unwatch)
 })
 
 wireProperty('$refresh', (component) => component.$wire.$commit)

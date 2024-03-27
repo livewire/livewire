@@ -7282,6 +7282,13 @@ function handleFileUpload(el, property, component, cleanup2) {
     }
   };
   el.addEventListener("change", eventHandler);
+  component.$wire.$watch(property, (value) => {
+    if (!el.isConnected)
+      return;
+    if (value === null || value === "") {
+      el.value = "";
+    }
+  });
   let clearFileInputValue = () => {
     el.value = null;
   };
@@ -8050,21 +8057,11 @@ wireProperty("$toggle", (component) => (name, live = true) => {
   return component.$wire.set(name, !component.$wire.get(name), live);
 });
 wireProperty("$watch", (component) => (path, callback) => {
-  let firstTime = true;
-  let oldValue = void 0;
-  import_alpinejs2.default.effect(() => {
-    let value = dataGet(component.reactive, path);
-    JSON.stringify(value);
-    if (!firstTime) {
-      queueMicrotask(() => {
-        callback(value, oldValue);
-        oldValue = value;
-      });
-    } else {
-      oldValue = value;
-    }
-    firstTime = false;
-  });
+  let getter = () => {
+    return dataGet(component.reactive, path);
+  };
+  let unwatch = import_alpinejs2.default.watch(getter, callback);
+  component.addCleanup(unwatch);
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => await requestCommit(component));

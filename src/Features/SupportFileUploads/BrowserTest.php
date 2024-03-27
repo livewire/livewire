@@ -192,4 +192,44 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertVisible('@error')
         ;
     }
+
+    /** @test */
+    public function can_clear_out_file_input_after_property_has_been_reset()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function mount()
+            {
+                Storage::disk('tmp-for-tests')->deleteDirectory('photos');
+            }
+
+            function resetFileInput()
+            {
+                unset($this->photo);
+            }
+
+            function render() { return <<<'HTML'
+                <div>
+                    <input type="file" wire:model="photo" dusk="upload">
+
+                    <button wire:click="resetFileInput" dusk="resetFileInput">ResetFileInput</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertInputValue('@upload', null)
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        // Browsers will return the `C:\fakepath\` prefix for security reasons
+        ->assertInputValue('@upload', 'C:\fakepath\browser_test_image.png')
+        ->pause(250)
+        ->waitForLivewire()
+        ->click('@resetFileInput')
+        ->assertInputValue('@upload', null)
+        ;
+    }
 }
