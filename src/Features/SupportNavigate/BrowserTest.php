@@ -768,10 +768,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
             ->click('@show-foo')
             ->click('@show-foo')
-            ->click('@navigate-to-same-page')
-            ->pause(500)
+            ->waitForNavigate()->click('@navigate-to-same-page')
             ->back()
-            ->pause(500)
             ->click('@show-foo')
             ->assertSee('foo');
     }
