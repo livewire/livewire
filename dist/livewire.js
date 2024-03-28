@@ -686,7 +686,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -2025,6 +2025,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "checked",
       "required",
       "readonly",
+      "hidden",
       "open",
       "selected",
       "autofocus",
@@ -3305,7 +3306,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     if (modifiers.includes("fill")) {
       if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-        setValue(getInputValue(el, modifiers, { target: el }, getValue()));
+        el.dispatchEvent(new Event(event, {}));
       }
     }
     if (!el._x_removeModelListeners)
@@ -3374,25 +3375,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return option.value || option.text;
         });
       } else {
-        let newValue;
-        if (el.type === "radio") {
-          if (event.target.checked) {
-            newValue = event.target.value;
-          } else {
-            newValue = currentValue;
-          }
-        } else {
-          newValue = event.target.value;
-        }
         if (modifiers.includes("number")) {
-          return safeParseNumber(newValue);
+          return safeParseNumber(event.target.value);
         } else if (modifiers.includes("boolean")) {
-          return safeParseBoolean(newValue);
-        } else if (modifiers.includes("trim")) {
-          return newValue.trim();
-        } else {
-          return newValue;
+          return safeParseBoolean(event.target.value);
         }
+        return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
       }
     });
   }
@@ -3441,7 +3429,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup22 }) => {
+  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
     if (!value) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3463,10 +3451,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value, result, modifiers));
     }));
-    cleanup22(() => {
-      el._x_undoAddedClasses && el._x_undoAddedClasses();
-      el._x_undoAddedStyles && el._x_undoAddedStyles();
-    });
   };
   handler2.inline = (el, { value, modifiers, expression }) => {
     if (!value)
@@ -4692,7 +4676,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4786,7 +4770,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5735,7 +5719,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5787,17 +5771,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return storage.getItem(key) !== null;
   }
   function storageGet(key, storage) {
-    let value = storage.getItem(key, storage);
-    if (value === void 0)
-      return;
-    return JSON.parse(value);
+    return JSON.parse(storage.getItem(key, storage));
   }
   function storageSet(key, value, storage) {
     storage.setItem(key, JSON.stringify(value));
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -5852,7 +5833,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -7402,7 +7383,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   import_nprogress.default.configure({
     minimum: 0.1,
     trickleSpeed: 200,
-    showSpinner: false
+    showSpinner: false,
+    parent: "html"
   });
   injectStyles();
   var inProgress = false;
@@ -7417,7 +7399,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function finishAndHideProgressBar() {
     inProgress = false;
     import_nprogress.default.done();
-    import_nprogress.default.remove();
+    setTimeout(() => {
+      import_nprogress.default.remove();
+    }, 400);
   }
   function injectStyles() {
     let style = document.createElement("style");
@@ -7640,15 +7624,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var autofocus = false;
   function navigate_default(Alpine3) {
     Alpine3.navigate = (url) => {
-      let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-        url: destination,
-        history: false,
-        cached: false
-      });
-      if (prevented)
-        return;
-      navigateTo(destination);
+      navigateTo(createUrlObjectFromString(url));
     };
     Alpine3.navigate.disableProgressBar = () => {
       showProgressBar = false;
@@ -7668,25 +7644,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
-          let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-            url: destination,
-            history: false,
-            cached: false
-          });
-          if (prevented)
-            return;
           navigateTo(destination);
         });
       });
     });
     function navigateTo(destination, shouldPushToHistoryState = true) {
+      restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
+      cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
+      updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
         fireEventForOtherLibariesToHookInto("alpine:navigating");
-        restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
-        cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
-        updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
@@ -7702,13 +7671,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
+            fireEventForOtherLibariesToHookInto("alpine:navigated");
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
                   autofocus && autofocusElementsWithTheAutofocusAttribute();
                 });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
-                fireEventForOtherLibariesToHookInto("alpine:navigated");
               });
             });
           });
@@ -7718,25 +7687,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
       ifThePageBeingVisitedHasntBeenCached((url) => {
         let destination = createUrlObjectFromString(url);
-        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-          url: destination,
-          history: true,
-          cached: false
-        });
-        if (prevented)
-          return;
         let shouldPushToHistoryState = false;
         navigateTo(destination, shouldPushToHistoryState);
       });
-    }, (html, url, currentPageUrl, currentPageKey) => {
-      let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-        url: destination,
-        history: true,
-        cached: true
-      });
-      if (prevented)
-        return;
+    }, (html, currentPageUrl, currentPageKey) => {
       storeScrollInformationInHtmlBeforeNavigatingAway();
       fireEventForOtherLibariesToHookInto("alpine:navigating");
       updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
@@ -7750,10 +7704,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
+          fireEventForOtherLibariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine3);
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
           });
         });
       });
@@ -7776,14 +7730,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(name, detail) {
-    let event = new CustomEvent(name, {
-      cancelable: true,
-      bubbles: true,
-      detail
-    });
-    document.dispatchEvent(event);
-    return event.defaultPrevented;
+  function fireEventForOtherLibariesToHookInto(eventName) {
+    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
   }
   function nowInitializeAlpineOnTheNewPage(Alpine3) {
     Alpine3.initTree(document.body, void 0, (el, skip) => {
@@ -8004,7 +7952,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8340,7 +8288,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default8(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let templateFn = () => expression;

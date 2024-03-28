@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -2632,6 +2632,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "checked",
         "required",
         "readonly",
+        "hidden",
         "open",
         "selected",
         "autofocus",
@@ -3265,7 +3266,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       if (modifiers.includes("fill")) {
         if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-          setValue(getInputValue(el, modifiers, { target: el }, getValue()));
+          el.dispatchEvent(new Event(event, {}));
         }
       }
       if (!el._x_removeModelListeners)
@@ -3334,25 +3335,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return option.value || option.text;
           });
         } else {
-          let newValue;
-          if (el.type === "radio") {
-            if (event.target.checked) {
-              newValue = event.target.value;
-            } else {
-              newValue = currentValue;
-            }
-          } else {
-            newValue = event.target.value;
-          }
           if (modifiers.includes("number")) {
-            return safeParseNumber(newValue);
+            return safeParseNumber(event.target.value);
           } else if (modifiers.includes("boolean")) {
-            return safeParseBoolean(newValue);
-          } else if (modifiers.includes("trim")) {
-            return newValue.trim();
-          } else {
-            return newValue;
+            return safeParseBoolean(event.target.value);
           }
+          return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
         }
       });
     }
@@ -3401,7 +3389,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     mapAttributes(startingWith(":", into(prefix("bind:"))));
-    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup2 }) => {
+    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
       if (!value) {
         let bindingProviders = {};
         injectBindingProviders(bindingProviders);
@@ -3423,10 +3411,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         mutateDom(() => bind(el, value, result, modifiers));
       }));
-      cleanup2(() => {
-        el._x_undoAddedClasses && el._x_undoAddedClasses();
-        el._x_undoAddedStyles && el._x_undoAddedStyles();
-      });
     };
     handler2.inline = (el, { value, modifiers, expression }) => {
       if (!value)
@@ -3782,9 +3766,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3903,9 +3887,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4905,9 +4889,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4982,10 +4966,7 @@ var require_module_cjs4 = __commonJS({
       return storage.getItem(key) !== null;
     }
     function storageGet(key, storage) {
-      let value = storage.getItem(key, storage);
-      if (value === void 0)
-        return;
-      return JSON.parse(value);
+      return JSON.parse(storage.getItem(key, storage));
     }
     function storageSet(key, value, storage) {
       storage.setItem(key, JSON.stringify(value));
@@ -4994,9 +4975,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5076,9 +5057,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6614,9 +6595,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6977,9 +6958,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8760,7 +8741,8 @@ var import_nprogress = __toESM(require_nprogress());
 import_nprogress.default.configure({
   minimum: 0.1,
   trickleSpeed: 200,
-  showSpinner: false
+  showSpinner: false,
+  parent: "html"
 });
 injectStyles();
 var inProgress = false;
@@ -8775,7 +8757,9 @@ function showAndStartProgressBar() {
 function finishAndHideProgressBar() {
   inProgress = false;
   import_nprogress.default.done();
-  import_nprogress.default.remove();
+  setTimeout(() => {
+    import_nprogress.default.remove();
+  }, 400);
 }
 function injectStyles() {
   let style = document.createElement("style");
@@ -8998,15 +8982,7 @@ var restoreScroll = true;
 var autofocus = false;
 function navigate_default(Alpine19) {
   Alpine19.navigate = (url) => {
-    let destination = createUrlObjectFromString(url);
-    let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-      url: destination,
-      history: false,
-      cached: false
-    });
-    if (prevented)
-      return;
-    navigateTo(destination);
+    navigateTo(createUrlObjectFromString(url));
   };
   Alpine19.navigate.disableProgressBar = () => {
     showProgressBar = false;
@@ -9026,25 +9002,18 @@ function navigate_default(Alpine19) {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
       whenItIsReleased(() => {
-        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-          url: destination,
-          history: false,
-          cached: false
-        });
-        if (prevented)
-          return;
         navigateTo(destination);
       });
     });
   });
   function navigateTo(destination, shouldPushToHistoryState = true) {
+    restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
+    cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
+    updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibariesToHookInto("alpine:navigating");
-      restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
-      cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
-      updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
@@ -9060,13 +9029,13 @@ function navigate_default(Alpine19) {
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
+          fireEventForOtherLibariesToHookInto("alpine:navigated");
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
                 autofocus && autofocusElementsWithTheAutofocusAttribute();
               });
               nowInitializeAlpineOnTheNewPage(Alpine19);
-              fireEventForOtherLibariesToHookInto("alpine:navigated");
             });
           });
         });
@@ -9076,25 +9045,10 @@ function navigate_default(Alpine19) {
   whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
     ifThePageBeingVisitedHasntBeenCached((url) => {
       let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-        url: destination,
-        history: true,
-        cached: false
-      });
-      if (prevented)
-        return;
       let shouldPushToHistoryState = false;
       navigateTo(destination, shouldPushToHistoryState);
     });
-  }, (html, url, currentPageUrl, currentPageKey) => {
-    let destination = createUrlObjectFromString(url);
-    let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
-      url: destination,
-      history: true,
-      cached: true
-    });
-    if (prevented)
-      return;
+  }, (html, currentPageUrl, currentPageKey) => {
     storeScrollInformationInHtmlBeforeNavigatingAway();
     fireEventForOtherLibariesToHookInto("alpine:navigating");
     updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
@@ -9108,10 +9062,10 @@ function navigate_default(Alpine19) {
           unPackPersistedTeleports(persistedEl);
         });
         restoreScrollPositionOrScrollToTop();
+        fireEventForOtherLibariesToHookInto("alpine:navigated");
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
           nowInitializeAlpineOnTheNewPage(Alpine19);
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
         });
       });
     });
@@ -9134,14 +9088,8 @@ function preventAlpineFromPickingUpDomChanges(Alpine19, callback) {
     });
   });
 }
-function fireEventForOtherLibariesToHookInto(name, detail) {
-  let event = new CustomEvent(name, {
-    cancelable: true,
-    bubbles: true,
-    detail
-  });
-  document.dispatchEvent(event);
-  return event.defaultPrevented;
+function fireEventForOtherLibariesToHookInto(eventName) {
+  document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
 }
 function nowInitializeAlpineOnTheNewPage(Alpine19) {
   Alpine19.initTree(document.body, void 0, (el, skip) => {
