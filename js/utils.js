@@ -25,8 +25,8 @@ export class WeakBag {
     each(key, callback) { return this.get(key).forEach(callback) }
 }
 
-export function dispatch(el, name, detail = {}, bubbles = true) {
-    el.dispatchEvent(
+export function dispatch(target, name, detail = {}, bubbles = true) {
+    target.dispatchEvent(
         new CustomEvent(name, {
             detail,
             bubbles,
@@ -35,6 +35,12 @@ export function dispatch(el, name, detail = {}, bubbles = true) {
             cancelable: true,
         })
     )
+}
+
+export function listen(target, name, handler) {
+    target.addEventListener(name, handler)
+
+    return () => target.removeEventListener(name, handler)
 }
 
 /**
