@@ -2025,7 +2025,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "checked",
       "required",
       "readonly",
-      "hidden",
       "open",
       "selected",
       "autofocus",
@@ -3306,7 +3305,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     if (modifiers.includes("fill")) {
       if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-        el.dispatchEvent(new Event(event, {}));
+        setValue(getInputValue(el, modifiers, { target: el }, getValue()));
       }
     }
     if (!el._x_removeModelListeners)
@@ -3375,12 +3374,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return option.value || option.text;
         });
       } else {
-        if (modifiers.includes("number")) {
-          return safeParseNumber(event.target.value);
-        } else if (modifiers.includes("boolean")) {
-          return safeParseBoolean(event.target.value);
+        let newValue;
+        if (el.type === "radio") {
+          if (event.target.checked) {
+            newValue = event.target.value;
+          } else {
+            newValue = currentValue;
+          }
+        } else {
+          newValue = event.target.value;
         }
-        return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
+        if (modifiers.includes("number")) {
+          return safeParseNumber(newValue);
+        } else if (modifiers.includes("boolean")) {
+          return safeParseBoolean(newValue);
+        } else if (modifiers.includes("trim")) {
+          return newValue.trim();
+        } else {
+          return newValue;
+        }
       }
     });
   }
@@ -3429,7 +3441,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
+  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup22 }) => {
     if (!value) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3451,6 +3463,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value, result, modifiers));
     }));
+    cleanup22(() => {
+      el._x_undoAddedClasses && el._x_undoAddedClasses();
+      el._x_undoAddedStyles && el._x_undoAddedStyles();
+    });
   };
   handler2.inline = (el, { value, modifiers, expression }) => {
     if (!value)
@@ -7218,10 +7234,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function createUrlObjectFromString(urlString) {
     return new URL(urlString, document.baseURI);
   }
+  function getUriStringFromUrlObject(urlObject) {
+    return urlObject.pathname + urlObject.search + urlObject.hash;
+  }
 
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback) {
-    let uri = destination.pathname + destination.search;
+    let uri = getUriStringFromUrlObject(destination);
     performFetch(uri, (html, finalDestination) => {
       callback(html, finalDestination);
     });
@@ -7238,7 +7257,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     let finalDestination;
     fetch(uri, options).then((response) => {
+      let destination = createUrlObjectFromString(uri);
       finalDestination = createUrlObjectFromString(response.url);
+      if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+        finalDestination.hash = destination.hash;
+      }
       return response.text();
     }).then((html) => {
       callback(html, finalDestination);
@@ -7248,24 +7271,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
   function prefetchHtml(destination, callback) {
-    let path = destination.pathname;
-    if (prefetches[path])
+    let uri = getUriStringFromUrlObject(destination);
+    if (prefetches[uri])
       return;
-    prefetches[path] = { finished: false, html: null, whenFinished: () => {
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => {
     } };
-    performFetch(path, (html, routedUri) => {
+    performFetch(uri, (html, routedUri) => {
       callback(html, routedUri);
     });
   }
   function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
-    let state = prefetches[destination.pathname];
+    let state = prefetches[getUriStringFromUrlObject(destination)];
     state.html = html;
     state.finished = true;
     state.finalDestination = finalDestination;
     state.whenFinished();
   }
   function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let uri = destination.pathname + destination.search;
+    let uri = getUriStringFromUrlObject(destination);
     if (!prefetches[uri])
       return ifNoPrefetchExists();
     if (prefetches[uri].finished) {

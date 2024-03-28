@@ -72,3 +72,7 @@ export function extractDestinationFromLink(linkEl) {
 export function createUrlObjectFromString(urlString) {
     return new URL(urlString, document.baseURI)
 }
+
+export function getUriStringFromUrlObject(urlObject) {
+    return urlObject.pathname + urlObject.search + urlObject.hash
+}
