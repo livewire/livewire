@@ -63,9 +63,20 @@ class BaseValidate extends LivewireAttribute
 
         if ($this->message) {
             if (is_array($this->message)) {
+                if (count($rules) === 1) {
+                    $messages = [];
+                    foreach ($this->message as $key => $value) {
+                        if (! str_contains($key, '.')) {
+                            $messages[$name.'.'.$key] = $value;
+                        }
+                    }
+                } else {
+                    $messages = $this->message;
+                }
+
                 $messages = $this->translate
-                    ? array_map(fn ($i) => trans($i), $this->message)
-                    : $this->message;
+                    ? array_map(fn ($i) => trans($i), $messages)
+                    : $messages;
 
                 $target->addMessagesFromOutside($messages);
             } else {
