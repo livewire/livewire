@@ -2632,6 +2632,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "checked",
         "required",
         "readonly",
+        "hidden",
         "open",
         "selected",
         "autofocus",
@@ -3265,7 +3266,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       if (modifiers.includes("fill")) {
         if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-          setValue(getInputValue(el, modifiers, { target: el }, getValue()));
+          el.dispatchEvent(new Event(event, {}));
         }
       }
       if (!el._x_removeModelListeners)
@@ -3334,25 +3335,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return option.value || option.text;
           });
         } else {
-          let newValue;
-          if (el.type === "radio") {
-            if (event.target.checked) {
-              newValue = event.target.value;
-            } else {
-              newValue = currentValue;
-            }
-          } else {
-            newValue = event.target.value;
-          }
           if (modifiers.includes("number")) {
-            return safeParseNumber(newValue);
+            return safeParseNumber(event.target.value);
           } else if (modifiers.includes("boolean")) {
-            return safeParseBoolean(newValue);
-          } else if (modifiers.includes("trim")) {
-            return newValue.trim();
-          } else {
-            return newValue;
+            return safeParseBoolean(event.target.value);
           }
+          return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
         }
       });
     }
@@ -3401,7 +3389,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     mapAttributes(startingWith(":", into(prefix("bind:"))));
-    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup2 }) => {
+    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
       if (!value) {
         let bindingProviders = {};
         injectBindingProviders(bindingProviders);
@@ -3423,10 +3411,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         mutateDom(() => bind(el, value, result, modifiers));
       }));
-      cleanup2(() => {
-        el._x_undoAddedClasses && el._x_undoAddedClasses();
-        el._x_undoAddedStyles && el._x_undoAddedStyles();
-      });
     };
     handler2.inline = (el, { value, modifiers, expression }) => {
       if (!value)
