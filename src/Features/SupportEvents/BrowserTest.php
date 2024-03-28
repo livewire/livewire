@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use Tests\BrowserTestCase;
 use Livewire\Component;
@@ -59,6 +60,35 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@button', '1')
             ->waitForLivewire()->click('@button')
             ->assertSeeIn('@button', '1');
+    }
+
+    /** @test */
+    public function can_dispatch_self_inside_script_directive()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = 'bar';
+
+            #[On('trigger')]
+            function changeFoo() {
+                $this->foo = 'baz';
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <h1 dusk="output">{{ $foo }}</h1>
+                </div>
+
+                @script
+                <script>
+                    $wire.dispatchSelf('trigger')
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+            ->waitForTextIn('@output', 'baz');
     }
 
     /** @test */
