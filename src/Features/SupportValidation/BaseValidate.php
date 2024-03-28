@@ -67,9 +67,12 @@ class BaseValidate extends LivewireAttribute
                     // if $this->rule was a string ('required|min:3') or numerically indexed array (['required', 'min:3']),
                     // the $rules array is single rule. If it was an associative array, it is multiple rules
                     $messages = [];
+                    $prefix = $name.'.';
                     foreach ($this->message as $key => $value) {
-                        if (! str_contains($key, '.')) {
-                            $messages[$name.'.'.$key] = $value;
+                        if (! str_starts_with($key, $prefix)) {
+                            $messages[$prefix.$key] = $value;
+                        } else {
+                            $messages[$key] = $value;
                         }
                     }
                 } else {
