@@ -63,7 +63,9 @@ class BaseValidate extends LivewireAttribute
 
         if ($this->message) {
             if (is_array($this->message)) {
-                if (count($rules) === 1) {
+                if (count($rules) === 1 && isset($rules[$this->getSubName()])) {
+                    // if $this->rule was a string ('required|min:3') or numerically indexed array (['required', 'min:3']),
+                    // the $rules array is single rule. If it was an associative array, it is multiple rules
                     $messages = [];
                     foreach ($this->message as $key => $value) {
                         if (! str_contains($key, '.')) {
