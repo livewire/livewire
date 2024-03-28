@@ -239,7 +239,31 @@ class UnitTest extends \Tests\TestCase
 
                 $this->assertEquals('Your foo is too short.', $messages['foo'][0]);
             })
-            ;
+        ;
+    }
+
+    /** @test */
+    public function rule_attribute_supports_custom_messages_as_arrays()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate('min:5', message: ['min' => 'Your foo is too short.'])]
+            public $foo = '';
+
+            #[Validate('min:5', message: ['min' => 'Your bar is too short.'])]
+            public $bar = '123456';
+
+            function clear() { $this->clearValidation(); }
+
+            function save() { $this->validate(); }
+        })
+            ->set('foo', 'te')
+            ->assertHasErrors()
+            ->tap(function ($component) {
+                $messages = $component->errors()->getMessages();
+
+                $this->assertEquals('Your foo is too short.', $messages['foo'][0]);
+            })
+        ;
     }
 
     /** @test */
