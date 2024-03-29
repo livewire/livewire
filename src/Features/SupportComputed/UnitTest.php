@@ -397,6 +397,11 @@ class UnitTest extends TestCase
             {
                 return 'bar';
             }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
         })
             ->assertSet('foo', 'bar');
     }
@@ -414,9 +419,17 @@ class UnitTest extends TestCase
 
             public function save()
             {
+                // Access foo to ensure it is memoized.
+                $this->foo;
+
                 $this->changeFoo = true;
 
                 unset($this->foo);
+            }
+
+            public function render()
+            {
+                return '<div></div>';
             }
         })
             ->assertSet('foo', 'bar')
