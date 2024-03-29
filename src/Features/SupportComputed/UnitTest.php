@@ -8,6 +8,7 @@ use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Livewire\Features\SupportEvents\BaseOn;
 
 class UnitTest extends TestCase
 {
@@ -420,6 +421,30 @@ class UnitTest extends TestCase
         })
             ->assertSet('foo', 'bar')
             ->call('save')
+            ->assertSet('foo', 'baz');
+    }
+
+    /** @test */
+    public function it_supports_unsetting_legacy_computed_properties_for_events()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $changeFoo = false;
+
+            public function getFooProperty()
+            {
+                return $this->changeFoo ? 'baz' : 'bar';
+            }
+
+            #[BaseOn('bar')]
+            public function onBar()
+            {
+                $this->changeFoo = true;
+
+                unset($this->foo);
+            }
+        })
+            ->assertSet('foo', 'bar')
+            ->dispatch('bar', 'baz')
             ->assertSet('foo', 'baz');
     }
 }
