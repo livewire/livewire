@@ -418,9 +418,6 @@ class UnitTest extends TestCase
 
             public function save()
             {
-                // Access foo to ensure it is memoized.
-                $this->foo;
-
                 $this->changeFoo = true;
 
                 unset($this->foo);
