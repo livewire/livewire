@@ -24,7 +24,7 @@
     "phpunit/phpunit": "^10.4",
     "laravel/framework": "^10.0|^11.0",
     "orchestra/testbench": "^8.21.0|^9.0",
-    "orchestra/testbench-dusk": "^8.21.0|^9.0",
+    "orchestra/testbench-dusk": "^8.24|^9.1",
     "calebporzio/sushi": "^2.1",
     "laravel/prompts": "^0.1.6"
   },
