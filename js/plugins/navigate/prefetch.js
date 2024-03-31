@@ -1,22 +1,23 @@
 import { performFetch } from "@/plugins/navigate/fetch";
+import { getUriStringFromUrlObject } from "./links";
 
 // Warning: this could cause some memory leaks
 let prefetches = {}
 
 export function prefetchHtml(destination, callback) {
-    let path = destination.pathname
+    let uri = getUriStringFromUrlObject(destination)
 
-    if (prefetches[path]) return
+    if (prefetches[uri]) return
 
-    prefetches[path] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[path], 10 * 1000) }
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], 10 * 1000) }
 
-    performFetch(path, (html, routedUri) => {
+    performFetch(uri, (html, routedUri) => {
         callback(html, routedUri)
     })
 }
 
 export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
-    let state = prefetches[destination.pathname]
+    let state = prefetches[getUriStringFromUrlObject(destination)]
     state.html = html
     state.finished = true
     state.finalDestination = finalDestination
@@ -24,7 +25,7 @@ export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, f
 }
 
 export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let uri = destination.pathname + destination.search
+    let uri = getUriStringFromUrlObject(destination)
 
     if (! prefetches[uri]) return ifNoPrefetchExists()
 

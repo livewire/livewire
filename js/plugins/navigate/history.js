@@ -92,7 +92,7 @@ export function whenTheBackOrForwardButtonIsClicked(
         if (snapshotCache.has(alpine.snapshotIdx)) {
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
-            handleHtml(snapshot.html, snapshotCache.currentUrl, snapshotCache.currentKey)
+            handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey)
         } else {
             fallback(alpine.url)
         }
