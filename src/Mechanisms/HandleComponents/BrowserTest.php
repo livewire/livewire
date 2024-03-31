@@ -149,6 +149,45 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@selected', 'D')
         ;
     }
+
+    /** @test */
+    public function it_does_not_show_rm_removal_value_in_update_hooks()
+    {
+        Livewire::visit(new class extends Component {
+            public $updates = [];
+            
+            public array $items = ['one', 'two', 'three', 'four'];
+
+            public function updatedItems($value, $key)
+            {
+                $this->updates[] = [
+                    'key' => $key,
+                    'value' => $value,
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <div>Items: <span dusk="items">{{ json_encode($items) }}</span></div>
+                        <div>Updates: <span dusk="updates">{{ json_encode($updates) }}</span></div>
+
+                        <div x-data="{ values: [] }" x-modelable="values" wire:model.live="items">
+                            <button x-on:click="values = ['two', 'three']" dusk="changeArray">Change array</button>
+                        </div>
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@items', '["one","two","three","four"]')
+            ->assertSeeIn('@updates', '[]')
+            
+            ->waitForLivewire()->click('@changeArray')
+            ->assertSeeIn('@items', '["two","three"]')
+            ->assertSeeIn('@updates', '[{"key":null,"value":["two","three"]}]')
+            ;
+    }
 }
 
 enum Suit: string
