@@ -1,39 +1,12 @@
-import {
-    replaceUrl,
-    updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks,
-    updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks,
-    updateUrlAndStoreLatestHtmlForFutureBackButtons,
-    whenTheBackOrForwardButtonIsClicked,
-} from './history'
-import {
-    getPretchedHtmlOr,
-    prefetchHtml,
-    storeThePrefetchedHtmlForWhenALinkIsClicked,
-} from './prefetch'
-import {
-    createUrlObjectFromString,
-    extractDestinationFromLink,
-    whenThisLinkIsHoveredFor,
-    whenThisLinkIsPressed,
-} from './links'
-import {
-    isTeleportTarget,
-    packUpPersistedTeleports,
-    removeAnyLeftOverStaleTeleportTargets,
-    unPackPersistedTeleports,
-} from './teleport'
-import {
-    restoreScrollPositionOrScrollToTop,
-    storeScrollInformationInHtmlBeforeNavigatingAway,
-} from './scroll'
-import {
-    isPersistedElement,
-    putPersistantElementsBack,
-    storePersistantElementsForLater,
-} from './persist'
-import { finishAndHideProgressBar, showAndStartProgressBar } from './bar'
-import { swapCurrentPageWithNewHtml } from './page'
-import { fetchHtml } from './fetch'
+import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
+import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
+import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
+import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
+import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
+import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
+import { finishAndHideProgressBar, showAndStartProgressBar } from "./bar"
+import { swapCurrentPageWithNewHtml } from "./page"
+import { fetchHtml } from "./fetch"
 
 let enablePersist = true
 let showProgressBar = true
@@ -41,8 +14,17 @@ let restoreScroll = true
 let autofocus = false
 
 export default function (Alpine) {
-    Alpine.navigate = url => {
-        navigateTo(createUrlObjectFromString(url))
+
+    Alpine.navigate = (url) => {
+        let destination = createUrlObjectFromString(url)
+
+        let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+            url: destination, history: false, cached: false,
+         })
+
+        if (prevented) return
+
+        navigateTo(destination)
     }
 
     Alpine.navigate.disableProgressBar = () => {
@@ -54,37 +36,36 @@ export default function (Alpine) {
     Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
-        shouldPrefetchOnHover &&
-            whenThisLinkIsHoveredFor(el, 60, () => {
-                let destination = extractDestinationFromLink(el)
-
-                prefetchHtml(destination, (html, finalDestination) => {
-                    storeThePrefetchedHtmlForWhenALinkIsClicked(
-                        html,
-                        destination,
-                        finalDestination
-                    )
-                })
-            })
-
-        whenThisLinkIsPressed(el, whenItIsReleased => {
+        shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
             prefetchHtml(destination, (html, finalDestination) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(
-                    html,
-                    destination,
-                    finalDestination
-                )
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            })
+        })
+
+        whenThisLinkIsPressed(el, (whenItIsReleased) => {
+            let destination = extractDestinationFromLink(el)
+
+            prefetchHtml(destination, (html, finalDestination) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             })
 
             whenItIsReleased(() => {
-                navigateTo(destination)
+                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                    url: destination, history: false, cached: false,
+                 })
+
+                if (prevented) return
+
+                navigateTo(destination);
             })
         })
     })
 
     function navigateTo(destination, shouldPushToHistoryState = true) {
+        fireEventForOtherLibariesToHookInto('alpine:navigating')
+
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
@@ -94,68 +75,70 @@ export default function (Alpine) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-            fireEventForOtherLibariesToHookInto('alpine:navigating')
 
             showProgressBar && finishAndHideProgressBar()
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                enablePersist &&
-                    storePersistantElementsForLater(persistedEl => {
-                        packUpPersistedTeleports(persistedEl)
-                    })
+                enablePersist && storePersistantElementsForLater(persistedEl => {
+                    packUpPersistedTeleports(persistedEl)
+                })
 
                 if (shouldPushToHistoryState) {
-                    updateUrlAndStoreLatestHtmlForFutureBackButtons(
-                        html,
-                        finalDestination
-                    )
+                    updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
                 } else {
                     replaceUrl(finalDestination, html)
                 }
 
-                swapCurrentPageWithNewHtml(
-                    html,
-                    afterNewScriptsAreDoneLoading => {
-                        removeAnyLeftOverStaleTeleportTargets(document.body)
+                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
+                    removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                        enablePersist &&
-                            putPersistantElementsBack(
-                                (persistedEl, newStub) => {
-                                    unPackPersistedTeleports(persistedEl)
-                                }
-                            )
+                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                        unPackPersistedTeleports(persistedEl)
+                    })
 
-                        restoreScrollPositionOrScrollToTop()
+                    restoreScrollPositionOrScrollToTop()
 
-                        fireEventForOtherLibariesToHookInto('alpine:navigated')
-
-                        afterNewScriptsAreDoneLoading(() => {
-                            andAfterAllThis(() => {
-                                setTimeout(() => {
-                                    autofocus &&
-                                        autofocusElementsWithTheAutofocusAttribute()
-                                })
-
-                                nowInitializeAlpineOnTheNewPage(Alpine)
+                    afterNewScriptsAreDoneLoading(() => {
+                        andAfterAllThis(() => {
+                            setTimeout(() => {
+                                autofocus && autofocusElementsWithTheAutofocusAttribute()
                             })
+
+                            nowInitializeAlpineOnTheNewPage(Alpine)
+
+                            fireEventForOtherLibariesToHookInto('alpine:navigated')
                         })
-                    }
-                )
+                    })
+                })
             })
         })
     }
 
     whenTheBackOrForwardButtonIsClicked(
-        ifThePageBeingVisitedHasntBeenCached => {
-            ifThePageBeingVisitedHasntBeenCached(url => {
+        (ifThePageBeingVisitedHasntBeenCached) => {
+            ifThePageBeingVisitedHasntBeenCached((url) => {
                 let destination = createUrlObjectFromString(url)
+
+                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                    url: destination, history: true, cached: false,
+                 })
+
+                if (prevented) return
 
                 let shouldPushToHistoryState = false
 
                 navigateTo(destination, shouldPushToHistoryState)
             })
         },
-        (html, currentPageUrl, currentPageKey) => {
+        (html, url, currentPageUrl, currentPageKey) => {
+            let destination = createUrlObjectFromString(url)
+
+            let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                url: destination, history: true, cached: true,
+            })
+
+            if (prevented) return
+
             // @todo: see if there's a way to update the current HTML BEFORE
             // the back button is hit, and not AFTER:
             storeScrollInformationInHtmlBeforeNavigatingAway()
@@ -165,38 +148,32 @@ export default function (Alpine) {
 
             // Only update the snapshot and not the history state as the history state
             // has already changed to the new page due to the popstate event
-            updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(
-                currentPageUrl,
-                currentPageKey
-            )
+            updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey)
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                enablePersist &&
-                    storePersistantElementsForLater(persistedEl => {
-                        packUpPersistedTeleports(persistedEl)
-                    })
+                enablePersist && storePersistantElementsForLater(persistedEl => {
+                    packUpPersistedTeleports(persistedEl)
+                })
 
                 swapCurrentPageWithNewHtml(html, () => {
                     removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                    enablePersist &&
-                        putPersistantElementsBack((persistedEl, newStub) => {
-                            unPackPersistedTeleports(persistedEl)
-                        })
+                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                        unPackPersistedTeleports(persistedEl)
+                    })
 
                     restoreScrollPositionOrScrollToTop()
 
-                    fireEventForOtherLibariesToHookInto('alpine:navigated')
-
                     andAfterAllThis(() => {
-                        autofocus &&
-                            autofocusElementsWithTheAutofocusAttribute()
+                        autofocus && autofocusElementsWithTheAutofocusAttribute()
 
                         nowInitializeAlpineOnTheNewPage(Alpine)
+
+                        fireEventForOtherLibariesToHookInto('alpine:navigated')
                     })
                 })
             })
-        }
+        },
     )
 
     // Because DOMContentLoaded is fired on first load,
@@ -215,7 +192,7 @@ function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
 function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     Alpine.stopObservingMutations()
 
-    callback(afterAllThis => {
+    callback((afterAllThis) => {
         Alpine.startObservingMutations()
 
         queueMicrotask(() => {
@@ -224,8 +201,16 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     })
 }
 
-function fireEventForOtherLibariesToHookInto(eventName) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }))
+function fireEventForOtherLibariesToHookInto(name, detail) {
+    let event = new CustomEvent(name, {
+        cancelable: true,
+        bubbles: true,
+        detail,
+    })
+
+    document.dispatchEvent(event)
+
+    return event.defaultPrevented
 }
 
 function nowInitializeAlpineOnTheNewPage(Alpine) {
@@ -235,8 +220,7 @@ function nowInitializeAlpineOnTheNewPage(Alpine) {
 }
 
 function autofocusElementsWithTheAutofocusAttribute() {
-    document.querySelector('[autofocus]') &&
-        document.querySelector('[autofocus]').focus()
+    document.querySelector('[autofocus]') && document.querySelector('[autofocus]').focus()
 }
 
 function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
