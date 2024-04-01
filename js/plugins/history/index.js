@@ -267,6 +267,9 @@ function fromQueryString(search) {
     let data = Object.create(null)
 
     entries.forEach(([key, value]) => {
+        // Query string params don't always have values... (`?foo=`)
+        if ( typeof value == 'undefined' ) return;
+
         value = decodeURIComponent(value.replaceAll('+', '%20'))
 
         if (! key.includes('[')) {

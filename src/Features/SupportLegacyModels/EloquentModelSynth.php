@@ -106,6 +106,10 @@ class EloquentModelSynth extends Synth
             return $target->setRelation($key, $value);
         }
 
+        if (array_key_exists($key, $target->getCasts()) && enum_exists($target->getCasts()[$key]) && $value === '') {
+            $value = null;
+        }
+
         $target->$key = $value;
     }
 

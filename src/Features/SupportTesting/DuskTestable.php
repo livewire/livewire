@@ -71,15 +71,28 @@ class DuskTestable
 
         $components = [$id => $firstComponent, ...$components];
 
+        return static::createBrowser($id, $components, $params, $queryParams)->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
+    }
+
+    static function createBrowser($id, $components, $params = [], $queryParams = [])
+    {
+        if (static::$shortCircuitCreateCall) {
+            throw new class ($components) extends \Exception {
+                public $components;
+                public $isDuskShortcircuit = true;
+                function __construct($components) {
+                    $this->components = $components;
+                }
+            };
+        }
+
         [$class, $method] = static::findTestClassAndMethodThatCalledThis();
 
         static::registerComponentsForNextTest([$id, $class, $method]);
 
         $testCase = invade(static::$currentTestCase);
 
-        static::$browser = $testCase->newBrowser($testCase->createWebDriver());
-
-        return static::$browser->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
+        return static::$browser = $testCase->newBrowser($testCase->createWebDriver());
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
