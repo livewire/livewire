@@ -21,7 +21,10 @@ let snapshotCache = {
         let snapshot = this.lookup[location]
 
         if (snapshot === undefined)
-            throw 'No back button cache found for current location: ' + location
+            throw (
+                'No back button cache found for current location: ' +
+                location
+            )
 
         return snapshot
     },
@@ -48,9 +51,9 @@ let snapshotCache = {
 
     trim() {
         for (let key of this.keys.splice(this.limit)) {
-            delete this.lookup[key]
+          delete this.lookup[key]
         }
-    },
+    }
 }
 
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
@@ -61,10 +64,7 @@ export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     replaceUrl(url, document.documentElement.outerHTML)
 }
 
-export function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(
-    key,
-    url
-) {
+export function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
     let html = document.documentElement.outerHTML
 
     snapshotCache.replace(key, new Snapshot(url, html))
@@ -87,17 +87,12 @@ export function whenTheBackOrForwardButtonIsClicked(
         // by anchor tags `#my-heading`, so we don't want to handle them.
         if (Object.keys(state).length === 0) return
 
-        if (!alpine.snapshotIdx) return
+        if (! alpine.snapshotIdx) return
 
         if (snapshotCache.has(alpine.snapshotIdx)) {
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
-            handleHtml(
-                snapshot.html,
-                snapshot.url,
-                snapshotCache.currentUrl,
-                snapshotCache.currentKey
-            )
+            handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey)
         } else {
             fallback(alpine.url)
         }
@@ -124,10 +119,7 @@ function updateUrl(method, url, html) {
 
     method === 'pushState'
         ? snapshotCache.push(key, new Snapshot(url, html))
-        : snapshotCache.replace(
-              (key = snapshotCache.currentKey ?? key),
-              new Snapshot(url, html)
-          )
+        : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
 
     let state = history.state || {}
 

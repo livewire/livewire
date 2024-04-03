@@ -64,19 +64,18 @@ export default function (Alpine) {
     })
 
     function navigateTo(destination, shouldPushToHistoryState = true) {
-        fireEventForOtherLibariesToHookInto('alpine:navigating')
-
-        restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
-
-        cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
-
-        updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
-
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
+            fireEventForOtherLibariesToHookInto('alpine:navigating')
+
+            restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
             showProgressBar && finishAndHideProgressBar()
+
+            cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
+
+            updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
                 enablePersist && storePersistantElementsForLater(persistedEl => {

@@ -5,7 +5,6 @@ NProgress.configure({
     minimum: 0.1,
     trickleSpeed: 200,
     showSpinner: false,
-    parent: 'html'
 })
 
 injectStyles()
@@ -27,10 +26,8 @@ export function showAndStartProgressBar() {
 export function finishAndHideProgressBar() {
     inProgress = false
     NProgress.done()
-    setTimeout(() => {
-      NProgress.remove()
-    }, 400);
-    
+    NProgress.remove()
+
     // finishProgressBar(); destroyBar()
 }
 
