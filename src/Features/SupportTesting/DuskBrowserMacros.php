@@ -167,14 +167,18 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('request', ({ respond }) => {
+                "window.Livewire.hook('request', ({ respond, succeed, fail }) => {
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
-                    respond(() => {
+                    let handle = () => {
                         queueMicrotask(() => {
+                            console.log('test')
                             delete window.duskIsWaitingForLivewireRequest{$id}
                         })
-                    })
+                    }
+
+                    succeed(handle)
+                    fail(handle)
                 })",
             ]);
 
@@ -213,14 +217,17 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('request', ({ respond }) => {
+                "window.Livewire.hook('request', ({ respond, succeed, fail }) => {
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
-                    respond(() => {
+                    let handle = () => {
                         queueMicrotask(() => {
                             delete window.duskIsWaitingForLivewireRequest{$id}
                         })
-                    })
+                    }
+
+                    succeed(handle)
+                    fail(handle)
                 })",
             ]);
 

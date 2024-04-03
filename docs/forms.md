@@ -437,7 +437,7 @@ use Livewire\Form;
 
 class PostForm extends Form
 {
-    public ?Post $post
+    public ?Post $post;
 
     #[Validate] // [tl! highlight]
     public $title = '';
