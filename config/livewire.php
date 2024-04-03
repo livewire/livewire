@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'class_namespace' => 'App\\Livewire',
+    'class_namespace' => env('LIVEWIRE_CLASS_NAMESPACE', 'App\\Livewire'),
 
     /*
     |---------------------------------------------------------------------------
@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'view_path' => resource_path('views/livewire'),
+    'view_path' => env('LIVEWIRE_VIEW_PATH', resource_path('views/livewire')),
 
     /*
     |---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ return [
     |
     */
 
-    'layout' => 'components.layouts.app',
+    'layout' => env('LIVEWIRE_LAYOUT', 'components.layouts.app'),
 
     /*
     |---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ return [
     |
     */
 
-    'lazy_placeholder' => null,
+    'lazy_placeholder' => env('LIVEWIRE_LAZY_PLACEHOLDER'),
 
     /*
     |---------------------------------------------------------------------------
@@ -87,7 +87,7 @@ return [
     |
     */
 
-    'render_on_redirect' => false,
+    'render_on_redirect' => env('LIVEWIRE_RENDER_ON_REDIRECT', false),
 
     /*
     |---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ return [
     |
     */
 
-    'legacy_model_binding' => false,
+    'legacy_model_binding' => env('LIVEWIRE_LEGACY_MODEL_BINDING', false),
 
     /*
     |---------------------------------------------------------------------------
@@ -113,7 +113,7 @@ return [
     |
     */
 
-    'inject_assets' => true,
+    'inject_assets' => env('LIVEWIRE_INJECT_ASSETS', true),
 
     /*
     |---------------------------------------------------------------------------
@@ -127,8 +127,8 @@ return [
     */
 
     'navigate' => [
-        'show_progress_bar' => true,
-        'progress_bar_color' => '#2299dd',
+        'show_progress_bar' => env('LIVEWIRE_SHOW_PROGRESS_BAR', true),
+        'progress_bar_color' => env('LIVEWIRE_PROGRESS_BAR_COLOR', '#2299dd'),
     ],
 
     /*
@@ -142,7 +142,7 @@ return [
     |
     */
 
-    'inject_morph_markers' => true,
+    'inject_morph_markers' => env('LIVEWIRE_INJECT_MORPH_MARKERS', true),
 
     /*
     |---------------------------------------------------------------------------
@@ -155,5 +155,5 @@ return [
     |
     */
 
-    'pagination_theme' => 'tailwind',
+    'pagination_theme' => env('LIVEWIRE_PAGINATION_THEME', 'tailwind'),
 ];
