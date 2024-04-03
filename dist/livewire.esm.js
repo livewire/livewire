@@ -8760,8 +8760,7 @@ var import_nprogress = __toESM(require_nprogress());
 import_nprogress.default.configure({
   minimum: 0.1,
   trickleSpeed: 200,
-  showSpinner: false,
-  parent: "html"
+  showSpinner: false
 });
 injectStyles();
 var inProgress = false;
@@ -8776,9 +8775,7 @@ function showAndStartProgressBar() {
 function finishAndHideProgressBar() {
   inProgress = false;
   import_nprogress.default.done();
-  setTimeout(() => {
-    import_nprogress.default.remove();
-  }, 400);
+  import_nprogress.default.remove();
 }
 function injectStyles() {
   let style = document.createElement("style");
@@ -9041,13 +9038,13 @@ function navigate_default(Alpine19) {
     });
   });
   function navigateTo(destination, shouldPushToHistoryState = true) {
-    fireEventForOtherLibariesToHookInto("alpine:navigating");
-    restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
-    cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
-    updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
+      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
+      cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
+      updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
