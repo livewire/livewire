@@ -205,6 +205,53 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function back_button_works_with_query_string_when_using_navigate_hook()
+    {
+        Livewire::visit(new class extends Component
+        {
+            #[\Livewire\Attributes\Locked]
+            public $foo = 'bar';
+
+            protected function queryString()
+            {
+                return [
+                    'foo' => [
+                        'keep' => true,
+                    ],
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <span>{{ $foo }}</span>
+                        <a :href="window.location.href" wire:navigate dusk="link">Navigate</a>
+                        @script
+                            <script>
+                                document.addEventListener("alpine:navigate", event => {
+                                    event.preventDefault();
+                                    if (!event.detail.cached && window.confirm("leave?")) {
+                                        Alpine.navigate(event.detail.url);
+                                    }
+                                }, { once: true });
+                            </script>
+                        @endscript
+                    </div>
+                HTML;
+            }
+        })
+            ->assertQueryStringHas('foo', 'bar')
+            ->click('@link')
+            ->assertDialogOpened('leave?')
+            ->acceptDialog()
+            ->waitFor('@link')
+            ->back()
+            ->pause(500)
+            ->assertNotPresent('#livewire-error');
+    }
+
+    /** @test */
     public function can_configure_progress_bar()
     {
         $this->browse(function ($browser) {
