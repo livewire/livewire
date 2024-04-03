@@ -27,7 +27,7 @@ class ComponentWontConflictWithPredefinedClasses extends \Tests\TestCase
     }
 
     /** @test */
-    public function wont_conflict_on_sequential_request()
+    public function wont_conflict_on_subsequent_requests()
     {
         $component = Livewire::test(Directory::class);
 
