@@ -8371,6 +8371,7 @@ function directive(name, callback) {
         el,
         directive: directive2,
         component,
+        $wire: component.$wire,
         cleanup: cleanup2
       });
     }

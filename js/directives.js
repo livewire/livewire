@@ -14,7 +14,7 @@ export function directive(name, callback) {
     on('directive.init', ({ el, component, directive, cleanup }) => {
         if (directive.value === name) {
             callback({
-                el, directive, component, cleanup
+                el, directive, component, $wire: component.$wire, cleanup
             })
         }
     })
