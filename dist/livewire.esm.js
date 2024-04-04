@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -2632,6 +2632,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "checked",
         "required",
         "readonly",
+        "hidden",
         "open",
         "selected",
         "autofocus",
@@ -2839,7 +2840,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.8",
+      version: "3.13.7",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3265,7 +3266,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       if (modifiers.includes("fill")) {
         if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-          setValue(getInputValue(el, modifiers, { target: el }, getValue()));
+          el.dispatchEvent(new Event(event, {}));
         }
       }
       if (!el._x_removeModelListeners)
@@ -3334,25 +3335,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return option.value || option.text;
           });
         } else {
-          let newValue;
-          if (el.type === "radio") {
-            if (event.target.checked) {
-              newValue = event.target.value;
-            } else {
-              newValue = currentValue;
-            }
-          } else {
-            newValue = event.target.value;
-          }
           if (modifiers.includes("number")) {
-            return safeParseNumber(newValue);
+            return safeParseNumber(event.target.value);
           } else if (modifiers.includes("boolean")) {
-            return safeParseBoolean(newValue);
-          } else if (modifiers.includes("trim")) {
-            return newValue.trim();
-          } else {
-            return newValue;
+            return safeParseBoolean(event.target.value);
           }
+          return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
         }
       });
     }
@@ -3401,7 +3389,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     mapAttributes(startingWith(":", into(prefix("bind:"))));
-    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup2 }) => {
+    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
       if (!value) {
         let bindingProviders = {};
         injectBindingProviders(bindingProviders);
@@ -3423,10 +3411,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         mutateDom(() => bind(el, value, result, modifiers));
       }));
-      cleanup2(() => {
-        el._x_undoAddedClasses && el._x_undoAddedClasses();
-        el._x_undoAddedStyles && el._x_undoAddedStyles();
-      });
     };
     handler2.inline = (el, { value, modifiers, expression }) => {
       if (!value)
@@ -3782,9 +3766,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3903,9 +3887,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4905,9 +4889,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4982,10 +4966,7 @@ var require_module_cjs4 = __commonJS({
       return storage.getItem(key) !== null;
     }
     function storageGet(key, storage) {
-      let value = storage.getItem(key, storage);
-      if (value === void 0)
-        return;
-      return JSON.parse(value);
+      return JSON.parse(storage.getItem(key, storage));
     }
     function storageSet(key, value, storage) {
       storage.setItem(key, JSON.stringify(value));
@@ -4994,9 +4975,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5076,9 +5057,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6349,9 +6330,9 @@ var require_nprogress = __commonJS({
         root.NProgress = factory();
       }
     })(exports, function() {
-      var NProgress2 = {};
-      NProgress2.version = "0.2.0";
-      var Settings = NProgress2.settings = {
+      var NProgress3 = {};
+      NProgress3.version = "0.2.0";
+      var Settings = NProgress3.settings = {
         minimum: 0.08,
         easing: "ease",
         positionUsing: "",
@@ -6365,7 +6346,7 @@ var require_nprogress = __commonJS({
         parent: "body",
         template: '<div class="bar" role="bar"><div class="peg"></div></div><div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
       };
-      NProgress2.configure = function(options) {
+      NProgress3.configure = function(options) {
         var key, value;
         for (key in options) {
           value = options[key];
@@ -6374,16 +6355,16 @@ var require_nprogress = __commonJS({
         }
         return this;
       };
-      NProgress2.status = null;
-      NProgress2.set = function(n) {
-        var started = NProgress2.isStarted();
+      NProgress3.status = null;
+      NProgress3.set = function(n) {
+        var started = NProgress3.isStarted();
         n = clamp(n, Settings.minimum, 1);
-        NProgress2.status = n === 1 ? null : n;
-        var progress = NProgress2.render(!started), bar = progress.querySelector(Settings.barSelector), speed = Settings.speed, ease = Settings.easing;
+        NProgress3.status = n === 1 ? null : n;
+        var progress = NProgress3.render(!started), bar = progress.querySelector(Settings.barSelector), speed = Settings.speed, ease = Settings.easing;
         progress.offsetWidth;
         queue(function(next) {
           if (Settings.positionUsing === "")
-            Settings.positionUsing = NProgress2.getPositioningCSS();
+            Settings.positionUsing = NProgress3.getPositioningCSS();
           css(bar, barPositionCSS(n, speed, ease));
           if (n === 1) {
             css(progress, {
@@ -6397,7 +6378,7 @@ var require_nprogress = __commonJS({
                 opacity: 0
               });
               setTimeout(function() {
-                NProgress2.remove();
+                NProgress3.remove();
                 next();
               }, speed);
             }, speed);
@@ -6407,17 +6388,17 @@ var require_nprogress = __commonJS({
         });
         return this;
       };
-      NProgress2.isStarted = function() {
-        return typeof NProgress2.status === "number";
+      NProgress3.isStarted = function() {
+        return typeof NProgress3.status === "number";
       };
-      NProgress2.start = function() {
-        if (!NProgress2.status)
-          NProgress2.set(0);
+      NProgress3.start = function() {
+        if (!NProgress3.status)
+          NProgress3.set(0);
         var work = function() {
           setTimeout(function() {
-            if (!NProgress2.status)
+            if (!NProgress3.status)
               return;
-            NProgress2.trickle();
+            NProgress3.trickle();
             work();
           }, Settings.trickleSpeed);
         };
@@ -6425,34 +6406,34 @@ var require_nprogress = __commonJS({
           work();
         return this;
       };
-      NProgress2.done = function(force) {
-        if (!force && !NProgress2.status)
+      NProgress3.done = function(force) {
+        if (!force && !NProgress3.status)
           return this;
-        return NProgress2.inc(0.3 + 0.5 * Math.random()).set(1);
+        return NProgress3.inc(0.3 + 0.5 * Math.random()).set(1);
       };
-      NProgress2.inc = function(amount) {
-        var n = NProgress2.status;
+      NProgress3.inc = function(amount) {
+        var n = NProgress3.status;
         if (!n) {
-          return NProgress2.start();
+          return NProgress3.start();
         } else {
           if (typeof amount !== "number") {
             amount = (1 - n) * clamp(Math.random() * n, 0.1, 0.95);
           }
           n = clamp(n + amount, 0, 0.994);
-          return NProgress2.set(n);
+          return NProgress3.set(n);
         }
       };
-      NProgress2.trickle = function() {
-        return NProgress2.inc(Math.random() * Settings.trickleRate);
+      NProgress3.trickle = function() {
+        return NProgress3.inc(Math.random() * Settings.trickleRate);
       };
       (function() {
         var initial = 0, current = 0;
-        NProgress2.promise = function($promise) {
+        NProgress3.promise = function($promise) {
           if (!$promise || $promise.state() === "resolved") {
             return this;
           }
           if (current === 0) {
-            NProgress2.start();
+            NProgress3.start();
           }
           initial++;
           current++;
@@ -6460,22 +6441,22 @@ var require_nprogress = __commonJS({
             current--;
             if (current === 0) {
               initial = 0;
-              NProgress2.done();
+              NProgress3.done();
             } else {
-              NProgress2.set((initial - current) / initial);
+              NProgress3.set((initial - current) / initial);
             }
           });
           return this;
         };
       })();
-      NProgress2.render = function(fromStart) {
-        if (NProgress2.isRendered())
+      NProgress3.render = function(fromStart) {
+        if (NProgress3.isRendered())
           return document.getElementById("nprogress");
         addClass(document.documentElement, "nprogress-busy");
         var progress = document.createElement("div");
         progress.id = "nprogress";
         progress.innerHTML = Settings.template;
-        var bar = progress.querySelector(Settings.barSelector), perc = fromStart ? "-100" : toBarPerc(NProgress2.status || 0), parent = document.querySelector(Settings.parent), spinner;
+        var bar = progress.querySelector(Settings.barSelector), perc = fromStart ? "-100" : toBarPerc(NProgress3.status || 0), parent = document.querySelector(Settings.parent), spinner;
         css(bar, {
           transition: "all 0 linear",
           transform: "translate3d(" + perc + "%,0,0)"
@@ -6490,16 +6471,16 @@ var require_nprogress = __commonJS({
         parent.appendChild(progress);
         return progress;
       };
-      NProgress2.remove = function() {
+      NProgress3.remove = function() {
         removeClass(document.documentElement, "nprogress-busy");
         removeClass(document.querySelector(Settings.parent), "nprogress-custom-parent");
         var progress = document.getElementById("nprogress");
         progress && removeElement(progress);
       };
-      NProgress2.isRendered = function() {
+      NProgress3.isRendered = function() {
         return !!document.getElementById("nprogress");
       };
-      NProgress2.getPositioningCSS = function() {
+      NProgress3.getPositioningCSS = function() {
         var bodyStyle = document.body.style;
         var vendorPrefix = "WebkitTransform" in bodyStyle ? "Webkit" : "MozTransform" in bodyStyle ? "Moz" : "msTransform" in bodyStyle ? "ms" : "OTransform" in bodyStyle ? "O" : "";
         if (vendorPrefix + "Perspective" in bodyStyle) {
@@ -6609,14 +6590,14 @@ var require_nprogress = __commonJS({
       function removeElement(element) {
         element && element.parentNode && element.parentNode.removeChild(element);
       }
-      return NProgress2;
+      return NProgress3;
     });
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6977,9 +6958,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8443,6 +8424,7 @@ var import_intersect = __toESM(require_module_cjs5());
 var import_anchor = __toESM(require_module_cjs6());
 
 // js/plugins/navigate/history.js
+var import_nprogress = __toESM(require_nprogress());
 var Snapshot = class {
   constructor(url, html) {
     this.url = url;
@@ -8506,6 +8488,7 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
     if (snapshotCache.has(alpine.snapshotIdx)) {
       let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
       handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey);
+      import_nprogress.default.remove();
     } else {
       fallback2(alpine.url);
     }
@@ -8756,11 +8739,12 @@ function isPersistedElement(el) {
 }
 
 // js/plugins/navigate/bar.js
-var import_nprogress = __toESM(require_nprogress());
-import_nprogress.default.configure({
+var import_nprogress2 = __toESM(require_nprogress());
+import_nprogress2.default.configure({
   minimum: 0.1,
   trickleSpeed: 200,
-  showSpinner: false
+  showSpinner: false,
+  parent: "html"
 });
 injectStyles();
 var inProgress = false;
@@ -8769,13 +8753,12 @@ function showAndStartProgressBar() {
   setTimeout(() => {
     if (!inProgress)
       return;
-    import_nprogress.default.start();
+    import_nprogress2.default.start();
   }, 150);
 }
 function finishAndHideProgressBar() {
   inProgress = false;
-  import_nprogress.default.done();
-  import_nprogress.default.remove();
+  import_nprogress2.default.done();
 }
 function injectStyles() {
   let style = document.createElement("style");
