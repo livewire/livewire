@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLazyLoading;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
@@ -36,6 +37,48 @@ class BrowserTest extends BrowserTestCase
         ->waitFor('#child')
         ->assertSee('Child!')
         ;
+    }
+
+    /** @test */
+    public function can_listen_whilst_lazy()
+    {
+        $this->expectNotToPerformAssertions();
+
+        Livewire::visit([new class extends Component {
+            public function render() { return Blade::render(<<<HTML
+            <div>
+                <button @click="$dispatch('foo')" dusk="button">button</button>
+                <!-- push the child component out of view -->
+                <div style="height: 100vh"></div>
+                <livewire:child lazy />
+            </div>
+            HTML); }
+        }, 'child' => new class extends Component {
+            public string $message;
+
+            protected $listeners = ['foo' => '$refresh'];
+
+            public function mount()
+            {
+                $this->message = 'Hello World!';
+            }
+
+            public function placeholder()
+            {
+                return '<div>Placeholder</div>';
+            }
+
+            public function render()
+            {
+                return <<<HTML
+                <div>
+                    <h1>{{ $this->message }}</h1>
+                </div>
+                HTML;
+            }
+        }], [])
+            ->waitForLivewire()->click('@button') // Should trigger an error
+            ;
     }
 
     /** @test */
