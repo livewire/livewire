@@ -4628,6 +4628,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           el,
           directive: directive3,
           component,
+          $wire: component.$wire,
           cleanup: cleanup3
         });
       }
