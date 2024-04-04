@@ -30,9 +30,9 @@
           root.NProgress = factory();
         }
       })(exports, function() {
-        var NProgress3 = {};
-        NProgress3.version = "0.2.0";
-        var Settings = NProgress3.settings = {
+        var NProgress2 = {};
+        NProgress2.version = "0.2.0";
+        var Settings = NProgress2.settings = {
           minimum: 0.08,
           easing: "ease",
           positionUsing: "",
@@ -46,7 +46,7 @@
           parent: "body",
           template: '<div class="bar" role="bar"><div class="peg"></div></div><div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
         };
-        NProgress3.configure = function(options) {
+        NProgress2.configure = function(options) {
           var key, value;
           for (key in options) {
             value = options[key];
@@ -55,16 +55,16 @@
           }
           return this;
         };
-        NProgress3.status = null;
-        NProgress3.set = function(n) {
-          var started2 = NProgress3.isStarted();
+        NProgress2.status = null;
+        NProgress2.set = function(n) {
+          var started2 = NProgress2.isStarted();
           n = clamp2(n, Settings.minimum, 1);
-          NProgress3.status = n === 1 ? null : n;
-          var progress = NProgress3.render(!started2), bar = progress.querySelector(Settings.barSelector), speed = Settings.speed, ease = Settings.easing;
+          NProgress2.status = n === 1 ? null : n;
+          var progress = NProgress2.render(!started2), bar = progress.querySelector(Settings.barSelector), speed = Settings.speed, ease = Settings.easing;
           progress.offsetWidth;
           queue2(function(next) {
             if (Settings.positionUsing === "")
-              Settings.positionUsing = NProgress3.getPositioningCSS();
+              Settings.positionUsing = NProgress2.getPositioningCSS();
             css(bar, barPositionCSS(n, speed, ease));
             if (n === 1) {
               css(progress, {
@@ -78,7 +78,7 @@
                   opacity: 0
                 });
                 setTimeout(function() {
-                  NProgress3.remove();
+                  NProgress2.remove();
                   next();
                 }, speed);
               }, speed);
@@ -88,17 +88,17 @@
           });
           return this;
         };
-        NProgress3.isStarted = function() {
-          return typeof NProgress3.status === "number";
+        NProgress2.isStarted = function() {
+          return typeof NProgress2.status === "number";
         };
-        NProgress3.start = function() {
-          if (!NProgress3.status)
-            NProgress3.set(0);
+        NProgress2.start = function() {
+          if (!NProgress2.status)
+            NProgress2.set(0);
           var work = function() {
             setTimeout(function() {
-              if (!NProgress3.status)
+              if (!NProgress2.status)
                 return;
-              NProgress3.trickle();
+              NProgress2.trickle();
               work();
             }, Settings.trickleSpeed);
           };
@@ -106,34 +106,34 @@
             work();
           return this;
         };
-        NProgress3.done = function(force) {
-          if (!force && !NProgress3.status)
+        NProgress2.done = function(force) {
+          if (!force && !NProgress2.status)
             return this;
-          return NProgress3.inc(0.3 + 0.5 * Math.random()).set(1);
+          return NProgress2.inc(0.3 + 0.5 * Math.random()).set(1);
         };
-        NProgress3.inc = function(amount) {
-          var n = NProgress3.status;
+        NProgress2.inc = function(amount) {
+          var n = NProgress2.status;
           if (!n) {
-            return NProgress3.start();
+            return NProgress2.start();
           } else {
             if (typeof amount !== "number") {
               amount = (1 - n) * clamp2(Math.random() * n, 0.1, 0.95);
             }
             n = clamp2(n + amount, 0, 0.994);
-            return NProgress3.set(n);
+            return NProgress2.set(n);
           }
         };
-        NProgress3.trickle = function() {
-          return NProgress3.inc(Math.random() * Settings.trickleRate);
+        NProgress2.trickle = function() {
+          return NProgress2.inc(Math.random() * Settings.trickleRate);
         };
         (function() {
           var initial = 0, current = 0;
-          NProgress3.promise = function($promise) {
+          NProgress2.promise = function($promise) {
             if (!$promise || $promise.state() === "resolved") {
               return this;
             }
             if (current === 0) {
-              NProgress3.start();
+              NProgress2.start();
             }
             initial++;
             current++;
@@ -141,22 +141,22 @@
               current--;
               if (current === 0) {
                 initial = 0;
-                NProgress3.done();
+                NProgress2.done();
               } else {
-                NProgress3.set((initial - current) / initial);
+                NProgress2.set((initial - current) / initial);
               }
             });
             return this;
           };
         })();
-        NProgress3.render = function(fromStart) {
-          if (NProgress3.isRendered())
+        NProgress2.render = function(fromStart) {
+          if (NProgress2.isRendered())
             return document.getElementById("nprogress");
           addClass(document.documentElement, "nprogress-busy");
           var progress = document.createElement("div");
           progress.id = "nprogress";
           progress.innerHTML = Settings.template;
-          var bar = progress.querySelector(Settings.barSelector), perc = fromStart ? "-100" : toBarPerc(NProgress3.status || 0), parent = document.querySelector(Settings.parent), spinner;
+          var bar = progress.querySelector(Settings.barSelector), perc = fromStart ? "-100" : toBarPerc(NProgress2.status || 0), parent = document.querySelector(Settings.parent), spinner;
           css(bar, {
             transition: "all 0 linear",
             transform: "translate3d(" + perc + "%,0,0)"
@@ -171,16 +171,16 @@
           parent.appendChild(progress);
           return progress;
         };
-        NProgress3.remove = function() {
+        NProgress2.remove = function() {
           removeClass(document.documentElement, "nprogress-busy");
           removeClass(document.querySelector(Settings.parent), "nprogress-custom-parent");
           var progress = document.getElementById("nprogress");
           progress && removeElement(progress);
         };
-        NProgress3.isRendered = function() {
+        NProgress2.isRendered = function() {
           return !!document.getElementById("nprogress");
         };
-        NProgress3.getPositioningCSS = function() {
+        NProgress2.getPositioningCSS = function() {
           var bodyStyle = document.body.style;
           var vendorPrefix = "WebkitTransform" in bodyStyle ? "Webkit" : "MozTransform" in bodyStyle ? "Moz" : "msTransform" in bodyStyle ? "ms" : "OTransform" in bodyStyle ? "O" : "";
           if (vendorPrefix + "Perspective" in bodyStyle) {
@@ -290,7 +290,7 @@
         function removeElement(element) {
           element && element.parentNode && element.parentNode.removeChild(element);
         }
-        return NProgress3;
+        return NProgress2;
       });
     }
   });
@@ -686,7 +686,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -2025,7 +2025,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "checked",
       "required",
       "readonly",
-      "hidden",
       "open",
       "selected",
       "autofocus",
@@ -2233,7 +2232,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.7",
+    version: "3.13.8",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3306,7 +3305,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     if (modifiers.includes("fill")) {
       if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-        el.dispatchEvent(new Event(event, {}));
+        setValue(getInputValue(el, modifiers, { target: el }, getValue()));
       }
     }
     if (!el._x_removeModelListeners)
@@ -3375,12 +3374,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return option.value || option.text;
         });
       } else {
-        if (modifiers.includes("number")) {
-          return safeParseNumber(event.target.value);
-        } else if (modifiers.includes("boolean")) {
-          return safeParseBoolean(event.target.value);
+        let newValue;
+        if (el.type === "radio") {
+          if (event.target.checked) {
+            newValue = event.target.value;
+          } else {
+            newValue = currentValue;
+          }
+        } else {
+          newValue = event.target.value;
         }
-        return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
+        if (modifiers.includes("number")) {
+          return safeParseNumber(newValue);
+        } else if (modifiers.includes("boolean")) {
+          return safeParseBoolean(newValue);
+        } else if (modifiers.includes("trim")) {
+          return newValue.trim();
+        } else {
+          return newValue;
+        }
       }
     });
   }
@@ -3429,7 +3441,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
+  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup22 }) => {
     if (!value) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3451,6 +3463,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value, result, modifiers));
     }));
+    cleanup22(() => {
+      el._x_undoAddedClasses && el._x_undoAddedClasses();
+      el._x_undoAddedStyles && el._x_undoAddedStyles();
+    });
   };
   handler2.inline = (el, { value, modifiers, expression }) => {
     if (!value)
@@ -4676,7 +4692,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4770,7 +4786,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5719,7 +5735,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5771,14 +5787,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return storage.getItem(key) !== null;
   }
   function storageGet(key, storage) {
-    return JSON.parse(storage.getItem(key, storage));
+    let value = storage.getItem(key, storage);
+    if (value === void 0)
+      return;
+    return JSON.parse(value);
   }
   function storageSet(key, value, storage) {
     storage.setItem(key, JSON.stringify(value));
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -5833,7 +5852,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/anchor/dist/module.esm.js
+  // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -7068,7 +7087,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default6 = src_default6;
 
   // js/plugins/navigate/history.js
-  var import_nprogress = __toESM(require_nprogress());
   var Snapshot = class {
     constructor(url, html) {
       this.url = url;
@@ -7132,7 +7150,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (snapshotCache.has(alpine.snapshotIdx)) {
         let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
         handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey);
-        import_nprogress.default.remove();
       } else {
         fallback2(alpine.url);
       }
@@ -7381,8 +7398,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/plugins/navigate/bar.js
-  var import_nprogress2 = __toESM(require_nprogress());
-  import_nprogress2.default.configure({
+  var import_nprogress = __toESM(require_nprogress());
+  import_nprogress.default.configure({
     minimum: 0.1,
     trickleSpeed: 200,
     showSpinner: false,
@@ -7395,12 +7412,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setTimeout(() => {
       if (!inProgress)
         return;
-      import_nprogress2.default.start();
+      import_nprogress.default.start();
     }, 150);
   }
   function finishAndHideProgressBar() {
     inProgress = false;
-    import_nprogress2.default.done();
+    import_nprogress.default.done();
+  }
+  function removeAnyLeftOverStaleProgressBars() {
+    import_nprogress.default.remove();
   }
   function injectStyles() {
     let style = document.createElement("style");
@@ -7480,9 +7500,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     `;
     let nonce2 = getNonce();
-    if (nonce2) {
+    if (nonce2)
       style.nonce = nonce2;
-    }
     document.head.appendChild(style);
   }
 
@@ -7728,6 +7747,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           packUpPersistedTeleports(persistedEl);
         });
         swapCurrentPageWithNewHtml(html, () => {
+          removeAnyLeftOverStaleProgressBars();
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
@@ -7989,7 +8009,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8325,7 +8345,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default8(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup3 }) => {
       let templateFn = () => expression;

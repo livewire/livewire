@@ -1,4 +1,4 @@
-import NProgress from 'nprogress'
+
 class Snapshot {
     constructor(url, html) {
         this.url = url
@@ -94,7 +94,6 @@ export function whenTheBackOrForwardButtonIsClicked(
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
             handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey)
-            NProgress.remove()
         } else {
             fallback(alpine.url)
         }
