@@ -8760,7 +8760,8 @@ var import_nprogress = __toESM(require_nprogress());
 import_nprogress.default.configure({
   minimum: 0.1,
   trickleSpeed: 200,
-  showSpinner: false
+  showSpinner: false,
+  parent: "html"
 });
 injectStyles();
 var inProgress = false;
@@ -8775,6 +8776,8 @@ function showAndStartProgressBar() {
 function finishAndHideProgressBar() {
   inProgress = false;
   import_nprogress.default.done();
+}
+function removeAnyLeftOverStaleProgressBars() {
   import_nprogress.default.remove();
 }
 function injectStyles() {
@@ -8855,9 +8858,8 @@ function injectStyles() {
     }
     `;
   let nonce2 = getNonce();
-  if (nonce2) {
+  if (nonce2)
     style.nonce = nonce2;
-  }
   document.head.appendChild(style);
 }
 
@@ -9103,6 +9105,7 @@ function navigate_default(Alpine19) {
         packUpPersistedTeleports(persistedEl);
       });
       swapCurrentPageWithNewHtml(html, () => {
+        removeAnyLeftOverStaleProgressBars();
         removeAnyLeftOverStaleTeleportTargets(document.body);
         enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
           unPackPersistedTeleports(persistedEl);

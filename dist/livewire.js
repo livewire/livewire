@@ -7402,7 +7402,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   import_nprogress.default.configure({
     minimum: 0.1,
     trickleSpeed: 200,
-    showSpinner: false
+    showSpinner: false,
+    parent: "html"
   });
   injectStyles();
   var inProgress = false;
@@ -7417,6 +7418,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function finishAndHideProgressBar() {
     inProgress = false;
     import_nprogress.default.done();
+  }
+  function removeAnyLeftOverStaleProgressBars() {
     import_nprogress.default.remove();
   }
   function injectStyles() {
@@ -7497,9 +7500,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     `;
     let nonce2 = getNonce();
-    if (nonce2) {
+    if (nonce2)
       style.nonce = nonce2;
-    }
     document.head.appendChild(style);
   }
 
@@ -7745,6 +7747,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           packUpPersistedTeleports(persistedEl);
         });
         swapCurrentPageWithNewHtml(html, () => {
+          removeAnyLeftOverStaleProgressBars();
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
