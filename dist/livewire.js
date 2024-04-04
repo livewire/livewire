@@ -4614,6 +4614,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
+  var customDirectiveNames = /* @__PURE__ */ new Set();
   function matchesForLivewireDirective(attributeName) {
     return attributeName.match(new RegExp("wire:"));
   }
@@ -4622,6 +4623,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new Directive(value, modifiers, name, el);
   }
   function directive2(name, callback) {
+    customDirectiveNames.add(name);
     on2("directive.init", ({ el, component, directive: directive3, cleanup: cleanup3 }) => {
       if (directive3.value === name) {
         callback({
@@ -4636,6 +4638,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function getDirectives(el) {
     return new DirectiveManager(el);
+  }
+  function customDirectiveHasBeenRegistered(name) {
+    return customDirectiveNames.has(name);
   }
   var DirectiveManager = class {
     constructor(el) {
@@ -9188,6 +9193,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-wildcard.js
   on2("directive.init", ({ el, directive: directive3, cleanup: cleanup3, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.value))
+      return;
+    if (customDirectiveHasBeenRegistered(directive3.value))
       return;
     let attribute = directive3.rawName.replace("wire:", "x-on:");
     if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {

@@ -8357,6 +8357,7 @@ function dispatchEvent(target, name, params, bubbles = true) {
 }
 
 // js/directives.js
+var customDirectiveNames = /* @__PURE__ */ new Set();
 function matchesForLivewireDirective(attributeName) {
   return attributeName.match(new RegExp("wire:"));
 }
@@ -8365,6 +8366,7 @@ function extractDirective(el, name) {
   return new Directive(value, modifiers, name, el);
 }
 function directive(name, callback) {
+  customDirectiveNames.add(name);
   on("directive.init", ({ el, component, directive: directive2, cleanup: cleanup2 }) => {
     if (directive2.value === name) {
       callback({
@@ -8379,6 +8381,9 @@ function directive(name, callback) {
 }
 function getDirectives(el) {
   return new DirectiveManager(el);
+}
+function customDirectiveHasBeenRegistered(name) {
+  return customDirectiveNames.has(name);
 }
 var DirectiveManager = class {
   constructor(el) {
@@ -10058,6 +10063,8 @@ function callAndClearComponentDebounces(component, callback) {
 var import_alpinejs12 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
+    return;
+  if (customDirectiveHasBeenRegistered(directive2.value))
     return;
   let attribute = directive2.rawName.replace("wire:", "x-on:");
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
