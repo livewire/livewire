@@ -12,6 +12,7 @@ Here's a list of all the available component lifecycle hooks:
 | `rendering()`    | Called before `render()` is called                                              |
 | `rendered()`     | Called after `render()` is called                                               |
 | `dehydrate()`    | Called at the end of every component request                                    |
+| `exception($e, $stopProgation)` | Called when an exception is thrown                     |                    |
 
 ## Mount
 
@@ -298,6 +299,32 @@ class ShowPosts extends Component
         //
         // $view: The rendered view
         // $html: The final, rendered HTML
+    }
+
+    // ...
+}
+```
+
+## Exception
+
+Sometimes it can be helpful to intercept and catch errors, eg: to customize the error message or ignore specific type of exceptions. The `exception()` hook allows you to do just that: you can perform check on the `$error`, and use the `$stopPropagation` parameter to catch the issue.
+This also unlocks powerful patterns when you want to stop further execution of code (return early), this is how internal methods like `validate()` works.
+
+```php
+use Livewire\Component;
+
+class ShowPost extends Component
+{
+    public function mount() // [tl! highlight:3]
+    {
+        $this->post = Post::find($this->postId);
+    }
+
+    public function exception($e, $stopPropagation) {
+        if($e instanceof NotFoundException) {
+            $this->notify('Post is not found')
+            $stopPropagation();
+        }
     }
 
     // ...
