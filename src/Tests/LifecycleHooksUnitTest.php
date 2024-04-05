@@ -33,6 +33,7 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
             'updatingBarBaz' => false,
             'updatedBar' => false,
             'updatedBarBaz' => false,
+            'caughtException' => false,
         ], $component->lifecycles);
     }
 
