@@ -32,7 +32,12 @@ class SupportMultipleRootElementDetection extends ComponentHook
     {
         $dom = new \DOMDocument();
 
-        @$dom->loadHTML($html);
+        $internalErrorsState = libxml_use_internal_errors(true);
+
+        $dom->loadHTML($html);
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($internalErrorsState);
 
         $body = $dom->getElementsByTagName('body')->item(0);
 
