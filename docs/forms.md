@@ -373,7 +373,51 @@ $this->reset('title');
 
 // Or multiple at once...
 
-$this->reset('title', 'content');
+$this->reset(['title', 'content']);
+```
+
+### Pulling form fields
+
+Alternatively, you can use the `pull()` method to both retrieve a form's properties and reset them in one operation.
+
+```php
+<?php
+
+namespace App\Livewire\Forms;
+
+use Livewire\Attributes\Validate;
+use App\Models\Post;
+use Livewire\Form;
+
+class PostForm extends Form
+{
+    #[Validate('required|min:5')]
+    public $title = '';
+
+    #[Validate('required|min:5')]
+    public $content = '';
+
+    // ...
+
+    public function store()
+    {
+        $this->validate();
+
+        Post::create(
+            $this->pull() // [tl! highlight]
+        );
+    }
+}
+```
+
+You can also pull specific properties by passing the property names into the `pull()` method:
+
+```php
+// Return a value before resetting...
+$this->pull('title');
+
+ // Return a key-value array of properties before resetting...
+$this->pull(['title', 'content']);
 ```
 
 ### Using Rule objects
