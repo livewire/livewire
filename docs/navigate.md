@@ -131,23 +131,63 @@ To do this, you must add `wire:scroll` to the element containing a scrollbar lik
 
 ## JavaScript hooks
 
-Livewire dispatches a useful event called `livewire:navigating` that allows you to execute JavaScript immediately BEFORE the current page is navigated away from.
+Each page navigation triggers three lifecycle hooks:
 
-This is useful for scenarios like modifying the contents of the current page before it is stored and reloaded as the back-button cache HTML.
+* `livewire:navigate`
+* `livewire:navigating`
+* `livewire:navigated`
+
+It's important to note that these three hooks events are dispatched on navigations of all types. This includes manual navigation using `Livewire.navigate()`, redirecting with navigation enabled, and back and forward button presses in the browser.
+
+Here's an example of registering listeners for each of these events:
 
 ```js
+document.addEventListener('livewire:navigate', (event) => {
+    // Triggers when a navigation is triggered.
+
+    // Can be "cancelled" (prevent the navigate from actually being performed):
+    event.preventDefault()
+
+    // Contains helpful context about the navigation trigger:
+    let context = event.detail
+
+    // A URL object of the intended destination of the navigation...
+    context.url
+
+    // A boolean [true/false] indicating whether or not this naviation
+    // was triggered by a back/forward (history state) navigation...
+    context.history
+
+    // A boolean [true/false] indicating whether or not there is
+    // cached version of this page to be used instead of
+    // fetching a new one via a network round-trip...
+    context.cached
+})
+
 document.addEventListener('livewire:navigating', () => {
-    // Mutate the HTML before the page is navigated away...
+    // Triggered when new HTML is about to swapped onto the page...
+
+    // This is a good place to mutate any HTML before the page
+    // is nagivated away from...
 })
-```
 
-Alternatively, you can hook into AFTER Livewire has navigated to a page using `livewire:navigated`. This event will dispatch after every navigation including back and forward button presses:
-
-```js
 document.addEventListener('livewire:navigated', () => {
-    //
+    // Triggered as the final step of any page navigation...
+
+    // Also triggered on page-load instead of "DOMContentLoaded"...
 })
 ```
+
+> [!warning] Event listeners will persist across pages
+>
+> When you attach an event listener to the document it will not be removed when you navigate to a different page. This can lead to unexpected behaviour if you need code to run only after navigating to a specific page, or if you add the same event listener on every page. If you do not remove your event listener it may cause exceptions on other pages when it's looking for elements that do not exist, or you may end up with the event listener executing multiple times per navigation.
+>
+> An easy method to remove an event listener after it runs is to pass the option `{once: true}` as a third parameter to the `addEventListener` function.
+> ```js
+> document.addEventListener('livewire:navigated', () => {
+>     // ...
+> }, { once: true })
+> ```
 
 ## Manually visiting a new page
 

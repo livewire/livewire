@@ -1,21 +1,27 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
 import { on } from '@/hooks'
+import { listen } from '@/utils'
 
-directive('loading', ({ el, directive, component }) => {
-    let targets = getTargets(el)
+directive('loading', ({ el, directive, component, cleanup }) => {
+    let { targets, inverted } = getTargets(el)
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    whenTargetsArePartOfRequest(component, targets, [
+    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
 
-    whenTargetsArePartOfFileUpload(component, targets, [
+    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
+
+    cleanup(() => {
+        cleanupA()
+        cleanupB()
+    })
 })
 
 function applyDelay(directive) {
@@ -63,11 +69,11 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
-    on('commit', ({ component: iComponent, commit: payload, respond }) => {
+function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
+    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
-        if (targets.length > 0 && ! containsTargets(payload, targets)) return
+        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
 
         startLoading()
 
@@ -87,23 +93,29 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
         return false
     }
 
-    window.addEventListener('livewire-upload-start', e => {
+    let cleanupA = listen(window, 'livewire-upload-start', e => {
         if (eventMismatch(e)) return
 
         startLoading()
     })
 
-    window.addEventListener('livewire-upload-finish', e => {
+    let cleanupB = listen(window, 'livewire-upload-finish', e => {
         if (eventMismatch(e)) return
 
         endLoading()
     })
 
-    window.addEventListener('livewire-upload-error', e => {
+    let cleanupC = listen(window, 'livewire-upload-error', e => {
         if (eventMismatch(e)) return
 
         endLoading()
     })
+
+    return () => {
+        cleanupA()
+        cleanupB()
+        cleanupC()
+    }
 }
 
 function containsTargets(payload, targets) {
@@ -139,10 +151,14 @@ function getTargets(el) {
 
     let targets = []
 
+    let inverted = false
+
     if (directives.has('target')) {
         let directive = directives.get('target')
 
         let raw = directive.expression
+
+        if (directive.modifiers.includes("except")) inverted = true
 
         if (raw.includes('(') && raw.includes(')')) {
             targets.push({ target: directive.method, params: quickHash(JSON.stringify(directive.params)) })
@@ -165,7 +181,7 @@ function getTargets(el) {
             .forEach(target => targets.push({ target }))
     }
 
-    return targets
+    return { targets, inverted }
 }
 
 function quickHash(subject) {

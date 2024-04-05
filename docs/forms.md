@@ -26,8 +26,9 @@ class CreatePost extends Component
             $this->only(['title', 'content'])
         );
 
-        return $this->redirect('/posts')
-            ->with('status', 'Post successfully created.');
+        session()->flash('status', 'Post successfully updated.');
+
+        return $this->redirect('/posts');
     }
 
     public function render()
@@ -436,7 +437,7 @@ use Livewire\Form;
 
 class PostForm extends Form
 {
-    public ?Post $post
+    public ?Post $post;
 
     #[Validate] // [tl! highlight]
     public $title = '';

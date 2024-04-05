@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportTesting;
 
-use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use PHPUnit\Framework\ExpectationFailedException;
 use Illuminate\Support\Facades\Artisan;
@@ -11,6 +10,7 @@ use Illuminate\Testing\TestResponse;
 use Illuminate\Testing\TestView;
 use Livewire\Component;
 use Livewire\Livewire;
+use Closure;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -259,6 +259,16 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->set(['name' => 'bar'])
             ->assertSet('name', 'bar');
+    }
+
+    /** @test */
+    function set_for_backed_enums()
+    {
+        Livewire::test(ComponentWithEnums::class)
+            ->set('backedFooBarEnum', BackedFooBarEnum::FOO->value)
+            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO)
+            ->set('backedFooBarEnum', BackedFooBarEnum::FOO)
+            ->assertSetStrict('backedFooBarEnum', BackedFooBarEnum::FOO);
     }
 
     /** @test */
@@ -616,6 +626,31 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertSet('nameHeader', 'Taylor')
             ;
     }
+
+    /** @test */
+    public function can_set_cookies_and_use_it_for_testing_subsequent_request()
+    {
+        // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
+        Livewire::withCookies(['colour' => 'blue'])->withCookie('name', 'Taylor')
+            ->test(new class extends Component {
+                public $colourCookie = '';
+                public $nameCookie = '';
+
+                public function setTheCookies()
+                {
+                    $this->colourCookie = request()->cookie('colour');
+                    $this->nameCookie = request()->cookie('name');
+                }
+
+                public function render()
+                {
+                    return '<div></div>';
+                }
+            })
+            ->call('setTheCookies')
+            ->assertSet('colourCookie', 'blue')
+            ->assertSet('nameCookie', 'Taylor');
+    }
 }
 
 class HasMountArguments extends Component
@@ -799,4 +834,20 @@ class ComponentWithMethodThatReturnsData extends Component
     {
         return app('view')->make('null-view');
     }
+}
+
+class ComponentWithEnums extends Component
+{
+    public BackedFooBarEnum $backedFooBarEnum;
+
+    function render()
+    {
+        return app('view')->make('null-view');
+    }
+}
+
+enum BackedFooBarEnum : string
+{
+    case FOO = 'foo';
+    case BAR = 'bar';
 }

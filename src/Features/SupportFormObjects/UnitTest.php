@@ -81,6 +81,29 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    function can_validate_a_form_with_the_general_validate_function()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->call('save')
+            ->tap(function ($component) {
+                $this->assertCount(1, $component->errors()->get('form.title'));
+                $this->assertCount(1, $component->errors()->get('form.content'));
+            })
+        ;
+    }
+
+    /** @test */
     function can_validate_a_specific_rule_has_errors_in_a_form_object()
     {
         Livewire::test(new class extends Component {
@@ -121,6 +144,43 @@ class UnitTest extends \Tests\TestCase
         ->call('save')
         ->assertHasErrors('form.title')
         ->assertHasNoErrors('form.content')
+        ;
+    }
+
+    /** @test */
+    function can_validate_a_specific_rule_for_form_object_with_validate_only()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateStub $form;
+
+            function save()
+            {
+                $this->form->validateOnly('title');
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasErrors(['form.title' => 'required']);
+        ;
+    }
+    
+    /** @test */
+    function can_validate_a_specific_rule_has_errors_on_update_in_a_form_object()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormValidateOnUpdateStub $form;
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+            ->assertHasNoErrors()
+            ->set('form.title', 'foo')
+            ->assertHasErrors(['form.title' => 'min'])
         ;
     }
 
@@ -747,6 +807,16 @@ class PostFormValidateStub extends Form
     protected $rules = [
         'title' => 'required',
         'content' => 'required',
+    ];
+}
+
+class PostFormValidateOnUpdateStub extends Form
+{
+    #[Validate]
+    public $title = '';
+
+    protected $rules = [
+        'title' => 'min:5',
     ];
 }
 

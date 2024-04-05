@@ -3,7 +3,9 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\GeneratorCommand;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:attribute')]
 class AttributeCommand extends GeneratorCommand
 {
     /**

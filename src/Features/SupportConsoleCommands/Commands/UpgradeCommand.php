@@ -23,7 +23,9 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstr
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroduction;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeForgetComputedToUnset;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:upgrade')]
 class UpgradeCommand extends Command
 {
     protected $signature = 'livewire:upgrade {--run-only=}';

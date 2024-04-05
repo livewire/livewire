@@ -312,13 +312,17 @@
       return this.get(key).forEach(callback);
     }
   };
-  function dispatch(el, name, detail = {}, bubbles = true) {
-    el.dispatchEvent(new CustomEvent(name, {
+  function dispatch(target, name, detail = {}, bubbles = true) {
+    target.dispatchEvent(new CustomEvent(name, {
       detail,
       bubbles,
       composed: true,
       cancelable: true
     }));
+  }
+  function listen(target, name, handler4) {
+    target.addEventListener(name, handler4);
+    return () => target.removeEventListener(name, handler4);
   }
   function isObjecty(subject) {
     return typeof subject === "object" && subject !== null;
@@ -465,6 +469,13 @@
       }
     };
     el.addEventListener("change", eventHandler);
+    component.$wire.$watch(property, (value) => {
+      if (!el.isConnected)
+        return;
+      if (value === null || value === "") {
+        el.value = "";
+      }
+    });
     let clearFileInputValue = () => {
       el.value = null;
     };
@@ -867,19 +878,10 @@
   }) {
     deferHandlingDirectives(() => {
       walker(el, (el2, skip) => {
-        if (el2._x_inited) {
-          if (el2._x_ignore)
-            skip();
-          return;
-        }
         intercept(el2, skip);
         initInterceptors.forEach((i) => i(el2, skip));
         directives(el2, el2.attributes).forEach((handle) => handle());
-        if (el2._x_ignore) {
-          skip();
-        } else {
-          el2._x_inited = true;
-        }
+        el2._x_ignore && skip();
       });
     });
   }
@@ -887,7 +889,6 @@
     walker(root, (el) => {
       cleanupAttributes(el);
       cleanupElement(el);
-      delete el._x_inited;
     });
   }
   var onAttributeAddeds = [];
@@ -1030,6 +1031,8 @@
       node._x_ignore = true;
     });
     for (let node of addedNodes) {
+      if (removedNodes.has(node))
+        continue;
       if (!node.isConnected)
         continue;
       delete node._x_ignoreSelf;
@@ -1077,7 +1080,7 @@
     has({ objects }, name) {
       if (name == Symbol.unscopables)
         return false;
-      return objects.some((obj) => Reflect.has(obj, name));
+      return objects.some((obj) => Object.prototype.hasOwnProperty.call(obj, name) || Reflect.has(obj, name));
     },
     get({ objects }, name, thisProxy) {
       if (name == "toJSON")
@@ -1085,7 +1088,7 @@
       return Reflect.get(objects.find((obj) => Reflect.has(obj, name)) || {}, name, thisProxy);
     },
     set({ objects }, name, value, thisProxy) {
-      const target = objects.find((obj) => Reflect.has(obj, name)) || objects[objects.length - 1];
+      const target = objects.find((obj) => Object.prototype.hasOwnProperty.call(obj, name)) || objects[objects.length - 1];
       const descriptor = Object.getOwnPropertyDescriptor(target, name);
       if (descriptor?.set && descriptor?.get)
         return Reflect.set(target, name, value, thisProxy);
@@ -1104,6 +1107,8 @@
     let recurse = (obj, basePath = "") => {
       Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
         if (enumerable === false || value === void 0)
+          return;
+        if (typeof value === "object" && value !== null && value.__v_skip)
           return;
         let path = basePath === "" ? key : `${basePath}.${key}`;
         if (typeof value === "object" && value !== null && value._x_interceptor) {
@@ -2020,7 +2025,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "checked",
       "required",
       "readonly",
-      "hidden",
       "open",
       "selected",
       "autofocus",
@@ -2228,7 +2232,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.13.5",
+    version: "3.13.8",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3301,7 +3305,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     if (modifiers.includes("fill")) {
       if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-        el.dispatchEvent(new Event(event, {}));
+        setValue(getInputValue(el, modifiers, { target: el }, getValue()));
       }
     }
     if (!el._x_removeModelListeners)
@@ -3370,12 +3374,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return option.value || option.text;
         });
       } else {
-        if (modifiers.includes("number")) {
-          return safeParseNumber(event.target.value);
-        } else if (modifiers.includes("boolean")) {
-          return safeParseBoolean(event.target.value);
+        let newValue;
+        if (el.type === "radio") {
+          if (event.target.checked) {
+            newValue = event.target.value;
+          } else {
+            newValue = currentValue;
+          }
+        } else {
+          newValue = event.target.value;
         }
-        return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
+        if (modifiers.includes("number")) {
+          return safeParseNumber(newValue);
+        } else if (modifiers.includes("boolean")) {
+          return safeParseBoolean(newValue);
+        } else if (modifiers.includes("trim")) {
+          return newValue.trim();
+        } else {
+          return newValue;
+        }
       }
     });
   }
@@ -3424,7 +3441,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   mapAttributes(startingWith(":", into(prefix("bind:"))));
-  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
+  var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup22 }) => {
     if (!value) {
       let bindingProviders = {};
       injectBindingProviders(bindingProviders);
@@ -3446,6 +3463,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       mutateDom(() => bind(el, value, result, modifiers));
     }));
+    cleanup22(() => {
+      el._x_undoAddedClasses && el._x_undoAddedClasses();
+      el._x_undoAddedStyles && el._x_undoAddedStyles();
+    });
   };
   handler2.inline = (el, { value, modifiers, expression }) => {
     if (!value)
@@ -4193,7 +4214,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       succeed: (i) => succeedCallbacks.push(i),
       fail: (i) => failCallbacks.push(i)
     });
-    let response = await fetch(updateUri, options);
+    let response;
+    try {
+      response = await fetch(updateUri, options);
+    } catch (e) {
+      finishProfile({ content: "{}", failed: true });
+      handleFailure();
+      fail({
+        status: 503,
+        content: null,
+        preventDefault: () => {
+        }
+      });
+      return;
+    }
     let mutableObject = {
       status: response.status,
       response
@@ -4342,25 +4376,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return component.$wire.set(name, !component.$wire.get(name), live);
   });
   wireProperty("$watch", (component) => (path, callback) => {
-    let firstTime = true;
-    let oldValue = void 0;
-    module_default.effect(() => {
-      let value = dataGet(component.reactive, path);
-      JSON.stringify(value);
-      if (!firstTime) {
-        queueMicrotask(() => {
-          callback(value, oldValue);
-          oldValue = value;
-        });
-      } else {
-        oldValue = value;
-      }
-      firstTime = false;
-    });
+    let getter = () => {
+      return dataGet(component.reactive, path);
+    };
+    let unwatch = module_default.watch(getter, callback);
+    component.addCleanup(unwatch);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
-  wireProperty("$on", (component) => (...params) => listen(component, ...params));
+  wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
@@ -4567,7 +4591,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       dispatchEvent(target.el, name, params, false);
     });
   }
-  function listen(component, name, callback) {
+  function listen2(component, name, callback) {
     component.el.addEventListener(name, (e) => {
       callback(e.detail);
     });
@@ -4590,6 +4614,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
+  var customDirectiveNames = /* @__PURE__ */ new Set();
   function matchesForLivewireDirective(attributeName) {
     return attributeName.match(new RegExp("wire:"));
   }
@@ -4598,12 +4623,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new Directive(value, modifiers, name, el);
   }
   function directive2(name, callback) {
+    customDirectiveNames.add(name);
     on2("directive.init", ({ el, component, directive: directive3, cleanup: cleanup3 }) => {
       if (directive3.value === name) {
         callback({
           el,
           directive: directive3,
           component,
+          $wire: component.$wire,
           cleanup: cleanup3
         });
       }
@@ -4611,6 +4638,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function getDirectives(el) {
     return new DirectiveManager(el);
+  }
+  function customDirectiveHasBeenRegistered(name) {
+    return customDirectiveNames.has(name);
   }
   var DirectiveManager = class {
     constructor(el) {
@@ -5616,7 +5646,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           setTimeout(() => {
             if (!el2.hasAttribute("tabindex"))
               el2.setAttribute("tabindex", "0");
-            el2.focus({ preventScroll: this._noscroll });
+            el2.focus({ preventScroll: this.__noscroll });
           });
         }
       };
@@ -5763,7 +5793,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return storage.getItem(key) !== null;
   }
   function storageGet(key, storage) {
-    return JSON.parse(storage.getItem(key, storage));
+    let value = storage.getItem(key, storage);
+    if (value === void 0)
+      return;
+    return JSON.parse(value);
   }
   function storageSet(key, value, storage) {
     storage.setItem(key, JSON.stringify(value));
@@ -7060,18 +7093,72 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default6 = src_default6;
 
   // js/plugins/navigate/history.js
+  var Snapshot = class {
+    constructor(url, html) {
+      this.url = url;
+      this.html = html;
+    }
+  };
+  var snapshotCache = {
+    currentKey: null,
+    currentUrl: null,
+    keys: [],
+    lookup: {},
+    limit: 10,
+    has(location) {
+      return this.lookup[location] !== void 0;
+    },
+    retrieve(location) {
+      let snapshot = this.lookup[location];
+      if (snapshot === void 0)
+        throw "No back button cache found for current location: " + location;
+      return snapshot;
+    },
+    replace(key, snapshot) {
+      if (this.has(key)) {
+        this.lookup[key] = snapshot;
+      } else {
+        this.push(key, snapshot);
+      }
+    },
+    push(key, snapshot) {
+      this.lookup[key] = snapshot;
+      let index = this.keys.indexOf(key);
+      if (index > -1)
+        this.keys.splice(index, 1);
+      this.keys.unshift(key);
+      this.trim();
+    },
+    trim() {
+      for (let key of this.keys.splice(this.limit)) {
+        delete this.lookup[key];
+      }
+    }
+  };
   function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     let url = new URL(window.location.href, document.baseURI);
     replaceUrl(url, document.documentElement.outerHTML);
   }
-  function whenTheBackOrForwardButtonIsClicked(callback) {
+  function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
+    let html = document.documentElement.outerHTML;
+    snapshotCache.replace(key, new Snapshot(url, html));
+  }
+  function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
+    let fallback2;
+    registerFallback((i) => fallback2 = i);
     window.addEventListener("popstate", (e) => {
       let state = e.state || {};
       let alpine = state.alpine || {};
-      if (!alpine._html)
+      if (Object.keys(state).length === 0)
         return;
-      let html = fromSessionStorage(alpine._html);
-      callback(html);
+      if (!alpine.snapshotIdx)
+        return;
+      if (snapshotCache.has(alpine.snapshotIdx)) {
+        let snapshot = snapshotCache.retrieve(alpine.snapshotIdx);
+        handleHtml(snapshot.html, snapshot.url, snapshotCache.currentUrl, snapshotCache.currentKey);
+      } else {
+        fallback2(alpine.url);
+      }
     });
   }
   function updateUrlAndStoreLatestHtmlForFutureBackButtons(html, destination) {
@@ -7084,36 +7171,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     updateUrl("replaceState", url, html);
   }
   function updateUrl(method, url, html) {
-    let key = new Date().getTime();
-    tryToStoreInSession(key, html);
+    let key = url.toString() + "-" + Math.random();
+    method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
     let state = history.state || {};
     if (!state.alpine)
       state.alpine = {};
-    state.alpine._html = key;
+    state.alpine.snapshotIdx = key;
+    state.alpine.url = url.toString();
     try {
-      history[method](state, document.title, url);
+      history[method](state, JSON.stringify(document.title), url);
+      snapshotCache.currentKey = key;
+      snapshotCache.currentUrl = url;
     } catch (error2) {
       if (error2 instanceof DOMException && error2.name === "SecurityError") {
         console.error("Livewire: You can't use wire:navigate with a link to a different root domain: " + url);
       }
       console.error(error2);
-    }
-  }
-  function fromSessionStorage(timestamp) {
-    let state = JSON.parse(sessionStorage.getItem("alpine:" + timestamp));
-    return state;
-  }
-  function tryToStoreInSession(timestamp, value) {
-    try {
-      sessionStorage.setItem("alpine:" + timestamp, JSON.stringify(value));
-    } catch (error2) {
-      if (![22, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(error2.code))
-        return;
-      let oldestTimestamp = Object.keys(sessionStorage).map((key) => Number(key.replace("alpine:", ""))).sort().shift();
-      if (!oldestTimestamp)
-        return;
-      sessionStorage.removeItem("alpine:" + oldestTimestamp);
-      tryToStoreInSession(timestamp, value);
     }
   }
 
@@ -7170,10 +7243,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function createUrlObjectFromString(urlString) {
     return new URL(urlString, document.baseURI);
   }
+  function getUriStringFromUrlObject(urlObject) {
+    return urlObject.pathname + urlObject.search + urlObject.hash;
+  }
 
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback) {
-    let uri = destination.pathname + destination.search;
+    let uri = getUriStringFromUrlObject(destination);
     performFetch(uri, (html, finalDestination) => {
       callback(html, finalDestination);
     });
@@ -7190,7 +7266,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     let finalDestination;
     fetch(uri, options).then((response) => {
+      let destination = createUrlObjectFromString(uri);
       finalDestination = createUrlObjectFromString(response.url);
+      if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+        finalDestination.hash = destination.hash;
+      }
       return response.text();
     }).then((html) => {
       callback(html, finalDestination);
@@ -7200,24 +7280,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
   function prefetchHtml(destination, callback) {
-    let path = destination.pathname;
-    if (prefetches[path])
+    let uri = getUriStringFromUrlObject(destination);
+    if (prefetches[uri])
       return;
-    prefetches[path] = { finished: false, html: null, whenFinished: () => {
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => {
     } };
-    performFetch(path, (html, routedUri) => {
+    performFetch(uri, (html, routedUri) => {
       callback(html, routedUri);
     });
   }
   function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
-    let state = prefetches[destination.pathname];
+    let state = prefetches[getUriStringFromUrlObject(destination)];
     state.html = html;
     state.finished = true;
     state.finalDestination = finalDestination;
     state.whenFinished();
   }
   function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
-    let uri = destination.pathname + destination.search;
+    let uri = getUriStringFromUrlObject(destination);
     if (!prefetches[uri])
       return ifNoPrefetchExists();
     if (prefetches[uri].finished) {
@@ -7328,7 +7408,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   import_nprogress.default.configure({
     minimum: 0.1,
     trickleSpeed: 200,
-    showSpinner: false
+    showSpinner: false,
+    parent: "html"
   });
   injectStyles();
   var inProgress = false;
@@ -7343,6 +7424,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function finishAndHideProgressBar() {
     inProgress = false;
     import_nprogress.default.done();
+  }
+  function removeAnyLeftOverStaleProgressBars() {
     import_nprogress.default.remove();
   }
   function injectStyles() {
@@ -7423,16 +7506,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     `;
     let nonce2 = getNonce();
-    if (nonce2) {
+    if (nonce2)
       style.nonce = nonce2;
-    }
     document.head.appendChild(style);
   }
 
   // js/plugins/navigate/page.js
   var oldBodyScriptTagHashes = [];
   var attributesExemptFromScriptTagHashing = [
-    "data-csrf"
+    "data-csrf",
+    "aria-hidden"
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = new DOMParser().parseFromString(html, "text/html");
@@ -7554,6 +7637,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       const regex = new RegExp(`${attr}="[^"]*"|${attr}='[^']*'`, "g");
       result = result.replace(regex, "");
     });
+    result = result.replaceAll(" ", "");
     return result.trim();
   }
 
@@ -7564,7 +7648,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var autofocus = false;
   function navigate_default(Alpine3) {
     Alpine3.navigate = (url) => {
-      navigateTo(createUrlObjectFromString(url));
+      let destination = createUrlObjectFromString(url);
+      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        url: destination,
+        history: false,
+        cached: false
+      });
+      if (prevented)
+        return;
+      navigateTo(destination);
     };
     Alpine3.navigate.disableProgressBar = () => {
       showProgressBar = false;
@@ -7584,11 +7676,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
+          let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+            url: destination,
+            history: false,
+            cached: false
+          });
+          if (prevented)
+            return;
           navigateTo(destination);
         });
       });
     });
-    function navigateTo(destination) {
+    function navigateTo(destination, shouldPushToHistoryState = true) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
         fireEventForOtherLibariesToHookInto("alpine:navigating");
@@ -7600,42 +7699,70 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
           });
+          if (shouldPushToHistoryState) {
+            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
+          } else {
+            replaceUrl(finalDestination, html);
+          }
           swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
             removeAnyLeftOverStaleTeleportTargets(document.body);
             enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
               unPackPersistedTeleports(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
-            updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
                   autofocus && autofocusElementsWithTheAutofocusAttribute();
                 });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
+                fireEventForOtherLibariesToHookInto("alpine:navigated");
               });
             });
           });
         });
       });
     }
-    whenTheBackOrForwardButtonIsClicked((html) => {
+    whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
+      ifThePageBeingVisitedHasntBeenCached((url) => {
+        let destination = createUrlObjectFromString(url);
+        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+          url: destination,
+          history: true,
+          cached: false
+        });
+        if (prevented)
+          return;
+        let shouldPushToHistoryState = false;
+        navigateTo(destination, shouldPushToHistoryState);
+      });
+    }, (html, url, currentPageUrl, currentPageKey) => {
+      let destination = createUrlObjectFromString(url);
+      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        url: destination,
+        history: true,
+        cached: true
+      });
+      if (prevented)
+        return;
       storeScrollInformationInHtmlBeforeNavigatingAway();
+      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
         });
         swapCurrentPageWithNewHtml(html, () => {
+          removeAnyLeftOverStaleProgressBars();
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine3);
+            fireEventForOtherLibariesToHookInto("alpine:navigated");
           });
         });
       });
@@ -7658,8 +7785,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(eventName) {
-    document.dispatchEvent(new CustomEvent(eventName, { bubbles: true }));
+  function fireEventForOtherLibariesToHookInto(name, detail) {
+    let event = new CustomEvent(name, {
+      cancelable: true,
+      bubbles: true,
+      detail
+    });
+    document.dispatchEvent(event);
+    return event.defaultPrevented;
   }
   function nowInitializeAlpineOnTheNewPage(Alpine3) {
     Alpine3.initTree(document.body, void 0, (el, skip) => {
@@ -7867,8 +8000,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       insertDotNotatedValueIntoData([second, ...rest].join("."), value, data3[first2]);
     };
     let entries = search.split("&").map((i) => i.split("="));
-    let data2 = {};
+    let data2 = /* @__PURE__ */ Object.create(null);
     entries.forEach(([key, value]) => {
+      if (typeof value == "undefined")
+        return;
       value = decodeURIComponent(value.replaceAll("+", "%20"));
       if (!key.includes("[")) {
         data2[key] = value;
@@ -8383,6 +8518,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/lifecycle.js
   function start2() {
+    setTimeout(() => ensureLivewireScriptIsntMisplaced());
     dispatch(document, "livewire:init");
     dispatch(document, "livewire:initializing");
     module_default.plugin(module_default7);
@@ -8434,110 +8570,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     setTimeout(() => window.Livewire.initialRenderIsFinished = true);
     dispatch(document, "livewire:initialized");
   }
-
-  // js/features/supportDisablingFormsDuringRequest.js
-  var cleanupStackByComponentId = {};
-  on2("element.init", ({ el, component }) => {
-    let directives2 = getDirectives(el);
-    if (directives2.missing("submit"))
+  function ensureLivewireScriptIsntMisplaced() {
+    let el = document.querySelector("script[data-update-uri][data-csrf]");
+    if (!el)
       return;
-    el.addEventListener("submit", () => {
-      cleanupStackByComponentId[component.id] = [];
-      module_default.walk(component.el, (node, skip) => {
-        if (!el.contains(node))
+    let livewireEl = el.closest("[wire\\:id]");
+    if (livewireEl) {
+      console.warn("Livewire: missing closing tags found. Ensure your template elements contain matching closing tags.", livewireEl);
+    }
+  }
+
+  // js/features/supportListeners.js
+  on2("effect", ({ component, effects }) => {
+    registerListeners(component, effects.listeners || []);
+  });
+  function registerListeners(component, listeners2) {
+    listeners2.forEach((name) => {
+      let handler4 = (e) => {
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component);
+        component.$wire.call("__dispatch", name, e.detail || {});
+      };
+      window.addEventListener(name, handler4);
+      component.addCleanup(() => window.removeEventListener(name, handler4));
+      component.el.addEventListener(name, (e) => {
+        if (!e.__livewire)
           return;
-        if (node.hasAttribute("wire:ignore"))
-          return skip();
-        if (node.tagName.toLowerCase() === "button" && node.type === "submit" || node.tagName.toLowerCase() === "select" || node.tagName.toLowerCase() === "input" && (node.type === "checkbox" || node.type === "radio")) {
-          if (!node.disabled)
-            cleanupStackByComponentId[component.id].push(() => node.disabled = false);
-          node.disabled = true;
-        } else if (node.tagName.toLowerCase() === "input" || node.tagName.toLowerCase() === "textarea") {
-          if (!node.readOnly)
-            cleanupStackByComponentId[component.id].push(() => node.readOnly = false);
-          node.readOnly = true;
-        }
+        if (e.bubbles)
+          return;
+        if (e.__livewire)
+          e.__livewire.receivedBy.push(component.id);
+        component.$wire.call("__dispatch", name, e.detail || {});
       });
-    });
-  });
-  on2("commit", ({ component, respond }) => {
-    respond(() => {
-      cleanup2(component);
-    });
-  });
-  function cleanup2(component) {
-    if (!cleanupStackByComponentId[component.id])
-      return;
-    while (cleanupStackByComponentId[component.id].length > 0) {
-      cleanupStackByComponentId[component.id].shift()();
-    }
-  }
-
-  // js/features/supportPropsAndModelables.js
-  on2("commit.pooling", ({ commits }) => {
-    commits.forEach((commit) => {
-      let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
-        child.$wire.$commit();
-      });
-    });
-  });
-  on2("commit.pooled", ({ pools }) => {
-    let commits = getPooledCommits(pools);
-    commits.forEach((commit) => {
-      let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
-        colocateCommitsByComponent(pools, component, child);
-      });
-    });
-  });
-  function getPooledCommits(pools) {
-    let commits = [];
-    pools.forEach((pool) => {
-      pool.commits.forEach((commit) => {
-        commits.push(commit);
-      });
-    });
-    return commits;
-  }
-  function colocateCommitsByComponent(pools, component, foreignComponent) {
-    let pool = findPoolWithComponent(pools, component);
-    let foreignPool = findPoolWithComponent(pools, foreignComponent);
-    let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
-    foreignPool.delete(foreignCommit);
-    pool.add(foreignCommit);
-    pools.forEach((pool2) => {
-      if (pool2.empty())
-        pools.delete(pool2);
-    });
-  }
-  function findPoolWithComponent(pools, component) {
-    for (let [idx, pool] of pools.entries()) {
-      if (pool.hasCommitFor(component))
-        return pool;
-    }
-  }
-  function getDeepChildrenWithBindings(component, callback) {
-    getDeepChildren(component, (child) => {
-      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
-        callback(child);
-      }
-    });
-  }
-  function hasReactiveProps(component) {
-    let meta = component.snapshot.memo;
-    let props = meta.props;
-    return !!props;
-  }
-  function hasWireModelableBindings(component) {
-    let meta = component.snapshot.memo;
-    let bindings = meta.bindings;
-    return !!bindings;
-  }
-  function getDeepChildren(component, callback) {
-    component.children.forEach((child) => {
-      callback(child);
-      getDeepChildren(child, callback);
     });
   }
 
@@ -8641,6 +8705,224 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return script;
   }
 
+  // js/features/supportJsEvaluation.js
+  on2("effect", ({ component, effects }) => {
+    let js = effects.js;
+    let xjs = effects.xjs;
+    if (js) {
+      Object.entries(js).forEach(([method, body]) => {
+        overrideMethod(component, method, () => {
+          module_default.evaluate(component.el, body);
+        });
+      });
+    }
+    if (xjs) {
+      xjs.forEach((expression) => {
+        module_default.evaluate(component.el, expression);
+      });
+    }
+  });
+
+  // js/morph.js
+  function morph2(component, el, html) {
+    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let wrapper = document.createElement(wrapperTag);
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.__livewire = component;
+    trigger2("morph", { el, toEl: to, component });
+    module_default.morph(el, to, {
+      updating: (el2, toEl, childrenOnly, skip) => {
+        if (isntElement(el2))
+          return;
+        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+        if (el2.__livewire_ignore === true)
+          return skip();
+        if (el2.__livewire_ignore_self === true)
+          childrenOnly();
+        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el2))
+          toEl.__livewire = component;
+      },
+      updated: (el2) => {
+        if (isntElement(el2))
+          return;
+        trigger2("morph.updated", { el: el2, component });
+      },
+      removing: (el2, skip) => {
+        if (isntElement(el2))
+          return;
+        trigger2("morph.removing", { el: el2, component, skip });
+      },
+      removed: (el2) => {
+        if (isntElement(el2))
+          return;
+        trigger2("morph.removed", { el: el2, component });
+      },
+      adding: (el2) => {
+        trigger2("morph.adding", { el: el2, component });
+      },
+      added: (el2) => {
+        if (isntElement(el2))
+          return;
+        const closestComponentId = closestComponent(el2).id;
+        trigger2("morph.added", { el: el2 });
+      },
+      key: (el2) => {
+        if (isntElement(el2))
+          return;
+        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
+      },
+      lookahead: false
+    });
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
+  }
+
+  // js/features/supportMorphDom.js
+  on2("effect", ({ component, effects }) => {
+    let html = effects.html;
+    if (!html)
+      return;
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        morph2(component, component.el, html);
+      });
+    });
+  });
+
+  // js/features/supportDispatches.js
+  on2("effect", ({ component, effects }) => {
+    dispatchEvents(component, effects.dispatches || []);
+  });
+  function dispatchEvents(component, dispatches) {
+    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+      if (self)
+        dispatchSelf(component, name, params);
+      else if (to)
+        dispatchTo(to, name, params);
+      else
+        dispatch3(component, name, params);
+    });
+  }
+
+  // js/features/supportDisablingFormsDuringRequest.js
+  var cleanupStackByComponentId = {};
+  on2("element.init", ({ el, component }) => setTimeout(() => {
+    let directives2 = getDirectives(el);
+    if (directives2.missing("submit"))
+      return;
+    el.addEventListener("submit", () => {
+      cleanupStackByComponentId[component.id] = [];
+      module_default.walk(component.el, (node, skip) => {
+        if (!el.contains(node))
+          return;
+        if (node.hasAttribute("wire:ignore"))
+          return skip();
+        if (node.tagName.toLowerCase() === "button" && node.type === "submit" || node.tagName.toLowerCase() === "select" || node.tagName.toLowerCase() === "input" && (node.type === "checkbox" || node.type === "radio")) {
+          if (!node.disabled)
+            cleanupStackByComponentId[component.id].push(() => node.disabled = false);
+          node.disabled = true;
+        } else if (node.tagName.toLowerCase() === "input" || node.tagName.toLowerCase() === "textarea") {
+          if (!node.readOnly)
+            cleanupStackByComponentId[component.id].push(() => node.readOnly = false);
+          node.readOnly = true;
+        }
+      });
+    });
+  }));
+  on2("commit", ({ component, respond }) => {
+    respond(() => {
+      cleanup2(component);
+    });
+  });
+  function cleanup2(component) {
+    if (!cleanupStackByComponentId[component.id])
+      return;
+    while (cleanupStackByComponentId[component.id].length > 0) {
+      cleanupStackByComponentId[component.id].shift()();
+    }
+  }
+
+  // js/features/supportPropsAndModelables.js
+  on2("commit.pooling", ({ commits }) => {
+    commits.forEach((commit) => {
+      let component = commit.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        child.$wire.$commit();
+      });
+    });
+  });
+  on2("commit.pooled", ({ pools }) => {
+    let commits = getPooledCommits(pools);
+    commits.forEach((commit) => {
+      let component = commit.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        colocateCommitsByComponent(pools, component, child);
+      });
+    });
+  });
+  function getPooledCommits(pools) {
+    let commits = [];
+    pools.forEach((pool) => {
+      pool.commits.forEach((commit) => {
+        commits.push(commit);
+      });
+    });
+    return commits;
+  }
+  function colocateCommitsByComponent(pools, component, foreignComponent) {
+    let pool = findPoolWithComponent(pools, component);
+    let foreignPool = findPoolWithComponent(pools, foreignComponent);
+    let foreignCommit = foreignPool.findCommitByComponent(foreignComponent);
+    foreignPool.delete(foreignCommit);
+    pool.add(foreignCommit);
+    pools.forEach((pool2) => {
+      if (pool2.empty())
+        pools.delete(pool2);
+    });
+  }
+  function findPoolWithComponent(pools, component) {
+    for (let [idx, pool] of pools.entries()) {
+      if (pool.hasCommitFor(component))
+        return pool;
+    }
+  }
+  function getDeepChildrenWithBindings(component, callback) {
+    getDeepChildren(component, (child) => {
+      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+        callback(child);
+      }
+    });
+  }
+  function hasReactiveProps(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function hasWireModelableBindings(component) {
+    let meta = component.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  function getDeepChildren(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      getDeepChildren(child, callback);
+    });
+  }
+
   // js/features/supportFileDownloads.js
   on2("commit", ({ succeed }) => {
     succeed(({ effects }) => {
@@ -8676,24 +8958,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return new Blob(byteArrays, { type: contentType });
   }
-
-  // js/features/supportJsEvaluation.js
-  on2("effect", ({ component, effects }) => {
-    let js = effects.js;
-    let xjs = effects.xjs;
-    if (js) {
-      Object.entries(js).forEach(([method, body]) => {
-        overrideMethod(component, method, () => {
-          module_default.evaluate(component.el, body);
-        });
-      });
-    }
-    if (xjs) {
-      xjs.forEach((expression) => {
-        module_default.evaluate(component.el, expression);
-      });
-    }
-  });
 
   // js/features/supportLazyLoading.js
   var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
@@ -8849,12 +9113,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportNavigate.js
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
-  document.addEventListener("alpine:navigated", (e) => {
-    document.dispatchEvent(new CustomEvent("livewire:navigated", { bubbles: true }));
-  });
-  document.addEventListener("alpine:navigating", (e) => {
-    document.dispatchEvent(new CustomEvent("livewire:navigating", { bubbles: true }));
-  });
+  document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
+  document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
+  document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
+  function forwardEvent(name, original) {
+    let event = new CustomEvent(name, { cancelable: true, bubbles: true, detail: original.detail });
+    document.dispatchEvent(event);
+    if (event.defaultPrevented) {
+      original.preventDefault();
+    }
+  }
   function shouldRedirectUsingNavigateOr(effects, url, or) {
     let forceNavigate = effects.redirectUsingNavigate;
     if (forceNavigate) {
@@ -8880,121 +9148,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.location.href = url;
     });
   });
-
-  // js/morph.js
-  function morph2(component, el, html) {
-    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-    let wrapper = document.createElement(wrapperTag);
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.__livewire = component;
-    trigger2("morph", { el, toEl: to, component });
-    module_default.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
-        if (el2.__livewire_ignore === true)
-          return skip();
-        if (el2.__livewire_ignore_self === true)
-          childrenOnly();
-        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el2))
-          toEl.__livewire = component;
-      },
-      updated: (el2) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.updated", { el: el2, component });
-      },
-      removing: (el2, skip) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.removing", { el: el2, component, skip });
-      },
-      removed: (el2) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.removed", { el: el2, component });
-      },
-      adding: (el2) => {
-        trigger2("morph.adding", { el: el2, component });
-      },
-      added: (el2) => {
-        if (isntElement(el2))
-          return;
-        const closestComponentId = closestComponent(el2).id;
-        trigger2("morph.added", { el: el2 });
-      },
-      key: (el2) => {
-        if (isntElement(el2))
-          return;
-        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-      },
-      lookahead: false
-    });
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
-  }
-
-  // js/features/supportMorphDom.js
-  on2("effect", ({ component, effects }) => {
-    let html = effects.html;
-    if (!html)
-      return;
-    queueMicrotask(() => {
-      queueMicrotask(() => {
-        morph2(component, component.el, html);
-      });
-    });
-  });
-
-  // js/features/supportEvents.js
-  on2("effect", ({ component, effects }) => {
-    registerListeners(component, effects.listeners || []);
-    dispatchEvents(component, effects.dispatches || []);
-  });
-  function registerListeners(component, listeners2) {
-    listeners2.forEach((name) => {
-      let handler4 = (e) => {
-        if (e.__livewire)
-          e.__livewire.receivedBy.push(component);
-        component.$wire.call("__dispatch", name, e.detail || {});
-      };
-      window.addEventListener(name, handler4);
-      component.addCleanup(() => window.removeEventListener(name, handler4));
-      component.el.addEventListener(name, (e) => {
-        if (!e.__livewire)
-          return;
-        if (e.bubbles)
-          return;
-        if (e.__livewire)
-          e.__livewire.receivedBy.push(component.id);
-        component.$wire.call("__dispatch", name, e.detail || {});
-      });
-    });
-  }
-  function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to }) => {
-      if (self)
-        dispatchSelf(component, name, params);
-      else if (to)
-        dispatchTo(to, name, params);
-      else
-        dispatch3(component, name, params);
-    });
-  }
 
   // js/directives/wire-transition.js
   on2("morph.added", ({ el }) => {
@@ -9041,6 +9194,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on2("directive.init", ({ el, directive: directive3, cleanup: cleanup3, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.value))
       return;
+    if (customDirectiveHasBeenRegistered(directive3.value))
+      return;
     let attribute = directive3.rawName.replace("wire:", "x-on:");
     if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {
       attribute = attribute + ".prevent";
@@ -9055,6 +9210,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (el.__livewire_confirm) {
           el.__livewire_confirm(() => {
             execute();
+          }, () => {
+            e.stopImmediatePropagation();
           });
         } else {
           execute();
@@ -9087,7 +9244,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     message = message.replaceAll("\\n", "\n");
     if (message === "")
       message = "Are you sure?";
-    el.__livewire_confirm = (action) => {
+    el.__livewire_confirm = (action, instead) => {
       if (shouldPrompt) {
         let [question, expected] = message.split("|");
         if (!expected) {
@@ -9096,11 +9253,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let input = prompt(question);
           if (input === expected) {
             action();
+          } else {
+            instead();
           }
         }
       } else {
         if (confirm(message))
           action();
+        else
+          instead();
       }
     };
   });
@@ -9109,7 +9270,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
     isTruthy = directive3.modifiers.includes("remove") ? !isTruthy : isTruthy;
     if (directive3.modifiers.includes("class")) {
-      let classes = directive3.expression.split(" ");
+      let classes = directive3.expression.split(" ").filter(String);
       if (isTruthy) {
         el.classList.add(...classes);
       } else {
@@ -9124,7 +9285,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else {
       let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
       let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
-      display = directive3.modifiers.includes("remove") ? cache : display;
+      display = directive3.modifiers.includes("remove") && !isTruthy ? cache : display;
       el.style.display = isTruthy ? display : "none";
     }
   }
@@ -9146,17 +9307,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/directives/wire-loading.js
-  directive2("loading", ({ el, directive: directive3, component }) => {
-    let targets = getTargets(el);
+  directive2("loading", ({ el, directive: directive3, component, cleanup: cleanup3 }) => {
+    let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive3);
-    whenTargetsArePartOfRequest(component, targets, [
+    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
-    whenTargetsArePartOfFileUpload(component, targets, [
+    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
       () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
       () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
     ]);
+    cleanup3(() => {
+      cleanupA();
+      cleanupB();
+    });
   });
   function applyDelay(directive3) {
     if (!directive3.modifiers.includes("delay") || directive3.modifiers.includes("none"))
@@ -9196,11 +9361,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     ];
   }
-  function whenTargetsArePartOfRequest(component, targets, [startLoading, endLoading]) {
-    on2("commit", ({ component: iComponent, commit: payload, respond }) => {
+  function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+    return on2("commit", ({ component: iComponent, commit: payload, respond }) => {
       if (iComponent !== component)
         return;
-      if (targets.length > 0 && !containsTargets(payload, targets))
+      if (targets.length > 0 && containsTargets(payload, targets) === inverted)
         return;
       startLoading();
       respond(() => {
@@ -9217,21 +9382,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return true;
       return false;
     };
-    window.addEventListener("livewire-upload-start", (e) => {
+    let cleanupA = listen(window, "livewire-upload-start", (e) => {
       if (eventMismatch(e))
         return;
       startLoading();
     });
-    window.addEventListener("livewire-upload-finish", (e) => {
+    let cleanupB = listen(window, "livewire-upload-finish", (e) => {
       if (eventMismatch(e))
         return;
       endLoading();
     });
-    window.addEventListener("livewire-upload-error", (e) => {
+    let cleanupC = listen(window, "livewire-upload-error", (e) => {
       if (eventMismatch(e))
         return;
       endLoading();
     });
+    return () => {
+      cleanupA();
+      cleanupB();
+      cleanupC();
+    };
   }
   function containsTargets(payload, targets) {
     let { updates, calls } = payload;
@@ -9258,9 +9428,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getTargets(el) {
     let directives2 = getDirectives(el);
     let targets = [];
+    let inverted = false;
     if (directives2.has("target")) {
       let directive3 = directives2.get("target");
       let raw2 = directive3.expression;
+      if (directive3.modifiers.includes("except"))
+        inverted = true;
       if (raw2.includes("(") && raw2.includes(")")) {
         targets.push({ target: directive3.method, params: quickHash(JSON.stringify(directive3.params)) });
       } else if (raw2.includes(",")) {
@@ -9274,7 +9447,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
       directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
-    return targets;
+    return { targets, inverted };
   }
   function quickHash(subject) {
     return btoa(encodeURIComponent(subject));
@@ -9594,20 +9767,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     all,
     hook: on2,
     trigger: trigger2,
+    triggerAsync,
     dispatch: dispatchGlobal,
     on: on3,
     get navigate() {
       return module_default.navigate;
     }
   };
+  var warnAboutMultipleInstancesOf = (entity) => console.warn(`Detected multiple instances of ${entity} running`);
   if (window.Livewire)
-    console.warn("Detected multiple instances of Livewire running");
+    warnAboutMultipleInstancesOf("Livewire");
   if (window.Alpine)
-    console.warn("Detected multiple instances of Alpine running");
+    warnAboutMultipleInstancesOf("Alpine");
   window.Livewire = Livewire2;
   window.Alpine = module_default;
   if (window.livewireScriptConfig === void 0) {
+    window.Alpine.__fromLivewire = true;
     document.addEventListener("DOMContentLoaded", () => {
+      if (window.Alpine.__fromLivewire === void 0) {
+        warnAboutMultipleInstancesOf("Alpine");
+      }
       Livewire2.start();
     });
   }
