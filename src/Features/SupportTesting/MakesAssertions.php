@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Testing\Constraints\SeeInOrder;
+use Illuminate\Contracts\View\View;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Illuminate\Support\Arr;
 
@@ -161,6 +162,30 @@ trait MakesAssertions
         } else {
             PHPUnit::assertEquals($value, $data);
         }
+
+        return $this;
+    }
+
+    public function assertViewIs($value)
+    {
+        if (! $this->lastState->getView() instanceof View) {
+            PHPUnit::fail('The response is not a view.');
+        }
+
+        // When the render method exists on the component, the view name will be the actual name...
+        if (method_exists($this->lastState->getComponent(), 'render')) {
+            PHPUnit::assertEquals($value, $this->lastState->getView()->name());
+
+            return $this;
+        }
+
+        // When the render method does not exist on the component, the view name will be the full path...
+        $fileName = str($value)->replace('.', '/')->__toString();
+
+        PHPUnit::assertThat(
+            $this->lastState->getView()->name(),
+            PHPUnit::equalTo(resource_path('views/').$fileName.'.blade.php'),
+        );
 
         return $this;
     }
