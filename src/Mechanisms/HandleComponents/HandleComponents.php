@@ -459,12 +459,16 @@ class HandleComponents extends Mechanism
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
 
-            if (! in_array($method, $methods)) {
+            if (! in_array($method, $methods) && !$root::class::hasMacro($method)) {
                 throw new MethodNotFoundException($method);
             }
 
             if (config('app.debug')) $start = microtime(true);
-            $return = wrap($root)->{$method}(...$params);
+            if ($root::class::hasMacro($method)) {
+                $return = $root->macroCall($method, $params);
+            } else {
+                $return = wrap($root)->{$method}(...$params);
+            }
             if (config('app.debug')) trigger('profile', 'call'.$idx, $root->getId(), [$start, microtime(true)]);
 
             $returns[] = $finish($return);

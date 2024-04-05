@@ -11,11 +11,13 @@ class ComponentIsMacroableUnitTest extends \Tests\TestCase
     public function it_resolves_the_mount_parameters()
     {
         Component::macro('macroedMethod', function ($first, $second) {
-            return [$first, $second];
+            $this->foo = [$first, $second];
         });
 
-        Livewire::test(ComponentWithMacroedMethodStub::class)
-            ->assertSet('foo', ['one', 'two']);
+        $test = Livewire::test(ComponentWithMacroedMethodStub::class)
+            ->assertSet('foo', ['one', 'two'])
+            ->call('macroedMethod', 'three', 'four')
+            ->assertSet('foo', ['three', 'four']);
     }
 }
 
@@ -25,7 +27,7 @@ class ComponentWithMacroedMethodStub extends Component
 
     public function mount()
     {
-        $this->foo = $this->macroedMethod('one', 'two');
+        $this->macroedMethod('one', 'two');
     }
 
     public function render()
