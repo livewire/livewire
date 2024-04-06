@@ -251,6 +251,11 @@ class Testable
         return $this->lastState->getComponent();
     }
 
+    function invade()
+    {
+        return \Livewire\invade($this->lastState->getComponent());
+    }
+
     function dump()
     {
         dump($this->lastState->getHtml());
