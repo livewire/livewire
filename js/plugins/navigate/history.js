@@ -1,3 +1,4 @@
+
 class Snapshot {
     constructor(url, html) {
         this.url = url

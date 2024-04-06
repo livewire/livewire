@@ -2839,7 +2839,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.7",
+      version: "3.13.8",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -8357,6 +8357,7 @@ function dispatchEvent(target, name, params, bubbles = true) {
 }
 
 // js/directives.js
+var customDirectiveNames = /* @__PURE__ */ new Set();
 function matchesForLivewireDirective(attributeName) {
   return attributeName.match(new RegExp("wire:"));
 }
@@ -8365,12 +8366,14 @@ function extractDirective(el, name) {
   return new Directive(value, modifiers, name, el);
 }
 function directive(name, callback) {
+  customDirectiveNames.add(name);
   on("directive.init", ({ el, component, directive: directive2, cleanup: cleanup2 }) => {
     if (directive2.value === name) {
       callback({
         el,
         directive: directive2,
         component,
+        $wire: component.$wire,
         cleanup: cleanup2
       });
     }
@@ -8378,6 +8381,9 @@ function directive(name, callback) {
 }
 function getDirectives(el) {
   return new DirectiveManager(el);
+}
+function customDirectiveHasBeenRegistered(name) {
+  return customDirectiveNames.has(name);
 }
 var DirectiveManager = class {
   constructor(el) {
@@ -8760,7 +8766,8 @@ var import_nprogress = __toESM(require_nprogress());
 import_nprogress.default.configure({
   minimum: 0.1,
   trickleSpeed: 200,
-  showSpinner: false
+  showSpinner: false,
+  parent: "html"
 });
 injectStyles();
 var inProgress = false;
@@ -8775,6 +8782,8 @@ function showAndStartProgressBar() {
 function finishAndHideProgressBar() {
   inProgress = false;
   import_nprogress.default.done();
+}
+function removeAnyLeftOverStaleProgressBars() {
   import_nprogress.default.remove();
 }
 function injectStyles() {
@@ -8855,9 +8864,8 @@ function injectStyles() {
     }
     `;
   let nonce2 = getNonce();
-  if (nonce2) {
+  if (nonce2)
     style.nonce = nonce2;
-  }
   document.head.appendChild(style);
 }
 
@@ -9103,6 +9111,7 @@ function navigate_default(Alpine19) {
         packUpPersistedTeleports(persistedEl);
       });
       swapCurrentPageWithNewHtml(html, () => {
+        removeAnyLeftOverStaleProgressBars();
         removeAnyLeftOverStaleTeleportTargets(document.body);
         enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
           unPackPersistedTeleports(persistedEl);
@@ -10054,6 +10063,8 @@ function callAndClearComponentDebounces(component, callback) {
 var import_alpinejs12 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup: cleanup2, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
+    return;
+  if (customDirectiveHasBeenRegistered(directive2.value))
     return;
   let attribute = directive2.rawName.replace("wire:", "x-on:");
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
