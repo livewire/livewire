@@ -3,7 +3,10 @@
 namespace Livewire\Features\SupportWireLoading;
 
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\Features\SupportEvents\BaseOn;
+use Livewire\Features\SupportEvents\TestsEvents;
 use Livewire\Form;
 use Livewire\Livewire;
 use Livewire\WithFileUploads;
@@ -377,6 +380,64 @@ class BrowserTest extends \Tests\BrowserTestCase
 		->waitForText('Foo')
         ->assertSee('Foo')
         ;
+    }
+
+    /** @test */
+    function wire_loading_works_when_function_called_by_event()
+    {
+        Livewire::visit(new class extends Component {
+            protected $listeners = ['foo' => 'onFoo'];
+
+            function onFoo() {
+                sleep(5);
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button @click="$dispatch('foo')" dusk="button">Dispatch "foo"</button>
+
+                    <div wire:loading wire:target="onFoo" dusk="loadingIndicator">
+                        Processing...
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+        ->assertDontSee('Processing...')
+        ->waitForLivewire()->click('@button')
+        ->assertSee('Processing...');
+    }
+
+    /** @test */
+    function wire_loading_works_when_function_called_by_click()
+    {
+        $component = Livewire::visit(new class extends Component {
+            public function foo()
+            {
+                sleep(2);
+            }
+
+            public function render() { 
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="foo" dusk="fooButton">Reset</button>
+                        <div wire:loading wire:target="foo" dusk="loadingIndicator">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+             }
+        });
+
+        $component->assertDontSee('Processing...')
+            ->press('@fooButton')
+            ->waitForText('Processing...')
+            ->assertSee('Processing...')
+            ->pause(3100)
+            ->assertDontSee('Processing...')
+            ;
     }
 }
 
