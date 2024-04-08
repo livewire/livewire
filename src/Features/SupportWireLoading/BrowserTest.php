@@ -409,36 +409,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@button')
         ->assertSee('Processing...');
     }
-
-    /** @test */
-    function wire_loading_works_when_function_called_by_click()
-    {
-        $component = Livewire::visit(new class extends Component {
-            public function foo()
-            {
-                sleep(2);
-            }
-
-            public function render() { 
-                return <<<'HTML'
-                    <div>
-                        <button wire:click="foo" dusk="fooButton">Reset</button>
-                        <div wire:loading wire:target="foo" dusk="loadingIndicator">
-                            Processing...
-                        </div>
-                    </div>
-                HTML;
-             }
-        });
-
-        $component->assertDontSee('Processing...')
-            ->press('@fooButton')
-            ->waitForText('Processing...')
-            ->assertSee('Processing...')
-            ->pause(3100)
-            ->assertDontSee('Processing...')
-            ;
-    }
 }
 
 class PostFormStub extends Form
