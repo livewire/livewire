@@ -40,4 +40,42 @@ class Test extends BrowserTestCase
             ->assertScript('window.renameMe', true)
         ;
     }
+
+    public function test_custom_wire_directive_doesnt_register_wildcard_event_listener(): void
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            public function inc()
+            {
+                $this->count++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <span dusk="target">{{ $count }}</span>
+
+                        <div wire:foo="inc">
+                            <button x-on:click="$dispatch('foo')" wire:click="inc" type="button" dusk="button">foo</button>
+                        </div>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                window.Livewire.directive('foo', ({ el, directive, component }) => {
+                                    // By registering this directive, we should be preventing Livewire
+                                    // from registering an event listener for the "foo" event...
+                                })
+                            })
+                        </script>
+                    </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@target', '0')
+            ->waitForLivewire()->click('@button')
+            ->assertSeeIn('@target', '1')
+        ;
+    }
 }
