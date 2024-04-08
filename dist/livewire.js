@@ -4623,6 +4623,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new Directive(value, modifiers, name, el);
   }
   function directive2(name, callback) {
+    if (customDirectiveNames.has(name))
+      return;
     customDirectiveNames.add(name);
     on2("directive.init", ({ el, component, directive: directive3, cleanup: cleanup3 }) => {
       if (directive3.value === name) {

@@ -8366,6 +8366,8 @@ function extractDirective(el, name) {
   return new Directive(value, modifiers, name, el);
 }
 function directive(name, callback) {
+  if (customDirectiveNames.has(name))
+    return;
   customDirectiveNames.add(name);
   on("directive.init", ({ el, component, directive: directive2, cleanup: cleanup2 }) => {
     if (directive2.value === name) {
