@@ -57,7 +57,7 @@ class IntSynthUnitTest extends \Tests\TestCase
             ->set('intOrStringField', 3.14)
             ->assertSetStrict('intOrStringField', 3)
             ->set('intOrStringField', '3')
-            ->assertSetStrict('intOrStringField', '3')
+            ->assertSetStrict('intOrStringField', 3)
             ->set('intOrStringField', '3.00')
             ->assertSetStrict('intOrStringField', '3.00')
             ->set('intOrStringField', '3.14')
