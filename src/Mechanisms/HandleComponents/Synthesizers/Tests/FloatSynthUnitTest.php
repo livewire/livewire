@@ -85,12 +85,18 @@ class FloatSynthUnitTest extends \Tests\TestCase
             ->assertSetStrict('floatOrStringField', 3.00)
             ->set('floatOrStringField', 3.00)
             ->assertSetStrict('floatOrStringField', 3.00)
+            ->set('floatOrStringField', 3.14)
+            ->assertSetStrict('floatOrStringField', 3.14)
             ->set('floatOrStringField', '3')
             ->assertSetStrict('floatOrStringField', '3')
             ->set('floatOrStringField', '3.00')
             ->assertSetStrict('floatOrStringField', '3.00')
+            ->set('floatOrStringField', '3.14')
+            ->assertSetStrict('floatOrStringField', '3.14')
             ->set('floatOrStringField', 'foo')
-            ->assertSetStrict('floatOrStringField', 'foo');
+            ->assertSetStrict('floatOrStringField', 'foo')
+            ->set('floatOrStringField', null)
+            ->assertSetStrict('floatOrStringField', null);
     }
 }
 
