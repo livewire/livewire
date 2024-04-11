@@ -31,6 +31,8 @@ class IntSynthUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithInt::class)
             ->set('intField', '3')
+            ->assertSetStrict('intField', 3)
+            ->set('intField', '3.14')
             ->assertSetStrict('intField', 3);
     }
 
@@ -39,6 +41,8 @@ class IntSynthUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithInt::class)
             ->set('intField', 3.00)
+            ->assertSetStrict('intField', 3)
+            ->set('intField', 3.14)
             ->assertSetStrict('intField', 3);
     }
 

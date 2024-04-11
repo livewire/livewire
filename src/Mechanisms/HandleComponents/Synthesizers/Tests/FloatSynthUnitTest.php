@@ -62,7 +62,9 @@ class FloatSynthUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithFloat::class)
             ->set('floatField', '3')
-            ->assertSetStrict('floatField', 3.00);
+            ->assertSetStrict('floatField', 3.00)
+            ->set('floatField', '3.14')
+            ->assertSetStrict('floatField', 3.14);
     }
 
     #[Test]
@@ -70,7 +72,9 @@ class FloatSynthUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithFloat::class)
             ->set('floatField', 3.00)
-            ->assertSetStrict('floatField', 3.00);
+            ->assertSetStrict('floatField', 3.00)
+            ->set('floatField', 3.14)
+            ->assertSetStrict('floatField', 3.14);
     }
 
     #[Test]
