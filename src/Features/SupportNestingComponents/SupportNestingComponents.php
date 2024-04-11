@@ -50,6 +50,13 @@ class SupportNestingComponents extends ComponentHook
         $children = $memo['children'];
 
         static::setPreviouslyRenderedChildren($this->component, $children);
+
+        // if this component was removed from the parent, skip it
+        $removedChildren = store()->get('removedChildren', []);
+        if (isset($removedChildren[$this->component->getId()])) {
+            $this->component->skipRender();
+            store()->unset('removedChildren', $this->component->getId());
+        }
     }
 
     function dehydrate($context)
@@ -57,6 +64,14 @@ class SupportNestingComponents extends ComponentHook
         $skipRender = $this->storeGet('skipRender');
 
         if ($skipRender) $this->keepRenderedChildren();
+
+        // keep track of all children that were removed
+        $removedChildren = array_diff_key($this->storeGet('previousChildren', []), $this->getChildren());
+        if (!empty($removedChildren)) {
+            foreach ($removedChildren as $key => $child) {
+                store()->push('removedChildren', $key, $child[1]);
+            }
+        }
 
         $context->addMemo('children', $this->getChildren());
     }
