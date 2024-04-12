@@ -153,6 +153,12 @@ class BrowserTest extends BrowserTestCase
         })
             ->check('@checkbox')
             ->assertSee('checked');
+    }
+
+
+    /** @test */
+    public function it_checks_checkbox_with_existing_value()
+    {
 
         // Check if checkbox is checked when value is the same as model value
         Livewire::visit(new class() extends \Livewire\Component
