@@ -11,4 +11,4 @@ contact_links:
     about: If you have a question or need help using the library
   - name: Documentation issue
     url: https://github.com/livewire/livewire/pulls
-    about: For documentation issues, open a pull request at the livewire/livewire repository
+    about: For documentation issues, please open a pull request
