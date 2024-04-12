@@ -12,7 +12,8 @@ class BrowserTest extends BrowserTestCase
     /** @test */
     function can_use_wire_dirty()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $prop = false;
 
             public function render()
@@ -33,14 +34,14 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Unsaved changes...')
             ->uncheck('@checkbox')
             ->assertSee('The data is in-sync...')
-            ->assertDontSee('Unsaved changes...')
-        ;
+            ->assertDontSee('Unsaved changes...');
     }
 
     /** @test */
     function can_update_bound_value_from_lifecyle_hook()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $foo = null;
 
             public $bar = null;
@@ -73,13 +74,13 @@ class BrowserTest extends BrowserTestCase
         })
             ->select('@barSelect', 'one')
             ->waitForLivewire()->select('@fooSelect', 'one')
-            ->assertSelected('@barSelect', '')
-        ;
+            ->assertSelected('@barSelect', '');
     }
 
     public function updates_dependent_select_options_correctly_when_wire_key_is_applied()
     {
-        Livewire::visit(new class extends Component {
+        Livewire::visit(new class extends Component
+        {
             public $parent = 'foo';
 
             public $child = 'bar';
@@ -129,5 +130,44 @@ class BrowserTest extends BrowserTestCase
             ->assertSelected('@child', '')
             ->waitForLivewire()->select('@parent', 'foo')
             ->assertSelected('@child', 'bar');
+    }
+
+
+    /** @test */
+    public function it_can_update_checkbox_with_value()
+    {
+        // Check if checking a checkbox results in correct value
+        Livewire::visit(new class() extends \Livewire\Component
+        {
+            public $element = '';
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="checkbox" type="checkbox" value="checked" wire:model.live="element">
+                    <span>{{ $element }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->check('@checkbox')
+            ->assertSee('checked');
+
+        // Check if checkbox is checked when value is the same as model value
+        Livewire::visit(new class() extends \Livewire\Component
+        {
+            public $element = 'checked';
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="checkbox" type="checkbox" value="checked" wire:model.live="element">
+                </div>
+                HTML;
+            }
+        })
+            ->assertChecked('@checkbox');
     }
 }
