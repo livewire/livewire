@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
-use PHPUnit\Framework\Attributes\Test;
+use Sushi\Sushi;
 
 class ImplicitRouteBindingUnitTest extends \Tests\TestCase
 {
-    #[Test]
+    /** @test */
     public function props_are_set_via_mount()
     {
         Livewire::test(ComponentWithPropBindings::class, [
@@ -19,7 +19,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         ])->assertSeeText('prop:mount-model');
     }
 
-    #[Test]
+    /** @test */
     public function props_are_set_via_implicit_binding()
     {
         Route::get('/foo/{model}', ComponentWithPropBindings::class);
@@ -27,7 +27,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo/route-model')->assertSeeText('prop:via-route:route-model');
     }
 
-    #[Test]
+    /** @test */
     public function dependent_props_are_set_via_implicit_binding()
     {
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentPropBindings::class);
@@ -35,7 +35,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
-    #[Test]
+    /** @test */
     public function dependent_props_are_set_via_mount()
     {
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentMountBindings::class);
@@ -43,7 +43,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
-    #[Test]
+    /** @test */
     public function props_and_mount_work_together()
     {
         Route::get('/foo/{parent}/child/{child}', ComponentWithPropBindingsAndMountMethod::class);
@@ -53,7 +53,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo/parent-model/child/child-model')->assertSeeText('via-route:parent-model:via-route:child-model');
     }
 
-    #[Test]
+    /** @test */
     public function props_are_set_via_implicit_binding_when_with_trashed()
     {
         Route::get('/foo/{model}', ComponentWithTrashedPropBindings::class);
@@ -66,6 +66,18 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()
             ->get('/foo/with-trashed/route-model')
             ->assertSeeText('prop:via-route:trashed:route-model');
+    }
+
+    /** @test */
+    public function props_are_set_via_implicit_binding_after_404()
+    {
+        Route::get('/foo/{user}', ComponentWithModelPropBindings::class);
+
+        $this->get('/foo/404')
+            ->assertNotFound();
+
+        $this->get('/foo/1')
+            ->assertSeeText('prop:John');
     }
 }
 
@@ -198,4 +210,39 @@ class ComponentWithTrashedPropBindings extends Component
 
         return app('view')->make('show-name-with-this');
     }
+}
+
+
+class ComponentWithModelPropBindings extends Component
+{
+    public User $user;
+
+    public function mount(User $user)
+    {
+        $this->user = $user;
+    }
+
+    public function render()
+    {
+        $this->name = 'prop:'.$this->user->name;
+
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class User extends Model
+{
+    use Sushi;
+
+    protected array $schema = [
+        'id' => 'integer',
+        'name' => 'string',
+    ];
+
+    protected array $rows = [
+        [
+            'id' => 1,
+            'name' => 'John',
+        ],
+    ];
 }

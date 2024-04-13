@@ -78,7 +78,27 @@ export async function sendRequest(pool) {
         fail: i => failCallbacks.push(i),
     })
 
-    let response = await fetch(updateUri, options)
+    let response
+
+    try {
+        response = await fetch(updateUri, options)
+    } catch (e) {
+        // If something went wrong with the fetch (particularly
+        // this would happen if the connection went offline)
+        // fail with a 503 and allow Livewire to clean up
+
+        finishProfile({ content: '{}', failed: true })
+
+        handleFailure()
+
+        fail({
+            status: 503,
+            content: null,
+            preventDefault: () => {},
+        })
+
+        return
+    }
 
     let mutableObject = {
         status: response.status,

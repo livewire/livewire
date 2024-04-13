@@ -96,6 +96,47 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
 
         $this->assertTrue(is_null($component->nullProp));
     }
+
+    /** @test */
+    public function can_reset_and_return_property_with_pull_method()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->assertSet('foo', 'bar')
+            ->set('foo', 'baz')
+            ->assertSet('foo', 'baz')
+            ->assertSet('pullResult', null)
+            ->call('proxyPull', 'foo')
+            ->assertSet('foo', 'bar')
+            ->assertSet('pullResult', 'baz');
+    }
+
+    /** @test */
+    public function can_pull_all_properties()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->assertSet('foo', 'bar')
+            ->set('foo', 'baz')
+            ->assertSet('foo', 'baz')
+            ->assertSet('pullResult', null)
+            ->call('proxyPull');
+
+        $this->assertEquals('baz', $component->pullResult['foo']);
+        $this->assertEquals('lob', $component->pullResult['bob']);
+    }
+
+    /** @test */
+    public function can_pull_some_properties()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->assertSet('foo', 'bar')
+            ->set('foo', 'baz')
+            ->assertSet('foo', 'baz')
+            ->assertSet('pullResult', null)
+            ->call('proxyPull', ['foo']);
+
+        $this->assertEquals('baz', $component->pullResult['foo']);
+        $this->assertFalse(array_key_exists('bob', $component->pullResult));
+    }
 }
 
 class ResetPropertiesComponent extends Component
@@ -110,6 +151,8 @@ class ResetPropertiesComponent extends Component
 
     public ?int $nullProp = null;
 
+    public $pullResult = null;
+
     public function resetAll()
     {
         $this->reset();
@@ -123,6 +166,11 @@ class ResetPropertiesComponent extends Component
     public function resetKeysExcept($keys)
     {
         $this->resetExcept($keys);
+    }
+
+    public function proxyPull(...$args)
+    {
+        $this->pullResult = $this->pull(...$args);
     }
 
     public function render()

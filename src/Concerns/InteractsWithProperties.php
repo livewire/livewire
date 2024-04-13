@@ -91,6 +91,23 @@ trait InteractsWithProperties
         $this->reset($keysToReset);
     }
 
+    public function pull($properties = null)
+    {
+        $wantsASingleValue = is_string($properties);
+
+        $properties = is_array($properties) ? $properties : func_get_args();
+
+        $beforeReset = match (true) {
+            empty($properties) => $this->all(),
+            $wantsASingleValue => $this->getPropertyValue($properties[0]),
+            default => $this->only($properties),
+        };
+
+        $this->reset($properties);
+
+        return $beforeReset;
+    }
+
     public function only($properties)
     {
         $results = [];

@@ -1,10 +1,7 @@
-import { dispatch, dispatchSelf, dispatchTo } from '@/events'
 import { on as hook } from '@/hooks'
 
 hook('effect', ({ component, effects }) => {
     registerListeners(component, effects.listeners || [])
-
-    dispatchEvents(component, effects.dispatches || [])
 })
 
 function registerListeners(component, listeners) {
@@ -32,14 +29,6 @@ function registerListeners(component, listeners) {
 
             component.$wire.call('__dispatch', name, e.detail || {})
         })
-    })
-}
-
-function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to }) => {
-        if (self) dispatchSelf(component, name, params)
-        else if (to) dispatchTo(to, name, params)
-        else dispatch(component, name, params)
     })
 }
 

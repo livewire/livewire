@@ -145,7 +145,7 @@ use Livewire\Attributes\Validate;
 public $title;
 ```
 
-Now, when the validation fails for this property, the message will  be "Please provide a post title" instead of "The title field is required".
+Now, when the validation fails for this property, the message will be "Please provide a post title" instead of "The title field is required".
 
 If you wish to add different messages for different rules, you can simply provide multiple `#[Validate]` attributes:
 
@@ -442,6 +442,8 @@ class CreatePost extends Component
 > [!warning] The `rules()` method doesn't validate on data updates
 > When defining rules via the `rules()` method, Livewire will ONLY use these validation rules to validate properties when you run `$this->validate()`. This is different than standard `#[Validate]` attributes which are applied every time a field is updated via something like `wire:model`. To apply these validation rules to a property every time it's updated, you can still use `#[Validate]` with no extra parameters.
 
+> [!warning] While using Livewire's validation utilities, your component should **not** have the properties `$rules`, `$messages`, `$validationAttributes` or `$validationCustomValues`, unless you're customizing the validation process. Otherwise, those will conflict with Livewire's mechanisms.
+
 ## Using Laravel Rule objects
 
 Laravel `Rule` objects are an extremely powerful way to add advanced validation behavior to your forms.
@@ -497,7 +499,7 @@ class UpdatePost extends Form
 
 ## Manually controlling validation errors
 
-Livewire's validation utilities should handle most common validation scenarios; however, there are times when you may want full control over the validation messages in your component.
+Livewire's validation utilities should handle the most common validation scenarios; however, there are times when you may want full control over the validation messages in your component.
 
 Below are all the available methods for manipulating the validation errors in your Livewire component:
 

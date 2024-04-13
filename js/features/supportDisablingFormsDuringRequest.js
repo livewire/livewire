@@ -4,7 +4,10 @@ import Alpine from 'alpinejs'
 
 let cleanupStackByComponentId = {}
 
-on('element.init', ({ el, component }) => {
+// Adding a setTimeout here so that these event listeners are
+// registered AFTER most other event listenrs, this way, we
+// can call "stopPropagation" for things like wire:confirm
+on('element.init', ({ el, component }) => setTimeout(() => {
     let directives = getDirectives(el)
 
     if (directives.missing('submit')) return
@@ -51,7 +54,7 @@ on('element.init', ({ el, component }) => {
             }
         })
     })
-})
+}))
 
 on('commit', ({ component, respond }) => {
     respond(() => {
@@ -60,7 +63,7 @@ on('commit', ({ component, respond }) => {
 })
 
 function cleanup(component) {
-    if (!cleanupStackByComponentId[component.id]) return
+    if (! cleanupStackByComponentId[component.id]) return
 
     while (cleanupStackByComponentId[component.id].length > 0) {
         cleanupStackByComponentId[component.id].shift()()

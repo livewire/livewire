@@ -20,6 +20,13 @@ class TraitsUnitTest extends \Tests\TestCase
             ->assertSet(
                 'hooksFromTrait',
                 ['initialized', 'hydrate', 'updating:foobar', 'updated:foobar', 'rendering', 'rendered:show-name', 'dehydrate']
+            )
+            ->call(
+                'testExceptionInterceptor',
+            )
+            ->assertSet(
+                'hooksFromTrait',
+                ['initialized', 'hydrate', 'exception', 'rendering', 'rendered:show-name', 'dehydrate']
             );
     }
 
@@ -117,9 +124,33 @@ class TraitsUnitTest extends \Tests\TestCase
                     'dehydratecomponent',
                     'dehydratetrait',
                 ]
-            );
+            )
+            ->call('testExceptionInterceptor')
+            ->assertSet(
+                'hooks',
+                [
+                    'bootcomponent',
+                    'boottrait',
+                    'initializedtrait',
+                    'hydratecomponent',
+                    'hydratetrait',
+                    'bootedcomponent',
+                    'bootedtrait',
+                    'exceptioncomponent',
+                    'exceptiontrait',
+                    'rendercomponent',
+                    'renderingcomponent',
+                    'renderingtrait',
+                    'renderedcomponent:show-name',
+                    'renderedtrait:show-name',
+                    'dehydratecomponent',
+                    'dehydratetrait',
+                ]
+                );
     }
 }
+class CustomException extends \Exception {};
+
 
 trait TraitForComponent
 {
@@ -165,6 +196,13 @@ trait TraitForComponent
 
         $this->hooksFromTrait[] = 'initialized';
     }
+    public function exceptionTraitForComponent($e, $stopPropagation)
+    {
+        if($e instanceof CustomException) {
+            $this->hooksFromTrait[] = 'exception';
+            $stopPropagation();
+        }
+    }
 }
 
 class ComponentWithTraitStub extends Component
@@ -174,6 +212,11 @@ class ComponentWithTraitStub extends Component
     public $hooksFromTrait = [];
 
     public $foo = 'bar';
+
+    public function testExceptionInterceptor()
+    {
+        throw new CustomException;
+    }
 
     public function render()
     {
@@ -346,6 +389,12 @@ trait TraitForComponentWithComponentHooks
     public function initializeTraitForComponentWithComponentHooks()
     {$this->hooks[] = 'initializedtrait';
     }
+    public function exceptionTraitForComponentWithComponentHooks($e, $stopPropagation) {
+        if($e instanceof CustomException) {
+            $this->hooks[] = 'exceptiontrait';
+            $stopPropagation();
+        }
+    }
 }
 
 class ComponentWithTraitStubAndComponentLifecycleHooks extends Component
@@ -412,10 +461,22 @@ class ComponentWithTraitStubAndComponentLifecycleHooks extends Component
         $this->hooks[] = 'initializedcomponent';
     }
 
+    public function exception($e, $stopPropagation) {
+        if($e instanceof CustomException) {
+            $this->hooks[] = 'exceptioncomponent';
+            $stopPropagation();
+        }
+    }
+
     public function render()
     {
         $this->hooks[] = 'rendercomponent';
 
         return view('show-name', ['name' => $this->foo]);
+    }
+
+    public function testExceptionInterceptor()
+    {
+        throw new CustomException;
     }
 }

@@ -12,7 +12,6 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\Drawer\Utils;
 use Livewire\Livewire;
-use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -38,6 +37,10 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('parent-component', ParentComponent::class);
             Livewire::component('child-component', ChildComponent::class);
 
+            Livewire::component('nav-bar-component', NavBarComponent::class);
+
+            Route::get('/navbar/{page}', NavBarComponent::class)->middleware('web');
+
             Route::get('/query-page', QueryPage::class)->middleware('web');
             Route::get('/first', FirstPage::class)->middleware('web');
             Route::get('/first-hide-progress', function () {
@@ -49,6 +52,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/redirect-to-second', fn () => redirect()->to('/second'));
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
+            Route::get('/fourth', FourthPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -82,7 +86,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         };
     }
 
-    #[Test]
+    /** @test */
     public function back_button_works_with_teleports()
     {
         $this->registerComponentTestRoutes([
@@ -131,7 +135,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    #[Test]
+    /** @test */
     public function back_button_works_with_teleports_inside_persist()
     {
         $this->registerComponentTestRoutes([
@@ -200,7 +204,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    #[Test]
+    /** @test */
     public function can_configure_progress_bar()
     {
         $this->browse(function ($browser) {
@@ -227,7 +231,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_navigate_to_page_without_reloading()
     {
         $this->browse(function ($browser) {
@@ -247,7 +251,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
     {
         $this->browse(function (Browser $browser) {
@@ -263,7 +267,18 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
+    public function can_navigate_to_another_page_with_hash_fragment()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->click('@link.to.hashtag')
+                ->assertFragmentIs('foo');
+        });
+    }
+
+    /** @test */
     public function navigate_is_not_triggered_on_cmd_and_enter()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -285,7 +300,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_navigate_to_page_from_child_via_parent_component_without_reloading()
     {
         $this->browse(function (Browser $browser) {
@@ -304,7 +319,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_redirect_with_reloading_from_a_page_that_was_loaded_by_wire_navigate()
     {
         $this->browse(function ($browser) {
@@ -324,7 +339,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_redirect_without_reloading_using_the_helper_from_a_page_that_was_loaded_normally()
     {
         $this->browse(function ($browser) {
@@ -340,7 +355,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_redirect_to_a_page_after_destorying_session()
     {
         $this->browse(function ($browser) {
@@ -358,7 +373,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_persist_elements_across_pages()
     {
         $this->browse(function ($browser) {
@@ -379,7 +394,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function new_assets_in_head_are_loaded_and_old_ones_are_not()
     {
         $this->browse(function ($browser) {
@@ -396,7 +411,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function tracked_assets_reload_the_page_when_they_change()
     {
         $this->browse(function ($browser) {
@@ -413,7 +428,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_use_wire_navigate_outside_of_a_livewire_component()
     {
         $this->browse(function ($browser) {
@@ -428,7 +443,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function script_runs_on_initial_page_visit()
     {
         $this->browse(function ($browser) {
@@ -445,7 +460,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_navigate_to_component_with_url_attribute_and_update_correctly()
     {
         $this->browse(function ($browser) {
@@ -459,7 +474,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function navigate_scrolls_to_top_and_back_preserves_scroll()
     {
         $this->browse(function ($browser) {
@@ -486,7 +501,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function navigate_back_works_from_page_without_a_livewire_component_that_has_a_script_with_data_navigate_track()
     {
         // When using `@vite` on the page without a Livewire component,
@@ -509,7 +524,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function navigate_is_only_triggered_on_left_click()
     {
         $this->browse(function ($browser) {
@@ -528,7 +543,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function livewire_navigated_event_is_fired_on_first_page_load()
     {
         $this->browse(function ($browser) {
@@ -539,7 +554,28 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
+    public function livewire_before_navigate_event_is_fired_when_click()
+    {
+        $this->browse(function($browser) {
+            $browser
+                ->visit('/fourth')
+                ->assertSee('On fourth')
+                ->assertScript('window.foo', 'bar')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // first attempt bar -> baz
+                ->assertScript('window.foo', 'baz')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // second attempt baz -> bat
+                ->assertScript('window.foo', 'bat')
+                ->assertSee('On fourth')
+                ->click('@link.to.first') // finally navigate
+                ->assertSee('On first')
+            ;
+        });
+    }
+
+    /** @test */
     public function livewire_navigated_event_is_fired_after_redirect_without_reloading()
     {
         $this->browse(function ($browser) {
@@ -555,7 +591,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function navigate_is_not_triggered_on_cmd_click()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -584,7 +620,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function events_from_child_components_still_function_after_navigation()
     {
         $this->browse(function (Browser $browser) {
@@ -612,7 +648,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function alpine_for_loop_still_functions_after_navigation()
     {
         $this->browse(function (Browser $browser) {
@@ -633,7 +669,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function injected_assets_such_as_nprogress_styles_are_retained_when_the_page_changes()
     {
         $this->browse(function ($browser) {
@@ -659,7 +695,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function remote_assets_loaded_with_the_directive_fully_load_before_component_scripts_and_initialization()
     {
         $this->browse(function ($browser) {
@@ -674,7 +710,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function redirects_are_reflected_properly_in_the_url()
     {
         $this->browse(function ($browser) {
@@ -688,7 +724,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    #[Test]
+    /** @test */
     public function can_programmatically_click_navigate_links()
     {
         $this->browse(function ($browser) {
@@ -702,6 +738,241 @@ class BrowserTest extends \Tests\BrowserTestCase
                 })
                 ->waitForText('On second')
                 ->assertPathIs('/second')
+            ;
+        });
+    }
+
+    /** @test */
+    public function can_binding_class_attribute_when_navigate_back()
+    {
+        Livewire::visit(new class extends Component {
+            public function render(){
+                return <<<'HTML'
+                    <div>
+                        <style>
+                            .hidden {
+                                display: none;
+                            }
+                        </style>
+
+                        <div x-data="{ show: false }">
+                            <button dusk="show-foo" type="button" @click="show = !show">Show</button>
+                            <span :class="show || 'hidden'">foo</span>
+                        </div>
+
+                        <a :href="window.location.pathname" wire:navigate dusk="navigate-to-same-page">Go to same page</a>
+
+                    </div>
+                HTML;
+            }
+        })
+            ->click('@show-foo')
+            ->click('@show-foo')
+            ->waitForNavigate()->click('@navigate-to-same-page')
+            ->back()
+            ->click('@show-foo')
+            ->assertSee('foo');
+    }
+
+    /** @test */
+    public function can_navigate_links_and_use_snapshot_cache_for_first_10_history_items()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/navbar/one')
+                ->assertSeeIn('@title', 'one')
+                ->assertHasClass('@link.one', 'active')
+                ->assertClassMissing('@link.two', 'active')
+
+                ->waitForNavigateRequest()->click('@link.two')
+                ->assertSeeIn('@title', 'two')
+                ->assertHasClass('@link.two', 'active')
+                ->assertClassMissing('@link.one', 'active')
+
+                ->waitForNavigateRequest()->click('@link.three')
+                ->assertSeeIn('@title', 'three')
+                ->assertHasClass('@link.three', 'active')
+                ->assertClassMissing('@link.two', 'active')
+
+                ->waitForNavigateRequest()->click('@link.four')
+                ->assertSeeIn('@title', 'four')
+                ->assertHasClass('@link.four', 'active')
+                ->assertClassMissing('@link.three', 'active')
+
+                ->waitForNavigateRequest()->click('@link.five')
+                ->assertSeeIn('@title', 'five')
+                ->assertHasClass('@link.five', 'active')
+                ->assertClassMissing('@link.four', 'active')
+
+                ->waitForNavigateRequest()->click('@link.six')
+                ->assertSeeIn('@title', 'six')
+                ->assertHasClass('@link.six', 'active')
+                ->assertClassMissing('@link.five', 'active')
+
+                ->waitForNavigateRequest()->click('@link.seven')
+                ->assertSeeIn('@title', 'seven')
+                ->assertHasClass('@link.seven', 'active')
+                ->assertClassMissing('@link.six', 'active')
+
+                ->waitForNavigateRequest()->click('@link.eight')
+                ->assertSeeIn('@title', 'eight')
+                ->assertHasClass('@link.eight', 'active')
+                ->assertClassMissing('@link.seven', 'active')
+
+                ->waitForNavigateRequest()->click('@link.nine')
+                ->assertSeeIn('@title', 'nine')
+                ->assertHasClass('@link.nine', 'active')
+                ->assertClassMissing('@link.eight', 'active')
+
+                ->waitForNavigateRequest()->click('@link.ten')
+                ->assertSeeIn('@title', 'ten')
+                ->assertHasClass('@link.ten', 'active')
+                ->assertClassMissing('@link.nine', 'active')
+
+                ->waitForNavigateRequest()->click('@link.eleven')
+                ->assertSeeIn('@title', 'eleven')
+                ->assertHasClass('@link.eleven', 'active')
+                ->assertClassMissing('@link.ten', 'active')
+
+                ->waitForNavigateRequest()->click('@link.twelve')
+                ->assertSeeIn('@title', 'twelve')
+                ->assertHasClass('@link.twelve', 'active')
+                ->assertClassMissing('@link.eleven', 'active')
+
+                ->waitForNavigateRequest()->click('@link.thirteen')
+                ->assertSeeIn('@title', 'thirteen')
+                ->assertHasClass('@link.thirteen', 'active')
+                ->assertClassMissing('@link.twelve', 'active')
+
+                // Assert no navigate request as we expect it to come from the cache
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'twelve')
+                ->assertHasClass('@link.twelve', 'active')
+                ->assertClassMissing('@link.thirteen', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'eleven')
+                ->assertHasClass('@link.eleven', 'active')
+                ->assertClassMissing('@link.twelve', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'ten')
+                ->assertHasClass('@link.ten', 'active')
+                ->assertClassMissing('@link.eleven', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'nine')
+                ->assertHasClass('@link.nine', 'active')
+                ->assertClassMissing('@link.ten', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'eight')
+                ->assertHasClass('@link.eight', 'active')
+                ->assertClassMissing('@link.nine', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'seven')
+                ->assertHasClass('@link.seven', 'active')
+                ->assertClassMissing('@link.eight', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'six')
+                ->assertHasClass('@link.six', 'active')
+                ->assertClassMissing('@link.seven', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'five')
+                ->assertHasClass('@link.five', 'active')
+                ->assertClassMissing('@link.six', 'active')
+
+                // Assert a navigate request was triggered as the remaining pages should no longer be in the cache
+                ->waitForNavigateRequest()->back()
+                ->assertSeeIn('@title', 'four')
+                ->assertHasClass('@link.four', 'active')
+                ->assertClassMissing('@link.five', 'active')
+
+                ->waitForNavigateRequest()->back()
+                ->assertSeeIn('@title', 'three')
+                ->assertHasClass('@link.three', 'active')
+                ->assertClassMissing('@link.four', 'active')
+
+                ->waitForNavigateRequest()->back()
+                ->assertSeeIn('@title', 'two')
+                ->assertHasClass('@link.two', 'active')
+                ->assertClassMissing('@link.three', 'active')
+
+                ->waitForNavigateRequest()->back()
+                ->assertSeeIn('@title', 'one')
+                ->assertHasClass('@link.one', 'active')
+                ->assertClassMissing('@link.two', 'active')
+
+            ;
+        });
+    }
+
+    /** @test */
+    public function can_navigate_links_and_if_a_refresh_happens_then_make_requests_until_pages_are_cached_again()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/navbar/one')
+                ->assertSeeIn('@title', 'one')
+                ->assertHasClass('@link.one', 'active')
+                ->assertClassMissing('@link.two', 'active')
+
+                ->waitForNavigateRequest()->click('@link.two')
+                ->assertSeeIn('@title', 'two')
+                ->assertHasClass('@link.two', 'active')
+                ->assertClassMissing('@link.one', 'active')
+
+                ->waitForNavigateRequest()->click('@link.three')
+                ->assertSeeIn('@title', 'three')
+                ->assertHasClass('@link.three', 'active')
+                ->assertClassMissing('@link.two', 'active')
+
+                ->waitForNavigateRequest()->click('@link.four')
+                ->assertSeeIn('@title', 'four')
+                ->assertHasClass('@link.four', 'active')
+                ->assertClassMissing('@link.three', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'three')
+                ->assertHasClass('@link.three', 'active')
+                ->assertClassMissing('@link.four', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'two')
+                ->assertHasClass('@link.two', 'active')
+                ->assertClassMissing('@link.three', 'active')
+
+                ->waitForLivewire()->refresh()
+                ->assertSeeIn('@title', 'two')
+                ->assertHasClass('@link.two', 'active')
+
+                ->waitForNavigateRequest()->click('@link.three')
+                ->assertSeeIn('@title', 'three')
+                ->assertHasClass('@link.three', 'active')
+                ->assertClassMissing('@link.two', 'active')
+
+                ->waitForNavigateRequest()->click('@link.four')
+                ->assertSeeIn('@title', 'four')
+                ->assertHasClass('@link.four', 'active')
+                ->assertClassMissing('@link.three', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'three')
+                ->assertHasClass('@link.three', 'active')
+                ->assertClassMissing('@link.four', 'active')
+
+                ->waitForNoNavigateRequest()->back()
+                ->assertSeeIn('@title', 'two')
+                ->assertHasClass('@link.two', 'active')
+                ->assertClassMissing('@link.three', 'active')
+
+                ->waitForNavigateRequest()->back()
+                ->assertSeeIn('@title', 'one')
+                ->assertHasClass('@link.one', 'active')
+                ->assertClassMissing('@link.two', 'active')
             ;
         });
     }
@@ -742,6 +1013,7 @@ class FirstPage extends Component
         <div>
             <div>On first</div>
 
+            <a :href="window.location.pathname + '#foo'" wire:navigate dusk="link.to.hashtag">Go to same page with hashtag</a>
             <a href="/second" wire:navigate.hover dusk="link.to.second">Go to second page</a>
             <a href="/third" wire:navigate.hover dusk="link.to.third">Go to slow third page</a>
             <a href="/second-remote-asset" wire:navigate.hover dusk="link.to.asset">Go to asset page</a>
@@ -833,6 +1105,36 @@ class ThirdPage extends Component
         return <<<'HTML'
         <div>
             Done loading...
+        </div>
+        HTML;
+    }
+}
+
+class FourthPage extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <div>On fourth</div>
+
+            <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
+
+            <script data-navigate-once>window.foo = 'bar';</script>
+
+            <script >
+                document.addEventListener('livewire:navigate', (event) => {
+                    event.preventDefault();
+                    if (window.foo === 'bar') {
+                        window.foo = 'baz'
+                    }
+                    else if (window.foo === 'baz') {
+                        window.foo ='bat'
+                    } else {
+                        Alpine.navigate(event.detail.url)
+                    }
+                })
+            </script>
         </div>
         HTML;
     }
@@ -1040,6 +1342,21 @@ class PageWithAlpineForLoop extends Component
                 </template>
             </div>
         </div>
+        HTML;
+    }
+}
+
+class NavBarComponent extends Component
+{
+    public $page;
+
+    #[Layout('test-views::navbar-sidebar')]
+    public function render()
+    {
+        return <<<'HTML'
+            <div>
+                <div>Page: <span dusk="title">{{ $page }}</span></div>
+            </div>
         HTML;
     }
 }
