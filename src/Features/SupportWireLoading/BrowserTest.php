@@ -301,8 +301,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    #[Test]
     /**
+    #[Test]
     function inverted_wire_target_hides_loading_for_file_upload()
     {
         Storage::persistentFake('tmp-for-tests');
