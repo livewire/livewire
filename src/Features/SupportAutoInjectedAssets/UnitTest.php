@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
 use Livewire\Livewire;
+use Orchestra\Testbench\Attributes\WithConfig;
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
@@ -140,10 +141,9 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.inject_assets', false)]
     public function can_disable_auto_injection_using_config(): void
     {
-        config()->set('livewire.inject_assets', false);
-
         Route::get('/with-livewire', function () {
             return (new class Extends TestComponent {})();
         });
@@ -157,10 +157,9 @@ class UnitTest extends TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.inject_assets', false)]
     public function can_force_injection_over_config(): void
     {
-        config()->set('livewire.inject_assets', false);
-
         Route::get('/with-livewire', function () {
             return (new class Extends TestComponent {})();
         });

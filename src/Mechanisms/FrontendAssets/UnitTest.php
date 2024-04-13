@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\FrontendAssets;
 
 use Illuminate\Support\Facades\Route;
 
+use Orchestra\Testbench\Attributes\WithConfig;
 use function Livewire\trigger;
 
 class UnitTest extends \Tests\TestCase
@@ -37,10 +38,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('app.debug', true)]
     public function use_normal_scripts_url_if_app_debug_is_true()
     {
-        config()->set('app.debug', true);
-
         $assets = app(FrontendAssets::class);
 
         // Call boot again, as the script route has to be set after the config is set
@@ -50,10 +50,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('app.debug', false)]
     public function use_minified_scripts_url_if_app_debug_is_false()
     {
-        config()->set('app.debug', false);
-
         $assets = app(FrontendAssets::class);
 
         // Call boot again, as the script route has to be set after the config is set
@@ -63,10 +62,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('app.debug', true)]
     public function use_normal_scripts_file_if_app_debug_is_true()
     {
-        config()->set('app.debug', true);
-
         $assets = app(FrontendAssets::class);
 
         $fileResponse = $assets->returnJavaScriptAsFile();
@@ -75,10 +73,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('app.debug', false)]
     public function use_minified_scripts_file_if_app_debug_is_false()
     {
-        config()->set('app.debug', false);
-
         $assets = app(FrontendAssets::class);
 
         $fileResponse = $assets->returnJavaScriptAsFile();
@@ -87,10 +84,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('app.debug', true)]
     public function if_script_route_has_been_overridden_use_normal_scripts_file_if_app_debug_is_true()
     {
-        config()->set('app.debug', true);
-
         $assets = app(FrontendAssets::class);
 
         $assets->setScriptRoute(function ($handle) {
@@ -103,10 +99,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('app.debug', false)]
     public function if_script_route_has_been_overridden_use_minified_scripts_file_if_app_debug_is_false()
     {
-        config()->set('app.debug', false);
-
         $assets = app(FrontendAssets::class);
 
         $assets->setScriptRoute(function ($handle) {

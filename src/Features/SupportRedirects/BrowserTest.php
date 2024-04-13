@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportRedirects;
 
 use Livewire\Attributes\On;
+use Orchestra\Testbench\Attributes\WithConfig;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -33,10 +34,9 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    #[WithConfig('session.driver', 'file')]
     public function session_flash_persists_when_redirecting_from_request_with_multiple_components_in_the_same_request()
     {
-        config()->set('session.driver', 'file');
-
         Route::get('/redirect', RedirectComponent::class)->middleware('web');
 
         Livewire::visit([
@@ -76,10 +76,9 @@ class BrowserTest extends BrowserTestCase
     }
 
     /** @test */
+    #[WithConfig('session.driver', 'file')]
     public function session_flash_clearing_on_subsequent_requests()
     {
-        config()->set('session.driver', 'file');
-
         Livewire::visit([
             new class extends Component {
                 public $foo = 0;

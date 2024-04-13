@@ -4,6 +4,7 @@ namespace Livewire\Tests;
 
 use Livewire\Livewire;
 use Illuminate\Support\Facades\View;
+use Orchestra\Testbench\Attributes\WithConfig;
 
 class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
 {
@@ -13,10 +14,9 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('app.debug', true)]
     public function livewire_js_is_unminified_when_app_is_in_debug_mode()
     {
-        config()->set('app.debug', true);
-
         $this->assertStringContainsString(
             '<script src="/livewire/livewire.js?',
             Livewire::scripts()
@@ -28,11 +28,10 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
+    #[WithConfig('app.debug', true)]
+    #[WithConfig('livewire.app_url', 'https://foo.com')]
     public function livewire_js_should_use_configured_app_url()
     {
-        config()->set('app.debug', true);
-        config()->set('livewire.app_url', 'https://foo.com');
-
         $this->assertStringContainsString(
             '<script src="/livewire/livewire.js?',
             Livewire::scripts()

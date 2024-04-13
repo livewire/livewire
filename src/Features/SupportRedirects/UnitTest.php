@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\Livewire;
+use Orchestra\Testbench\Attributes\WithConfig;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -165,10 +166,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.render_on_redirect', true)]
     public function dont_skip_render_on_redirect_if_config_set()
     {
-        config()->set('livewire.render_on_redirect', true);
-
         $component = Livewire::test(SkipsRenderOnRedirect::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);
@@ -176,10 +176,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.render_on_redirect', true)]
     public function manually_override_dont_skip_render_on_redirect_using_skip_render_method()
     {
-        config()->set('livewire.render_on_redirect', true);
-
         $component = Livewire::test(RenderOnRedirectWithSkipRenderMethod::class)->call('triggerRedirect');
 
         $this->assertEquals('/local', $component->effects['redirect']);

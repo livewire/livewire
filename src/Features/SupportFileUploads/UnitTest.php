@@ -14,6 +14,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
+use Orchestra\Testbench\Attributes\WithConfig;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -29,10 +30,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.disk', 's3')]
     public function s3_driver_only_supports_single_file_uploads()
     {
-        config()->set('livewire.temporary_file_upload.disk', 's3');
-
         $this->expectException(S3DoesntSupportMultipleFileUploads::class);
 
         Livewire::test(FileUploadComponent::class)
@@ -71,7 +71,6 @@ class UnitTest extends \Tests\TestCase
     /** @test */
     public function cant_remove_a_file_property_with_mismatched_filename_provided()
     {
-
         $file = UploadedFile::fake()->image('avatar.jpg');
 
         $component = Livewire::test(FileUploadComponent::class)
@@ -177,10 +176,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.disk', 's3')]
     public function can_set_a_file_as_a_property_using_the_s3_driver_and_store_it()
     {
-        config()->set('livewire.temporary_file_upload.disk', 's3');
-
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -221,13 +219,12 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.rules', 'file|max:50')]
     public function the_global_upload_validation_rules_can_be_configured_and_the_error_messages_show_as_normal_validation_errors_for_the_property()
     {
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->image('avatar.jpg')->size(100); // 100KB
-
-        config()->set('livewire.temporary_file_upload.rules', 'file|max:50');
 
         Livewire::test(FileUploadComponent::class)
             ->set('photo', $file)
@@ -384,10 +381,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.disk', 's3')]
     public function temporary_files_older_than_24_hours_are_not_cleaned_up_on_every_new_upload_when_using_S3()
     {
-        config()->set('livewire.temporary_file_upload.disk', 's3');
-
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -426,10 +422,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.middleware', DummyMiddleware::class)]
     public function the_global_upload_route_middleware_is_configurable()
     {
-        config()->set('livewire.temporary_file_upload.middleware', DummyMiddleware::class);
-
         $url = GenerateSignedUploadUrl::forLocal();
 
         try {
@@ -440,10 +435,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.middleware', ['throttle:60,1', DummyMiddleware::class])]
     public function the_global_upload_route_middleware_supports_multiple_middleware()
     {
-        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1', DummyMiddleware::class]);
-
         $url = GenerateSignedUploadUrl::forLocal();
 
         try {
@@ -555,10 +549,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.preview_mimes', ['pdf'])]
     public function allows_setting_file_types_for_temporary_signed_urls_in_config()
     {
-        config()->set('livewire.temporary_file_upload.preview_mimes', ['pdf']);
-
         Storage::fake('advatars');
 
         $file = UploadedFile::fake()->create('file.pdf');
@@ -605,10 +598,9 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.temporary_file_upload.disk', 's3')]
     public function can_preview_a_temporary_files_with_a_temporary_signed_url_from_s3()
     {
-        config()->set('livewire.temporary_file_upload.disk', 's3');
-
         Storage::fake('avatars');
 
         $file = UploadedFile::fake()->image('avatar.jpg');

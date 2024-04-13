@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportNestingComponents;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
+use Orchestra\Testbench\Attributes\WithConfig;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -90,10 +91,9 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    #[WithConfig('livewire.layout', '')]
     public function nested_components_do_not_error_when_parent_has_custom_layout_and_default_layout_does_not_exist()
     {
-        config()->set('livewire.layout', '');
-
         Livewire::visit([
             new class extends Component {
                 #[Layout('layouts.app')]
