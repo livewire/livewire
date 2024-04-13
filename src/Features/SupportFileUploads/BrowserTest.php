@@ -194,7 +194,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_clear_out_file_input_after_property_has_been_reset()
     {
         Storage::persistentFake('tmp-for-tests');

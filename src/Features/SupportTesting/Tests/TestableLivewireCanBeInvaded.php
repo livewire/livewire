@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportTesting\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
+use PHPUnit\Framework\Attributes\Test;
 
 class TestableLivewireCanBeInvaded extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_invade_protected_properties()
     {
         $component = Livewire::test(new class extends Component {
@@ -22,7 +23,7 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
         PHPUnit::assertEquals('bar', $component->invade()->foo);
     }
 
-    /** @test */
+    #[Test]
     function can_invade_protected_functions()
     {
         $component = Livewire::test(new class extends Component {
@@ -38,7 +39,7 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
         PHPUnit::assertEquals('bar', $component->invade()->foo());
     }
 
-    /** @test */
+    #[Test]
     function can_invade_private_properties()
     {
         $component = Livewire::test(new class extends Component {
@@ -52,7 +53,7 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
         PHPUnit::assertEquals('bar', $component->invade()->foo);
     }
 
-    /** @test */
+    #[Test]
     function can_invade_private_functions()
     {
         $component = Livewire::test(new class extends Component {

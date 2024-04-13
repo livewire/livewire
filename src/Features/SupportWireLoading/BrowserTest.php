@@ -7,10 +7,11 @@ use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
 use Livewire\WithFileUploads;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     function can_wire_target_to_a_form_object_property()
     {
         Livewire::visit(new class extends Component {
@@ -78,7 +79,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function wire_loading_remove_works_with_renderless_methods()
     {
         Livewire::visit(new class extends Component {
@@ -108,7 +109,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {
@@ -147,7 +148,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function wire_loading_delay_is_removed_after_being_triggered_once()
     {
         /**
@@ -192,7 +193,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-	/** @test */
+	#[Test]
     function wire_loading_targets_single_correct_element()
     {
 		/*
@@ -243,7 +244,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function inverted_wire_target_hides_loading_for_specified_action()
     {
         Livewire::visit(new class extends Component {
@@ -300,7 +301,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     /**
     function inverted_wire_target_hides_loading_for_file_upload()
     {
@@ -343,7 +344,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
     */
 
-	/** @test */
+	#[Test]
     function wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
     {
         Livewire::visit(new class extends Component {

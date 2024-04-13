@@ -8,6 +8,7 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class HooksBrowserTest extends \Tests\BrowserTestCase
 {
@@ -22,7 +23,7 @@ class HooksBrowserTest extends \Tests\BrowserTestCase
         };
     }
 
-    /** @test */
+    #[Test]
     public function navigation_triggers_lifecycle_hooks()
     {
         $this->browse(function ($browser) {
@@ -38,7 +39,7 @@ class HooksBrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function back_and_forward_button_triggers_the_same_lifecycle_hooks_as_a_normal_navigate()
     {
         $this->browse(function ($browser) {
@@ -62,7 +63,7 @@ class HooksBrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function back_button_hook_contains_info_about_caching_after_the_cache_runs_out()
     {
         $this->browse(function ($browser) {

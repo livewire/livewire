@@ -390,7 +390,7 @@ class UnitTest extends TestCase
             ->assertSee('false');
     }
 
-    /** @test */
+    #[Test]
     public function it_supports_legacy_computed_properties()
     {
         Livewire::test(new class extends TestComponent {
@@ -407,7 +407,7 @@ class UnitTest extends TestCase
             ->assertSet('foo', 'bar');
     }
 
-    /** @test */
+    #[Test]
     public function it_supports_unsetting_legacy_computed_properties()
     {
         Livewire::test(new class extends TestComponent {
@@ -438,7 +438,7 @@ class UnitTest extends TestCase
             ->assertSet('foo', 'baz');
     }
 
-    /** @test */
+    #[Test]
     public function it_supports_unsetting_legacy_computed_properties_for_events()
     {
         Livewire::test(new class extends TestComponent {

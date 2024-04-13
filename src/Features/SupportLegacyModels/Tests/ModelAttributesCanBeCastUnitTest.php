@@ -335,7 +335,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.custom_caster', 'e=mc2');
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_enum_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)

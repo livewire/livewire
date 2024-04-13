@@ -4,6 +4,7 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class ComponentWontConflictWithPredefinedClasses extends \Tests\TestCase
 {
@@ -18,7 +19,7 @@ class ComponentWontConflictWithPredefinedClasses extends \Tests\TestCase
         config()->set('livewire.class_namespace', 'Livewire\\Tests');
     }
 
-    /** @test */
+    #[Test]
     public function wont_conflict_on_initial_request()
     {
         $component = Livewire::test(Directory::class);
@@ -26,7 +27,7 @@ class ComponentWontConflictWithPredefinedClasses extends \Tests\TestCase
         $component->assertSee('Count: 1');
     }
 
-    /** @test */
+    #[Test]
     public function wont_conflict_on_subsequent_requests()
     {
         $component = Livewire::test(Directory::class);

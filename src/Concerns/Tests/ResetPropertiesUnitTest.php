@@ -97,7 +97,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertTrue(is_null($component->nullProp));
     }
 
-    /** @test */
+    #[Test]
     public function can_reset_and_return_property_with_pull_method()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
@@ -110,7 +110,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->assertSet('pullResult', 'baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_pull_all_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
@@ -124,7 +124,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertEquals('lob', $component->pullResult['bob']);
     }
 
-    /** @test */
+    #[Test]
     public function can_pull_some_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
