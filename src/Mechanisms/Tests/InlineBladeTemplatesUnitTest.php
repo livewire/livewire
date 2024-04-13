@@ -4,10 +4,11 @@ namespace Livewire\Mechanisms\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class InlineBladeTemplatesUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function renders_inline_blade_template()
     {
         Livewire::test(ComponentWithInlineBladeTemplate::class)

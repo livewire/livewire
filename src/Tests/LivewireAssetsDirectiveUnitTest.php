@@ -4,6 +4,7 @@ namespace Livewire\Tests;
 
 use Livewire\Livewire;
 use Illuminate\Support\Facades\View;
+use PHPUnit\Framework\Attributes\Test;
 
 class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
 {
@@ -12,7 +13,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         $this->markTestSkipped('not sure exactly how we want to handle all this asset stuff for v3 so holding off on this...');
     }
 
-    /** @test */
+    #[Test]
     public function livewire_js_is_unminified_when_app_is_in_debug_mode()
     {
         config()->set('app.debug', true);
@@ -44,7 +45,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function livewire_js_calls_reference_relative_root()
     {
         $this->assertStringContainsString(
@@ -58,7 +59,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function livewire_js_calls_reference_configured_asset_url()
     {
         $this->assertStringContainsString(
@@ -72,7 +73,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function asset_url_trailing_slashes_are_trimmed()
     {
         $this->assertStringContainsString(
@@ -86,7 +87,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function asset_url_passed_into_blade_assets_directive()
     {
         $output = View::make('assets-directive', [
@@ -104,7 +105,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function nonce_passed_into_directive_gets_added_as_script_tag_attribute()
     {
         $output = View::make('assets-directive', [

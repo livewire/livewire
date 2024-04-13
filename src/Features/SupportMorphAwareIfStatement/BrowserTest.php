@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function blade_conditionals_are_handled_properly_by_morphdom()
     {
         Livewire::visit(new class extends Component {
@@ -44,7 +45,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function blade_conditional_actions_are_handled_properly_by_morphdom()
     {
         Livewire::visit(new class extends Component {

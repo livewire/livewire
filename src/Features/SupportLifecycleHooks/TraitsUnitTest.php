@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportLifecycleHooks;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class TraitsUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTraitStub::class)
@@ -22,7 +23,7 @@ class TraitsUnitTest extends \Tests\TestCase
             );
     }
 
-    /** @test */
+    #[Test]
     public function multiple_traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTwoTraitsStub::class)
@@ -45,7 +46,7 @@ class TraitsUnitTest extends \Tests\TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function calling_test_methods_will_not_run_hooks_from_previous_methods()
     {
         ComponentForTestMethodsStub::$hooksFromTrait = [];
@@ -70,7 +71,7 @@ class TraitsUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function trait_hooks_are_run_at_the_same_time_as_component_hooks()
     {
         Livewire::test(ComponentWithTraitStubAndComponentLifecycleHooks::class)

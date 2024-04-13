@@ -4,10 +4,11 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class QueryParamsUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function it_sets_name_from_query_params()
     {
         $name = 'Livewire';
@@ -17,7 +18,7 @@ class QueryParamsUnitTest extends \Tests\TestCase
             ->assertSet('name', $name);
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_set_name_when_no_query_params_are_provided()
     {
         Livewire::test(QueryParamsComponent::class)

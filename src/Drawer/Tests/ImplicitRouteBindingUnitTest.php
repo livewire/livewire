@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class ImplicitRouteBindingUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function props_are_set_via_mount()
     {
         Livewire::test(ComponentWithPropBindings::class, [
@@ -18,7 +19,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         ])->assertSeeText('prop:mount-model');
     }
 
-    /** @test */
+    #[Test]
     public function props_are_set_via_implicit_binding()
     {
         Route::get('/foo/{model}', ComponentWithPropBindings::class);
@@ -26,7 +27,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo/route-model')->assertSeeText('prop:via-route:route-model');
     }
 
-    /** @test */
+    #[Test]
     public function dependent_props_are_set_via_implicit_binding()
     {
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentPropBindings::class);
@@ -34,7 +35,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
-    /** @test */
+    #[Test]
     public function dependent_props_are_set_via_mount()
     {
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentMountBindings::class);
@@ -42,7 +43,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
-    /** @test */
+    #[Test]
     public function props_and_mount_work_together()
     {
         Route::get('/foo/{parent}/child/{child}', ComponentWithPropBindingsAndMountMethod::class);
@@ -52,7 +53,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo/parent-model/child/child-model')->assertSeeText('via-route:parent-model:via-route:child-model');
     }
 
-    /** @test */
+    #[Test]
     public function props_are_set_via_implicit_binding_when_with_trashed()
     {
         Route::get('/foo/{model}', ComponentWithTrashedPropBindings::class);

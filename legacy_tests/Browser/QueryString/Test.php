@@ -221,7 +221,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_does_not_build_query_string_from_referer_if_it_is_coming_from_a_full_page_redirect()
     {
         $this->browse(function (Browser $browser) {

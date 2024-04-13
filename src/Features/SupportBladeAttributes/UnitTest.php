@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportBladeAttributes;
 use Illuminate\View\ComponentAttributeBag;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function it_adds_wire_macro_to_component_attribute_bag()
     {
         $bag = new ComponentAttributeBag([
@@ -29,7 +30,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(['enter'], $bag->wire('keydown')->modifiers()->toArray());
     }
 
-    /** @test */
+    #[Test]
     public function entangle_directive_adds_dot_defer_if_defer_modifier_is_present()
     {
         // @todo: Should this be in support entangle feature?

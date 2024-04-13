@@ -4,10 +4,11 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class ComponentIsMacroableUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function it_resolves_the_mount_parameters()
     {
         Component::macro('macroedMethod', function ($first, $second) {

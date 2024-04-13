@@ -6,11 +6,12 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_persist_entangled_data()
     {
         Livewire::visit(new class extends Component {
@@ -34,7 +35,7 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function is_not_live_by_default()
     {
         Livewire::visit(new class extends Component {
@@ -66,7 +67,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@state', 'bar');
     }
 
-    /** @test */
+    #[Test]
     public function can_be_forced_to_not_be_live()
     {
         Livewire::visit(new class extends Component {
@@ -98,7 +99,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@state', 'bar');
     }
 
-    /** @test */
+    #[Test]
     public function can_be_live()
     {
         Livewire::visit(new class extends Component {
@@ -124,7 +125,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@state', 'bar');
     }
 
-    /** @test */
+    #[Test]
     public function can_remove_entangled_components_from_dom_without_side_effects()
     {
         Livewire::visit(new class extends Component {
@@ -202,7 +203,7 @@ class BrowserTest extends BrowserTestCase
             ->assertMissing('@item3');
     }
 
-    /** @test */
+    #[Test]
     public function can_remove_dollar_sign_entangled_components_from_dom_without_side_effects()
     {
         Livewire::visit(new class extends Component {
@@ -280,7 +281,7 @@ class BrowserTest extends BrowserTestCase
             ->assertMissing('@item3');
     }
 
-    /** @test */
+    #[Test]
     public function can_removed_nested_items_without_multiple_requests_when_entangled_items_are_present()
     {
         Livewire::visit(new class extends Component {
@@ -387,7 +388,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@counter', '13');
     }
 
-    /** @test */
+    #[Test]
     public function can_reorder_entangled_keys()
     {
         Livewire::visit(new class extends Component {

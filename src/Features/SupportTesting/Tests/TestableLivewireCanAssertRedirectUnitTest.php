@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportTesting\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_assert_a_redirect_without_a_uri()
     {
         $component = Livewire::test(RedirectComponent::class);
@@ -17,7 +18,7 @@ class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
         $component->assertRedirect();
     }
 
-    /** @test */
+    #[Test]
     function can_assert_a_redirect_with_a_uri()
     {
         $component = Livewire::test(RedirectComponent::class);
@@ -27,7 +28,7 @@ class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
         $component->assertRedirect('/some');
     }
 
-    /** @test */
+    #[Test]
     function can_detect_failed_redirect()
     {
         $component = Livewire::test(RedirectComponent::class);

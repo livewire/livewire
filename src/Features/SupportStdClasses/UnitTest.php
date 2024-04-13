@@ -4,11 +4,12 @@ namespace Livewire\Features\SupportStdClasses;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 
 class UnitTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     function can_use_wire_stdclass_property()
     {
         Livewire::test(new class extends Component {

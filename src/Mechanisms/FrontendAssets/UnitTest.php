@@ -4,11 +4,12 @@ namespace Livewire\Mechanisms\FrontendAssets;
 
 use Illuminate\Support\Facades\Route;
 
+use PHPUnit\Framework\Attributes\Test;
 use function Livewire\trigger;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function styles()
     {
         $assets = app(FrontendAssets::class);
@@ -24,7 +25,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue($assets->hasRenderedStyles);
     }
 
-    /** @test */
+    #[Test]
     public function scripts()
     {
         $assets = app(FrontendAssets::class);
@@ -36,7 +37,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue($assets->hasRenderedScripts);
     }
 
-    /** @test */
+    #[Test]
     public function use_normal_scripts_url_if_app_debug_is_true()
     {
         config()->set('app.debug', true);
@@ -49,7 +50,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('livewire.js', $assets->scripts());
     }
 
-    /** @test */
+    #[Test]
     public function use_minified_scripts_url_if_app_debug_is_false()
     {
         config()->set('app.debug', false);
@@ -62,7 +63,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('livewire.min.js', $assets->scripts());
     }
 
-    /** @test */
+    #[Test]
     public function use_normal_scripts_file_if_app_debug_is_true()
     {
         config()->set('app.debug', true);
@@ -74,7 +75,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire.js', $fileResponse->getFile()->getFilename());
     }
 
-    /** @test */
+    #[Test]
     public function use_minified_scripts_file_if_app_debug_is_false()
     {
         config()->set('app.debug', false);
@@ -86,7 +87,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire.min.js', $fileResponse->getFile()->getFilename());
     }
 
-    /** @test */
+    #[Test]
     public function if_script_route_has_been_overridden_use_normal_scripts_file_if_app_debug_is_true()
     {
         config()->set('app.debug', true);
@@ -102,7 +103,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire.js', $response->getFile()->getFilename());
     }
 
-    /** @test */
+    #[Test]
     public function if_script_route_has_been_overridden_use_minified_scripts_file_if_app_debug_is_false()
     {
         config()->set('app.debug', false);
@@ -118,7 +119,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire.min.js', $response->getFile()->getFilename());
     }
 
-    /** @test */
+    #[Test]
     public function flush_state_event_resets_has_rendered()
     {
         $assets = app(FrontendAssets::class);
@@ -135,7 +136,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertFalse($assets->hasRenderedStyles);
     }
 
-    /** @test */
+    #[Test]
     public function js_does_not_prepend_slash_for_url()
     {
         $url = 'https://example.com/livewire/livewire.js';

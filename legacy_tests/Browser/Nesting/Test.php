@@ -37,7 +37,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_returns_the_render_context_back_to_the_parent_component_after_sub_component_is_rendered()
     {
         $this->browse(function ($browser) {

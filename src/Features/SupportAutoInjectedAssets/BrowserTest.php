@@ -6,11 +6,12 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function livewire_styles_take_preference_over_other_styles()
     {
         Livewire::visit(new class extends Component {

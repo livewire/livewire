@@ -7,10 +7,11 @@ use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class ComponentsAreSecureUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function throws_method_not_found_exception_when_action_missing()
     {
         $this->expectException(MethodNotFoundException::class);
@@ -21,7 +22,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->runAction('missingMethod');
     }
 
-    /** @test */
+    #[Test]
     public function can_only_call_methods_defined_by_user()
     {
         $this->expectException(MethodNotFoundException::class);
@@ -33,7 +34,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->runAction('redirect');
     }
 
-    /** @test */
+    #[Test]
     public function can_only_set_public_properties()
     {
         $this->expectException(\Error::class);
@@ -44,7 +45,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->updateProperty('protectedProperty', 'baz');
     }
 
-    /** @test */
+    #[Test]
     public function data_cannot_be_tampered_with_on_frontend()
     {
         $this->markTestSkipped(); // @todo: This needs to be fixed.
@@ -62,7 +63,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->call('$refresh');
     }
 
-    /** @test */
+    #[Test]
     public function id_cannot_be_tampered_with_on_frontend()
     {
         $this->markTestSkipped(); // @todo: This needs to be fixed.
@@ -80,7 +81,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->call('$refresh');
     }
 
-    /** @test */
+    #[Test]
     public function component_name_cannot_be_tampered_with_on_frontend()
     {
         $this->markTestSkipped(); // @todo: This needs to be fixed.

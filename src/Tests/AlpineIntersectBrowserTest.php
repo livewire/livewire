@@ -4,10 +4,11 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class AlpineIntersectBrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function component_with_intersect_plugin_works()
     {
         Livewire::visit(new class () extends Component {

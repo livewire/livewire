@@ -60,7 +60,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_can_handle_having_selected_on_an_option()
     {
         $this->browse(function (Browser $browser) {
@@ -74,7 +74,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
+    // #[\PHPUnit\Framework\Attributes\Test]
     // @note: I think I'm skipping this test for V3 as we should just defer to what x-model in Alpine does.
     // We can always uncomment this and get it working if it's a breaking change for people.
     // public function it_renders_wire_model_selected_option_even_if_html_selected_is_different()

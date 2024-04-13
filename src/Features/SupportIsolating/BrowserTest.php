@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportIsolating;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -10,7 +11,7 @@ use Livewire\Attributes\Isolate;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function components_can_be_marked_as_isolated()
     {
         Livewire::visit([new class extends Component {
@@ -64,7 +65,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function lazy_requests_are_isolated_by_default()
     {
         Livewire::visit([new class extends Component {
@@ -103,7 +104,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function lazy_requests_are_isolated_by_default_but_bundled_on_next_request_when_polling()
     {
         Livewire::visit([new class extends Component {
@@ -155,7 +156,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function lazy_requests_can_be_bundled_with_attribute_parameter()
     {
         Livewire::visit([new class extends Component {

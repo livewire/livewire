@@ -8,6 +8,7 @@ use Livewire\Component;
 use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidationRuleException;
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 use function Livewire\invade;
@@ -16,7 +17,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
+    #[Test]
     public function can_set_a_model_attribute_inside_a_models_collection_and_save()
     {
         // Reset Sushi model.
@@ -39,7 +40,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->assertSet('models.0.title', 'boo');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_non_persisted_models_in_model_collection()
     {
         // Reset Sushi model.
@@ -71,7 +72,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_a_custom_model_collection_and_bind_to_values()
     {
         // Reset Sushi model.
@@ -97,7 +98,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->assertSet('modelsType', CustomCollection::class);
     }
 
-    /** @test */
+    #[Test]
     public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {
         // Reset Sushi model.
@@ -111,7 +112,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->assertSet('models.1.restricted', null);
     }
 
-    /** @test */
+    #[Test]
     public function an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
     {
         // Reset Sushi model.

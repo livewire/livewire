@@ -3,10 +3,11 @@
 namespace Livewire\Mechanisms\Tests;
 
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class DirectlyAssignComponentParametersAsPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function parameters_are_directly_set_as_properties_without_mount_method()
     {
         Livewire::test(ComponentWithDirectlyAssignedProperties::class, [
@@ -15,7 +16,7 @@ class DirectlyAssignComponentParametersAsPropertiesUnitTest extends \Tests\TestC
         ])->assertSeeText('barbob');
     }
 
-    /** @test */
+    #[Test]
     public function parameters_are_directly_set_as_properties_even_if_mount_method_accepts_them_too()
     {
         Livewire::test(ComponentWithDirectlyAssignedPropertiesAndMountMethod::class, [

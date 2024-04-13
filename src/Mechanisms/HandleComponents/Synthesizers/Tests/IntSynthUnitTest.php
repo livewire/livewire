@@ -4,12 +4,11 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class IntSynthUnitTest extends \Tests\TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function null_value_hydrated_returns_null()
     {
         Livewire::test(ComponentWithNullableInt::class)

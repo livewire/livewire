@@ -6,11 +6,11 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Support\Stringable;
 use PHPUnit\Framework\Assert as PHPUnit;
+use PHPUnit\Framework\Attributes\Test;
 
 class LifecycleHooksUnitTest extends \Tests\TestCase
 {
-
-    /** @test */
+    #[Test]
     public function refresh_magic_method()
     {
         $component = Livewire::test(ForMagicMethods::class);
@@ -34,7 +34,7 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
+    #[Test]
     public function set_magic_method()
     {
         $component = Livewire::test(ForMagicMethods::class, [

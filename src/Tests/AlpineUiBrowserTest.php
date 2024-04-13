@@ -4,10 +4,11 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class AlpineUiBrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function component_with_listbox_and_wire_model_live_should_not_cause_infinite_loop()
     {
         Livewire::visit(new class extends Component {
@@ -64,7 +65,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function component_with_combobox_and_wire_model_live_should_not_cause_infinite_loop()
     {
         Livewire::visit(new class extends Component {

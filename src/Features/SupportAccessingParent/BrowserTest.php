@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportAccessingParent;
 
 use LegacyTests\Browser\TestCase;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function can_access_parent()
     {
         $this->browse(function ($browser) {

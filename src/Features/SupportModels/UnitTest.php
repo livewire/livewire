@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function model_properties_are_persisted()
     {
         (new Article)::resolveConnection()->enableQueryLog();
@@ -33,7 +34,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(2, Article::resolveConnection()->getQueryLog());
     }
 
-    /** @test */
+    #[Test]
     public function cant_update_a_model_property()
     {
         $this->expectExceptionMessage("Can't set model properties directly");
@@ -53,7 +54,7 @@ class UnitTest extends \Tests\TestCase
         ->set('post.title', 'bar');
     }
 
-    /** @test */
+    #[Test]
     public function cant_view_model_data_in_javascript()
     {
         $data = Livewire::test(new class extends \Livewire\Component {
@@ -71,7 +72,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull($data['post']);
     }
 
-    /** @test */
+    #[Test]
     public function unpersisted_models_can_be_assigned_but_no_data_is_persisted_between_requests()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
@@ -88,13 +89,13 @@ class UnitTest extends \Tests\TestCase
         ->call('$refresh')
         ->assertSet('post', new Article())
         ;
-        
+
         $data = $component->getData();
 
         $this->assertNull($data['post']);
     }
 
-    /** @test */
+    #[Test]
     public function model_properties_are_lazy_loaded()
     {
         $this->markTestSkipped(); // @todo: probably not going to go this route...
@@ -124,7 +125,7 @@ class UnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
+    #[Test]
     public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
     {
         Relation::morphMap([
@@ -136,7 +137,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
     }
 
-    /** @test */
+    #[Test]
     public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
     {
         $post = Article::first();
@@ -150,7 +151,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('post', $post);
     }
 
-    /** @test */
+    #[Test]
     public function collections_with_duplicate_models_are_available_when_hydrating()
     {
         Livewire::test(new class extends \Livewire\Component {
@@ -178,7 +179,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('First-1');
     }
 
-    /** @test */
+    #[Test]
     public function collections_retain_their_order_on_hydration()
     {
         Livewire::test(new class extends \Livewire\Component {
@@ -203,7 +204,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('First-1');
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()
     {
         // reset morph

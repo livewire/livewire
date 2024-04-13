@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 use Livewire\Component as BaseComponent;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 class EagerLoadingBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
+    #[Test]
     public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
     {
         $this->browse(function (Browser $browser) {
@@ -24,7 +25,7 @@ class EagerLoadingBrowserTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function models_without_eager_loaded_relations_are_not_affected()
     {
         $this->browse(function (Browser $browser) {

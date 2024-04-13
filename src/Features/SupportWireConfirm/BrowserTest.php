@@ -2,13 +2,14 @@
 
 namespace Livewire\Features\SupportWireConfirm;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_confirm_an_action()
     {
         Livewire::visit(new class extends Component {
@@ -35,7 +36,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function custom_confirm_message()
     {
         Livewire::visit(new class extends Component {
@@ -54,7 +55,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_prompt_a_user_for_a_match()
     {
         Livewire::visit(new class extends Component {

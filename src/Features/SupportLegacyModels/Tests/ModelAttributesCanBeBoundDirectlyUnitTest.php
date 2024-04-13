@@ -9,6 +9,7 @@ use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidation
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
+use PHPUnit\Framework\Attributes\Test;
 use function Livewire\invade;
 
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
@@ -26,7 +27,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_set_a_model_attribute_and_save()
     {
         $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
@@ -47,7 +48,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
+    #[Test]
     public function a_non_existant_eloquent_model_can_be_set()
     {
         $model = new ModelForAttributeBinding;
@@ -62,7 +63,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         $this->assertTrue(ModelForAttributeBinding::whereTitle('i-exist-now')->exists());
     }
 
-    /** @test */
+    #[Test]
     public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
@@ -74,7 +75,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
             ->assertSet('model.id', null);
     }
 
-    /** @test */
+    #[Test]
     public function an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
     {
         $this->expectException(CorruptComponentPayloadException::class);

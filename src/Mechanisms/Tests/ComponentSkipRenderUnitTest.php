@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
 
+use PHPUnit\Framework\Attributes\Test;
 use function Livewire\store;
 use function Livewire\str;
 
 class ComponentSkipRenderUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function component_renders_like_normal()
     {
         $component = Livewire::test(ComponentSkipRenderStub::class);
@@ -21,7 +22,7 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function on_skip_render_render_is_not_called()
     {
         $component = Livewire::test(ComponentSkipRenderStub::class);
@@ -33,7 +34,7 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         $this->assertNotNull($component->html());
     }
 
-    /** @test */
+    #[Test]
     public function with_skip_render_attribute_render_is_not_called()
     {
         $component = Livewire::test(ComponentSkipRenderAttributeStub::class);
@@ -45,7 +46,7 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         $this->assertNotNull($component->html());
     }
 
-    /** @test */
+    #[Test]
     public function on_redirect_in_mount_render_is_not_called()
     {
         Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);

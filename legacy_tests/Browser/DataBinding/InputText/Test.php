@@ -81,7 +81,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_provides_a_nice_warning_in_console_for_an_empty_wire_model()
     {
         $this->browse(function (Browser $browser) {

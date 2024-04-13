@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportEvents;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function receive_event_with_attribute()
     {
         $component = Livewire::test(new class extends Component {
@@ -27,7 +28,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
+    #[Test]
     public function listen_for_dynamic_event_name()
     {
         $component = Livewire::test(new class extends Component {
@@ -49,7 +50,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
+    #[Test]
     public function listens_for_event_with_named_params()
     {
         $component = Livewire::test(new class extends Component {
@@ -69,7 +70,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'bazshmaz');
     }
 
-    /** @test */
+    #[Test]
     public function dispatches_event_with_named_params()
     {
         Livewire::test(new class extends Component {
@@ -90,7 +91,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_can_register_multiple_listeners_via_attribute(): void
     {
         Livewire::test(new class extends Component {
@@ -110,7 +111,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('counter', 2);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_register_multiple_listeners_via_attribute_userland(): void
     {
         Livewire::test(new class extends Component {
@@ -130,7 +131,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('counter', 2);
     }
 
-    /** @test */
+    #[Test]
     public function receive_event()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -140,7 +141,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
+    #[Test]
     public function receive_event_with_single_value_listener()
     {
         $component = Livewire::test(ReceivesEventsWithSingleValueListener::class);
@@ -150,7 +151,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
+    #[Test]
     public function receive_event_with_multiple_parameters()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -160,7 +161,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'bazblab');
     }
 
-    /** @test */
+    #[Test]
     public function listeners_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -168,7 +169,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(in_array('bar', $component->effects['listeners']));
     }
 
-    /** @test */
+    #[Test]
     public function server_dispatched_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -178,7 +179,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(in_array(['name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
-    /** @test */
+    #[Test]
     public function server_dispatched_self_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -188,7 +189,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(in_array(['self' => true, 'name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
-    /** @test */
+    #[Test]
     public function component_can_set_dynamic_listeners()
     {
         Livewire::test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob'])
@@ -196,7 +197,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertSet('foo', 'lob');
     }
 
-    /** @test */
+    #[Test]
     public function component_receives_events_dispatched_using_classname()
     {
         $component = Livewire::test(ReceivesEvents::class);
@@ -207,7 +208,7 @@ class UnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
+    #[Test]
     public function receive_event_with_refresh_attribute()
     {
         $component = Livewire::test(ReceivesEventUsingRefreshAttribute::class);
@@ -219,7 +220,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(2, ReceivesEventUsingRefreshAttribute::$counter);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_register_multiple_listeners_via_refresh_attribute(): void
     {
         Livewire::test(ReceivesMultipleEventsUsingMultipleRefreshAttributes::class)
@@ -230,7 +231,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_register_multiple_listeners_via_single_refresh_attribute(): void
     {
         Livewire::test(ReceivesMultipleEventsUsingSingleRefreshAttribute::class)
@@ -241,7 +242,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_register_multiple_listeners_via_refresh_attribute_userland(): void
     {
         Livewire::test(ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::class)

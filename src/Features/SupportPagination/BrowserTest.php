@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportPagination;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Sushi\Sushi;
 use Livewire\WithoutUrlPagination;
@@ -277,7 +278,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page_tailwind()
     {
         Livewire::visit(new class extends Component {
@@ -327,7 +328,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_two_sets_of_links_for_the_one_paginator_on_a_page_bootstrap()
     {
         Livewire::visit(new class extends Component {
@@ -379,7 +380,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_calls_pagination_hook_method_when_pagination_changes()
     {
         Livewire::visit(new class extends Component {
@@ -445,7 +446,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_two_pagination_instances_on_a_page_tailwind()
     {
         Livewire::visit(new class extends Component {
@@ -568,7 +569,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_two_pagination_instances_on_a_page_bootstrap()
     {
         Livewire::visit(new class extends Component {
@@ -693,7 +694,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_calls_pagination_hook_methods_when_pagination_changes_with_multiple_paginators()
     {
         Livewire::visit(new class extends Component {
@@ -785,7 +786,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_calls_pagination_hook_methods_when_page_is_kebab_cased()
     {
         Livewire::visit(new class extends Component {
@@ -819,7 +820,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@item-page-pagination-hook', 'item-page-is-set-to-2');
     }
 
-    /** @test */
+    #[Test]
     public function pagination_trait_resolves_query_string_alias_for_page_from_component()
     {
         Livewire::withQueryParams(['p' => '2'])
@@ -866,7 +867,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function pagination_is_tracked_in_query_string_on_lazy_components()
     {
         Livewire::withQueryParams(['page' => '2'])
@@ -908,7 +909,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_loads_pagination_on_nested_alpine_tabs()
     {
         Livewire::visit(new class extends Component {
@@ -986,7 +987,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSee('Post #9');
     }
 
-    /** @test */
+    #[Test]
     public function it_loads_pagination_even_when_there_are_nested_components_that_do_not_have_pagination()
     {
         Livewire::visit([
@@ -1090,7 +1091,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function test_pagination_query_string_disabled()
     {
         Livewire::visit(new class extends Component {

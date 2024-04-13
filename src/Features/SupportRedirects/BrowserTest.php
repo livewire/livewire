@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportRedirects;
 
 use Livewire\Attributes\On;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_redirect()
     {
         Livewire::visit([new class extends Component {
@@ -32,7 +33,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function session_flash_persists_when_redirecting_from_request_with_multiple_components_in_the_same_request()
     {
         config()->set('session.driver', 'file');
@@ -75,7 +76,7 @@ class BrowserTest extends BrowserTestCase
         ->waitForTextIn('@session-message', 'Session flash data');
     }
 
-    /** @test */
+    #[Test]
     public function session_flash_clearing_on_subsequent_requests()
     {
         config()->set('session.driver', 'file');

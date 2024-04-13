@@ -12,6 +12,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\Drawer\Utils;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -81,7 +82,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         };
     }
 
-    /** @test */
+    #[Test]
     public function back_button_works_with_teleports()
     {
         $this->registerComponentTestRoutes([
@@ -130,7 +131,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function back_button_works_with_teleports_inside_persist()
     {
         $this->registerComponentTestRoutes([
@@ -199,7 +200,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_progress_bar()
     {
         $this->browse(function ($browser) {
@@ -226,7 +227,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_navigate_to_page_without_reloading()
     {
         $this->browse(function ($browser) {
@@ -246,7 +247,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
     {
         $this->browse(function (Browser $browser) {
@@ -262,7 +263,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function navigate_is_not_triggered_on_cmd_and_enter()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -284,7 +285,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_navigate_to_page_from_child_via_parent_component_without_reloading()
     {
         $this->browse(function (Browser $browser) {
@@ -303,7 +304,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_redirect_with_reloading_from_a_page_that_was_loaded_by_wire_navigate()
     {
         $this->browse(function ($browser) {
@@ -323,7 +324,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_redirect_without_reloading_using_the_helper_from_a_page_that_was_loaded_normally()
     {
         $this->browse(function ($browser) {
@@ -339,7 +340,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_redirect_to_a_page_after_destorying_session()
     {
         $this->browse(function ($browser) {
@@ -357,7 +358,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_persist_elements_across_pages()
     {
         $this->browse(function ($browser) {
@@ -378,7 +379,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function new_assets_in_head_are_loaded_and_old_ones_are_not()
     {
         $this->browse(function ($browser) {
@@ -395,7 +396,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function tracked_assets_reload_the_page_when_they_change()
     {
         $this->browse(function ($browser) {
@@ -412,7 +413,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_use_wire_navigate_outside_of_a_livewire_component()
     {
         $this->browse(function ($browser) {
@@ -427,7 +428,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function script_runs_on_initial_page_visit()
     {
         $this->browse(function ($browser) {
@@ -444,7 +445,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_navigate_to_component_with_url_attribute_and_update_correctly()
     {
         $this->browse(function ($browser) {
@@ -458,7 +459,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function navigate_scrolls_to_top_and_back_preserves_scroll()
     {
         $this->browse(function ($browser) {
@@ -485,7 +486,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function navigate_back_works_from_page_without_a_livewire_component_that_has_a_script_with_data_navigate_track()
     {
         // When using `@vite` on the page without a Livewire component,
@@ -508,7 +509,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function navigate_is_only_triggered_on_left_click()
     {
         $this->browse(function ($browser) {
@@ -527,7 +528,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function livewire_navigated_event_is_fired_on_first_page_load()
     {
         $this->browse(function ($browser) {
@@ -538,7 +539,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function livewire_navigated_event_is_fired_after_redirect_without_reloading()
     {
         $this->browse(function ($browser) {
@@ -554,7 +555,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function navigate_is_not_triggered_on_cmd_click()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
@@ -583,7 +584,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function events_from_child_components_still_function_after_navigation()
     {
         $this->browse(function (Browser $browser) {
@@ -611,7 +612,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function alpine_for_loop_still_functions_after_navigation()
     {
         $this->browse(function (Browser $browser) {
@@ -632,7 +633,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function injected_assets_such_as_nprogress_styles_are_retained_when_the_page_changes()
     {
         $this->browse(function ($browser) {
@@ -658,7 +659,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function remote_assets_loaded_with_the_directive_fully_load_before_component_scripts_and_initialization()
     {
         $this->browse(function ($browser) {
@@ -673,7 +674,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function redirects_are_reflected_properly_in_the_url()
     {
         $this->browse(function ($browser) {
@@ -687,7 +688,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function can_programmatically_click_navigate_links()
     {
         $this->browse(function ($browser) {

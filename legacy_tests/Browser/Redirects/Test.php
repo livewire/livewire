@@ -12,7 +12,7 @@ class Test extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_correctly_shows_flash_messages_before_and_after_direct()
     {
         $this->browse(function ($browser) {

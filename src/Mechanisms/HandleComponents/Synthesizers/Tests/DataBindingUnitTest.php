@@ -2,13 +2,14 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestComponent;
 use Livewire\Component;
 use Livewire\Livewire;
 
 class DataBindingUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function update_component_data()
     {
         $component = Livewire::test(DataBindingStub::class);
@@ -18,7 +19,7 @@ class DataBindingUnitTest extends \Tests\TestCase
         $this->assertEquals('bar', $component->foo);
     }
 
-    /** @test */
+    #[Test]
     public function update_nested_component_data_inside_array()
     {
         $component = Livewire::test(DataBindingStub::class);
@@ -30,7 +31,7 @@ class DataBindingUnitTest extends \Tests\TestCase
         $this->assertEquals(['bar', 'bar' => 'baz'], $component->foo);
     }
 
-    /** @test */
+    #[Test]
     public function can_remove_an_array_from_an_array()
     {
         Livewire::test(new class extends TestComponent {

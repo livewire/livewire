@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportQueryString;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_track_properties_in_the_url()
     {
         $component = Livewire::test(new class extends Component {

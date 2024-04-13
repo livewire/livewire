@@ -4,11 +4,12 @@ namespace Livewire\Features\SupportNestedComponentListeners;
 
 use Livewire\Livewire;
 use Livewire\Component as BaseComponent;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     function can_listen_for_child_events_directly_on_child()
     {
         Livewire::visit([
@@ -53,7 +54,7 @@ class BrowserTest extends BrowserTestCase
         ->waitForTextIn('@count', '3');
     }
 
-    /** @test */
+    #[Test]
     function can_dispatch_parameters_to_listeners()
     {
         Livewire::visit([
@@ -89,7 +90,7 @@ class BrowserTest extends BrowserTestCase
         ->waitForTextIn('@count', '5');
     }
 
-    /** @test */
+    #[Test]
     function can_dispatch_multi_word_event_names()
     {
         Livewire::visit([

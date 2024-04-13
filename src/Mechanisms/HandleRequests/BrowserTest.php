@@ -4,10 +4,11 @@ namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_register_a_custom_update_endpoint()
     {
         Livewire::setUpdateRoute(function ($handle) {

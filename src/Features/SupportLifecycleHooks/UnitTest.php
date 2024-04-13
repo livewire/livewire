@@ -6,10 +6,11 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function cant_call_protected_lifecycle_hooks()
     {
         $this->assertTrue(
@@ -40,7 +41,7 @@ class UnitTest extends \Tests\TestCase
         return false;
     }
 
-    /** @test */
+    #[Test]
     public function boot_method_is_called_on_mount_and_on_subsequent_updates()
     {
         Livewire::test(ComponentWithBootMethod::class)
@@ -49,7 +50,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('memo', 'boothydratebooted');
     }
 
-    /** @test */
+    #[Test]
     public function boot_method_can_be_added_to_trait()
     {
         Livewire::test(ComponentWithBootTrait::class)
@@ -58,7 +59,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('memo', 'boottraitboottraitinitializehydratebootedtraitbooted');
     }
 
-    /** @test */
+    #[Test]
     public function boot_method_supports_dependency_injection()
     {
         Livewire::test(ComponentWithBootMethodDI::class)
@@ -67,7 +68,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('memo', 'boottraitbootbootedtraitbooted');
     }
 
-    /** @test */
+    #[Test]
     public function it_resolves_the_mount_parameters()
     {
         $component = Livewire::test(ComponentWithOptionalParameters::class);
@@ -91,7 +92,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(null, $component->bar);
     }
 
-    /** @test */
+    #[Test]
     public function it_sets_missing_dynamically_passed_in_parameters_to_null()
     {
         $fooBar = ['foo' => 10, 'bar' => 5];
@@ -104,7 +105,8 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(5, $componentWithFooBar->bar);
         $this->assertSame(null, data_get($componentWithOnlyFoo->instance(), 'bar'));
     }
-    /** @test */
+
+    #[Test]
     public function mount_hook()
     {
         $component = Livewire::test(ForLifecycleHooks::class);
@@ -128,7 +130,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
+    #[Test]
     public function update_property()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
@@ -163,7 +165,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
+    #[Test]
     public function update_nested_properties()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
@@ -216,7 +218,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
+    #[Test]
     public function update_nested_properties_with_nested_update_hook()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [

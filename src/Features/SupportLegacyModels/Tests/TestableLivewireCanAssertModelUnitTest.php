@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TestableLivewireCanAssertModelUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_assert_model_property_value()
     {
         Livewire::test(PropertyTestingComponent::class, [

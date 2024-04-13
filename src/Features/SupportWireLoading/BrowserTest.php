@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportWireLoading;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     function can_wire_target_to_a_form_object_property()
     {
         Livewire::visit(new class extends Component {
@@ -76,7 +77,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {
@@ -115,7 +116,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function wire_loading_delay_is_removed_after_being_triggered_once()
     {
         /**
@@ -159,12 +160,12 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Loading...')
         ;
     }
-	
-	/** @test */
+
+	#[Test]
     function wire_loading_targets_single_correct_element()
     {
 		/*
-		 * Previously 
+		 * Previously
 		 */
         Livewire::visit(new class extends Component {
 
@@ -182,7 +183,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 sleep(2);
             }
-			
+
 			public function render()
 			{
 			    return <<<'HTML'
@@ -195,7 +196,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 </div>
                 HTML;
             }
-			
+
         })
         ->type('@input', 'Foo')
 		->waitForText('Loading "prop"...')

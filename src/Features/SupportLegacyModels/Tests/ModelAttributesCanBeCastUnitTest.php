@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
@@ -16,7 +17,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
         parent::setUp();
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_normal_date_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -30,7 +31,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.normal_date', '2019-10-12T00:00:00.000000Z');
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_formatted_date_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -50,7 +51,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.formatted_date', '03-03-2020');
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_datetime_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -64,7 +65,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.date_with_time', '1985-10-26T01:20:00.000000Z');
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_timestamp_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -78,7 +79,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.timestamped_date', 1538110800);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_integer_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -98,7 +99,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.integer_number', 1);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_real_attributes_from_model_casts_definition()
     {
 
@@ -119,7 +120,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.real_number', 2.345);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_float_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -139,7 +140,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.float_number', 3.399);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_double_precision_attributes_from_model_casts_definition()
     {
 
@@ -160,7 +161,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.double_precision_number', 4.20);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_decimal_attributes_with_one_digit_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -180,7 +181,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.decimal_with_one_digit', 5.6);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_decimal_attributes_with_two_digits_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -200,7 +201,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.decimal_with_two_digits', 6.21);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_string_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -220,7 +221,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.string_name', '123');
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_boolean_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -258,7 +259,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.boolean_value', false);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_array_attributes_from_model_casts_definition()
     {
 
@@ -273,7 +274,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.array_list', ['foo', 'bar']);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_json_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
@@ -287,7 +288,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.json_list', [4, 5, 6]);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_collection_attributes_from_model_casts_definition()
     {
 
@@ -302,7 +303,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.collected_list', [false, true]);
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_object_attributes_from_model_casts_definition()
     {
 
@@ -319,7 +320,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->assertSnapshotSet('model.object_value.email', 'marian@my-company.rocks');
     }
 
-    /** @test */
+    #[Test]
     public function can_cast_attributes_with_custom_caster_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)

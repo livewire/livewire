@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportEntangle;
 
+use PHPUnit\Framework\Attributes\Test;
+
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_()
     {
         $this->assertTrue(true);

@@ -3,10 +3,11 @@
 namespace Livewire\Features\SupportNestingComponents;
 
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function parent_renders_child()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
@@ -16,7 +17,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('foo', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function parent_renders_stub_element_in_place_of_child_on_subsequent_renders()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
@@ -30,7 +31,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('foo', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function stub_element_root_element_matches_original_child_component_root_element()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
@@ -44,7 +45,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('span', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function parent_tracks_subsequent_renders_of_children_inside_a_loop()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildrenStub::class);
@@ -62,7 +63,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('bar', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_syntax()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildrenWithWireKeyStub::class);
@@ -80,7 +81,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('bar', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_having_comma()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildrenWithWireKeyHavingCommaStub::class);
@@ -98,7 +99,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('bar', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function parent_keeps_rendered_children_even_when_skipped_rendering()
     {
         app('livewire')->component('parent', ParentComponentForSkipRenderStub::class);

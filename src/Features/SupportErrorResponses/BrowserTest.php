@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportErrorResponses;
 
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function it_shows_page_expired_dialog_when_session_has_expired()
     {
         Livewire::visit(Component::class)
@@ -22,7 +23,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_custom_hook_dialog_using_on_error_response_hook_when_session_has_expired()
     {
         Livewire::withQueryParams(['useCustomErrorResponseHook' => true])

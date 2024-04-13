@@ -45,7 +45,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function checkboxes_fuzzy_match_integer_values()
     {
         $this->browse(function (Browser $browser) {

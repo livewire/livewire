@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportNestingComponents;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_add_new_components()
     {
         Livewire::visit([
@@ -41,7 +42,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function nested_components_do_not_error_with_empty_elements_on_page()
     {
         Livewire::visit([
@@ -89,7 +90,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function nested_components_do_not_error_when_parent_has_custom_layout_and_default_layout_does_not_exist()
     {
         config()->set('livewire.layout', '');
@@ -128,7 +129,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function nested_components_do_not_error_when_child_deleted()
     {
         Livewire::visit([
@@ -180,7 +181,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertNotPresent('@child-one');
     }
 
-    /** @test */
+    #[Test]
     public function lazy_nested_components_do_not_call_boot_method_twice()
     {
         Livewire::visit([
@@ -219,7 +220,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function nested_components_can_be_removed_and_readded_to_dom()
     {
         Livewire::visit([

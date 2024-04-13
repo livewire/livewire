@@ -9,10 +9,11 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function uses_standard_app_layout_by_default()
     {
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
@@ -24,7 +25,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_a_default_layout()
     {
         config()->set('livewire.layout', 'layouts.app-with-baz-hardcoded');
@@ -37,7 +38,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_the_default_layout_to_a_class_based_component_layout()
     {
         config()->set('livewire.layout', \LegacyTests\AppLayout::class);
@@ -52,7 +53,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_params_with_a_configured_class_based_component_layout()
     {
         config()->set('livewire.layout', \LegacyTests\AppLayout::class);
@@ -66,7 +67,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_custom_slot_for_a_configured_class_based_component_layout()
     {
         config()->set('livewire.layout', \LegacyTests\AppLayout::class);
@@ -79,7 +80,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('bar');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_the_default_layout_to_an_anonymous_component_layout()
     {
         config()->set('livewire.layout', 'layouts.app-anonymous-component');
@@ -93,7 +94,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_params_with_a_configured_anonymous_component_layout()
     {
         config()->set('livewire.layout', 'layouts.app-anonymous-component');
@@ -107,7 +108,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_custom_slot_for_a_configured_anonymous_component_layout()
     {
         config()->set('livewire.layout', 'layouts.app-anonymous-component');
@@ -120,7 +121,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('bar');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_params_with_a_configured_anonymous_component_layout_that_has_a_required_prop()
     {
         config()->set('livewire.layout', 'layouts.app-anonymous-component-with-required-prop');
@@ -134,7 +135,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_override_optional_props_with_a_configured_anonymous_component_layout()
     {
         config()->set('livewire.layout', 'layouts.app-anonymous-component');
@@ -148,7 +149,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_pass_attributes_to_a_configured_class_based_component_layout()
     {
         config()->set('livewire.layout', \LegacyTests\AppLayout::class);
@@ -161,7 +162,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('id="foo"', false);
     }
 
-    /** @test */
+    #[Test]
     public function can_pass_attributes_to_a_configured_anonymous_component_layout()
     {
         config()->set('livewire.layout', 'layouts.app-anonymous-component');
@@ -173,7 +174,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('class="foo"', false);
     }
 
-    /** @test */
+    #[Test]
     public function can_extend_a_blade_layout()
     {
         $this->withoutExceptionHandling();
@@ -185,7 +186,7 @@ class UnitTest extends \Tests\TestCase
         $this->get('/foo')->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_custom_section()
     {
         Livewire::component(ComponentWithCustomSection::class);
@@ -195,7 +196,7 @@ class UnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_custom_layout()
     {
         Livewire::component(ComponentWithCustomLayout::class);
@@ -205,7 +206,7 @@ class UnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_custom_slot_for_a_layout()
     {
         Livewire::component(ComponentWithCustomSlotForLayout::class);
@@ -215,7 +216,7 @@ class UnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_params_with_a_custom_class_based_component_layout()
     {
         Livewire::component(ComponentWithClassBasedComponentLayout::class);
@@ -227,7 +228,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_params_set_in_the_constructor_of_a_custom_class_based_component_layout()
     {
         Livewire::component(ComponentWithClassBasedComponentLayoutAndParams::class);
@@ -239,7 +240,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_attributes_with_a_custom_class_based_component_layout()
     {
         Livewire::component(ComponentWithClassBasedComponentLayoutAndAttributes::class);
@@ -250,7 +251,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('class="foo"', false);
     }
 
-    /** @test */
+    #[Test]
     public function can_show_params_with_a_custom_anonymous_component_layout()
     {
         Livewire::component(ComponentWithAnonymousComponentLayout::class);
@@ -262,7 +263,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_attributes_with_a_custom_anonymous_component_layout()
     {
         Livewire::component(ComponentWithAnonymousComponentLayoutAndAttributes::class);
@@ -274,7 +275,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('id="foo"', false);
     }
 
-    /** @test */
+    #[Test]
     public function can_show_the_params()
     {
         Livewire::component(ComponentWithCustomParams::class);
@@ -285,7 +286,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('foo');
     }
 
-    /** @test */
+    #[Test]
     public function can_show_params_with_custom_layout()
     {
         Livewire::component(ComponentWithCustomParamsAndLayout::class);
@@ -296,7 +297,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('livewire');
     }
 
-    /** @test */
+    #[Test]
     public function route_supports_laravels_missing_fallback_function(): void
     {
         Route::get('awesome-js/{framework}', ComponentWithModel::class)
@@ -308,7 +309,7 @@ class UnitTest extends \Tests\TestCase
         $this->get('/awesome-js/jquery')->assertRedirect('/awesome-js/alpine');
     }
 
-    /** @test */
+    #[Test]
     public function can_pass_parameters_to_a_layout_file()
     {
         Livewire::component(ComponentForRouteRegistration::class);
@@ -318,7 +319,7 @@ class UnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_handle_requests_after_application_is_created()
     {
         Livewire::component(ComponentForRouteRegistration::class);
@@ -332,7 +333,7 @@ class UnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function component_uses_alias_instead_of_full_name_if_registered()
     {
         Livewire::component('component-alias', ComponentForRouteRegistration::class);
@@ -343,7 +344,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('component-alias');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_layout_using_layout_attribute()
     {
         Route::get('/configurable-layout', ComponentForRenderLayoutAttribute::class);
@@ -355,7 +356,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_layout_using_layout_attribute_on_class_instead_of_render_method()
     {
         Route::get('/configurable-layout', ComponentForClassLayoutAttribute::class);
@@ -367,7 +368,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_layout_using_layout_attribute_on_parent_class()
     {
         Route::get('/configurable-layout', ComponentForParentClassLayoutAttribute::class);
@@ -379,7 +380,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_title_using_title_attribute()
     {
         Route::get('/configurable-layout', ComponentForTitleAttribute::class);
@@ -391,7 +392,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('some-title');
     }
 
-    /** @test */
+    #[Test]
     public function can_use_layout_slots_in_full_page_components()
     {
         Route::get('/configurable-layout', ComponentWithMultipleLayoutSlots::class);
@@ -406,7 +407,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('I am a footer - foo');
     }
 
-    /** @test */
+    #[Test]
     public function can_modify_response()
     {
         Route::get('/configurable-layout', ComponentWithCustomResponseHeaders::class);
@@ -416,7 +417,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHeader('x-livewire', 'awesome');
     }
 
-    /** @test */
+    #[Test]
     public function can_configure_title_in_render_method_and_layout_using_layout_attribute()
     {
         Route::get('/configurable-layout', ComponentWithClassBasedComponentTitleAndLayoutAttribute::class);
@@ -427,7 +428,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('some-title');
     }
 
-    /** @test */
+    #[Test]
     public function can_push_to_stacks()
     {
         Route::get('/layout-with-stacks', ComponentWithStacks::class);
@@ -440,7 +441,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('I am a script 2');
     }
 
-    /** @test */
+    #[Test]
     public function can_use_multiple_slots_with_same_name()
     {
         Route::get('/slots', ComponentWithTwoHeaderSlots::class);
@@ -459,7 +460,7 @@ class UnitTest extends \Tests\TestCase
         $this->get('/route-with-params/123')->assertSeeText('123');
     }
 
-    /** @test */
+    #[Test]
     public function can_access_route_parameters_with_mount_method()
     {
         Route::get('/route-with-params/{myId}', ComponentForRouteWithMountParametersTest::class);

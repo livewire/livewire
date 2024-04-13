@@ -6,6 +6,7 @@ use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use PHPUnit\Framework\Attributes\Test;
 
 class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
 {
@@ -50,7 +51,7 @@ class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
         };
     }
 
-    /** @test */
+    #[Test]
     public function can_use_a_custom_update_route_with_a_uri_segment()
     {
         $this->browse(function (\Laravel\Dusk\Browser $browser) {

@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportLocales;
 use Illuminate\Support\Facades\App;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function a_livewire_component_can_persist_its_locale()
     {
         // Set locale

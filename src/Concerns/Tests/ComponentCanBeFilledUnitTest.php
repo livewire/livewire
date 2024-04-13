@@ -6,10 +6,11 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
+use PHPUnit\Framework\Attributes\Test;
 
 class ComponentCanBeFilledUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_fill_from_an_array()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class);
@@ -29,7 +30,7 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('private');
     }
 
-    /** @test */
+    #[Test]
     public function can_fill_from_an_object()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class);
@@ -45,7 +46,7 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('private');
     }
 
-    /** @test */
+    #[Test]
     public function can_fill_from_an_eloquent_model()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class);
@@ -61,7 +62,7 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('private');
     }
 
-    /** @test */
+    #[Test]
     public function can_fill_using_dot_notation()
     {
         Livewire::test(ComponentWithFillableProperties::class)

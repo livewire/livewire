@@ -2,13 +2,14 @@
 
 namespace Livewire\Features\SupportMultipleRootElementDetection;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Livewire\Component;
 
 class UnitTest extends TestCase
 {
-    /** @test */
+    #[Test]
     function two_or_more_root_elements_throws_an_error()
     {
         config()->set('app.debug', true);
@@ -31,7 +32,7 @@ class UnitTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     function allow_script_tags_as_second_element()
     {
         config()->set('app.debug', true);
@@ -52,7 +53,7 @@ class UnitTest extends TestCase
         })->assertSuccessful();
     }
 
-    /** @test */
+    #[Test]
     function dont_throw_error_in_production_so_that_there_is_no_perf_penalty()
     {
         config()->set('app.debug', false);

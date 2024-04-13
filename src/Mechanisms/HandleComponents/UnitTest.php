@@ -8,10 +8,11 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function it_restores_laravel_middleware_after_livewire_test()
     {
         // Run a basic Livewire test first to ensure Livewire has disabled
@@ -30,7 +31,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('laravelaaalaravel');
     }
 
-    /** @test */
+    #[Test]
     public function synthesized_property_types_are_preserved_after_update()
     {
         Livewire::test(new class extends Component {
@@ -53,7 +54,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function uninitialized_integer_can_be_set_to_empty_string()
     {
         Livewire::test(new class extends Component {
@@ -75,7 +76,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function uninitialized_integer_in_a_form_object_can_be_set_to_empty_string()
     {
         Livewire::test(new class extends Component {
@@ -97,7 +98,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
         Livewire::test(new class extends \Livewire\Component {
@@ -132,7 +133,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null_inside_form_object()
     {
         Livewire::test(new class extends \Livewire\Component {
@@ -155,7 +156,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_bypasses_synthesizer_hydration_when_deleting()
     {
         Livewire::test(new class extends \Livewire\Component {

@@ -6,10 +6,11 @@ use Livewire\Attributes\Computed;
 use Illuminate\View\ViewException;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function corrupt_component_payload_exception_is_no_longer_thrown_from_data_incompatible_with_javascript()
     {
         Livewire::visit(new class extends \Livewire\Component {
@@ -69,7 +70,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_converts_empty_strings_to_null_for_integer_properties()
     {
         Livewire::visit(new class extends \Livewire\Component {
@@ -91,7 +92,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_uses_the_synthesizers_for_multiple_types_property_updates()
     {
         Livewire::visit(new class extends \Livewire\Component {
@@ -117,7 +118,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
         Livewire::visit(new class extends \Livewire\Component {

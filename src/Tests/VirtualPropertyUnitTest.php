@@ -4,12 +4,13 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 const PROPERTY_NAME = 'virtualProperty';
 
 class VirtualPropertyUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function virtual_property_is_accessible()
     {
         $this->markTestSkipped('Not sure we should support this.');

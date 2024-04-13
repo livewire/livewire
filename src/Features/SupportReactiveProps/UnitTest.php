@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportReactiveProps;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_pass_prop_to_child_component()
     {
         Livewire::test([new class extends Component {
@@ -27,7 +28,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('bar');
     }
 
-    /** @test */
+    #[Test]
     function can_change_reactive_prop_in_child_component()
     {
         $this->markTestSkipped('Unit testing child components isnt supported yet');

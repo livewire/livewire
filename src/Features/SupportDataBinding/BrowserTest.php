@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportDataBinding;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -9,7 +10,7 @@ use Livewire\Attributes\Computed;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     function can_use_wire_dirty()
     {
         Livewire::visit(new class extends Component {
@@ -37,7 +38,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_update_bound_value_from_lifecyle_hook()
     {
         Livewire::visit(new class extends Component {

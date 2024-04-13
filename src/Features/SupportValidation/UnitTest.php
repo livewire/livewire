@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportValidation;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestComponent;
 use Livewire\Wireable;
 use Livewire\Livewire;
@@ -18,7 +19,7 @@ use Illuminate\Support\Collection;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function update_triggers_rule_attribute()
     {
         Livewire::test(new class extends TestComponent {
@@ -44,7 +45,7 @@ class UnitTest extends \Tests\TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function deprecated_rule_alias_can_be_used()
     {
         Livewire::test(new class extends TestComponent {
@@ -70,7 +71,7 @@ class UnitTest extends \Tests\TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function validate_can_be_used_without_a_rule()
     {
         Livewire::test(new class extends TestComponent {
@@ -97,7 +98,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['foo' => 'required']);
     }
 
-    /** @test */
+    #[Test]
     public function realtime_validation_can_be_opted_out_of()
     {
         Livewire::test(new class extends TestComponent {
@@ -122,7 +123,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors();
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_supports_custom_attribute()
     {
         Livewire::test(new class extends TestComponent {
@@ -143,7 +144,7 @@ class UnitTest extends \Tests\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_supports_custom_attribute_as_alias()
     {
         Livewire::test(new class extends TestComponent {
@@ -164,7 +165,7 @@ class UnitTest extends \Tests\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_alias_is_translatable()
     {
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
@@ -183,7 +184,7 @@ class UnitTest extends \Tests\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_alias_is_translatable_with_array()
     {
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
@@ -202,7 +203,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_alias_translation_can_be_opted_out()
     {
         Lang::addLines(['translatable.foo' => 'Translated Foo'], App::currentLocale());
@@ -221,7 +222,7 @@ class UnitTest extends \Tests\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_supports_custom_messages()
     {
         Livewire::test(new class extends TestComponent {
@@ -242,7 +243,7 @@ class UnitTest extends \Tests\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_supports_custom_messages_when_using_repeated_attributes()
     {
         Livewire::test(new class extends TestComponent {
@@ -259,7 +260,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_message_is_translatable()
     {
         Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
@@ -278,7 +279,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attribute_message_is_translatable_with_array()
     {
         Lang::addLines(['translatable.foo' => 'Your foo is too short.'], App::currentLocale());
@@ -297,7 +298,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attributes_can_contain_rules_for_multiple_properties()
     {
         Livewire::test(new class extends TestComponent {
@@ -323,7 +324,7 @@ class UnitTest extends \Tests\TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function rule_attributes_can_contain_multiple_rules()
     {
         Livewire::test(new class extends TestComponent {
@@ -341,7 +342,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attributes_can_contain_multiple_rules_userland(): void
     {
         Livewire::test(new class extends TestComponent {
@@ -361,7 +362,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function rule_attributes_can_be_repeated()
     {
         Livewire::test(new class extends TestComponent {
@@ -391,7 +392,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function validate_with_rules_property()
     {
         Livewire::test(ComponentWithRulesProperty::class)
@@ -400,7 +401,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['foo' => 'required']);
     }
 
-    /** @test */
+    #[Test]
     public function validate_only_with_rules_property()
     {
         Livewire::test(ComponentWithRulesProperty::class)
@@ -408,7 +409,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['bar' => 'required']);
     }
 
-    /** @test */
+    #[Test]
     public function validate_without_rules_property_and_no_args_throws_exception()
     {
         $this->expectException(MissingRulesException::class);
@@ -416,7 +417,7 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(ComponentWithoutRulesProperty::class)->call('save');
     }
 
-    /** @test */
+    #[Test]
     public function can_validate_collection_properties()
     {
         Livewire::test(ComponentWithRulesProperty::class)
@@ -429,7 +430,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors('baz.*.foo');
     }
 
-    /** @test */
+    #[Test]
     public function validate_component_properties()
     {
         $component = Livewire::test(ForValidation::class);
@@ -440,7 +441,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('The bar field is required', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function validate_component_properties_with_custom_message()
     {
         $component = Livewire::test(ForValidation::class);
@@ -450,7 +451,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('Custom Message', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function validate_component_properties_with_custom_message_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -460,7 +461,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('Custom Message', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function validate_component_properties_with_custom_attribute_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -471,7 +472,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('The Items Baz field is required.', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function validate_component_properties_with_custom_attribute()
     {
         $component = Livewire::test(ForValidation::class);
@@ -481,7 +482,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('The foobar field is required.', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function validate_component_properties_with_custom_value_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -491,7 +492,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('The bar field is required when foo is my custom value.', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function validate_nested_component_properties()
     {
         $component = Livewire::test(ForValidation::class);
@@ -501,7 +502,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('The emails.1 field must be a valid email address.', $component->effects['html']);
     }
 
-    /** @test */
+    #[Test]
     public function validate_deeply_nested_component_properties()
     {
         $component = Livewire::test(ForValidation::class);
@@ -512,7 +513,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringNotContainsString('items.0.baz field is required', $component->html());
     }
 
-    /** @test */
+    #[Test]
     public function validation_errors_persist_across_requests()
     {
         $component = Livewire::test(ForValidation::class);
@@ -523,7 +524,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The bar field is required');
     }
 
-    /** @test */
+    #[Test]
     public function old_validation_errors_are_overwritten_if_new_request_has_errors()
     {
         $component = Livewire::test(ForValidation::class);
@@ -535,7 +536,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The foo field is required');
     }
 
-    /** @test */
+    #[Test]
     public function old_validation_is_cleared_if_new_validation_passes()
     {
         $component = Livewire::test(ForValidation::class);
@@ -553,7 +554,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('The bar field is required');
     }
 
-    /** @test */
+    #[Test]
     public function can_validate_only_a_specific_field_and_preserve_other_validation_messages()
     {
         $component = Livewire::test(ForValidation::class);
@@ -570,7 +571,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The bar field is required');
     }
 
-    /** @test */
+    #[Test]
     public function validating_only_a_specific_field_wont_throw_an_error_if_the_field_doesnt_exist()
     {
         $component = Livewire::test(ForValidation::class);
@@ -582,7 +583,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('The bar field is required');
     }
 
-    /** @test */
+    #[Test]
     public function validating_only_a_specific_field_wont_throw_an_error_if_the_array_key_doesnt_exist()
     {
         $component = Livewire::test(ForValidation::class);
@@ -593,7 +594,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('items.0.baz field is required');
     }
 
-    /** @test */
+    #[Test]
     public function can_validate_only_a_specific_field_with_custom_message_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -610,7 +611,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('Bar Message'); // Bar is not set, show message
     }
 
-    /** @test */
+    #[Test]
     public function can_validate_only_a_specific_field_with_custom_attributes_property()
     {
         $component = Livewire::test(ForValidation::class);
@@ -625,7 +626,7 @@ class UnitTest extends \Tests\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function can_validate_only_a_specific_field_with_deeply_nested_array()
     {
         $component = Livewire::test(ForValidation::class);
@@ -637,7 +638,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('items.1.baz field is required');
     }
 
-    /** @test */
+    #[Test]
     public function old_deeply_nested_wildcard_validation_only_is_cleared_if_new_validation_passes()
     {
         $component = Livewire::test(ForValidation::class);
@@ -650,7 +651,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('items.1.baz field is required');
     }
 
-    /** @test */
+    #[Test]
     public function old_deeply_nested_wildcard_validation_only_is_cleared_if_new_validation_fails()
     {
         $component = Livewire::test(ForValidation::class);
@@ -665,7 +666,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('items.0.baz field is required');
     }
 
-    /** @test */
+    #[Test]
     public function old_deeply_nested_specific_validation_only_is_cleared_if_new_validation_passes()
     {
         $component = Livewire::test(ForValidation::class);
@@ -678,7 +679,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('items.1.baz field is required');
     }
 
-    /** @test */
+    #[Test]
     public function old_deeply_nested_specific_validation_only_is_cleared_if_new_validation_fails()
     {
         $component = Livewire::test(ForValidation::class);
@@ -693,7 +694,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('items.0.baz field is required');
     }
 
-    /** @test */
+    #[Test]
     public function validation_errors_are_shared_for_all_views()
     {
         $component = Livewire::test(ForValidation::class);
@@ -708,7 +709,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(app('view')->shared('errors') === $errors);
     }
 
-    /** @test */
+    #[Test]
     public function validation_errors_are_shared_when_redirecting_back_to_full_page_component()
     {
         // We apply the web middleware here so that the errors will get shared
@@ -725,7 +726,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('sharedError:The bar field is required');
     }
 
-    /** @test */
+    #[Test]
     public function multi_word_validation_rules_failing_are_assertable()
     {
         $component = Livewire::test(ForValidation::class);
@@ -736,7 +737,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['foo' => 'alpha_dash']);
     }
 
-    /** @test */
+    #[Test]
     public function class_based_validation_rules_failing_are_assertable()
     {
         $component = Livewire::test(ForValidation::class);
@@ -747,7 +748,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['foo' => ValueEqualsFoobar::class]);
     }
 
-    /** @test */
+    #[Test]
     public function can_assert_has_no_errors_when_no_validation_has_failed_and_specific_keys_are_supplied()
     {
         $component = Livewire::test(ForValidation::class);
@@ -759,7 +760,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors(['foo' => 'required']);
     }
 
-    /** @test */
+    #[Test]
     public function multi_word_validation_rules_passing_are_assertable()
     {
         $component = Livewire::test(ForValidation::class);
@@ -770,7 +771,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors(['foo' => 'alpha_dash']);
     }
 
-    /** @test */
+    #[Test]
     public function class_based_validation_rules_are_assertable()
     {
         $component = Livewire::test(ForValidation::class);
@@ -781,7 +782,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors(['foo' => ValueEqualsFoobar::class]);
     }
 
-    /** @test */
+    #[Test]
     public function custom_validation_messages_are_cleared_between_validate_only_validations()
     {
         $component = Livewire::test(ForValidation::class);
@@ -811,7 +812,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('Lengths must be the same');
     }
 
-    /** @test */
+    #[Test]
     public function validation_fails_when_same_rule_is_used_without_matching()
     {
         Livewire::test(ForValidation::class)
@@ -820,7 +821,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The password field must match password confirmation.');
     }
 
-    /** @test */
+    #[Test]
     public function validation_passes_when_same_rule_is_used_and_matches()
     {
         Livewire::test(ForValidation::class)
@@ -830,7 +831,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee('The password field must match password confirmation.');
     }
 
-    /** @test */
+    #[Test]
     public function only_data_in_validation_rules_is_returned()
     {
         $component = new ForValidation();
@@ -842,7 +843,7 @@ class UnitTest extends \Tests\TestCase
         ], $validatedData);
     }
 
-    /** @test */
+    #[Test]
     public function can_assert_validation_errors_on_errors_thrown_from_custom_validator()
     {
         $component = Livewire::test(ForValidation::class);
@@ -850,7 +851,7 @@ class UnitTest extends \Tests\TestCase
         $component->call('failFooOnCustomValidator')->assertHasErrors('plop');
     }
 
-    /** @test */
+    #[Test]
     public function can_use_withvalidator_method()
     {
         $component = Livewire::test(WithValidationMethod::class);
@@ -872,7 +873,7 @@ class UnitTest extends \Tests\TestCase
         $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateOnlyMethod')->assertSet('count', 1);
     }
 
-    /** @test */
+    #[Test]
     public function a_set_of_items_will_validate_individually()
     {
         Livewire::test(ValidatesOnlyTestComponent::class, ['image' => 'image', 'imageAlt' => 'This is an image'])
@@ -884,7 +885,7 @@ class UnitTest extends \Tests\TestCase
             ->assertHasNoErrors(['image', 'image_url', 'image_alt']);
     }
 
-    /** @test */
+    #[Test]
     public function a_computed_property_is_able_to_validate()
     {
         Livewire::test(ValidatesComputedProperty::class, ['helper' => 10])
@@ -903,7 +904,7 @@ class UnitTest extends \Tests\TestCase
             ->call('runValidationRuleWithoutProperty');
     }
 
-    /** @test */
+    #[Test]
     public function when_unwrapping_data_for_validation_an_object_is_checked_if_it_is_wireable_first()
     {
         $this->markTestSkipped('Not sure we support setting data on a wireable without requiring a ->set method on the wireable...');
@@ -917,7 +918,7 @@ class UnitTest extends \Tests\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function adding_validation_error_inside_mount_method()
     {
         Livewire::test(AddErrorInMount::class)

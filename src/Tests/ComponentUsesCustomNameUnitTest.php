@@ -4,10 +4,11 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class ComponentUsesCustomNameUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function uses_default_component_name()
     {
         $component = Livewire::test(UsesDefaultComponentName::class);
@@ -16,7 +17,7 @@ class ComponentUsesCustomNameUnitTest extends \Tests\TestCase
         $this->assertNotEquals('Hello World', $component->instance()->getName());
     }
 
-    /** @test */
+    #[Test]
     public function preserves_name_property()
     {
         $component = Livewire::test(PreservesNameProperty::class);

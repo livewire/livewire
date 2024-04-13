@@ -3,11 +3,12 @@
 namespace Livewire\Mechanisms\Tests;
 
 use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Attributes\Test;
 
 // TODO - Change this to \Tests\TestCase
 class LivewireDirectiveUnitTest extends \LegacyTests\Unit\TestCase
 {
-    /** @test */
+    #[Test]
     public function component_is_loaded_with_blade_directive()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
@@ -19,7 +20,7 @@ class LivewireDirectiveUnitTest extends \LegacyTests\Unit\TestCase
         $this->assertStringContainsString('div', $output);
     }
 
-    /** @test */
+    #[Test]
     public function component_is_loaded_with_blade_directive_by_classname()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);

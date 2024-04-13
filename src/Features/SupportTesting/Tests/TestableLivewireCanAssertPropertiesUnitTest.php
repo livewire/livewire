@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportTesting\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_assert_basic_property_value()
     {
         Livewire::test(PropertyTestingComponent::class)
@@ -16,21 +17,21 @@ class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
             ->assertSet('foo', 'baz');
     }
 
-    /** @test */
+    #[Test]
     function can_assert_computed_property_value()
     {
         Livewire::test(PropertyTestingComponent::class)
             ->assertSet('bob', 'lob');
     }
 
-    /** @test */
+    #[Test]
     function swallows_property_not_found_exceptions()
     {
         Livewire::test(PropertyTestingComponent::class)
             ->assertSet('nonExistentProperty', null);
     }
 
-    /** @test */
+    #[Test]
     function throws_non_property_not_found_exceptions()
     {
         $this->markTestSkipped('In V2 computed properties are "LAZY", what should we do in V3?');

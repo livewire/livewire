@@ -4,13 +4,14 @@ namespace Livewire\Features\SupportSession;
 
 use Illuminate\Support\Facades\Session as FacadesSession;
 use Livewire\Attributes\Session;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 use Livewire\Livewire;
 use Tests\TestComponent;
 
 class UnitTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_creates_a_session_key()
     {
         $component = Livewire::test(new class extends TestComponent {
@@ -27,7 +28,7 @@ class UnitTest extends TestCase
         $this->assertTrue(FacadesSession::has('lw'.crc32($component->instance()->getName().'count')));
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_a_dynamic_session_id()
     {
         Livewire::test(new class extends TestComponent {

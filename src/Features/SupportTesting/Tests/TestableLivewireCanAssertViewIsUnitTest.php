@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportTesting\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class TestableLivewireCanAssertViewIsUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_assert_view_is()
     {
         Livewire::test(ViewComponent::class)

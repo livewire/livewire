@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 use Livewire\Component as BaseComponent;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 class EloquentCollectionsBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
+    #[Test]
     public function it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
@@ -31,7 +32,7 @@ class EloquentCollectionsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_allows_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
@@ -70,7 +71,7 @@ class EloquentCollectionsBrowserTest extends TestCase
         $author->push();
     }
 
-    /** @test */
+    #[Test]
     public function hydrate_works_properly_without_rules()
     {
         $this->browse(function (Browser $browser) {
@@ -81,7 +82,7 @@ class EloquentCollectionsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function hydrate_works_properly_when_collection_is_empty()
     {
         $this->browse(function (Browser $browser) {

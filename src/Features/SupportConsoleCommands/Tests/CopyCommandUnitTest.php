@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Attributes\Test;
 
 class CopyCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function component_is_copied_by_copy_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob']);
@@ -24,7 +25,7 @@ class CopyCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
     }
 
-    /** @test */
+    #[Test]
     public function inline_component_is_copied_by_copy_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob', '--inline' => true]);
@@ -40,7 +41,8 @@ class CopyCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireClassesPath('Bob.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
     }
-    /** @test */
+
+    #[Test]
     public function component_with_test_is_copied_by_copy_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob','--test'=>true]);
@@ -59,7 +61,8 @@ class CopyCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('bob.blade.php')));
         $this->assertTrue(File::exists($this->livewireTestsPath('BobTest.php')));
     }
-    /** @test */
+
+    #[Test]
     public function component_is_copied_by_cp_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob','--test'=>true]);
@@ -80,7 +83,7 @@ class CopyCommandUnitTest extends \Tests\TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function nested_component_is_copied_by_copy_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob.lob','--test'=>true]);
@@ -101,7 +104,7 @@ class CopyCommandUnitTest extends \Tests\TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function multiword_component_is_copied_by_copy_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob-lob','--test'=>true]);
@@ -122,7 +125,7 @@ class CopyCommandUnitTest extends \Tests\TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function pascal_case_component_is_automatically_converted_by_copy_command()
     {
         Artisan::call('make:livewire', ['name' => 'BobLob.BobLob','--test'=>true]);
@@ -142,7 +145,7 @@ class CopyCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('LobLaw/LobLawTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function cannot_copy_component_to_a_name_that_already_exists()
     {
         Artisan::call('make:livewire', ['name' => 'BobLob.BobLob']);
@@ -157,7 +160,7 @@ class CopyCommandUnitTest extends \Tests\TestCase
             ->expectsOutput('Class already exists: app/Livewire/BobLob/LobLaw.php');
     }
 
-    /** @test */
+    #[Test]
     public function can_copy_component_to_a_name_that_already_exists_if_forced()
     {
         Artisan::call('make:livewire', ['name' => 'BobLob.BobLob']);

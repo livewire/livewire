@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportComputed;
 
 use Illuminate\Support\Facades\Cache;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Livewire;
@@ -11,7 +12,7 @@ use Livewire\Attributes\Computed;
 
 class UnitTest extends TestCase
 {
-    /** @test */
+    #[Test]
     function can_make_method_a_computed()
     {
         Livewire::test(new class extends TestComponent {
@@ -23,7 +24,7 @@ class UnitTest extends TestCase
             ->assertSet('foo', 'bar');
     }
 
-    /** @test */
+    #[Test]
     function can_access_computed_properties_inside_views()
     {
         Livewire::test(new class extends TestComponent {
@@ -41,7 +42,7 @@ class UnitTest extends TestCase
             ->assertSee('foobar');
     }
 
-    /** @test */
+    #[Test]
     function computed_properties_only_get_accessed_once_per_request()
     {
         Livewire::test(new class extends TestComponent {
@@ -70,7 +71,7 @@ class UnitTest extends TestCase
             ->assertSet('count', 2);
     }
 
-    /** @test */
+    #[Test]
     function can_bust_computed_cache_using_unset()
     {
         Livewire::test(new class extends TestComponent {
@@ -99,7 +100,7 @@ class UnitTest extends TestCase
             ->assertSet('count', 4);
     }
 
-    /** @test */
+    #[Test]
     function can_tag_cached_computed_property()
     {
         // need to set a cache driver, which can handle tags
@@ -135,7 +136,7 @@ class UnitTest extends TestCase
             ->assertSet('count', 2);
     }
 
-    /** @test */
+    #[Test]
     function can_tag_persisten_computed_property()
     {
         // need to set a cache driver, which can handle tags
@@ -171,7 +172,7 @@ class UnitTest extends TestCase
             ->assertSet('count', 2);
     }
 
-    /** @test */
+    #[Test]
     function can_tag_persisted_computed_with_custom_key_property()
     {
         Cache::setDefaultDriver('array');
@@ -201,7 +202,7 @@ class UnitTest extends TestCase
         $this->assertTrue(Cache::has('baz'));
     }
 
-    /** @test */
+    #[Test]
     function cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);
@@ -223,7 +224,7 @@ class UnitTest extends TestCase
     }
 
 
-    /** @test */
+    #[Test]
     function can_use_multiple_computed_properties_for_different_properties()
     {
         Livewire::test(new class extends TestComponent {
@@ -264,7 +265,7 @@ class UnitTest extends TestCase
             ->assertSet('count', 4);
     }
 
-    /** @test */
+    #[Test]
     function parses_computed_properties()
     {
         $this->assertEquals(
@@ -277,7 +278,7 @@ class UnitTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     function computed_property_is_accessible_using_snake_case()
     {
         Livewire::test(new class extends TestComponent {
@@ -301,7 +302,7 @@ class UnitTest extends TestCase
             ->assertSee('foo_bar');
     }
 
-    /** @test */
+    #[Test]
     function computed_property_is_accessible_when_using_snake_case_or_camel_case_in_the_method_name_in_the_class()
     {
         Livewire::test(new class extends TestComponent {
@@ -346,42 +347,42 @@ class UnitTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(ComputedPropertyStub::class)
             ->assertSee('foo');
     }
 
-    /** @test */
+    #[Test]
     public function injected_computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(InjectedComputedPropertyStub::class)
             ->assertSee('bar');
     }
 
-    /** @test */
+    #[Test]
     public function computed_property_is_memoized_after_its_accessed()
     {
         Livewire::test(MemoizedComputedPropertyStub::class)
             ->assertSee('int(2)');
     }
 
-    /** @test */
+    #[Test]
     public function isset_is_true_on_existing_computed_property()
     {
         Livewire::test(IssetComputedPropertyStub::class)
             ->assertSee('true');
     }
 
-    /** @test */
+    #[Test]
     public function isset_is_false_on_non_existing_computed_property()
     {
         Livewire::test(FalseIssetComputedPropertyStub::class)
             ->assertSee('false');
     }
 
-    /** @test */
+    #[Test]
     public function isset_is_false_on_null_computed_property()
     {
         Livewire::test(NullIssetComputedPropertyStub::class)

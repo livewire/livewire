@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportEvents;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Drawer\Utils;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Blade;
 
 class EchoBrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_listen_for_echo_event()
     {
         Route::get('/dusk/fake-echo', function () {
@@ -45,7 +46,7 @@ class EchoBrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '1');
     }
 
-    /** @test */
+    #[Test]
     public function can_listen_for_echo_event_with_payload()
     {
         Route::get('/dusk/fake-echo', function () {
@@ -80,7 +81,7 @@ class EchoBrowserTest extends BrowserTestCase
 
     // This test asserts agains a scenario that fails silently. Therefore I can't easily make a test for it.
     // I'm leaving it here as a playground for the issue (that has been mostly resolved)...
-    // /** @test */
+    // #[Test]
     // public function echo_listeners_are_torn_down_when_navigating_pages_using_wire_navigate()
     // {
     //     Route::get('/dusk/fake-echo', function () {

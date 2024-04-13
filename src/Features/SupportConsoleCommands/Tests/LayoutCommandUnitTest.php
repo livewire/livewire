@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Attributes\Test;
 
 class LayoutCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function layout_is_created_by_layout_command()
     {
         Artisan::call('livewire:layout');

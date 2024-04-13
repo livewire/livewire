@@ -4,10 +4,11 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class TypedPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_set_uninitialized_typed_properties()
     {
         $testMessage = 'hello world';

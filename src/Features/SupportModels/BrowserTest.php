@@ -8,13 +8,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Component;
 use Livewire\Features\SupportEvents\BaseOn;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function parent_component_with_eloquent_collection_property_does_not_error_when_child_deletes_a_model_contained_within_it()
     {
         Livewire::visit([
@@ -73,7 +74,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function empty_eloquent_collection_property_is_dehydrated_without_errors()
     {
         Livewire::visit([

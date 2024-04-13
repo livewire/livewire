@@ -3,10 +3,11 @@
 namespace Livewire\Features\SupportTransitions;
 
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_transition_blade_conditional_dom_segments()
     {
         $opacity = 'parseFloat(getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity, 10)';
@@ -49,7 +50,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function elements_the_contain_transition_are_displayed_on_page_load()
     {
         Livewire::visit(

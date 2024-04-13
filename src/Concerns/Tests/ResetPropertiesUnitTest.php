@@ -4,10 +4,11 @@ namespace Livewire\Concerns\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class ResetPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_reset_properties()
     {
         Livewire::test(ResetPropertiesComponent::class)
@@ -71,7 +72,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->assertSet('mwa', 'hah');
     }
 
-    /** @test */
+    #[Test]
     public function can_reset_unset_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
@@ -83,7 +84,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertFalse(isset($component->notSet));
     }
 
-    /** @test */
+    #[Test]
     public function can_reset_null_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)

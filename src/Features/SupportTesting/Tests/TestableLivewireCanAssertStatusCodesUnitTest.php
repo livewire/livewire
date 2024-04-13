@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportTesting\Tests;
 
 use Illuminate\Auth\Access\AuthorizationException;
+use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -10,7 +11,7 @@ use Tests\TestComponent;
 
 class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_assert_a_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(NotFoundComponent::class);
@@ -18,7 +19,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
         $component->assertStatus(404);
     }
 
-    /** @test */
+    #[Test]
     function can_assert_a_404_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(NotFoundComponent::class);
@@ -26,7 +27,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
         $component->assertNotFound();
     }
 
-    /** @test */
+    #[Test]
     function can_assert_a_401_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(UnauthorizedComponent::class);
@@ -34,7 +35,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
         $component->assertUnauthorized();
     }
 
-    /** @test */
+    #[Test]
     function can_assert_a_403_status_code_when_an_exception_is_encountered()
     {
         $component = Livewire::test(ForbiddenComponent::class);
@@ -42,7 +43,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
         $component->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     function can_assert_a_403_status_code_when_an_exception_is_encountered_on_an_action()
     {
         $component = Livewire::test(new class extends TestComponent {
@@ -56,7 +57,7 @@ class TestableLivewireCanAssertStatusCodesUnitTest extends \Tests\TestCase
             ->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     function can_assert_status_and_continue_making_livewire_assertions()
     {
         Livewire::test(NormalComponent::class)

@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportLockedProperties;
 use Livewire\Livewire;
 use Livewire\Component as BaseComponent;
 use Livewire\Form;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function cant_update_locked_property()
     {
         $this->expectExceptionMessage(
@@ -29,7 +30,7 @@ class UnitTest extends \Tests\TestCase
         ->set('count', 2);
     }
 
-    /** @test */
+    #[Test]
     function cant_deeply_update_locked_property()
     {
         $this->expectException(CannotUpdateLockedPropertyException::class);
@@ -51,7 +52,7 @@ class UnitTest extends \Tests\TestCase
         ->set('foo.count', 2);
     }
 
-    /** @test */
+    #[Test]
     function can_update_locked_property_with_similar_name()
     {
         Livewire::test(new class extends BaseComponent {
@@ -68,7 +69,7 @@ class UnitTest extends \Tests\TestCase
         ->set('count2', 2);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_updates_form_with_locked_properties()
     {
         Livewire::test(Component::class)

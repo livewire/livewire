@@ -6,10 +6,11 @@ use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class CarbonSynthUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function public_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithPublicCarbonCaster::class)
@@ -20,7 +21,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
+    #[Test]
     public function public_nullable_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
@@ -36,7 +37,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
+    #[Test]
     public function public_carbon_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonImmutableCaster::class)
@@ -52,7 +53,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
+    #[Test]
     public function public_datetime_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeCaster::class)
@@ -68,7 +69,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
+    #[Test]
     public function public_datetime_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeImmutableCaster::class)

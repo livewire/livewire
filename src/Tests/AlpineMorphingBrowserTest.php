@@ -4,11 +4,12 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 /** @group morphing */
 class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function component_with_custom_directive_keeps_state_after_cloning()
     {
         Livewire::visit(new class extends Component {
@@ -53,7 +54,7 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function deep_alpine_state_is_preserved_when_morphing_with_uninitialized_livewire_html()
     {
         Livewire::visit(new class extends Component {
@@ -89,7 +90,7 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function alpine_property_persists_on_array_item_reorder()
     {
         return Livewire::visit(new class extends Component {

@@ -7,10 +7,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_lazy_load_component_with_custom_layout()
     {
         Livewire::component('page', PageWithCustomLayout::class);

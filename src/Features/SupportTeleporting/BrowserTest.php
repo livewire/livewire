@@ -4,11 +4,12 @@ namespace Livewire\Features\SupportTeleporting;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_teleport_dom_via_blade_directive()
     {
         Livewire::visit(new class extends Component {
@@ -24,7 +25,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('teleportedbar');
     }
 
-    /** @test */
+    #[Test]
     public function can_teleport_dom_via_blade_directive_then_change_it()
     {
         Livewire::visit(new class extends Component {
@@ -54,7 +55,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('teleportedbaz');
     }
 
-    /** @test */
+    #[Test]
     public function morphdom_doesnt_remove_subsequent_teleports_if_there_are_multiple()
     {
         Livewire::visit(new class extends Component {

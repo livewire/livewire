@@ -5,12 +5,13 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
+use PHPUnit\Framework\Attributes\Test;
 
 class ModelsCanBeFilledUnitTest extends \Tests\TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
+    #[Test]
     public function can_fill_binded_model_properties()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class, ['user' => new UserModel()]);

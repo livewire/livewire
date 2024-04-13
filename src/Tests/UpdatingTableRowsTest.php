@@ -4,10 +4,11 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UpdatingTableRowsTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function component_renders_table_rows_and_updates_properly()
     {
         Livewire::visit([new class extends Component {

@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 use Livewire\Component as BaseComponent;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 class DataBindingModelsBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
+    #[Test]
     public function it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
@@ -29,7 +30,7 @@ class DataBindingModelsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_enables_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
@@ -65,7 +66,7 @@ class DataBindingModelsBrowserTest extends TestCase
         $author->push();
     }
 
-    /** @test */
+    #[Test]
     public function it_enables_changing_model_attributes_that_have_not_been_initialized_using_entangle()
     {
         $this->browse(function (Browser $browser) {

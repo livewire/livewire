@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_injects_livewire_assets_before_closing_tags(): void
     {
         $this->compare(
@@ -40,7 +41,7 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
+    #[Test]
     public function it_injects_livewire_assets_html_only(): void
     {
         $this->compare(
@@ -57,7 +58,7 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
+    #[Test]
     public function it_injects_livewire_assets_weirdly_formatted_html(): void
     {
         $this->compare(
@@ -94,7 +95,7 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
+    #[Test]
     public function it_injects_livewire_assets_html_with_header(): void
     {
         $this->compare(
@@ -133,13 +134,13 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
+    #[Test]
     public function can_disable_auto_injection_using_global_method(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
+    #[Test]
     public function can_disable_auto_injection_using_config(): void
     {
         config()->set('livewire.inject_assets', false);
@@ -156,7 +157,7 @@ class UnitTest extends TestCase
         $this->get('/with-livewire')->assertDontSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
+    #[Test]
     public function can_force_injection_over_config(): void
     {
         config()->set('livewire.inject_assets', false);
@@ -177,7 +178,7 @@ class UnitTest extends TestCase
         $this->get('/without-livewire')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
+    #[Test]
     public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
         Route::get('/with-livewire', function () {
@@ -192,7 +193,7 @@ class UnitTest extends TestCase
         $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
+    #[Test]
     public function only_auto_injects_when_persist_was_rendered_on_the_page(): void
     {
         Route::get('/with-persist', function () {
@@ -207,19 +208,19 @@ class UnitTest extends TestCase
         $this->get('/with-persist')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
+    #[Test]
     public function only_injects_on_full_page_loads(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
+    #[Test]
     public function only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
+    #[Test]
     public function response_maintains_original_view_after_asset_injection(): void
     {
         Livewire::component('foo', new class extends \Livewire\Component {

@@ -4,11 +4,12 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use ValueError;
 
 class EnumUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function public_properties_can_be_cast()
     {
         Livewire::test(ComponentWithPublicEnumCasters::class)
@@ -17,7 +18,7 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertSet('enum', TestingEnum::from('Be excellent to each other'));
     }
 
-    /** @test */
+    #[Test]
     public function nullable_public_property_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicEnumCaster::class)

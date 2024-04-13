@@ -6,11 +6,12 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\ExpectationFailedException;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_download_a_file()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -19,7 +20,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_a_file_as_stream()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -34,7 +35,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_with_custom_filename()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -42,7 +43,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.csv', 'I\'m the file you should download.');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_a_file_as_stream_with_custom_filename()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -50,7 +51,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.csv', 'alpinejs');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_with_custom_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -58,7 +59,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.csv', 'I\'m the file you should download.', 'text/csv');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_a_file_as_stream_with_custom_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -66,7 +67,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.csv', 'alpinejs', 'text/csv');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_with_custom_japanese_filename()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -74,7 +75,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_a_file_as_stream_with_custom_japanese_filename()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -82,7 +83,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('ダウンロード.csv', 'alpinejs');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_with_custom_japanese_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -90,7 +91,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.', 'text/csv');
     }
 
-    /** @test */
+    #[Test]
     public function can_download_a_file_as_stream_with_custom_japanese_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -98,7 +99,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('ダウンロード.csv', 'alpinejs', 'text/csv');
     }
 
-    /** @test */
+    #[Test]
     public function it_refreshes_html_after_download()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -107,7 +108,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSeeText('Thanks!');
     }
 
-    /** @test */
+    #[Test]
     public function can_assert_that_nothing_was_downloaded()
     {
         Livewire::test(FileDownloadComponent::class)
@@ -115,7 +116,7 @@ class UnitTest extends \Tests\TestCase
             ->assertNoFileDownloaded();
     }
 
-    /** @test */
+    #[Test]
     public function can_fail_to_assert_that_nothing_was_downloaded()
     {
         $this->expectException(ExpectationFailedException::class);

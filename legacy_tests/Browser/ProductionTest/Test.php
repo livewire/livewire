@@ -8,7 +8,7 @@ use Tests\BrowserTestCase;
 
 class Test extends BrowserTestCase
 {
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function ensure_livewire_runs_when_app_debug_is_set_to_false(): void
     {
         Livewire::visit(new class extends Component {

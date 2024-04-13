@@ -4,10 +4,11 @@ namespace Livewire\Concerns\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function a_livewire_component_can_return_an_associative_array_of_public_properties()
     {
         Livewire::test(ComponentWithProperties::class)

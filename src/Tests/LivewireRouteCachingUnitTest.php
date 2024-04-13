@@ -5,11 +5,12 @@ namespace Livewire\Tests;
 use Error;
 use Exception;
 use Illuminate\Routing\Route;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class LivewireRouteCachingUnitTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function livewire_script_route_is_cacheable(): void
     {
         $route = $this->getRoute('livewire/livewire.min.js');
@@ -17,7 +18,7 @@ class LivewireRouteCachingUnitTest extends TestCase
         $this->cacheRoute($route, 'Livewire\Mechanisms\FrontendAssets\FrontendAssets@returnJavaScriptAsFile', "Failed to cache route 'livewire/livewire.js'");
     }
 
-    /** @test */
+    #[Test]
     public function livewire_update_route_is_cacheable(): void
     {
         $route = $this->getRoute('livewire/update');

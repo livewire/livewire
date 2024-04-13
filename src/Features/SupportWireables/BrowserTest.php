@@ -4,11 +4,12 @@ namespace Livewire\Features\SupportWireables;
 
 use Livewire\Livewire;
 use Livewire\Wireable;
+use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function it_can_update_a_custom_wireable_object()
     {
         Livewire::visit(new class () extends \Livewire\Component {
@@ -34,7 +35,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('43');
     }
 
-    /** @test */
+    #[Test]
     public function it_can_update_a_custom_wireable_via_inputs()
     {
         Livewire::visit(new class () extends \Livewire\Component {

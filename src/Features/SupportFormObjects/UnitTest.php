@@ -8,11 +8,12 @@ use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     function can_use_a_form_object()
     {
         Livewire::test(new class extends Component {
@@ -31,7 +32,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_reset_form_object_property()
     {
         Livewire::test(new class extends Component {
@@ -56,7 +57,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_validate_a_form_object()
     {
         Livewire::test(new class extends Component {
@@ -80,7 +81,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_validate_a_specific_rule_has_errors_in_a_form_object()
     {
         Livewire::test(new class extends Component {
@@ -102,7 +103,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_validate_a_form_object_with_validate_only()
     {
         Livewire::test(new class extends Component {
@@ -124,7 +125,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_validate_a_form_object_with_root_component_validate_only()
     {
         Livewire::test(new class extends Component {
@@ -146,7 +147,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_validate_a_form_object_using_rule_attributes()
     {
         Livewire::test(new class extends Component {
@@ -174,7 +175,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_validate_a_form_object_using_rule_attribute_with_custom_name()
     {
         Livewire::test(new class extends Component {
@@ -199,7 +200,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_reset_property()
     {
         Livewire::test(new class extends Component {
@@ -225,7 +226,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_reset_all_properties()
     {
         Livewire::test(new class extends Component {
@@ -251,7 +252,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function all_properties_are_available_in_rules_method()
     {
         Livewire::test(new class extends Component {
@@ -277,7 +278,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_get_only_specific_properties()
     {
         $component = new class extends Component {};
@@ -300,7 +301,7 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     function can_get_properties_except()
     {
         $component = new class extends Component {};
@@ -323,7 +324,7 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     function validation_can_show_a_form_object_dynamic_validation_attributes()
     {
         Livewire::test(new class extends Component {
@@ -348,7 +349,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function multiple_form_objects_in_component_not_interfering_between()
     {
         Livewire::test(new class extends Component {
@@ -391,7 +392,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function validation_showing_a_form_object_dynamic_messages()
     {
         Livewire::test(new class extends Component {
@@ -414,7 +415,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_fill_a_form_object_from_model()
     {
         Livewire::test(new class extends Component {
@@ -444,7 +445,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_fill_a_form_object_from_array()
     {
         Livewire::test(new class extends Component {
@@ -471,7 +472,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function form_object_validation_runs_alongside_component_validation()
     {
         Livewire::test(new class extends Component {
@@ -497,7 +498,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function form_object_validation_wont_run_if_rules_are_passed_into_validate()
     {
         Livewire::test(new class extends Component {
@@ -522,7 +523,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function allows_form_object_without_rules_without_throwing_an_error()
     {
         Livewire::test(new class extends Component {
@@ -552,7 +553,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function allows_form_object_without_rules_but_can_still_validate_it_with_its_own_rules()
     {
         Livewire::test(new class extends Component {
@@ -584,7 +585,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function form_object_without_rules_can_still_be_validated_and_return_proper_data()
     {
         Livewire::test(new class extends Component {
@@ -621,7 +622,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function resetting_validation_errors_resets_form_objects_as_well()
     {
         Livewire::test(new class extends Component {
@@ -654,7 +655,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function can_intercept_form_object_validator_instance()
     {
         Livewire::test(new class extends Component {

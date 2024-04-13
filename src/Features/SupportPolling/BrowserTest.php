@@ -2,13 +2,14 @@
 
 namespace Livewire\Features\SupportPolling;
 
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function polling_requests_are_batched_by_default()
     {
         Livewire::visit([new class extends Component {
@@ -26,7 +27,7 @@ class BrowserTest extends BrowserTestCase
             {
                 $this->time = LARAVEL_START;
             }
-            
+
             public function render() { return <<<'HTML'
             <div wire:poll.500ms id="child">
                 Child {{ $num }}

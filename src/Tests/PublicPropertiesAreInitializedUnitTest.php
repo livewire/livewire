@@ -4,25 +4,26 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Stringable;
 
 class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function uninitialized_public_property_is_null()
     {
         Livewire::test(UninitializedPublicPropertyComponent::class)
             ->assertSet('message', null);
     }
 
-    /** @test */
+    #[Test]
     public function initialized_public_property_shows_value()
     {
         Livewire::test(InitializedPublicPropertyComponent::class)
             ->assertSee('Non-typed Properties are boring');
     }
 
-    /** @test */
+    #[Test]
     public function modified_initialized_public_property_should_not_revert_after_subsequent_hydration()
     {
         $propertyValue = Livewire::test(InitializedPublicPropertyComponent::class)
@@ -34,21 +35,21 @@ class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
         $this->assertEquals(null, $propertyValue);
     }
 
-    /** @test */
+    #[Test]
     public function uninitialized_public_typed_property_is_null()
     {
         Livewire::test(UninitializedPublicTypedPropertyComponent::class)
             ->assertSet('message', null);
     }
 
-    /** @test */
+    #[Test]
     public function uninitialized_public_union_typed_property_is_null()
     {
         Livewire::test(UninitializedPublicUnionTypedPropertyComponent::class)
             ->assertSet('message', null);
     }
 
-    /** @test */
+    #[Test]
     public function uninitialized_public_typed_property_is_still_null_after_refresh()
     {
         Livewire::test(UninitializedPublicTypedPropertyAfterRefreshComponent::class)
@@ -56,7 +57,7 @@ class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
             ->assertSet('message', null);
     }
 
-    /** @test */
+    #[Test]
     public function initialized_public_typed_property_shows_value()
     {
         Livewire::test(InitializedPublicTypedPropertyComponent::class)

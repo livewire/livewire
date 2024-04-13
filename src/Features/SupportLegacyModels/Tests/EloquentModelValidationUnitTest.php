@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 use Livewire\Livewire;
 use Livewire\Component;
@@ -13,7 +14,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
 
     // @todo: Fix model array keys now legacy models have been implemented
 
-    /** @test */
+    #[Test]
     public function standard_model_property()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -28,7 +29,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals('baz', $foo->fresh()->bar);
     }
 
-    /** @test */
+    #[Test]
     public function validate_message_doesnt_contain_dot_notation_if_property_is_model()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -39,7 +40,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertSee('The bar field is required.');
     }
 
-    /** @test */
+    #[Test]
     public function validate_message_doesnt_contain_dot_notation_if_property_is_model_with_snake_cased_attribute()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -50,7 +51,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertSee('The bar baz field is required.');
     }
 
-    /** @test */
+    #[Test]
     public function validate_message_doesnt_contain_dot_notation_if_property_is_camelcased_model()
     {
         Livewire::test(ComponentWithCamelCasedModelProperty::class, [
@@ -61,7 +62,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertSee('The bar field is required.');
     }
 
-    /** @test */
+    #[Test]
     public function validate_message_still_honors_original_custom_attributes_if_property_is_a_model()
     {
         app('translator')->addLines(['validation.required' => 'The :attribute field is required.'], 'en');
@@ -74,7 +75,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertSee('The plop field is required.');
     }
 
-    /** @test */
+    #[Test]
     public function validate_only_message_doesnt_contain_dot_notation_if_property_is_model()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -85,7 +86,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertSee('The bar field is required.');
     }
 
-    /** @test */
+    #[Test]
     public function array_model_property()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -100,7 +101,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals(['bob', 'lob'], $foo->fresh()->baz);
     }
 
-    /** @test */
+    #[Test]
     public function array_wildcard_key_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -115,7 +116,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals(['bb', 'bbo'], $foo->fresh()->bob);
     }
 
-    /** @test */
+    #[Test]
     public function array_index_key_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -130,7 +131,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals(['bbo'], $foo->fresh()->bob);
     }
 
-    /** @test */
+    #[Test]
     public function array_wildcard_key_with_key_after_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -145,7 +146,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
     }
 
-    /** @test */
+    #[Test]
     public function array_with_numerical_index_key_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -160,7 +161,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
     }
 
-    /** @test */
+    #[Test]
     public function array_wildcard_key_with_numeric_index_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -175,7 +176,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals(['law' => [['blog' => 'globbbbb']]], $foo->fresh()->lob);
     }
 
-    /** @test */
+    #[Test]
     public function array_wildcard_key_with_deep_numeric_index_model_property_validation()
     {
         Livewire::test(ComponentForEloquentModelHydrationMiddleware::class, [
@@ -190,7 +191,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
         $this->assertEquals([[['name' => 'arise']]], $foo->fresh()->zap);
     }
 
-    /** @test */
+    #[Test]
     public function collection_model_property_validation_only_includes_relevant_error()
     {
         Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
@@ -201,7 +202,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertHasNoErrors('foos.1.bar_baz');
     }
 
-    /** @test */
+    #[Test]
     public function collection_model_property_validation_only_includes_all_errors_when_using_wildcard()
     {
         Livewire::test(ComponentForEloquentModelCollectionHydrationMiddleware::class, [
@@ -212,7 +213,7 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertHasErrors('foos.1.bar_baz');
     }
 
-    /** @test */
+    #[Test]
     public function array_with_deep_nested_model_relationship_validation()
     {
         Livewire::test(ComponentForEloquentModelNestedHydrationMiddleware::class, [

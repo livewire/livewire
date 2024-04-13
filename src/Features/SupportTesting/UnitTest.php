@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportTesting;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\ExpectationFailedException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -15,7 +16,7 @@ use Livewire\Livewire;
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
-    /** @test */
+    #[Test]
     function can_assert_see_livewire_on_standard_blade_view()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
@@ -34,7 +35,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertSeeLivewire('foo');
     }
 
-    /** @test */
+    #[Test]
     function can_test_component_using_magic_render()
     {
         mkdir($this->livewireViewsPath());
@@ -61,7 +62,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         Livewire::test('foo')->assertSee('Im foo');
     }
 
-    /** @test */
+    #[Test]
     function can_assert_see_livewire_on_standard_blade_view_using_class_name()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
@@ -80,7 +81,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertSeeLivewire(\App\Livewire\Foo::class);
     }
 
-    /** @test */
+    #[Test]
     function assert_see_livewire_fails_when_the_component_is_not_present()
     {
         $this->expectException(ExpectationFailedException::class);
@@ -99,7 +100,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertSeeLivewire('foo');
     }
 
-    /** @test */
+    #[Test]
     function assert_see_livewire_fails_when_the_component_is_not_present_using_class_name()
     {
         $this->expectException(ExpectationFailedException::class);
@@ -118,7 +119,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertSeeLivewire(\App\Livewire\Foo::class);
     }
 
-    /** @test */
+    #[Test]
     function can_assert_dont_see_livewire_on_standard_blade_view()
     {
         $fakeClass = new class {
@@ -133,7 +134,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertDontSeeLivewire('foo');
     }
 
-    /** @test */
+    #[Test]
     function assert_dont_see_livewire_fails_when_the_component_is_present()
     {
         $this->expectException(ExpectationFailedException::class);
@@ -154,7 +155,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertDontSeeLivewire('foo');
     }
 
-    /** @test */
+    #[Test]
     function assert_dont_see_livewire_fails_when_the_component_is_present_using_class_name()
     {
         $this->expectException(ExpectationFailedException::class);
@@ -175,7 +176,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertDontSeeLivewire(\App\Livewire\Foo::class);
     }
 
-    /** @test */
+    #[Test]
     function can_assert_dont_see_livewire_on_standard_blade_view_using_class_name()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
@@ -192,7 +193,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testResponse->assertDontSeeLivewire(\App\Livewire\Foo::class);
     }
 
-    /** @test */
+    #[Test]
     function can_assert_see_livewire_on_test_view()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
@@ -204,7 +205,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testView->assertSeeLivewire('foo');
     }
 
-    /** @test */
+    #[Test]
     function can_assert_see_livewire_on_test_view_refering_by_subfolder_without_dot_index()
     {
         Artisan::call('make:livewire', ['name' => 'bar.index']);
@@ -216,7 +217,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $testView->assertSeeLivewire('bar');
     }
 
-    /** @test */
+    #[Test]
     function can_assert_dont_see_livewire_on_test_view()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
@@ -225,7 +226,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $testView->assertDontSeeLivewire('foo');
     }
-    /** @test */
+
+    #[Test]
     function cant_test_non_livewire_components()
     {
         $this->expectException(\Exception::class);
@@ -233,7 +235,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         Livewire::test(\StdClass::class);
     }
 
-    /** @test */
+    #[Test]
     function livewire_route_works_with_user_route_with_the_same_signature()
     {
         Route::get('/{param1}/{param2}', function() {
@@ -245,7 +247,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $this->assertTrue(true);
     }
 
-    /** @test */
+    #[Test]
     function method_accepts_arguments_to_pass_to_mount()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'foo']);
@@ -253,7 +255,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $this->assertStringContainsString('foo', $component->html());
     }
 
-    /** @test */
+    #[Test]
     function set_multiple_with_array()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'foo'])
@@ -261,7 +263,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertSet('name', 'bar');
     }
 
-    /** @test */
+    #[Test]
     function assert_set()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
@@ -285,7 +287,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $component->assertSet('name', null, true);
     }
 
-    /** @test */
+    #[Test]
     function assert_not_set()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'bar'])
@@ -301,7 +303,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $component->assertNotSet('name', null);
     }
 
-    /** @test */
+    #[Test]
     function assert_set_strict()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
@@ -313,7 +315,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $component->assertSetStrict('name', null);
     }
 
-    /** @test */
+    #[Test]
     function assert_not_set_strict()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'bar'])
@@ -325,7 +327,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $component->assertNotSetStrict('name', '');
     }
 
-    /** @test */
+    #[Test]
     function assert_count()
     {
         Livewire::test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => ['foo']])
@@ -338,63 +340,63 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertCount('name', 0);
     }
 
-    /** @test */
+    #[Test]
     function assert_see()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertSee('should see me');
     }
 
-    /** @test */
+    #[Test]
     function assert_see_unescaped()
     {
         Livewire::test(HasHtml::class)
                 ->assertSee('<p style', false);
     }
 
-    /** @test */
+    #[Test]
     function assert_see_multiple()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertSee(['should', 'see', 'me']);
     }
 
-    /** @test */
+    #[Test]
     function assert_see_html()
     {
         Livewire::test(HasHtml::class)
             ->assertSeeHtml('<p style="display: none">Hello HTML</p>');
     }
 
-    /** @test */
+    #[Test]
     function assert_dont_see_html()
     {
         Livewire::test(HasHtml::class)
             ->assertDontSeeHtml('<span style="display: none">Hello HTML</span>');
     }
 
-    /** @test */
+    #[Test]
     function assert_dont_see()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertDontSee('no one should see this');
     }
 
-    /** @test */
+    #[Test]
     function assert_dont_see_unescaped()
     {
         Livewire::test(HasHtml::class)
                 ->assertDontSee('<span>', false);
     }
 
-    /** @test */
+    #[Test]
     function assert_dont_see_multiple()
     {
         Livewire::test(HasMountArguments::class, ['name' => 'should see me'])
             ->assertDontSee(['nobody', 'really', 'knows']);
     }
 
-    /** @test */
+    #[Test]
     function assert_see_doesnt_include_wire_id_and_wire_data_attribute()
     {
         /*
@@ -405,7 +407,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertDontSee('shouldnt see me');
     }
 
-    /** @test */
+    #[Test]
     function assert_dispatched()
     {
         Livewire::test(DispatchesEventsComponentStub::class)
@@ -425,7 +427,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             });
     }
 
-    /** @test */
+    #[Test]
     function assert_dispatched_to()
     {
         Livewire::component('some-component', SomeComponentStub::class);
@@ -444,7 +446,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function assert_not_dispatched()
     {
         Livewire::test(DispatchesEventsComponentStub::class)
@@ -465,7 +467,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             });
     }
 
-    /** @test */
+    #[Test]
     function assert_has_errors()
     {
         Livewire::test(ValidatesDataWithSubmitStub::class)
@@ -484,7 +486,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function assert_has_errors_with_validation_class()
     {
         Livewire::test(ValidatesDataWithCustomRuleStub::class)
@@ -507,7 +509,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     function assert_has_error_with_manually_added_error()
     {
         Livewire::test(ValidatesDataWithSubmitStub::class)
@@ -515,7 +517,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertHasErrors('bob');
     }
 
-    /** @test */
+    #[Test]
     function assert_has_error_with_submit_validation()
     {
         Livewire::test(ValidatesDataWithSubmitStub::class)
@@ -528,7 +530,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     function assert_has_error_with_real_time_validation()
     {
         Livewire::test(ValidatesDataWithRealTimeStub::class)
@@ -548,7 +550,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertHasErrors(['foo', 'bar']);
     }
 
-    /** @test */
+    #[Test]
     function it_ignores_rules_with_params()
     {
         Livewire::test(ValidatesDataWithRulesHasParams::class)
@@ -560,7 +562,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertHasNoErrors(['foo' => 'min:2']);
     }
 
-    /** @test */
+    #[Test]
     function assert_response_of_calling_method()
     {
         Livewire::test(ComponentWithMethodThatReturnsData::class)
@@ -569,7 +571,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertReturned(fn ($data) => $data === 'bar');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_cookies_for_use_with_testing()
     {
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
@@ -594,7 +596,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function can_set_headers_for_use_with_testing()
     {
         Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])

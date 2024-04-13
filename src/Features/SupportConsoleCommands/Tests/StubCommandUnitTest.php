@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Attributes\Test;
 
 class StubCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function default_view_stub_is_created()
     {
         Artisan::call('livewire:stubs');
@@ -19,7 +20,7 @@ class StubCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->stubsPath('livewire.pest.stub')));
     }
 
-    /** @test */
+    #[Test]
     public function component_is_created_with_view_and_class_custom_default_stubs()
     {
         Artisan::call('livewire:stubs');

@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Sushi\Sushi;
 
 /** @group morphing */
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_bind_a_property_from_parent_to_property_from_child()
     {
         Livewire::visit([
@@ -59,7 +60,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_bind_a_live_property_from_parent_to_property_from_child()
     {
         Livewire::visit([
@@ -102,7 +103,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_bind_a_property_from_parent_array_to_property_from_child()
     {
         Livewire::visit([
@@ -156,7 +157,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child.ephemeral', 'qux');
     }
 
-    /** @test */
+    #[Test]
     public function can_bind_a_property_from_parent_array_using_a_numeric_index_to_property_from_child()
     {
         Livewire::visit([
@@ -210,7 +211,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child.ephemeral', 'qux');
     }
 
-    /** @test */
+    #[Test]
     public function can_bind_a_property_from_parent_form_to_property_from_child()
     {
         Livewire::visit([

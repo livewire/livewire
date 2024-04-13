@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportConsoleCommands\Tests;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Attributes\Test;
 
 class MakeCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function component_is_created_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
@@ -17,7 +18,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireViewsPath('foo.blade.php')));
     }
 
-    /** @test */
+    #[Test]
     public function component_is_created_without_view_by_make_command_with_inline_option()
     {
         Artisan::call('make:livewire', ['name' => 'foo', '--inline' => true]);
@@ -26,7 +27,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireViewsPath('foo.blade.php')));
     }
 
-    /** @test */
+    #[Test]
     public function component_test_is_created_by_make_command_with_test_option()
     {
         Artisan::call('make:livewire', ['name' => 'foo', '--test' => true]);
@@ -36,7 +37,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('FooTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function component_pest_test_is_created_by_make_command_with_pest_option()
     {
         Artisan::call('make:livewire', ['name' => 'foo', '--test' => true, '--pest' => true]);
@@ -52,7 +53,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertStringContainsString('it(\'renders successfully\', function () {', $file);
     }
 
-    /** @test */
+    #[Test]
     public function component_is_created_by_livewire_make_command()
     {
         Artisan::call('livewire:make', ['name' => 'foo', '--test' => true]);
@@ -62,7 +63,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('FooTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function component_is_created_by_touch_command()
     {
         Artisan::call('livewire:touch', ['name' => 'foo', '--test' => true]);
@@ -72,7 +73,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('FooTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function dot_nested_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo.bar', '--test' => true]);
@@ -82,7 +83,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('Foo/BarTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function forward_slash_nested_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo/bar', '--test' => true]);
@@ -92,7 +93,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('Foo/BarTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function multiword_component_is_created_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo-bar', '--test' => true]);
@@ -102,7 +103,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('FooBarTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function pascal_case_component_is_automatically_converted_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'FooBar.FooBar', '--test' => true]);
@@ -112,7 +113,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('FooBar/FooBarTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function pascal_case_component_with_double_backslashes_is_automatically_converted_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'FooBar\\FooBar', '--test' => true]);
@@ -122,7 +123,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('FooBar/FooBarTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function snake_case_component_is_automatically_converted_by_make_command()
     {
         Artisan::call('make:livewire', ['name' => 'text_replace', '--test' => true]);
@@ -132,7 +133,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('TextReplaceTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function snake_case_component_is_automatically_converted_by_make_command_on_nested_component()
     {
         Artisan::call('make:livewire', ['name' => 'TextManager.text_replace', '--test' => true]);
@@ -142,7 +143,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->livewireTestsPath('TextManager/TextReplaceTest.php')));
     }
 
-    /** @test */
+    #[Test]
     public function new_component_class_view_name_reference_matches_configured_view_path()
     {
         // We can't use Artisan::call here because we need to be able to set config vars.
@@ -156,7 +157,7 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists(resource_path('views/not-livewire/foo.blade.php')));
     }
 
-    /** @test */
+    #[Test]
     public function a_component_is_not_created_with_a_reserved_class_name()
     {
         Artisan::call('make:livewire', ['name' => 'component']);
@@ -169,7 +170,8 @@ class MakeCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireClassesPath('List.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('list.blade.php')));
     }
-    /** @test */
+
+    #[Test]
     public function a_component_is_not_created_with_a_invalid_class_name()
     {
         Artisan::call('make:livewire', ['name' => '1Class']);

@@ -4,13 +4,14 @@ namespace Livewire\Features\SupportEvents;
 
 use Illuminate\Support\Facades\Blade;
 use Livewire\Attributes\Renderless;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_listen_for_component_event_with_this_on_in_javascript()
     {
         Livewire::visit(new class extends Component {
@@ -34,7 +35,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@target', 'bar');
     }
 
-    /** @test */
+    #[Test]
     public function dont_call_render_on_renderless_event_handler()
     {
         Livewire::visit(new class extends Component {
@@ -61,7 +62,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@button', '1');
     }
 
-    /** @test */
+    #[Test]
     public function dispatch_from_javascript_should_only_be_called_once()
     {
         Livewire::visit(new class extends Component {
@@ -88,7 +89,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@button', '1');
     }
 
-    /** @test */
+    #[Test]
     public function can_dispatch_to_another_component_globally()
     {
         Livewire::visit([
@@ -139,7 +140,7 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    /** @test */
+    #[Test]
     public function can_unregister_global_livewire_listener()
     {
         Livewire::visit(new class extends Component {
@@ -172,7 +173,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_event_data_in_alpine_for_loop_without_throwing_errors()
     {
         Livewire::visit(new class extends Component {

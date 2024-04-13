@@ -7,10 +7,11 @@ use Livewire\WithFileUploads;
 use Livewire\Component;
 use Livewire\Features\SupportValidation\BaseValidate;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_upload_preview_and_save_a_file()
     {
         Storage::persistentFake('tmp-for-tests');
@@ -63,7 +64,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_cancel_an_upload()
     {
         Storage::persistentFake('tmp-for-tests');
@@ -105,7 +106,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function an_element_targeting_a_file_upload_retains_loading_state_until_the_upload_has_finished()
     {
         Storage::persistentFake('tmp-for-tests');
@@ -143,7 +144,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function file_upload_being_renderless_is_not_impacted_by_real_time_validation()
     {
         Storage::persistentFake('tmp-for-tests');

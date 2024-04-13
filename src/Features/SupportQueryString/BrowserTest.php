@@ -5,10 +5,11 @@ namespace Livewire\Features\SupportQueryString;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Url;
+use PHPUnit\Framework\Attributes\Test;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function it_does_not_add_null_values_to_the_query_string_array()
     {
         Livewire::visit([
@@ -81,7 +82,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertScript('return !! window.location.search.match(/comma=foo\,bar/)');
     }
 
-    /** @test */
+    #[Test]
     public function can_encode_url_containing_reserved_characters()
     {
         Livewire::visit([
@@ -122,7 +123,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_a_value_other_than_initial_for_except_behavior()
     {
         Livewire::visit([
@@ -155,7 +156,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function initial_values_loaded_from_querystring_are_not_removed_from_querystring_on_load_if_they_are_different_to_the_default()
     {
         Livewire::withQueryParams(['perPage' => 25])->visit([
@@ -180,7 +181,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_except_in_query_string_property()
     {
         Livewire::visit([
@@ -219,7 +220,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_url_on_form_object_properties()
     {
         Livewire::visit([
@@ -252,7 +253,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_url_on_string_backed_enum_object_properties()
     {
         Livewire::visit([
@@ -288,7 +289,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_url_on_integer_backed_enum_object_properties()
     {
         Livewire::visit([
@@ -324,7 +325,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_break_string_typed_properties()
     {
         Livewire::withQueryParams(['foo' => 'bar'])
@@ -348,7 +349,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_use_url_on_lazy_component()
     {
         Livewire::visit([
@@ -386,7 +387,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_unset_the_array_key_when_using_dot_notation_without_except()
     {
         Livewire::visit([
@@ -426,7 +427,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_unset_the_array_key_when_with_except()
     {
         Livewire::visit([
@@ -471,7 +472,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_unset_the_array_key_when_without_except()
     {
         Livewire::visit([
@@ -515,7 +516,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_unset_the_array_key_when_using_dot_notation_with_except()
     {
         Livewire::visit([
@@ -556,7 +557,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    #[Test]
     public function can_handle_empty_querystring_value_as_empty_string()
     {
         Livewire::visit([
@@ -601,7 +602,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('foo', '');
     }
 
-    /** @test */
+    #[Test]
     public function can_handle_empty_querystring_value_as_null()
     {
         Livewire::visit([
@@ -646,7 +647,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('foo', '');
     }
 
-    /** @test */
+    #[Test]
     public function can_handle_empty_querystring_value_as_null_or_empty_string_based_on_typehinting_of_property()
     {
         Livewire::visit([
@@ -719,7 +720,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertQueryStringHas('notTypehintingFoo', '');
     }
 
-    /** @test */
+    #[Test]
     public function can_set_the_correct_query_string_parameter_when_multiple_instances_of_the_same_component_are_used()
     {
         Livewire::visit([

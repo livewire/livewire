@@ -4,10 +4,11 @@ namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use PHPUnit\Framework\Attributes\Test;
 
 class AttributeCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function attribute_is_created_by_attribute_command()
     {
         Artisan::call('livewire:attribute', ['name' => 'SampleAttribute']);
@@ -20,7 +21,7 @@ class AttributeCommandUnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
+    #[Test]
     public function attribute_is_created_in_subdirectory_by_attribute_command()
     {
         Artisan::call('livewire:attribute', ['name' => 'Auth/SampleAttribute']);

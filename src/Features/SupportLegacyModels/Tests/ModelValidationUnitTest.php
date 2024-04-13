@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use function Livewire\invade;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
@@ -12,7 +13,7 @@ class ModelValidationUnitTest extends \Tests\TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
+    #[Test]
     public function can_validate_uniqueness_on_a_model()
     {
         Livewire::test(ComponentWithRulesPropertyAndModelWithUniquenessValidation::class)
@@ -24,7 +25,7 @@ class ModelValidationUnitTest extends \Tests\TestCase
             ->assertHasNoErrors('foo.name');
     }
 
-    /** @test */
+    #[Test]
     public function can_validate_uniqueness_on_a_model_but_exempt_the_model_itself()
     {
         Livewire::test(ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions::class)

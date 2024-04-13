@@ -4,10 +4,11 @@ namespace Livewire\Mechanisms\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function component_keys_are_deterministic_across_load_balancers()
     {
         $component = Livewire::test([new class extends Component {

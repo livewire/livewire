@@ -5,14 +5,15 @@ namespace Livewire\Tests;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Livewire\Component;
+use PHPUnit\Framework\Attributes\Test;
 
 class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function public_properties_can_be_cast()
     {
         $this->markTestSkipped('This test needs to be split, so each property type is tested as part of their dedicated Synth');
-        
+
         Livewire::test(ComponentWithPublicPropertyCasters::class)
             ->call('storeTypeOfs')
             ->assertSet('typeOfs.date', 'Carbon\Carbon')

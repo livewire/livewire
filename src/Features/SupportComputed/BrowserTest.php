@@ -5,11 +5,12 @@ namespace Livewire\Features\SupportComputed;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
+    #[Test]
     public function can_persist_computed_between_requests_and_bust_them()
     {
         Livewire::visit(new class extends Component {
@@ -52,7 +53,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '2');
     }
 
-    /** @test */
+    #[Test]
     public function can_cache_computed_properties_for_all_components_and_bust_them()
     {
         Livewire::visit(new class extends Component {

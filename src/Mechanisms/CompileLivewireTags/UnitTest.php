@@ -4,10 +4,11 @@ namespace Livewire\Mechanisms\CompileLivewireTags;
 
 use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function can_compile_livewire_self_closing_tags()
     {
         Livewire::component('foo', new class extends \Livewire\Component {

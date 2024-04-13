@@ -3,11 +3,12 @@
 namespace Livewire\Features\SupportAttributes;
 
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
+    #[Test]
     public function property_attribute_has_access_to_lifecycle_hooks()
     {
         Livewire::test(new class extends TestComponent {
@@ -17,7 +18,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('count', 3);
     }
 
-    /** @test */
+    #[Test]
     public function can_set_property_hook_manually()
     {
         Livewire::test(new class extends TestComponent {
@@ -30,7 +31,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('count', 3);
     }
 
-    /** @test */
+    #[Test]
     public function can_set_nested_property_hook_manually()
     {
         Livewire::test(new class extends TestComponent {
@@ -43,7 +44,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('items.count', 3);
     }
 
-    /** @test */
+    #[Test]
     public function non_livewire_attribute_are_ignored()
     {
         Livewire::test(new class extends TestComponent {
