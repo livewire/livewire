@@ -79,6 +79,37 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
+    public function wire_loading_remove_works_with_other_wire_directives()
+    {
+        Livewire::visit(new class extends Component
+        {
+            public function doSomething()
+            {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(500000);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="doSomething" dusk="button">
+                            <span wire:loading.remove wire:foo>Do something</span>
+                            <span wire:loading>...</span>
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForText('Do something')
+        ->click('@button')
+        ->waitForText('...')
+        ->assertDontSee('Do something')
+        ->waitForText('Do something')
+        ->assertDontSee('...');
+    }
+
+    /** @test */
     function wire_loading_remove_works_with_renderless_methods()
     {
         Livewire::visit(new class extends Component {
