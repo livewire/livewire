@@ -2,8 +2,11 @@
 
 namespace Livewire\Tests;
 
+use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Attributes\Lazy;
+ 
 
 /** @group morphing */
 class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
@@ -137,4 +140,59 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('@hidden');
             // ->assertConsoleLogMissingWarning('show is not defined');
     }
+
+    /** @test */
+    public function support_declarative_shadow_dom()
+    {
+        Blade::component('shadow-dom', ShadowDomComponent::class);
+        return Livewire::visit(
+            new #[Lazy] class extends Component {
+            function render() {
+                return <<<'HTML'
+                <div>
+                    Light DOM!
+                    <x-shadow-dom>
+                        Light DOM Slot!
+                    </x-shadow-dom>
+                    @script
+                    <script>
+                        customElements.define('my-webcomponent', class extends HTMLElement {
+                            constructor() {
+                                super();                   
+                            }
+                        });
+                    </script>
+                    @endscript
+                </div>
+                HTML;
+            }
+        })
+            ->waitUntil('customElements.get("my-webcomponent") !== undefined')
+            ->assertSee('Light DOM!')
+            ->assertSee('Shadow DOM!')
+            ->assertSee('Light DOM Slot!');
+    }
 }
+
+
+class ShadowDomComponent extends \Illuminate\View\Component {
+        function render() {
+            return function (array $data) {
+                $slot = $data['slot'];
+                $attributes = $data['attributes'];
+                return <<<HTML
+                            <my-webcomponent $attributes>
+                                <template shadowrootmode="open" shadowrootclonable>
+                                    <div>
+                                        Shadow DOM!
+                                        <slot></slot>
+                                    </div>
+                                </template>
+                                $slot
+                            </my-webcomponent>
+                            
+                        HTML;
+            };
+                
+        }
+    }
