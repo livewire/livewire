@@ -3,12 +3,107 @@
 namespace Livewire\Mechanisms\HandleComponents;
 
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Validate;
 use Illuminate\View\ViewException;
 use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    /** @test */
+    public function realtime_validation_works_when_calling_validate_only()
+    {
+        Livewire::visit(new class extends Component {
+            public $name = '';
+            public $items = [];
+
+            public function rules()
+            {
+                return [
+                    'name' => 'required',
+                    'items' => 'required',
+                ];
+            }
+
+            public function updated($field)
+            {
+                $this->validateOnly($field);
+            }
+
+            public function save()
+            {
+                $this->validate();
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model.change="name" dusk="name">
+                        <div dusk="nameError">@error('name'){{ $message }}@enderror</div>
+
+                        <input type="checkbox" wire:model.change="items" dusk="checkbox" value="true">
+                        <div dusk="itemsError">@error('items'){{ $message }}@enderror</div>
+
+                        <button type="button" wire:click="save" dusk="save">Save</button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewire()->click('@save')
+        ->assertSeeIn('@nameError', 'required')
+        ->assertSeeIn('@itemsError', 'required')
+        ->waitForLivewire()->click('@checkbox')
+        ->assertDontSeeIn('@itemsError', 'required')
+        ->assertSeeIn('@nameError', 'required');
+    }
+
+    /** @test */
+    public function realtime_validation_works_when_using_validate_attribute()
+    {
+        Livewire::visit(new class extends Component {
+            #[Validate]
+            public $name = '';
+
+            #[Validate]
+            public $items = [];
+
+            public function rules()
+            {
+                return [
+                    'name' => 'required',
+                    'items' => 'required',
+                ];
+            }
+
+            public function save()
+            {
+                $this->validate();
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="text" wire:model.change="name" dusk="name">
+                        <div dusk="nameError">@error('name'){{ $message }}@enderror</div>
+
+                        <input type="checkbox" wire:model.change="items" dusk="checkbox" value="true">
+                        <div dusk="itemsError">@error('items'){{ $message }}@enderror</div>
+
+                        <button type="button" wire:click="save" dusk="save">Save</button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForLivewire()->click('@save')
+        ->assertSeeIn('@nameError', 'required')
+        ->assertSeeIn('@itemsError', 'required')
+        ->waitForLivewire()->click('@checkbox')
+        ->assertDontSeeIn('@itemsError', 'required')
+        ->assertSeeIn('@nameError', 'required');
+    }
+
     /** @test */
     public function corrupt_component_payload_exception_is_no_longer_thrown_from_data_incompatible_with_javascript()
     {
