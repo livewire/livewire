@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -2632,7 +2632,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "checked",
         "required",
         "readonly",
-        "hidden",
         "open",
         "selected",
         "autofocus",
@@ -2840,7 +2839,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.7",
+      version: "3.13.8",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3266,7 +3265,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       if (modifiers.includes("fill")) {
         if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue())) {
-          el.dispatchEvent(new Event(event, {}));
+          setValue(getInputValue(el, modifiers, { target: el }, getValue()));
         }
       }
       if (!el._x_removeModelListeners)
@@ -3335,12 +3334,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             return option.value || option.text;
           });
         } else {
-          if (modifiers.includes("number")) {
-            return safeParseNumber(event.target.value);
-          } else if (modifiers.includes("boolean")) {
-            return safeParseBoolean(event.target.value);
+          let newValue;
+          if (el.type === "radio") {
+            if (event.target.checked) {
+              newValue = event.target.value;
+            } else {
+              newValue = currentValue;
+            }
+          } else {
+            newValue = event.target.value;
           }
-          return modifiers.includes("trim") ? event.target.value.trim() : event.target.value;
+          if (modifiers.includes("number")) {
+            return safeParseNumber(newValue);
+          } else if (modifiers.includes("boolean")) {
+            return safeParseBoolean(newValue);
+          } else if (modifiers.includes("trim")) {
+            return newValue.trim();
+          } else {
+            return newValue;
+          }
         }
       });
     }
@@ -3389,7 +3401,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
     mapAttributes(startingWith(":", into(prefix("bind:"))));
-    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3 }) => {
+    var handler2 = (el, { value, modifiers, expression, original }, { effect: effect3, cleanup: cleanup2 }) => {
       if (!value) {
         let bindingProviders = {};
         injectBindingProviders(bindingProviders);
@@ -3411,6 +3423,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         mutateDom(() => bind(el, value, result, modifiers));
       }));
+      cleanup2(() => {
+        el._x_undoAddedClasses && el._x_undoAddedClasses();
+        el._x_undoAddedStyles && el._x_undoAddedStyles();
+      });
     };
     handler2.inline = (el, { value, modifiers, expression }) => {
       if (!value)
@@ -3766,9 +3782,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3887,9 +3903,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4889,9 +4905,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -4966,7 +4982,10 @@ var require_module_cjs4 = __commonJS({
       return storage.getItem(key) !== null;
     }
     function storageGet(key, storage) {
-      return JSON.parse(storage.getItem(key, storage));
+      let value = storage.getItem(key, storage);
+      if (value === void 0)
+        return;
+      return JSON.parse(value);
     }
     function storageSet(key, value, storage) {
       storage.setItem(key, JSON.stringify(value));
@@ -4975,9 +4994,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5057,9 +5076,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6595,9 +6614,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6958,9 +6977,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -9772,7 +9791,11 @@ var import_alpinejs10 = __toESM(require_module_cjs());
 function morph2(component, el, html) {
   let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
   let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
+  if (typeof wrapper.setHTMLUnsafe !== void 0) {
+    wrapper.setHTMLUnsafe(html);
+  } else {
+    wrapper.innerHTML = html;
+  }
   let parentComponent;
   try {
     parentComponent = closestComponent(el.parentElement);
