@@ -98,6 +98,40 @@ class UnitTest extends \Tests\TestCase
     }
 
     /** @test */
+    public function realtime_validation_works_as_expected()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $foo = '';
+            public $bar = [];
+
+            public function rules()
+            {
+                return [
+                    'foo' => 'required',
+                    'bar' => 'required',
+                ];
+            }
+
+            public function updated($field)
+            {
+                $this->validateOnly($field);
+            }
+
+            public function save()
+            {
+                $this->validate();
+            }
+        })
+            ->call('save')
+            ->assertHasErrors('foo', 'bar')
+            ->set('bar', ['baz'])
+            ->assertHasNoErrors('bar')
+            ->assertHasErrors('foo')
+            ->set('bar', [])
+            ->assertHasErrors('foo', 'bar');
+    }
+
+    /** @test */
     public function realtime_validation_can_be_opted_out_of()
     {
         Livewire::test(new class extends TestComponent {
