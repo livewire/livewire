@@ -4,7 +4,7 @@ import { createUrlObjectFromString, extractDestinationFromLink, whenThisLinkIsHo
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
-import { finishAndHideProgressBar, showAndStartProgressBar } from "./bar"
+import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndStartProgressBar } from "./bar"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
 
@@ -155,6 +155,8 @@ export default function (Alpine) {
                 })
 
                 swapCurrentPageWithNewHtml(html, () => {
+                    removeAnyLeftOverStaleProgressBars()
+
                     removeAnyLeftOverStaleTeleportTargets(document.body)
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {

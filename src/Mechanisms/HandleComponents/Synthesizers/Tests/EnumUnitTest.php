@@ -21,11 +21,11 @@ class EnumUnitTest extends \Tests\TestCase
     public function nullable_public_property_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicEnumCaster::class)
-            ->assertSet('status', null, true)
+            ->assertSetStrict('status', null)
             ->updateProperty('status', 'Be excellent to each other')
             ->assertSet('status', TestingEnum::TEST)
             ->updateProperty('status', '')
-            ->assertSet('status', null, true);
+            ->assertSetStrict('status', null);
 
         $this->expectException(ValueError::class);
         $testable->updateProperty('status', 'Be excellent excellent to each other');

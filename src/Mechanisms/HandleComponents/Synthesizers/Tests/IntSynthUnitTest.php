@@ -15,7 +15,7 @@ class IntSynthUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithNullableInt::class)
             ->set('intField', null)
-            ->assertSet('intField', null, true); // Use strict mode
+            ->assertSetStrict('intField', null);
     }
 
     #[Test]

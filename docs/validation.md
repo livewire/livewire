@@ -442,6 +442,8 @@ class CreatePost extends Component
 > [!warning] The `rules()` method doesn't validate on data updates
 > When defining rules via the `rules()` method, Livewire will ONLY use these validation rules to validate properties when you run `$this->validate()`. This is different than standard `#[Validate]` attributes which are applied every time a field is updated via something like `wire:model`. To apply these validation rules to a property every time it's updated, you can still use `#[Validate]` with no extra parameters.
 
+> [!warning] While using Livewire's validation utilities, your component should **not** have the properties `$rules`, `$messages`, `$validationAttributes` or `$validationCustomValues`, unless you're customizing the validation process. Otherwise, those will conflict with Livewire's mechanisms.
+
 ## Using Laravel Rule objects
 
 Laravel `Rule` objects are an extremely powerful way to add advanced validation behavior to your forms.
