@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportFormObjects;
 
-use Livewire\Drawer\Utils;
-
 trait HandlesFormObjects
 {
     public function getFormObjects()

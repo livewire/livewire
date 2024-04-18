@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportWireLoading;
 
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use Livewire\WithFileUploads;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -73,6 +75,36 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Loaded form.text')
         ->waitForText('Loaded form.text')
         ->assertSee('Loaded form.text')
+        ;
+    }
+
+    /** @test */
+    function wire_loading_remove_works_with_renderless_methods()
+    {
+        Livewire::visit(new class extends Component {
+            #[\Livewire\Attributes\Renderless]
+            public function doSomething() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(500000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="doSomething" dusk="button">
+                            <span wire:loading.remove>Do something</span>
+                            <span wire:loading>...</span>
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+        ->waitForText('Do something')
+        ->click('@button')
+        ->waitForText('...')
+        ->assertDontSee('Do something')
+        ->waitForText('Do something')
+        ->assertDontSee('...')
         ;
     }
 
@@ -159,12 +191,12 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Loading...')
         ;
     }
-	
+
 	/** @test */
     function wire_loading_targets_single_correct_element()
     {
 		/*
-		 * Previously 
+		 * Previously
 		 */
         Livewire::visit(new class extends Component {
 
@@ -182,7 +214,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 sleep(2);
             }
-			
+
 			public function render()
 			{
 			    return <<<'HTML'
@@ -195,7 +227,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 </div>
                 HTML;
             }
-			
+
         })
         ->type('@input', 'Foo')
 		->waitForText('Loading "prop"...')
@@ -208,6 +240,142 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Loading "prop2"...')
         ->assertSee('Loading "myModel"...')
         ->assertDontSee('Loading "prop"...')
+        ;
+    }
+
+    /** @test */
+    function inverted_wire_target_hides_loading_for_specified_action()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="process1Function" dusk="process1Button">Process 1</button>
+                        <button wire:click="process2Function" dusk="process2Button">Process 2</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target.except="process1Function, process2Function" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div wire:loading wire:target.except="resetFunction" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function process1Function()
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function process2Function()
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ->assertDontSee('Processing...')
+        ->waitUntilMissingText('Waiting to process...')
+        ->press('@process1Button')
+        ->pause(250)
+        ->assertDontSee('Waiting to process...')
+        ->assertSee('Processing...')
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ->waitUntilMissingText('Waiting to process...')
+        ->press('@process2Button')
+        ->pause(250)
+        ->assertDontSee('Waiting to process...')
+        ->assertSee('Processing...')
+        ;
+    }
+
+    /** @test */
+    /**
+    function inverted_wire_target_hides_loading_for_file_upload()
+    {
+        Storage::persistentFake('tmp-for-tests');
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $file1, $file2;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <input type="file" wire:model="file1" dusk="file1Input">
+                        <input type="file" wire:model="file2" dusk="file2Input">
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target.except="file1" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+        ->pause(10000000)
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ->waitUntilMissingText('Waiting to process...')
+        ->attach('@file1Input', __DIR__ . '/browser_test_image.png')
+        ->assertDontSee('Waiting to process...')
+        ->attach('@file2Input', __DIR__ . '/browser_test_image.png')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ;
+    }
+    */
+
+	/** @test */
+    function wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
+    {
+        Livewire::visit(new class extends Component {
+
+			public $myModel;
+
+			public function mount()
+			{
+				$this->myModel = [
+					'prop' => 'one',
+				];
+			}
+
+			public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                sleep(2);
+            }
+
+			public function render()
+			{
+			    return <<<'HTML'
+                <div>
+                	<input type="text" wire:model.live="myModel.prop" dusk="input">
+                	<div wire:loading.class="foo  bar" wire:target="myModel.prop">{{ $myModel['prop'] }}</div>
+                </div>
+                HTML;
+            }
+
+        })
+        ->type('@input', 'Foo')
+		->waitForText('Foo')
+        ->assertSee('Foo')
         ;
     }
 }

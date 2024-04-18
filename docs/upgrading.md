@@ -199,6 +199,7 @@ If you include Alpine into your application via a script tag like the following,
 
 Livewire 3 now ships with the following Alpine plugins out-of-the-box:
 
+* [Anchor](https://alpinejs.dev/plugins/anchor)
 * [Collapse](https://alpinejs.dev/plugins/collapse)
 * [Focus](https://alpinejs.dev/plugins/focus)
 * [Intersect](https://alpinejs.dev/plugins/intersect)
@@ -206,7 +207,9 @@ Livewire 3 now ships with the following Alpine plugins out-of-the-box:
 * [Morph](https://alpinejs.dev/plugins/morph)
 * [Persist](https://alpinejs.dev/plugins/persist)
 
-If you have already included any of these in your application via `<script>` tags like below, you can remove them along with Alpine's core:
+It is worth keeping an eye on changes to the [package.json](https://github.com/livewire/livewire/blob/main/package.json) file, as new Alpine plugins may be added!
+
+If you have previously included any of these in your application via `<script>` tags like below, you should remove them along with Alpine's core:
 
 ```html
 <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script> <!-- [tl! remove:1] -->
@@ -229,7 +232,7 @@ You may continue to do so, as Livewire internally includes and registers Alpine'
 
 ### Including via JS bundle
 
-If you have included Alpine and any relevant plugins via NPM into your applications JavaScript bundle like so:
+If you have included Alpine or any of the popular core Alpine plugins mentioned above via NPM into your applications JavaScript bundle like so:
 
 ```js
 // Warning: this is a snippet of the Livewire 2 approach to including Alpine

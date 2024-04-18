@@ -3,7 +3,9 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:copy')]
 class CopyCommand extends FileManipulationCommand
 {
     protected $signature = 'livewire:copy {name} {new-name} {--inline} {--force} {--test}';

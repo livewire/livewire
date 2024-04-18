@@ -148,8 +148,6 @@ function invade($obj)
         {
             $property = $this->reflected->getProperty($name);
 
-            $property->setAccessible(true);
-
             return $property->getValue($this->obj);
         }
 
@@ -157,16 +155,12 @@ function invade($obj)
         {
             $property = $this->reflected->getProperty($name);
 
-            $property->setAccessible(true);
-
             $property->setValue($this->obj, $value);
         }
 
         public function __call($name, $params)
         {
             $method = $this->reflected->getMethod($name);
-
-            $method->setAccessible(true);
 
             return $method->invoke($this->obj, ...$params);
         }
