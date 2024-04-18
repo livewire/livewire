@@ -26,6 +26,37 @@ class UnitTest extends \Tests\TestCase
         $this->get('/two')->assertSee('This is a custom layout');
         $this->get('/three')->assertSee('This is a custom layout');
     }
+
+    /** @test */
+    public function can_disable_lazy_loading_during_unit_tests()
+    {
+        Livewire::component('lazy-component', BasicLazyComponent::class);
+
+        Livewire::withoutLazyLoading()->test(new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <livewire:lazy-component />
+                    </div>
+                HTML;
+            }
+        })
+        ->assertDontSee('Loading...')
+        ->assertSee('Hello world!');
+    }
+}
+
+#[Lazy]
+class BasicLazyComponent extends Component {
+    public function placeholder() {
+        return '<div>Loading...</div>';
+    }
+
+    public function render()
+    {
+        return '<div>Hello world!</div>';
+    }
 }
 
 #[Layout('components.layouts.custom'), Lazy]

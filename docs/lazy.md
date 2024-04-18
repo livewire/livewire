@@ -250,3 +250,33 @@ If you want to set a default placeholder view for all your components you can do
 ```
 
 Now, when a component is lazy-loaded and no `placeholder()` is defined, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)
+
+## Disabling lazy loading for tests
+
+When unit testing a lazy component, or a page with nested lazy components, you may want to disable the "lazy" behavior so that you can assert the final rendered behavior. Otherwise, those components would be rendered as their placeholders during your tests.
+
+You can easily disable lazy loading using the `Livewire::withoutLazyLoading()` testing helper like so:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\Dashboard;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class DashboardTest extends TestCase
+{
+    /** @test */
+    public function renders_successfully()
+    {
+        Livewire::withoutLazyLoading() // [tl! highlight]
+            ->test(Dashboard::class)
+            ->assertSee(...);
+    }
+}
+```
+
+Now, when the dashboard component is rendered for this test, it will skip rendering the `placeholder()` and instead render the full component as if lazy loading wasn't applied at all.
+
