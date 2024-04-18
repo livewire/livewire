@@ -9,12 +9,14 @@ export function morph(component, el, html) {
         : 'div'
 
     let wrapper = document.createElement(wrapperTag)
-    // check for setHTMLUnsafe availability for Declarative Shadow DOM support
+
+    // Use setHTMLUnsafe if available to support "Declarative Shadow DOM" in templates (<template shadowrootmode="open">)...
     if (typeof wrapper.setHTMLUnsafe !== undefined) {
         wrapper.setHTMLUnsafe(html)
     } else {
         wrapper.innerHTML = html
     }
+
     let parentComponent
 
     try {
