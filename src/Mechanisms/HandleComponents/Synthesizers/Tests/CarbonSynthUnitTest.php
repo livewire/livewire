@@ -24,13 +24,13 @@ class CarbonSynthUnitTest extends \Tests\TestCase
     public function public_nullable_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', Carbon::parse('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
@@ -40,13 +40,13 @@ class CarbonSynthUnitTest extends \Tests\TestCase
     public function public_carbon_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonImmutableCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', CarbonImmutable::parse('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
@@ -56,13 +56,13 @@ class CarbonSynthUnitTest extends \Tests\TestCase
     public function public_datetime_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', new \DateTime('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
@@ -72,13 +72,13 @@ class CarbonSynthUnitTest extends \Tests\TestCase
     public function public_datetime_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeImmutableCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', new \DateTimeImmutable('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');

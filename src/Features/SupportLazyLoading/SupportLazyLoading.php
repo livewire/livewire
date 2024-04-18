@@ -4,7 +4,7 @@ namespace Livewire\Features\SupportLazyLoading;
 
 use Livewire\Features\SupportLifecycleHooks\SupportLifecycleHooks;
 use Livewire\Mechanisms\HandleComponents\ViewContext;
-use function Livewire\{ store, trigger, wrap };
+use function Livewire\{ on, store, trigger, wrap };
 use Illuminate\Routing\Route;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
@@ -12,9 +12,20 @@ use Livewire\Component;
 
 class SupportLazyLoading extends ComponentHook
 {
+    static $disableWhileTesting = false;
+
+    static function disableWhileTesting()
+    {
+        static::$disableWhileTesting = true;
+    }
+
     static function provide()
     {
         static::registerRouteMacro();
+
+        on('flush-state', function () {
+            static::$disableWhileTesting = false;
+        });
     }
 
     static function registerRouteMacro()
@@ -35,6 +46,8 @@ class SupportLazyLoading extends ComponentHook
         $reflectionClass = new \ReflectionClass($this->component);
         $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
 
+        // If Livewire::withoutLazyLoading()...
+        if (static::$disableWhileTesting) return;
         // If `:lazy="false"` disable lazy loading...
         if ($hasLazyParam && ! $lazyProperty) return;
         // If no lazy loading is included at all...
