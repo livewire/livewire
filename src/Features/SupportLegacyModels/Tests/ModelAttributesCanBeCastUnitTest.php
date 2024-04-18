@@ -338,19 +338,19 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     public function can_cast_enum_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.enum', null, true)
+            ->assertSetStrict('model.enum', null)
             ->assertSnapshotSet('model.enum', null)
 
             ->set('model.enum', TestingEnum::FOO->value)
             ->call('validateAttribute', 'model.enum')
             ->assertHasNoErrors('model.enum')
-            ->assertSet('model.enum', TestingEnum::FOO, true)
+            ->assertSetStrict('model.enum', TestingEnum::FOO)
             ->assertSnapshotSet('model.enum', TestingEnum::FOO->value, true)
 
             ->set('model.enum', '')
             ->call('validateAttribute', 'model.enum')
             ->assertHasNoErrors('model.enum')
-            ->assertSet('model.enum', null, true)
+            ->assertSetStrict('model.enum', null)
             ->assertSnapshotSet('model.enum', null, true);
     }
 }
