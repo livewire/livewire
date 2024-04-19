@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use App\Livewire\UploadFile;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Http;
@@ -783,6 +784,21 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(FileReadContentComponent::class)
             ->set('file', $file)
             ->assertSet('content', $file->getContent());
+    }
+
+    public function test_validation_of_file_uploads_while_time_traveling()
+    {
+        Storage::fake('avatars');
+
+        $this->travelTo(now()->addMonth());
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', 'uploaded-avatar.png');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
 }
 
