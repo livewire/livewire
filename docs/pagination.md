@@ -359,7 +359,7 @@ Once the files have been published, you have complete control over them. When re
 If you wish to bypass Livewire's pagination views entirely, you can render your own in one of two ways:
 
 1. The `->links()` method in your Blade view
-2. The `paginationView()` method in your component
+2. The `paginationView()` or `paginationSimpleView()` method in your component
 
 ### Via `->links()`
 
@@ -371,14 +371,18 @@ The first approach is to simply pass your custom pagination Blade view name to t
 
 When rendering the pagination links, Livewire will now look for a view at `resources/views/custom-pagination-links.blade.php`.
 
-### Via `paginationView()`
+### Via `paginationView()` or `paginationSimpleView()`
 
-The second approach is to declare a `paginationView` method inside your component which returns the name of the view you would like to use:
+The second approach is to declare a `paginationView` or `paginationSimpleView` method inside your component which returns the name of the view you would like to use:
 
 ```php
 public function paginationView()
 {
     return 'custom-pagination-links-view';
+}
+public function paginationSimpleView()
+{
+    return 'custom-simple-pagination-links-view';
 }
 ```
 
