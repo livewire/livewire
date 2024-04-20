@@ -380,6 +380,7 @@ public function paginationView()
 {
     return 'custom-pagination-links-view';
 }
+
 public function paginationSimpleView()
 {
     return 'custom-simple-pagination-links-view';
