@@ -1395,109 +1395,6 @@ var require_module_cjs = __commonJS({
       });
       return () => release(effectReference);
     }
-    function dispatch3(el, name, detail = {}) {
-      el.dispatchEvent(new CustomEvent(name, {
-        detail,
-        bubbles: true,
-        composed: true,
-        cancelable: true
-      }));
-    }
-    function walk(el, callback) {
-      if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
-        Array.from(el.children).forEach((el2) => walk(el2, callback));
-        return;
-      }
-      let skip = false;
-      callback(el, () => skip = true);
-      if (skip)
-        return;
-      let node = el.firstElementChild;
-      while (node) {
-        walk(node, callback, false);
-        node = node.nextElementSibling;
-      }
-    }
-    function warn(message, ...args) {
-      console.warn(`Alpine Warning: ${message}`, ...args);
-    }
-    var started = false;
-    function start2() {
-      if (started)
-        warn("Alpine has already been initialized on this page. Calling Alpine.start() more than once can cause problems.");
-      started = true;
-      if (!document.body)
-        warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
-      dispatch3(document, "alpine:init");
-      dispatch3(document, "alpine:initializing");
-      startObservingMutations();
-      onElAdded((el) => initTree(el, walk));
-      onElRemoved((el) => destroyTree(el));
-      onAttributesAdded((el, attrs) => {
-        directives(el, attrs).forEach((handle) => handle());
-      });
-      let outNestedComponents = (el) => !closestRoot(el.parentElement, true);
-      Array.from(document.querySelectorAll(allSelectors().join(","))).filter(outNestedComponents).forEach((el) => {
-        initTree(el);
-      });
-      dispatch3(document, "alpine:initialized");
-    }
-    var rootSelectorCallbacks = [];
-    var initSelectorCallbacks = [];
-    function rootSelectors() {
-      return rootSelectorCallbacks.map((fn) => fn());
-    }
-    function allSelectors() {
-      return rootSelectorCallbacks.concat(initSelectorCallbacks).map((fn) => fn());
-    }
-    function addRootSelector(selectorCallback) {
-      rootSelectorCallbacks.push(selectorCallback);
-    }
-    function addInitSelector(selectorCallback) {
-      initSelectorCallbacks.push(selectorCallback);
-    }
-    function closestRoot(el, includeInitSelectors = false) {
-      return findClosest(el, (element) => {
-        const selectors = includeInitSelectors ? allSelectors() : rootSelectors();
-        if (selectors.some((selector) => element.matches(selector)))
-          return true;
-      });
-    }
-    function findClosest(el, callback) {
-      if (!el)
-        return;
-      if (callback(el))
-        return el;
-      if (el._x_teleportBack)
-        el = el._x_teleportBack;
-      if (!el.parentElement)
-        return;
-      return findClosest(el.parentElement, callback);
-    }
-    function isRoot(el) {
-      return rootSelectors().some((selector) => el.matches(selector));
-    }
-    var initInterceptors = [];
-    function interceptInit(callback) {
-      initInterceptors.push(callback);
-    }
-    function initTree(el, walker = walk, intercept = () => {
-    }) {
-      deferHandlingDirectives(() => {
-        walker(el, (el2, skip) => {
-          intercept(el2, skip);
-          initInterceptors.forEach((i) => i(el2, skip));
-          directives(el2, el2.attributes).forEach((handle) => handle());
-          el2._x_ignore && skip();
-        });
-      });
-    }
-    function destroyTree(root, walker = walk) {
-      walker(root, (el) => {
-        cleanupAttributes(el);
-        cleanupElement(el);
-      });
-    }
     var onAttributeAddeds = [];
     var onElRemoveds = [];
     var onElAddeds = [];
@@ -1631,7 +1528,6 @@ var require_module_cjs = __commonJS({
         if (addedNodes.has(node))
           continue;
         onElRemoveds.forEach((i) => i(node));
-        destroyTree(node);
       }
       addedNodes.forEach((node) => {
         node._x_ignoreSelf = true;
@@ -1709,7 +1605,7 @@ var require_module_cjs = __commonJS({
         return acc;
       }, {});
     }
-    function initInterceptors2(data2) {
+    function initInterceptors(data2) {
       let isObject2 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
       let recurse = (obj, basePath = "") => {
         Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
@@ -1927,6 +1823,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       };
     }
+    function directiveExists(name) {
+      return Object.keys(directiveHandlers).includes(name);
+    }
     function directives(el, attributes, originalAttributeOverride) {
       attributes = Array.from(attributes);
       if (el._x_virtualDirectives) {
@@ -2065,6 +1964,129 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let typeA = directiveOrder.indexOf(a.type) === -1 ? DEFAULT : a.type;
       let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
       return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
+    }
+    function dispatch3(el, name, detail = {}) {
+      el.dispatchEvent(new CustomEvent(name, {
+        detail,
+        bubbles: true,
+        composed: true,
+        cancelable: true
+      }));
+    }
+    function walk(el, callback) {
+      if (typeof ShadowRoot === "function" && el instanceof ShadowRoot) {
+        Array.from(el.children).forEach((el2) => walk(el2, callback));
+        return;
+      }
+      let skip = false;
+      callback(el, () => skip = true);
+      if (skip)
+        return;
+      let node = el.firstElementChild;
+      while (node) {
+        walk(node, callback, false);
+        node = node.nextElementSibling;
+      }
+    }
+    function warn(message, ...args) {
+      console.warn(`Alpine Warning: ${message}`, ...args);
+    }
+    var started = false;
+    function start2() {
+      if (started)
+        warn("Alpine has already been initialized on this page. Calling Alpine.start() more than once can cause problems.");
+      started = true;
+      if (!document.body)
+        warn("Unable to initialize. Trying to load Alpine before `<body>` is available. Did you forget to add `defer` in Alpine's `<script>` tag?");
+      dispatch3(document, "alpine:init");
+      dispatch3(document, "alpine:initializing");
+      startObservingMutations();
+      onElAdded((el) => initTree(el, walk));
+      onElRemoved((el) => destroyTree(el));
+      onAttributesAdded((el, attrs) => {
+        directives(el, attrs).forEach((handle) => handle());
+      });
+      let outNestedComponents = (el) => !closestRoot(el.parentElement, true);
+      Array.from(document.querySelectorAll(allSelectors().join(","))).filter(outNestedComponents).forEach((el) => {
+        initTree(el);
+      });
+      dispatch3(document, "alpine:initialized");
+      setTimeout(() => {
+        warnAboutMissingPlugins();
+      });
+    }
+    var rootSelectorCallbacks = [];
+    var initSelectorCallbacks = [];
+    function rootSelectors() {
+      return rootSelectorCallbacks.map((fn) => fn());
+    }
+    function allSelectors() {
+      return rootSelectorCallbacks.concat(initSelectorCallbacks).map((fn) => fn());
+    }
+    function addRootSelector(selectorCallback) {
+      rootSelectorCallbacks.push(selectorCallback);
+    }
+    function addInitSelector(selectorCallback) {
+      initSelectorCallbacks.push(selectorCallback);
+    }
+    function closestRoot(el, includeInitSelectors = false) {
+      return findClosest(el, (element) => {
+        const selectors = includeInitSelectors ? allSelectors() : rootSelectors();
+        if (selectors.some((selector) => element.matches(selector)))
+          return true;
+      });
+    }
+    function findClosest(el, callback) {
+      if (!el)
+        return;
+      if (callback(el))
+        return el;
+      if (el._x_teleportBack)
+        el = el._x_teleportBack;
+      if (!el.parentElement)
+        return;
+      return findClosest(el.parentElement, callback);
+    }
+    function isRoot(el) {
+      return rootSelectors().some((selector) => el.matches(selector));
+    }
+    var initInterceptors2 = [];
+    function interceptInit(callback) {
+      initInterceptors2.push(callback);
+    }
+    function initTree(el, walker = walk, intercept = () => {
+    }) {
+      deferHandlingDirectives(() => {
+        walker(el, (el2, skip) => {
+          intercept(el2, skip);
+          initInterceptors2.forEach((i) => i(el2, skip));
+          directives(el2, el2.attributes).forEach((handle) => handle());
+          el2._x_ignore && skip();
+        });
+      });
+    }
+    function destroyTree(root, walker = walk) {
+      walker(root, (el) => {
+        cleanupAttributes(el);
+        cleanupElement(el);
+      });
+    }
+    function warnAboutMissingPlugins() {
+      let pluginDirectives = [
+        ["ui", "dialog", ["[x-dialog], [x-popover]"]],
+        ["anchor", "anchor", ["[x-anchor]"]],
+        ["sort", "sort", ["[x-sort]"]]
+      ];
+      pluginDirectives.forEach(([plugin2, directive22, selectors]) => {
+        if (directiveExists(directive22))
+          return;
+        selectors.some((selector) => {
+          if (document.querySelector(selector)) {
+            warn(`found "${selector}", but missing ${plugin2} plugin`);
+            return true;
+          }
+        });
+      });
     }
     var tickStack = [];
     var isHolding = false;
@@ -2757,7 +2779,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (typeof value === "object" && value !== null && value.hasOwnProperty("init") && typeof value.init === "function") {
         stores[name].init();
       }
-      initInterceptors2(stores[name]);
+      initInterceptors(stores[name]);
     }
     function getStores() {
       return stores;
@@ -2839,7 +2861,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.13.8",
+      version: "3.13.9",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3108,10 +3130,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           e.stopPropagation();
           next(e);
         });
-      if (modifiers.includes("self"))
+      if (modifiers.includes("once")) {
         handler4 = wrapHandler(handler4, (next, e) => {
-          e.target === el && next(e);
+          next(e);
+          listenerTarget.removeEventListener(event, handler4, options);
         });
+      }
       if (modifiers.includes("away") || modifiers.includes("outside")) {
         listenerTarget = document;
         handler4 = wrapHandler(handler4, (next, e) => {
@@ -3126,12 +3150,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           next(e);
         });
       }
-      if (modifiers.includes("once")) {
+      if (modifiers.includes("self"))
         handler4 = wrapHandler(handler4, (next, e) => {
-          next(e);
-          listenerTarget.removeEventListener(event, handler4, options);
+          e.target === el && next(e);
         });
-      }
       handler4 = wrapHandler(handler4, (next, e) => {
         if (isKeyEvent(event)) {
           if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
@@ -3453,7 +3475,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         data2 = {};
       injectMagics(data2, el);
       let reactiveData = reactive(data2);
-      initInterceptors2(reactiveData);
+      initInterceptors(reactiveData);
       let undo = addScopeToNode(el, reactiveData);
       reactiveData["init"] && evaluate(el, reactiveData["init"]);
       cleanup2(() => {
