@@ -28,8 +28,9 @@ class BaseUtils
     static function getPublicProperties($target, $filter = null)
     {
         return collect((new \ReflectionObject($target))->getProperties())
-            ->filter(function ($property) {
-                return $property->isPublic() && ! $property->isStatic() && $property->isDefault();
+            ->filter(function ($property) use ($target) {
+                return $property->isPublic() && ! $property->isStatic() && $property->isDefault()
+                    && !static::hasAttribute($target, $property->getName(), \Livewire\Attributes\Locked::class);
             })
             ->filter($filter ?? fn () => true)
             ->mapWithKeys(function ($property) use ($target) {
