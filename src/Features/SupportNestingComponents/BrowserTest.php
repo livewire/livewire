@@ -271,7 +271,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_submit_form_using_magic_actions_without_breaking_form()
+    public function can_submit_form_using_parent_action_without_permenantly_disabling_form()
     {
         Livewire::visit([
             new class extends Component
@@ -284,7 +284,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
                         <livewire:child />
 
-                        <span>{{ $textFromChildComponent }}</span>
+                        <span dusk="output">{{ $textFromChildComponent }}</span>
                     </div>
                     HTML;
                 }
@@ -313,7 +313,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ])
             ->type('@input', 'hello')
             ->click('@submit-btn')
-            ->pause(500)
+            ->waitForTextIn('@output', 'hello')
             ->assertAttributeMissing('@input', 'readonly')
             ->assertAttributeMissing('@submit-btn', 'disabled');
     }
