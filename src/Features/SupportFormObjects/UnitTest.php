@@ -258,6 +258,31 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
         ;
     }
+    /** @test */
+    public function validation_errors_persist_across_validation_errors()
+    {
+        $component = Livewire::test(new class extends Component {
+            public FormWithLiveValidation $form;
+
+            function save()
+            {
+                $this->form->validate();
+            }
+
+            function render() {
+                return '<div>{{ $errors }}</div>';
+            }
+        });
+
+        $component->assertDontSee('The title field is required')
+            ->assertDontSee('The content field is required')
+            ->set('form.title', '')
+            ->assertSee('The title field is required')
+            ->assertDontSee('The content field is required')
+            ->set('form.content', '')
+            ->assertSee('The title field is required')
+            ->assertSee('The content field is required');
+    }
 
     /** @test */
     function can_reset_property()
@@ -914,4 +939,26 @@ class PostForFormObjectTesting extends Model
             'content' => 'Some content',
         ],
     ];
+}
+
+class FormWithLiveValidation extends Form
+{
+    #[Validate]
+    public $title = 'title';
+
+    #[Validate]
+    public $content = 'content';
+
+    public function rules()
+    {
+        return [
+            'title' => [
+                'required',
+            ],
+
+            'content' => [
+                'required',
+            ],
+        ];
+    }
 }

@@ -4665,6 +4665,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives.js
+  var customDirectiveNames = /* @__PURE__ */ new Set();
   function matchesForLivewireDirective(attributeName) {
     return attributeName.match(new RegExp("wire:"));
   }
@@ -4673,12 +4674,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return new Directive(value, modifiers, name, el);
   }
   function directive2(name, callback) {
+    if (customDirectiveNames.has(name))
+      return;
+    customDirectiveNames.add(name);
     on2("directive.init", ({ el, component, directive: directive3, cleanup: cleanup2 }) => {
       if (directive3.value === name) {
         callback({
           el,
           directive: directive3,
           component,
+          $wire: component.$wire,
           cleanup: cleanup2
         });
       }
@@ -4686,6 +4691,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function getDirectives(el) {
     return new DirectiveManager(el);
+  }
+  function customDirectiveHasBeenRegistered(name) {
+    return customDirectiveNames.has(name);
   }
   var DirectiveManager = class {
     constructor(el) {
@@ -7453,7 +7461,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   import_nprogress.default.configure({
     minimum: 0.1,
     trickleSpeed: 200,
-    showSpinner: false
+    showSpinner: false,
+    parent: "html"
   });
   injectStyles();
   var inProgress = false;
@@ -7468,6 +7477,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function finishAndHideProgressBar() {
     inProgress = false;
     import_nprogress.default.done();
+  }
+  function removeAnyLeftOverStaleProgressBars() {
     import_nprogress.default.remove();
   }
   function injectStyles() {
@@ -7548,9 +7559,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     `;
     let nonce2 = getNonce();
-    if (nonce2) {
+    if (nonce2)
       style.nonce = nonce2;
-    }
     document.head.appendChild(style);
   }
 
@@ -7796,6 +7806,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           packUpPersistedTeleports(persistedEl);
         });
         swapCurrentPageWithNewHtml(html, () => {
+          removeAnyLeftOverStaleProgressBars();
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
@@ -9258,6 +9269,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-wildcard.js
   on2("directive.init", ({ el, directive: directive3, cleanup: cleanup2, component }) => {
     if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive3.value))
+      return;
+    if (customDirectiveHasBeenRegistered(directive3.value))
       return;
     let attribute = directive3.rawName.replace("wire:", "x-on:");
     if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {
