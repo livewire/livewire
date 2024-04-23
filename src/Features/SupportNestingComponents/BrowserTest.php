@@ -269,6 +269,54 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@child-button')
         ->assertSeeIn('@child-text', 'true');
     }
+
+    /** @test */
+    public function can_submit_form_using_parent_action_without_permenantly_disabling_form()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public $textFromChildComponent;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child />
+
+                        <span dusk="output">{{ $textFromChildComponent }}</span>
+                    </div>
+                    HTML;
+                }
+
+                public function submit($text)
+                {
+                    $this->textFromChildComponent = $text;
+                }
+            },
+            'child' => new class extends Component
+            {
+                public $text;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <form wire:submit="$parent.submit($wire.text)">
+                            <input type="text" name="test" wire:model="text" dusk="input" />
+                            <button type="submit" dusk="submit-btn">submit</button>
+                        </form>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->type('@input', 'hello')
+            ->click('@submit-btn')
+            ->waitForTextIn('@output', 'hello')
+            ->assertAttributeMissing('@input', 'readonly')
+            ->assertAttributeMissing('@submit-btn', 'disabled');
+    }
 }
 
 class Page extends Component
