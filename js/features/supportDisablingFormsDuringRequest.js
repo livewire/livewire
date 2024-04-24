@@ -23,8 +23,6 @@ on('directive.init', ({ el, directive, cleanup, component }) => setTimeout(() =>
 
         let cleanup = disableForm(el)
 
-        window.yo = cleanup
-
         cleanups.add(componentId, cleanup)
     })
 }))

@@ -8878,7 +8878,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.addEventListener("submit", () => {
       let componentId = directive3.expression.startsWith("$parent") ? component.parent.id : component.id;
       let cleanup3 = disableForm(el);
-      window.yo = cleanup3;
       cleanups.add(componentId, cleanup3);
     });
   }));
