@@ -83,6 +83,37 @@ class UnitTest extends \Tests\TestCase
         })->assertSee('Custom pagination theme');
     }
 
+    /** @test */
+    public function can_set_a_custom_simple_links_theme_in_component()
+    {
+        Livewire::test(new class extends Component {
+            use WithPagination;
+
+            function paginationSimpleView()
+            {
+                return 'custom-simple-pagination-theme';
+            }
+
+            #[Computed]
+            function posts()
+            {
+                return PaginatorPostTestModel::simplePaginate();
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @foreach ($this->posts as $post)
+                    @endforeach
+
+                    {{ $this->posts->links() }}
+                </div>
+                HTML;
+            }
+        })->assertSee('Custom simple pagination theme');
+    }
+
     public function test_calling_pagination_getPage_before_paginate_method_resolve_the_correct_page_number_in_first_visit_or_after_reload()
     {
         Livewire::withQueryParams(['page' => 5])->test(new class extends Component {
