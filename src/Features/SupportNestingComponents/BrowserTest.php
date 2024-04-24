@@ -271,7 +271,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
 
     /** @test */
-    public function can_listening_multiple_event_using_at_directive_attribute_from_child_component()
+    public function can_listen_to_multiple_events_using_at_directive_attribute_from_child_component()
     {
         Livewire::visit([
             new class extends Component
