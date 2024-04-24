@@ -62,7 +62,7 @@ class EloquentModelSynth extends Synth
 
     public function hydrate($data, $meta, $hydrateChild)
     {
-        if (is_null($data)) return null;
+        if ($data === '' || $data === null) return null;
         
         if (isset($meta['__child_from_parent'])) {
             $model = $meta['__child_from_parent'];
