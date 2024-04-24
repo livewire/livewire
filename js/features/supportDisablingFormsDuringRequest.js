@@ -1,71 +1,89 @@
 import { getDirectives } from '@/directives'
 import { on } from '@/hooks'
+import { Bag } from '@/utils'
 import Alpine from 'alpinejs'
 
-let cleanupStackByComponentId = {}
+let cleanups = new Bag
 
 // Adding a setTimeout here so that these event listeners are
 // registered AFTER most other event listenrs, this way, we
 // can call "stopPropagation" for things like wire:confirm
-on('element.init', ({ el, component }) => setTimeout(() => {
-    let directives = getDirectives(el)
+on('directive.init', ({ el, directive, cleanup, component }) => setTimeout(() => {
+    if (directive.value !== 'submit') return
 
-    if (directives.missing('submit')) return
-
-    // Set a forms "disabled" state on inputs and buttons.
     // Livewire will clean it all up automatically when the form
-    // submission returns and the new DOM lacks these additions.
+    // submission returns and the new DOM lacks these additions...
     el.addEventListener('submit', () => {
-        cleanupStackByComponentId[component.id] = []
+        // If using wire:submit="$parent...", we will need to use
+        // the parent ID as a reference for undoing because it's
+        // the ID that will come back from the network request.
+        let componentId = directive.expression.startsWith('$parent')
+            ? component.parent.id
+            : component.id
 
-        Alpine.walk(component.el, (node, skip) => {
-            if (! el.contains(node)) return
+        let cleanup = disableForm(el)
 
-            if (node.hasAttribute('wire:ignore')) return skip()
-
-            if (
-                // <button type="submit">
-                (node.tagName.toLowerCase() === 'button' &&
-                    node.type === 'submit') ||
-                // <select>
-                node.tagName.toLowerCase() === 'select' ||
-                // <input type="checkbox|radio">
-                (node.tagName.toLowerCase() === 'input' &&
-                    (node.type === 'checkbox' || node.type === 'radio'))
-            ) {
-                if (!node.disabled)
-                    cleanupStackByComponentId[component.id].push(
-                        () => (node.disabled = false)
-                    )
-
-                node.disabled = true
-            } else if (
-                // <input type="text">
-                node.tagName.toLowerCase() === 'input' ||
-                // <textarea>
-                node.tagName.toLowerCase() === 'textarea'
-            ) {
-                if (!node.readOnly)
-                    cleanupStackByComponentId[component.id].push(
-                        () => (node.readOnly = false)
-                    )
-
-                node.readOnly = true
-            }
-        })
+        cleanups.add(componentId, cleanup)
     })
 }))
 
 on('commit', ({ component, respond }) => {
     respond(() => {
-        cleanup(component)
+        cleanups.each(component.id, i => i())
+        cleanups.remove(component.id)
     })
 })
 
-function cleanup(component) {
-    if (! cleanupStackByComponentId[component.id]) return
+function disableForm(formEl) {
+    let undos = []
 
-    while (cleanupStackByComponentId[component.id].length > 0) {
-        cleanupStackByComponentId[component.id].shift()()
+    Alpine.walk(formEl, (el, skip) => {
+        if (! formEl.contains(el)) return
+
+        if (el.hasAttribute('wire:ignore')) return skip()
+
+        if (shouldMarkDisabled(el)) {
+            undos.push(markDisabled(el))
+        } else if (shouldMarkReadOnly(el)) {
+            undos.push(markReadOnly(el))
+        }
+    })
+
+    return () => {
+        while (undos.length > 0) undos.shift()()
     }
+}
+
+function shouldMarkDisabled(el) {
+    let tag = el.tagName.toLowerCase()
+
+    if (tag === 'select') return true
+    if (tag === 'button' && el.type === 'submit') return true
+    if (tag === 'input' && (el.type === 'checkbox' || el.type === 'radio')) return true
+
+    return false
+}
+
+function shouldMarkReadOnly(el) {
+    return ['input', 'textarea'].includes(el.tagName.toLowerCase())
+}
+
+function markDisabled(el) {
+    let undo = el.disabled
+        ? () => {}
+        : () => el.disabled = false
+
+    el.disabled = true
+
+    return undo
+}
+
+function markReadOnly(el) {
+    let undo = el.readOnly
+        ? () => {}
+        : () => el.readOnly = false
+
+    el.readOnly = true
+
+    return undo
 }

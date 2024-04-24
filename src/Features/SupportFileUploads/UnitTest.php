@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use App\Livewire\UploadFile;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Http;
@@ -381,6 +382,39 @@ class UnitTest extends \Tests\TestCase
             ->call('upload', 'uploaded-avatar3.png');
 
         $this->assertCount(1, FileUploadConfiguration::storage()->allFiles());
+    }
+
+    /** @test */
+    public function temporary_files_older_than_24_hours_are_not_cleaned_up_if_configuration_specifies()
+    {
+        config()->set('livewire.temporary_file_upload.cleanup', false);
+
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+        $file2 = UploadedFile::fake()->image('avatar.jpg');
+        $file3 = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', 'uploaded-avatar.png');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file2)
+            ->call('upload', 'uploaded-avatar2.png');
+
+        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+
+        // Make temporary files look 2 days old.
+        foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
+            touch(FileUploadConfiguration::storage()->path($fileShortPath), now()->subDays(2)->timestamp);
+        }
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file3)
+            ->call('upload', 'uploaded-avatar3.png');
+
+        $this->assertCount(3, FileUploadConfiguration::storage()->allFiles());
     }
 
     /** @test */
@@ -783,6 +817,21 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(FileReadContentComponent::class)
             ->set('file', $file)
             ->assertSet('content', $file->getContent());
+    }
+
+    public function test_validation_of_file_uploads_while_time_traveling()
+    {
+        Storage::fake('avatars');
+
+        $this->travelTo(now()->addMonth());
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', 'uploaded-avatar.png');
+
+        Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
 }
 

@@ -654,6 +654,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `Livewire::withCookie('color', 'blue')`                      | Set the test's `color` cookie to the provided value (`blue`). |
 | `Livewire::withCookies(['color' => 'blue', 'name' => 'Taylor])`                      | Set the test's `color` and `name` cookies to the provided values (`blue`, `Taylor`). |
 | `Livewire::withHeaders(['X-COLOR' => 'blue', 'X-NAME' => 'Taylor])`                      | Set the test's `X-COLOR` and `X-NAME` headers to the provided values (`blue`, `Taylor`). |
+| `Livewire::withoutLazyLoading()`                      | Disable lazy loading in this and all child components under test. |
 
 
 ### Interacting with components
