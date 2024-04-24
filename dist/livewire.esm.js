@@ -9744,7 +9744,6 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => setT
   el.addEventListener("submit", () => {
     let componentId = directive2.expression.startsWith("$parent") ? component.parent.id : component.id;
     let cleanup2 = disableForm(el);
-    window.yo = cleanup2;
     cleanups.add(componentId, cleanup2);
   });
 }));
