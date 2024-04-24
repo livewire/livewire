@@ -79,7 +79,7 @@ class HandleRequests extends Mechanism
     {
         $components = request('components');
 
-        trigger('request', request());
+        trigger('request', $components);
 
         $responses = [];
 
