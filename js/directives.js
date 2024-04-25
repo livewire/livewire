@@ -13,6 +13,9 @@ export function extractDirective(el, name) {
 }
 
 export function directive(name, callback) {
+    // Prevent the same directive from registering multiple initialization listeners...
+    if (customDirectiveNames.has(name)) return
+
     customDirectiveNames.add(name)
 
     on('directive.init', ({ el, component, directive, cleanup }) => {

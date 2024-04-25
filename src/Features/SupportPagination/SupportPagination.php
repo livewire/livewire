@@ -135,6 +135,10 @@ class SupportPagination extends ComponentHook
 
     protected function paginationSimpleView()
     {
+        if (method_exists($this->component, 'paginationSimpleView')) {
+            return $this->component->paginationSimpleView();
+        }
+
         return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 

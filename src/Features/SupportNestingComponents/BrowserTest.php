@@ -269,6 +269,105 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@child-button')
         ->assertSeeIn('@child-text', 'true');
     }
+
+    /** @test */
+    public function can_submit_form_using_parent_action_without_permenantly_disabling_form()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public $textFromChildComponent;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child />
+
+                        <span dusk="output">{{ $textFromChildComponent }}</span>
+                    </div>
+                    HTML;
+                }
+
+                public function submit($text)
+                {
+                    $this->textFromChildComponent = $text;
+                }
+            },
+            'child' => new class extends Component
+            {
+                public $text;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <form wire:submit="$parent.submit($wire.text)">
+                            <input type="text" name="test" wire:model="text" dusk="input" />
+                            <button type="submit" dusk="submit-btn">submit</button>
+                        </form>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->type('@input', 'hello')
+            ->click('@submit-btn')
+            ->waitForTextIn('@output', 'hello')
+            ->assertAttributeMissing('@input', 'readonly')
+            ->assertAttributeMissing('@submit-btn', 'disabled');
+    }
+
+    /** @test */
+    public function can_listen_to_multiple_events_using_at_directive_attribute_from_child_component()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public $text;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child @foo="foo" @bar="bar" />
+                        <span>{{ $text }}</span>
+                    </div>
+                    HTML;
+                }
+
+                public function foo()
+                {
+                    $this->text = 'foo';
+                }
+
+                public function bar()
+                {
+                    $this->text = 'bar';
+                }
+            },
+            'child' => new class extends Component
+            {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="$dispatch('foo')" dusk="dispatch-foo-event-btn">
+                            Dispatch Foo
+                        </button>
+                        <button type="button" wire:click="$dispatch('bar')" dusk="dispatch-bar-event-btn">
+                            Dispatch Bar
+                        </button>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewire()->click('@dispatch-bar-event-btn')
+            ->assertSee('bar')
+            ->waitForLivewire()->click('@dispatch-foo-event-btn')
+            ->assertSee('foo');
+    }
 }
 
 class Page extends Component

@@ -231,10 +231,8 @@ class TodoList extends Component
     public function add()
     {
         Todo::create([
-            'content' => $this->todo,
+            'content' => $this->pull('todo'),
         ]);
-
-        $this->reset('todo');
     }
 
     public function render()

@@ -1,6 +1,6 @@
 import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
-import { findComponent } from '@/store'
+import { closestComponent, findComponent } from '@/store'
 import { trigger } from '@/hooks'
 
 export class Component {
@@ -142,6 +142,10 @@ export class Component {
         let childIds = Object.values(meta.children).map(i => i[1])
 
         return childIds.map(id => findComponent(id))
+    }
+
+    get parent() {
+        return closestComponent(this.el.parentElement)
     }
 
     inscribeSnapshotAndEffectsOnElement() {
