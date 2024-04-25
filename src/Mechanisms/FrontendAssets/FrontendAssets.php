@@ -150,7 +150,7 @@ class FrontendAssets extends Mechanism
     public static function js($options)
     {
         // Use the default endpoint...
-        $url = app(static::class)->javaScriptRoute->uri;
+        $url = app('url')->toRoute(app(static::class)->javaScriptRoute, [], false);
 
         // Use the configured one...
         $url = config('livewire.asset_url') ?: $url;
