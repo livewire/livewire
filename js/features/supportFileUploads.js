@@ -178,7 +178,7 @@ class UploadManager {
 
         request.upload.addEventListener('progress', e => {
             e.detail = {}
-            e.detail.progress = Math.round((e.loaded * 100) / e.total)
+            e.detail.progress = Math.floor((e.loaded * 100) / e.total)
 
             this.uploadBag.first(name).progressCallback(e)
         })
