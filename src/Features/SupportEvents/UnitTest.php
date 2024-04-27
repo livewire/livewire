@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use Livewire\Component;
+use Livewire\Form;
 use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
@@ -128,6 +129,30 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('counter', 1)
             ->dispatch('bar')
             ->assertSet('counter', 2);
+    }
+
+    public function test_it_can_listen_to_property_updates(): void
+    {
+        Livewire::test(ComponentWithUpdatedListener::class)
+            ->assertSetStrict('title', 'foo')
+            ->assertSetStrict('length', 3)
+            ->set('title', 'foo-bar')
+            ->assertDispatched('updatedTitle')
+            ->dispatch('updatedTitle')
+            ->assertSetStrict('title', 'foo-bar')
+            ->assertSetStrict('length', 7);
+    }
+
+    public function test_it_can_listen_to_property_updates_in_forms(): void
+    {
+        Livewire::test(ComponentWithFormAndUpdatedListener::class)
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('length', 3)
+            ->set('form.title', 'foo-bar')
+            ->assertDispatched('updatedFormTitle')
+            ->dispatch('updatedFormTitle')
+            ->assertSetStrict('form.title', 'foo-bar')
+            ->assertSetStrict('length', 7);
     }
 
     /** @test */
@@ -383,4 +408,37 @@ class ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes extends Compo
     public static $counter = 0;
 
     public function render() { static::$counter++; return '<div></div>'; }
+}
+
+class ComponentWithUpdatedListener extends Component
+{
+    public string $title = 'foo';
+    public int $length = 3;
+
+    #[BaseOn('updatedTitle')]
+    public function calculate(): void
+    {
+        $this->length = strlen($this->title);
+    }
+
+    public function render() { return '<div></div>'; }
+}
+
+class ComponentForm extends Form
+{
+    public string $title = 'foo';
+}
+
+class ComponentWithFormAndUpdatedListener extends Component
+{
+    public ComponentForm $form;
+    public int $length = 3;
+
+    #[BaseOn('updatedFormTitle')]
+    public function calculate(): void
+    {
+        $this->length = strlen($this->form->title);
+    }
+
+    public function render() { return '<div></div>'; }
 }

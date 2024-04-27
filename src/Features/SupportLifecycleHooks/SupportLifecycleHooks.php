@@ -76,8 +76,10 @@ class SupportLifecycleHooks extends ComponentHook
             $this->callTraitHook('updated', [$fullPath, $newValue]);
 
             $this->callHook($afterMethod, [$newValue, $keyAfterFirstDot]);
-
             $this->callHook($afterNestedMethod, [$newValue, $keyAfterLastDot]);
+
+            $this->callHook('dispatch', [$afterMethod]);
+            $this->callHook('dispatch', [$afterNestedMethod]);
         };
     }
 
@@ -99,7 +101,7 @@ class SupportLifecycleHooks extends ComponentHook
 
         $this->callTraitHook('call', ['methodName' => $methodName, 'params' => $params, 'returnEarly' => $returnEarly]);
     }
-    
+
     public function exception($e, $stopPropagation)
     {
         $this->callHook('exception', ['e' => $e, 'stopPropagation' => $stopPropagation]);
