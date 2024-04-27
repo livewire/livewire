@@ -8,8 +8,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_confirm_an_action()
+    public function test_can_confirm_an_action()
     {
         Livewire::visit(new class extends Component {
             public $confirmed = false;
@@ -35,8 +34,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_confirm_an_action_when_used_with_submit_directive()
+    public function test_can_confirm_an_action_when_used_with_submit_directive()
     {
         $browser = Livewire::visit(new class extends Component {
             public $confirmed = false;
@@ -73,8 +71,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function custom_confirm_message()
+    public function test_custom_confirm_message()
     {
         Livewire::visit(new class extends Component {
             public $confirmed = false;
@@ -92,8 +89,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_prompt_a_user_for_a_match()
+    public function test_can_prompt_a_user_for_a_match()
     {
         Livewire::visit(new class extends Component {
             public $confirmed = false;
@@ -127,8 +123,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_prompt_a_user_for_a_match_when_used_with_submit_directive()
+    public function test_can_prompt_a_user_for_a_match_when_used_with_submit_directive()
     {
         $browser = Livewire::visit(new class extends Component {
             public $confirmed = false;

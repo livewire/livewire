@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class ComponentIsMacroableUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function it_resolves_the_mount_parameters()
+    public function test_it_resolves_the_mount_parameters()
     {
         Component::macro('macroedMethod', function ($first, $second) {
             return [$first, $second];

@@ -7,8 +7,7 @@ use Livewire\Component;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_pass_a_reactive_property_from_parent_to_child()
+    public function test_can_pass_a_reactive_property_from_parent_to_child()
     {
         Livewire::visit([
             new class extends Component {
@@ -71,8 +70,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child.count', 0);
     }
 
-    /** @test */
-    public function can_pass_a_reactive_property_from_parent_to_nested_children()
+    public function test_can_pass_a_reactive_property_from_parent_to_nested_children()
     {
         Livewire::visit([
             new class extends Component {
@@ -131,8 +129,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@nested-child.count', 2);
     }
 
-    /** @test */
-    public function can_throw_exception_cannot_mutate_reactive_prop()
+    public function test_can_throw_exception_cannot_mutate_reactive_prop()
     {
         Livewire::visit([
             new class extends Component {
@@ -178,8 +175,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child.count', 1);
     }
 
-    /** @test */
-    public function can_pass_a_reactive_property_from_parent_to_lazy_child()
+    public function test_can_pass_a_reactive_property_from_parent_to_lazy_child()
     {
         Livewire::visit([
             new class extends Component {

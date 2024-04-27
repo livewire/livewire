@@ -12,8 +12,7 @@ use Sushi\Sushi;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    function can_use_a_form_object()
+    function test_can_use_a_form_object()
     {
         Livewire::test(new class extends Component {
             public PostFormStub $form;
@@ -31,8 +30,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_reset_form_object_property()
+    function test_can_reset_form_object_property()
     {
         Livewire::test(new class extends Component {
             public PostFormStub $form;
@@ -56,8 +54,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object()
+    function test_can_validate_a_form_object()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -80,8 +77,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_with_the_general_validate_function()
+    function test_can_validate_a_form_with_the_general_validate_function()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -103,8 +99,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_specific_rule_has_errors_in_a_form_object()
+    function test_can_validate_a_specific_rule_has_errors_in_a_form_object()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -125,8 +120,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_with_validate_only()
+    function test_can_validate_a_form_object_with_validate_only()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -147,8 +141,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_specific_rule_for_form_object_with_validate_only()
+    function test_can_validate_a_specific_rule_for_form_object_with_validate_only()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -167,9 +160,8 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['form.title' => 'required']);
         ;
     }
-    
-    /** @test */
-    function can_validate_a_specific_rule_has_errors_on_update_in_a_form_object()
+
+    function test_can_validate_a_specific_rule_has_errors_on_update_in_a_form_object()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateOnUpdateStub $form;
@@ -184,8 +176,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_with_root_component_validate_only()
+    function test_can_validate_a_form_object_with_root_component_validate_only()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -206,8 +197,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_using_rule_attributes()
+    function test_can_validate_a_form_object_using_rule_attributes()
     {
         Livewire::test(new class extends Component {
             public PostFormRuleAttributeStub $form;
@@ -234,8 +224,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_using_rule_attribute_with_custom_name()
+    function test_can_validate_a_form_object_using_rule_attribute_with_custom_name()
     {
         Livewire::test(new class extends Component {
             public PostFormRuleAttributeWithCustomNameStub $form;
@@ -258,8 +247,7 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
         ;
     }
-    /** @test */
-    public function validation_errors_persist_across_validation_errors()
+    public function test_validation_errors_persist_across_validation_errors()
     {
         $component = Livewire::test(new class extends Component {
             public FormWithLiveValidation $form;
@@ -284,8 +272,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The content field is required');
     }
 
-    /** @test */
-    function can_reset_property()
+    function test_can_reset_property()
     {
         Livewire::test(new class extends Component {
             public PostFormStub $form;
@@ -310,8 +297,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_reset_all_properties()
+    function test_can_reset_all_properties()
     {
         Livewire::test(new class extends Component {
             public PostFormStub $form;
@@ -336,8 +322,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function all_properties_are_available_in_rules_method()
+    function test_all_properties_are_available_in_rules_method()
     {
         Livewire::test(new class extends Component {
             public PostFormWithRulesStub $form;
@@ -362,8 +347,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_get_only_specific_properties()
+    function test_can_get_only_specific_properties()
     {
         $component = new class extends Component {};
 
@@ -385,8 +369,7 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    function can_get_properties_except()
+    function test_can_get_properties_except()
     {
         $component = new class extends Component {};
 
@@ -408,8 +391,7 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    function validation_can_show_a_form_object_dynamic_validation_attributes()
+    function test_validation_can_show_a_form_object_dynamic_validation_attributes()
     {
         Livewire::test(new class extends Component {
             public PostFormDynamicValidationAttributesStub $withDynamicValidationAttributesForm;
@@ -433,8 +415,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function multiple_form_objects_in_component_not_interfering_between()
+    function test_multiple_form_objects_in_component_not_interfering_between()
     {
         Livewire::test(new class extends Component {
             public PostFormDynamicValidationAttributesStub $firstForm;
@@ -476,8 +457,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function validation_showing_a_form_object_dynamic_messages()
+    function test_validation_showing_a_form_object_dynamic_messages()
     {
         Livewire::test(new class extends Component {
             public PostFormDynamicMessagesStub $form;
@@ -499,8 +479,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function can_fill_a_form_object_from_model()
+    public function test_can_fill_a_form_object_from_model()
     {
         Livewire::test(new class extends Component {
             public PostForFormObjectTesting $post;
@@ -529,8 +508,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function can_fill_a_form_object_from_array()
+    public function test_can_fill_a_form_object_from_array()
     {
         Livewire::test(new class extends Component {
             public PostFormStub $form;
@@ -556,8 +534,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function form_object_validation_runs_alongside_component_validation()
+    function test_form_object_validation_runs_alongside_component_validation()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -582,8 +559,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function form_object_validation_wont_run_if_rules_are_passed_into_validate()
+    function test_form_object_validation_wont_run_if_rules_are_passed_into_validate()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -607,8 +583,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function allows_form_object_without_rules_without_throwing_an_error()
+    function test_allows_form_object_without_rules_without_throwing_an_error()
     {
         Livewire::test(new class extends Component {
             public PostFormWithoutRules $form;
@@ -637,8 +612,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function allows_form_object_without_rules_but_can_still_validate_it_with_its_own_rules()
+    function test_allows_form_object_without_rules_but_can_still_validate_it_with_its_own_rules()
     {
         Livewire::test(new class extends Component {
             public PostFormWithoutRules $form;
@@ -669,8 +643,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function form_object_without_rules_can_still_be_validated_and_return_proper_data()
+    function test_form_object_without_rules_can_still_be_validated_and_return_proper_data()
     {
         Livewire::test(new class extends Component {
             public PostFormWithoutRules $form;
@@ -706,8 +679,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function resetting_validation_errors_resets_form_objects_as_well()
+    function test_resetting_validation_errors_resets_form_objects_as_well()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateStub $form;
@@ -739,8 +711,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_intercept_form_object_validator_instance()
+    function test_can_intercept_form_object_validator_instance()
     {
         Livewire::test(new class extends Component {
             public PostFormValidateWithInterceptStub $form;

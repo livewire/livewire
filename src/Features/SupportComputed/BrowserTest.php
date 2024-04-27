@@ -9,8 +9,7 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_persist_computed_between_requests_and_bust_them()
+    public function test_can_persist_computed_between_requests_and_bust_them()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -52,8 +51,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '2');
     }
 
-    /** @test */
-    public function can_cache_computed_properties_for_all_components_and_bust_them()
+    public function test_can_cache_computed_properties_for_all_components_and_bust_them()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;

@@ -8,8 +8,7 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_teleport_dom_via_blade_directive()
+    public function test_can_teleport_dom_via_blade_directive()
     {
         Livewire::visit(new class extends Component {
             public function render() { return <<<'HTML'
@@ -24,8 +23,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('teleportedbar');
     }
 
-    /** @test */
-    public function can_teleport_dom_via_blade_directive_then_change_it()
+    public function test_can_teleport_dom_via_blade_directive_then_change_it()
     {
         Livewire::visit(new class extends Component {
             public $foo = 'bar';
@@ -54,8 +52,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('teleportedbaz');
     }
 
-    /** @test */
-    public function morphdom_doesnt_remove_subsequent_teleports_if_there_are_multiple()
+    public function test_morphdom_doesnt_remove_subsequent_teleports_if_there_are_multiple()
     {
         Livewire::visit(new class extends Component {
             public $count = 1;

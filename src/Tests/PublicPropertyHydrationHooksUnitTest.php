@@ -8,11 +8,10 @@ use Livewire\Component;
 
 class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function public_properties_can_be_cast()
+    public function test_public_properties_can_be_cast()
     {
         $this->markTestSkipped('This test needs to be split, so each property type is tested as part of their dedicated Synth');
-        
+
         Livewire::test(ComponentWithPublicPropertyCasters::class)
             ->call('storeTypeOfs')
             ->assertSet('typeOfs.date', 'Carbon\Carbon')

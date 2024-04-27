@@ -10,8 +10,7 @@ class ModelsCanBeFilledUnitTest extends \Tests\TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function can_fill_binded_model_properties()
+    public function test_can_fill_binded_model_properties()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class, ['user' => new UserModel()]);
 

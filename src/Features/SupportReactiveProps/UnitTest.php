@@ -7,8 +7,7 @@ use Livewire\Component;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    function can_pass_prop_to_child_component()
+    function test_can_pass_prop_to_child_component()
     {
         Livewire::test([new class extends Component {
             public $foo = 'bar';
@@ -27,8 +26,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('bar');
     }
 
-    /** @test */
-    function can_change_reactive_prop_in_child_component()
+    function test_can_change_reactive_prop_in_child_component()
     {
         $this->markTestSkipped('Unit testing child components isnt supported yet');
 

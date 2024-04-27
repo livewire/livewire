@@ -12,8 +12,7 @@ class ModelValidationUnitTest extends \Tests\TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function can_validate_uniqueness_on_a_model()
+    public function test_can_validate_uniqueness_on_a_model()
     {
         Livewire::test(ComponentWithRulesPropertyAndModelWithUniquenessValidation::class)
             ->set('foo.name', 'bar')
@@ -24,8 +23,7 @@ class ModelValidationUnitTest extends \Tests\TestCase
             ->assertHasNoErrors('foo.name');
     }
 
-    /** @test */
-    public function can_validate_uniqueness_on_a_model_but_exempt_the_model_itself()
+    public function test_can_validate_uniqueness_on_a_model_but_exempt_the_model_itself()
     {
         Livewire::test(ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions::class)
             ->set('foo.email', 'baz@example.com')

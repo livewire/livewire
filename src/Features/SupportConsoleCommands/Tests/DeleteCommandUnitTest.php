@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class DeleteCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function component_is_removed_by_delete_command()
+    public function test_component_is_removed_by_delete_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo']);
 
@@ -24,8 +23,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($viewPath));
     }
 
-    /** @test */
-    public function inline_component_is_removed_by_delete_command()
+    public function test_inline_component_is_removed_by_delete_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo', '--inline' => true]);
 
@@ -41,8 +39,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($viewPath));
     }
 
-    /** @test */
-    public function component_with_test_is_removed_by_delete_command()
+    public function test_component_with_test_is_removed_by_delete_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo','--test'=>true]);
 
@@ -60,8 +57,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($viewPath));
         $this->assertFalse(File::exists($testPath));
     }
-    /** @test */
-    public function component_is_removed_by_rm_command()
+    public function test_component_is_removed_by_rm_command()
     {
         Artisan::call('make:livewire', ['name' => 'foo','--test'=>true]);
 
@@ -80,8 +76,7 @@ class DeleteCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($testPath));
     }
 
-    /** @test */
-    public function component_is_removed_without_confirmation_if_forced()
+    public function test_component_is_removed_without_confirmation_if_forced()
     {
         Artisan::call('make:livewire', ['name' => 'foo','--test'=>true]);
 

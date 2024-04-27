@@ -9,8 +9,7 @@ use Livewire\Livewire;
 
 class CarbonSynthUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function public_carbon_properties_can_be_cast()
+    public function test_public_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithPublicCarbonCaster::class)
             ->updateProperty('date', '2024-02-14')
@@ -20,8 +19,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_nullable_carbon_properties_can_be_cast()
+    public function test_public_nullable_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
             ->assertSetStrict('date', null)
@@ -36,8 +34,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_carbon_immutable_properties_can_be_cast()
+    public function test_public_carbon_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonImmutableCaster::class)
             ->assertSetStrict('date', null)
@@ -52,8 +49,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_datetime_properties_can_be_cast()
+    public function test_public_datetime_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeCaster::class)
             ->assertSetStrict('date', null)
@@ -68,8 +64,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_datetime_immutable_properties_can_be_cast()
+    public function test_public_datetime_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeImmutableCaster::class)
             ->assertSetStrict('date', null)

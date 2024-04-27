@@ -8,8 +8,7 @@ use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function a_livewire_component_can_persist_its_locale()
+    public function test_a_livewire_component_can_persist_its_locale()
     {
         // Set locale
         App::setLocale('en');

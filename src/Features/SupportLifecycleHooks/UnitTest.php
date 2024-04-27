@@ -9,8 +9,7 @@ use PHPUnit\Framework\Assert as PHPUnit;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function cant_call_protected_lifecycle_hooks()
+    public function test_cant_call_protected_lifecycle_hooks()
     {
         $this->assertTrue(
             collect([
@@ -40,8 +39,7 @@ class UnitTest extends \Tests\TestCase
         return false;
     }
 
-    /** @test */
-    public function boot_method_is_called_on_mount_and_on_subsequent_updates()
+    public function test_boot_method_is_called_on_mount_and_on_subsequent_updates()
     {
         Livewire::test(ComponentWithBootMethod::class)
             ->assertSet('memo', 'bootmountbooted')
@@ -49,8 +47,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('memo', 'boothydratebooted');
     }
 
-    /** @test */
-    public function boot_method_can_be_added_to_trait()
+    public function test_boot_method_can_be_added_to_trait()
     {
         Livewire::test(ComponentWithBootTrait::class)
             ->assertSet('memo', 'boottraitboottraitinitializemountbootedtraitbooted')
@@ -58,8 +55,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('memo', 'boottraitboottraitinitializehydratebootedtraitbooted');
     }
 
-    /** @test */
-    public function boot_method_supports_dependency_injection()
+    public function test_boot_method_supports_dependency_injection()
     {
         Livewire::test(ComponentWithBootMethodDI::class)
             ->assertSet('memo', 'boottraitbootbootedtraitbooted')
@@ -67,8 +63,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('memo', 'boottraitbootbootedtraitbooted');
     }
 
-    /** @test */
-    public function it_resolves_the_mount_parameters()
+    public function test_it_resolves_the_mount_parameters()
     {
         $component = Livewire::test(ComponentWithOptionalParameters::class);
         $this->assertSame(null, $component->foo);
@@ -91,8 +86,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(null, $component->bar);
     }
 
-    /** @test */
-    public function it_sets_missing_dynamically_passed_in_parameters_to_null()
+    public function test_it_sets_missing_dynamically_passed_in_parameters_to_null()
     {
         $fooBar = ['foo' => 10, 'bar' => 5];
         $componentWithFooBar = Livewire::test(ComponentWithOptionalParameters::class, $fooBar);
@@ -104,8 +98,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(5, $componentWithFooBar->bar);
         $this->assertSame(null, data_get($componentWithOnlyFoo->instance(), 'bar'));
     }
-    /** @test */
-    public function mount_hook()
+    public function test_mount_hook()
     {
         $component = Livewire::test(ForLifecycleHooks::class);
 
@@ -128,8 +121,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function update_property()
+    public function test_update_property()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
@@ -163,8 +155,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function update_nested_properties()
+    public function test_update_nested_properties()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
@@ -216,8 +207,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function update_nested_properties_with_nested_update_hook()
+    public function test_update_nested_properties_with_nested_update_hook()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [

@@ -12,8 +12,7 @@ class EagerLoadingBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
+    public function test_it_restores_eloquent_colletion_eager_loaded_relations_on_hydrate()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EagerLoadComponent::class)
@@ -24,8 +23,7 @@ class EagerLoadingBrowserTest extends TestCase
         });
     }
 
-    /** @test */
-    public function models_without_eager_loaded_relations_are_not_affected()
+    public function test_models_without_eager_loaded_relations_are_not_affected()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EagerLoadComponent::class)

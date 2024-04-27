@@ -8,8 +8,7 @@ use ValueError;
 
 class EnumUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function public_properties_can_be_cast()
+    public function test_public_properties_can_be_cast()
     {
         Livewire::test(ComponentWithPublicEnumCasters::class)
             ->call('storeTypeOf')
@@ -17,8 +16,7 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertSet('enum', TestingEnum::from('Be excellent to each other'));
     }
 
-    /** @test */
-    public function nullable_public_property_can_be_cast()
+    public function test_nullable_public_property_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicEnumCaster::class)
             ->assertSetStrict('status', null)

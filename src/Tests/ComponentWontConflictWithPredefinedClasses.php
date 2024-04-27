@@ -18,16 +18,14 @@ class ComponentWontConflictWithPredefinedClasses extends \Tests\TestCase
         config()->set('livewire.class_namespace', 'Livewire\\Tests');
     }
 
-    /** @test */
-    public function wont_conflict_on_initial_request()
+    public function test_wont_conflict_on_initial_request()
     {
         $component = Livewire::test(Directory::class);
 
         $component->assertSee('Count: 1');
     }
 
-    /** @test */
-    public function wont_conflict_on_subsequent_requests()
+    public function test_wont_conflict_on_subsequent_requests()
     {
         $component = Livewire::test(Directory::class);
 

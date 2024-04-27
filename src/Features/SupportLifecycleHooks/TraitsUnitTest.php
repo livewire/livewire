@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class TraitsUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function traits_can_intercept_lifecycle_hooks()
+    public function test_traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTraitStub::class)
             ->assertSet(
@@ -29,8 +28,7 @@ class TraitsUnitTest extends \Tests\TestCase
             );
     }
 
-    /** @test */
-    public function multiple_traits_can_intercept_lifecycle_hooks()
+    public function test_multiple_traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTwoTraitsStub::class)
             ->assertSet('hooksFromTrait', [
@@ -52,8 +50,7 @@ class TraitsUnitTest extends \Tests\TestCase
             ]);
     }
 
-    /** @test */
-    public function calling_test_methods_will_not_run_hooks_from_previous_methods()
+    public function test_calling_test_methods_will_not_run_hooks_from_previous_methods()
     {
         ComponentForTestMethodsStub::$hooksFromTrait = [];
         $test = Livewire::test(ComponentForTestMethodsStub::class);
@@ -77,8 +74,7 @@ class TraitsUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function trait_hooks_are_run_at_the_same_time_as_component_hooks()
+    public function test_trait_hooks_are_run_at_the_same_time_as_component_hooks()
     {
         Livewire::test(ComponentWithTraitStubAndComponentLifecycleHooks::class)
             ->assertSet(

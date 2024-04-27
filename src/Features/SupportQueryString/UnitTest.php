@@ -17,8 +17,7 @@ trait WithSorting
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    function can_track_properties_in_the_url()
+    function test_can_track_properties_in_the_url()
     {
         $component = Livewire::test(new class extends Component {
             #[BaseUrl]
@@ -34,8 +33,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(isset($component->effects['url']));
     }
 
-    /** @test */
-    function sub_name_is_null_in_attributes_from_query_string_component_method()
+    function test_sub_name_is_null_in_attributes_from_query_string_component_method()
     {
         $component = Livewire::test(new class extends Component {
             public function render()
@@ -58,8 +56,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(null, $queryFromMethod->getSubName());
     }
 
-    /** @test */
-    function sub_name_is_null_in_attributes_from_query_string_trait_method()
+    function test_sub_name_is_null_in_attributes_from_query_string_trait_method()
     {
         $component = Livewire::test(new class extends Component {
             use WithSorting;
@@ -77,8 +74,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(null, $queryFromTrait->getSubName());
     }
 
-    /** @test */
-    function sub_name_is_same_as_name_in_attributes_from_base_url_property_attribute()
+    function test_sub_name_is_same_as_name_in_attributes_from_base_url_property_attribute()
     {
         $component = Livewire::test(new class extends Component {
             #[BaseUrl]

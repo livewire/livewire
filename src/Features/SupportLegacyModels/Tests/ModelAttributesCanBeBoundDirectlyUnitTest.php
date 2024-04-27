@@ -26,8 +26,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         });
     }
 
-    /** @test */
-    public function can_set_a_model_attribute_and_save()
+    public function test_can_set_a_model_attribute_and_save()
     {
         $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
 
@@ -47,8 +46,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
-    public function a_non_existant_eloquent_model_can_be_set()
+    public function test_a_non_existant_eloquent_model_can_be_set()
     {
         $model = new ModelForAttributeBinding;
 
@@ -62,8 +60,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         $this->assertTrue(ModelForAttributeBinding::whereTitle('i-exist-now')->exists());
     }
 
-    /** @test */
-    public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
+    public function test_cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
 
@@ -74,8 +71,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
             ->assertSet('model.id', null);
     }
 
-    /** @test */
-    public function an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
+    public function test_an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
     {
         $this->expectException(CorruptComponentPayloadException::class);
 
@@ -89,8 +85,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         $component->call('$refresh');
     }
 
-    /** @test */
-    public function an_eloquent_model_property_can_be_set_to_null()
+    public function test_an_eloquent_model_property_can_be_set_to_null()
     {
         $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
 

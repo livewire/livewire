@@ -12,8 +12,7 @@ class DataBindingModelsBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function it_displays_all_nested_data()
+    public function test_it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, DataBindingComponent::class)
@@ -29,8 +28,7 @@ class DataBindingModelsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
-    public function it_enables_nested_data_to_be_changed()
+    public function test_it_enables_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, DataBindingComponent::class)
@@ -65,8 +63,7 @@ class DataBindingModelsBrowserTest extends TestCase
         $author->push();
     }
 
-    /** @test */
-    public function it_enables_changing_model_attributes_that_have_not_been_initialized_using_entangle()
+    public function test_it_enables_changing_model_attributes_that_have_not_been_initialized_using_entangle()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, DataBindingComponent::class)

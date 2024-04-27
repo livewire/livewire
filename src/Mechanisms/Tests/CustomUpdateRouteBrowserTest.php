@@ -50,8 +50,7 @@ class CustomUpdateRouteBrowserTest extends \Tests\BrowserTestCase
         };
     }
 
-    /** @test */
-    public function can_use_a_custom_update_route_with_a_uri_segment()
+    public function test_can_use_a_custom_update_route_with_a_uri_segment()
     {
         $this->browse(function (\Laravel\Dusk\Browser $browser) {
             $browser

@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class TypedPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function can_set_uninitialized_typed_properties()
+    public function test_can_set_uninitialized_typed_properties()
     {
         $testMessage = 'hello world';
 

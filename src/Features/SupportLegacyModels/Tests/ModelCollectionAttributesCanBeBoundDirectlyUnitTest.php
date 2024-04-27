@@ -16,8 +16,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function can_set_a_model_attribute_inside_a_models_collection_and_save()
+    public function test_can_set_a_model_attribute_inside_a_models_collection_and_save()
     {
         // Reset Sushi model.
         (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
@@ -39,8 +38,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->assertSet('models.0.title', 'boo');
     }
 
-    /** @test */
-    public function can_set_non_persisted_models_in_model_collection()
+    public function test_can_set_non_persisted_models_in_model_collection()
     {
         // Reset Sushi model.
         (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
@@ -71,8 +69,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
         ;
     }
 
-    /** @test */
-    public function can_use_a_custom_model_collection_and_bind_to_values()
+    public function test_can_use_a_custom_model_collection_and_bind_to_values()
     {
         // Reset Sushi model.
         (new ModelWithCustomCollectionForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelWithCustomCollectionForBinding)->getTable());
@@ -97,8 +94,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->assertSet('modelsType', CustomCollection::class);
     }
 
-    /** @test */
-    public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
+    public function test_cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {
         // Reset Sushi model.
         (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());
@@ -111,8 +107,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->assertSet('models.1.restricted', null);
     }
 
-    /** @test */
-    public function an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
+    public function test_an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
     {
         // Reset Sushi model.
         (new ModelForBinding)->resolveConnection()->getSchemaBuilder()->drop((new ModelForBinding)->getTable());

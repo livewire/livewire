@@ -11,8 +11,7 @@ use function Livewire\str;
 
 class ComponentSkipRenderUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function component_renders_like_normal()
+    public function test_component_renders_like_normal()
     {
         $component = Livewire::test(ComponentSkipRenderStub::class);
 
@@ -21,8 +20,7 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function on_skip_render_render_is_not_called()
+    public function test_on_skip_render_render_is_not_called()
     {
         $component = Livewire::test(ComponentSkipRenderStub::class);
 
@@ -33,8 +31,7 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         $this->assertNotNull($component->html());
     }
 
-    /** @test */
-    public function with_skip_render_attribute_render_is_not_called()
+    public function test_with_skip_render_attribute_render_is_not_called()
     {
         $component = Livewire::test(ComponentSkipRenderAttributeStub::class);
 
@@ -45,8 +42,7 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
         $this->assertNotNull($component->html());
     }
 
-    /** @test */
-    public function on_redirect_in_mount_render_is_not_called()
+    public function test_on_redirect_in_mount_render_is_not_called()
     {
         Route::get('/403', ComponentSkipRenderOnRedirectHelperInMountStub::class);
         $this->get('/403')->assertRedirect('/bar');

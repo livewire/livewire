@@ -221,8 +221,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
-    public function it_does_not_build_query_string_from_referer_if_it_is_coming_from_a_full_page_redirect()
+    public function test_it_does_not_build_query_string_from_referer_if_it_is_coming_from_a_full_page_redirect()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, RedirectLinkToQueryStringComponent::class)

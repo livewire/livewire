@@ -45,8 +45,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
-    public function checkboxes_fuzzy_match_integer_values()
+    public function test_checkboxes_fuzzy_match_integer_values()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, CheckboxesWithIntsComponent::class)

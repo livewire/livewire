@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\File;
 
 class WorksOnLoadBalancersUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function livewire_renders_chidren_properly_across_load_balancers()
+    public function test_livewire_renders_chidren_properly_across_load_balancers()
     {
         $this->markTestSkipped('I havent wired this up yet because I want to make sure there isnt a less complex way...');
 

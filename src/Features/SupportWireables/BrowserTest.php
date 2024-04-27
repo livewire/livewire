@@ -8,8 +8,7 @@ use RuntimeException;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function it_can_update_a_custom_wireable_object()
+    public function test_it_can_update_a_custom_wireable_object()
     {
         Livewire::visit(new class () extends \Livewire\Component {
             public Person $person;
@@ -34,8 +33,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('43');
     }
 
-    /** @test */
-    public function it_can_update_a_custom_wireable_via_inputs()
+    public function test_it_can_update_a_custom_wireable_via_inputs()
     {
         Livewire::visit(new class () extends \Livewire\Component {
             public Person $person;
