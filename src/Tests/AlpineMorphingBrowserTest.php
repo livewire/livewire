@@ -134,4 +134,53 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('@hidden');
             // ->assertConsoleLogMissingWarning('show is not defined');
     }
+
+    /** @test */
+    public function alpine_property_persists_on_array_unshift()
+    {
+        Livewire::visit(new class extends Component {
+            public array $values = [2, 1, 0];
+
+            public function unshift()
+            {
+                array_unshift($this->values, count($this->values));
+            }
+
+            public function push()
+            {
+                array_push($this->values, count($this->values));
+            }
+
+            public function render(): string
+            {
+                return <<<'BLADE'
+                    <div>
+                        <div>
+                            @foreach($values as $value)
+                                <div wire:key="item-{{ $value }}" x-data="{ show: false }" >
+                                    <div>Value #{{ $value }}</div>
+                                    <span x-show="show" x-cloak>hidden</span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <button type="button" wire:click="unshift" dusk="unshift">Unshift</button>
+
+                        <button type="button" wire:click="push" dusk="push">Push</button>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSee('Value #2')
+            ->assertDontSee('hidden')
+            ->assertDontSee('Value #3')
+            ->waitForLivewire()->click('@unshift')
+            ->assertSee('Value #3')
+            ->assertDontSee('hidden')
+            ->waitForLivewire()->click('@unshift')
+            ->assertSee('Value #4')
+            // The second time: Error thrown in console, and Alpine fails and shows the hidden text when it should not.
+            ->assertDontSee('hidden')
+            ;
+    }
 }
