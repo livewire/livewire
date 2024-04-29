@@ -321,6 +321,8 @@ class PostForm extends Form
 
     public function update()
     {
+        $this->validate();
+
         $this->post->update(
             $this->all()
         );
