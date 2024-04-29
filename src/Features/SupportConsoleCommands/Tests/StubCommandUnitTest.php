@@ -11,13 +11,13 @@ class StubCommandUnitTest extends \Tests\TestCase
     {
         Artisan::call('livewire:stubs');
 
-        $this->assertTrue(File::exists($this->stubsPath('livewire.stub'))); // OK
-        $this->assertTrue(File::exists($this->stubsPath('livewire.inline.stub'))); // OK
-        $this->assertTrue(File::exists($this->stubsPath('livewire.view.stub'))); // OK
+        $this->assertTrue(File::exists($this->stubsPath('livewire.stub')));
+        $this->assertTrue(File::exists($this->stubsPath('livewire.inline.stub')));
+        $this->assertTrue(File::exists($this->stubsPath('livewire.view.stub')));
         $this->assertTrue(File::exists($this->stubsPath('livewire.test.stub')));
         $this->assertTrue(File::exists($this->stubsPath('livewire.pest.stub')));
-        $this->assertTrue(File::exists($this->stubsPath('livewire.form.stub'))); // OK
-        $this->assertTrue(File::exists($this->stubsPath('livewire.attribute.stub'))); // OK
+        $this->assertTrue(File::exists($this->stubsPath('livewire.form.stub')));
+        $this->assertTrue(File::exists($this->stubsPath('livewire.attribute.stub')));
     }
 
     public function test_component_is_created_with_view_and_class_custom_default_stubs()
