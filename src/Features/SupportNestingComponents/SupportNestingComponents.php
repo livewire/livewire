@@ -51,12 +51,11 @@ class SupportNestingComponents extends ComponentHook
 
         static::setPreviouslyRenderedChildren($this->component, $children);
 
-        // if this component was removed from the parent, skip it
-        $removedChildren = store()->get('removedChildren', []);
-        if (isset($removedChildren[$this->component->getId()])) {
+        $this->ifThisComponentIsAChildThatHasBeenRemovedByTheParent(function () {
+            // Let's skip its render so that we aren't wasting extra rendering time
+            // on a component that has already been thrown-away by its parent...
             $this->component->skipRender();
-            store()->unset('removedChildren', $this->component->getId());
-        }
+        });
     }
 
     function dehydrate($context)
@@ -65,13 +64,7 @@ class SupportNestingComponents extends ComponentHook
 
         if ($skipRender) $this->keepRenderedChildren();
 
-        // keep track of all children that were removed
-        $removedChildren = array_diff_key($this->storeGet('previousChildren', []), $this->getChildren());
-        if (!empty($removedChildren)) {
-            foreach ($removedChildren as $key => $child) {
-                store()->push('removedChildren', $key, $child[1]);
-            }
-        }
+        $this->storeRemovedChildrenToReferenceWhenThoseChildrenHydrateSoWeCanSkipTheirRenderAndAvoideUselessWork();
 
         $context->addMemo('children', $this->getChildren());
     }
@@ -102,5 +95,26 @@ class SupportNestingComponents extends ComponentHook
             ->each(function ($value, $property) use ($component) {
                 $component->{$property} = $value;
             });
+    }
+
+    protected function storeRemovedChildrenToReferenceWhenThoseChildrenHydrateSoWeCanSkipTheirRenderAndAvoideUselessWork()
+    {
+        // Get a list of children that we're "removed" in this request...
+        $removedChildren = array_diff_key($this->storeGet('previousChildren', []), $this->getChildren());
+
+        foreach ($removedChildren as $key => $child) {
+            store()->push('removedChildren', $key, $child[1]);
+        }
+    }
+
+    protected function ifThisComponentIsAChildThatHasBeenRemovedByTheParent($callback)
+    {
+        $removedChildren = store()->get('removedChildren', []);
+
+        if (isset($removedChildren[$this->component->getId()])) {
+            $callback();
+
+            store()->unset('removedChildren', $this->component->getId());
+        }
     }
 }
