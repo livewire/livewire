@@ -8,8 +8,7 @@ use PHPUnit\Framework\Assert as PHPUnit;
 
 class TestableLivewireCanBeInvaded extends \Tests\TestCase
 {
-    /** @test */
-    function can_invade_protected_properties()
+    function test_can_invade_protected_properties()
     {
         $component = Livewire::test(new class extends Component {
             protected string $foo = 'bar';
@@ -22,8 +21,7 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
         PHPUnit::assertEquals('bar', $component->invade()->foo);
     }
 
-    /** @test */
-    function can_invade_protected_functions()
+    function test_can_invade_protected_functions()
     {
         $component = Livewire::test(new class extends Component {
             protected function foo() : string {
@@ -38,8 +36,7 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
         PHPUnit::assertEquals('bar', $component->invade()->foo());
     }
 
-    /** @test */
-    function can_invade_private_properties()
+    function test_can_invade_private_properties()
     {
         $component = Livewire::test(new class extends Component {
             private string $foo = 'bar';
@@ -52,8 +49,7 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
         PHPUnit::assertEquals('bar', $component->invade()->foo);
     }
 
-    /** @test */
-    function can_invade_private_functions()
+    function test_can_invade_private_functions()
     {
         $component = Livewire::test(new class extends Component {
             private function foo() : string {

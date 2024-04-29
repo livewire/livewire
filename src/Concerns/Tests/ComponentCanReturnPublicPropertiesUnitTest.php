@@ -7,8 +7,7 @@ use Livewire\Component;
 
 class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function a_livewire_component_can_return_an_associative_array_of_public_properties()
+    public function test_a_livewire_component_can_return_an_associative_array_of_public_properties()
     {
         Livewire::test(ComponentWithProperties::class)
             ->call('setAllProperties')

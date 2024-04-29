@@ -11,8 +11,7 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function standard_redirect()
+    public function test_standard_redirect()
     {
         $component = Livewire::test(TriggersRedirectStub::class);
 
@@ -21,8 +20,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('/local', $component->effects['redirect']);
     }
 
-    /** @test */
-    public function route_redirect()
+    public function test_route_redirect()
     {
         $this->registerNamedRoute();
 
@@ -33,8 +31,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('http://localhost/foo', $component->effects['redirect']);
     }
 
-    /** @test */
-    public function intended_redirect()
+    public function test_intended_redirect()
     {
         $this->registerNamedRoute();
 
@@ -47,8 +44,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(route('foo'), $component->effects['redirect']);
     }
 
-    /** @test */
-    public function action_redirect()
+    public function test_action_redirect()
     {
         $this->registerAction();
 
@@ -59,8 +55,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('http://localhost/foo', $component->effects['redirect']);
     }
 
-    /** @test */
-    public function can_redirect_to_other_component_from_redirect_method()
+    public function test_can_redirect_to_other_component_from_redirect_method()
     {
         Route::get('/test', TriggersRedirectStub::class);
 
@@ -75,8 +70,7 @@ class UnitTest extends \Tests\TestCase
         ->assertRedirect('/test');
     }
 
-    /** @test */
-    public function redirect_helper()
+    public function test_redirect_helper()
     {
         $component = Livewire::test(TriggersRedirectStub::class);
 
@@ -85,8 +79,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(url('foo'), $component->effects['redirect']);
     }
 
-    /** @test */
-    public function redirect_helper_using_key_value_with()
+    public function test_redirect_helper_using_key_value_with()
     {
         $component = Livewire::test(TriggersRedirectStub::class);
 
@@ -97,8 +90,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire-is-awesome', Session::get('success'));
     }
 
-    /** @test */
-    public function redirect_helper_using_array_with()
+    public function test_redirect_helper_using_array_with()
     {
         $component = Livewire::test(TriggersRedirectStub::class);
 
@@ -109,8 +101,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('livewire-is-awesome', Session::get('success'));
     }
 
-    /** @test */
-    public function redirect_facade_with_to_method()
+    public function test_redirect_facade_with_to_method()
     {
         $component = Livewire::test(TriggersRedirectStub::class);
 
@@ -119,8 +110,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(url('foo'), $component->effects['redirect']);
     }
 
-    /** @test */
-    public function redirect_facade_with_route_method()
+    public function test_redirect_facade_with_route_method()
     {
         $this->registerNamedRoute();
 
@@ -131,8 +121,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(route('foo'), $component->effects['redirect']);
     }
 
-    /** @test */
-    public function redirect_helper_with_route_method()
+    public function test_redirect_helper_with_route_method()
     {
         $this->registerNamedRoute();
 
@@ -143,8 +132,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(route('foo'), $component->effects['redirect']);
     }
 
-    /** @test */
-    public function redirect_helper_with_away_method()
+    public function test_redirect_helper_with_away_method()
     {
         $this->registerNamedRoute();
 
@@ -155,8 +143,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(route('foo'), $component->effects['redirect']);
     }
 
-    /** @test */
-    public function skip_render_on_redirect_by_default()
+    public function test_skip_render_on_redirect_by_default()
     {
         $component = Livewire::test(SkipsRenderOnRedirect::class)->call('triggerRedirect');
 
@@ -164,8 +151,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull($component->effects['html'] ?? null);
     }
 
-    /** @test */
-    public function dont_skip_render_on_redirect_if_config_set()
+    public function test_dont_skip_render_on_redirect_if_config_set()
     {
         config()->set('livewire.render_on_redirect', true);
 
@@ -175,8 +161,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('Render has run', $component->html());
     }
 
-    /** @test */
-    public function manually_override_dont_skip_render_on_redirect_using_skip_render_method()
+    public function test_manually_override_dont_skip_render_on_redirect_using_skip_render_method()
     {
         config()->set('livewire.render_on_redirect', true);
 
@@ -186,8 +171,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull($component->effects['html'] ?? null);
     }
 
-    /** @test */
-    public function flash_data_is_available_after_render()
+    public function test_flash_data_is_available_after_render()
     {
         session()->flash('foo', 'bar');
         $this->assertEquals('bar', session()->get('foo'));
@@ -197,8 +181,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('bar', session()->get('foo'));
     }
 
-    /** @test */
-    public function flash_data_is_unavailable_after_subsequent_requests()
+    public function test_flash_data_is_unavailable_after_subsequent_requests()
     {
         session()->flash('foo', 'bar');
         $this->assertEquals('bar', session()->get('foo'));
@@ -212,8 +195,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertNull(session()->get('foo'));
     }
 
-    /** @test */
-    public function flash_data_is_available_after_render_of_multiple_components()
+    public function test_flash_data_is_available_after_render_of_multiple_components()
     {
         session()->flash('foo', 'bar');
         $this->assertEquals('bar', session()->get('foo'));

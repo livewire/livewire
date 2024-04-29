@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_register_a_custom_javascript_endpoint()
+    public function test_can_register_a_custom_javascript_endpoint()
     {
         Livewire::setScriptRoute(function ($handle) {
             return Route::get('/custom/livewire.js', function () use ($handle) {

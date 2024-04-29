@@ -8,8 +8,7 @@ use Livewire\Livewire;
 /** @group morphing */
 class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function component_with_custom_directive_keeps_state_after_cloning()
+    public function test_component_with_custom_directive_keeps_state_after_cloning()
     {
         Livewire::visit(new class extends Component {
             public int $counter = 0;
@@ -53,8 +52,7 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function deep_alpine_state_is_preserved_when_morphing_with_uninitialized_livewire_html()
+    public function test_deep_alpine_state_is_preserved_when_morphing_with_uninitialized_livewire_html()
     {
         Livewire::visit(new class extends Component {
             function render() {
@@ -89,8 +87,7 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function alpine_property_persists_on_array_item_reorder()
+    public function test_alpine_property_persists_on_array_item_reorder()
     {
         return Livewire::visit(new class extends Component {
             public array $items = [

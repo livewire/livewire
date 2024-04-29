@@ -81,8 +81,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
-    public function it_provides_a_nice_warning_in_console_for_an_empty_wire_model()
+    public function test_it_provides_a_nice_warning_in_console_for_an_empty_wire_model()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EmptyWireModelComponent::class)

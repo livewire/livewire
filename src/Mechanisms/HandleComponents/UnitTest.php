@@ -11,8 +11,7 @@ use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function it_restores_laravel_middleware_after_livewire_test()
+    public function test_it_restores_laravel_middleware_after_livewire_test()
     {
         // Run a basic Livewire test first to ensure Livewire has disabled
         // trim strings and convert empty strings to null middleware
@@ -30,8 +29,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('laravelaaalaravel');
     }
 
-    /** @test */
-    public function synthesized_property_types_are_preserved_after_update()
+    public function test_synthesized_property_types_are_preserved_after_update()
     {
         Livewire::test(new class extends Component {
             public $foo;
@@ -53,8 +51,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function uninitialized_integer_can_be_set_to_empty_string()
+    public function test_uninitialized_integer_can_be_set_to_empty_string()
     {
         Livewire::test(new class extends Component {
             public int $count;
@@ -75,8 +72,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function uninitialized_integer_in_a_form_object_can_be_set_to_empty_string()
+    public function test_uninitialized_integer_in_a_form_object_can_be_set_to_empty_string()
     {
         Livewire::test(new class extends Component {
             public CountForm $form;
@@ -97,8 +93,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
+    public function test_it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
         Livewire::test(new class extends \Livewire\Component {
             public ?UnitSuit $selected;
@@ -132,8 +127,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null_inside_form_object()
+    public function test_it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null_inside_form_object()
     {
         Livewire::test(new class extends \Livewire\Component {
             public SuitForm $form;
@@ -155,8 +149,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function it_bypasses_synthesizer_hydration_when_deleting()
+    public function test_it_bypasses_synthesizer_hydration_when_deleting()
     {
         Livewire::test(new class extends \Livewire\Component {
             public $suits;

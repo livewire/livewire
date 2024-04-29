@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class AttributeCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function attribute_is_created_by_attribute_command()
+    public function test_attribute_is_created_by_attribute_command()
     {
         Artisan::call('livewire:attribute', ['name' => 'SampleAttribute']);
 
@@ -20,8 +19,7 @@ class AttributeCommandUnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
-    public function attribute_is_created_in_subdirectory_by_attribute_command()
+    public function test_attribute_is_created_in_subdirectory_by_attribute_command()
     {
         Artisan::call('livewire:attribute', ['name' => 'Auth/SampleAttribute']);
 

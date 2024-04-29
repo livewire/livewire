@@ -10,8 +10,7 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function livewire_styles_take_preference_over_other_styles()
+    public function test_livewire_styles_take_preference_over_other_styles()
     {
         Livewire::visit(new class extends Component {
             #[Layout('layouts.app-with-styles')]

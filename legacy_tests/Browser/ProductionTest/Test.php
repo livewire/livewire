@@ -8,8 +8,7 @@ use Tests\BrowserTestCase;
 
 class Test extends BrowserTestCase
 {
-    /** @test */
-    public function ensure_livewire_runs_when_app_debug_is_set_to_false(): void
+    public function test_ensure_livewire_runs_when_app_debug_is_set_to_false(): void
     {
         Livewire::visit(new class extends Component {
             public $foo = 'squishy';

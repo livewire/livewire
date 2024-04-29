@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class FormCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function form_object_is_created_by_form_command()
+    public function test_form_object_is_created_by_form_command()
     {
         Artisan::call('livewire:form', ['name' => 'SampleForm']);
 
@@ -20,8 +19,7 @@ class FormCommandUnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
-    public function form_object_is_created_in_subdirectory_by_form_command()
+    public function test_form_object_is_created_in_subdirectory_by_form_command()
     {
         Artisan::call('livewire:form', ['name' => 'Auth/SampleForm']);
 

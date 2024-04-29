@@ -8,8 +8,7 @@ use Livewire\Form;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    function cant_update_locked_property()
+    function test_cant_update_locked_property()
     {
         $this->expectExceptionMessage(
             'Cannot update locked property: [count]'
@@ -29,8 +28,7 @@ class UnitTest extends \Tests\TestCase
         ->set('count', 2);
     }
 
-    /** @test */
-    function cant_deeply_update_locked_property()
+    function test_cant_deeply_update_locked_property()
     {
         $this->expectException(CannotUpdateLockedPropertyException::class);
         $this->expectExceptionMessage(
@@ -51,8 +49,7 @@ class UnitTest extends \Tests\TestCase
         ->set('foo.count', 2);
     }
 
-    /** @test */
-    function can_update_locked_property_with_similar_name()
+    function test_can_update_locked_property_with_similar_name()
     {
         Livewire::test(new class extends BaseComponent {
             #[BaseLocked]
@@ -68,8 +65,7 @@ class UnitTest extends \Tests\TestCase
         ->set('count2', 2);
     }
 
-    /** @test */
-    public function it_can_updates_form_with_locked_properties()
+    public function test_it_can_updates_form_with_locked_properties()
     {
         Livewire::test(Component::class)
             ->set('form.foo', 'bar')

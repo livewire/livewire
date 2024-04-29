@@ -10,8 +10,7 @@ use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function can_lazy_load_component_with_custom_layout()
+    public function test_can_lazy_load_component_with_custom_layout()
     {
         Livewire::component('page', PageWithCustomLayout::class);
         Route::get('/one', PageWithCustomLayout::class)->middleware('web');
@@ -27,8 +26,7 @@ class UnitTest extends \Tests\TestCase
         $this->get('/three')->assertSee('This is a custom layout');
     }
 
-    /** @test */
-    public function can_disable_lazy_loading_during_unit_tests()
+    public function test_can_disable_lazy_loading_during_unit_tests()
     {
         Livewire::component('lazy-component', BasicLazyComponent::class);
 

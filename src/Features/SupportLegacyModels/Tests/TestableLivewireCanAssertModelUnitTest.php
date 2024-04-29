@@ -9,8 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TestableLivewireCanAssertModelUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function can_assert_model_property_value()
+    public function test_can_assert_model_property_value()
     {
         Livewire::test(PropertyTestingComponent::class, [
                 'model' => ModelForPropertyTesting::first(),

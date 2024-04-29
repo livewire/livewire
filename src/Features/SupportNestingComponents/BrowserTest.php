@@ -8,8 +8,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_add_new_components()
+    public function test_can_add_new_components()
     {
         Livewire::visit([
             Page::class,
@@ -41,8 +40,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function nested_components_do_not_error_with_empty_elements_on_page()
+    public function test_nested_components_do_not_error_with_empty_elements_on_page()
     {
         Livewire::visit([
             new class extends Component {
@@ -89,8 +87,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function nested_components_do_not_error_when_parent_has_custom_layout_and_default_layout_does_not_exist()
+    public function test_nested_components_do_not_error_when_parent_has_custom_layout_and_default_layout_does_not_exist()
     {
         config()->set('livewire.layout', '');
 
@@ -128,8 +125,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function nested_components_do_not_error_when_child_deleted()
+    public function test_nested_components_do_not_error_when_child_deleted()
     {
         Livewire::visit([
             new class extends Component {
@@ -180,8 +176,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertNotPresent('@child-one');
     }
 
-    /** @test */
-    public function lazy_nested_components_do_not_call_boot_method_twice()
+    public function test_lazy_nested_components_do_not_call_boot_method_twice()
     {
         Livewire::visit([
             new class extends Component {
@@ -219,8 +214,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function nested_components_can_be_removed_and_readded_to_dom()
+    public function test_nested_components_can_be_removed_and_readded_to_dom()
     {
         Livewire::visit([
             new class extends Component {
@@ -270,8 +264,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@child-text', 'true');
     }
 
-    /** @test */
-    public function can_submit_form_using_parent_action_without_permenantly_disabling_form()
+    public function test_can_submit_form_using_parent_action_without_permenantly_disabling_form()
     {
         Livewire::visit([
             new class extends Component
@@ -318,8 +311,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertAttributeMissing('@submit-btn', 'disabled');
     }
 
-    /** @test */
-    public function can_listen_to_multiple_events_using_at_directive_attribute_from_child_component()
+    public function test_can_listen_to_multiple_events_using_at_directive_attribute_from_child_component()
     {
         Livewire::visit([
             new class extends Component

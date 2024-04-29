@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class QueryParamsUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function it_sets_name_from_query_params()
+    public function test_it_sets_name_from_query_params()
     {
         $name = 'Livewire';
 
@@ -17,8 +16,7 @@ class QueryParamsUnitTest extends \Tests\TestCase
             ->assertSet('name', $name);
     }
 
-    /** @test */
-    public function it_does_not_set_name_when_no_query_params_are_provided()
+    public function test_it_does_not_set_name_when_no_query_params_are_provided()
     {
         Livewire::test(QueryParamsComponent::class)
             ->assertSet('name', null);

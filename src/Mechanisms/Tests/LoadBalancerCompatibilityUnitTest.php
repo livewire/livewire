@@ -7,8 +7,7 @@ use Livewire\Component;
 
 class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function component_keys_are_deterministic_across_load_balancers()
+    public function test_component_keys_are_deterministic_across_load_balancers()
     {
         $component = Livewire::test([new class extends Component {
             public function render()
@@ -46,8 +45,7 @@ class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
         $this->assertEquals($firstKey, $secondKey);
     }
 
-    /** @test */
-    public function deterministic_keys_can_still_be_generated_from_blade_strings_not_files()
+    public function test_deterministic_keys_can_still_be_generated_from_blade_strings_not_files()
     {
         $contentsA = app('blade.compiler')->compileString(<<<'HTML'
         <div>

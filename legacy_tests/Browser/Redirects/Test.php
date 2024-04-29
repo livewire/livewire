@@ -12,8 +12,7 @@ class Test extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function it_correctly_shows_flash_messages_before_and_after_direct()
+    public function test_it_correctly_shows_flash_messages_before_and_after_direct()
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, Component::class)

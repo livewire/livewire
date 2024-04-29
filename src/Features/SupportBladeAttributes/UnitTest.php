@@ -8,8 +8,7 @@ use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function it_adds_wire_macro_to_component_attribute_bag()
+    public function test_it_adds_wire_macro_to_component_attribute_bag()
     {
         $bag = new ComponentAttributeBag([
             'wire:model.defer' => 'foo',
@@ -29,8 +28,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(['enter'], $bag->wire('keydown')->modifiers()->toArray());
     }
 
-    /** @test */
-    public function entangle_directive_adds_dot_defer_if_defer_modifier_is_present()
+    public function test_entangle_directive_adds_dot_defer_if_defer_modifier_is_present()
     {
         // @todo: Should this be in support entangle feature?
         $dom = Livewire::test(ComponentWithEntangleDirectiveUsedWithinBladeComponent::class)

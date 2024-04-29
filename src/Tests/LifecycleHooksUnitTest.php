@@ -12,9 +12,8 @@ class CustomException extends \Exception {};
 class LifecycleHooksUnitTest extends \Tests\TestCase
 {
 
-    /** @test */
-    public function refresh_magic_method()
-    {        
+    public function test_refresh_magic_method()
+    {
         $component = Livewire::test(ForMagicMethods::class);
 
         $component->call('$refresh');
@@ -37,8 +36,7 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function set_magic_method()
+    public function test_set_magic_method()
     {
         $component = Livewire::test(ForMagicMethods::class, [
             'expected' => [
@@ -72,7 +70,7 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
             'caughtException' => false,
         ], $component->lifecycles);
 
-        
+
         $component->call('testExceptionInterceptor');
         $this->assertTrue($component->lifecycles['caughtException']);
 

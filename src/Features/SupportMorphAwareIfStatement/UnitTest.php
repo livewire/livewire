@@ -6,12 +6,10 @@ use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Test;
 
 class UnitTest extends \Tests\TestCase
 {
-    #[Test]
-    public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
+    public function test_conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
         Livewire::component('foo', new class extends \Livewire\Component
         {
@@ -30,8 +28,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
 
-    #[Test]
-    public function handles_custom_blade_conditional_directives()
+    public function test_handles_custom_blade_conditional_directives()
     {
         Blade::if('foo', function () {
             return '...';
@@ -49,8 +46,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
-    #[Test]
-    public function handles_if_statements_with_calculation_inside()
+    public function test_handles_if_statements_with_calculation_inside()
     {
         $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
 
@@ -60,9 +56,8 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
-    #[Test]
     #[DataProvider('templatesProvider')]
-    public function foo($occurrences, $template, $expectedCompiled = null)
+    public function test_foo($occurrences, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 

@@ -8,8 +8,7 @@ use Tests\BrowserTestCase;
 
 class UnitTest extends BrowserTestCase
 {
-    /** @test */
-    function can_use_wire_stdclass_property()
+    function test_can_use_wire_stdclass_property()
     {
         Livewire::test(new class extends Component {
             public $obj;

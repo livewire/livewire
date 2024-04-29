@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class ResetPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function can_reset_properties()
+    public function test_can_reset_properties()
     {
         Livewire::test(ResetPropertiesComponent::class)
             ->assertSet('foo', 'bar')
@@ -71,8 +70,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->assertSet('mwa', 'hah');
     }
 
-    /** @test */
-    public function can_reset_unset_properties()
+    public function test_can_reset_unset_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->set('notSet', 1)
@@ -83,8 +81,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertFalse(isset($component->notSet));
     }
 
-    /** @test */
-    public function can_reset_null_properties()
+    public function test_can_reset_null_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->set('nullProp', 1)
@@ -96,8 +93,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertTrue(is_null($component->nullProp));
     }
 
-    /** @test */
-    public function can_reset_and_return_property_with_pull_method()
+    public function test_can_reset_and_return_property_with_pull_method()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->assertSet('foo', 'bar')
@@ -109,8 +105,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->assertSet('pullResult', 'baz');
     }
 
-    /** @test */
-    public function can_pull_all_properties()
+    public function test_can_pull_all_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->assertSet('foo', 'bar')
@@ -123,8 +118,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertEquals('lob', $component->pullResult['bob']);
     }
 
-    /** @test */
-    public function can_pull_some_properties()
+    public function test_can_pull_some_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->assertSet('foo', 'bar')

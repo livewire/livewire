@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class StubCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function default_view_stub_is_created()
+    public function test_default_view_stub_is_created()
     {
         Artisan::call('livewire:stubs');
 
@@ -19,8 +18,7 @@ class StubCommandUnitTest extends \Tests\TestCase
         $this->assertTrue(File::exists($this->stubsPath('livewire.pest.stub')));
     }
 
-    /** @test */
-    public function component_is_created_with_view_and_class_custom_default_stubs()
+    public function test_component_is_created_with_view_and_class_custom_default_stubs()
     {
         Artisan::call('livewire:stubs');
         File::append($this->stubsPath('livewire.stub'), '// comment default');

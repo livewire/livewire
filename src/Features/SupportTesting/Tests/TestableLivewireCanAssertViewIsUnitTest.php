@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class TestableLivewireCanAssertViewIsUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    function can_assert_view_is()
+    function test_can_assert_view_is()
     {
         Livewire::test(ViewComponent::class)
             ->assertViewIs('null-view');

@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function receive_event_with_attribute()
+    public function test_receive_event_with_attribute()
     {
         $component = Livewire::test(new class extends Component {
             public $foo = 'bar';
@@ -27,8 +26,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
-    public function listen_for_dynamic_event_name()
+    public function test_listen_for_dynamic_event_name()
     {
         $component = Livewire::test(new class extends Component {
             public $post = ['id' => 2];
@@ -49,8 +47,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
-    public function listens_for_event_with_named_params()
+    public function test_listens_for_event_with_named_params()
     {
         $component = Livewire::test(new class extends Component {
             public $foo = 'bar';
@@ -69,8 +66,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'bazshmaz');
     }
 
-    /** @test */
-    public function dispatches_event_with_named_params()
+    public function test_dispatches_event_with_named_params()
     {
         Livewire::test(new class extends Component {
             public function dispatchFoo()
@@ -90,8 +86,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function it_can_register_multiple_listeners_via_attribute(): void
+    public function test_it_can_register_multiple_listeners_via_attribute(): void
     {
         Livewire::test(new class extends Component {
             public $counter = 0;
@@ -110,8 +105,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('counter', 2);
     }
 
-    /** @test */
-    public function it_can_register_multiple_listeners_via_attribute_userland(): void
+    public function test_it_can_register_multiple_listeners_via_attribute_userland(): void
     {
         Livewire::test(new class extends Component {
             public $counter = 0;
@@ -130,8 +124,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSet('counter', 2);
     }
 
-    /** @test */
-    public function receive_event()
+    public function test_receive_event()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
@@ -140,8 +133,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
-    public function receive_event_with_single_value_listener()
+    public function test_receive_event_with_single_value_listener()
     {
         $component = Livewire::test(ReceivesEventsWithSingleValueListener::class);
 
@@ -150,8 +142,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'baz');
     }
 
-    /** @test */
-    public function receive_event_with_multiple_parameters()
+    public function test_receive_event_with_multiple_parameters()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
@@ -160,16 +151,14 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals($component->get('foo'), 'bazblab');
     }
 
-    /** @test */
-    public function listeners_are_provided_to_frontend()
+    public function test_listeners_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
         $this->assertTrue(in_array('bar', $component->effects['listeners']));
     }
 
-    /** @test */
-    public function server_dispatched_events_are_provided_to_frontend()
+    public function test_server_dispatched_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
@@ -178,8 +167,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(in_array(['name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
-    /** @test */
-    public function server_dispatched_self_events_are_provided_to_frontend()
+    public function test_server_dispatched_self_events_are_provided_to_frontend()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
@@ -188,16 +176,14 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(in_array(['self' => true, 'name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
-    /** @test */
-    public function component_can_set_dynamic_listeners()
+    public function test_component_can_set_dynamic_listeners()
     {
         Livewire::test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob'])
                 ->dispatch('bob', 'lob')
                 ->assertSet('foo', 'lob');
     }
 
-    /** @test */
-    public function component_receives_events_dispatched_using_classname()
+    public function test_component_receives_events_dispatched_using_classname()
     {
         $component = Livewire::test(ReceivesEvents::class);
 
@@ -207,8 +193,7 @@ class UnitTest extends \Tests\TestCase
     }
 
 
-    /** @test */
-    public function receive_event_with_refresh_attribute()
+    public function test_receive_event_with_refresh_attribute()
     {
         $component = Livewire::test(ReceivesEventUsingRefreshAttribute::class);
 
@@ -219,8 +204,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals(2, ReceivesEventUsingRefreshAttribute::$counter);
     }
 
-    /** @test */
-    public function it_can_register_multiple_listeners_via_refresh_attribute(): void
+    public function test_it_can_register_multiple_listeners_via_refresh_attribute(): void
     {
         Livewire::test(ReceivesMultipleEventsUsingMultipleRefreshAttributes::class)
             ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter))
@@ -230,8 +214,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleRefreshAttributes::$counter));
     }
 
-    /** @test */
-    public function it_can_register_multiple_listeners_via_single_refresh_attribute(): void
+    public function test_it_can_register_multiple_listeners_via_single_refresh_attribute(): void
     {
         Livewire::test(ReceivesMultipleEventsUsingSingleRefreshAttribute::class)
             ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter))
@@ -241,8 +224,7 @@ class UnitTest extends \Tests\TestCase
             ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingSingleRefreshAttribute::$counter));
     }
 
-    /** @test */
-    public function it_can_register_multiple_listeners_via_refresh_attribute_userland(): void
+    public function test_it_can_register_multiple_listeners_via_refresh_attribute_userland(): void
     {
         Livewire::test(ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::class)
             ->tap(fn () => $this->assertEquals(1, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter))
