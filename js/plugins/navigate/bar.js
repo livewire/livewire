@@ -5,7 +5,7 @@ NProgress.configure({
     minimum: 0.1,
     trickleSpeed: 200,
     showSpinner: false,
-    parent: 'html',
+    parent: 'body',
 })
 
 injectStyles()
