@@ -47,17 +47,17 @@ class StubCommandUnitTest extends \Tests\TestCase
     {
         Artisan::call('livewire:stubs');
         File::append($this->stubsPath('livewire.form.stub'), '// form stub');
-        Artisan::call('livewire:form', ['name' => 'foo']);
+        Artisan::call('livewire:form', ['name' => 'Foo']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Forms/Foo.php')));
         $this->assertStringContainsString('// form stub', File::get($this->livewireClassesPath('Forms/Foo.php')));
     }
 
-    public function test_attributes_is_created_with_class_custom_default_stubs()
+    public function test_attribute_is_created_with_class_custom_default_stubs()
     {
         Artisan::call('livewire:stubs');
         File::append($this->stubsPath('livewire.attribute.stub'), '// attribute stub');
-        Artisan::call('livewire:attribute', ['name' => 'foo']);
+        Artisan::call('livewire:attribute', ['name' => 'Foo']);
 
         $this->assertTrue(File::exists($this->livewireClassesPath('Attributes/Foo.php')));
         $this->assertStringContainsString('// attribute stub', File::get($this->livewireClassesPath('Attributes/Foo.php')));
