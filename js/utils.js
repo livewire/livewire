@@ -7,6 +7,10 @@ export class Bag {
         this.arrays[key].push(value)
     }
 
+    remove(key) {
+        if (this.arrays[key]) delete this.arrays[key]
+    }
+
     get(key) { return this.arrays[key] || [] }
 
     each(key, callback) { return this.get(key).forEach(callback) }
@@ -16,8 +20,12 @@ export class WeakBag {
     constructor() { this.arrays = new WeakMap }
 
     add(key, value) {
-        if (! this.arrays.has(key) ) this.arrays.set(key, [])
+        if (! this.arrays.has(key)) this.arrays.set(key, [])
         this.arrays.get(key).push(value)
+    }
+
+    remove(key) {
+        if (this.arrays.has(key)) this.arrays.delete(key, [])
     }
 
     get(key) { return this.arrays.has(key) ? this.arrays.get(key) : [] }
