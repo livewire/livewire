@@ -15,14 +15,14 @@ class UnitTest extends \Tests\TestCase
         (new Article)::resolveConnection()->enableQueryLog();
 
         Livewire::test(new class extends \Livewire\Component {
-            public Article $post;
+            public Article $article;
 
             public function mount() {
-                $this->post = Article::first();
+                $this->article = Article::first();
             }
 
             public function render() { return <<<'HTML'
-                <div>{{ $post->title }}</div>
+                <div>{{ $article->title }}</div>
             HTML; }
         })
         ->assertSee('First')
@@ -37,57 +37,57 @@ class UnitTest extends \Tests\TestCase
         $this->expectExceptionMessage("Can't set model properties directly");
 
         Livewire::test(new class extends \Livewire\Component {
-            public Article $post;
+            public Article $article;
 
             public function mount() {
-                $this->post = Article::first();
+                $this->article = Article::first();
             }
 
             public function render() { return <<<'HTML'
-                <div>{{ $post->title }}</div>
+                <div>{{ $article->title }}</div>
             HTML; }
         })
         ->assertSee('First')
-        ->set('post.title', 'bar');
+        ->set('article.title', 'bar');
     }
 
     public function test_cant_view_model_data_in_javascript()
     {
         $data = Livewire::test(new class extends \Livewire\Component {
-            public Article $post;
+            public Article $article;
 
             public function mount() {
-                $this->post = Article::first();
+                $this->article = Article::first();
             }
 
             public function render() { return <<<'HTML'
-                <div>{{ $post->title }}</div>
+                <div>{{ $article->title }}</div>
             HTML; }
         })->getData();
 
-        $this->assertNull($data['post']);
+        $this->assertNull($data['article']);
     }
 
     public function test_unpersisted_models_can_be_assigned_but_no_data_is_persisted_between_requests()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
-            public Article $post;
+            public Article $article;
 
             public function mount() {
-                $this->post = new Article();
+                $this->article = new Article();
             }
 
             public function render() { return <<<'HTML'
-                <div>{{ $post->title }}</div>
+                <div>{{ $article->title }}</div>
             HTML; }
         })
         ->call('$refresh')
-        ->assertSet('post', new Article())
+        ->assertSet('article', new Article())
         ;
 
         $data = $component->getData();
 
-        $this->assertNull($data['post']);
+        $this->assertNull($data['article']);
     }
 
     public function test_model_properties_are_lazy_loaded()
@@ -97,15 +97,15 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::test(new class extends \Livewire\Component {
             #[Lazy]
-            public Article $post;
+            public Article $article;
 
             public function mount() {
-                $this->post = Article::first();
+                $this->article = Article::first();
             }
 
             public function save()
             {
-                $this->post->save();
+                $this->article->save();
             }
 
             public function render() { return <<<'HTML'
@@ -122,34 +122,34 @@ class UnitTest extends \Tests\TestCase
     public function test_it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
     {
         Relation::morphMap([
-            'post' => Article::class,
+            'article' => Article::class,
         ]);
 
         $component =  Livewire::test(ArticleComponent::class);
 
-        $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
+        $this->assertEquals('article', $component->snapshot['data']['article'][1]['class']);
     }
 
     public function test_it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
     {
-        $post = Article::first();
+        $article = Article::first();
 
         Relation::morphMap([
-            'post' => Article::class,
+            'article' => Article::class,
         ]);
 
         Livewire::test(ArticleComponent::class)
             ->call('$refresh')
-            ->assertSet('post', $post);
+            ->assertSet('article', $article);
     }
 
     public function test_collections_with_duplicate_models_are_available_when_hydrating()
     {
         Livewire::test(new class extends \Livewire\Component {
-            public Collection $posts;
+            public Collection $articles;
 
             public function mount() {
-                $this->posts = new Collection([
+                $this->articles = new Collection([
                     Article::first(),
                     Article::first(),
                 ]);
@@ -157,8 +157,8 @@ class UnitTest extends \Tests\TestCase
 
             public function render() { return <<<'HTML'
                 <div>
-                    @foreach($posts as $post)
-                    {{ $post->title.'-'.$loop->index }}
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
                     @endforeach
                 </div>
             HTML; }
@@ -173,16 +173,16 @@ class UnitTest extends \Tests\TestCase
     public function test_collections_retain_their_order_on_hydration()
     {
         Livewire::test(new class extends \Livewire\Component {
-            public Collection $posts;
+            public Collection $articles;
 
             public function mount() {
-                $this->posts = Article::all()->reverse();
+                $this->articles = Article::all()->reverse();
             }
 
             public function render() { return <<<'HTML'
                 <div>
-                    @foreach($posts as $post)
-                    {{ $post->title.'-'.$loop->index }}
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
                     @endforeach
                 </div>
             HTML; }
@@ -201,11 +201,11 @@ class UnitTest extends \Tests\TestCase
         Relation::requireMorphMap();
 
         $component = Livewire::test(new class extends \Livewire\Component {
-            public $post;
+            public $article;
 
             public function mount()
             {
-                $this->post = Article::first();
+                $this->article = Article::first();
             }
 
             public function render()
@@ -216,7 +216,7 @@ class UnitTest extends \Tests\TestCase
             }
         });
 
-        $this->assertEquals(Article::class, $component->snapshot['data']['post'][1]['class']);
+        $this->assertEquals(Article::class, $component->snapshot['data']['article'][1]['class']);
 
         Relation::requireMorphMap(false);
     }
@@ -229,11 +229,11 @@ class Lazy {
 
 class ArticleComponent extends \Livewire\Component
 {
-    public $post;
+    public $article;
 
     public function mount()
     {
-        $this->post = Article::first();
+        $this->article = Article::first();
     }
 
     public function render()
