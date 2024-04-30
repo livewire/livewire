@@ -397,7 +397,7 @@ let snapshot = {
         errors: [],
     },
 
-    // A securely encryped hash of this snapshot. This way,
+    // A securely encrypted hash of this snapshot. This way,
     // if a malicous user tampers with the snapshot with
     // the goal of accessing un-owned resources on the server,
     // the checksum validation will fail and an error will
