@@ -55,6 +55,9 @@ The previous example demonstrates the most basic storage scenario: moving the te
 
 However, you may want to customize the file name of the stored file or even specify a specific storage "disk" to keep the file on (such as S3).
 
+> [!tip] Original file names
+> You can access the original file name of a temporary upload, by calling its `->getClientOriginalName()` method.
+
 Livewire honors the same APIs Laravel uses for storing uploaded files, so feel free to consult [Laravel's file upload documentation](https://laravel.com/docs/filesystem#file-uploads). However, below are a few common storage scenarios and examples:
 
 ```php
