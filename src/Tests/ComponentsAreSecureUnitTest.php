@@ -33,7 +33,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
 
     public function test_can_only_set_public_properties()
     {
-        $this->expectException(\Error::class);
+        $this->expectException(PublicPropertyNotFoundException::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
