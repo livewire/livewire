@@ -314,7 +314,7 @@ class HandleComponents extends Mechanism
         $finish = trigger('update', $component, $path, $value);
 
         // Ensure that it's a public property, not on the base class first...
-        if (! in_array($property, Utils::getPublicPropertiesDefinedOnSubclass($component))) {
+        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {
             throw new PublicPropertyNotFoundException($property, $component->getName());
         }
 
