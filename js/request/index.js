@@ -139,6 +139,13 @@ export async function sendPayloadRequest(payload, handleSuccess, handleFailure, 
     }
 
     /**
+     * Sometimes we don't receive any response text from request, example incase of redirect
+     */
+    if (!content) {
+        return
+    }
+
+    /**
      * Sometimes a response will be prepended with html to render a dump, so we
      * will seperate the dump html from Livewire's JSON response content and
      * render the dump in a modal and allow Livewire to continue with the

@@ -85,7 +85,7 @@ export class RequestPool {
 
             let fail = () => failureReceivers[id].forEach(receiver => receiver())
 
-            payloads.push([ commitPayloads[id], succeed, fail, value ])
+            payloads.push([ commitPayloads[id], succeed, fail, value[0] || {} ])
         }
 
         return payloads;

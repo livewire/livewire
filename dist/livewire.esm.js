@@ -7800,7 +7800,7 @@ var RequestPool = class {
     for (const [id, value] of Object.entries(endpoints)) {
       let succeed = (components2) => successReceivers[id].forEach((receiver) => receiver(components2.shift()));
       let fail = () => failureReceivers[id].forEach((receiver) => receiver());
-      payloads.push([commitPayloads[id], succeed, fail, value]);
+      payloads.push([commitPayloads[id], succeed, fail, value[0] || {}]);
     }
     return payloads;
   }
@@ -8055,6 +8055,9 @@ async function sendPayloadRequest(payload, handleSuccess, handleFailure, endpoin
   }
   if (response.redirected) {
     window.location.href = response.url;
+  }
+  if (!content) {
+    return;
   }
   if (contentIsFromDump(content)) {
     let dump;
