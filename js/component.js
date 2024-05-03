@@ -24,6 +24,7 @@ export class Component {
         }
 
         this.name = this.snapshot.memo.name
+        this.endpoint = this.snapshot.memo?.endpoint
 
         this.effects = JSON.parse(el.getAttribute('wire:effects'))
         this.originalEffects = deepClone(this.effects)

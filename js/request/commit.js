@@ -115,6 +115,6 @@ export class Commit {
             fail()
         }
 
-        return [payload, handleResponse, handleFailure]
+        return [payload, handleResponse, handleFailure, this.component.endpoint]
     }
 }

@@ -113,6 +113,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportTesting\SupportTesting::class,
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
+            Features\SupportCustomEndpoint\SupportCustomEndpoint::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

@@ -39,12 +39,7 @@ export async function requestCall(component, method, params) {
     return promise
 }
 
-/**
- * Send a pool of commits to the server over HTTP...
- */
-export async function sendRequest(pool) {
-    let [payload, handleSuccess, handleFailure] = pool.payload()
-
+export async function sendPayloadRequest(payload, handleSuccess, handleFailure, endpoint) {
     let options = {
         method: 'POST',
         body: JSON.stringify({
@@ -67,7 +62,7 @@ export async function sendRequest(pool) {
 
     let finishProfile = trigger('request.profile', options)
 
-    let updateUri = getUpdateUri()
+    let updateUri = endpoint?.url || getUpdateUri()
 
     trigger('request', {
         url: updateUri,
@@ -167,6 +162,18 @@ export async function sendRequest(pool) {
     await handleSuccess(components)
 
     succeed({ status: response.status, json: JSON.parse(content) })
+}
+
+/**
+ * Send a pool of commits to the server over HTTP...
+ */
+export async function sendRequest(pool) {
+    let payloads = pool.payload()
+
+    payloads.forEach(request => {
+        let [payload, handleSuccess, handleFailure, endpoint] = request;
+        sendPayloadRequest(payload, handleSuccess, handleFailure, endpoint);
+    })
 }
 
 function handlePageExpiry() {

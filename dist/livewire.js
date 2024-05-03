@@ -593,7 +593,7 @@
       });
       request.upload.addEventListener("progress", (e) => {
         e.detail = {};
-        e.detail.progress = Math.round(e.loaded * 100 / e.total);
+        e.detail.progress = Math.floor(e.loaded * 100 / e.total);
         this.uploadBag.first(name).progressCallback(e);
       });
       request.addEventListener("load", () => {
@@ -710,7 +710,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -4040,15 +4040,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let commitPayloads = [];
       let successReceivers = [];
       let failureReceivers = [];
+      let endpoints = [];
       this.commits.forEach((commit) => {
-        let [payload, succeed2, fail2] = commit.toRequestPayload();
-        commitPayloads.push(payload);
-        successReceivers.push(succeed2);
-        failureReceivers.push(fail2);
+        let [payload, succeed, fail, endpoint] = commit.toRequestPayload();
+        let id = endpoint?.id || "default";
+        if (typeof endpoints[id] === "undefined") {
+          commitPayloads[id] = [];
+          successReceivers[id] = [];
+          failureReceivers[id] = [];
+          endpoints[id] = [];
+        }
+        commitPayloads[id].push(payload);
+        successReceivers[id].push(succeed);
+        failureReceivers[id].push(fail);
+        endpoints[id].push(endpoint);
       });
-      let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-      let fail = () => failureReceivers.forEach((receiver) => receiver());
-      return [commitPayloads, succeed, fail];
+      let payloads = [];
+      for (const [id, value] of Object.entries(endpoints)) {
+        let succeed = (components2) => successReceivers[id].forEach((receiver) => receiver(components2.shift()));
+        let fail = () => failureReceivers[id].forEach((receiver) => receiver());
+        payloads.push([commitPayloads[id], succeed, fail, value]);
+      }
+      return payloads;
     }
   };
 
@@ -4129,7 +4142,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         respond();
         fail();
       };
-      return [payload, handleResponse, handleFailure];
+      return [payload, handleResponse, handleFailure, this.component.endpoint];
     }
   };
 
@@ -4234,8 +4247,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     promise.commit = commit;
     return promise;
   }
-  async function sendRequest(pool) {
-    let [payload, handleSuccess, handleFailure] = pool.payload();
+  async function sendPayloadRequest(payload, handleSuccess, handleFailure, endpoint) {
     let options = {
       method: "POST",
       body: JSON.stringify({
@@ -4254,7 +4266,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
     let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
     let finishProfile = trigger2("request.profile", options);
-    let updateUri = getUpdateUri();
+    let updateUri = endpoint?.url || getUpdateUri();
     trigger2("request", {
       url: updateUri,
       options,
@@ -4315,6 +4327,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     await triggerAsync("payload.intercept", { components: components2, assets });
     await handleSuccess(components2);
     succeed({ status: response.status, json: JSON.parse(content) });
+  }
+  async function sendRequest(pool) {
+    let payloads = pool.payload();
+    payloads.forEach((request) => {
+      let [payload, handleSuccess, handleFailure, endpoint] = request;
+      sendPayloadRequest(payload, handleSuccess, handleFailure, endpoint);
+    });
   }
   function handlePageExpiry() {
     confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
@@ -4486,6 +4505,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         throw `Snapshot missing on Livewire component with id: ` + this.id;
       }
       this.name = this.snapshot.memo.name;
+      this.endpoint = this.snapshot.memo?.endpoint;
       this.effects = JSON.parse(el.getAttribute("wire:effects"));
       this.originalEffects = deepClone(this.effects);
       this.canonical = extractData(deepClone(this.snapshot.data));
@@ -4752,7 +4772,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4846,7 +4866,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5795,7 +5815,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5857,7 +5877,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -5912,7 +5932,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -7463,7 +7483,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     minimum: 0.1,
     trickleSpeed: 200,
     showSpinner: false,
-    parent: "html"
+    parent: "body"
   });
   injectStyles();
   var inProgress = false;
@@ -8069,7 +8089,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8404,7 +8424,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default7 = src_default7;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default8(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;

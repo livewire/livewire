@@ -57,21 +57,37 @@ export class RequestPool {
         // Collect success and failure callbacks to be used inside aggregated callbacks...
         let successReceivers = []
         let failureReceivers = []
+        let endpoints = []
 
         this.commits.forEach(commit => {
-            let [payload, succeed, fail] = commit.toRequestPayload()
+            let [payload, succeed, fail, endpoint] = commit.toRequestPayload()
 
-            commitPayloads.push(payload)
-            successReceivers.push(succeed)
-            failureReceivers.push(fail)
+            let id = endpoint?.id || 'default';
+
+            if (typeof endpoints[id] === 'undefined') {
+                commitPayloads[id] = []
+                successReceivers[id] = []
+                failureReceivers[id] = []
+                endpoints[id] = []
+            }
+
+            commitPayloads[id].push(payload)
+            successReceivers[id].push(succeed)
+            failureReceivers[id].push(fail)
+            endpoints[id].push(endpoint)
         })
 
-        // Aggregate the success and failure callbacks for individual commits
-        // into something that can be called singularly...
-        let succeed = components => successReceivers.forEach(receiver => receiver(components.shift()))
+        let payloads = [];
+        for (const [id, value] of Object.entries(endpoints)) {
+            // Aggregate the success and failure callbacks for individual commits
+            // into something that can be called singularly...
+            let succeed = components => successReceivers[id].forEach(receiver => receiver(components.shift()))
 
-        let fail = () => failureReceivers.forEach(receiver => receiver())
+            let fail = () => failureReceivers[id].forEach(receiver => receiver())
 
-        return [ commitPayloads, succeed, fail ]
+            payloads.push([ commitPayloads[id], succeed, fail, value ])
+        }
+
+        return payloads;
     }
 }

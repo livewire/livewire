@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3807,9 +3807,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3928,9 +3928,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4930,9 +4930,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5019,9 +5019,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5101,9 +5101,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6639,9 +6639,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7001,9 +7001,9 @@ var require_module_cjs7 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7492,7 +7492,7 @@ var UploadManager = class {
     });
     request.upload.addEventListener("progress", (e) => {
       e.detail = {};
-      e.detail.progress = Math.round(e.loaded * 100 / e.total);
+      e.detail.progress = Math.floor(e.loaded * 100 / e.total);
       this.uploadBag.first(name).progressCallback(e);
     });
     request.addEventListener("load", () => {
@@ -7781,15 +7781,28 @@ var RequestPool = class {
     let commitPayloads = [];
     let successReceivers = [];
     let failureReceivers = [];
+    let endpoints = [];
     this.commits.forEach((commit) => {
-      let [payload, succeed2, fail2] = commit.toRequestPayload();
-      commitPayloads.push(payload);
-      successReceivers.push(succeed2);
-      failureReceivers.push(fail2);
+      let [payload, succeed, fail, endpoint] = commit.toRequestPayload();
+      let id = endpoint?.id || "default";
+      if (typeof endpoints[id] === "undefined") {
+        commitPayloads[id] = [];
+        successReceivers[id] = [];
+        failureReceivers[id] = [];
+        endpoints[id] = [];
+      }
+      commitPayloads[id].push(payload);
+      successReceivers[id].push(succeed);
+      failureReceivers[id].push(fail);
+      endpoints[id].push(endpoint);
     });
-    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-    let fail = () => failureReceivers.forEach((receiver) => receiver());
-    return [commitPayloads, succeed, fail];
+    let payloads = [];
+    for (const [id, value] of Object.entries(endpoints)) {
+      let succeed = (components2) => successReceivers[id].forEach((receiver) => receiver(components2.shift()));
+      let fail = () => failureReceivers[id].forEach((receiver) => receiver());
+      payloads.push([commitPayloads[id], succeed, fail, value]);
+    }
+    return payloads;
   }
 };
 
@@ -7870,7 +7883,7 @@ var Commit = class {
       respond();
       fail();
     };
-    return [payload, handleResponse, handleFailure];
+    return [payload, handleResponse, handleFailure, this.component.endpoint];
   }
 };
 
@@ -7975,8 +7988,7 @@ async function requestCall(component, method, params) {
   promise.commit = commit;
   return promise;
 }
-async function sendRequest(pool) {
-  let [payload, handleSuccess, handleFailure] = pool.payload();
+async function sendPayloadRequest(payload, handleSuccess, handleFailure, endpoint) {
   let options = {
     method: "POST",
     body: JSON.stringify({
@@ -7995,7 +8007,7 @@ async function sendRequest(pool) {
   let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
   let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
   let finishProfile = trigger("request.profile", options);
-  let updateUri = getUpdateUri();
+  let updateUri = endpoint?.url || getUpdateUri();
   trigger("request", {
     url: updateUri,
     options,
@@ -8056,6 +8068,13 @@ async function sendRequest(pool) {
   await triggerAsync("payload.intercept", { components: components2, assets });
   await handleSuccess(components2);
   succeed({ status: response.status, json: JSON.parse(content) });
+}
+async function sendRequest(pool) {
+  let payloads = pool.payload();
+  payloads.forEach((request) => {
+    let [payload, handleSuccess, handleFailure, endpoint] = request;
+    sendPayloadRequest(payload, handleSuccess, handleFailure, endpoint);
+  });
 }
 function handlePageExpiry() {
   confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
@@ -8228,6 +8247,7 @@ var Component = class {
       throw `Snapshot missing on Livewire component with id: ` + this.id;
     }
     this.name = this.snapshot.memo.name;
+    this.endpoint = this.snapshot.memo?.endpoint;
     this.effects = JSON.parse(el.getAttribute("wire:effects"));
     this.originalEffects = deepClone(this.effects);
     this.canonical = extractData(deepClone(this.snapshot.data));
@@ -8820,7 +8840,7 @@ import_nprogress.default.configure({
   minimum: 0.1,
   trickleSpeed: 200,
   showSpinner: false,
-  parent: "html"
+  parent: "body"
 });
 injectStyles();
 var inProgress = false;
