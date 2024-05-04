@@ -19,12 +19,10 @@ function str($string = null)
 function invade($obj)
 {
     return new class($obj) {
-        public $obj;
         public $reflected;
 
-        public function __construct($obj)
+        public function __construct(public $obj)
         {
-            $this->obj = $obj;
             $this->reflected = new ReflectionClass($obj);
         }
 

@@ -55,11 +55,8 @@ class DuskTestable
     {
         if (static::$shortCircuitCreateCall) {
             throw new class ($components) extends \Exception {
-                public $components;
                 public $isDuskShortcircuit = true;
-                function __construct($components) {
-                    $this->components = $components;
-                }
+                function __construct(public $components) {}
             };
         }
 
@@ -78,11 +75,8 @@ class DuskTestable
     {
         if (static::$shortCircuitCreateCall) {
             throw new class ($components) extends \Exception {
-                public $components;
                 public $isDuskShortcircuit = true;
-                function __construct($components) {
-                    $this->components = $components;
-                }
+                function __construct(public $components) {}
             };
         }
 

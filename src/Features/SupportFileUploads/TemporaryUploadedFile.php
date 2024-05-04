@@ -10,13 +10,11 @@ use League\MimeTypeDetection\FinfoMimeTypeDetector;
 
 class TemporaryUploadedFile extends UploadedFile
 {
-    protected $disk;
     protected $storage;
     protected $path;
 
-    public function __construct($path, $disk)
+    public function __construct($path, protected $disk)
     {
-        $this->disk = $disk;
         $this->storage = Storage::disk($this->disk);
         $this->path = FileUploadConfiguration::path($path, false);
 

@@ -6,12 +6,7 @@ use Illuminate\View\Component;
 
 class AppLayoutWithConstructor extends Component
 {
-    public $foo;
-
-    public function __construct($foo = 'bar')
-    {
-        $this->foo = $foo;
-    }
+    public function __construct(public $foo = 'bar') {}
 
     public function render()
     {

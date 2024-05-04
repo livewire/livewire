@@ -196,12 +196,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
 
 class ModelToBeBound extends Model
 {
-    public $value;
-
-    public function __construct($value = 'model-default')
-    {
-        $this->value = $value;
-    }
+    public function __construct(public $value = 'model-default') {}
 
     public function resolveRouteBinding($value, $field = null)
     {

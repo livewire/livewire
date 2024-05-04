@@ -18,12 +18,7 @@ use Illuminate\Contracts\Routing\UrlRoutable;
  */
 class ImplicitRouteBinding
 {
-    protected $container;
-
-    public function __construct($container)
-    {
-        $this->container = $container;
-    }
+    public function __construct(protected $container) {}
 
     public function resolveAllParameters(Route $route, Component $component)
     {

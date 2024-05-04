@@ -1370,12 +1370,7 @@ class CustomWireableValidationCollection extends Collection implements Wireable
 
 class CustomWireableValidationDTO implements Wireable
 {
-    public $amount;
-
-    public function __construct($amount)
-    {
-        $this->amount = $amount;
-    }
+    public function __construct(public $amount) {}
 
     public function toLivewire()
     {

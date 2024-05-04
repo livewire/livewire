@@ -192,10 +192,7 @@ class DuskBrowserMacros
 
             // If no callback is passed, make ->waitForLivewire a higher-order method.
             return new class($this, $id) {
-                protected $browser;
-                protected $id;
-
-                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
+                public function __construct(protected $browser, protected $id) {}
 
                 public function __call($method, $params)
                 {
@@ -241,10 +238,7 @@ class DuskBrowserMacros
 
             // If no callback is passed, make ->waitForNoLivewire a higher-order method.
             return new class($this, $id) {
-                protected $browser;
-                protected $id;
-
-                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
+                public function __construct(protected $browser, protected $id) {}
 
                 public function __call($method, $params)
                 {
@@ -288,9 +282,7 @@ class DuskBrowserMacros
 
             // If no callback is passed, make ->waitForNavigate a higher-order method.
             return new class($this, $id) {
-                protected $browser;
-                protected $id;
-                public function __construct($browser, $id) { $this->browser = $browser; $this->id = $id; }
+                public function __construct(protected $browser, protected $id) {}
 
                 public function __call($method, $params)
                 {
@@ -399,14 +391,7 @@ class DuskBrowserMacros
             // If no callback is passed, make ->waitForNavigate a higher-order method.
             return new class($this, $id)
             {
-                protected $browser;
-                protected $id;
-
-                public function __construct($browser, $id)
-                {
-                    $this->browser = $browser;
-                    $this->id = $id;
-                }
+                public function __construct(protected $browser, protected $id) {}
 
                 public function __call($method, $params)
                 {

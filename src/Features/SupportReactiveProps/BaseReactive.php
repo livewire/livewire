@@ -8,8 +8,6 @@ use function Livewire\store;
 #[\Attribute]
 class BaseReactive extends LivewireAttribute
 {
-    function __construct() {}
-
     protected $originalValueHash;
 
     public function mount($params)

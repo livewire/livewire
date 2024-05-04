@@ -156,12 +156,7 @@ class Utils extends BaseUtils
 
         $component = new class($subject) extends \Illuminate\View\Component
         {
-            protected $template;
-
-            public function __construct($template)
-            {
-                $this->template = $template;
-            }
+            public function __construct(protected $template) {}
 
             public function render()
             {

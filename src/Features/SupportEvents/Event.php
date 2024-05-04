@@ -6,16 +6,13 @@ use Livewire\Mechanisms\ComponentRegistry;
 
 class Event
 {
-    protected $name;
-    protected $params;
     protected $self;
     protected $component;
 
-    public function __construct($name, $params)
-    {
-        $this->name = $name;
-        $this->params = $params;
-    }
+    public function __construct(
+        protected $name,
+        protected $params
+    ) {}
 
     public function self()
     {

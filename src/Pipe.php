@@ -6,10 +6,7 @@ class Pipe implements \Stringable, \ArrayAccess, \IteratorAggregate
 {
     use Transparency;
 
-    function __construct($target)
-    {
-        $this->target = $target;
-    }
+    function __construct(public $target) {}
 
     function __invoke(...$params) {
         if (empty($params)) return $this->target;

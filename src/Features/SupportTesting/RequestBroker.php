@@ -12,12 +12,7 @@ class RequestBroker
 {
     use MakesHttpRequests, InteractsWithExceptionHandling;
 
-    protected $app;
-
-    function __construct($app)
-    {
-        $this->app = $app;
-    }
+    function __construct(protected $app) {}
 
     function temporarilyDisableExceptionHandlingAndMiddleware($callback)
     {

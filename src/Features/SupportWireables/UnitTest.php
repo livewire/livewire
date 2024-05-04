@@ -163,13 +163,10 @@ class UnitTest extends \Tests\TestCase
 
 class WireableClass implements Wireable
 {
-    public $message;
-
     public EmbeddedWireableClass $embeddedWireable;
 
-    public function __construct($message, $embeddedMessage)
+    public function __construct(public $message, $embeddedMessage)
     {
-        $this->message = $message;
         $this->embeddedWireable = new EmbeddedWireableClass($embeddedMessage);
     }
 
@@ -189,12 +186,7 @@ class WireableClass implements Wireable
 
 class EmbeddedWireableClass implements Wireable
 {
-    public $message;
-
-    public function __construct($message)
-    {
-        $this->message = $message;
-    }
+    public function __construct(public $message) {}
 
     public function toLivewire()
     {
@@ -282,12 +274,7 @@ class CustomWireableCollection extends Collection implements Wireable
 
 class CustomWireableDTO implements Wireable
 {
-    public $amount;
-
-    public function __construct($amount)
-    {
-        $this->amount = $amount;
-    }
+    public function __construct(public $amount) {}
 
     public function toLivewire()
     {

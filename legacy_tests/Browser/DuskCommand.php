@@ -11,14 +11,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class DuskCommand extends Command
 {
-    public $e;
-    public $testCase;
-
-    public function __construct($testCase, $e, $colorMode = null)
+    public function __construct(public $testCase, public $e)
     {
-        $this->e = $e;
-        $this->testCase = $testCase;
-
         parent::__construct();
     }
 

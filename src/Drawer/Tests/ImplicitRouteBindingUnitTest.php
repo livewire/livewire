@@ -76,12 +76,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
 
 class PropBoundModel extends Model
 {
-    public $value;
-
-    public function __construct($value = 'model-default')
-    {
-        $this->value = $value;
-    }
+    public function __construct(public $value = 'model-default') {}
 
     public function resolveRouteBinding($value, $field = null)
     {
@@ -171,12 +166,7 @@ class PropBoundModelWithSoftDelete extends Model
 {
     use SoftDeletes;
 
-    public $value;
-
-    public function __construct($value = 'model-default')
-    {
-        $this->value = $value;
-    }
+    public function __construct(public $value = 'model-default') {}
 
     public function resolveRouteBinding($value, $field = null)
     {
