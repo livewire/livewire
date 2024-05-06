@@ -392,7 +392,7 @@ Here's an example:
 ```php
 use Livewire\Component;
 use App\Models\Post;
-use Illuminate\Validation\Rule as ValidationRule;
+use Illuminate\Validation\Rule;
 
 class CreatePost extends Component
 {
@@ -403,7 +403,7 @@ class CreatePost extends Component
     public function rules() // [tl! highlight:6]
     {
         return [
-            'title' => ValidationRule::exists('posts', 'title'),
+            'title' => Rule::exists('posts', 'title'),
             'content' => 'required|min:3',
         ];
     }
