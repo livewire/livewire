@@ -8795,6 +8795,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (isntElement(el2))
           return;
         trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+        if (el2.__livewire_replace === true)
+          el2.innerHTML = toEl.innerHTML;
+        if (el2.__livewire_replace_self === true) {
+          el2.outerHTML = toEl.outerHTML;
+          return skip();
+        }
         if (el2.__livewire_ignore === true)
           return skip();
         if (el2.__livewire_ignore_self === true)
@@ -9592,6 +9598,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let remaining = raw2.replace(regex, "");
     return [parsed, remaining];
   }
+
+  // js/directives/wire-replace.js
+  directive2("replace", ({ el, directive: directive3 }) => {
+    if (directive3.modifiers.includes("self")) {
+      el.__livewire_replace_self = true;
+    } else {
+      el.__livewire_replace = true;
+    }
+  });
 
   // js/directives/wire-ignore.js
   directive2("ignore", ({ el, directive: directive3 }) => {
