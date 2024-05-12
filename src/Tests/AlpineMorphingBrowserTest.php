@@ -146,11 +146,6 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
                 array_unshift($this->values, count($this->values));
             }
 
-            public function push()
-            {
-                array_push($this->values, count($this->values));
-            }
-
             public function render(): string
             {
                 return <<<'BLADE'
@@ -165,8 +160,6 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
                         </div>
 
                         <button type="button" wire:click="unshift" dusk="unshift">Unshift</button>
-
-                        <button type="button" wire:click="push" dusk="push">Push</button>
                     </div>
                 BLADE;
             }
