@@ -823,6 +823,38 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertQueryStringHas('foo', 'bar');
     }
 
+    public function test_it_handles_query_string_encoded_keys()
+    {
+        Livewire::withQueryParams([
+            'foo' => ['bar'],
+        ])
+            ->visit([
+                new class extends Component
+                {
+                    #[Url]
+                    public $foo;
+
+                    public function setFoo()
+                    {
+                        $this->foo = [];
+                    }
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <button wire:click="setFoo" dusk="setButton">Set foo</button>
+                            <span dusk="output">@json($foo)</span>
+                        </div>
+                        HTML;
+                    }
+                }
+            ])
+            ->assertSeeIn('@output', '["bar"]')
+            ->waitForLivewire()->click('@setButton')
+            ->assertSeeIn('@output', '[]')
+            ->assertQueryStringMissing('foo');
+    }
 }
 
 class FormObject extends \Livewire\Form
