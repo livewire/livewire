@@ -270,6 +270,7 @@ function fromQueryString(search) {
         // Query string params don't always have values... (`?foo=`)
         if ( typeof value == 'undefined' ) return;
 
+        key = decodeURIComponent(key)
         value = decodeURIComponent(value.replaceAll('+', '%20'))
 
         if (! key.includes('[')) {

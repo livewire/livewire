@@ -9415,6 +9415,7 @@ function fromQueryString(search) {
   entries.forEach(([key, value]) => {
     if (typeof value == "undefined")
       return;
+    key = decodeURIComponent(key);
     value = decodeURIComponent(value.replaceAll("+", "%20"));
     if (!key.includes("[")) {
       data[key] = value;
