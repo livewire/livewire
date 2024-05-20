@@ -16,6 +16,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifie
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemoveDeferModifierFromWireModelDirectives;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePrefetchModifierFromWireClickDirective;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RemovePreventModifierFromWireSubmitDirective;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigation;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ThirdPartyUpgradeNotice;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
@@ -56,6 +57,7 @@ class UpgradeCommand extends Command
             ReplaceTemporaryUploadedFileNamespace::class,
 
             // Partially automated steps
+            ReplaceEmitWithDispatch::class,
 
             // Manual steps
             UpgradeConfigInstructions::class,
