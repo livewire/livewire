@@ -20,7 +20,7 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\RepublishNavigatio
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ThirdPartyUpgradeNotice;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
-use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceTemporaryUploadedFileNamespace;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroduction;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeForgetComputedToUnset;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -53,9 +53,9 @@ class UpgradeCommand extends Command
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
             ChangeForgetComputedToUnset::class,
+            ReplaceTemporaryUploadedFileNamespace::class,
 
             // Partially automated steps
-            ReplaceEmitWithDispatch::class,
 
             // Manual steps
             UpgradeConfigInstructions::class,
