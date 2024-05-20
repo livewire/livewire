@@ -264,7 +264,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertSet('name', 'is_array')
             ->set('name', 0)
             ->assertSet('name', null)
-            ->assertSet('name', 0)
+            ->assertSetStrict('name', 0)
             ->assertSet(
                 'name',
                 function ($propertyValue) {
@@ -274,7 +274,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
-        $component->assertSet('name', null);
+        $component->assertSetStrict('name', null);
     }
 
     function test_assert_not_set()
