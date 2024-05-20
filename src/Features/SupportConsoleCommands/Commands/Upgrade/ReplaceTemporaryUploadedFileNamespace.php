@@ -23,9 +23,9 @@ class ReplaceTemporaryUploadedFileNamespace extends UpgradeStep
             after: 'Livewire\Features\SupportFileUploads\TemporaryUploadedFile',
             pattern: '/Livewire\\TemporaryUploadedFile/',
             replacement: 'Livewire\\Features\\SupportFileUploads\\TemporaryUploadedFile',
+            directories: ['app', 'tests', 'resources/views']
         );
-        if($console->confirm('Continue?', true))
-        {
+        if ($console->confirm('Continue?', true)) {
             return $next($console);
         }
     }
