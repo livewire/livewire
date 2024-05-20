@@ -39,7 +39,7 @@ class DataBindingUnitTest extends \Tests\TestCase
         // We can simulate Livewire's removing an item from an array
         // by hardcoding "__rm__"...
         ->set('tasks.1', '__rm__')
-        ->assertSet('tasks', [['id' => 123]])
+        ->assertSetStrict('tasks', [['id' => 123]])
         ;
     }
 }

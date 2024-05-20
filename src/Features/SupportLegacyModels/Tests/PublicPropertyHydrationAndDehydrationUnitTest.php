@@ -66,7 +66,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         Livewire::test(PostComponent::class)
             ->call('$refresh')
-            ->assertSet('post', $post);
+            ->assertSetStrict('post', $post);
     }
 
     public function test_it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
@@ -94,7 +94,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         Livewire::test(PostComponent::class)
             ->call('$refresh')
-            ->assertSet('post', $post);
+            ->assertSetStrict('post', $post);
     }
 
     public function test_it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()

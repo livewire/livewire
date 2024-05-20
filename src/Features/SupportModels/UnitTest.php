@@ -82,7 +82,7 @@ class UnitTest extends \Tests\TestCase
             HTML; }
         })
         ->call('$refresh')
-        ->assertSet('article', new Article())
+        ->assertSetStrict('article', new Article())
         ;
 
         $data = $component->getData();
@@ -140,7 +140,7 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::test(ArticleComponent::class)
             ->call('$refresh')
-            ->assertSet('article', $article);
+            ->assertSetStrict('article', $article);
     }
 
     public function test_collections_with_duplicate_models_are_available_when_hydrating()

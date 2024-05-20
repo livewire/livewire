@@ -11,7 +11,7 @@ class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithProperties::class)
             ->call('setAllProperties')
-            ->assertSet('allProperties', [
+            ->assertSetStrict('allProperties', [
                  'onlyProperties' => [],
                  'exceptProperties' => [],
                  'allProperties' => [],
@@ -20,12 +20,12 @@ class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
                  'baz' => 'Baz',
             ])
             ->call('setOnlyProperties', ['foo', 'bar'])
-            ->assertSet('onlyProperties', [
+            ->assertSetStrict('onlyProperties', [
                 'foo' => 'Foo',
                 'bar' => 'Bar',
             ])
             ->call('setExceptProperties', ['foo', 'onlyProperties', 'exceptProperties', 'allProperties'])
-            ->assertSet('exceptProperties', [
+            ->assertSetStrict('exceptProperties', [
                  'bar' => 'Bar',
                  'baz' => 'Baz',
             ]);

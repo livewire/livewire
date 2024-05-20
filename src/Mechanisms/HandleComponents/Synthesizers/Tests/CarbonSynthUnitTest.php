@@ -13,7 +13,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
     {
         $testable = Livewire::test(ComponentWithPublicCarbonCaster::class)
             ->updateProperty('date', '2024-02-14')
-            ->assertSet('date', Carbon::parse('2024-02-14'));
+            ->assertSetStrict('date', Carbon::parse('2024-02-14'));
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
@@ -24,7 +24,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable = Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
             ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
-            ->assertSet('date', Carbon::parse('2024-02-14'))
+            ->assertSetStrict('date', Carbon::parse('2024-02-14'))
             ->updateProperty('date', '')
             ->assertSetStrict('date', null)
             ->updateProperty('date', null)
@@ -39,7 +39,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable = Livewire::test(ComponentWithNullablePublicCarbonImmutableCaster::class)
             ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
-            ->assertSet('date', CarbonImmutable::parse('2024-02-14'))
+            ->assertSetStrict('date', CarbonImmutable::parse('2024-02-14'))
             ->updateProperty('date', '')
             ->assertSetStrict('date', null)
             ->updateProperty('date', null)
@@ -54,7 +54,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeCaster::class)
             ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
-            ->assertSet('date', new \DateTime('2024-02-14'))
+            ->assertSetStrict('date', new \DateTime('2024-02-14'))
             ->updateProperty('date', '')
             ->assertSetStrict('date', null)
             ->updateProperty('date', null)
@@ -69,7 +69,7 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeImmutableCaster::class)
             ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
-            ->assertSet('date', new \DateTimeImmutable('2024-02-14'))
+            ->assertSetStrict('date', new \DateTimeImmutable('2024-02-14'))
             ->updateProperty('date', '')
             ->assertSetStrict('date', null)
             ->updateProperty('date', null)

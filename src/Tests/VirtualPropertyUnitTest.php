@@ -15,7 +15,7 @@ class VirtualPropertyUnitTest extends \Tests\TestCase
         $component = Livewire::test(ComponentWithPublicVirtualproperty::class)
             ->assertSee('Caleb')
             ->set(PROPERTY_NAME, 'Porzio')
-            ->assertSet('name', 'Porzio');
+            ->assertSetStrict('name', 'Porzio');
 
         $this->assertEquals($component->get(PROPERTY_NAME), 'Porzio');
     }
