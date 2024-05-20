@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -11,7 +12,7 @@ class UnitTest extends \Tests\TestCase
 {
     public function test_conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
-        Livewire::component('foo', new class extends \Livewire\Component
+        Livewire::component('foo', new class extends Component
         {
             public function render()
             {

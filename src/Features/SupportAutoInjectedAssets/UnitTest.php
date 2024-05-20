@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
+use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestComponent;
 use Tests\TestCase;
@@ -26,7 +27,7 @@ class UnitTest extends TestCase
                 <body>
                 </body>
             </html>
-        HTML, <<<HTML
+        HTML, <<<'HTML'
             <!doctype html>
             <html>
                 <head>
@@ -48,7 +49,7 @@ class UnitTest extends TestCase
             <html>
                 <yolo />
             </html>
-        HTML, <<<HTML
+        HTML, <<<'HTML'
             <html>$livewireStyles
                 <yolo />
             $livewireScripts</html>
@@ -74,7 +75,7 @@ class UnitTest extends TestCase
                 </body
                 >
             </html>
-        HTML, <<<HTML
+        HTML, <<<'HTML'
             <!doctype html>
             <html
                 lang="en"
@@ -111,7 +112,7 @@ class UnitTest extends TestCase
                 </bOdY
                 >
             </HTML>
-        HTML, <<<HTML
+        HTML, <<<'HTML'
             <!doctype html>
             <HTML
                 lang="en"
@@ -210,7 +211,7 @@ class UnitTest extends TestCase
 
     public function test_response_maintains_original_view_after_asset_injection(): void
     {
-        Livewire::component('foo', new class extends \Livewire\Component {
+        Livewire::component('foo', new class extends Component {
             public function render() {
                 return '<div>Foo!</div>';
             }

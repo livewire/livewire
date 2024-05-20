@@ -99,7 +99,7 @@ class FrontendAssets extends Mechanism
 
         // Note: the attribute selectors are "doubled" so that they don't get overriden when Tailwind's CDN loads a script tag
         // BELOW the one Livewire injects...
-        $html = <<<HTML
+        $html = <<<'HTML'
         <!-- Livewire Styles -->
         <style {$nonce}>
             [wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
@@ -186,7 +186,7 @@ class FrontendAssets extends Mechanism
             app(static::class)->scriptTagAttributes,
         );
 
-        return <<<HTML
+        return <<<'HTML'
         {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
@@ -206,7 +206,7 @@ class FrontendAssets extends Mechanism
             'nonce' => isset($options['nonce']) ? $options['nonce'] : '',
         ]);
 
-        return <<<HTML
+        return <<<'HTML'
         <script{$nonce} data-navigate-once="true">window.livewireScriptConfig = {$attributes};</script>
         HTML;
     }
@@ -232,7 +232,7 @@ class FrontendAssets extends Mechanism
         $url = $assertUrl;
 
         if ($manifest !== $publishedManifest) {
-            $assetWarning = <<<HTML
+            $assetWarning = <<<'HTML'
             <script {$nonce}>
                 console.warn('Livewire: The published Livewire assets are out of date\\n See: https://livewire.laravel.com/docs/installation#publishing-livewires-frontend-assets')
             </script>\n

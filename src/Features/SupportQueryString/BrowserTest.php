@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportQueryString;
 
+use Livewire\Form;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Url;
@@ -12,7 +13,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_it_does_not_add_null_values_to_the_query_string_array()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 #[Url]
                 public array $tableFilters = [
                     'filter_1' => [
@@ -380,7 +381,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_unset_the_array_key_when_using_dot_notation_without_except()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public array $tableFilters = [];
 
                 protected function queryString() {
@@ -419,7 +420,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_unset_the_array_key_when_with_except()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public array $tableFilters = [];
 
                 protected function queryString() {
@@ -463,7 +464,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_unset_the_array_key_when_without_except()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public array $tableFilters = [];
 
                 protected function queryString() {
@@ -506,7 +507,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_unset_the_array_key_when_using_dot_notation_with_except()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public array $tableFilters = [];
 
                 protected function queryString() {
@@ -825,7 +826,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
 }
 
-class FormObject extends \Livewire\Form
+class FormObject extends Form
 {
     #[\Livewire\Attributes\Url]
     public $foo = 'bar';

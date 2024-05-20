@@ -11,6 +11,7 @@ use Illuminate\Testing\TestView;
 use Livewire\Component;
 use Livewire\Livewire;
 use Closure;
+use Tests\TestComponent;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -543,18 +544,13 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
         Livewire::withCookies(['colour' => 'blue'])
             ->withCookie('name', 'Taylor')
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourCookie = '';
                 public $nameCookie = '';
                 public function mount()
                 {
                     $this->colourCookie = request()->cookie('colour');
                     $this->nameCookie = request()->cookie('name');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
                 }
             })
             ->assertSet('colourCookie', 'blue')
@@ -565,18 +561,13 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     public function test_can_set_headers_for_use_with_testing()
     {
         Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourHeader = '';
                 public $nameHeader = '';
                 public function mount()
                 {
                     $this->colourHeader = request()->header('colour');
                     $this->nameHeader = request()->header('name');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
                 }
             })
             ->assertSet('colourHeader', 'blue')
@@ -588,7 +579,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
         Livewire::withCookies(['colour' => 'blue'])->withCookie('name', 'Taylor')
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourCookie = '';
                 public $nameCookie = '';
 
@@ -596,11 +587,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                 {
                     $this->colourCookie = request()->cookie('colour');
                     $this->nameCookie = request()->cookie('name');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
                 }
             })
             ->call('setTheCookies')

@@ -11,7 +11,7 @@ class BrowserTest extends BrowserTestCase
     public function test_polling_requests_are_batched_by_default()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child num="1" />
                 <livewire:child num="2" />

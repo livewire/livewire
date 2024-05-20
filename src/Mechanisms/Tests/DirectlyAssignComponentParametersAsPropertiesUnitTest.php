@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\Tests;
 
+use Livewire\Component;
 use Livewire\Livewire;
 
 class DirectlyAssignComponentParametersAsPropertiesUnitTest extends \Tests\TestCase
@@ -23,7 +24,7 @@ class DirectlyAssignComponentParametersAsPropertiesUnitTest extends \Tests\TestC
     }
 }
 
-class ComponentWithDirectlyAssignedProperties extends \Livewire\Component
+class ComponentWithDirectlyAssignedProperties extends Component
 {
     public $foo;
     public $baz;
@@ -36,7 +37,7 @@ class ComponentWithDirectlyAssignedProperties extends \Livewire\Component
     }
 }
 
-class ComponentWithDirectlyAssignedPropertiesAndMountMethod extends \Livewire\Component
+class ComponentWithDirectlyAssignedPropertiesAndMountMethod extends Component
 {
     public $foo;
     public $baz;

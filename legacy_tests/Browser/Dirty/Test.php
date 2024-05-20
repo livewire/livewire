@@ -18,7 +18,7 @@ class Test extends BrowserTestCase
 
             public function render()
             {
-                return <<<HTML
+                return <<<'HTML'
                     <div>
                         <input wire:model.lazy="foo" wire:dirty.class="foo-dirty" dusk="foo">
                         <input wire:model.lazy="bar" wire:dirty.class.remove="bar-dirty" class="bar-dirty" dusk="bar">

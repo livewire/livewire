@@ -3,6 +3,7 @@
 namespace LegacyTests\Browser\SupportStringables;
 
 use Illuminate\Support\Str;
+use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -10,7 +11,7 @@ class Test extends TestCase
 {
     public function test_stringable_support()
     {
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends Component {
             public $string;
 
             public function mount()

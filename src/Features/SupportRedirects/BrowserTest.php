@@ -19,7 +19,7 @@ class BrowserTest extends BrowserTestCase
                 $this->redirect('https://livewire.laravel.com');
             }
 
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <button type="button" dusk="button" wire:click="redirectToWebsite">Redirect to Livewire</button>
             </div>

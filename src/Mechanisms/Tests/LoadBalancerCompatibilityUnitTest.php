@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use Tests\TestComponent;
 
 class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
 {
@@ -15,12 +16,7 @@ class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
                 return '<div> <livewire:child /> </div>';
             }
         },
-        'child' => new class extends Component {
-            public function render()
-            {
-                return '<div></div>';
-            }
-        }]);
+        'child' => new class extends TestComponent {}]);
 
         $firstKey = array_keys($component->snapshot['memo']['children'])[0];
 
@@ -33,12 +29,7 @@ class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
                 return '<div> <livewire:child /> </div>';
             }
         },
-        'child' => new class extends Component {
-            public function render()
-            {
-                return '<div></div>';
-            }
-        }]);
+        'child' => new class extends TestComponent {}]);
 
         $secondKey = array_keys($component->snapshot['memo']['children'])[0];
 

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportJsEvaluation;
 
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -9,7 +10,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_toggle_a_purely_js_property_with_a_purely_js_function()
     {
         Livewire::visit(
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $show = false;
 
                 #[BaseJs]
@@ -44,7 +45,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_evaluate_js_code_after_an_action_is_performed()
     {
         Livewire::visit(
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $show = false;
 
                 function toggle()

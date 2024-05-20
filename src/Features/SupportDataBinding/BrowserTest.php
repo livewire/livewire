@@ -16,14 +16,14 @@ class BrowserTest extends BrowserTestCase
 
             public function render()
             {
-                return <<<'BLADE'
+                return <<<'HTML'
                     <div>
                         <input dusk="checkbox" type="checkbox" wire:model="prop" value="true"  />
 
                         <div wire:dirty>Unsaved changes...</div>
                         <div wire:dirty.remove>The data is in-sync...</div>
                     </div>
-                BLADE;
+                HTML;
             }
         })
             ->assertSee('The data is in-sync...')
@@ -50,7 +50,7 @@ class BrowserTest extends BrowserTestCase
 
             public function render()
             {
-                return <<<'BLADE'
+                return <<<'HTML'
                     <div>
                         <select wire:model.live="foo" dusk="fooSelect">
                             <option value=""></option>
@@ -66,7 +66,7 @@ class BrowserTest extends BrowserTestCase
                             <option value="three">Three</option>
                         </select>
                     </div>
-                BLADE;
+                HTML;
             }
         })
             ->select('@barSelect', 'one')

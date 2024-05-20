@@ -8,6 +8,7 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -31,7 +32,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_synthesized_property_types_are_preserved_after_update()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public $foo;
             public $isStringable;
             public function mount() { $this->foo = str('bar'); }
@@ -39,7 +40,6 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->isStringable = $this->foo instanceof Stringable;
             }
-            public function render() { return '<div></div>'; }
         })
             ->assertSet('foo', 'bar')
             ->call('checkStringable')
@@ -95,7 +95,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends Component {
             public ?UnitSuit $selected;
 
             #[\Livewire\Attributes\Computed]
@@ -129,7 +129,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null_inside_form_object()
     {
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends Component {
             public SuitForm $form;
 
             public function render()
@@ -151,7 +151,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_it_bypasses_synthesizer_hydration_when_deleting()
     {
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends Component {
             public $suits;
             public $dates;
             public $objects;

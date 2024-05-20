@@ -13,7 +13,7 @@ class BrowserTest extends BrowserTestCase
     public function test_components_can_be_marked_as_isolated()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child num="1" />
                 <livewire:child num="2" />
@@ -66,7 +66,7 @@ class BrowserTest extends BrowserTestCase
     public function test_lazy_requests_are_isolated_by_default()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child num="1" />
                 <livewire:child num="2" />
@@ -104,7 +104,7 @@ class BrowserTest extends BrowserTestCase
     public function test_lazy_requests_are_isolated_by_default_but_bundled_on_next_request_when_polling()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child num="1" />
                 <livewire:child num="2" />
@@ -155,7 +155,7 @@ class BrowserTest extends BrowserTestCase
     public function test_lazy_requests_can_be_bundled_with_attribute_parameter()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child num="1" />
                 <livewire:child num="2" />

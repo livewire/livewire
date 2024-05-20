@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportWireables;
 
+use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Wireable;
 use RuntimeException;
@@ -10,7 +11,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 {
     public function test_it_can_update_a_custom_wireable_object()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class () extends Component {
             public Person $person;
 
             public function mount(): void
@@ -35,7 +36,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_it_can_update_a_custom_wireable_via_inputs()
     {
-        Livewire::visit(new class () extends \Livewire\Component {
+        Livewire::visit(new class () extends Component {
             public Person $person;
 
             public function mount(): void

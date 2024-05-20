@@ -17,13 +17,13 @@ class BrowserTest extends BrowserTestCase
 
             public function render()
             {
-                return <<<'BLADE'
+                return <<<'HTML'
                     <div>
                         <div x-data="{ value: $persist(@entangle('input')) }">
                             <input dusk="input" x-model="value" />
                         </div>
                     </div>
-                BLADE;
+                HTML;
             }
         })
             ->type('@input', 'Hello World')

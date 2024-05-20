@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportQueryString;
 
 use Livewire\Livewire;
-use Livewire\Component;
+use Tests\TestComponent;
 
 trait WithSorting
 {
@@ -19,15 +19,11 @@ class UnitTest extends \Tests\TestCase
 {
     function test_can_track_properties_in_the_url()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             #[BaseUrl]
             public $count = 1;
 
             function increment() { $this->count++; }
-
-            public function render() {
-                return '<div></div>';
-            }
         });
 
         $this->assertTrue(isset($component->effects['url']));
@@ -35,12 +31,7 @@ class UnitTest extends \Tests\TestCase
 
     function test_sub_name_is_null_in_attributes_from_query_string_component_method()
     {
-        $component = Livewire::test(new class extends Component {
-            public function render()
-            {
-                return '<div></div>';
-            }
-
+        $component = Livewire::test(new class extends TestComponent {
             protected function queryString()
             {
                 return [
@@ -58,13 +49,8 @@ class UnitTest extends \Tests\TestCase
 
     function test_sub_name_is_null_in_attributes_from_query_string_trait_method()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             use WithSorting;
-
-            public function render()
-            {
-                return '<div></div>';
-            }
         });
 
         $attributes = $component->instance()->getAttributes();
@@ -76,14 +62,9 @@ class UnitTest extends \Tests\TestCase
 
     function test_sub_name_is_same_as_name_in_attributes_from_base_url_property_attribute()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             #[BaseUrl]
             public $queryFromAttribute;
-
-            public function render()
-            {
-                return '<div></div>';
-            }
         });
 
         $attributes = $component->instance()->getAttributes();

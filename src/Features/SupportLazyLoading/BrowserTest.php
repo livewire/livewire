@@ -13,7 +13,7 @@ class BrowserTest extends BrowserTestCase
     public function test_can_lazy_load_a_component()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child lazy />
             </div>
@@ -24,7 +24,7 @@ class BrowserTest extends BrowserTestCase
             }
 
             public function render() {
-                return <<<HTML
+                return <<<'HTML'
                 <div id="child">
                     Child!
                 </div>
@@ -42,7 +42,7 @@ class BrowserTest extends BrowserTestCase
         Livewire::visit([new class extends Component {
             public function render()
             {
-                return <<<HTML
+                return <<<'HTML'
             <div>
                 <div style="height: 200vh"></div>
                 <livewire:child lazy="on-load" />
@@ -57,7 +57,7 @@ class BrowserTest extends BrowserTestCase
 
             public function render()
             {
-                return <<<HTML
+                return <<<'HTML'
                 <div id="child">
                     Child!
                 </div>
@@ -74,7 +74,7 @@ class BrowserTest extends BrowserTestCase
         Livewire::visit([new class extends Component {
             public function render()
             {
-                return <<<HTML
+                return <<<'HTML'
             <div>
                 <div style="height: 200vh"></div>
                 <livewire:child lazy />
@@ -89,7 +89,7 @@ class BrowserTest extends BrowserTestCase
 
             public function render()
             {
-                return <<<HTML
+                return <<<'HTML'
                 <div id="child">
                     Child!
                 </div>
@@ -108,13 +108,13 @@ class BrowserTest extends BrowserTestCase
                 sleep(1);
             }
 
-            public function placeholder() { return <<<HTML
+            public function placeholder() { return <<<'HTML'
                 <div id="loading">
                     Loading...
                 </div>
                 HTML; }
 
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
                 <div id="page">
                     Hello World
                 </div>
@@ -151,19 +151,19 @@ class BrowserTest extends BrowserTestCase
     public function test_can_lazy_load_a_component_with_a_placeholder()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child lazy />
             </div>
             HTML; }
         }, 'child' => new class extends Component {
             public function mount() { sleep(1); }
-            public function placeholder() { return <<<HTML
+            public function placeholder() { return <<<'HTML'
                 <div id="loading">
                     Loading...
                 </div>
                 HTML; }
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div id="child">
                 Child!
             </div>
@@ -259,7 +259,7 @@ class BrowserTest extends BrowserTestCase
     public function test_can_access_component_parameters_in_placeholder_view()
     {
         Livewire::visit([new class extends Component {
-            public function render() { return <<<HTML
+            public function render() { return <<<'HTML'
             <div>
                 <livewire:child my-parameter="A Parameter Value" lazy />
             </div>
@@ -272,7 +272,7 @@ class BrowserTest extends BrowserTestCase
                 return view('placeholder', $params);
             }
             public function render() {
-                return <<<HTML
+                return <<<'HTML'
                 <div id="child">
                     Child!
                 </div>
@@ -294,13 +294,13 @@ class Page extends Component {
         sleep(1);
     }
 
-    public function placeholder() { return <<<HTML
+    public function placeholder() { return <<<'HTML'
             <div id="loading">
                 Loading...
             </div>
             HTML; }
 
-    public function render() { return <<<HTML
+    public function render() { return <<<'HTML'
             <div id="page">
                 Hello World
             </div>

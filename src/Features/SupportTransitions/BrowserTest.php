@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportTransitions;
 
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -12,7 +13,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         $isBlock = 'getComputedStyle(document.querySelector(\'[dusk="target"]\')).display === "block"';
 
         Livewire::visit(
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $show = false;
 
                 function toggle()
@@ -51,7 +52,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_elements_the_contain_transition_are_displayed_on_page_load()
     {
         Livewire::visit(
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $messages = [
                     'message 1',
                     'message 2',

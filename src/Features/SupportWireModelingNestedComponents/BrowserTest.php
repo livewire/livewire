@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Validate;
+use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
 use Sushi\Sushi;
@@ -14,7 +15,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_bind_a_property_from_parent_to_property_from_child()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $foo = 0;
 
                 public function render() { return <<<'HTML'
@@ -28,7 +29,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 </div>
                 HTML; }
             },
-            'child' => new class extends \Livewire\Component {
+            'child' => new class extends Component {
                 #[BaseModelable]
                 public $bar;
 
@@ -61,7 +62,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_bind_a_live_property_from_parent_to_property_from_child()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $foo = 0;
 
                 public function render() { return <<<'HTML'
@@ -75,7 +76,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 </div>
                 HTML; }
             },
-            'child' => new class extends \Livewire\Component {
+            'child' => new class extends Component {
                 #[BaseModelable]
                 public $bar;
 
@@ -103,7 +104,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_bind_a_property_from_parent_array_to_property_from_child()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $foo = ['bar' => 'baz'];
 
                 public function render()
@@ -120,7 +121,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
                 }
             },
-            'child' => new class extends \Livewire\Component {
+            'child' => new class extends Component {
                 #[BaseModelable]
                 public $bar;
 
@@ -156,7 +157,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_bind_a_property_from_parent_array_using_a_numeric_index_to_property_from_child()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public $foo = ['baz'];
 
                 public function render()
@@ -173,7 +174,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
                 }
             },
-            'child' => new class extends \Livewire\Component {
+            'child' => new class extends Component {
                 #[BaseModelable]
                 public $bar;
 
@@ -209,7 +210,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_can_bind_a_property_from_parent_form_to_property_from_child()
     {
         Livewire::visit([
-            new class extends \Livewire\Component {
+            new class extends Component {
                 public CreatePost $form;
 
                 public function submit()
@@ -232,7 +233,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
                 }
             },
-            'child' => new class extends \Livewire\Component {
+            'child' => new class extends Component {
                 #[BaseModelable]
                 public $bar;
 

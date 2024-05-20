@@ -3,6 +3,7 @@
 namespace Livewire\Mechanisms\HandleRequests;
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
@@ -23,7 +24,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             });
         });
 
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public $count = 1;
             function inc() { $this->count++; }
             function render() { return <<<'HTML'

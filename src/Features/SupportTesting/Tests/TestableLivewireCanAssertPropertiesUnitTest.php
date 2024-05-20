@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
 {
@@ -38,7 +38,7 @@ class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
     }
 }
 
-class PropertyTestingComponent extends Component
+class PropertyTestingComponent extends TestComponent
 {
     public $foo = 'bar';
 
@@ -46,22 +46,12 @@ class PropertyTestingComponent extends Component
     {
         return 'lob';
     }
-
-    function render()
-    {
-        return '<div></div>';
-    }
 }
 
-class ComputedPropertyWithExceptionTestingComponent extends Component
+class ComputedPropertyWithExceptionTestingComponent extends TestComponent
 {
     function getThrowsExceptionProperty()
     {
         throw new \Exception('Test exception');
-    }
-
-    function render()
-    {
-        return '<div></div>';
     }
 }

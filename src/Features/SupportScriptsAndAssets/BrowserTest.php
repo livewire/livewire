@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportScriptsAndAssets;
 
+use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
@@ -10,7 +11,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 {
     public function test_can_evaluate_a_script_inside_a_component()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public $message = 'original';
 
             public function render() { return <<<'HTML'
@@ -35,7 +36,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_can_register_an_alpine_component_inside_a_script_tag()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public $message = 'original';
 
             public function render() { return <<<'HTML'
@@ -60,7 +61,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_multiple_scripts_can_be_evaluated()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public function render() { return <<<'HTML'
             <div>
                 <h1 dusk="foo"></h1>
@@ -87,7 +88,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_scripts_can_be_added_conditionally()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public $show = false;
 
             public function render() { return <<<'HTML'
@@ -123,7 +124,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             return Utils::pretendResponseIsFile(__DIR__.'/test.js');
         });
 
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public function render() { return <<<'HTML'
             <div>
                 <h1 dusk="foo" wire:ignore></h1>
@@ -140,7 +141,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_remote_assets_can_be_loaded()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public function render() { return <<<'HTML'
             <div>
                 <input type="text" data-picker>
@@ -167,7 +168,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_remote_assets_can_be_loaded_lazily()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public $load = false;
 
             public function render() { return <<<'HTML'
@@ -201,7 +202,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_remote_assets_can_be_loaded_from_a_deferred_nested_component()
     {
-        Livewire::visit([new class extends \Livewire\Component {
+        Livewire::visit([new class extends Component {
             public $load = false;
 
             public function render() { return <<<'HTML'
@@ -216,7 +217,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             </div>
             HTML; }
         },
-        'child' => new class extends \Livewire\Component {
+        'child' => new class extends Component {
             public function render() { return <<<'HTML'
             <div>
                 <input type="text" data-picker>
@@ -243,7 +244,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_remote_inline_scripts_can_be_loaded_from_a_deferred_nested_component()
     {
-        Livewire::visit([new class extends \Livewire\Component {
+        Livewire::visit([new class extends Component {
             public $load = false;
 
             public function render() { return <<<'HTML'
@@ -258,7 +259,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             </div>
             HTML; }
         },
-        'child' => new class extends \Livewire\Component {
+        'child' => new class extends Component {
             public function render() { return <<<'HTML'
             <div>
                 <input type="text" data-picker>
@@ -290,7 +291,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_can_listen_for_initial_dispatches_inside_script()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public function render() {
                 $this->dispatch('test')->self();
 
@@ -315,7 +316,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_functions_loaded_in_scripts_are_not_auto_evaluated()
     {
-        Livewire::visit(new class extends \Livewire\Component {
+        Livewire::visit(new class extends Component {
             public function render() { return <<<'HTML'
             <div>
                 <div dusk="output"></div>
