@@ -107,7 +107,7 @@ trait MakesAssertions
 
     function assertSetStrict($name, $value)
     {
-        $this->assertSetStrict($name, $value, true);
+        $this->assertSet($name, $value, true);
 
         return $this;
     }
