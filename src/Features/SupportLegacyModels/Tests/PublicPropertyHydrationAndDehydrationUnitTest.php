@@ -94,7 +94,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         Livewire::test(PostComponent::class)
             ->call('$refresh')
-            ->assertSetStrict('post', $post);
+            ->assertSet('post', $post);
     }
 
     public function test_it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()

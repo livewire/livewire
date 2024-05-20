@@ -20,32 +20,32 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     public function test_can_cast_normal_date_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSetStrict('model.normal_date', new \DateTime('2000-08-12'))
+            ->assertSet('model.normal_date', new \DateTime('2000-08-12'))
             ->assertSnapshotSet('model.normal_date', '2000-08-12T00:00:00.000000Z')
 
             ->set('model.normal_date', '2019-10-12')
             ->call('validateAttribute', 'model.normal_date')
             ->assertHasNoErrors('model.normal_date')
-            ->assertSetStrict('model.normal_date', new \DateTime('2019-10-12'))
+            ->assertSet('model.normal_date', new \DateTime('2019-10-12'))
             ->assertSnapshotSet('model.normal_date', '2019-10-12T00:00:00.000000Z');
     }
 
     public function test_can_cast_formatted_date_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSetStrict('model.formatted_date', new \DateTime('2020-03-03'))
+            ->assertSet('model.formatted_date', new \DateTime('2020-03-03'))
             ->assertSnapshotSet('model.formatted_date', '03-03-2020')
 
             ->set('model.formatted_date', '03-03-1999')
             ->call('validateAttribute', 'model.formatted_date')
             ->assertHasNoErrors('model.formatted_date')
-            ->assertSetStrict('model.formatted_date', new \DateTime('1999-03-03'))
+            ->assertSet('model.formatted_date', new \DateTime('1999-03-03'))
             ->assertSnapshotSet('model.formatted_date', '03-03-1999')
 
             ->set('model.formatted_date', '2020-03-03')
             ->call('validateAttribute', 'model.formatted_date')
             ->assertHasNoErrors('model.formatted_date')
-            ->assertSetStrict('model.formatted_date', new \DateTime('2020-03-03'))
+            ->assertSet('model.formatted_date', new \DateTime('2020-03-03'))
             ->assertSnapshotSet('model.formatted_date', '03-03-2020');
     }
 
@@ -278,13 +278,13 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     {
 
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSetStrict('model.collected_list', collect([true, false]))
+            ->assertSet('model.collected_list', collect([true, false]))
             ->assertSnapshotSet('model.collected_list', [true, false])
 
             ->set('model.collected_list', [false, true])
             ->call('validateAttribute', 'model.collected_list')
             ->assertHasNoErrors('model.collected_list')
-            ->assertSetStrict('model.collected_list', collect([false, true]))
+            ->assertSet('model.collected_list', collect([false, true]))
             ->assertSnapshotSet('model.collected_list', [false, true]);
     }
 
