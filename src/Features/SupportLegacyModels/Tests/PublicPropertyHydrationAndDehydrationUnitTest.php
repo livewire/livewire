@@ -66,7 +66,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         Livewire::test(PostComponent::class)
             ->call('$refresh')
-            ->assertSetStrict('post', $post);
+            ->assertSet('post', $post);
     }
 
     public function test_it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()

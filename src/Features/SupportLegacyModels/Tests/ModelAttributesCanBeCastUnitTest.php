@@ -52,13 +52,13 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     public function test_can_cast_datetime_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSetStrict('model.date_with_time', new \DateTime('2015-10-21 00:00:00'))
+            ->assertSet('model.date_with_time', new \DateTime('2015-10-21 00:00:00'))
             ->assertSnapshotSet('model.date_with_time', '2015-10-21T00:00:00.000000Z')
 
             ->set('model.date_with_time', '1985-10-26 01:20')
             ->call('validateAttribute', 'model.date_with_time')
             ->assertHasNoErrors('model.date_with_time')
-            ->assertSetStrict('model.date_with_time', new \DateTime('1985-10-26 01:20'))
+            ->assertSet('model.date_with_time', new \DateTime('1985-10-26 01:20'))
             ->assertSnapshotSet('model.date_with_time', '1985-10-26T01:20:00.000000Z');
     }
 
@@ -292,7 +292,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     {
 
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSetStrict('model.object_value', (object) ['name' => 'Marian', 'email' => 'marian@likes.pizza'])
+            ->assertSet('model.object_value', (object) ['name' => 'Marian', 'email' => 'marian@likes.pizza'])
             ->assertSnapshotSet('model.object_value', (array) ['name' => 'Marian', 'email' => 'marian@likes.pizza'])
 
             ->set('model.object_value', (object) ['name' => 'Marian', 'email' => 'marian@my-company.rocks'])
@@ -307,13 +307,13 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     public function test_can_cast_attributes_with_custom_caster_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSetStrict('model.custom_caster', QuizAnswer::make('dumb answer'))
+            ->assertSet('model.custom_caster', QuizAnswer::make('dumb answer'))
             ->assertSnapshotSet('model.custom_caster', 'dumb answer')
 
             ->set('model.custom_caster', 'e=mc2')
             ->call('validateAttribute', 'model.custom_caster')
             ->assertHasNoErrors('model.custom_caster')
-            ->assertSetStrict('model.custom_caster', QuizAnswer::make('e=mc2'))
+            ->assertSet('model.custom_caster', QuizAnswer::make('e=mc2'))
             ->assertSnapshotSet('model.custom_caster', 'e=mc2');
     }
 
