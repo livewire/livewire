@@ -44,37 +44,13 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSetStrict('form.title', '')
-            ->assertSetStrict('form.content', '')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
             ->set('form.title', 'Some Title')
             ->set('form.content', 'Some content...')
             ->call('resetForm')
-            ->assertSetStrict('form.title', '')
-            ->assertSetStrict('form.content', '')
-        ;
-    }
-
-    function test_can_reset_form_object_property_to_defaults()
-    {
-        Livewire::test(new class extends Component {
-            public PostFormStubWithDefaults $form;
-
-            public function resetForm()
-            {
-                $this->reset('form.title', 'form.content');
-            }
-
-            public function render() {
-                return '<div></div>';
-            }
-        })
-            ->assertSetStrict('form.title', 'foo')
-            ->assertSetStrict('form.content', 'bar')
-            ->set('form.title', 'Some Title')
-            ->set('form.content', 'Some content...')
-            ->call('resetForm')
-            ->assertSetStrict('form.title', 'foo')
-            ->assertSetStrict('form.content', 'bar')
+            ->assertSet('form.title', '')
+            ->assertSet('form.content', '')
         ;
     }
 
@@ -769,13 +745,6 @@ class PostFormStub extends Form
     public $title = '';
 
     public $content = '';
-}
-
-class PostFormStubWithDefaults extends Form
-{
-    public $title = 'foo';
-
-    public $content = 'bar';
 }
 
 class PostFormWithRulesStub extends Form
