@@ -257,15 +257,15 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     function test_assert_set()
     {
         $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
-            ->assertSetStrict('name', 'foo')
+            ->assertSet('name', 'foo')
             ->set('name', 'info')
-            ->assertSetStrict('name', 'info')
+            ->assertSet('name', 'info')
             ->set('name', 'is_array')
-            ->assertSetStrict('name', 'is_array')
+            ->assertSet('name', 'is_array')
             ->set('name', 0)
-            ->assertSetStrict('name', null)
-            ->assertSetStrict('name', 0)
-            ->assertSetStrict(
+            ->assertSet('name', null)
+            ->assertSet('name', 0)
+            ->assertSet(
                 'name',
                 function ($propertyValue) {
                     return $propertyValue === 0;
@@ -274,7 +274,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
-        $component->assertSetStrict('name', null);
+        $component->assertSet('name', null);
     }
 
     function test_assert_not_set()

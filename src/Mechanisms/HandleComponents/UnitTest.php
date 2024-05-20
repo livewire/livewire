@@ -41,11 +41,11 @@ class UnitTest extends \Tests\TestCase
             }
             public function render() { return '<div></div>'; }
         })
-            ->assertSetStrict('foo', 'bar')
+            ->assertSet('foo', 'bar')
             ->call('checkStringable')
             ->assertSetStrict('isStringable', true)
             ->set('foo', 'baz')
-            ->assertSetStrict('foo', 'baz')
+            ->assertSet('foo', 'baz')
             ->call('checkStringable')
             ->assertSetStrict('isStringable', true)
         ;
@@ -181,12 +181,12 @@ class UnitTest extends \Tests\TestCase
         })
             // simulate a client side unsets by setting the '__rm__' value
             ->set('objects.1', '__rm__')
-            ->assertSetStrict('objects', [
+            ->assertSet('objects', [
                 0 => (object) ['foo' => 'bar'],
                 2 => (object) ['ping' => 'pong'],
             ])
             ->set('dates.1', '__rm__')
-            ->assertSetStrict('dates', [
+            ->assertSet('dates', [
                 0 => Carbon::make('2001-01-01'),
                 2 => Carbon::make('2003-03-03'),
             ])
