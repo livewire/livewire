@@ -239,7 +239,9 @@ class UploadManager {
         let uploadItem = this.uploadBag.first(name);
 
         if (uploadItem) {
-            uploadItem.request.abort();
+            if (uploadItem.request) {
+                uploadItem.request.abort();
+            }
 
             this.uploadBag.shift(name).cancelledCallback();
 
