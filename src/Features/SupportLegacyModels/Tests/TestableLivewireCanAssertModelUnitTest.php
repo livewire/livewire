@@ -14,7 +14,7 @@ class TestableLivewireCanAssertModelUnitTest extends \Tests\TestCase
         Livewire::test(PropertyTestingComponent::class, [
                 'model' => ModelForPropertyTesting::first(),
             ])
-            ->assertSet('model.foo.bar', 'baz');
+            ->assertSetStrict('model.foo.bar', 'baz');
     }
 }
 

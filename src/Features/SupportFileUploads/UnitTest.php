@@ -62,7 +62,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->call('_removeUpload', 'photo', $tmpFilename)
             ->assertDispatched('upload:removed', name: 'photo', tmpFilename: $tmpFilename)
-            ->assertSet('photo', null);
+            ->assertSetStrict('photo', null);
     }
 
     public function test_cant_remove_a_file_property_with_mismatched_filename_provided()
@@ -772,7 +772,7 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::test(FileReadContentComponent::class)
             ->set('file', $file)
-            ->assertSet('content', $file->getContent());
+            ->assertSetStrict('content', $file->getContent());
     }
 
     public function test_validation_of_file_uploads_while_time_traveling()

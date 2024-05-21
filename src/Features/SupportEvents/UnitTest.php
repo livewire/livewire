@@ -100,9 +100,9 @@ class UnitTest extends \Tests\TestCase
             public function render() { return '<div></div>'; }
         })
             ->dispatch('foo')
-            ->assertSet('counter', 1)
+            ->assertSetStrict('counter', 1)
             ->dispatch('bar')
-            ->assertSet('counter', 2);
+            ->assertSetStrict('counter', 2);
     }
 
     public function test_it_can_register_multiple_listeners_via_attribute_userland(): void
@@ -119,9 +119,9 @@ class UnitTest extends \Tests\TestCase
             public function render() { return '<div></div>'; }
         })
             ->dispatch('foo')
-            ->assertSet('counter', 1)
+            ->assertSetStrict('counter', 1)
             ->dispatch('bar')
-            ->assertSet('counter', 2);
+            ->assertSetStrict('counter', 2);
     }
 
     public function test_receive_event()
@@ -180,7 +180,7 @@ class UnitTest extends \Tests\TestCase
     {
         Livewire::test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob'])
                 ->dispatch('bob', 'lob')
-                ->assertSet('foo', 'lob');
+                ->assertSetStrict('foo', 'lob');
     }
 
     public function test_component_receives_events_dispatched_using_classname()

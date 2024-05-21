@@ -14,7 +14,7 @@ class ComponentIsMacroableUnitTest extends \Tests\TestCase
         });
 
         Livewire::test(ComponentWithMacroedMethodStub::class)
-            ->assertSet('foo', ['one', 'two']);
+            ->assertSetStrict('foo', ['one', 'two']);
     }
 }
 

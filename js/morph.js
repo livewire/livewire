@@ -31,6 +31,11 @@ export function morph(component, el, html) {
 
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly })
 
+            // bypass DOM diffing for children by overwriting the content
+            if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
+            // completely bypass DOM diffing for this element and all children
+            if (el.__livewire_replace_self === true) { el.outerHTML = toEl.outerHTML; return skip(); }
+
             if (el.__livewire_ignore === true) return skip()
             if (el.__livewire_ignore_self === true) childrenOnly()
 
