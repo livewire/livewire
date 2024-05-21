@@ -13,7 +13,7 @@ class UnitTest extends \Tests\TestCase
             #[LifecycleHookAttribute]
             public $count = 0;
         })
-        ->assertSet('count', 3);
+        ->assertSetStrict('count', 3);
     }
 
     public function test_can_set_property_hook_manually()
@@ -25,7 +25,7 @@ class UnitTest extends \Tests\TestCase
 
             public $count = 0;
         })
-        ->assertSet('count', 3);
+        ->assertSetStrict('count', 3);
     }
 
     public function test_can_set_nested_property_hook_manually()
@@ -37,7 +37,7 @@ class UnitTest extends \Tests\TestCase
 
             public $items = ['count' => 0];
         })
-        ->assertSet('items.count', 3);
+        ->assertSetStrict('items.count', 3);
     }
 
     public function test_non_livewire_attribute_are_ignored()
@@ -46,7 +46,7 @@ class UnitTest extends \Tests\TestCase
             #[NonLivewire]
             public $count = 0;
         })
-            ->assertSet('count', 0);
+            ->assertSetStrict('count', 0);
     }
 }
 

@@ -13,7 +13,7 @@ class TypedPropertiesUnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentWithUninitializedTypedProperty::class)
             ->set('message', $testMessage)
-            ->assertSet('message', $testMessage);
+            ->assertSetStrict('message', $testMessage);
     }
 }
 

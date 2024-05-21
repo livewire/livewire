@@ -12,8 +12,8 @@ class EnumUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentWithPublicEnumCasters::class)
             ->call('storeTypeOf')
-            ->assertSet('typeOf', TestingEnum::class)
-            ->assertSet('enum', TestingEnum::from('Be excellent to each other'));
+            ->assertSetStrict('typeOf', TestingEnum::class)
+            ->assertSetStrict('enum', TestingEnum::from('Be excellent to each other'));
     }
 
     public function test_nullable_public_property_can_be_cast()
@@ -21,7 +21,7 @@ class EnumUnitTest extends \Tests\TestCase
         $testable = Livewire::test(ComponentWithNullablePublicEnumCaster::class)
             ->assertSetStrict('status', null)
             ->updateProperty('status', 'Be excellent to each other')
-            ->assertSet('status', TestingEnum::TEST)
+            ->assertSetStrict('status', TestingEnum::TEST)
             ->updateProperty('status', '')
             ->assertSetStrict('status', null);
 

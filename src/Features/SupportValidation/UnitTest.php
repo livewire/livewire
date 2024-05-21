@@ -799,22 +799,22 @@ class UnitTest extends \Tests\TestCase
     public function test_can_use_withvalidator_method()
     {
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidationWithClosure')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidationWithClosure')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidationWithThisMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidationWithThisMethod')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidateOnlyWithClosure')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidateOnlyWithClosure')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidateOnlyWithThisMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidateOnlyWithThisMethod')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('clearWithValidatorAfterRunningValidateMethod')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateOnlyMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('clearWithValidatorAfterRunningValidateOnlyMethod')->assertSetStrict('count', 1);
     }
 
     public function test_a_set_of_items_will_validate_individually()

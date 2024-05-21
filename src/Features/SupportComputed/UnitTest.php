@@ -20,7 +20,7 @@ class UnitTest extends TestCase
                 return 'bar';
             }
         })
-            ->assertSet('foo', 'bar');
+            ->assertSetStrict('foo', 'bar');
     }
 
     function test_can_access_computed_properties_inside_views()
@@ -63,9 +63,9 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('foobar')
-            ->assertSet('count', 1)
+            ->assertSetStrict('count', 1)
             ->call('$refresh')
-            ->assertSet('count', 2);
+            ->assertSetStrict('count', 2);
     }
 
     function test_can_bust_computed_cache_using_unset()
@@ -91,9 +91,9 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('foobar')
-            ->assertSet('count', 2)
+            ->assertSetStrict('count', 2)
             ->call('$refresh')
-            ->assertSet('count', 4);
+            ->assertSetStrict('count', 4);
     }
 
     function test_can_tag_cached_computed_property()
@@ -126,9 +126,9 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->call('$refresh')
-            ->assertSet('count', 1)
+            ->assertSetStrict('count', 1)
             ->call('deleteCachedTags')
-            ->assertSet('count', 2);
+            ->assertSetStrict('count', 2);
     }
 
     function test_can_tag_persisten_computed_property()
@@ -161,9 +161,9 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->call('$refresh')
-            ->assertSet('count', 1)
+            ->assertSetStrict('count', 1)
             ->call('deleteCachedTags')
-            ->assertSet('count', 2);
+            ->assertSetStrict('count', 2);
     }
 
     function test_can_tag_persisted_computed_with_custom_key_property()
@@ -190,7 +190,7 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->call('$refresh')
-            ->assertSet('count', 1);
+            ->assertSetStrict('count', 1);
 
         $this->assertTrue(Cache::has('baz'));
     }
@@ -251,9 +251,9 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->assertSee('boblob')
-            ->assertSet('count', 2)
+            ->assertSetStrict('count', 2)
             ->call('$refresh')
-            ->assertSet('count', 4);
+            ->assertSetStrict('count', 4);
     }
 
     function test_parses_computed_properties()
@@ -384,7 +384,7 @@ class UnitTest extends TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('foo', 'bar');
+            ->assertSetStrict('foo', 'bar');
     }
 
     public function test_it_supports_unsetting_legacy_computed_properties()
@@ -412,9 +412,9 @@ class UnitTest extends TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->call('save')
-            ->assertSet('foo', 'baz');
+            ->assertSetStrict('foo', 'baz');
     }
 
     public function test_it_supports_unsetting_legacy_computed_properties_for_events()
@@ -435,9 +435,9 @@ class UnitTest extends TestCase
                 unset($this->foo);
             }
         })
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->dispatch('bar', 'baz')
-            ->assertSet('foo', 'baz');
+            ->assertSetStrict('foo', 'baz');
     }
 }
 

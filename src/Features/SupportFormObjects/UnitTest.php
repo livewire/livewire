@@ -21,12 +21,12 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ->set('form.title', 'Some Title')
         ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some Title')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', 'Some Title')
+        ->assertSetStrict('form.content', 'Some content...')
         ;
     }
 
@@ -68,8 +68,8 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ->assertHasNoErrors()
         ->call('save')
         ->assertHasErrors('form.title')
@@ -113,7 +113,7 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
+        ->assertSetStrict('form.title', '')
         ->assertHasNoErrors()
         ->call('save')
         ->assertHasErrors(['form.title' => 'required'])
@@ -211,8 +211,8 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ->assertHasNoErrors()
         ->call('save')
         ->assertHasErrors('form.title')
@@ -238,7 +238,7 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('form.name', '')
+            ->assertSetStrict('form.name', '')
             ->assertHasNoErrors()
             ->call('save')
             ->assertHasErrors('form.name')
@@ -288,12 +288,12 @@ class UnitTest extends \Tests\TestCase
         })
         ->set('form.title', 'Some title...')
         ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', 'Some title...')
+        ->assertSetStrict('form.content', 'Some content...')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', 'Some content...')
         ;
     }
 
@@ -313,12 +313,12 @@ class UnitTest extends \Tests\TestCase
         })
         ->set('form.title', 'Some title...')
         ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', 'Some title...')
+        ->assertSetStrict('form.content', 'Some content...')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ;
     }
 
@@ -340,9 +340,9 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('form.post', 42)
+        ->assertSetStrict('form.post', 42)
         ->call('save')
-        ->assertSet('form.post', 42)
+        ->assertSetStrict('form.post', 42)
         ->assertHasErrors()
         ;
     }
@@ -500,11 +500,11 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.content', '')
             ->call('fillForm')
-            ->assertSet('form.title', 'A Title')
-            ->assertSet('form.content', 'Some content')
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.content', 'Some content')
         ;
     }
 
@@ -526,11 +526,11 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.content', '')
             ->call('fillForm')
-            ->assertSet('form.title', 'Title from array')
-            ->assertSet('form.content', 'Content from array')
+            ->assertSetStrict('form.title', 'Title from array')
+            ->assertSetStrict('form.content', 'Content from array')
         ;
     }
 

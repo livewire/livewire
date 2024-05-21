@@ -65,32 +65,32 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     public function test_can_cast_timestamp_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.timestamped_date', 1030665600)
+            ->assertSetStrict('model.timestamped_date', 1030665600)
             ->assertSnapshotSet('model.timestamped_date', 1030665600)
 
             ->set('model.timestamped_date', 1538110800)
             ->call('validateAttribute', 'model.timestamped_date')
             ->assertHasNoErrors('model.timestamped_date')
-            ->assertSet('model.timestamped_date', 1538110800)
+            ->assertSetStrict('model.timestamped_date', 1538110800)
             ->assertSnapshotSet('model.timestamped_date', 1538110800);
     }
 
     public function test_can_cast_integer_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.integer_number', 1)
+            ->assertSetStrict('model.integer_number', 1)
             ->assertSnapshotSet('model.integer_number', 1)
 
             ->set('model.integer_number', 1.9999999999999)
             ->call('validateAttribute', 'model.integer_number')
             ->assertHasNoErrors('model.integer_number')
-            ->assertSet('model.integer_number', 1)
+            ->assertSetStrict('model.integer_number', 1)
             ->assertSnapshotSet('model.integer_number', 1)
 
             ->set('model.integer_number', '1.9999999999')
             ->call('validateAttribute', 'model.integer_number')
             ->assertHasNoErrors('model.integer_number')
-            ->assertSet('model.integer_number', 1)
+            ->assertSetStrict('model.integer_number', 1)
             ->assertSnapshotSet('model.integer_number', 1);
     }
 
@@ -98,38 +98,38 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     {
 
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.real_number', 2.0)
+            ->assertSetStrict('model.real_number', 2.0)
             ->assertSnapshotSet('model.real_number', 2.0)
 
             ->set('model.real_number', 2.9999999999)
             ->call('validateAttribute', 'model.real_number')
             ->assertHasNoErrors('model.real_number')
-            ->assertSet('model.real_number', 2.9999999999)
+            ->assertSetStrict('model.real_number', 2.9999999999)
             ->assertSnapshotSet('model.real_number', 2.9999999999)
 
             ->set('model.real_number', '2.345')
             ->call('validateAttribute', 'model.real_number')
             ->assertHasNoErrors('model.real_number')
-            ->assertSet('model.real_number', 2.345)
+            ->assertSetStrict('model.real_number', 2.345)
             ->assertSnapshotSet('model.real_number', 2.345);
     }
 
     public function test_can_cast_float_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.float_number', 3.0)
+            ->assertSetStrict('model.float_number', 3.0)
             ->assertSnapshotSet('model.float_number', 3.0)
 
             ->set('model.float_number', 3.9999999998)
             ->call('validateAttribute', 'model.float_number')
             ->assertHasNoErrors('model.float_number')
-            ->assertSet('model.float_number', 3.9999999998)
+            ->assertSetStrict('model.float_number', 3.9999999998)
             ->assertSnapshotSet('model.float_number', 3.9999999998)
 
             ->set('model.float_number', '3.399')
             ->call('validateAttribute', 'model.float_number')
             ->assertHasNoErrors('model.float_number')
-            ->assertSet('model.float_number', 3.399)
+            ->assertSetStrict('model.float_number', 3.399)
             ->assertSnapshotSet('model.float_number', 3.399);
     }
 
@@ -137,19 +137,19 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     {
 
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.double_precision_number', 4.0)
+            ->assertSetStrict('model.double_precision_number', 4.0)
             ->assertSnapshotSet('model.double_precision_number', 4.0)
 
             ->set('model.double_precision_number', 4.9999999997)
             ->call('validateAttribute', 'model.double_precision_number')
             ->assertHasNoErrors('model.double_precision_number')
-            ->assertSet('model.double_precision_number', 4.9999999997)
+            ->assertSetStrict('model.double_precision_number', 4.9999999997)
             ->assertSnapshotSet('model.double_precision_number', 4.9999999997)
 
             ->set('model.double_precision_number', '4.20')
             ->call('validateAttribute', 'model.double_precision_number')
             ->assertHasNoErrors('model.double_precision_number')
-            ->assertSet('model.double_precision_number', 4.20)
+            ->assertSetStrict('model.double_precision_number', 4.20)
             ->assertSnapshotSet('model.double_precision_number', 4.20);
     }
 
@@ -175,7 +175,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     public function test_can_cast_decimal_attributes_with_two_digits_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.decimal_with_two_digits', 6.0)
+            ->assertSet('model.decimal_with_two_digits', 6.00)
             ->assertSnapshotSet('model.decimal_with_two_digits', 6.0)
 
             ->set('model.decimal_with_two_digits', 6.4567)
@@ -194,56 +194,56 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     public function test_can_cast_string_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.string_name', 'Gladys')
+            ->assertSetStrict('model.string_name', 'Gladys')
             ->assertSnapshotSet('model.string_name', 'Gladys')
 
             ->set('model.string_name', 'Elena')
             ->call('validateAttribute', 'model.string_name')
             ->assertHasNoErrors('model.string_name')
-            ->assertSet('model.string_name', 'Elena')
+            ->assertSetStrict('model.string_name', 'Elena')
             ->assertSnapshotSet('model.string_name', 'Elena')
 
             ->set('model.string_name', 123)
             ->call('validateAttribute', 'model.string_name')
             ->assertHasNoErrors('model.string_name')
-            ->assertSet('model.string_name', '123')
+            ->assertSetStrict('model.string_name', '123')
             ->assertSnapshotSet('model.string_name', '123');
     }
 
     public function test_can_cast_boolean_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.boolean_value', false)
+            ->assertSetStrict('model.boolean_value', false)
             ->assertSnapshotSet('model.boolean_value', false)
 
             ->set('model.boolean_value', true)
             ->call('validateAttribute', 'model.boolean_value')
             ->assertHasNoErrors('model.boolean_value')
-            ->assertSet('model.boolean_value', true)
+            ->assertSetStrict('model.boolean_value', true)
             ->assertSnapshotSet('model.boolean_value', true)
 
             ->set('model.boolean_value', 0)
             ->call('validateAttribute', 'model.boolean_value')
             ->assertHasNoErrors('model.boolean_value')
-            ->assertSet('model.boolean_value', false)
+            ->assertSetStrict('model.boolean_value', false)
             ->assertSnapshotSet('model.boolean_value', false)
 
             ->set('model.boolean_value', 1)
             ->call('validateAttribute', 'model.boolean_value')
             ->assertHasNoErrors('model.boolean_value')
-            ->assertSet('model.boolean_value', true)
+            ->assertSetStrict('model.boolean_value', true)
             ->assertSnapshotSet('model.boolean_value', true)
 
             ->set('model.boolean_value', 'true')
             ->call('validateAttribute', 'model.boolean_value')
             ->assertHasNoErrors('model.boolean_value')
-            ->assertSet('model.boolean_value', true)
+            ->assertSetStrict('model.boolean_value', true)
             ->assertSnapshotSet('model.boolean_value', true)
 
             ->set('model.boolean_value', '')
             ->call('validateAttribute', 'model.boolean_value')
             ->assertHasNoErrors('model.boolean_value')
-            ->assertSet('model.boolean_value', false)
+            ->assertSetStrict('model.boolean_value', false)
             ->assertSnapshotSet('model.boolean_value', false);
     }
 
@@ -251,26 +251,26 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     {
 
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.array_list', [])
+            ->assertSetStrict('model.array_list', [])
             ->assertSnapshotSet('model.array_list', [])
 
             ->set('model.array_list', ['foo', 'bar'])
             ->call('validateAttribute', 'model.array_list')
             ->assertHasNoErrors('model.array_list')
-            ->assertSet('model.array_list', ['foo', 'bar'])
+            ->assertSetStrict('model.array_list', ['foo', 'bar'])
             ->assertSnapshotSet('model.array_list', ['foo', 'bar']);
     }
 
     public function test_can_cast_json_attributes_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
-            ->assertSet('model.json_list', [1, 2, 3])
+            ->assertSetStrict('model.json_list', [1, 2, 3])
             ->assertSnapshotSet('model.json_list', [1, 2, 3])
 
             ->set('model.json_list', [4, 5, 6])
             ->call('validateAttribute', 'model.json_list')
             ->assertHasNoErrors('model.json_list')
-            ->assertSet('model.json_list', [4, 5, 6])
+            ->assertSetStrict('model.json_list', [4, 5, 6])
             ->assertSnapshotSet('model.json_list', [4, 5, 6]);
     }
 
@@ -298,9 +298,9 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
             ->set('model.object_value', (object) ['name' => 'Marian', 'email' => 'marian@my-company.rocks'])
             ->call('validateAttribute', 'model.object_value')
             ->assertHasNoErrors('model.object_value')
-            ->assertSet('model.object_value.name', 'Marian')
+            ->assertSetStrict('model.object_value.name', 'Marian')
             ->assertSnapshotSet('model.object_value.name', 'Marian')
-            ->assertSet('model.object_value.email', 'marian@my-company.rocks')
+            ->assertSetStrict('model.object_value.email', 'marian@my-company.rocks')
             ->assertSnapshotSet('model.object_value.email', 'marian@my-company.rocks');
     }
 

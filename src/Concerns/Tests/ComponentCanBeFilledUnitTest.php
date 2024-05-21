@@ -61,13 +61,13 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
     public function test_can_fill_using_dot_notation()
     {
         Livewire::test(ComponentWithFillableProperties::class)
-            ->assertSet('dotProperty', [])
+            ->assertSetStrict('dotProperty', [])
             ->call('callFill', [
                 'dotProperty.foo' => 'bar',
                 'dotProperty.bob' => 'lob',
             ])
-            ->assertSet('dotProperty.foo', 'bar')
-            ->assertSet('dotProperty.bob', 'lob');
+            ->assertSetStrict('dotProperty.foo', 'bar')
+            ->assertSetStrict('dotProperty.bob', 'lob');
     }
 }
 

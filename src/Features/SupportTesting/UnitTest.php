@@ -242,7 +242,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->set(['name' => 'bar'])
-            ->assertSet('name', 'bar');
+            ->assertSetStrict('name', 'bar');
     }
 
     function test_set_for_backed_enums()
@@ -557,8 +557,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                     return '<div></div>';
                 }
             })
-            ->assertSet('colourCookie', 'blue')
-            ->assertSet('nameCookie', 'Taylor')
+            ->assertSetStrict('colourCookie', 'blue')
+            ->assertSetStrict('nameCookie', 'Taylor')
             ;
     }
 
@@ -579,8 +579,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                     return '<div></div>';
                 }
             })
-            ->assertSet('colourHeader', 'blue')
-            ->assertSet('nameHeader', 'Taylor')
+            ->assertSetStrict('colourHeader', 'blue')
+            ->assertSetStrict('nameHeader', 'Taylor')
             ;
     }
 
@@ -604,8 +604,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                 }
             })
             ->call('setTheCookies')
-            ->assertSet('colourCookie', 'blue')
-            ->assertSet('nameCookie', 'Taylor');
+            ->assertSetStrict('colourCookie', 'blue')
+            ->assertSetStrict('nameCookie', 'Taylor');
     }
 }
 
