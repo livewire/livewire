@@ -9661,6 +9661,12 @@ function morph2(component, el, html) {
       if (isntElement(el2))
         return;
       trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+      if (el2.__livewire_replace === true)
+        el2.innerHTML = toEl.innerHTML;
+      if (el2.__livewire_replace_self === true) {
+        el2.outerHTML = toEl.outerHTML;
+        return skip();
+      }
       if (el2.__livewire_ignore === true)
         return skip();
       if (el2.__livewire_ignore_self === true)
@@ -10463,6 +10469,15 @@ function extractStreamObjects(raw) {
   let remaining = raw.replace(regex, "");
   return [parsed, remaining];
 }
+
+// js/directives/wire-replace.js
+directive("replace", ({ el, directive: directive2 }) => {
+  if (directive2.modifiers.includes("self")) {
+    el.__livewire_replace_self = true;
+  } else {
+    el.__livewire_replace = true;
+  }
+});
 
 // js/directives/wire-ignore.js
 directive("ignore", ({ el, directive: directive2 }) => {

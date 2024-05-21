@@ -41,6 +41,7 @@ HTML Directives:
     wire:poll: { uri: /docs/wire-poll, file: /wire-poll.md }
     wire:offline: { uri: /docs/wire-offline, file: /wire-offline.md }
     wire:ignore: { uri: /docs/wire-ignore, file: /wire-ignore.md }
+    wire:replace: { uri: /docs/wire-replace, file: /wire-replace.md }
     wire:stream: { uri: /docs/wire-stream, file: /wire-stream.md }
 Concepts:
     Morphing: { uri: /docs/morphing, file: /morph.md }
