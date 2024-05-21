@@ -152,6 +152,20 @@ trait MakesAssertions
         return $this;
     }
 
+    function assertSnapshotSetStrict($name, $value)
+    {
+        $this->assertSnapshotSet($name, $value, true);
+
+        return $this;
+    }
+
+    function assertSnapshotNotSetStrict($name, $value)
+    {
+        $this->assertSnapshotNotSet($name, $value, true);
+
+        return $this;
+    }
+
     public function assertReturned($value)
     {
         $data = data_get($this->lastState->getEffects(), 'returns.0');
