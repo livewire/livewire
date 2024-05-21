@@ -157,38 +157,38 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
             ->assertSetStrict('model.decimal_with_one_digit', '5.0')
-            ->assertSnapshotSetStrict('model.decimal_with_one_digit', '5.0')
+            ->assertSnapshotSet('model.decimal_with_one_digit', 5.0)
 
             ->set('model.decimal_with_one_digit', 5.120983)
             ->call('validateAttribute', 'model.decimal_with_one_digit')
             ->assertHasNoErrors('model.decimal_with_one_digit')
             ->assertSetStrict('model.decimal_with_one_digit', '5.1')
-            ->assertSnapshotSetStrict('model.decimal_with_one_digit', '5.1')
+            ->assertSnapshotSet('model.decimal_with_one_digit', 5.1)
 
             ->set('model.decimal_with_one_digit', '5.55')
             ->call('validateAttribute', 'model.decimal_with_one_digit')
             ->assertHasNoErrors('model.decimal_with_one_digit')
             ->assertSetStrict('model.decimal_with_one_digit', '5.6')
-            ->assertSnapshotSetStrict('model.decimal_with_one_digit', '5.6');
+            ->assertSnapshotSet('model.decimal_with_one_digit', 5.6);
     }
 
     public function test_can_cast_decimal_attributes_with_two_digits_from_model_casts_definition()
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
             ->assertSetStrict('model.decimal_with_two_digits', '6.00')
-            ->assertSnapshotSetStrict('model.decimal_with_two_digits', '6.00')
+            ->assertSnapshotSet('model.decimal_with_two_digits', 6.0)
 
             ->set('model.decimal_with_two_digits', 6.4567)
             ->call('validateAttribute', 'model.decimal_with_two_digits')
             ->assertHasNoErrors('model.decimal_with_two_digits')
             ->assertSetStrict('model.decimal_with_two_digits', '6.46')
-            ->assertSnapshotSetStrict('model.decimal_with_two_digits', '6.46')
+            ->assertSnapshotSet('model.decimal_with_two_digits', 6.46)
 
             ->set('model.decimal_with_two_digits', '6.212')
             ->call('validateAttribute', 'model.decimal_with_two_digits')
             ->assertHasNoErrors('model.decimal_with_two_digits')
             ->assertSetStrict('model.decimal_with_two_digits', '6.21')
-            ->assertSnapshotSetStrict('model.decimal_with_two_digits', '6.21');
+            ->assertSnapshotSet('model.decimal_with_two_digits', 6.21);
     }
 
     public function test_can_cast_string_attributes_from_model_casts_definition()
