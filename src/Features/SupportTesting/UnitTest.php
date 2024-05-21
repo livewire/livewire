@@ -314,6 +314,28 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $component->assertNotSetStrict('name', '');
     }
 
+    function test_assert_snapshot_set_strict()
+    {
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+            ->set('name', '')
+            ->assertSnapshotSetStrict('name', '');
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
+        $component->assertSnapshotSetStrict('name', null);
+    }
+
+    function test_assert_snapshot_not_set_strict()
+    {
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+            ->set('name', '')
+            ->assertSnapshotNotSetStrict('name', null);
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
+        $component->assertSnapshotNotSetStrict('name', '');
+    }
+
     function test_assert_count()
     {
         Livewire::test(HasMountArgumentsButDoesntPassThemToBladeView::class, ['name' => ['foo']])
