@@ -10,21 +10,21 @@ class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
     function test_can_assert_basic_property_value()
     {
         Livewire::test(PropertyTestingComponent::class)
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->set('foo', 'baz')
-            ->assertSet('foo', 'baz');
+            ->assertSetStrict('foo', 'baz');
     }
 
     function test_can_assert_computed_property_value()
     {
         Livewire::test(PropertyTestingComponent::class)
-            ->assertSet('bob', 'lob');
+            ->assertSetStrict('bob', 'lob');
     }
 
     function test_swallows_property_not_found_exceptions()
     {
         Livewire::test(PropertyTestingComponent::class)
-            ->assertSet('nonExistentProperty', null);
+            ->assertSetStrict('nonExistentProperty', null);
     }
 
     function test_throws_non_property_not_found_exceptions()
@@ -34,7 +34,7 @@ class TestableLivewireCanAssertPropertiesUnitTest extends \Tests\TestCase
         $this->expectException(\Exception::class);
 
         Livewire::test(ComputedPropertyWithExceptionTestingComponent::class)
-            ->assertSet('throwsException', null);
+            ->assertSetStrict('throwsException', null);
     }
 }
 

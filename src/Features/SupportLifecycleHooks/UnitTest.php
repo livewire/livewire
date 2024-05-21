@@ -42,25 +42,25 @@ class UnitTest extends \Tests\TestCase
     public function test_boot_method_is_called_on_mount_and_on_subsequent_updates()
     {
         Livewire::test(ComponentWithBootMethod::class)
-            ->assertSet('memo', 'bootmountbooted')
+            ->assertSetStrict('memo', 'bootmountbooted')
             ->call('$refresh')
-            ->assertSet('memo', 'boothydratebooted');
+            ->assertSetStrict('memo', 'boothydratebooted');
     }
 
     public function test_boot_method_can_be_added_to_trait()
     {
         Livewire::test(ComponentWithBootTrait::class)
-            ->assertSet('memo', 'boottraitboottraitinitializemountbootedtraitbooted')
+            ->assertSetStrict('memo', 'boottraitboottraitinitializemountbootedtraitbooted')
             ->call('$refresh')
-            ->assertSet('memo', 'boottraitboottraitinitializehydratebootedtraitbooted');
+            ->assertSetStrict('memo', 'boottraitboottraitinitializehydratebootedtraitbooted');
     }
 
     public function test_boot_method_supports_dependency_injection()
     {
         Livewire::test(ComponentWithBootMethodDI::class)
-            ->assertSet('memo', 'boottraitbootbootedtraitbooted')
+            ->assertSetStrict('memo', 'boottraitbootbootedtraitbooted')
             ->call('$refresh')
-            ->assertSet('memo', 'boottraitbootbootedtraitbooted');
+            ->assertSetStrict('memo', 'boottraitbootbootedtraitbooted');
     }
 
     public function test_it_resolves_the_mount_parameters()

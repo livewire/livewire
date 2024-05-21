@@ -242,7 +242,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->set(['name' => 'bar'])
-            ->assertSet('name', 'bar');
+            ->assertSetStrict('name', 'bar');
     }
 
     function test_set_for_backed_enums()
@@ -312,6 +312,28 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
         $component->assertNotSetStrict('name', '');
+    }
+
+    function test_assert_snapshot_set_strict()
+    {
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+            ->set('name', '')
+            ->assertSnapshotSetStrict('name', '');
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
+        $component->assertSnapshotSetStrict('name', null);
+    }
+
+    function test_assert_snapshot_not_set_strict()
+    {
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+            ->set('name', '')
+            ->assertSnapshotNotSetStrict('name', null);
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
+        $component->assertSnapshotNotSetStrict('name', '');
     }
 
     function test_assert_count()
@@ -557,8 +579,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                     return '<div></div>';
                 }
             })
-            ->assertSet('colourCookie', 'blue')
-            ->assertSet('nameCookie', 'Taylor')
+            ->assertSetStrict('colourCookie', 'blue')
+            ->assertSetStrict('nameCookie', 'Taylor')
             ;
     }
 
@@ -579,8 +601,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                     return '<div></div>';
                 }
             })
-            ->assertSet('colourHeader', 'blue')
-            ->assertSet('nameHeader', 'Taylor')
+            ->assertSetStrict('colourHeader', 'blue')
+            ->assertSetStrict('nameHeader', 'Taylor')
             ;
     }
 
@@ -604,8 +626,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                 }
             })
             ->call('setTheCookies')
-            ->assertSet('colourCookie', 'blue')
-            ->assertSet('nameCookie', 'Taylor');
+            ->assertSetStrict('colourCookie', 'blue')
+            ->assertSetStrict('nameCookie', 'Taylor');
     }
 }
 

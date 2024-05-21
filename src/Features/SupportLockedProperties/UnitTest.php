@@ -24,7 +24,7 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('count', 1)
+        ->assertSetStrict('count', 1)
         ->set('count', 2);
     }
 
@@ -45,7 +45,7 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('foo.count', 1)
+        ->assertSetStrict('foo.count', 1)
         ->set('foo.count', 2);
     }
 
@@ -61,7 +61,7 @@ class UnitTest extends \Tests\TestCase
                 return '<div></div>';
             }
         })
-        ->assertSet('count2', 1)
+        ->assertSetStrict('count2', 1)
         ->set('count2', 2);
     }
 
@@ -69,7 +69,7 @@ class UnitTest extends \Tests\TestCase
     {
         Livewire::test(Component::class)
             ->set('form.foo', 'bar')
-            ->assertSet('form.foo', 'bar')
+            ->assertSetStrict('form.foo', 'bar')
             ->assertOk();
     }
 }

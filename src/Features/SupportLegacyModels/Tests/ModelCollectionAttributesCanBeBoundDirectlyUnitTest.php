@@ -23,19 +23,19 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
         (new ModelForBinding)->migrate();
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
-            ->assertSet('models.0.title', 'foo')
+            ->assertSetStrict('models.0.title', 'foo')
             ->assertSnapshotSet('models.0.title', 'foo')
             ->set('models.0.title', 'bo')
-            ->assertSet('models.0.title', 'bo')
+            ->assertSetStrict('models.0.title', 'bo')
             ->call('refreshModels')
-            ->assertSet('models.0.title', 'foo')
+            ->assertSetStrict('models.0.title', 'foo')
             ->set('models.0.title', 'bo')
             ->call('save')
             ->assertHasErrors('models.0.title')
             ->set('models.0.title', 'boo')
             ->call('save')
             ->call('refreshModels')
-            ->assertSet('models.0.title', 'boo');
+            ->assertSetStrict('models.0.title', 'boo');
     }
 
     public function test_can_set_non_persisted_models_in_model_collection()
@@ -45,18 +45,18 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
         (new ModelForBinding)->migrate();
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
-            ->assertSet('models.2.title', 'baz')
-            ->assertSet('models.3', null)
+            ->assertSetStrict('models.2.title', 'baz')
+            ->assertSetStrict('models.3', null)
             ->assertSnapshotSet('models.3', null)
             ->call('addModel')
             ->assertNotSet('models.3', null)
             ->assertSnapshotNotSet('models.3', null)
             ->set('models.3.title', 'bob')
-            ->assertSet('models.3.title', 'bob')
+            ->assertSetStrict('models.3.title', 'bob')
             ->assertSnapshotSet('models.3.title', 'bob')
             ->set('models.3.title', 'bo')
             ->call('refreshModels')
-            ->assertSet('models.3', null)
+            ->assertSetStrict('models.3', null)
             ->assertSnapshotSet('models.3', null)
             ->call('addModel')
             ->set('models.3.title', 'bo')
@@ -65,7 +65,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
             ->set('models.3.title', 'boo')
             ->call('save')
             ->call('refreshModels')
-            ->assertSet('models.3.title', 'boo');
+            ->assertSetStrict('models.3.title', 'boo');
         ;
     }
 
@@ -77,21 +77,21 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->call('setModelsToCustomCollection')
-            ->assertSet('models.0.title', 'foo')
+            ->assertSetStrict('models.0.title', 'foo')
             ->assertSnapshotSet('models.0.title', 'foo')
             ->set('models.0.title', 'bo')
-            ->assertSet('models.0.title', 'bo')
+            ->assertSetStrict('models.0.title', 'bo')
             ->call('refreshModels')
-            ->assertSet('models.0.title', 'foo')
+            ->assertSetStrict('models.0.title', 'foo')
             ->set('models.0.title', 'bo')
             ->call('save')
             ->assertHasErrors('models.0.title')
             ->set('models.0.title', 'boo')
             ->call('save')
             ->call('refreshModels')
-            ->assertSet('models.0.title', 'boo')
+            ->assertSetStrict('models.0.title', 'boo')
             ->call('getTypeOfModels')
-            ->assertSet('modelsType', CustomCollection::class);
+            ->assertSetStrict('modelsType', CustomCollection::class);
     }
 
     public function test_cant_set_a_model_attribute_that_isnt_present_in_rules_array()
@@ -104,7 +104,7 @@ class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCas
 
         Livewire::test(ComponentWithModelCollectionProperty::class)
             ->set('models.1.restricted', 'bar')
-            ->assertSet('models.1.restricted', null);
+            ->assertSetStrict('models.1.restricted', null);
     }
 
     public function test_an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()

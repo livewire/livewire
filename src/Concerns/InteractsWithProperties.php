@@ -59,6 +59,11 @@ trait InteractsWithProperties
                 $propertyName = $property->afterLast('.');
                 $objectName = $property->beforeLast('.');
 
+                if (method_exists($this->{$objectName}, 'reset')) {
+                    $this->{$objectName}->reset($propertyName);
+                    continue;
+                }
+
                 $object = data_get($freshInstance, $objectName, null);
 
                 if (is_object($object)) {

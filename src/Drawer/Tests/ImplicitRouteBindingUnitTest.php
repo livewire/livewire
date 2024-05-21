@@ -3,6 +3,7 @@
 namespace Livewire\Drawer\Tests;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
@@ -30,6 +31,19 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentPropBindings::class);
 
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
+    }
+
+    public function test_props_are_set_via_scope_binding()
+    {
+        Route::get('/scope-binding/{store:name}/{book:name}', ComponentWithScopeBindings::class)->scopeBindings();
+
+        $this->get('/scope-binding/First/Foo')
+            ->assertSeeText('Store ID: 1')
+            ->assertSeeText('Book ID: 1');
+
+        $this->get('/scope-binding/Second/Foo')
+            ->assertSeeText('Store ID: 2')
+            ->assertSeeText('Book ID: 2');
     }
 
     public function test_dependent_props_are_set_via_mount()
@@ -236,6 +250,70 @@ class User extends Model
         [
             'id' => 1,
             'name' => 'John',
+        ],
+    ];
+}
+
+class ComponentWithScopeBindings extends Component
+{
+    public Store $store;
+    public Book $book;
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                Store ID: {{ $store->id }}
+                Book ID: {{ $book->id }}
+            </div>
+        BLADE;
+    }
+}
+
+class Store extends Model
+{
+    use Sushi;
+
+    protected array $schema = [
+        'id' => 'integer',
+        'name' => 'string',
+    ];
+
+    protected array $rows = [
+        [
+            'id' => 1,
+            'name' => 'First',
+        ], [
+            'id' => 2,
+            'name' => 'Second',
+        ],
+    ];
+
+    public function books() : HasMany
+    {
+        return $this->hasMany(Book::class);
+    }
+}
+
+class Book extends Model
+{
+    use Sushi;
+
+    protected array $schema = [
+        'id' => 'integer',
+        'store_id' => 'integer',
+        'name' => 'string',
+    ];
+
+    protected array $rows = [
+        [
+            'id' => 1,
+            'store_id' => 1,
+            'name' => 'Foo',
+        ], [
+            'id' => 2,
+            'store_id' => 2,
+            'name' => 'Foo',
         ],
     ];
 }

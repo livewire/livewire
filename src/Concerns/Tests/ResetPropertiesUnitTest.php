@@ -10,71 +10,71 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
     public function test_can_reset_properties()
     {
         Livewire::test(ResetPropertiesComponent::class)
-            ->assertSet('foo', 'bar')
-            ->assertSet('bob', 'lob')
-            ->assertSet('mwa', 'hah')
+            ->assertSetStrict('foo', 'bar')
+            ->assertSetStrict('bob', 'lob')
+            ->assertSetStrict('mwa', 'hah')
             ->set('foo', 'baz')
             ->set('bob', 'law')
             ->set('mwa', 'aha')
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'aha')
             // Reset all.
             ->call('resetAll')
-            ->assertSet('foo', 'bar')
-            ->assertSet('bob', 'lob')
-            ->assertSet('mwa', 'hah')
+            ->assertSetStrict('foo', 'bar')
+            ->assertSetStrict('bob', 'lob')
+            ->assertSetStrict('mwa', 'hah')
             ->set('foo', 'baz')
             ->set('bob', 'law')
             ->set('mwa', 'aha')
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'aha')
             // Reset foo and bob.
             ->call('resetKeys', ['foo', 'bob'])
-            ->assertSet('foo', 'bar')
-            ->assertSet('bob', 'lob')
-            ->assertSet('mwa', 'aha')
+            ->assertSetStrict('foo', 'bar')
+            ->assertSetStrict('bob', 'lob')
+            ->assertSetStrict('mwa', 'aha')
             ->set('foo', 'baz')
             ->set('bob', 'law')
             ->set('mwa', 'aha')
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'aha')
             // Reset only foo.
             ->call('resetKeys', 'foo')
-            ->assertSet('foo', 'bar')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
+            ->assertSetStrict('foo', 'bar')
+            ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'aha')
             ->set('foo', 'baz')
             ->set('bob', 'law')
             ->set('mwa', 'aha')
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'aha')
             // Reset all except foo.
             ->call('resetKeysExcept', 'foo')
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'lob')
-            ->assertSet('mwa', 'hah')
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'lob')
+            ->assertSetStrict('mwa', 'hah')
             ->set('foo', 'baz')
             ->set('bob', 'law')
             ->set('mwa', 'aha')
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'aha')
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'aha')
             // Reset all except foo and bob.
             ->call('resetKeysExcept', ['foo', 'bob'])
-            ->assertSet('foo', 'baz')
-            ->assertSet('bob', 'law')
-            ->assertSet('mwa', 'hah');
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'hah');
     }
 
     public function test_can_reset_unset_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->set('notSet', 1)
-            ->assertSet('notSet', 1)
+            ->assertSetStrict('notSet', 1)
             // Reset only notSet.
             ->call('resetKeys', 'notSet');
 
@@ -85,10 +85,10 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
             ->set('nullProp', 1)
-            ->assertSet('nullProp', 1)
+            ->assertSetStrict('nullProp', 1)
             // Reset only nullProp.
             ->call('resetKeys', 'nullProp')
-            ->assertSet('nullProp', null);
+            ->assertSetStrict('nullProp', null);
 
         $this->assertTrue(is_null($component->nullProp));
     }
@@ -96,22 +96,22 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
     public function test_can_reset_and_return_property_with_pull_method()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->set('foo', 'baz')
-            ->assertSet('foo', 'baz')
-            ->assertSet('pullResult', null)
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('pullResult', null)
             ->call('proxyPull', 'foo')
-            ->assertSet('foo', 'bar')
-            ->assertSet('pullResult', 'baz');
+            ->assertSetStrict('foo', 'bar')
+            ->assertSetStrict('pullResult', 'baz');
     }
 
     public function test_can_pull_all_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->set('foo', 'baz')
-            ->assertSet('foo', 'baz')
-            ->assertSet('pullResult', null)
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('pullResult', null)
             ->call('proxyPull');
 
         $this->assertEquals('baz', $component->pullResult['foo']);
@@ -121,10 +121,10 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
     public function test_can_pull_some_properties()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->set('foo', 'baz')
-            ->assertSet('foo', 'baz')
-            ->assertSet('pullResult', null)
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('pullResult', null)
             ->call('proxyPull', ['foo']);
 
         $this->assertEquals('baz', $component->pullResult['foo']);

@@ -31,18 +31,18 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
 
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
-            ->assertSet('model.title', 'foo')
+            ->assertSetStrict('model.title', 'foo')
             ->set('model.title', 'ba')
-            ->assertSet('model.title', 'ba')
+            ->assertSetStrict('model.title', 'ba')
             ->call('refreshModel')
-            ->assertSet('model.title', 'foo')
+            ->assertSetStrict('model.title', 'foo')
             ->set('model.title', 'ba')
             ->call('save')
             ->assertHasErrors('model.title')
             ->set('model.title', 'bar')
             ->call('save')
             ->call('refreshModel')
-            ->assertSet('model.title', 'bar');
+            ->assertSetStrict('model.title', 'bar');
     }
 
 
@@ -53,9 +53,9 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
             ->assertNotSet('model.title', 'foo')
             ->set('model.title', 'i-exist-now')
-            ->assertSet('model.title', 'i-exist-now')
+            ->assertSetStrict('model.title', 'i-exist-now')
             ->call('save')
-            ->assertSet('model.title', 'i-exist-now');
+            ->assertSetStrict('model.title', 'i-exist-now');
 
         $this->assertTrue(ModelForAttributeBinding::whereTitle('i-exist-now')->exists());
     }
@@ -68,7 +68,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
             ->set('model.id', 2)
-            ->assertSet('model.id', null);
+            ->assertSetStrict('model.id', null);
     }
 
     public function test_an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()

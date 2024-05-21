@@ -10,19 +10,19 @@ class TraitsUnitTest extends \Tests\TestCase
     public function test_traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTraitStub::class)
-            ->assertSet(
+            ->assertSetStrict(
                 'hooksFromTrait',
                 ['initialized', 'mount', 'rendering', 'rendered:show-name', 'dehydrate']
             )
             ->set('foo', 'bar')
-            ->assertSet(
+            ->assertSetStrict(
                 'hooksFromTrait',
                 ['initialized', 'hydrate', 'updating:foobar', 'updated:foobar', 'rendering', 'rendered:show-name', 'dehydrate']
             )
             ->call(
                 'testExceptionInterceptor',
             )
-            ->assertSet(
+            ->assertSetStrict(
                 'hooksFromTrait',
                 ['initialized', 'hydrate', 'exception', 'rendering', 'rendered:show-name', 'dehydrate']
             );
@@ -31,7 +31,7 @@ class TraitsUnitTest extends \Tests\TestCase
     public function test_multiple_traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTwoTraitsStub::class)
-            ->assertSet('hooksFromTrait', [
+            ->assertSetStrict('hooksFromTrait', [
                 'initialized', 'secondInitialized',
                 'mount', 'secondMount',
                 'rendering', 'secondRendering',
@@ -39,7 +39,7 @@ class TraitsUnitTest extends \Tests\TestCase
                 'dehydrate', 'secondDehydrate'
             ])
             ->set('foo', 'bar')
-            ->assertSet('hooksFromTrait', [
+            ->assertSetStrict('hooksFromTrait', [
                 'initialized', 'secondInitialized',
                 'hydrate', 'secondHydrate',
                 'updating:foobar', 'secondUpdating:foobar',
@@ -77,7 +77,7 @@ class TraitsUnitTest extends \Tests\TestCase
     public function test_trait_hooks_are_run_at_the_same_time_as_component_hooks()
     {
         Livewire::test(ComponentWithTraitStubAndComponentLifecycleHooks::class)
-            ->assertSet(
+            ->assertSetStrict(
                 'hooks',
                 [
                     'bootcomponent',
@@ -97,7 +97,7 @@ class TraitsUnitTest extends \Tests\TestCase
                 ]
             )
             ->set('foo', 'bar')
-            ->assertSet(
+            ->assertSetStrict(
                 'hooks',
                 [
                     'bootcomponent',
@@ -121,7 +121,7 @@ class TraitsUnitTest extends \Tests\TestCase
                 ]
             )
             ->call('testExceptionInterceptor')
-            ->assertSet(
+            ->assertSetStrict(
                 'hooks',
                 [
                     'bootcomponent',

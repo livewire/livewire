@@ -17,11 +17,11 @@ class ModelsCanBeFilledUnitTest extends \Tests\TestCase
         $this->assertInstanceOf(UserModel::class, $component->get('user'));
 
         $component
-            ->assertSet('user.name', null)
+            ->assertSetStrict('user.name', null)
             ->call('callFill', [
                 'user.name' => 'Caleb',
             ])
-            ->assertSet('user.name', 'Caleb');
+            ->assertSetStrict('user.name', 'Caleb');
     }
 }
 

@@ -24,9 +24,9 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ComponentSkipRenderStub::class);
 
-        $component->assertSet('skipped', false);
+        $component->assertSetStrict('skipped', false);
         $component->call('skip');
-        $component->assertSet('skipped', true);
+        $component->assertSetStrict('skipped', true);
 
         $this->assertNotNull($component->html());
     }
@@ -35,9 +35,9 @@ class ComponentSkipRenderUnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ComponentSkipRenderAttributeStub::class);
 
-        $component->assertSet('skipped', false);
+        $component->assertSetStrict('skipped', false);
         $component->call('skip');
-        $component->assertSet('skipped', true);
+        $component->assertSetStrict('skipped', true);
 
         $this->assertNotNull($component->html());
     }
