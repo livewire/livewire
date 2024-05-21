@@ -99,7 +99,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentForModelAttributeCasting::class)
             ->assertSetStrict('model.real_number', 2.0)
-            ->assertSnapshotSet('model.real_number', 2.0)
+            ->assertSnapshotSetStrict('model.real_number', 2)
 
             ->set('model.real_number', 2.9999999999)
             ->call('validateAttribute', 'model.real_number')
@@ -118,7 +118,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
     {
         Livewire::test(ComponentForModelAttributeCasting::class)
             ->assertSetStrict('model.float_number', 3.0)
-            ->assertSnapshotSet('model.float_number', 3.0)
+            ->assertSnapshotSetStrict('model.float_number', 3)
 
             ->set('model.float_number', 3.9999999998)
             ->call('validateAttribute', 'model.float_number')
@@ -138,7 +138,7 @@ class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentForModelAttributeCasting::class)
             ->assertSetStrict('model.double_precision_number', 4.0)
-            ->assertSnapshotSet('model.double_precision_number', 4.0)
+            ->assertSnapshotSetStrict('model.double_precision_number', 4)
 
             ->set('model.double_precision_number', 4.9999999997)
             ->call('validateAttribute', 'model.double_precision_number')
