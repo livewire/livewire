@@ -78,6 +78,39 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    function test_set_form_object_with_typed_nullable_properties()
+    {
+        Livewire::test(new class extends Component {
+            public PostFormWithTypedProperties $form;
+
+            public function render() {
+                return <<<'BLADE'
+                    <div>
+                        Title: "{{ $form->title }}"
+                        Content: "{{ $form->content }}"
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSetStrict('form.title', null)
+            ->assertSetStrict('form.content', null)
+            ->assertSee('Title: ""', false)
+            ->assertSee('Content: ""', false)
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'Some content...')
+            ->assertSee('Title: "Some Title"', false)
+            ->assertSee('Content: "Some content..."', false)
+            ->set('form.title', null)
+            ->set('form.content', null)
+            ->assertSetStrict('form.title', null)
+            ->assertSetStrict('form.content', null)
+            ->assertSee('Title: ""', false)
+            ->assertSee('Content: ""', false);
+        ;
+    }
+
     function test_can_validate_a_form_object()
     {
         Livewire::test(new class extends Component {
@@ -776,6 +809,13 @@ class PostFormStubWithDefaults extends Form
     public $title = 'foo';
 
     public $content = 'bar';
+}
+
+class PostFormWithTypedProperties extends Form
+{
+    public ?string $title = null;
+
+    public ?string $content = null;
 }
 
 class PostFormWithRulesStub extends Form
