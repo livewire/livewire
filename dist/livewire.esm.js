@@ -7539,7 +7539,9 @@ var UploadManager = class {
     unsetUploadLoading(this.component);
     let uploadItem = this.uploadBag.first(name);
     if (uploadItem) {
-      uploadItem.request.abort();
+      if (uploadItem.request) {
+        uploadItem.request.abort();
+      }
       this.uploadBag.shift(name).cancelledCallback();
       if (cancelledCallback)
         cancelledCallback();
