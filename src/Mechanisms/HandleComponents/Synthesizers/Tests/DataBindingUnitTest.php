@@ -44,7 +44,7 @@ class DataBindingUnitTest extends \Tests\TestCase
     }
 }
 
-class DataBindingStub extends Component
+class DataBindingStub extends TestComponent
 {
     public $foo;
     public $bar;
@@ -69,10 +69,5 @@ class DataBindingStub extends Component
     public function removeArrayPropertyOne()
     {
         unset($this->arrayProperty[1]);
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

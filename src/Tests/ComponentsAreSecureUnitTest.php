@@ -6,7 +6,7 @@ use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\MethodNotFoundException;
-use Livewire\Component;
+use Tests\TestComponent;
 
 class ComponentsAreSecureUnitTest extends \Tests\TestCase
 {
@@ -97,7 +97,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
     }
 }
 
-class SecurityTargetStub extends Component
+class SecurityTargetStub extends TestComponent
 {
     public $publicProperty = 'foo';
     protected $protectedProperty = 'bar';
@@ -109,22 +109,12 @@ class SecurityTargetStub extends Component
     protected function protectedMethod()
     {
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class UnsafeComponentStub extends Component
+class UnsafeComponentStub extends TestComponent
 {
     public function someMethod()
     {
         throw new \Exception('Should not be able to acess me!');
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

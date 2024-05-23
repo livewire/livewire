@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Livewire\Livewire;
-use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
+use Tests\TestComponent;
 
 class ModelsCanBeFilledUnitTest extends \Tests\TestCase
 {
@@ -49,17 +49,12 @@ class UserModel extends Model
     }
 }
 
-class ComponentWithFillableProperties extends Component
+class ComponentWithFillableProperties extends TestComponent
 {
     public $user;
 
     public function callFill($values)
     {
         $this->fill($values);
-    }
-
-    public function render()
-    {
-        return '<div></div>';
     }
 }

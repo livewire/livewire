@@ -378,11 +378,6 @@ class UnitTest extends TestCase
             {
                 return 'bar';
             }
-
-            public function render()
-            {
-                return '<div></div>';
-            }
         })
             ->assertSetStrict('foo', 'bar');
     }
@@ -405,11 +400,6 @@ class UnitTest extends TestCase
                 $this->changeFoo = true;
 
                 unset($this->foo);
-            }
-
-            public function render()
-            {
-                return '<div></div>';
             }
         })
             ->assertSetStrict('foo', 'bar')

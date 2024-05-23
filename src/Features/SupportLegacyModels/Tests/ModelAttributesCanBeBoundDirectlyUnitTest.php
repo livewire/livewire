@@ -9,6 +9,7 @@ use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidation
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
+use Tests\TestComponent;
 use function Livewire\invade;
 
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
@@ -101,7 +102,7 @@ class ModelForAttributeBinding extends Model
     protected $guarded = [];
 }
 
-class ComponentWithModelProperty extends Component
+class ComponentWithModelProperty extends TestComponent
 {
     public $model;
 
@@ -125,25 +126,15 @@ class ComponentWithModelProperty extends Component
     {
         $this->model->refresh();
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithoutRulesArray extends Component
+class ComponentWithoutRulesArray extends TestComponent
 {
     public $model;
 
     public function mount(ModelForAttributeBinding $model)
     {
         $this->model = $model;
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }
 

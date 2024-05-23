@@ -11,6 +11,7 @@ use Illuminate\Testing\TestView;
 use Livewire\Component;
 use Livewire\Livewire;
 use Closure;
+use Tests\TestComponent;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -565,18 +566,13 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
         Livewire::withCookies(['colour' => 'blue'])
             ->withCookie('name', 'Taylor')
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourCookie = '';
                 public $nameCookie = '';
                 public function mount()
                 {
                     $this->colourCookie = request()->cookie('colour');
                     $this->nameCookie = request()->cookie('name');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
                 }
             })
             ->assertSetStrict('colourCookie', 'blue')
@@ -587,18 +583,13 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     public function test_can_set_headers_for_use_with_testing()
     {
         Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourHeader = '';
                 public $nameHeader = '';
                 public function mount()
                 {
                     $this->colourHeader = request()->header('colour');
                     $this->nameHeader = request()->header('name');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
                 }
             })
             ->assertSetStrict('colourHeader', 'blue')
@@ -610,7 +601,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
         Livewire::withCookies(['colour' => 'blue'])->withCookie('name', 'Taylor')
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourCookie = '';
                 public $nameCookie = '';
 
@@ -618,11 +609,6 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                 {
                     $this->colourCookie = request()->cookie('colour');
                     $this->nameCookie = request()->cookie('name');
-                }
-
-                public function render()
-                {
-                    return '<div></div>';
                 }
             })
             ->call('setTheCookies')
@@ -654,15 +640,11 @@ class HasHtml extends Component
     }
 }
 
-class SomeComponentStub extends Component
+class SomeComponentStub extends TestComponent
 {
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class HasMountArgumentsButDoesntPassThemToBladeView extends Component
+class HasMountArgumentsButDoesntPassThemToBladeView extends TestComponent
 {
     public $name;
 
@@ -670,14 +652,9 @@ class HasMountArgumentsButDoesntPassThemToBladeView extends Component
     {
         $this->name = $name;
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class DispatchesEventsComponentStub extends Component
+class DispatchesEventsComponentStub extends TestComponent
 {
     function dispatchFoo()
     {
@@ -703,11 +680,6 @@ class DispatchesEventsComponentStub extends Component
     {
         $this->dispatch('foo')->to(ComponentWhichReceivesEvent::class);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class CustomValidationRule implements ValidationRule
@@ -720,7 +692,7 @@ class CustomValidationRule implements ValidationRule
     }
 }
 
-class ValidatesDataWithCustomRuleStub extends Component
+class ValidatesDataWithCustomRuleStub extends TestComponent
 {
     public bool $foo = false;
 
@@ -730,14 +702,9 @@ class ValidatesDataWithCustomRuleStub extends Component
             'foo' => new CustomValidationRule,
         ]);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ValidatesDataWithSubmitStub extends Component
+class ValidatesDataWithSubmitStub extends TestComponent
 {
     public $foo;
     public $bar;
@@ -754,14 +721,9 @@ class ValidatesDataWithSubmitStub extends Component
     {
         $this->addError('bob', 'lob');
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ValidatesDataWithRealTimeStub extends Component
+class ValidatesDataWithRealTimeStub extends TestComponent
 {
     public $foo;
     public $bar;
@@ -773,14 +735,10 @@ class ValidatesDataWithRealTimeStub extends Component
             'bar' => 'required',
         ]);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ValidatesDataWithRulesHasParams extends Component{
+class ValidatesDataWithRulesHasParams extends TestComponent
+{
     public $foo, $bar;
 
     function submit()
@@ -789,39 +747,23 @@ class ValidatesDataWithRulesHasParams extends Component{
             'foo' => 'string|min:2',
         ]);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class ComponentWhichReceivesEvent extends Component
 {
-
 }
 
-class ComponentWithMethodThatReturnsData extends Component
+class ComponentWithMethodThatReturnsData extends TestComponent
 {
     function foo()
     {
         return 'bar';
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ComponentWithEnums extends Component
+class ComponentWithEnums extends TestComponent
 {
     public BackedFooBarEnum $backedFooBarEnum;
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 enum BackedFooBarEnum : string

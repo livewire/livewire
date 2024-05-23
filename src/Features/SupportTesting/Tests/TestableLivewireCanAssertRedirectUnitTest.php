@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
 {
@@ -35,15 +35,10 @@ class TestableLivewireCanAssertRedirectUnitTest extends \Tests\TestCase
     }
 }
 
-class RedirectComponent extends Component
+class RedirectComponent extends TestComponent
 {
     function performRedirect()
     {
         $this->redirect('/some');
-    }
-
-    function render()
-    {
-        return view('null-view');
     }
 }

@@ -3,7 +3,7 @@
 namespace Livewire\Concerns\Tests;
 
 use Livewire\Livewire;
-use Livewire\Component;
+use Tests\TestComponent;
 
 class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
 {
@@ -32,7 +32,7 @@ class ComponentCanReturnPublicPropertiesUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithProperties extends Component
+class ComponentWithProperties extends TestComponent
 {
     public $onlyProperties = [];
 
@@ -59,10 +59,5 @@ class ComponentWithProperties extends Component
     public function setAllProperties()
     {
         $this->allProperties = $this->all();
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }

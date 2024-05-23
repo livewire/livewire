@@ -2,8 +2,8 @@
 
 namespace Livewire\Concerns\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class ResetPropertiesUnitTest extends \Tests\TestCase
 {
@@ -132,7 +132,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
     }
 }
 
-class ResetPropertiesComponent extends Component
+class ResetPropertiesComponent extends TestComponent
 {
     public $foo = 'bar';
 
@@ -164,10 +164,5 @@ class ResetPropertiesComponent extends Component
     public function proxyPull(...$args)
     {
         $this->pullResult = $this->pull(...$args);
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }

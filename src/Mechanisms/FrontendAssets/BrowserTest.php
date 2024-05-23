@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\FrontendAssets;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -15,10 +16,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             });
         });
 
-        Livewire::visit(new class extends \Livewire\Component {
-            function render() { return '<div></div>'; }
-        })
-        ->assertDialogOpened('hi mom')
+        Livewire::visit(new class extends TestComponent {})
+            ->assertDialogOpened('hi mom')
         ;
     }
 }

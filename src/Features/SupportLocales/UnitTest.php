@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportLocales;
 
 use Illuminate\Support\Facades\App;
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -28,15 +28,10 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentForLocalePersistanceHydrationMiddleware extends Component
+class ComponentForLocalePersistanceHydrationMiddleware extends TestComponent
 {
     public function mount()
     {
         App::setLocale('es');
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }

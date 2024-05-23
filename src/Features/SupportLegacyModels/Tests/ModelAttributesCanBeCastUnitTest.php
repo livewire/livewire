@@ -4,9 +4,9 @@ namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Validation\Rule;
-use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
+use Tests\TestComponent;
 
 class ModelAttributesCanBeCastUnitTest extends \Tests\TestCase
 {
@@ -441,7 +441,7 @@ enum TestingEnum: string
     case FOO = 'bar';
 }
 
-class ComponentForModelAttributeCasting extends Component
+class ComponentForModelAttributeCasting extends TestComponent
 {
     public $model;
 
@@ -481,10 +481,5 @@ class ComponentForModelAttributeCasting extends Component
     public function validateAttribute(string $attribute)
     {
         $this->validateOnly($attribute);
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }

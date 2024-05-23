@@ -6,6 +6,7 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -254,7 +255,7 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class ForProtectedLifecycleHooks extends Component
+class ForProtectedLifecycleHooks extends TestComponent
 {
     public function mount()
     {
@@ -299,11 +300,6 @@ class ForProtectedLifecycleHooks extends Component
     public function updatedFoo($value)
     {
         //
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }
 
@@ -437,7 +433,7 @@ class ComponentWithBootMethodDI extends Component
     }
 }
 
-class ComponentWithOptionalParameters extends Component
+class ComponentWithOptionalParameters extends TestComponent
 {
     public $foo;
     public $bar;
@@ -447,14 +443,9 @@ class ComponentWithOptionalParameters extends Component
         $this->foo = $foo;
         $this->bar = $bar;
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithOnlyFooParameter extends Component
+class ComponentWithOnlyFooParameter extends TestComponent
 {
     public $foo;
 
@@ -462,25 +453,14 @@ class ComponentWithOnlyFooParameter extends Component
     {
         $this->foo = $foo;
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithoutMount extends Component
+class ComponentWithoutMount extends TestComponent
 {
     public $foo = 0;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-
-class ForLifecycleHooks extends Component
+class ForLifecycleHooks extends TestComponent
 {
     public $foo;
 
@@ -624,11 +604,6 @@ class ForLifecycleHooks extends Component
     public function rendering()
     {
         $this->lifecycles['rendering']++;
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 
     public function rendered()

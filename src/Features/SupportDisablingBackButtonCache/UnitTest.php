@@ -3,7 +3,7 @@
 namespace Livewire\Features\SupportDisablingBackButtonCache;
 
 use Illuminate\Support\Facades\Route;
-use Livewire\Component;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -32,16 +32,11 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class DisableBrowserCache extends Component
+class DisableBrowserCache extends TestComponent
 {
     public function mount()
     {
         $this->disableBackButtonCache();
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }
 

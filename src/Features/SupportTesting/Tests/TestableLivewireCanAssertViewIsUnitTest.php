@@ -2,8 +2,8 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class TestableLivewireCanAssertViewIsUnitTest extends \Tests\TestCase
 {
@@ -14,7 +14,7 @@ class TestableLivewireCanAssertViewIsUnitTest extends \Tests\TestCase
     }
 }
 
-class ViewComponent extends Component
+class ViewComponent extends TestComponent
 {
     function render()
     {
