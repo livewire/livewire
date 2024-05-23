@@ -150,6 +150,18 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('id="foo"', false);
     }
 
+    public function test_can_use_a_configured_class_based_component_layout_with_properties()
+    {
+        config()->set('livewire.layout', \LegacyTests\AppLayoutWithProperties::class);
+
+        Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertSee('foo')
+            ->assertSee('bar');
+    }
+
     public function test_can_pass_attributes_to_a_configured_anonymous_component_layout()
     {
         config()->set('livewire.layout', 'layouts.app-anonymous-component');
