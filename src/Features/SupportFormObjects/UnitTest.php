@@ -701,7 +701,7 @@ class UnitTest extends \Tests\TestCase
 
     function test_can_reset_and_return_property_with_pull_method()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public ResetPropertiesForm $form;
 
             public $pullResult;
@@ -709,10 +709,6 @@ class UnitTest extends \Tests\TestCase
             function test(...$args)
             {
                 $this->pullResult = $this->form->proxyPull(...$args);
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
         ->assertSet('form.foo', 'bar')
@@ -726,7 +722,7 @@ class UnitTest extends \Tests\TestCase
 
     function test_can_pull_all_properties()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             public ResetPropertiesForm $form;
 
             public $pullResult;
@@ -734,10 +730,6 @@ class UnitTest extends \Tests\TestCase
             function test(...$args)
             {
                 $this->pullResult = $this->form->proxyPull(...$args);
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
         ->assertSet('form.foo', 'bar')
@@ -752,16 +744,12 @@ class UnitTest extends \Tests\TestCase
 
     function test_can_pull_some_properties()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             public ResetPropertiesForm $form;
 
             function test(...$args)
             {
                 $this->form->proxyResetExcept(...$args);
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
         ->assertSet('form.foo', 'bar')
