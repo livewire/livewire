@@ -125,7 +125,7 @@ class UploadPhotos extends Component
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
 
 > [!warning] Ensure S3 is properly configured
-> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#upload-to-s3), these validation rules will fail if the S3 file object is not publicly accessible.
+> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#uploading-directly-to-amazon-s3), these validation rules will fail if the S3 file object is not publicly accessible.
 
 For more information on file validation, consult [Laravel's file validation documentation](https://laravel.com/docs/validation#available-validation-rules).
 
