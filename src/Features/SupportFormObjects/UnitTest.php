@@ -738,6 +738,83 @@ class UnitTest extends \Tests\TestCase
         ->assertHasNoErrors('form.content')
         ;
     }
+
+    function test_can_reset_and_return_property_with_pull_method()
+    {
+        Livewire::test(new class extends Component {
+            public ResetPropertiesForm $form;
+
+            public $pullResult;
+
+            function test(...$args)
+            {
+                $this->pullResult = $this->form->proxyPull(...$args);
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.foo', 'bar')
+        ->assertSet('form.bob', 'lob')
+        ->set('form.foo', 'baz')
+        ->assertSet('form.foo', 'baz')
+        ->call('test', 'foo')
+        ->assertSet('form.foo', 'bar')
+        ->assertSet('pullResult', 'baz');
+    }
+
+    function test_can_pull_all_properties()
+    {
+        $component = Livewire::test(new class extends Component {
+            public ResetPropertiesForm $form;
+
+            public $pullResult;
+
+            function test(...$args)
+            {
+                $this->pullResult = $this->form->proxyPull(...$args);
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.foo', 'bar')
+        ->set('form.foo', 'baz')
+        ->assertSet('form.foo', 'baz')
+        ->assertSet('pullResult', null)
+        ->call('test');
+
+        $this->assertEquals('baz', $component->pullResult['foo']);
+        $this->assertEquals('lob', $component->pullResult['bob']);
+    }
+
+    function test_can_pull_some_properties()
+    {
+        $component = Livewire::test(new class extends Component {
+            public ResetPropertiesForm $form;
+
+            function test(...$args)
+            {
+                $this->form->proxyResetExcept(...$args);
+            }
+
+            public function render() {
+                return '<div></div>';
+            }
+        })
+        ->assertSet('form.foo', 'bar')
+        ->set('form.foo', 'baz')
+        ->assertSet('form.foo', 'baz')
+        ->assertSet('form.bob', 'lob')
+        ->set('form.bob', 'loc')
+        ->assertSet('form.bob', 'loc')
+        ->call('test', ['foo']);
+
+        $this->assertEquals('baz', $component->form->foo);
+        $this->assertEquals('lob', $component->form->bob);
+    }
 }
 
 class PostFormStub extends Form
@@ -931,5 +1008,19 @@ class FormWithLiveValidation extends Form
                 'required',
             ],
         ];
+    }
+}
+
+class ResetPropertiesForm extends Form
+{
+    public $foo = 'bar';
+    public $bob = 'lob';
+
+    public function proxyResetExcept(...$args){
+        return $this->resetExcept(...$args);
+    }
+
+    public function proxyPull(...$args){
+        return $this->pull(...$args);
     }
 }
