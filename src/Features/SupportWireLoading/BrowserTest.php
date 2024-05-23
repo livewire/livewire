@@ -2,11 +2,9 @@
 
 namespace Livewire\Features\SupportWireLoading;
 
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
-use Livewire\WithFileUploads;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {

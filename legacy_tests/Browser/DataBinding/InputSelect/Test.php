@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\InputSelect;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 

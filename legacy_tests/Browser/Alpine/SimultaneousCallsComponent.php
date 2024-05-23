@@ -2,8 +2,6 @@
 
 namespace LegacyTests\Browser\Alpine;
 
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Str;
 use Livewire\Component as BaseComponent;
 
 class SimultaneousCallsComponent extends BaseComponent

@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;

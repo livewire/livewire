@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportAttributes;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 use Livewire\ComponentHook;
-use Livewire\Drawer\Utils;
 
 class SupportAttributes extends ComponentHook
 {
