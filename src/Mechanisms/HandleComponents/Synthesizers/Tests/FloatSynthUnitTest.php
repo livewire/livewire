@@ -18,7 +18,7 @@ class FloatSynthUnitTest extends \Tests\TestCase
     public function test_hydrated_component_with_empty_string_returns_null()
     {
         Livewire::test(ComponentWithNullableFloat::class)
-            ->set('floatField', "")
+            ->set('floatField', '')
             ->assertSetStrict('floatField', null);
     }
 
@@ -32,7 +32,7 @@ class FloatSynthUnitTest extends \Tests\TestCase
     public function test_hydrated_form_with_empty_string_returns_null()
     {
         Livewire::test(FormComponentWithNullableFloat::class)
-            ->set('form.floatField', "")
+            ->set('form.floatField', '')
             ->assertSetStrict('form.floatField', null);
     }
 
