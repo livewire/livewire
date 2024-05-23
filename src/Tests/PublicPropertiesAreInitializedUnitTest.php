@@ -5,6 +5,7 @@ namespace Livewire\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use Stringable;
+use Tests\TestComponent;
 
 class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
 {
@@ -57,14 +58,9 @@ class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
     }
 }
 
-class UninitializedPublicPropertyComponent extends Component
+class UninitializedPublicPropertyComponent extends TestComponent
 {
     public $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class InitializedPublicPropertyComponent extends Component
@@ -78,34 +74,19 @@ class InitializedPublicPropertyComponent extends Component
     }
 }
 
-class UninitializedPublicTypedPropertyComponent extends Component
+class UninitializedPublicTypedPropertyComponent extends TestComponent
 {
     public string $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class UninitializedPublicUnionTypedPropertyComponent extends Component
+class UninitializedPublicUnionTypedPropertyComponent extends TestComponent
 {
     public string | Stringable $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class UninitializedPublicTypedPropertyAfterRefreshComponent extends Component
+class UninitializedPublicTypedPropertyAfterRefreshComponent extends TestComponent
 {
     public string $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class InitializedPublicTypedPropertyComponent extends Component

@@ -15,6 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -799,14 +800,12 @@ class DummyMiddleware
     }
 }
 
-class NonFileUploadComponent extends Component
+class NonFileUploadComponent extends TestComponent
 {
     public $photo;
-
-    public function render() { return app('view')->make('null-view'); }
 }
 
-class FileUploadComponent extends Component
+class FileUploadComponent extends TestComponent
 {
     use WithFileUploads;
 
@@ -879,8 +878,6 @@ class FileUploadComponent extends Component
     {
         $this->_uploadErrored($name, null, false);
     }
-
-    public function render() { return app('view')->make('null-view'); }
 }
 
 class FileUploadInArrayComponent extends FileUploadComponent

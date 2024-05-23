@@ -2,20 +2,16 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Tests\TestComponent;
 
 class TestableLivewireCanBeInvaded extends \Tests\TestCase
 {
     function test_can_invade_protected_properties()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             protected string $foo = 'bar';
-
-            function render() {
-                return '<div></div>';
-            }
         });
 
         PHPUnit::assertEquals('bar', $component->invade()->foo);
@@ -23,13 +19,9 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
 
     function test_can_invade_protected_functions()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             protected function foo() : string {
                 return 'bar';
-            }
-
-            function render() {
-                return '<div></div>';
             }
         });
 
@@ -38,12 +30,8 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
 
     function test_can_invade_private_properties()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             private string $foo = 'bar';
-
-            function render() {
-                return '<div></div>';
-            }
         });
 
         PHPUnit::assertEquals('bar', $component->invade()->foo);
@@ -51,13 +39,9 @@ class TestableLivewireCanBeInvaded extends \Tests\TestCase
 
     function test_can_invade_private_functions()
     {
-        $component = Livewire::test(new class extends Component {
+        $component = Livewire::test(new class extends TestComponent {
             private function foo() : string {
                 return 'bar';
-            }
-
-            function render() {
-                return '<div></div>';
             }
         });
 

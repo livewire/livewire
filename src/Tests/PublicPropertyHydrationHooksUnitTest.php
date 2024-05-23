@@ -4,7 +4,7 @@ namespace Livewire\Tests;
 
 use Illuminate\Support\Str;
 use Livewire\Livewire;
-use Livewire\Component;
+use Tests\TestComponent;
 
 class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 {
@@ -30,7 +30,7 @@ class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithPublicPropertyCasters extends Component
+class ComponentWithPublicPropertyCasters extends TestComponent
 {
     public $date;
     public $dateWithFormat;
@@ -76,10 +76,5 @@ class ComponentWithPublicPropertyCasters extends Component
             'allCaps' => $this->allCaps,
             'stringable' => get_class($this->stringable),
         ];
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }

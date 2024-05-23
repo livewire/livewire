@@ -12,6 +12,7 @@ use Livewire\Exceptions\BypassViewHandler;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -245,41 +246,26 @@ class LivewireExceptionIsThrownInViewStub extends Component
     }
 }
 
-class Abort404IsThrownInComponentMountStub extends Component
+class Abort404IsThrownInComponentMountStub extends TestComponent
 {
     public function mount()
     {
         abort(404);
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class Abort500IsThrownInComponentMountStub extends Component
+class Abort500IsThrownInComponentMountStub extends TestComponent
 {
     public function mount()
     {
         abort(500);
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class AuthorizationExceptionIsThrownInComponentMountStub extends Component
+class AuthorizationExceptionIsThrownInComponentMountStub extends TestComponent
 {
     public function mount()
     {
         throw new AuthorizationException();
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

@@ -8,6 +8,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\WithPagination;
 use Sushi\Sushi;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -141,14 +142,9 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithPaginationStub extends Component
+class ComponentWithPaginationStub extends TestComponent
 {
     use WithPagination;
-
-    public function render()
-    {
-        return '<div></div>';
-    }
 }
 
 class PaginatorPostTestModel extends Model

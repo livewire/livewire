@@ -8,6 +8,7 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -31,7 +32,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_synthesized_property_types_are_preserved_after_update()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public $foo;
             public $isStringable;
             public function mount() { $this->foo = str('bar'); }
@@ -39,7 +40,6 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->isStringable = $this->foo instanceof Stringable;
             }
-            public function render() { return '<div></div>'; }
         })
             ->assertSet('foo', 'bar')
             ->call('checkStringable')
@@ -200,25 +200,15 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class BasicComponent extends Component
+class BasicComponent extends TestComponent
 {
     public $name;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithStringPropertiesStub extends Component
+class ComponentWithStringPropertiesStub extends TestComponent
 {
     public $emptyString = '';
     public $oneSpace = ' ';
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 enum UnitSuit: string

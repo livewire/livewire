@@ -4,8 +4,8 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class CarbonSynthUnitTest extends \Tests\TestCase
 {
@@ -80,50 +80,26 @@ class CarbonSynthUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithPublicCarbonCaster extends Component
+class ComponentWithPublicCarbonCaster extends TestComponent
 {
     public Carbon $date;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
-class ComponentWithNullablePublicCarbonCaster extends Component
+
+class ComponentWithNullablePublicCarbonCaster extends TestComponent
 {
     public ?Carbon $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithNullablePublicCarbonImmutableCaster extends Component
+class ComponentWithNullablePublicCarbonImmutableCaster extends TestComponent
 {
     public ?CarbonImmutable $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithNullablePublicDateTimeCaster extends Component
+class ComponentWithNullablePublicDateTimeCaster extends TestComponent
 {
     public ?\DateTime $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
-class ComponentWithNullablePublicDateTimeImmutableCaster extends Component
+class ComponentWithNullablePublicDateTimeImmutableCaster extends TestComponent
 {
     public ?\DateTimeImmutable $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }

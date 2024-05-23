@@ -2,8 +2,8 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class IntSynthUnitTest extends \Tests\TestCase
 {
@@ -61,32 +61,17 @@ class IntSynthUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithNullableInt extends Component
+class ComponentWithNullableInt extends TestComponent
 {
     public ?int $intField = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithInt extends Component
+class ComponentWithInt extends TestComponent
 {
     public int $intField;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithIntOrString extends Component
+class ComponentWithIntOrString extends TestComponent
 {
     public int|string $intOrStringField;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }

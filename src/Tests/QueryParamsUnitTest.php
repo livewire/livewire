@@ -2,8 +2,8 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class QueryParamsUnitTest extends \Tests\TestCase
 {
@@ -23,17 +23,12 @@ class QueryParamsUnitTest extends \Tests\TestCase
     }
 }
 
-class QueryParamsComponent extends Component
+class QueryParamsComponent extends TestComponent
 {
     public $name;
 
     public function mount()
     {
         $this->name = request('name');
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

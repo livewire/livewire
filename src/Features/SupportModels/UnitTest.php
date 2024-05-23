@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
 use Sushi\Sushi;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -95,7 +96,7 @@ class UnitTest extends \Tests\TestCase
         $this->markTestSkipped(); // @todo: probably not going to go this route...
         (new Article)::resolveConnection()->enableQueryLog();
 
-        Livewire::test(new class extends \Livewire\Component {
+        Livewire::test(new class extends TestComponent {
             #[Lazy]
             public Article $article;
 
@@ -107,10 +108,6 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->article->save();
             }
-
-            public function render() { return <<<'HTML'
-                <div></div>
-            HTML; }
         })
         ->call('$refresh')
         ->call('save');
@@ -200,19 +197,12 @@ class UnitTest extends \Tests\TestCase
         Relation::morphMap([], false);
         Relation::requireMorphMap();
 
-        $component = Livewire::test(new class extends \Livewire\Component {
+        $component = Livewire::test(new class extends TestComponent {
             public $article;
 
             public function mount()
             {
                 $this->article = Article::first();
-            }
-
-            public function render()
-            {
-                return <<<'HTML'
-                <div></div>
-                HTML;
             }
         });
 
@@ -227,20 +217,13 @@ class Lazy {
     //
 }
 
-class ArticleComponent extends \Livewire\Component
+class ArticleComponent extends TestComponent
 {
     public $article;
 
     public function mount()
     {
         $this->article = Article::first();
-    }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div></div>
-        HTML;
     }
 }
 

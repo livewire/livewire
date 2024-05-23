@@ -2,8 +2,8 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 use ValueError;
 
 class EnumUnitTest extends \Tests\TestCase
@@ -35,7 +35,7 @@ enum TestingEnum: string
     case TEST = 'Be excellent to each other';
 }
 
-class ComponentWithPublicEnumCasters extends Component
+class ComponentWithPublicEnumCasters extends TestComponent
 {
     public $typeOf;
     public $enum;
@@ -59,19 +59,9 @@ class ComponentWithPublicEnumCasters extends Component
     {
         $this->typeOf = get_class($this->enum);
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithNullablePublicEnumCaster extends Component
+class ComponentWithNullablePublicEnumCaster extends TestComponent
 {
     public ?TestingEnum $status = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }

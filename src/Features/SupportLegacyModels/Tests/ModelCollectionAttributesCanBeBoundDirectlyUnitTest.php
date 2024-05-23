@@ -10,6 +10,7 @@ use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Sushi\Sushi;
 
+use Tests\TestComponent;
 use function Livewire\invade;
 
 class ModelCollectionAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
@@ -155,7 +156,7 @@ class ModelWithCustomCollectionForBinding extends Model
     }
 }
 
-class ComponentWithModelCollectionProperty extends Component
+class ComponentWithModelCollectionProperty extends TestComponent
 {
     public $models;
     public $modelsType;
@@ -194,10 +195,5 @@ class ComponentWithModelCollectionProperty extends Component
     public function refreshModels()
     {
         $this->models = $this->models->filter->exists->fresh();
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }
