@@ -152,7 +152,6 @@ class UnitTest extends \Tests\TestCase
 
     public function test_can_use_a_configured_class_based_component_layout_with_properties()
     {
-        $this->withoutExceptionHandling();
         config()->set('livewire.layout', \LegacyTests\AppLayoutWithProperties::class);
 
         Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
