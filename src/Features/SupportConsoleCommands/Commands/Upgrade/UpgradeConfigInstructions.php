@@ -8,7 +8,7 @@ class UpgradeConfigInstructions extends UpgradeStep
 {
     public function handle(Command $console, \Closure $next)
     {
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> Manual Upgrade: New configuration </>");
+        $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> Manual Upgrade: New configuration </>');
         $console->newLine();
         $console->line('Livewire V3 has both added and removed certain configuration items.');
         $console->line('If your application has a published configuration file `config/livewire.php`, you will need to update it to account for the following changes.');

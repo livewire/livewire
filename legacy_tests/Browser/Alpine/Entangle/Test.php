@@ -115,11 +115,11 @@ class Test extends TestCase
             $this->visitLivewireComponent($browser, EntangleNestedArray::class)
                 ->waitForLivewire()->click('@add')
                 ->waitForLivewire()->click('@add')
-                ->assertSeeIn('@output', "Item0")
-                ->assertSeeIn('@output', "Item1")
+                ->assertSeeIn('@output', 'Item0')
+                ->assertSeeIn('@output', 'Item1')
                 ->waitForLivewire()->click('@remove')
-                ->assertSeeIn('@output', "Item0")
-                ->assertDontSeeIn('@output', "Item1")
+                ->assertSeeIn('@output', 'Item0')
+                ->assertDontSeeIn('@output', 'Item1')
             ;
         });
     }
@@ -128,11 +128,11 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, [EntangleNestedParentComponent::class, EntangleNestedChildComponent::class])
-                ->assertSeeIn('@livewire-output-test1', "test1")
-                ->assertSeeIn('@alpine-output-test1', "test1")
+                ->assertSeeIn('@livewire-output-test1', 'test1')
+                ->assertSeeIn('@alpine-output-test1', 'test1')
                 ->waitForLivewire()->click('@add')
-                ->assertSeeIn('@livewire-output-test2', "test2")
-                ->assertSeeIn('@alpine-output-test2', "test2")
+                ->assertSeeIn('@livewire-output-test2', 'test2')
+                ->assertSeeIn('@alpine-output-test2', 'test2')
             ;
         });
     }
@@ -141,9 +141,9 @@ class Test extends TestCase
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, EntangleResponseCheck::class)
-                ->assertSeeIn('@output', "false")
+                ->assertSeeIn('@output', 'false')
                 ->waitForLivewire()->click('@add')
-                ->assertSeeIn('@output', "false")
+                ->assertSeeIn('@output', 'false')
             ;
         });
     }

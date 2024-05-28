@@ -23,7 +23,7 @@ class Test extends TestCase
                  * element inserted in the middle moves subsequent elements instead of removing them
                  */
                 ->tap(function ($b) { $b->script([
-                    "window.elementWasRemoved = false",
+                    'window.elementWasRemoved = false',
                     "Livewire.hook('element.removed', () => { window.elementWasRemoved = true })",
                 ]);})
                 ->waitForLivewire()->click('@bar')
@@ -33,7 +33,7 @@ class Test extends TestCase
                  * element inserted before element with same tag name is handled as if they were different.
                  */
                 ->tap(function ($b) { $b->script([
-                    "window.lastAddedElement = false",
+                    'window.lastAddedElement = false',
                     "Livewire.hook('element.init', ({ el )} => { window.lastAddedElement = el })",
                 ]);})
                 ->waitForLivewire()->click('@baz')
@@ -48,8 +48,8 @@ class Test extends TestCase
 
 
                 ->tap(function ($b) { $b->script([
-                    "window.lastAddedElement = false",
-                    "window.lastUpdatedElement = false",
+                    'window.lastAddedElement = false',
+                    'window.lastUpdatedElement = false',
                     "Livewire.hook('element.updated', el => { window.lastUpdatedElement = el })",
                 ]);})
                 ->waitForLivewire()->click('@qux')

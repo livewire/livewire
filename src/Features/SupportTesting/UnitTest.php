@@ -283,7 +283,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $component = Livewire::test(HasMountArguments::class, ['name' => 'bar'])
             ->assertNotSet('name', 'foo')
             ->set('name', 100)
-            ->assertNotSet('name', "1e2", true)
+            ->assertNotSet('name', '1e2', true)
             ->set('name', 0)
             ->assertNotSet('name', false, true)
             ->assertNotSet('name', null, true);

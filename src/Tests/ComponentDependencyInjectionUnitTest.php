@@ -201,13 +201,13 @@ class ComponentWithUnionTypes extends TestComponent
 
     public function mount(UrlGenerator $generator, string|int $id = 123)
     {
-        $this->foo = $generator->to("/some-url", $id);
+        $this->foo = $generator->to('/some-url', $id);
         $this->bar = $id;
     }
 
     public function injection(UrlGenerator $generator, $bar)
     {
-        $this->foo = $generator->to("/");
+        $this->foo = $generator->to('/');
         $this->bar = $bar;
     }
 }

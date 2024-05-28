@@ -9,7 +9,7 @@ class ReplaceEmitWithDispatch extends UpgradeStep
     public function handle(Command $console, \Closure $next)
     {
         $console->newLine(2);
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> Partial Manual Upgrade: Event dispatching </>");
+        $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> Partial Manual Upgrade: Event dispatching </>');
         $console->newLine();
         $console->line('In v2 you could use the emit() and dispatchBrowserEvent() methods in PHP.');
         $console->line('For version 3, Livewire has unified these two methods into a single method: dispatch()');
