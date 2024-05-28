@@ -218,7 +218,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         $this->expectException(\Exception::class);
 
-        Livewire::test(\StdClass::class);
+        Livewire::test(\stdClass::class);
     }
 
     function test_livewire_route_works_with_user_route_with_the_same_signature()

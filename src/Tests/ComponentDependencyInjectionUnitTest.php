@@ -40,7 +40,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
-        app()->bind('foo', \StdClass::class);
+        app()->bind('foo', \stdClass::class);
 
         $component->runAction('actionWithContainerBoundNameCollision', 'bar');
 
