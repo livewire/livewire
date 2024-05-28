@@ -3,7 +3,6 @@
 namespace LegacyTests\Browser\Loading;
 
 use Laravel\Dusk\Browser;
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase

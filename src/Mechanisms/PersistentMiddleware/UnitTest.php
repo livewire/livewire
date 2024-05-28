@@ -3,12 +3,7 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Stringable;
-use Livewire\Component;
-use Livewire\Form;
 use Livewire\Livewire;
-use Tests\TestCase;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {

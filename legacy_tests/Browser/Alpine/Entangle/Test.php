@@ -2,9 +2,6 @@
 
 namespace LegacyTests\Browser\Alpine\Entangle;
 
-use Livewire\Livewire;
-use LegacyTests\Browser\Alpine\Entangle\Component;
-use LegacyTests\Browser\Alpine\Entangle\EntangleConsecutiveActions;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase

@@ -4,7 +4,6 @@ namespace LegacyTests\Browser\Redirects;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Sushi\Sushi;
 use LegacyTests\Browser\TestCase;
 

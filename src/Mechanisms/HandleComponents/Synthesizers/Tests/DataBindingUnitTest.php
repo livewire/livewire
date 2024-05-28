@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Tests\TestComponent;
-use Livewire\Component;
 use Livewire\Livewire;
 
 class DataBindingUnitTest extends \Tests\TestCase

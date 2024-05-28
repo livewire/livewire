@@ -4,7 +4,6 @@ namespace Livewire\Tests;
 
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
-use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\MethodNotFoundException;
 use Tests\TestComponent;
 
