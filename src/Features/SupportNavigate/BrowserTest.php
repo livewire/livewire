@@ -36,6 +36,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('second-scroll-page', SecondScrollPage::class);
             Livewire::component('parent-component', ParentComponent::class);
             Livewire::component('child-component', ChildComponent::class);
+            Livewire::component('script-component', ScriptComponent::class);
 
             Livewire::component('nav-bar-component', NavBarComponent::class);
 
@@ -83,6 +84,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/script-component', ScriptComponent::class);
         };
     }
 
@@ -944,6 +946,33 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_back_reevaluates_scripts()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/script-component')
+                ->waitForDialog(seconds: 1)
+                ->assertDialogOpened('script was executed?')
+                ->acceptDialog()
+                ->assertSee('On script component')
+                ->click('@link.to.first')
+                ->waitForText('On first')
+                ->back()
+                ->waitForDialog(seconds: 1)
+                ->assertDialogOpened('script was executed?')
+                ->acceptDialog()
+                ->waitForText('On script component')
+                ->click('@link.to.first')
+                ->waitForText('On first')
+                ->back()
+                ->waitForDialog(seconds: 1)
+                ->assertDialogOpened('script was executed?')
+                ->acceptDialog()
+                ->waitForText('On script component')
+            ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1089,7 +1118,7 @@ class FourthPage extends Component
 
             <script data-navigate-once>window.foo = 'bar';</script>
 
-            <script >
+            <script>
                 document.addEventListener('livewire:navigate', (event) => {
                     event.preventDefault();
                     if (window.foo === 'bar') {
@@ -1158,6 +1187,7 @@ class SecondRemoteAsset extends Component
     {
         return <<<'HTML'
             <div>
+                <div>On second asset page</div>
                 <div dusk="target">foo</div>
             </div>
 
@@ -1175,7 +1205,6 @@ class SecondRemoteAsset extends Component
             </script>
             @endscript
         HTML;
-        return '<div>On second asset page</div>';
     }
 }
 
@@ -1323,6 +1352,24 @@ class NavBarComponent extends Component
         return <<<'HTML'
             <div>
                 <div>Page: <span dusk="title">{{ $page }}</span></div>
+            </div>
+        HTML;
+    }
+}
+
+class ScriptComponent extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            @script
+            <script>
+                confirm('script was executed?')
+            </script>
+            @endscript
+            <div>
+                <div>On script component</div>
+                <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
             </div>
         HTML;
     }

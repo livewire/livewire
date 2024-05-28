@@ -4569,6 +4569,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (this.originalEffects.url) {
         effects.url = this.originalEffects.url;
       }
+      if (this.originalEffects.scripts) {
+        effects.scripts = this.originalEffects.scripts;
+      }
       el.setAttribute("wire:effects", JSON.stringify(effects));
     }
     addCleanup(cleanup2) {
