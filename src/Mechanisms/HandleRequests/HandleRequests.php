@@ -13,7 +13,7 @@ class HandleRequests extends Mechanism
 {
     protected $updateRoute;
 
-    public function boot()
+    function boot()
     {
         // Only set it if another provider hasn't already set it....
         if (! $this->updateRoute) {
@@ -25,14 +25,14 @@ class HandleRequests extends Mechanism
         $this->skipRequestPayloadTamperingMiddleware();
     }
 
-    public function getUpdateUri()
+    function getUpdateUri()
     {
         return (string) str(
             route($this->updateRoute->getName(), [], false)
         )->start('/');
     }
 
-    public function skipRequestPayloadTamperingMiddleware()
+    function skipRequestPayloadTamperingMiddleware()
     {
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::skipWhen(function () {
             return $this->isLivewireRequest();
@@ -43,7 +43,7 @@ class HandleRequests extends Mechanism
         });
     }
 
-    public function setUpdateRoute($callback)
+    function setUpdateRoute($callback)
     {
         $route = $callback([self::class, 'handleUpdate']);
 
@@ -55,12 +55,12 @@ class HandleRequests extends Mechanism
         $this->updateRoute = $route;
     }
 
-    public function isLivewireRequest()
+    function isLivewireRequest()
     {
         return request()->hasHeader('X-Livewire');
     }
 
-    public function isLivewireRoute()
+    function isLivewireRoute()
     {
         // @todo: Rename this back to `isLivewireRequest` once the need for it in tests has been fixed.
         $route = request()->route();
@@ -78,7 +78,7 @@ class HandleRequests extends Mechanism
         return $route->named('*livewire.update');
     }
 
-    public function handleUpdate()
+    function handleUpdate()
     {
         $requestPayload = request(key: 'components', default: []);
 
