@@ -65,9 +65,7 @@ class HandleRequests extends Mechanism
         // @todo: Rename this back to `isLivewireRequest` once the need for it in tests has been fixed.
         $route = request()->route();
 
-        if (! $route) {
-            return false;
-        }
+        if (! $route) return false;
 
         /*
          * Check to see if route name ends with `livewire.update`, as if
