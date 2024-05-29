@@ -6,13 +6,14 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
 use Livewire\Mechanisms\Mechanism;
+
 use function Livewire\trigger;
 
 class HandleRequests extends Mechanism
 {
     protected $updateRoute;
 
-    function boot()
+    public function boot()
     {
         // Only set it if another provider hasn't already set it....
         if (! $this->updateRoute) {
@@ -24,14 +25,14 @@ class HandleRequests extends Mechanism
         $this->skipRequestPayloadTamperingMiddleware();
     }
 
-    function getUpdateUri()
+    public function getUpdateUri()
     {
         return (string) str(
             route($this->updateRoute->getName(), [], false)
         )->start('/');
     }
 
-    function skipRequestPayloadTamperingMiddleware()
+    public function skipRequestPayloadTamperingMiddleware()
     {
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::skipWhen(function () {
             return $this->isLivewireRequest();
@@ -42,7 +43,7 @@ class HandleRequests extends Mechanism
         });
     }
 
-    function setUpdateRoute($callback)
+    public function setUpdateRoute($callback)
     {
         $route = $callback([self::class, 'handleUpdate']);
 
@@ -54,17 +55,19 @@ class HandleRequests extends Mechanism
         $this->updateRoute = $route;
     }
 
-    function isLivewireRequest()
+    public function isLivewireRequest()
     {
         return request()->hasHeader('X-Livewire');
     }
 
-    function isLivewireRoute()
+    public function isLivewireRoute()
     {
         // @todo: Rename this back to `isLivewireRequest` once the need for it in tests has been fixed.
         $route = request()->route();
 
-        if (! $route) return false;
+        if (! $route) {
+            return false;
+        }
 
         /*
          * Check to see if route name ends with `livewire.update`, as if
@@ -75,9 +78,9 @@ class HandleRequests extends Mechanism
         return $route->named('*livewire.update');
     }
 
-    function handleUpdate()
+    public function handleUpdate()
     {
-        $requestPayload = request('components');
+        $requestPayload = request(key: 'components', default: []);
 
         $finish = trigger('request', $requestPayload);
 
