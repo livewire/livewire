@@ -153,6 +153,88 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_except_removes_property_from_query_string_when_original_value_set_from_query_string()
+    {
+        Livewire::withQueryParams(['filter1' => 'some', 'filter2' => 'none'])->visit([
+            new class extends Component
+            {
+                #[BaseUrl(except: '')]
+                public $filter1 = '';
+
+                #[BaseUrl(except: 'all')]
+                public $filter2 = 'all';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <select dusk="filter1" wire:model.change="filter1">
+                            <option value="">All</option>
+                            <option value="some">Some</option>
+                            <option value="none">None</option>
+                        </select>
+                        <div dusk="output1">
+                            @switch($filter1)
+                              @case('all')
+                                <div>All</div>
+                              @case('some') 
+                                <div>Some</div>
+                              @break
+                            @endswitch   
+                        </div>
+                        <select dusk="filter2" wire:model.change="filter2">
+                            <option value="all">All</option>
+                            <option value="some">Some</option>
+                            <option value="none">None</option>
+                        </select>
+                        <div dusk="output2">
+                            @switch($filter2)
+                              @case('all')
+                                <div>All</div>
+                              @case('some') 
+                                <div>Some</div>
+                              @break
+                            @endswitch   
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertQueryStringHas('filter1', 'some')
+            ->assertDontSeeIn('@output1', 'All')
+            ->assertSeeIn('@output1', 'Some')
+            ->assertQueryStringHas('filter2', 'none')
+            ->assertDontSeeIn('@output2', 'All')
+            ->assertDontSeeIn('@output2', 'Some')
+
+            ->waitForLivewire()->select('@filter1', '')
+            ->assertQueryStringMissing('filter1')
+            ->assertSeeIn('@output1', 'All')
+            ->assertSeeIn('@output1', 'Some')
+            ->assertQueryStringHas('filter2', 'none')
+            ->assertDontSeeIn('@output2', 'All')
+            ->assertDontSeeIn('@output2', 'Some')
+
+            ->waitForLivewire()->select('@filter2', 'all')
+            ->assertQueryStringMissing('filter1')
+            ->assertSeeIn('@output1', 'All')
+            ->assertSeeIn('@output1', 'Some')
+            ->assertQueryStringMissing('filter2')
+            ->assertSeeIn('@output2', 'All')
+            ->assertSeeIn('@output2', 'Some')
+
+            ->waitForLivewire()->select('@filter1', 'none')
+            ->assertQueryStringHas('filter1', 'none')
+            ->assertDontSeeIn('@output1', 'All')
+            ->assertDontSeeIn('@output1', 'Some')
+            ->assertQueryStringMissing('filter2')
+            ->assertSeeIn('@output2', 'All')
+            ->assertSeeIn('@output2', 'Some')
+
+        ;
+    }
+
     public function test_initial_values_loaded_from_querystring_are_not_removed_from_querystring_on_load_if_they_are_different_to_the_default()
     {
         Livewire::withQueryParams(['perPage' => 25])->visit([
