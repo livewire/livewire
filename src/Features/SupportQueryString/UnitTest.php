@@ -73,4 +73,25 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals('queryFromAttribute', $queryFromAttribute->getSubName());
     }
+
+    function test_noexist_query_parameter_is_allowed_value()
+    {
+        $component = Livewire::withQueryParams(['exists' => 'noexist'])
+            ->test(new class extends TestComponent {
+                #[BaseUrl]
+                public $exists;
+                #[BaseUrl]
+                public $noexists;
+            });
+
+        $attributes = $component->instance()->getAttributes();
+
+        $existsAttribute = $attributes->first(fn (BaseUrl $attribute) => $attribute->getName() === 'exists');
+        $noexistsAttribute = $attributes->first(fn (BaseUrl $attribute) => $attribute->getName() === 'noexists');
+
+        $this->assertEquals('noexist', $existsAttribute->getFromUrlQueryString($existsAttribute->urlName(), 'does not exist'));
+        $this->assertEquals('does not exist', $noexistsAttribute->getFromUrlQueryString($noexistsAttribute->urlName(), 'does not exist'));
+        $this->assertEquals('noexist', $component->instance()->exists);
+        $this->assertEquals('', $component->instance()->noexists);
+    }
 }
