@@ -175,7 +175,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         </select>
                         <div dusk="output1">
                             @switch($filter1)
-                              @case('all')
+                              @case('')
                                 <div>All</div>
                               @case('some') 
                                 <div>Some</div>
