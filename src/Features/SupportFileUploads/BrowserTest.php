@@ -49,7 +49,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertMissing('@preview')
         ->attach('@upload', __DIR__ . '/browser_test_image.png')
-        ->pause(250)
+        ->waitFor('@preview')
         ->assertVisible('@preview')
         ->tap(function () {
             Storage::disk('tmp-for-tests')->assertMissing('photos/photo.png');
