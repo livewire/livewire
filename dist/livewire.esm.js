@@ -2348,7 +2348,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               let carry = Promise.all([
                 el2._x_hidePromise,
                 ...(el2._x_hideChildren || []).map(hideAfterChildren)
-              ]).then(([i]) => i == null ? void 0 : i());
+              ]).then(([i]) => i());
               delete el2._x_hidePromise;
               delete el2._x_hideChildren;
               return carry;
@@ -2861,7 +2861,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.0",
+      version: "3.13.10",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3156,14 +3156,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         handler4 = wrapHandler(handler4, (next, e) => {
           e.target === el && next(e);
         });
-      if (isKeyEvent(event) || isClickEvent(event)) {
-        handler4 = wrapHandler(handler4, (next, e) => {
+      handler4 = wrapHandler(handler4, (next, e) => {
+        if (isKeyEvent(event)) {
           if (isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers)) {
             return;
           }
-          next(e);
-        });
-      }
+        }
+        next(e);
+      });
       listenerTarget.addEventListener(event, handler4, options);
       return () => {
         listenerTarget.removeEventListener(event, handler4, options);
@@ -3186,12 +3186,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function isKeyEvent(event) {
       return ["keydown", "keyup"].includes(event);
     }
-    function isClickEvent(event) {
-      return ["contextmenu", "click", "mouse"].some((i) => event.includes(i));
-    }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3215,8 +3212,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return e[`${modifier}Key`];
         });
         if (activelyPressedKeyModifiers.length === selectedSystemKeyModifiers.length) {
-          if (isClickEvent(e.type))
-            return false;
           if (keyToModifiers(e.key).includes(keyModifiers[0]))
             return false;
         }
@@ -3887,7 +3882,7 @@ var require_module_cjs2 = __commonJS({
               start: { height: current + "px" },
               end: { height: full + "px" }
             }, () => el._x_isShown = true, () => {
-              if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
+              if (el.getBoundingClientRect().height == full) {
                 el.style.overflow = null;
               }
             });
@@ -9276,13 +9271,15 @@ function history2(Alpine19) {
   });
   Alpine19.history = { track };
 }
-function track(name, initialSeedValue, alwaysShow = false) {
+function track(name, initialSeedValue, alwaysShow = false, except = null) {
   let { has, get, set, remove } = queryStringUtils();
   let url = new URL(window.location.href);
   let isInitiallyPresentInUrl = has(url, name);
   let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue;
   let initialValueMemo = JSON.stringify(initialValue);
+  let exceptValueMemo = [false, null, void 0].includes(except) ? initialSeedValue : JSON.stringify(except);
   let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
+  let hasReturnedToExceptValue = (newValue) => JSON.stringify(newValue) === exceptValueMemo;
   if (alwaysShow)
     url = set(url, name, initialValue);
   replace(url, name, { value: initialValue });
@@ -9294,6 +9291,8 @@ function track(name, initialSeedValue, alwaysShow = false) {
     if (!alwaysShow && !isInitiallyPresentInUrl && hasReturnedToInitialValue(newValue)) {
       url2 = remove(url2, name);
     } else if (newValue === void 0) {
+      url2 = remove(url2, name);
+    } else if (!alwaysShow && hasReturnedToExceptValue(newValue)) {
       url2 = remove(url2, name);
     } else {
       url2 = set(url2, name, newValue);
@@ -9955,7 +9954,7 @@ on("effect", ({ component, effects, cleanup }) => {
     if (!as)
       as = name;
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
-    let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow);
+    let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow, except);
     if (use === "replace") {
       let effectReference = import_alpinejs10.default.effect(() => {
         replace2(dataGet(component.reactive, name));

@@ -15,7 +15,7 @@ on('effect', ({ component, effects, cleanup }) => {
 
         let initialValue = [false, null, undefined].includes(except) ? dataGet(component.ephemeral, name) : except
 
-        let { replace, push, pop } = track(as, initialValue, alwaysShow)
+        let { replace, push, pop } = track(as, initialValue, alwaysShow, except)
 
         if (use === 'replace') {
             let effectReference = Alpine.effect(() => {
