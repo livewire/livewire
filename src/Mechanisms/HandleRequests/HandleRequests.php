@@ -26,6 +26,11 @@ class HandleRequests extends Mechanism
 
     function getUpdateUri()
     {
+        $urlFromConfig = config('livewire.update_uri');
+        if ($urlFromConfig) {
+            return $urlFromConfig;
+        }
+
         return (string) str(
             route($this->updateRoute->getName(), [], false)
         )->start('/');

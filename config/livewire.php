@@ -157,4 +157,18 @@ return [
     */
 
     'pagination_theme' => 'tailwind',
-];
+
+
+    /*
+   |---------------------------------------------------------------------------
+   | Update URI
+   |---------------------------------------------------------------------------
+   |
+   | This configuration option is used to specify a custom URL for Livewire
+   | to use when sending update requests.
+   |
+   */
+   'update_uri' =>null,
+
+
+ ];
