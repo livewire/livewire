@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
-use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Renderless;
@@ -115,6 +114,26 @@ trait WithFileUploads
                 $storage->delete($filePathname);
             }
         }
+    }
+
+    public function uploadMultipart($name, $fileHashName, $uploadId, $partNumber, $partsCount)
+    {
+        $this->dispatch(
+            'upload:generatedSignedUrlForS3',
+            name: $name,
+            payload: GenerateSignedUploadUrl::forMultipartUpload(
+                $fileHashName, $uploadId, $partNumber, $partsCount
+            ),
+        )->self();
+    }
+
+    public function completeMultipartUpload($name, $uploadId)
+    {
+        return $this->dispatch(
+            'upload:generatedSignedUrlForS3',
+            name: $name,
+            payload: GenerateSignedUploadUrl::completeMultipartUpload($uploadId),
+        )->self();
     }
 }
 
