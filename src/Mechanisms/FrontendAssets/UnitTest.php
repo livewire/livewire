@@ -2,8 +2,11 @@
 
 namespace Livewire\Mechanisms\FrontendAssets;
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
+use Livewire\Livewire;
+use Livewire\LivewireManager;
 use function Livewire\trigger;
 
 class UnitTest extends \Tests\TestCase
@@ -136,5 +139,28 @@ class UnitTest extends \Tests\TestCase
     {
         $url = 'livewire/livewire.js';
         $this->assertStringStartsWith('<script src="/'.$url, FrontendAssets::js(['url' => $url]));
+    }
+
+    public function test_it_returns_published_assets_url_when_running_serverless()
+    {
+        $assets = app(FrontendAssets::class);
+
+        Artisan::call('livewire:publish', ['--assets' => true]);
+
+        config()->set('app.asset_url', 'https://example.com/');
+
+        $manager = $this->partialMock(LivewireManager::class, function ($mock) {
+            $mock->shouldReceive('isRunningServerless')
+                ->once()
+                ->andReturn(true);
+        });
+
+        $this->app->instance('livewire', $manager);
+
+        $this->assertStringStartsWith('<script src="https://example.com/vendor/livewire/livewire.min.js', $assets->scripts());
+
+        if (file_exists(public_path('vendor/livewire/manifest.json'))) {
+            unlink(public_path('vendor/livewire/manifest.json'));
+        }
     }
 }
