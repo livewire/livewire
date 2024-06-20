@@ -84,10 +84,25 @@ Livewire::setUpdateRoute(function ($handle) {
 
 ## Customizing the asset URL
 
-By default, Livewire will serve its JavaScript assets from the following URL: `https://example.com/livewire/livewire.js`. Additionally, Livewire will reference this asset from a script tag like so:
+By default, Livewire will serve its JavaScript assets from the following URL: 
 
+- When `APP_DEBUG` is `True`,
+
+`https://example.com/livewire/livewire.js`. 
+
+- Otherwise,
+
+`https://example.com/livewire/livewire.min.js`. 
+
+Additionally, Livewire will reference this asset from a script tag like so:
+
+- When `APP_DEBUG` is `True`
 ```blade
 <script src="/livewire/livewire.js" ...
+```
+- Otherwise,
+```blade
+<script src="/livewire/livewire.min.js" ...
 ```
 
 If your application has global route prefixes due to localization or multi-tenancy, you can register your own endpoint that Livewire should use internally when fetching its JavaScript.
@@ -96,14 +111,21 @@ To use a custom JavaScript asset endpoint, you can register your own route insid
 
 ```php
 Livewire::setScriptRoute(function ($handle) {
-    return Route::get('/custom/livewire/livewire.js', $handle);
+    return config('app.debug')
+        ? Route::get('/custom/livewire/livewire.js', $handle)
+        : Route::get('/custom/livewire.min.js', $handle);
 });
 ```
 
 Now, Livewire will load its JavaScript like so:
 
+- When `APP_DEBUG` is `True`
 ```blade
 <script src="/custom/livewire/livewire.js" ...
+```
+- Otherwise,
+```blade
+<script src="/custom/livewire/livewire.min.js" ...
 ```
 
 ## Manually bundling Livewire and Alpine
