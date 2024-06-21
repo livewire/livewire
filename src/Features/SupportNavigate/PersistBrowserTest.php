@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportNavigate;
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\View;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -11,15 +10,13 @@ class PersistBrowserTest extends \Tests\BrowserTestCase
 {
     public static function tweakApplicationHook() {
         return function() {
-            View::addNamespace('test-views', __DIR__.'/test-views');
-
             Livewire::component('persist-component', PersistComponent::class);
-            Livewire::component('first-page', FirstPage::class);
-            Livewire::component('second-page', SecondPage::class);
+            Livewire::component('persist-first-page', PersistFirstPage::class);
+            Livewire::component('persist-second-page', PersistSecondPage::class);
 
             Route::middleware(['web'])->group(function() {
-                Route::get('/first', FirstPage::class);
-                Route::get('/second', SecondPage::class);
+                Route::get('/first', PersistFirstPage::class);
+                Route::get('/second', PersistSecondPage::class);
             });
         };
     }
@@ -36,7 +33,7 @@ class PersistBrowserTest extends \Tests\BrowserTestCase
                 ->assertScript('return window._lw_dusk_test')
                 ->waitFor('@save')
                 ->assertSee('On second')
-                ->click('@save')
+                ->click('@save')->waitForLivewire()
                 ->assertConsoleLogMissingWarning('Uncaught Component not found');
         });
     }
@@ -53,7 +50,7 @@ class PersistComponent extends Component
 }
 
 
-class FirstPage extends Component
+class PersistFirstPage extends Component
 {
     function render(): string
     {
@@ -72,7 +69,7 @@ class FirstPage extends Component
 }
 
 
-class SecondPage extends Component
+class PersistSecondPage extends Component
 {
     public function save(): void
     {
