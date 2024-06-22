@@ -61,6 +61,46 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.foo', 'bar')
             ->assertOk();
     }
+
+    function test_cant_update_globally_locked_property()
+    {
+        $this->expectExceptionMessage(
+            'Cannot update locked property: [count]'
+        );
+
+        Livewire::lockProperties();
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 1;
+
+            function increment() { $this->count++; }
+        })
+            ->assertSetStrict('count', 1)
+            ->set('count', 2);
+    }
+
+    function test_can_update_unlocked_property()
+    {
+        Livewire::lockProperties();
+
+        Livewire::test(new class extends TestComponent {
+            #[BaseUnlocked]
+            public $count = 1;
+        })
+            ->assertSetStrict('count', 1)
+            ->set('count', 2);
+    }
+
+    function test_can_update_unlocked_component()
+    {
+        Livewire::lockProperties();
+
+        Livewire::test(new #[BaseUnlocked] class extends TestComponent {
+            public $count = 1;
+        })
+            ->assertSetStrict('count', 1)
+            ->set('count', 2);
+    }
 }
 
 class SomeForm extends Form {

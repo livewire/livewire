@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Livewire\Features\SupportLockedProperties\SupportLockedProperties;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
@@ -114,6 +115,11 @@ class LivewireManager
     function componentHasBeenRendered()
     {
         return SupportAutoInjectedAssets::$hasRenderedAComponentThisRequest;
+    }
+
+    function lockProperties()
+    {
+        SupportLockedProperties::$locked = true;
     }
 
     function forceAssetInjection()
