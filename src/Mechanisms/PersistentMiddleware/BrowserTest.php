@@ -31,7 +31,7 @@ class BrowserTest extends BrowserTestCase
 
     public static function tweakApplicationHook() {
         return function() {
-            Livewire::addPersistentMiddleware(AllowListedMiddleware::class);
+            Livewire::addPersistentMiddleware([AllowListedMiddleware::class, IsBanned::class]);
 
             // Overwrite the default route for these tests, so the middleware is included
             Route::get('livewire-dusk/{component}', function ($component) {
@@ -57,6 +57,12 @@ class BrowserTest extends BrowserTestCase
 
                 return app()->call(app('livewire')->new($class));
             })->middleware(['web', 'auth']);
+
+            Route::get('/with-redirects/livewire-dusk/{component}', function ($component) {
+                $class = urldecode($component);
+
+                return app()->call(app('livewire')->new($class));
+            })->middleware(['web', 'auth', IsBanned::class]);
 
             Gate::policy(Post::class, PostPolicy::class);
 
@@ -186,6 +192,24 @@ JS;
             })
             ->waitForText('response-ready: ')
             ->assertDontSee('Protected Content')
+        ;
+    }
+
+    public function test_that_persistent_middleware_redirects_on_subsequent_requests()
+    {
+        Livewire::visit(Component::class)
+            ->tap(function () {
+                User::where('id', 1)->update(['banned' => false]); // Reset the user. Sometimes it's cached(?.
+            })
+            ->visit('/force-login/1')
+            ->visit('/with-redirects/livewire-dusk/'.urlencode(Component::class))
+            ->assertSee('Protected Content')
+            ->tap(function () {
+                User::where('id', 1)->update(['banned' => true]);
+            })
+            ->waitForLivewire()
+            ->click('@refresh')
+            ->assertPathIs('/force-logout')
         ;
     }
 }
@@ -351,6 +375,8 @@ class User extends AuthUser
 {
     use Sushi;
 
+    protected $fillable = ['banned'];
+
     public function posts()
     {
         return $this->hasMany(Post::class);
@@ -362,12 +388,14 @@ class User extends AuthUser
             'name' => 'First User',
             'email' => 'first@laravel-livewire.com',
             'password' => '',
+            'banned' => false,
         ],
         [
             'id' => 2,
             'name' => 'Second user',
             'email' => 'second@laravel-livewire.com',
             'password' => '',
+            'banned' => false,
         ],
     ];
 }
@@ -392,5 +420,17 @@ class PostPolicy
     public function update(User $user, Post $post)
     {
         return (int) $post->user_id === (int) $user->id;
+    }
+}
+
+class IsBanned
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        if ($request->user()->banned) {
+            return redirect('/force-logout');
+        }
+
+        return $next($request);
     }
 }
