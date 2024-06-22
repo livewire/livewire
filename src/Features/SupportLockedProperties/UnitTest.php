@@ -9,6 +9,13 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function tearDown(): void
+    {
+        SupportLockedProperties::$locked = false;
+
+        parent::tearDown();
+    }
+
     function test_cant_update_locked_property()
     {
         $this->expectExceptionMessage(

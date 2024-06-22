@@ -14,7 +14,7 @@ class SupportLockedProperties extends ComponentHook
         if(self::$locked === false) {
             return;
         }
-
+        
         $componentIsUnlocked = $this->component
             ->getAttributes()
             ->whereInstanceOf(BaseUnlocked::class)
