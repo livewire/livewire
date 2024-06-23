@@ -113,7 +113,7 @@ To use a custom JavaScript asset endpoint, you can register your own route insid
 Livewire::setScriptRoute(function ($handle) {
     return config('app.debug')
         ? Route::get('/custom/livewire/livewire.js', $handle)
-        : Route::get('/custom/livewire.min.js', $handle);
+        : Route::get('/custom/livewire/livewire.min.js', $handle);
 });
 ```
 
