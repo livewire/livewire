@@ -6,11 +6,11 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function cant_call_protected_lifecycle_hooks()
+    public function test_cant_call_protected_lifecycle_hooks()
     {
         $this->assertTrue(
             collect([
@@ -40,35 +40,31 @@ class UnitTest extends \Tests\TestCase
         return false;
     }
 
-    /** @test */
-    public function boot_method_is_called_on_mount_and_on_subsequent_updates()
+    public function test_boot_method_is_called_on_mount_and_on_subsequent_updates()
     {
         Livewire::test(ComponentWithBootMethod::class)
-            ->assertSet('memo', 'bootmountbooted')
+            ->assertSetStrict('memo', 'bootmountbooted')
             ->call('$refresh')
-            ->assertSet('memo', 'boothydratebooted');
+            ->assertSetStrict('memo', 'boothydratebooted');
     }
 
-    /** @test */
-    public function boot_method_can_be_added_to_trait()
+    public function test_boot_method_can_be_added_to_trait()
     {
         Livewire::test(ComponentWithBootTrait::class)
-            ->assertSet('memo', 'boottraitboottraitinitializemountbootedtraitbooted')
+            ->assertSetStrict('memo', 'boottraitboottraitinitializemountbootedtraitbooted')
             ->call('$refresh')
-            ->assertSet('memo', 'boottraitboottraitinitializehydratebootedtraitbooted');
+            ->assertSetStrict('memo', 'boottraitboottraitinitializehydratebootedtraitbooted');
     }
 
-    /** @test */
-    public function boot_method_supports_dependency_injection()
+    public function test_boot_method_supports_dependency_injection()
     {
         Livewire::test(ComponentWithBootMethodDI::class)
-            ->assertSet('memo', 'boottraitbootbootedtraitbooted')
+            ->assertSetStrict('memo', 'boottraitbootbootedtraitbooted')
             ->call('$refresh')
-            ->assertSet('memo', 'boottraitbootbootedtraitbooted');
+            ->assertSetStrict('memo', 'boottraitbootbootedtraitbooted');
     }
 
-    /** @test */
-    public function it_resolves_the_mount_parameters()
+    public function test_it_resolves_the_mount_parameters()
     {
         $component = Livewire::test(ComponentWithOptionalParameters::class);
         $this->assertSame(null, $component->foo);
@@ -91,8 +87,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(null, $component->bar);
     }
 
-    /** @test */
-    public function it_sets_missing_dynamically_passed_in_parameters_to_null()
+    public function test_it_sets_missing_dynamically_passed_in_parameters_to_null()
     {
         $fooBar = ['foo' => 10, 'bar' => 5];
         $componentWithFooBar = Livewire::test(ComponentWithOptionalParameters::class, $fooBar);
@@ -104,8 +99,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(5, $componentWithFooBar->bar);
         $this->assertSame(null, data_get($componentWithOnlyFoo->instance(), 'bar'));
     }
-    /** @test */
-    public function mount_hook()
+    public function test_mount_hook()
     {
         $component = Livewire::test(ForLifecycleHooks::class);
 
@@ -113,6 +107,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => 0,
             'hydrateFoo' => 0,
+            'rendering' => 1,
+            'rendered' => 1,
             'dehydrate' => 1,
             'dehydrateFoo' => 1,
             'updating' => false,
@@ -126,8 +122,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function update_property()
+    public function test_update_property()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
@@ -146,6 +141,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => 1,
             'hydrateFoo' => 1,
+            'rendering' => 2,
+            'rendered' => 2,
             'dehydrate' => 2,
             'dehydrateFoo' => 2,
             'updating' => true,
@@ -159,8 +156,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function update_nested_properties()
+    public function test_update_nested_properties()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
@@ -197,6 +193,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => 3,
             'hydrateFoo' => 3,
+            'rendering' => 4,
+            'rendered' => 4,
             'dehydrate' => 4,
             'dehydrateFoo' => 4,
             'updating' => true,
@@ -210,8 +208,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function update_nested_properties_with_nested_update_hook()
+    public function test_update_nested_properties_with_nested_update_hook()
     {
         $component = Livewire::test(ForLifecycleHooks::class, [
             'expected' => [
@@ -242,6 +239,8 @@ class UnitTest extends \Tests\TestCase
             'mount' => true,
             'hydrate' => true,
             'hydrateFoo' => true,
+            'rendering' => true,
+            'rendered' => true,
             'dehydrate' => true,
             'dehydrateFoo' => true,
             'updating' => true,
@@ -256,7 +255,7 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class ForProtectedLifecycleHooks extends Component
+class ForProtectedLifecycleHooks extends TestComponent
 {
     public function mount()
     {
@@ -301,11 +300,6 @@ class ForProtectedLifecycleHooks extends Component
     public function updatedFoo($value)
     {
         //
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }
 
@@ -439,7 +433,7 @@ class ComponentWithBootMethodDI extends Component
     }
 }
 
-class ComponentWithOptionalParameters extends Component
+class ComponentWithOptionalParameters extends TestComponent
 {
     public $foo;
     public $bar;
@@ -449,14 +443,9 @@ class ComponentWithOptionalParameters extends Component
         $this->foo = $foo;
         $this->bar = $bar;
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithOnlyFooParameter extends Component
+class ComponentWithOnlyFooParameter extends TestComponent
 {
     public $foo;
 
@@ -464,25 +453,14 @@ class ComponentWithOnlyFooParameter extends Component
     {
         $this->foo = $foo;
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithoutMount extends Component
+class ComponentWithoutMount extends TestComponent
 {
     public $foo = 0;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-
-class ForLifecycleHooks extends Component
+class ForLifecycleHooks extends TestComponent
 {
     public $foo;
 
@@ -496,6 +474,8 @@ class ForLifecycleHooks extends Component
         'mount' => false,
         'hydrate' => 0,
         'hydrateFoo' => 0,
+        'rendering' => 0,
+        'rendered' => 0,
         'dehydrate' => 0,
         'dehydrateFoo' => 0,
         'updating' => false,
@@ -621,8 +601,13 @@ class ForLifecycleHooks extends Component
         $this->lifecycles['updatedBarBaz'] = true;
     }
 
-    public function render()
+    public function rendering()
     {
-        return app('view')->make('null-view');
+        $this->lifecycles['rendering']++;
+    }
+
+    public function rendered()
+    {
+        $this->lifecycles['rendered']++;
     }
 }

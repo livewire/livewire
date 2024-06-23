@@ -29,7 +29,7 @@ class CreatePost extends Component
 			'content' => $this->content,
 		]);
 
-		return $this->redirect('/posts'); // [tl! highlight]
+		$this->redirect('/posts'); // [tl! highlight]
     }
 
     public function render()
@@ -40,6 +40,38 @@ class CreatePost extends Component
 ```
 
 As you can see, when the `save` action is triggered, a redirect will also be triggered to `/posts`. When Livewire receives this response, it will redirect the user to the new URL on the frontend.
+
+## Redirect to Route
+
+In case you want to redirect to a page using its route name you can use the `redirectRoute`.
+
+For example, if you have a page with the route named `'profile'` like this: 
+
+```php
+    Route::get('/user/profile', function () {
+        // ...
+    })->name('profile');
+```
+
+You can use `redirectRoute` to redirect to that page using the name of the route like so:
+
+```php
+    $this->redirectRoute('profile');
+```
+
+In case you need to pass parameters to the route you may use the second argument of the method `redirectRoute` like so:
+
+```php
+    $this->redirectRoute('profile', ['id' => 1]);
+```
+
+## Redirect to intended
+
+In case you want to redirect the user back to the previous page they were on you can use `redirectIntended`. It accepts an optional default URL as its first argument which is used as a fallback if no previous page can be determined:
+
+```php
+    $this->redirectIntended('/default/url');
+```
 
 ## Redirecting to full-page components
 
@@ -60,7 +92,7 @@ public function save()
 {
     // ...
 
-    return $this->redirect(ShowPage::class);
+    $this->redirect(ShowPage::class);
 }
 ```
 
@@ -68,7 +100,7 @@ public function save()
 
 In addition to allowing you to use Laravel's built-in redirection methods, Livewire also supports Laravel's [session flash data utilities](https://laravel.com/docs/session#flash-data).
 
-To pass flash data along with a redirect, you can use Laravel's `->with()` method like so:
+To pass flash data along with a redirect, you can use Laravel's `session()->flash()` method like so:
 
 ```php
 use Livewire\Component;
@@ -81,12 +113,14 @@ class UpdatePost extends Component
     {
         // ...
 
-		return $this->redirect('/posts')->with('status', 'Post updated!');
+        session()->flash('status', 'Post successfully updated.');
+
+        $this->redirect('/posts');
     }
 }
 ```
 
-Assuming the page being redirected to contains the following Blade snippet, the user will see a "Post updated!" message after updating the post:
+Assuming the page being redirected to contain the following Blade snippet, the user will see a "Post successfully updated." message after updating the post:
 
 ```blade
 @if (session('status'))
@@ -94,19 +128,4 @@ Assuming the page being redirected to contains the following Blade snippet, the 
         {{ session('status') }}
     </div>
 @endif
-```
-
-### Flashing without redirecting
-
-Sometimes, you may want to flash data to users from the same component they're interacting with without redirecting them away.
-
-In these cases, you can use Laravel's session data utilities directly from any Livewire action:
-
-```php
-public function update()
-{
-    // ...
-
-    session()->flash('status', 'Post updated!');
-}
 ```

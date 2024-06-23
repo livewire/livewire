@@ -54,10 +54,21 @@ function invade($obj)
         {
             $method = $this->reflected->getMethod($name);
 
-            $method->setAccessible(true);
-
             return $method->invoke($this->obj, ...$params);
         }
+    };
+}
+
+function once($fn)
+{
+    $hasRun = false;
+
+    return function (...$params) use ($fn, &$hasRun) {
+        if ($hasRun) return;
+
+        $hasRun = true;
+
+        return $fn(...$params);
     };
 }
 
@@ -152,6 +163,11 @@ function store($instance = null)
         function has($key, $iKey = null)
         {
             return app(\Livewire\Mechanisms\DataStore::class)->has($this->instance, $key, $iKey);
+        }
+
+        function unset($key, $iKey = null)
+        {
+            return app(\Livewire\Mechanisms\DataStore::class)->unset($this->instance, $key, $iKey);
         }
     };
 }

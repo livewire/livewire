@@ -7,26 +7,31 @@ use Livewire\Livewire;
 
 class TraitsUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function traits_can_intercept_lifecycle_hooks()
+    public function test_traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTraitStub::class)
-            ->assertSet(
+            ->assertSetStrict(
                 'hooksFromTrait',
                 ['initialized', 'mount', 'rendering', 'rendered:show-name', 'dehydrate']
             )
             ->set('foo', 'bar')
-            ->assertSet(
+            ->assertSetStrict(
                 'hooksFromTrait',
                 ['initialized', 'hydrate', 'updating:foobar', 'updated:foobar', 'rendering', 'rendered:show-name', 'dehydrate']
+            )
+            ->call(
+                'testExceptionInterceptor',
+            )
+            ->assertSetStrict(
+                'hooksFromTrait',
+                ['initialized', 'hydrate', 'exception', 'rendering', 'rendered:show-name', 'dehydrate']
             );
     }
 
-    /** @test */
-    public function multiple_traits_can_intercept_lifecycle_hooks()
+    public function test_multiple_traits_can_intercept_lifecycle_hooks()
     {
         Livewire::test(ComponentWithTwoTraitsStub::class)
-            ->assertSet('hooksFromTrait', [
+            ->assertSetStrict('hooksFromTrait', [
                 'initialized', 'secondInitialized',
                 'mount', 'secondMount',
                 'rendering', 'secondRendering',
@@ -34,7 +39,7 @@ class TraitsUnitTest extends \Tests\TestCase
                 'dehydrate', 'secondDehydrate'
             ])
             ->set('foo', 'bar')
-            ->assertSet('hooksFromTrait', [
+            ->assertSetStrict('hooksFromTrait', [
                 'initialized', 'secondInitialized',
                 'hydrate', 'secondHydrate',
                 'updating:foobar', 'secondUpdating:foobar',
@@ -45,8 +50,7 @@ class TraitsUnitTest extends \Tests\TestCase
             ]);
     }
 
-    /** @test */
-    public function calling_test_methods_will_not_run_hooks_from_previous_methods()
+    public function test_calling_test_methods_will_not_run_hooks_from_previous_methods()
     {
         ComponentForTestMethodsStub::$hooksFromTrait = [];
         $test = Livewire::test(ComponentForTestMethodsStub::class);
@@ -70,11 +74,10 @@ class TraitsUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function trait_hooks_are_run_at_the_same_time_as_component_hooks()
+    public function test_trait_hooks_are_run_at_the_same_time_as_component_hooks()
     {
         Livewire::test(ComponentWithTraitStubAndComponentLifecycleHooks::class)
-            ->assertSet(
+            ->assertSetStrict(
                 'hooks',
                 [
                     'bootcomponent',
@@ -85,14 +88,16 @@ class TraitsUnitTest extends \Tests\TestCase
                     'bootedcomponent',
                     'bootedtrait',
                     'rendercomponent',
+                    'renderingcomponent',
                     'renderingtrait',
+                    'renderedcomponent:show-name',
                     'renderedtrait:show-name',
                     'dehydratecomponent',
                     'dehydratetrait',
                 ]
             )
             ->set('foo', 'bar')
-            ->assertSet(
+            ->assertSetStrict(
                 'hooks',
                 [
                     'bootcomponent',
@@ -107,14 +112,40 @@ class TraitsUnitTest extends \Tests\TestCase
                     'updatedcomponent:foobar',
                     'updatedtrait:foobar',
                     'rendercomponent',
+                    'renderingcomponent',
                     'renderingtrait',
+                    'renderedcomponent:show-name',
                     'renderedtrait:show-name',
                     'dehydratecomponent',
                     'dehydratetrait',
                 ]
-            );
+            )
+            ->call('testExceptionInterceptor')
+            ->assertSetStrict(
+                'hooks',
+                [
+                    'bootcomponent',
+                    'boottrait',
+                    'initializedtrait',
+                    'hydratecomponent',
+                    'hydratetrait',
+                    'bootedcomponent',
+                    'bootedtrait',
+                    'exceptioncomponent',
+                    'exceptiontrait',
+                    'rendercomponent',
+                    'renderingcomponent',
+                    'renderingtrait',
+                    'renderedcomponent:show-name',
+                    'renderedtrait:show-name',
+                    'dehydratecomponent',
+                    'dehydratetrait',
+                ]
+                );
     }
 }
+class CustomException extends \Exception {};
+
 
 trait TraitForComponent
 {
@@ -160,6 +191,13 @@ trait TraitForComponent
 
         $this->hooksFromTrait[] = 'initialized';
     }
+    public function exceptionTraitForComponent($e, $stopPropagation)
+    {
+        if($e instanceof CustomException) {
+            $this->hooksFromTrait[] = 'exception';
+            $stopPropagation();
+        }
+    }
 }
 
 class ComponentWithTraitStub extends Component
@@ -169,6 +207,11 @@ class ComponentWithTraitStub extends Component
     public $hooksFromTrait = [];
 
     public $foo = 'bar';
+
+    public function testExceptionInterceptor()
+    {
+        throw new CustomException;
+    }
 
     public function render()
     {
@@ -341,6 +384,12 @@ trait TraitForComponentWithComponentHooks
     public function initializeTraitForComponentWithComponentHooks()
     {$this->hooks[] = 'initializedtrait';
     }
+    public function exceptionTraitForComponentWithComponentHooks($e, $stopPropagation) {
+        if($e instanceof CustomException) {
+            $this->hooks[] = 'exceptiontrait';
+            $stopPropagation();
+        }
+    }
 }
 
 class ComponentWithTraitStubAndComponentLifecycleHooks extends Component
@@ -407,10 +456,22 @@ class ComponentWithTraitStubAndComponentLifecycleHooks extends Component
         $this->hooks[] = 'initializedcomponent';
     }
 
+    public function exception($e, $stopPropagation) {
+        if($e instanceof CustomException) {
+            $this->hooks[] = 'exceptioncomponent';
+            $stopPropagation();
+        }
+    }
+
     public function render()
     {
         $this->hooks[] = 'rendercomponent';
 
         return view('show-name', ['name' => $this->foo]);
+    }
+
+    public function testExceptionInterceptor()
+    {
+        throw new CustomException;
     }
 }

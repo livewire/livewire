@@ -42,9 +42,11 @@ class SupportFormObjects extends ComponentHook
                 $name = $property->getName()
             );
 
-            FormObjectSynth::bootFormObject($this->component, $form, $name);
+            $callBootMethod = FormObjectSynth::bootFormObject($this->component, $form, $name);
 
             $property->setValue($this->component, $form);
+
+            $callBootMethod();
         }
     }
 }

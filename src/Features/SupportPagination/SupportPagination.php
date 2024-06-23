@@ -3,13 +3,13 @@
 namespace Livewire\Features\SupportPagination;
 
 use function Livewire\invade;
-use Illuminate\Pagination\Cursor;
-use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Pagination\Paginator;
-use Livewire\ComponentHook;
-use Livewire\ComponentHookRegistry;
+use Livewire\WithPagination;
 use Livewire\Features\SupportQueryString\SupportQueryString;
-use Livewire\Features\SupportQueryString\Url;
+use Livewire\ComponentHookRegistry;
+use Livewire\ComponentHook;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\Cursor;
 
 class SupportPagination extends ComponentHook
 {
@@ -26,6 +26,11 @@ class SupportPagination extends ComponentHook
     }
 
     protected $restoreOverriddenPaginationViews;
+
+    function skip()
+    {
+        return ! in_array(WithPagination::class, class_uses_recursive($this->component));
+    }
 
     function boot()
     {
@@ -76,6 +81,12 @@ class SupportPagination extends ComponentHook
 
         $this->component->paginators[$pageName] = $this->resolvePage($queryStringDetails['as'], $defaultPage);
 
+        $shouldSkipUrlTracking = in_array(
+            WithoutUrlPagination::class, class_uses_recursive($this->component)
+        );
+
+        if ($shouldSkipUrlTracking) return;
+
         $this->addUrlHook($pageName, $queryStringDetails);
     }
 
@@ -102,17 +113,31 @@ class SupportPagination extends ComponentHook
         $history = $queryStringDetails['history'];
         $keep = $queryStringDetails['keep'];
 
-        // @todo: make this work...
-        $this->component->setPropertyAttribute($key, new Url(as: $alias, history: $history, keep: $keep));
+        $attribute = new PaginationUrl(as: $alias, history: $history, keep: $keep);
+
+        $this->component->setPropertyAttribute($key, $attribute);
+
+        // We need to manually call this in case it's a Lazy component,
+        // in which case the `mount()` lifecycle hook isn't called.
+        // This means it can be called twice, but that's fine...
+        $attribute->setPropertyFromQueryString();
     }
 
     protected function paginationView()
     {
+        if (method_exists($this->component, 'paginationView')) {
+            return $this->component->paginationView();
+        }
+
         return 'livewire::' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 
     protected function paginationSimpleView()
     {
+        if (method_exists($this->component, 'paginationSimpleView')) {
+            return $this->component->paginationSimpleView();
+        }
+
         return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 

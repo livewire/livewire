@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         colors="true"
          stopOnFailure="false"
          backupGlobals="false"
          processIsolation="false"
-         backupStaticAttributes="false"
          bootstrap="vendor/autoload.php"
-         convertDeprecationsToExceptions="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true">
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.4/phpunit.xsd"
+         cacheDirectory=".phpunit.cache"
+         backupStaticProperties="false">
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="UnitTest.php">./src</directory>
@@ -20,4 +19,8 @@
             <directory suffix="Test.php">./legacy_tests/Browser</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <env name="CACHE_STORE" value="file"/>
+        <env name="SESSION_DRIVER" value="file"/>
+    </php>
 </phpunit>

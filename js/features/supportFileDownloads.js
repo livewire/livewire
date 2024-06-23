@@ -1,6 +1,6 @@
-import { on } from '@/events'
+import { on } from '@/hooks'
 
-on('commit', ({ component, succeed }) => {
+on('commit', ({ succeed }) => {
     succeed(({ effects }) => {
         let download = effects.download
 

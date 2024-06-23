@@ -2,7 +2,7 @@
 
 namespace Livewire\Attributes;
 
-use Livewire\Features\SupportWireModelingNestedComponents\Modelable as BaseModelable;
+use Livewire\Features\SupportWireModelingNestedComponents\BaseModelable;
 
 #[\Attribute]
 class Modelable extends BaseModelable

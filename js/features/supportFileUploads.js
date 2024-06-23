@@ -1,5 +1,4 @@
 import { getCsrfToken } from '@/utils';
-import { on } from '@/events'
 
 let uploadManagers = new WeakMap
 
@@ -21,6 +20,7 @@ export function handleFileUpload(el, property, component, cleanup) {
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
     let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
     let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
+    let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property} }))
     let progress = (progressEvent) => {
         var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
 
@@ -37,19 +37,34 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancel)
         }
     }
 
     el.addEventListener('change', eventHandler)
+
+    // If the Livewire property has changed to null or an empty string, then reset the input...
+    component.$wire.$watch(property, (value) => {
+        // This watch will only be released when the component is removed. However, the
+        // actual file-upload element may be removed from the DOM withou the entire
+        // component being removed. In this case, let's just bail early on this.
+        if (! el.isConnected) return
+
+        if (value === null || value === '') {
+            el.value = ''
+        }
+    })
 
     // There's a bug in browsers where selecting a file, removing it,
     // then re-adding it doesn't fire the change event. This fixes it.
     // Reference: https://stackoverflow.com/questions/12030686/html-input-file-selection-event-not-firing-upon-selecting-the-same-file
     let clearFileInputValue = () => { el.value = null }
     el.addEventListener('click', clearFileInputValue)
+
+    // Clear the input if the uploaded is cancelled...
+    el.addEventListener('livewire-upload-cancel', clearFileInputValue)
 
     cleanup(() => {
         el.removeEventListener('change', eventHandler)
@@ -85,23 +100,25 @@ class UploadManager {
         this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
-    upload(name, file, finishCallback, errorCallback, progressCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
         this.setUpload(name, {
             files: [file],
             multiple: false,
             finishCallback,
             errorCallback,
             progressCallback,
+            cancelledCallback,
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
             finishCallback,
             errorCallback,
             progressCallback,
+            cancelledCallback,
         })
     }
 
@@ -110,7 +127,7 @@ class UploadManager {
             tmpFilename, finishCallback
         })
 
-        this.component.$wire.call('removeUpload', name, tmpFilename);
+        this.component.$wire.call('_removeUpload', name, tmpFilename);
     }
 
     setUpload(name, uploadObject) {
@@ -152,6 +169,7 @@ class UploadManager {
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
         let request = new XMLHttpRequest()
+
         request.open(method, url)
 
         Object.entries(headers).forEach(([key, value]) => {
@@ -160,7 +178,7 @@ class UploadManager {
 
         request.upload.addEventListener('progress', e => {
             e.detail = {}
-            e.detail.progress = Math.round((e.loaded * 100) / e.total)
+            e.detail.progress = Math.floor((e.loaded * 100) / e.total)
 
             this.uploadBag.first(name).progressCallback(e)
         })
@@ -169,7 +187,7 @@ class UploadManager {
             if ((request.status+'')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-                this.component.$wire.call('finishUpload', name, paths, this.uploadBag.first(name).multiple)
+                this.component.$wire.call('_finishUpload', name, paths, this.uploadBag.first(name).multiple)
 
                 return
             }
@@ -180,8 +198,10 @@ class UploadManager {
                 errors = request.response
             }
 
-            this.component.$wire.call('uploadErrored', name, errors, this.uploadBag.first(name).multiple)
+            this.component.$wire.call('_uploadErrored', name, errors, this.uploadBag.first(name).multiple)
         })
+
+        this.uploadBag.first(name).request = request
 
         request.send(formData)
     }
@@ -191,7 +211,7 @@ class UploadManager {
             return { name: file.name, size: file.size, type: file.type }
         })
 
-        this.component.$wire.call('startUpload', name, fileInfos, uploadObject.multiple);
+        this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple);
 
         setUploadLoading(this.component, name)
     }
@@ -212,8 +232,23 @@ class UploadManager {
 
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
     }
-}
 
+    cancelUpload(name, cancelledCallback = null) {
+        unsetUploadLoading(this.component)
+
+        let uploadItem = this.uploadBag.first(name);
+
+        if (uploadItem) {
+            if (uploadItem.request) {
+                uploadItem.request.abort();
+            }
+
+            this.uploadBag.shift(name).cancelledCallback();
+
+            if (cancelledCallback) cancelledCallback()
+        }
+    }
+}
 
 export default class MessageBag {
     constructor() {
@@ -275,7 +310,8 @@ export function upload(
     file,
     finishCallback = () => { },
     errorCallback = () => { },
-    progressCallback = () => { }
+    progressCallback = () => { },
+    cancelledCallback = () => { },
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -284,7 +320,8 @@ export function upload(
         file,
         finishCallback,
         errorCallback,
-        progressCallback
+        progressCallback,
+        cancelledCallback,
     )
 }
 
@@ -294,7 +331,8 @@ export function uploadMultiple(
     files,
     finishCallback = () => { },
     errorCallback = () => { },
-    progressCallback = () => { }
+    progressCallback = () => { },
+    cancelledCallback = () => { },
 ) {
     let uploadManager = getUploadManager(component)
 
@@ -303,7 +341,8 @@ export function uploadMultiple(
         files,
         finishCallback,
         errorCallback,
-        progressCallback
+        progressCallback,
+        cancelledCallback,
     )
 }
 
@@ -321,5 +360,18 @@ export function removeUpload(
         tmpFilename,
         finishCallback,
         errorCallback
+    )
+}
+
+export function cancelUpload(
+    component,
+    name,
+    cancelledCallback = () => { }
+) {
+    let uploadManager = getUploadManager(component)
+
+    uploadManager.cancelUpload(
+        name,
+        cancelledCallback
     )
 }

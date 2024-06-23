@@ -18,6 +18,19 @@ class FakeChannel {
 
         return this
     }
+
+    stopListening(eventName, callback) {
+        window.fakeEchoListeners = window.fakeEchoListeners.filter(i => {
+            if (callback) {
+                return ! (i.event === eventName && i.callback === callback)
+            }
+
+            return ! (i.event === eventName)
+        })
+
+
+        return this
+    }
 }
 
 class FakePrivateChannel extends FakeChannel {
@@ -71,6 +84,10 @@ class FakeEcho {
 
     encryptedPrivate(channel) {
         return new FakePrivateChannel(channel);
+    }
+
+    socketId() {
+        return 'fake-socked-id'
     }
 
     // For dusk to trigger listeners...

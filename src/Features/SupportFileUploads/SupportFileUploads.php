@@ -24,7 +24,7 @@ class SupportFileUploads extends ComponentHook
         ]);
 
         on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
-            if ($method === 'startUpload') {
+            if ($method === '_startUpload') {
                 if (! method_exists($component, $method)) {
                     throw new MissingFileUploadsTraitException($component);
                 }
@@ -32,11 +32,9 @@ class SupportFileUploads extends ComponentHook
         });
 
         Route::post('/livewire/upload-file', [FileUploadController::class, 'handle'])
-            ->name('livewire.upload-file')
-            ->middleware('web');
+            ->name('livewire.upload-file');
 
         Route::get('/livewire/preview-file/{filename}', [FilePreviewController::class, 'handle'])
-            ->name('livewire.preview-file')
-            ->middleware('web');
+            ->name('livewire.preview-file');
     }
 }

@@ -36,6 +36,8 @@ class Dashboard extends Component
 
 On this page's initial render, the `Dashboard` component will encounter `<livewire:todo-list />` and render it in place. On a subsequent network request to `Dashboard`, the nested `todo-list` component will skip rendering because it is now its own independent component on the page. For more information on the technical concepts behind nesting and rendering, consult our documentation on why [nested components are "islands"](/docs/understanding-nesting#every-component-is-an-island).
 
+For more information about the syntax for rendering components, consult our documentation on [Rendering Components](/docs/components#rendering-components).
+
 ## Passing props to children
 
 Passing data from a parent component to a child component is straightforward. In fact, it's very much like passing props to a typical [Blade component](https://laravel.com/docs/blade#components).
@@ -125,14 +127,15 @@ Boolean values may be provided to components by only specifying the key. For exa
 <livewire:todo-count :todos="$todos" inline />
 ```
 
-> [!tip]
-> If the name of the property and variable you are passing into the child component match, you can use the following shorter, alternative syntax:
->
-> ```blade
-> <livewire:todo-count :todos="$todos" /> <!-- [tl! remove] -->
->
-> <livewire:todo-count :$todos /> <!-- [tl! add] -->
-> ```
+### Shortened attribute syntax
+
+When passing PHP variables into a component, the variable name and the prop name are often the same. To avoid writing the name twice, Livewire allows you to simply prefix the variable with a colon:
+
+```blade
+<livewire:todo-count :todos="$todos" /> <!-- [tl! remove] -->
+
+<livewire:todo-count :$todos /> <!-- [tl! add] -->
+```
 
 ## Rendering children in a loop
 
@@ -156,16 +159,6 @@ As you can see, each child component will have a unique key set to the ID of eac
 
 > [!warning] Keys aren't optional
 > If you have used frontend frameworks like Vue or Alpine, you are familiar with adding a key to a nested element in a loop. However, in those frameworks, a key isn't _mandatory_, meaning the items will render, but a re-order might not be tracked properly. However, Livewire relies more heavily on keys and will behave incorrectly without them.
-
-### Shortened attribute syntax
-
-When passing PHP variables into a component, the variable name and the prop name are often the same. To avoid writing the name twice, Livewire allows you to simply prefix the variable with a colon:
-
-```blade
-<livewire:todo-item :todo="$todo" /> <!-- [tl! remove] -->
-
-<livewire:todo-item :$todo /> <!-- [tl! add] -->
-```
 
 ## Reactive props
 
@@ -238,10 +231,8 @@ class TodoList extends Component
     public function add()
     {
         Todo::create([
-            'content' => $this->todo,
+            'content' => $this->pull('todo'),
         ]);
-
-        $this->reset('todo');
     }
 
     public function render()
@@ -281,6 +272,7 @@ Below is the `TodoInput` component with the `#[Modelable]` attribute added above
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Modelable;
 
 class TodoInput extends Component
 {
@@ -303,7 +295,7 @@ class TodoInput extends Component
 Now the parent `TodoList` component can treat `TodoInput` like any other input element and bind directly to its value using `wire:model`.
 
 > [!warning]
-> Currently Livewire only support a single `#[Modelable]` attribute, only the first one will be bound.
+> Currently Livewire only supports a single `#[Modelable]` attribute, so only the first one will be bound.
 
 
 ## Listening for events from children
@@ -361,6 +353,7 @@ namespace App\Livewire;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Models\Todo;
+use Livewire\Attributes\On;
 
 class TodoList extends Component
 {
@@ -506,7 +499,7 @@ class Steps extends Component
 
     public function next()
     {
-        $currentIndex = array_search($this->steps, $this->current);
+        $currentIndex = array_search($this->current, $this->steps);
 
         $this->current = $this->steps[$currentIndex + 1];
     }
@@ -520,13 +513,13 @@ class Steps extends Component
 
 ```blade
 <div>
-    <livewire:dynamic-component :is="$current" />
+    <livewire:dynamic-component :is="$current" :key="$current" />
 
     <button wire:click="next">Next</button>
 </div>
 ```
 
-Now, if the `Steps` component's `$current` prop is set to "step-1", Livewire will render a component named "step-one" like so:
+Now, if the `Steps` component's `$current` prop is set to "step-one", Livewire will render a component named "step-one" like so:
 
 ```php
 <?php
@@ -543,6 +536,17 @@ class StepOne extends Component
     }
 }
 ```
+
+If you prefer, you can use the alternative syntax:
+
+```blade
+<livewire:is :component="$current" :key="$current" />
+```
+
+> [!warning]
+> Don't forget to assign each child component a unique key. Although Livewire automatically generates a key for `<livewire:dynamic-child />` and `<livewire:is />`, that same key will apply to _all_ your child components, meaning subsequent renders will be skipped.
+> 
+> See [forcing a child component to re-render](#forcing-a-child-component-to-re-render) for a deeper understanding of how keys affect component rendering.
 
 ## Recursive components
 
@@ -576,7 +580,7 @@ class SurveyQuestion extends Component
     Question: {{ $question->content }}
 
     @foreach ($subQuestions as $subQuestion)
-        <livewire:survey-question :question="$subQuestion" />
+        <livewire:survey-question :question="$subQuestion" :key="$subQuestion->id" />
     @endforeach
 </div>
 ```

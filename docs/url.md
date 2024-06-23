@@ -32,7 +32,7 @@ class ShowUsers extends Component
 
     <ul>
         @foreach ($users as $user)
-            <li>{{ $user->name }}</li>
+            <li wire:key="{{ $user->id }}">{{ $user->name }}</li>
         @endforeach
     </ul>
 </div>
@@ -85,7 +85,7 @@ For example, if a user visits the URL `https://example.com/users?search=bob`, Li
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url]
     public $search = ''; // Will be set to "bob"...
@@ -93,6 +93,29 @@ class ShowUsers extend Component
     // ...
 }
 ```
+
+### Nullable properties
+
+By default, if a page is loaded with an empty query string entry like `?search=`, Livewire will treat that value as an empty string. In many cases, this is expected, however there are times when you want `?search=` to be treated as `null`.
+
+In these cases, you can use a nullable typehint like so:
+
+```php
+use Livewire\Attributes\Url;
+use Livewire\Component;
+
+class ShowUsers extends Component
+{
+    #[Url]
+    public ?string $search; // [tl! highlight]
+
+    // ...
+}
+```
+
+Because `?` is present in the above typehint, Livewire will see `?search=` and set `$search` to `null` instead of an empty string.
+
+This works the other way around as well, if you set `$this->search = null` in your application, it will be represented in the query string as `?search=`.
 
 ## Using an alias
 
@@ -104,7 +127,7 @@ You can specify a query string alias by providing the `as` parameter to the `#[U
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(as: 'q')]
     public $search = '';
@@ -114,6 +137,31 @@ class ShowUsers extend Component
 ```
 
 Now, when a user types "bob" into the search field, the URL will show: `https://example.com/users?q=bob` instead of `?search=bob`.
+
+## Excluding certain values
+
+By default, Livewire will only put an entry in the query string when it's value has changed from what it was at initialization. Most of the time, this is the desired behavior, however, there are certain scenarios where you may want more control over which value Livewire excludes from the query string. In these cases you can use the `except` parameter.
+
+For example, in the component below, the initial value of `$search` is modified in `mount()`. To ensure the browser will only ever exclude `search` from the query string if the `search` value is an empty string, the `except` parameter has been added to `#[Url]`:
+
+```php
+use Livewire\Attributes\Url;
+use Livewire\Component;
+
+class ShowUsers extends Component
+{
+    #[Url(except: '')]
+    public $search = '';
+
+    public function mount() {
+        $this->search = auth()->user()->username;
+    }
+
+    // ...
+}
+```
+
+Without `except` in the above example, Livewire would remove the `search` entry from the query string any time the value of `search` is equal to the initial value of `auth()->user()->username`. Instead, because `except: ''` has been used, Livewire will preserve all query string values except when `search` is an empty string.
 
 ## Display on page load
 
@@ -125,7 +173,7 @@ If you want the `?search` entry to always be included in the query string, even 
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(keep: true)]
     public $search = '';
@@ -145,10 +193,10 @@ Because Livewire "replaces" the current history, pressing the "back" button in t
 To force Livewire to use `history.pushState` when updating the URL, you can provide the `history` parameter to the `#[Url]` attribute:
 
 ```php
+use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\With\Url;
 
-class ShowUsers extend Component
+class ShowUsers extends Component
 {
     #[Url(history: true)]
     public $search = '';
@@ -158,3 +206,44 @@ class ShowUsers extend Component
 ```
 
 In the example above, when a user changes the search value from "bob" to "frank" and then clicks the browser's back button, the search value (and the URL) will be set back to "bob" instead of navigating to the previously visited page.
+
+## Using the queryString method
+
+The query string can also be defined as a method on the component. This can be useful if some properties have dynamic options.
+
+```php
+use Livewire\Component;
+
+class ShowUsers extends Component
+{
+    // ...
+
+    protected function queryString()
+    {
+        return [
+            'search' => [
+                'as' => 'q',
+            ],
+        ];
+    }
+}
+```
+
+## Trait hooks
+
+Livewire offers [hooks](/docs/lifecycle-hooks) for query strings as well.
+
+```php
+trait WithSorting
+{
+    // ...
+
+    protected function queryStringWithSorting()
+    {
+        return [
+            'sortBy' => ['as' => 'sort'],
+            'sortDirection' => ['as' => 'direction'],
+        ];
+    }
+}
+```

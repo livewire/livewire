@@ -4,18 +4,8 @@ namespace Livewire\Mechanisms;
 
 use WeakMap;
 
-class DataStore
+class DataStore extends Mechanism
 {
-    function register()
-    {
-        app()->singleton($this::class);
-    }
-
-    function boot()
-    {
-        //
-    }
-
     protected $lookup;
 
     function __construct()
@@ -42,7 +32,7 @@ class DataStore
         }
 
         if ($iKey !== null) {
-            return !! $this->lookup[$instance][$key][$iKey] ?? false;
+            return !! ($this->lookup[$instance][$key][$iKey] ?? false);
         }
 
         return true;
@@ -94,6 +84,33 @@ class DataStore
             $this->lookup[$instance][$key][$iKey] = $value;
         } else {
             $this->lookup[$instance][$key][] = $value;
+        }
+    }
+
+    function unset($instance, $key, $iKey = null)
+    {
+        if (! isset($this->lookup[$instance])) {
+            return;
+        }
+
+        if (! isset($this->lookup[$instance][$key])) {
+            return;
+        }
+
+        if ($iKey !== null) {
+            // Set a local variable to avoid the "indirect modification" error.
+            $keyValue = $this->lookup[$instance][$key];
+
+            unset($keyValue[$iKey]);
+
+            $this->lookup[$instance][$key] = $keyValue;
+        } else {
+            // Set a local variable to avoid the "indirect modification" error.
+            $instanceValue = $this->lookup[$instance];
+
+            unset($instanceValue[$key]);
+
+            $this->lookup[$instance] = $instanceValue;
         }
     }
 }

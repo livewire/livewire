@@ -12,8 +12,7 @@ class DataBindingModelsBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function it_displays_all_nested_data()
+    public function test_it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, DataBindingComponent::class)
@@ -29,8 +28,7 @@ class DataBindingModelsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
-    public function it_enables_nested_data_to_be_changed()
+    public function test_it_enables_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, DataBindingComponent::class)
@@ -64,11 +62,22 @@ class DataBindingModelsBrowserTest extends TestCase
         $author->posts[0]->comments[1]->author->name = 'John';
         $author->push();
     }
+
+    public function test_it_enables_changing_model_attributes_that_have_not_been_initialized_using_entangle()
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitLivewireComponent($browser, DataBindingComponent::class)
+                ->waitForLivewire()->type('@post.title', 'Livewire is awesome')
+                ->assertSeeIn('@output.post.title', 'Livewire is awesome');
+        });
+    }
 }
 
 class DataBindingComponent extends BaseComponent
 {
     public $author;
+
+    public ?DataBindingPost $thepost;
 
     protected $rules = [
         'author.name' => '',
@@ -76,11 +85,14 @@ class DataBindingComponent extends BaseComponent
         'author.posts.*.title' => '',
         'author.posts.*.comments.*.comment' => '',
         'author.posts.*.comments.*.author.name' => '',
+        'thepost.title' => '',
     ];
 
     public function mount()
     {
         $this->author = DataBindingAuthor::with(['posts', 'posts.comments', 'posts.comments.author'])->first();
+
+        $this->thepost = new DataBindingPost();
     }
 
     public function save()
@@ -134,6 +146,12 @@ class DataBindingComponent extends BaseComponent
     </div>
 
     <button wire:click="save" type="button" dusk="save">Save</button>
+
+    <div x-data="{ title: @entangle('thepost.title').live }">
+        Post Title
+        <input dusk='post.title' x-model='title' />
+        <span dusk='output.post.title'>{{ $thepost->title }}</span>
+    </div>
 </div>
 HTML;
     }

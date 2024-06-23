@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportAutoInjectedAssets;
 
+use Livewire\Livewire;
 use Tests\TestComponent;
 use Tests\TestCase;
 use Livewire\Mechanisms\FrontendAssets\FrontendAssets;
@@ -10,13 +11,12 @@ use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends TestCase
 {
-    /** @test */
-    public function it_injects_livewire_assets_before_closing_tags(): void
+    public function test_it_injects_livewire_assets_before_closing_tags(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <!doctype html>
             <html>
                 <head>
@@ -29,23 +29,22 @@ class UnitTest extends TestCase
         HTML, <<<HTML
             <!doctype html>
             <html>
-                <head>$livewireStyles
+                <head>
                     <meta charset="utf-8"/>
                     <title></title>
-                </head>
+                $livewireStyles</head>
                 <body>
                 $livewireScripts</body>
             </html>
         HTML);
     }
 
-    /** @test */
-    public function it_injects_livewire_assets_html_only(): void
+    public function test_it_injects_livewire_assets_html_only(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <html>
                 <yolo />
             </html>
@@ -56,13 +55,12 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
-    public function it_injects_livewire_assets_weirdly_formatted_html(): void
+    public function test_it_injects_livewire_assets_weirdly_formatted_html(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <!doctype html>
             <html
                 lang="en"
@@ -82,10 +80,10 @@ class UnitTest extends TestCase
                 lang="en"
             >
                 <head
-                >$livewireStyles
+                >
                     <meta charset="utf-8"/>
                     <title></title>
-                </head>
+                $livewireStyles</head>
                 <body>
                 $livewireScripts</body
                 >
@@ -93,13 +91,12 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
-    public function it_injects_livewire_assets_html_with_header(): void
+    public function test_it_injects_livewire_assets_html_with_header(): void
     {
-        $livewireStyles = FrontendAssets::styles();
-        $livewireScripts = FrontendAssets::scripts();
-
-        $this->compare(<<<'HTML'
+        $this->compare(
+            $livewireStyles = FrontendAssets::styles(),
+            $livewireScripts = FrontendAssets::scripts(),
+        <<<'HTML'
             <!doctype html>
             <HTML
                 lang="en"
@@ -120,10 +117,10 @@ class UnitTest extends TestCase
                 lang="en"
             >
                 <Head
-                >$livewireStyles
+                >
                     <meta charset="utf-8"/>
                     <title></title>
-                </Head>
+                $livewireStyles</Head>
                 <bOdY>
                     <header class=""></header>
                 $livewireScripts</bOdY
@@ -132,20 +129,48 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
-    public function can_disable_auto_injection_using_global_method(): void
+    public function test_can_disable_auto_injection_using_global_method(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
-    public function can_disable_auto_injection_using_config(): void
+    public function test_can_disable_auto_injection_using_config(): void
     {
-        $this->markTestIncomplete();
+        config()->set('livewire.inject_assets', false);
+
+        Route::get('/with-livewire', function () {
+            return (new class Extends TestComponent {})();
+        });
+
+        Route::get('/without-livewire', function () {
+            return Blade::render('<html></html>');
+        });
+
+        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.min.js');
+        $this->get('/with-livewire')->assertDontSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
-    public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
+    public function test_can_force_injection_over_config(): void
+    {
+        config()->set('livewire.inject_assets', false);
+
+        Route::get('/with-livewire', function () {
+            return (new class Extends TestComponent {})();
+        });
+
+        Route::get('/without-livewire', function () {
+            return '<html></html>';
+        });
+
+        \Livewire\Livewire::forceAssetInjection();
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
+
+        \Livewire\Livewire::flushState();
+        \Livewire\Livewire::forceAssetInjection();
+        $this->get('/without-livewire')->assertSee('/livewire/livewire.min.js');
+    }
+
+    public function test_only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
         Route::get('/with-livewire', function () {
             return (new class Extends TestComponent {})();
@@ -155,12 +180,11 @@ class UnitTest extends TestCase
             return '<html></html>';
         });
 
-        $this->get('/with-livewire')->assertSee('/livewire/livewire.js');
-        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.js');
+        $this->get('/without-livewire')->assertDontSee('/livewire/livewire.min.js');
+        $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
-    public function only_auto_injects_when_persist_was_rendered_on_the_page(): void
+    public function test_only_auto_injects_when_persist_was_rendered_on_the_page(): void
     {
         Route::get('/with-persist', function () {
             return Blade::render('<html>@persist("foo") ... @endpersist</html>');
@@ -170,24 +194,51 @@ class UnitTest extends TestCase
             return '<html></html>';
         });
 
-        $this->get('/with-persist')->assertSee('/livewire/livewire.js');
-        $this->get('/without-persist')->assertDontSee('/livewire/livewire.js');
+        $this->get('/without-persist')->assertDontSee('/livewire/livewire.min.js');
+        $this->get('/with-persist')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
-    public function only_injects_on_full_page_loads(): void
+    public function test_only_injects_on_full_page_loads(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
-    public function only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles(): void
+    public function test_only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles(): void
     {
         $this->markTestIncomplete();
     }
 
-    protected function compare(string $original, string $expected): void
+    public function test_response_maintains_original_view_after_asset_injection(): void
     {
-        $this->assertEquals($expected, SupportAutoInjectedAssets::injectAssets($original));
+        Livewire::component('foo', new class extends \Livewire\Component {
+            public function render() {
+                return '<div>Foo!</div>';
+            }
+        });
+
+        $view = view('uses-component')->with('variable', 'cheese');
+
+        Route::get('/with-livewire', fn() => $view);
+
+        $response = $this->get('/with-livewire');
+
+        $this->assertEquals($view, $response->original);
+
+        $response
+            ->assertSee('cheese')
+            ->assertViewIs('uses-component')
+            ->assertViewHas('variable', 'cheese');
+    }
+
+    protected function compare($forHead, $forBody, string $original, string $expected): void
+    {
+        $this->assertEquals($expected, SupportAutoInjectedAssets::injectAssets($original, $forHead, $forBody));
+    }
+
+    public function makeACleanSlate()
+    {
+        \Livewire\Livewire::flushState();
+
+        parent::makeACleanSlate();
     }
 }

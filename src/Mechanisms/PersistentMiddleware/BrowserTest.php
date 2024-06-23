@@ -1,5 +1,7 @@
 <?php
 
+
+
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Closure;
@@ -71,6 +73,9 @@ class BrowserTest extends BrowserTestCase
 
                 return app()->call(new $class);
             })->middleware(['web', 'auth', 'can:update,post']);
+
+            Route::get('/with-authorization/{post}/inline-auth', Component::class)
+                ->middleware(['web', 'auth', 'can:update,post']);
         };
     }
     public function test_that_persistent_middleware_is_applied_to_subsequent_livewire_requests()
@@ -202,7 +207,7 @@ JS;
                 User::where('id', 1)->update(['banned' => false]); // Reset the user. Sometimes it's cached(?.
             })
             ->visit('/force-login/1')
-            ->visit('/with-redirects/livewire-dusk/'.urlencode(Component::class))
+            ->visit('/with-redirects/livewire-dusk/' . urlencode(Component::class))
             ->assertSee('Protected Content')
             ->tap(function () {
                 User::where('id', 1)->update(['banned' => true]);
@@ -210,6 +215,56 @@ JS;
             ->waitForLivewire()
             ->click('@refresh')
             ->assertPathIs('/force-logout')
+        ;
+    }
+
+    public function test_that_authorization_middleware_is_re_applied_on_page_components()
+    {
+        // This test relies on "app('router')->subsituteImplicitBindingsUsing()"...
+        if (app()->version() < '10.37.1') {
+            $this->markTestSkipped();
+        }
+
+        Livewire::visit(Component::class)
+            ->visit('/with-authorization/1/inline-auth')
+            ->assertDontSee('Protected Content')
+            ->visit('/force-login/1')
+            ->visit('/with-authorization/1/inline-auth')
+            ->assertSee('Protected Content')
+            ->waitForLivewireToLoad()
+            ->tap(function ($b) {
+                $script = <<<'JS'
+                    let unDecoratedFetch = window.fetch
+                    let decoratedFetch = (...args) => {
+                        window.localStorage.setItem(
+                            'lastFetchArgs',
+                            JSON.stringify(args),
+                        )
+
+                        return unDecoratedFetch(...args)
+                    }
+                    window.fetch = decoratedFetch
+JS;
+
+                $b->script($script);
+            })
+            ->waitForLivewire()->click('@changeProtected')
+            ->assertDontSee('Protected Content')
+            ->assertSee('Still Secure Content')
+            ->visit('/force-login/2')
+            ->tap(function ($b) {
+                $script = <<<'JS'
+                    let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
+
+                    window.fetch(...args).then(i => i.text()).then(response => {
+                        document.body.textContent = 'response-ready: '+JSON.stringify(response)
+                    })
+JS;
+
+                $b->script($script);
+            })
+            ->waitForText('response-ready: ')
+            ->assertDontSee('Protected Content')
         ;
     }
 }
@@ -294,6 +349,11 @@ class Component extends BaseComponent
     public $middleware = [];
     public $showNested = false;
     public $changeProtected = false;
+
+    public function mount(Post $post)
+    {
+        //
+    }
 
     public function showNestedComponent()
     {

@@ -1,0 +1,9 @@
+<?php
+
+use [classwithnamespace];
+use Livewire\Livewire;
+
+it('renders successfully', function () {
+    Livewire::test([class]::class)
+        ->assertStatus(200);
+});

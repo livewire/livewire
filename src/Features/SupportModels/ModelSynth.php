@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportModels;
 
+use Illuminate\Database\ClassMorphViolationException;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
@@ -17,23 +18,34 @@ class ModelSynth extends Synth {
     }
 
     function dehydrate($target) {
-        if (! $target->exists) {
-            throw new \Exception('Can\'t set model as property if it hasn\'t been persisted yet');
+        $class = $target::class;
+        
+        try {
+            // If no alias is found, this just returns the class name
+            $alias = $target->getMorphClass();
+        } catch (ClassMorphViolationException $e) {
+            // If the model is not using morph classes, this exception is thrown
+            $alias = $class;
         }
 
-        // If no alias is found, this just returns the class name
-        $alias = $target->getMorphClass();
+        $serializedModel = $target->exists
+            ? (array) $this->getSerializedPropertyValue($target)
+            : null;
 
-        $serializedModel = (array) $this->getSerializedPropertyValue($target);
+        $meta = ['class' => $alias];
+
+        // If the model doesn't exist as it's an empty model or has been
+        // recently deleted, then we don't want to include any key.
+        if ($serializedModel) $meta['key'] = $serializedModel['id'];
+        
 
         return [
             null,
-            ['class' => $alias, 'key' => $serializedModel['id']],
+            $meta,
         ];
     }
 
     function hydrate($data, $meta) {
-        $key = $meta['key'];
         $class = $meta['class'];
 
         // If no alias found, this returns `null`
@@ -42,6 +54,13 @@ class ModelSynth extends Synth {
         if (! is_null($aliasClass)) {
             $class = $aliasClass;
         }
+
+        // If no key is provided then an empty model is returned
+        if (! array_key_exists('key', $meta)) {
+            return new $class;
+        }
+
+        $key = $meta['key'];
 
         $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
 

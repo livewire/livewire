@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportJsEvaluation;
 
-use Livewire\ComponentHook;
-
 use function Livewire\store;
+
+use Livewire\ComponentHook;
 
 class SupportJsEvaluation extends ComponentHook
 {

@@ -3,9 +3,10 @@
 namespace Livewire\Features\SupportTesting;
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Dusk\Browser;
+use PHPUnit\Framework\TestCase;
 use function Livewire\{ invade, on };
 use Illuminate\Support\Arr;
-use Tests\TestCase;
 
 class DuskTestable
 {
@@ -15,11 +16,7 @@ class DuskTestable
     public static $browser;
 
     static function provide() {
-        Route::get('livewire-dusk/{component}', function ($component) {
-            $class = urldecode($component);
-
-            return app()->call(app('livewire')->new($class));
-        })->middleware('web');
+        Route::get('livewire-dusk/{component}', ShowDuskComponent::class)->middleware('web');
 
         on('browser.testCase.setUp', function ($testCase) {
             static::$currentTestCase = $testCase;
@@ -27,8 +24,8 @@ class DuskTestable
 
             $tweakApplication = $testCase::tweakApplicationHook();
 
-            invade($testCase)->tweakApplication(function () use ($tweakApplication) {
-                config()->set('app.debug', true);
+            invade($testCase)->beforeServingApplication(function ($app, $config) use ($tweakApplication) {
+                $config->set('app.debug', true);
 
                 if (is_callable($tweakApplication)) $tweakApplication();
 
@@ -44,13 +41,16 @@ class DuskTestable
             static::$currentTestCase = null;
         });
 
-        if (isset($_SERVER['CI'])) {
+        if (isset($_SERVER['CI']) && class_exists(\Orchestra\Testbench\Dusk\Options::class)) {
             \Orchestra\Testbench\Dusk\Options::withoutUI();
         }
 
         \Laravel\Dusk\Browser::mixin(new DuskBrowserMacros);
     }
 
+    /**
+     * @return Browser
+     */
     static function create($components, $params = [], $queryParams = [])
     {
         if (static::$shortCircuitCreateCall) {
@@ -71,15 +71,28 @@ class DuskTestable
 
         $components = [$id => $firstComponent, ...$components];
 
+        return static::createBrowser($id, $components, $params, $queryParams)->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
+    }
+
+    static function createBrowser($id, $components, $params = [], $queryParams = [])
+    {
+        if (static::$shortCircuitCreateCall) {
+            throw new class ($components) extends \Exception {
+                public $components;
+                public $isDuskShortcircuit = true;
+                function __construct($components) {
+                    $this->components = $components;
+                }
+            };
+        }
+
         [$class, $method] = static::findTestClassAndMethodThatCalledThis();
 
         static::registerComponentsForNextTest([$id, $class, $method]);
 
         $testCase = invade(static::$currentTestCase);
 
-        static::$browser = $testCase->newBrowser($testCase->createWebDriver());
-
-        return static::$browser->visit('/livewire-dusk/'.$id.'?'.Arr::query($queryParams));
+        return static::$browser = $testCase->newBrowser($testCase->createWebDriver());
     }
 
     static function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
@@ -116,7 +129,13 @@ class DuskTestable
 
             $components = null;
 
-            try { (new $testClass)->$method(); } catch (\Exception $e) {
+            try {
+                if (\Orchestra\Testbench\phpunit_version_compare('10.0', '>=')) {
+                    (new $testClass($method))->$method();
+                } else {
+                    (new $testClass())->$method();
+                }
+            } catch (\Exception $e) {
                 if (! $e->isDuskShortcircuit) throw $e;
                 $components = $e->components;
             }

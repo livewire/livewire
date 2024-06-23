@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_register_a_custom_update_endpoint()
+    public function test_can_register_a_custom_update_endpoint()
     {
         Livewire::setUpdateRoute(function ($handle) {
             return Route::post('/custom/update', function () use ($handle) {

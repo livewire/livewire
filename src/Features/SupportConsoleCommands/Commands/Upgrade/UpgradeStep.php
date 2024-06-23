@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportConsoleCommands\Commands\Upgrade;
 
-use Arr;
+use Illuminate\Support\Arr;
 use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -70,7 +70,7 @@ abstract class UpgradeStep
 
         $this->beforeAfterView($console, $before, $after);
 
-        $confirm = $console->confirm("Would you like to apply these changes?", true);
+        $confirm = $console->confirm('Would you like to apply these changes?', true);
 
         if ($confirm) {
             $console->newLine();
@@ -79,7 +79,7 @@ abstract class UpgradeStep
 
             if($replacements->isEmpty())
             {
-                $console->line("No occurrences of were found.");
+                $console->line('No occurrences of were found.');
             }
 
             if($replacements->isNotEmpty()) {

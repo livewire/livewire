@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class InlineBladeTemplatesUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function renders_inline_blade_template()
+    public function test_renders_inline_blade_template()
     {
         Livewire::test(ComponentWithInlineBladeTemplate::class)
             ->assertSee('foo');

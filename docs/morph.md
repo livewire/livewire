@@ -27,15 +27,15 @@ class Todos extends Component
 ```
 
 ```blade
-<div wire:submit="add">
+<form wire:submit="add">
     <ul>
-        @foreach ($todos as $todo)
-            <li>{{ $todo }}</li>
+        @foreach ($todos as $item)
+            <li>{{ $item }}</li>
         @endforeach
     </ul>
 
     <input wire:model="todo">
-</div>
+</form>
 ```
 
 The initial render of this component will output the following HTML:
@@ -95,7 +95,7 @@ Consider the following Livewire Blade template for a fictitious `CreatePost` com
     <div>
         <button>Save</button>
     </div>
-<div>
+</form>
 ```
 
 If a user tries submitting the form, but encounters a validation error, the following problem occurs:
@@ -109,7 +109,7 @@ To re-iterate what's happening more explicitly:
 * Livewire encounters the first `<div>` in both trees. They are the same, so it continues.
 * Livewire encounters the second `<div>` in both trees and thinks they are the same `<div>`, just one has changed contents. So instead of inserting the error message as a new element, it changes the `<button>` into an error message.
 * Livewire then, after mistakenly modifying the previous element, notices an additional element at the end of the comparison. It then creates and appends the element after the previous one.
-* Therefore destroying, then re-creating an element that otherwise should have been simply moved.
+* Therefore, destroying, then re-creating an element that otherwise should have been simply moved.
 
 This scenario is at the root of almost all morph-related bugs.
 
@@ -133,7 +133,7 @@ Here is a visualization of the "look-ahead" algorithm in action:
 
 ### Injecting morph markers
 
-On the backend, Livewire automatically detects conditionals inside Blade templates and wraps them in markers that Livewire's JavaScript can use as a guide when morphing.
+On the backend, Livewire automatically detects conditionals inside Blade templates and wraps them in HTML comment markers that Livewire's JavaScript can use as a guide when morphing.
 
 Here's an example of the previous Blade template but with Livewire's injected markers:
 
@@ -143,16 +143,16 @@ Here's an example of the previous Blade template but with Livewire's injected ma
         <input wire:model="title">
     </div>
 
-    <!-- __BLOCK__ --> <!-- [tl! highlight] -->
+    <!--[if BLOCK]><![endif]--> <!-- [tl! highlight] -->
     @if ($errors->has('title'))
         <div>Error: {{ $errors->first('title') }}</div>
     @endif
-    <!-- ENDBLOCK --> <!-- [tl! highlight] -->
+    <!--[if ENDBLOCK]><![endif]--> <!-- [tl! highlight] -->
 
     <div>
         <button>Save</button>
     </div>
-<div>
+</form>
 ```
 
 With these markers injected into the template, Livewire can now more easily detect the difference between a change and an addition.
@@ -184,8 +184,11 @@ For example, here's the above Blade template rewritten with wrapping `<div>` ele
     <div>
         <button>Save</button>
     </div>
-<div>
+</form>
 ```
 
 Now that the conditional has been wrapped in a persistent element, Livewire will morph the two different HTML trees properly.
 
+#### Bypassing morphing
+
+If you need to bypass morphing entirely for an element, you can use [wire:replace](/docs/wire-replace) to instruct livewire to replace all children of an element instead of attempting to morph the existing elements.

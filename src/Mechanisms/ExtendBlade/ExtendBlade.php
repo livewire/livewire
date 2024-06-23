@@ -3,10 +3,11 @@
 namespace Livewire\Mechanisms\ExtendBlade;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Mechanisms\Mechanism;
 use function Livewire\invade;
 use function Livewire\on;
 
-class ExtendBlade
+class ExtendBlade extends Mechanism
 {
     protected $directives = [];
     protected $precompilers = [];
@@ -34,15 +35,8 @@ class ExtendBlade
         return ! empty(static::$livewireComponents);
     }
 
-    function register()
-    {
-        //
-    }
-
     function boot()
     {
-        app()->singleton($this::class, fn () => $this);
-
         Blade::directive('this', fn() => "window.Livewire.find('{{ \$_instance->getId() }}')");
 
         on('render', function ($target, $view) {
@@ -71,6 +65,21 @@ class ExtendBlade
         app()->make('view.engine.resolver')->register('blade', function () {
             return new ExtendedCompilerEngine(app('blade.compiler'));
         });
+
+        app()->singleton(DeterministicBladeKeys::class);
+
+        // Reset this singleton between tests and Octane requests...
+        on('flush-state', function () {
+            app()->singleton(DeterministicBladeKeys::class);
+        });
+
+        // We're using "precompiler" as a hook for the point in time when
+        // Laravel compiles a Blade view...
+        app('blade.compiler')->precompiler(function ($value) {
+            app(DeterministicBladeKeys::class)->hookIntoCompile(app('blade.compiler'), $value);
+
+            return $value;
+        });
     }
 
     function livewireOnlyDirective($name, $handler)
@@ -78,13 +87,9 @@ class ExtendBlade
         $this->directives[$name] = $handler;
     }
 
-    function livewireOnlyPrecompiler($pattern, $handler)
+    function livewireOnlyPrecompiler($handler)
     {
-        $this->precompilers[] = function ($string) use ($pattern, $handler) {
-            return preg_replace_callback($pattern, function ($matches) use ($handler, $string) {
-                return $handler($matches, $string);
-            }, $string);
-        };
+        $this->precompilers[] = $handler;
     }
 
     function livewireifyBladeCompiler() {

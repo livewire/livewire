@@ -9,6 +9,7 @@ use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidation
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
+use Tests\TestComponent;
 use function Livewire\invade;
 
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
@@ -26,44 +27,41 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         });
     }
 
-    /** @test */
-    public function can_set_a_model_attribute_and_save()
+    public function test_can_set_a_model_attribute_and_save()
     {
         $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
 
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
-            ->assertSet('model.title', 'foo')
+            ->assertSetStrict('model.title', 'foo')
             ->set('model.title', 'ba')
-            ->assertSet('model.title', 'ba')
+            ->assertSetStrict('model.title', 'ba')
             ->call('refreshModel')
-            ->assertSet('model.title', 'foo')
+            ->assertSetStrict('model.title', 'foo')
             ->set('model.title', 'ba')
             ->call('save')
             ->assertHasErrors('model.title')
             ->set('model.title', 'bar')
             ->call('save')
             ->call('refreshModel')
-            ->assertSet('model.title', 'bar');
+            ->assertSetStrict('model.title', 'bar');
     }
 
 
-    /** @test */
-    public function a_non_existant_eloquent_model_can_be_set()
+    public function test_a_non_existant_eloquent_model_can_be_set()
     {
         $model = new ModelForAttributeBinding;
 
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
             ->assertNotSet('model.title', 'foo')
             ->set('model.title', 'i-exist-now')
-            ->assertSet('model.title', 'i-exist-now')
+            ->assertSetStrict('model.title', 'i-exist-now')
             ->call('save')
-            ->assertSet('model.title', 'i-exist-now');
+            ->assertSetStrict('model.title', 'i-exist-now');
 
         $this->assertTrue(ModelForAttributeBinding::whereTitle('i-exist-now')->exists());
     }
 
-    /** @test */
-    public function cant_set_a_model_attribute_that_isnt_present_in_rules_array()
+    public function test_cant_set_a_model_attribute_that_isnt_present_in_rules_array()
     {
         $this->expectException(CannotBindToModelDataWithoutValidationRuleException::class);
 
@@ -71,11 +69,10 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
             ->set('model.id', 2)
-            ->assertSet('model.id', null);
+            ->assertSetStrict('model.id', null);
     }
 
-    /** @test */
-    public function an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
+    public function test_an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
     {
         $this->expectException(CorruptComponentPayloadException::class);
 
@@ -88,6 +85,15 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 
         $component->call('$refresh');
     }
+
+    public function test_an_eloquent_model_property_can_be_set_to_null()
+    {
+        $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
+
+        Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
+            ->set('model', null)
+            ->assertSuccessful();
+    }
 }
 
 class ModelForAttributeBinding extends Model
@@ -96,7 +102,7 @@ class ModelForAttributeBinding extends Model
     protected $guarded = [];
 }
 
-class ComponentWithModelProperty extends Component
+class ComponentWithModelProperty extends TestComponent
 {
     public $model;
 
@@ -120,25 +126,15 @@ class ComponentWithModelProperty extends Component
     {
         $this->model->refresh();
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithoutRulesArray extends Component
+class ComponentWithoutRulesArray extends TestComponent
 {
     public $model;
 
     public function mount(ModelForAttributeBinding $model)
     {
         $this->model = $model;
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }
 

@@ -2,16 +2,17 @@ Livewire provides a variety of lifecycle hooks that allow you to execute code at
 
 Here's a list of all the available component lifecycle hooks:
 
-| Hook Method        | Description                               |
-|-----------------|-------------------------------------------|
-| `mount()`    | Called when a component is created |
-| `hydrate()`    | Called when a component is re-hydrated at the beginning of a subsequent request |
-| `boot()`    | Called at the beginning of every request. Both initial, and subsequent |
-| `updating()`    | Called before updating a component property |
-| `updated()`    | Called after updating a property |
-| `rendering()`    | Called before `render()` is called |
-| `rendered()`    | Called after `render()` is called |
-| `dehydrate()`    | Called at the end of every component request |
+| Hook Method      | Description                                                                     |
+|------------------|---------------------------------------------------------------------------------|
+| `mount()`        | Called when a component is created                                              |
+| `hydrate()`      | Called when a component is re-hydrated at the beginning of a subsequent request |
+| `boot()`         | Called at the beginning of every request. Both initial, and subsequent          |
+| `updating()`     | Called before updating a component property                                     |
+| `updated()`      | Called after updating a property                                                |
+| `rendering()`    | Called before `render()` is called                                              |
+| `rendered()`     | Called after `render()` is called                                               |
+| `dehydrate()`    | Called at the end of every component request                                    |
+| `exception($e, $stopProgation)` | Called when an exception is thrown                     |                    |
 
 ## Mount
 
@@ -194,11 +195,34 @@ class CreateUser extends Component
 
 Of course, you can also apply this technique to the `updating` hook.
 
+### Arrays
+
+Array properties have an additional `$key` argument passed to these functions to specify the changing element.
+
+Note that when the array itself is updated instead of a specific key, the `$key` argument is null.
+
+```php
+use Livewire\Component;
+
+class UpdatePreferences extends Component
+{
+    public $preferences = [];
+
+    public function updatedPreferences($value, $key)
+    {
+        // $value = 'dark'
+        // $key   = 'theme'
+    }
+
+    // ...
+}
+```
+
 ## Hydrate & Dehydrate
 
 Hydrate and dehydrate are lesser-known and lesser-utilized hooks. However, there are specific scenarios where they can be powerful.
 
-The terms "dehydrate" and "hydrate" refer to a Livewire component being serialized to JSON for the client-side and then unserialized back into a PHP on the subsequent request.
+The terms "dehydrate" and "hydrate" refer to a Livewire component being serialized to JSON for the client-side and then unserialized back into a PHP object on the subsequent request.
 
 We often use the terms "hydrate" and "dehydrate" to refer to this process throughout Livewire's codebase and the documentation. If you'd like more clarity on these terms, you can learn more by [consulting our hydration documentation](/docs/hydration).
 
@@ -281,6 +305,32 @@ class ShowPosts extends Component
 }
 ```
 
+## Exception
+
+Sometimes it can be helpful to intercept and catch errors, eg: to customize the error message or ignore specific type of exceptions. The `exception()` hook allows you to do just that: you can perform check on the `$error`, and use the `$stopPropagation` parameter to catch the issue.
+This also unlocks powerful patterns when you want to stop further execution of code (return early), this is how internal methods like `validate()` works.
+
+```php
+use Livewire\Component;
+
+class ShowPost extends Component
+{
+    public function mount() // [tl! highlight:3]
+    {
+        $this->post = Post::find($this->postId);
+    }
+
+    public function exception($e, $stopPropagation) {
+        if($e instanceof NotFoundException) {
+            $this->notify('Post is not found')
+            $stopPropagation();
+        }
+    }
+
+    // ...
+}
+```
+
 ## Using hooks inside a trait
 
 Traits are a helpful way to reuse code across components or extract code from a single component into a dedicated file.
@@ -311,42 +361,42 @@ trait HasPostForm
 
     public $content = '';
 
-    public function hasPostFormMount()
+    public function mountHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormHydrate()
+    public function hydrateHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormBoot()
+    public function bootHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormUpdating()
+    public function updatingHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormUpdated()
+    public function updatedHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormRendering()
+    public function renderingHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormRendered()
+    public function renderedHasPostForm()
     {
         // ...
     }
 
-    public function hasPostFormDehydrated()
+    public function dehydrateHasPostForm()
     {
         // ...
     }

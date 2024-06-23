@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function it_shows_page_expired_dialog_when_session_has_expired()
+    public function test_it_shows_page_expired_dialog_when_session_has_expired()
     {
         Livewire::visit(Component::class)
             ->waitForLivewire()->click('@regenerateSession')
@@ -22,8 +21,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function it_shows_custom_hook_dialog_using_on_error_response_hook_when_session_has_expired()
+    public function test_it_shows_custom_hook_dialog_using_on_error_response_hook_when_session_has_expired()
     {
         Livewire::withQueryParams(['useCustomErrorResponseHook' => true])
             ->visit(Component::class)

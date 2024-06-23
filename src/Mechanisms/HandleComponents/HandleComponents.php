@@ -2,13 +2,16 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{ store, trigger, wrap };
+use function Livewire\{store, trigger, wrap };
+use ReflectionUnionType;
+use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
 
-class HandleComponents
+class HandleComponents extends Mechanism
 {
     protected $propertySynthesizers = [
         Synthesizers\CarbonSynth::class,
@@ -17,20 +20,12 @@ class HandleComponents
         Synthesizers\EnumSynth::class,
         Synthesizers\StdClassSynth::class,
         Synthesizers\ArraySynth::class,
+        Synthesizers\IntSynth::class,
+        Synthesizers\FloatSynth::class
     ];
 
     public static $renderStack = [];
     public static $componentStack = [];
-
-    public function register()
-    {
-        app()->singleton($this::class);
-    }
-
-    public function boot()
-    {
-        //
-    }
 
     public function registerPropertySynthesizer($synth)
     {
@@ -209,6 +204,11 @@ class HandleComponents
 
         [$value, $meta] = $tuple;
 
+        // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
+        if ($this->isRemoval($value) && str($path)->contains('.')) {
+            return $value;
+        }
+
         $synth = $this->propertySynth($meta['s'], $context, $path);
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
@@ -236,7 +236,12 @@ class HandleComponents
             $revertA = Utils::shareWithViews('__livewire', $component);
             $revertB = Utils::shareWithViews('_instance', $component); // @deprecated
 
-            $html = $view->render();
+            $viewContext = new ViewContext;
+
+            $html = $view->render(function ($view) use ($viewContext) {
+                // Extract leftover slots, sections, and pushes before they get flushed...
+                $viewContext->extractFromEnvironment($view->getFactory());
+            });
 
             $revertA(); $revertB();
 
@@ -248,7 +253,7 @@ class HandleComponents
                 $html = $newHtml;
             };
 
-            $html = $finish($html, $replaceHtml);
+            $html = $finish($html, $replaceHtml, $viewContext);
 
             return $html;
         });
@@ -284,10 +289,19 @@ class HandleComponents
 
     protected function updateProperties($component, $updates, $data, $context)
     {
+        $finishes = [];
+
         foreach ($updates as $path => $value) {
             $value = $this->hydrateForUpdate($data, $path, $value, $context);
 
-            $this->updateProperty($component, $path, $value, $context);
+            // We only want to run "updated" hooks after all properties have
+            // been updated so that each individual hook has the ability
+            // to overwrite the updated states of other properties...
+            $finishes[] = $this->updateProperty($component, $path, $value, $context);
+        }
+
+        foreach ($finishes as $finish) {
+            $finish();
         }
     }
 
@@ -299,24 +313,53 @@ class HandleComponents
 
         $finish = trigger('update', $component, $path, $value);
 
+        // Ensure that it's a public property, not on the base class first...
+        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {
+            throw new PublicPropertyNotFoundException($property, $component->getName());
+        }
+
         // If this isn't a "deep" set, set it directly, otherwise we have to
         // recursively get up and set down the value through the synths...
         if (empty($segments)) {
-            if ($value !== '__rm__') $component->$property = $value;
+            $this->setComponentPropertyAwareOfTypes($component, $property, $value);
         } else {
             $propertyValue = $component->$property;
 
-            $component->$property = $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context);
+            $this->setComponentPropertyAwareOfTypes($component, $property,
+                $this->recursivelySetValue($property, $propertyValue, $value, $segments, 0, $context)
+            );
         }
 
-        $finish();
+        return $finish;
     }
 
     protected function hydrateForUpdate($raw, $path, $value, $context)
     {
         $meta = $this->getMetaForPath($raw, $path);
 
-        if ($meta) return $this->hydrate([$value, $meta], $context, $path);
+        // If we have meta data already for this property, let's use that to get a synth...
+        if ($meta) {
+            return $this->hydrate([$value, $meta], $context, $path);
+        }
+
+        // If we don't, let's check to see if it's a typed property and fetch the synth that way...
+        $parent = str($path)->contains('.')
+            ? data_get($context->component, str($path)->beforeLast('.')->toString())
+            : $context->component;
+
+        $childKey = str($path)->afterLast('.');
+
+        if ($parent && is_object($parent) && property_exists($parent, $childKey) && Utils::propertyIsTyped($parent, $childKey)) {
+            $type = Utils::getProperty($parent, $childKey)->getType();
+
+            $types = $type instanceof ReflectionUnionType ? $type->getTypes() : [$type];
+
+            foreach ($types as $type) {
+                $synth = $this->getSynthesizerByType($type->getName(), $context, $path);
+
+                if ($synth) return $synth->hydrateFromType($type->getName(), $value);
+            }
+        }
 
         return $value;
     }
@@ -365,7 +408,7 @@ class HandleComponents
             $toSet = $this->recursivelySetValue($baseProperty, $propertyTarget, $leafValue, $segments, $index + 1, $context);
         }
 
-        $method = ($leafValue === '__rm__' && $isLastSegment) ? 'unset' : 'set';
+        $method = ($this->isRemoval($leafValue) && $isLastSegment) ? 'unset' : 'set';
 
         $pathThusFar = collect([$baseProperty, ...$segments])->slice(0, $index + 1)->join('.');
         $fullPath = collect([$baseProperty, ...$segments])->join('.');
@@ -373,6 +416,22 @@ class HandleComponents
         $synth->$method($target, $property, $toSet, $pathThusFar, $fullPath);
 
         return $target;
+    }
+
+    protected function setComponentPropertyAwareOfTypes($component, $property, $value)
+    {
+        try {
+           $component->$property = $value;
+        } catch (\TypeError $e) {
+            // If an "int" is being set to empty string, unset the property (making it null).
+            // This is common in the case of `wire:model`ing an int to a text field...
+            // If a value is being set to "null", do the same...
+            if ($value === '' || $value === null) {
+                unset($component->$property);
+            } else {
+                throw $e;
+            }
+        }
     }
 
     protected function callMethods($root, $calls, $context)
@@ -450,6 +509,17 @@ class HandleComponents
         throw new \Exception('Property type not supported in Livewire for property: ['.json_encode($target).']');
     }
 
+    protected function getSynthesizerByType($type, $context, $path)
+    {
+        foreach ($this->propertySynthesizers as $synth) {
+            if ($synth::matchByType($type)) {
+                return new $synth($context, $path);
+            }
+        }
+
+        return null;
+    }
+
     protected function pushOntoComponentStack($component)
     {
         array_push($this::$componentStack, $component);
@@ -458,5 +528,9 @@ class HandleComponents
     protected function popOffComponentStack()
     {
         array_pop($this::$componentStack);
+    }
+
+    protected function isRemoval($value) {
+        return $value === '__rm__';
     }
 }

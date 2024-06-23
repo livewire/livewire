@@ -37,13 +37,19 @@ class ComponentHookRegistry
 
         foreach (static::$componentHooks as $hook) {
             on('mount', function ($component, $params, $key, $parent) use ($hook) {
-                $hook = static::initializeHook($hook, $component);
+                if (! $hook = static::initializeHook($hook, $component)) {
+                    return;
+                }
+
                 $hook->callBoot();
                 $hook->callMount($params, $parent);
             });
 
             on('hydrate', function ($component, $memo) use ($hook) {
-                $hook = static::initializeHook($hook, $component);
+                if (! $hook = static::initializeHook($hook, $component)) {
+                    return;
+                }
+
                 $hook->callBoot();
                 $hook->callHydrate($memo);
             });
@@ -71,8 +77,10 @@ class ComponentHookRegistry
             static::proxyCallToHooks($component, 'callDestroy')($context);
         });
 
-        on('exception', function ($component, $e, $stopPropagation) {
-            static::proxyCallToHooks($component, 'callException')($e, $stopPropagation);
+        on('exception', function ($target, $e, $stopPropagation) {
+            if ($target instanceof \Livewire\Component) {
+                static::proxyCallToHooks($target, 'callException')($e, $stopPropagation);
+            }
         });
     }
 
@@ -80,11 +88,18 @@ class ComponentHookRegistry
     {
         if (! isset(static::$components[$target])) static::$components[$target] = [];
 
-        static::$components[$target][] = $hook = new $hook;
+        $hook = new $hook;
 
         $hook->setComponent($target);
 
-        return tap($hook)->setComponent($target);
+        // If no `skip` method has been implemented, then boot the hook anyway
+        if (method_exists($hook, 'skip') && $hook->skip()) {
+            return;
+        }
+
+        static::$components[$target][] = $hook;
+
+        return $hook;
     }
 
     static function proxyCallToHooks($target, $method) {

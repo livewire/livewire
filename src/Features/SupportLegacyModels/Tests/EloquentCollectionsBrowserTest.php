@@ -12,8 +12,7 @@ class EloquentCollectionsBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function it_displays_all_nested_data()
+    public function test_it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsComponent::class)
@@ -31,8 +30,7 @@ class EloquentCollectionsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
-    public function it_allows_nested_data_to_be_changed()
+    public function test_it_allows_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsComponent::class)
@@ -68,6 +66,26 @@ class EloquentCollectionsBrowserTest extends TestCase
         $author->posts[0]->comments[0]->comment = 'Comment 1';
         $author->posts[0]->comments[1]->author->name = 'John';
         $author->push();
+    }
+
+    public function test_hydrate_works_properly_without_rules()
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitLivewireComponent($browser, EloquentCollectionsWithoutRulesComponent::class)
+                ->waitForLivewire()->click('@something')
+                ->assertSeeIn('@output', 'Ok!');
+            ;
+        });
+    }
+
+    public function test_hydrate_works_properly_when_collection_is_empty()
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitLivewireComponent($browser, EloquentCollectionsWithoutItemsComponent::class)
+                ->waitForLivewire()->click('@something')
+                ->assertSeeIn('@output', 'Ok!');
+            ;
+        });
     }
 }
 
@@ -149,6 +167,71 @@ HTML;
     }
 }
 
+class EloquentCollectionsWithoutRulesComponent extends EloquentCollectionsComponent
+{
+    public $output;
+
+    protected $rules = [];
+
+    public function something()
+    {
+        $this->output = 'Ok!';
+    }
+
+    public function render()
+    {
+        return
+        <<<'HTML'
+<div>
+      <div>
+          @foreach($authors as $author)
+              <p>{{ $author->name }}</p>
+          @endforeach
+      </div>
+      <span dusk='output'>{{ $output }}</span>
+      <button dusk='something' wire:click='something'>something</button>
+</div>
+HTML;
+
+    }
+}
+
+class EloquentCollectionsWithoutItemsComponent extends BaseComponent
+{
+    public $authors;
+
+    public $output;
+
+    protected $rules = [];
+
+    public function mount()
+    {
+        $this->authors = EloquentCollectionsWithoutItems::get();
+    }
+
+    public function something()
+    {
+        $this->output = 'Ok!';
+    }
+
+    public function render()
+    {
+        return
+            <<<'HTML'
+<div>
+      <div>
+          @foreach($authors as $author)
+              <p>{{ $author->name }}</p>
+          @endforeach
+      </div>
+      <span dusk='output'>{{ $output }}</span>
+      <button dusk='something' wire:click='something'>something</button>
+</div>
+HTML;
+
+    }
+}
+
 class EloquentCollectionsAuthor extends Model
 {
     use Sushi;
@@ -213,4 +296,14 @@ class EloquentCollectionsComment extends Model
     {
         return $this->belongsTo(EloquentCollectionsPost::class, 'eloquent_collections_post_id');
     }
+}
+
+
+class EloquentCollectionsWithoutItems extends Model
+{
+    use Sushi;
+
+    protected $guarded = [];
+
+    protected $rows = [];
 }

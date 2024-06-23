@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Nesting;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -37,8 +36,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
-    public function it_returns_the_render_context_back_to_the_parent_component_after_sub_component_is_rendered()
+    public function test_it_returns_the_render_context_back_to_the_parent_component_after_sub_component_is_rendered()
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, [RenderContextComponent::class, 'nested' => NestedComponent::class])

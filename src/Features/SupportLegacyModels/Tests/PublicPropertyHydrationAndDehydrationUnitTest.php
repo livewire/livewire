@@ -3,10 +3,10 @@
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Livewire\Livewire;
-use Livewire\Component;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
+use Tests\TestComponent;
 
 class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 {
@@ -50,8 +50,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         });
     }
 
-    /** @test */
-    public function it_uses_class_name_if_laravels_morph_map_not_available_when_dehydrating()
+    public function test_it_uses_class_name_if_laravels_morph_map_not_available_when_dehydrating()
     {
         Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
 
@@ -59,8 +58,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals('Livewire\Features\SupportLegacyModels\Tests\Post', $component->snapshot['data']['post'][1]['class']);
     }
 
-    /** @test */
-    public function it_uses_class_name_if_laravels_morph_map_not_available_when_hydrating()
+    public function test_it_uses_class_name_if_laravels_morph_map_not_available_when_hydrating()
     {
         $post = Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
 
@@ -71,8 +69,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->assertSet('post', $post);
     }
 
-    /** @test */
-    public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
+    public function test_it_uses_laravels_morph_map_instead_of_class_name_if_available_when_dehydrating()
     {
         $post = Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
 
@@ -85,8 +82,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals('post', $component->snapshot['data']['post'][1]['class']);
     }
 
-    /** @test */
-    public function it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
+    public function test_it_uses_laravels_morph_map_instead_of_class_name_if_available_when_hydrating()
     {
         $post = Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
 
@@ -101,8 +97,20 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->assertSet('post', $post);
     }
 
-    /** @test */
-    public function an_eloquent_model_properties_with_deep_relations_and_single_relations_can_have_dirty_data_reapplied()
+    public function test_it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()
+    {
+        Post::create(['id' => 1, 'title' => 'Post 1', 'description' => 'Post 1 Description', 'content' => 'Post 1 Content']);
+
+        // reset morph
+        Relation::morphMap([], false);
+        Relation::requireMorphMap();
+
+        $component = Livewire::test(PostComponent::class);
+        $this->assertEquals('Livewire\Features\SupportLegacyModels\Tests\Post', $component->snapshot['data']['post'][1]['class']);
+        Relation::requireMorphMap(false);
+    }
+
+    public function test_an_eloquent_model_properties_with_deep_relations_and_single_relations_can_have_dirty_data_reapplied()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -123,23 +131,21 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->set('model.posts.0.description', 'Description 1 Post')
             ->set('model.posts.0.content', 'Content 1 Post')
             ->set('model.posts.0.comments.1.comment', '2 Comment')
-            ->set('model.posts.0.comments.1.author.name', 'gniht')
-            ;
+            ->set('model.posts.0.comments.1.author.name', 'gniht');
 
         $updatedModel = $component->get('model');
 
         $this->assertEquals('oof', $updatedModel->title);
         $this->assertEquals('rab', $updatedModel->name);
         $this->assertEquals('zab', $updatedModel->email);
-        $this->assertEquals('1 Post', $updatedModel->posts[0]->title, );
+        $this->assertEquals('1 Post', $updatedModel->posts[0]->title,);
         $this->assertEquals('Description 1 Post', $updatedModel->posts[0]->description);
         $this->assertEquals('Content 1 Post', $updatedModel->posts[0]->content);
         $this->assertEquals('2 Comment', $updatedModel->posts[0]->comments[1]->comment);
         $this->assertEquals('gniht', $updatedModel->posts[0]->comments[1]->author->name);
     }
 
-    /** @test */
-    public function an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_have_dirty_data_reapplied()
+    public function test_an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_have_dirty_data_reapplied()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -164,15 +170,14 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
             ->set('model.posts.0.content', 'Content 1 Post')
             ->set('model.posts.0.comments.1.comment', '2 Comment')
             ->set('model.posts.0.comments.1.author.name', 'gniht')
-            ->set('model.posts.0.otherComments.1.comment', '2 Other Comment')
-            ;
+            ->set('model.posts.0.otherComments.1.comment', '2 Other Comment');
 
         $updatedModel = $component->get('model');
 
         $this->assertEquals('oof', $updatedModel->title);
         $this->assertEquals('rab', $updatedModel->name);
         $this->assertEquals('zab', $updatedModel->email);
-        $this->assertEquals('1 Post', $updatedModel->posts[0]->title, );
+        $this->assertEquals('1 Post', $updatedModel->posts[0]->title,);
         $this->assertEquals('Description 1 Post', $updatedModel->posts[0]->description);
         $this->assertEquals('Content 1 Post', $updatedModel->posts[0]->content);
         $this->assertEquals('2 Comment', $updatedModel->posts[0]->comments[1]->comment);
@@ -180,22 +185,19 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals('2 Other Comment', $updatedModel->posts[0]->otherComments[1]->comment);
     }
 
-    /** @test */
-    public function an_eloquent_model_with_a_properties_dirty_data_set_to_an_empty_array_gets_hydrated_properly()
+    public function test_an_eloquent_model_with_a_properties_dirty_data_set_to_an_empty_array_gets_hydrated_properly()
     {
         $model = new Author();
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model])
-            ->set('model.name', [])
-            ;
+            ->set('model.name', []);
 
         $updatedModel = $component->get('model');
 
         $this->assertEquals([], $updatedModel->name);
     }
 
-    /** @test */
-    public function an_eloquent_model_properties_can_be_serialised()
+    public function test_an_eloquent_model_properties_can_be_serialised()
     {
         $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
 
@@ -216,8 +218,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected, $results);
     }
 
-    /** @test */
-    public function an_eloquent_model_properties_with_deep_relations_and_single_relations_can_be_serialised()
+    public function test_an_eloquent_model_properties_with_deep_relations_and_single_relations_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -279,8 +280,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected['posts'][1]['comments'], $results['posts'][0][1][0]['comments'][0]);
     }
 
-    /** @test */
-    public function an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
+    public function test_an_eloquent_model_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -364,8 +364,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected['posts'][1]['comments'], $results['posts'][0][1][0]['comments'][0]);
     }
 
-    /** @test */
-    public function an_eloquent_collection_properties_can_be_serialised()
+    public function test_an_eloquent_collection_properties_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -396,8 +395,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[1], $results[1][0]);
     }
 
-    /** @test */
-    public function an_eloquent_collection_properties_with_relations_can_be_serialised()
+    public function test_an_eloquent_collection_properties_with_relations_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -448,8 +446,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[1]['posts'][1]['title'], $results[1][0]['posts'][0][1][0]['title']);
     }
 
-    /** @test */
-    public function an_eloquent_collection_properties_with_deep_relations_can_be_serialised()
+    public function test_an_eloquent_collection_properties_with_deep_relations_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -517,8 +514,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[1]['posts'], $results[1][0]['posts'][0]);
     }
 
-    /** @test */
-    public function an_eloquent_collection_properties_with_deep_relations_and_single_relations_can_be_serialised()
+    public function test_an_eloquent_collection_properties_with_deep_relations_and_single_relations_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -593,8 +589,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[1]['posts'], $results[1][0]['posts'][0]);
     }
 
-    /** @test */
-    public function an_eloquent_collection_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
+    public function test_an_eloquent_collection_properties_with_deep_relations_and_multiword_relations_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -693,8 +688,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[1]['posts'], $results[1][0]['posts'][0]);
     }
 
-    /** @test */
-    public function an_eloquent_collection_properties_with_deep_relations_with_skipped_intermediate_relations_rules_can_be_serialised()
+    public function test_an_eloquent_collection_properties_with_deep_relations_with_skipped_intermediate_relations_rules_can_be_serialised()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -764,8 +758,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[1]['posts'], $results[1][0]['posts'][0]);
     }
 
-    /** @test */
-    public function it_does_not_throw_error_if_relation_is_not_loaded()
+    public function test_it_does_not_throw_error_if_relation_is_not_loaded()
     {
         Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
         Author::create(['id' => 2, 'title' => 'sample', 'name' => 'thing', 'email' => 'todo']);
@@ -778,7 +771,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         Comment::create(['id' => 3, 'comment' => 'Comment 3', 'post_id' => 2, 'author_id' => 1]);
         Comment::create(['id' => 4, 'comment' => 'Comment 4', 'post_id' => 2, 'author_id' => 2]);
 
-        $models = Author::with(['posts'])->get();
+        $models = Author::with(['posts', 'posts.comments'])->get();
 
         $rules = [
             'models.*.title' => '',
@@ -816,18 +809,17 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
         $this->assertEquals($expected[0]['title'], $results[0][0]['title']);
         $this->assertEquals($expected[0]['email'], $results[0][0]['email']);
         $this->assertEquals($expected[0]['posts'][0]['title'], $results[0][0]['posts'][0][0][0]['title']);
-        $this->assertArrayNotHasKey('comments', $results[0][0]['posts'][0][0][0]);
+        $this->assertArrayHasKey('comments', $results[0][0]['posts'][0][0][0]);
 
         $this->assertEquals($expected[0]['posts'][1]['title'], $results[0][0]['posts'][0][1][0]['title']);
-        $this->assertArrayNotHasKey('comments', $results[0][0]['posts'][0][1][0]);
+        $this->assertArrayHasKey('comments', $results[0][0]['posts'][0][1][0]);
 
         $this->assertEquals($expected[1]['title'], $results[1][0]['title']);
         $this->assertEquals($expected[1]['email'], $results[1][0]['email']);
         $this->assertEquals($expected[1]['posts'], $results[1][0]['posts'][0]);
     }
 
-    /** @test */
-    public function it_does_not_throw_error_if_model_property_does_not_exist()
+    public function test_it_does_not_throw_error_if_model_property_does_not_exist()
     {
         // @todo: Review this, as it's not quite correct, key "foo" should be sent to the front end, even if not set, to match V2 functionality
         $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
@@ -850,11 +842,10 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $this->assertEquals($expected['title'], $results['title']);
         $this->assertEquals($expected['email'], $results['email']);
-        $this->assertArrayNotHasKey('foo', $results);
+        $this->assertEquals($expected['foo'], $results['foo']);
     }
 
-    /** @test */
-    public function it_serialises_properties_from_model_that_has_not_been_persisted()
+    public function test_it_serialises_properties_from_model_that_has_not_been_persisted()
     {
         // @todo: Review this, as it's not quite correct, key "name" should be sent to the front end, even if not set, to match V2 functionality
         $model = Author::make();
@@ -871,11 +862,23 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
         $results = $component->snapshot['data']['model'][0];
 
-        $this->assertArrayNotHasKey('name', $results);
+        $this->assertEquals($expected['name'], $results['name']);
+    }
+
+    public function test_it_ignores_the_key_if_the_model_does_not_exist()
+    {
+        $this->expectNotToPerformAssertions();
+
+        $model = Author::make();
+
+        $model->id = 123;
+
+        Livewire::test(ModelsComponent::class, ['model' => $model])
+            ->call('$refresh');
     }
 }
 
-class PostComponent extends Component
+class PostComponent extends TestComponent
 {
     public $post;
 
@@ -883,16 +886,9 @@ class PostComponent extends Component
     {
         $this->post = Post::first();
     }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div></div>
-        HTML;
-    }
 }
 
-class ModelsComponent extends Component
+class ModelsComponent extends TestComponent
 {
     public $model;
     public $models;
@@ -920,13 +916,6 @@ class ModelsComponent extends Component
         if (isset($rules)) {
             $this->_rules = $rules;
         }
-    }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div></div>
-        HTML;
     }
 }
 

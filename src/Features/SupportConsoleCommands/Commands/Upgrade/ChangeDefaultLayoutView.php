@@ -10,7 +10,7 @@ class ChangeDefaultLayoutView extends UpgradeStep
     {
         if($this->hasOldLayout())
         {
-            $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> The Livewire default layout has has changed. </>");
+            $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> The Livewire default layout has changed. </>');
             $console->newLine();
 
             $console->line('When rendering full-page components Livewire would use the "layouts.app" view as the default layout. This has been changed to "components.layouts.app".');

@@ -1,11 +1,10 @@
-import { dispatch, dispatchSelf, dispatchTo, listen } from '@/features/supportEvents'
+import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
+import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
-import { closestComponent, findComponent } from '@/store'
-import { requestCommit, requestCall } from '@/commit'
-import { WeakBag, dataGet, dataSet } from '@/utils'
-import { on, trigger } from '@/events'
+import { closestComponent } from '@/store'
+import { requestCommit, requestCall } from '@/request'
+import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
-import { removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
 
 let properties = {}
 let fallback
@@ -21,6 +20,9 @@ function wireFallback(callback) {
 // For V2 backwards compatibility...
 // And I actually like both depending on the scenario...
 let aliases = {
+    'on': '$on',
+    'el': '$el',
+    'id': '$id',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -33,6 +35,7 @@ let aliases = {
     'upload': '$upload',
     'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
+    'cancelUpload': '$cancelUpload',
 }
 
 export function generateWireObject(component, state) {
@@ -69,18 +72,59 @@ function getFallback(component) {
     return fallback(component)
 }
 
-Alpine.magic('wire', el => closestComponent(el).$wire)
+Alpine.magic('wire', (el, { cleanup }) => {
+    // Purposely initializing an empty variable here is a "memo"
+    // so that a component is lazy-loaded when using $wire from Alpine...
+    let component
+
+    // Override $wire methods that need to be cleaned up when
+    // and element is removed. For example, `x-data="{ foo: $wire.entangle(...) }"`:
+    // we would want the entangle effect freed if the element was removed from the DOM...
+    return new Proxy({}, {
+        get(target, property) {
+            if (! component) component = closestComponent(el)
+
+            if (['$entangle', 'entangle'].includes(property)) {
+                return generateEntangleFunction(component, cleanup)
+            }
+
+            return component.$wire[property]
+        },
+
+        set(target, property, value) {
+            if (! component) component = closestComponent(el)
+
+            component.$wire[property] = value
+
+            return true
+        },
+    })
+})
 
 wireProperty('__instance', (component) => component)
 
 wireProperty('$get', (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property))
 
+wireProperty('$el', (component) => {
+    return component.el
+})
+
+wireProperty('$id', (component) => {
+    return component.id
+})
+
 wireProperty('$set', (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value)
 
-    return live
-        ? await requestCommit(component)
-        : Promise.resolve()
+    // If "live", send a request, queueing the property update to happen first
+    // on the server, then trickle back down to the client and get merged...
+    if (live) {
+        component.queueUpdate(property, value)
+
+        return await requestCommit(component)
+    }
+
+    return Promise.resolve()
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {
@@ -91,33 +135,18 @@ wireProperty('$entangle', (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live)
 })
 
-wireProperty('$toggle', (component) => (name) => {
-    return component.$wire.set(name, ! component.$wire.get(name))
+wireProperty('$toggle', (component) => (name, live = true) => {
+    return component.$wire.set(name, ! component.$wire.get(name), live)
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
-    let firstTime = true
-    let oldValue = undefined
+    let getter = () => {
+        return dataGet(component.reactive, path)
+    }
 
-   Alpine.effect(() => {
-    // JSON.stringify touches every single property at any level enabling deep watching
-        let value = dataGet(component.reactive, path)
-        JSON.stringify(value)
+    let unwatch = Alpine.watch(getter, callback)
 
-        if (! firstTime) {
-            // We have to queue this watcher as a microtask so that
-            // the watcher doesn't pick up its own dependencies.
-            queueMicrotask(() => {
-                callback(value, oldValue)
-
-                oldValue = value
-            })
-        } else {
-            oldValue = value
-        }
-
-        firstTime = false
-    })
+    component.addCleanup(unwatch)
 })
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
@@ -127,24 +156,23 @@ wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
-wireProperty('$dispatchTo', (component) => (...params) => dispatchTo(component, ...params))
-
+wireProperty('$dispatchTo', () => (...params) => dispatchTo(...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
-wireProperty('$removeUpload', (component) => (...params) =>removeUpload(component, ...params))
+wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
+wireProperty('$cancelUpload', (component) => (...params) => cancelUpload(component, ...params))
 
-let parentMemo
+let parentMemo = new WeakMap
 
 wireProperty('$parent', component => {
-    if (parentMemo) return parentMemo.$wire
+    if (parentMemo.has(component)) return parentMemo.get(component).$wire
 
-    let parent = closestComponent(component.el.parentElement)
+    let parent = component.parent
 
-    parentMemo = parent
+    parentMemo.set(component, parent)
 
     return parent.$wire
 })
-
 
 let overriddenMethods = new WeakMap
 

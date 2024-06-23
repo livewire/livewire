@@ -9,14 +9,14 @@ class SubsequentRender extends Render
         protected ComponentState $lastState,
     ) {}
 
-    static function make($requestBroker, $lastState, $calls = [], $updates = [])
+    static function make($requestBroker, $lastState, $calls = [], $updates = [], $cookies = [])
     {
         $instance = new static($requestBroker, $lastState);
 
-        return $instance->makeSubsequentRequest($calls, $updates);
+        return $instance->makeSubsequentRequest($calls, $updates, $cookies);
     }
 
-    function makeSubsequentRequest($calls = [], $updates = []) {
+    function makeSubsequentRequest($calls = [], $updates = [], $cookies = []) {
         $uri = app('livewire')->getUpdateUri();
 
         $encodedSnapshot = json_encode($this->lastState->getSnapshot());
@@ -31,15 +31,29 @@ class SubsequentRender extends Render
             ],
         ];
 
-        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $payload) {
-            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $payload) {
-                return $requestBroker->withHeaders(['X-Livewire' => true])->post($uri, $payload);
+        [$response, $componentInstance, $componentView] = $this->extractComponentAndBladeView(function () use ($uri, $payload, $cookies) {
+            return $this->requestBroker->temporarilyDisableExceptionHandlingAndMiddleware(function ($requestBroker) use ($uri, $payload, $cookies) {
+                return $requestBroker->addHeaders(['X-Livewire' => true])->call('POST', $uri, $payload, $cookies);
             });
         });
 
         app('livewire')->flushState();
 
+        if (! $response->isOk()) {
+            return new ComponentState(
+                $componentInstance,
+                $response,
+                null,
+                '',
+                [],
+                [],
+            );
+        }
+
         $json = $response->json();
+
+        // Set "original" to Blade view for assertions like "assertViewIs()"...
+        $response->original = $componentView;
 
         $componentResponsePayload = $json['components'][0];
 

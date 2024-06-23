@@ -2,8 +2,10 @@
 
 namespace Livewire\Drawer;
 
+use Illuminate\Http\Request;
 use Livewire\Exceptions\RootTagMissingFromViewException;
 
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use function Livewire\invade;
 
 class Utils extends BaseUtils
@@ -49,38 +51,56 @@ class Utils extends BaseUtils
         return htmlspecialchars(json_encode($subject), ENT_QUOTES|ENT_SUBSTITUTE);
     }
 
-    static function pretendResponseIsFile($file, $mimeType = 'application/javascript')
+    static function pretendResponseIsFile($file, $contentType = 'application/javascript; charset=utf-8')
+    {
+        $lastModified = filemtime($file);
+
+        return static::cachedFileResponse($file, $contentType, $lastModified,
+            fn ($headers) => response()->file($file, $headers));
+    }
+
+    static function pretendPreviewResponseIsPreviewFile($filename)
+    {
+        $file = FileUploadConfiguration::path($filename);
+        $storage = FileUploadConfiguration::storage();
+        $mimeType = FileUploadConfiguration::mimeType($filename);
+        $lastModified = FileUploadConfiguration::lastModified($file);
+
+        return self::cachedFileResponse($filename, $mimeType, $lastModified,
+            fn ($headers) => $storage->download($file, $filename, $headers));
+    }
+
+    static private function cachedFileResponse($filename, $contentType, $lastModified, $downloadCallback)
     {
         $expires = strtotime('+1 year');
-        $lastModified = filemtime($file);
         $cacheControl = 'public, max-age=31536000';
 
         if (static::matchesCache($lastModified)) {
-            return response()->make('', 304, [
+            return response('', 304, [
                 'Expires' => static::httpDate($expires),
                 'Cache-Control' => $cacheControl,
             ]);
         }
 
         $headers = [
-            'Content-Type' => "$mimeType; charset=utf-8",
+            'Content-Type' => $contentType,
             'Expires' => static::httpDate($expires),
             'Cache-Control' => $cacheControl,
             'Last-Modified' => static::httpDate($lastModified),
         ];
 
-        if (str($file)->endsWith('.br')) {
+        if (str($filename)->endsWith('.br')) {
             $headers['Content-Encoding'] = 'br';
         }
 
-        return response()->file($file, $headers);
+        return $downloadCallback($headers);
     }
 
     static function matchesCache($lastModified)
     {
-        $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
+        $ifModifiedSince = app(Request::class)->header('if-modified-since');
 
-        return @strtotime($ifModifiedSince) === $lastModified;
+        return $ifModifiedSince !== null && @strtotime($ifModifiedSince) === $lastModified;
     }
 
     static function httpDate($timestamp)

@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class MoveCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function component_is_renamed_by_move_command()
+    public function test_component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob']);
 
@@ -24,8 +23,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
     }
 
-    /** @test */
-    public function inline_component_is_renamed_by_move_command()
+    public function test_inline_component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob', '--inline' => true]);
 
@@ -39,8 +37,8 @@ class MoveCommandUnitTest extends \Tests\TestCase
 
         $this->assertFalse(File::exists($this->livewireClassesPath('Bob.php')));
     }
-    /** @test */
-    public function component_with_test_is_renamed_by_move_command()
+
+    public function test_component_with_test_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob','--test'=>true]);
 
@@ -59,8 +57,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireTestsPath('BobTest.php')));
 
     }
-    /** @test */
-    public function component_is_renamed_by_mv_command()
+    public function test_component_is_renamed_by_mv_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob']);
 
@@ -76,8 +73,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
         $this->assertFalse(File::exists($this->livewireViewsPath('bob.blade.php')));
     }
 
-    /** @test */
-    public function nested_component_is_renamed_by_move_command()
+    public function test_nested_component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob.lob','--test'=>true]);
 
@@ -97,8 +93,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
 
     }
 
-    /** @test */
-    public function multiword_component_is_renamed_by_move_command()
+    public function test_multiword_component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob-lob','--test'=>true]);
 
@@ -118,8 +113,7 @@ class MoveCommandUnitTest extends \Tests\TestCase
 
     }
 
-    /** @test */
-    public function pascal_case_component_is_automatically_converted_by_move_command()
+    public function test_pascal_case_component_is_automatically_converted_by_move_command()
     {
         Artisan::call('make:livewire', ['name' => 'BobLob.BobLob','--test'=>true]);
 

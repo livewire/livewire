@@ -64,9 +64,15 @@ class FileUploadConfiguration
 
     protected static function s3Root()
     {
-        return static::isUsingS3() && is_array(static::diskConfig()) && array_key_exists('root', static::diskConfig())
-            ? static::normalizeRelativePath(static::diskConfig()['root'])
-            : '';
+        if (! static::isUsingS3()) return '';
+
+        $diskConfig = static::diskConfig();
+
+        if (! is_array($diskConfig)) return '';
+
+        $root = $diskConfig['root'] ?? null;
+
+        return $root !== null ? static::normalizeRelativePath($root) : '';
     }
 
     public static function path($path = '', $withS3Root = true)
@@ -85,9 +91,19 @@ class FileUploadConfiguration
         return $mimeType === 'image/svg' ? 'image/svg+xml' : $mimeType;
     }
 
+    public static function lastModified($filename)
+    {
+        return static::storage()->lastModified($filename);
+    }
+
     public static function middleware()
     {
         return config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1';
+    }
+
+    public static function shouldCleanupOldUploads()
+    {
+        return config('livewire.temporary_file_upload.cleanup', true);
     }
 
     public static function rules()

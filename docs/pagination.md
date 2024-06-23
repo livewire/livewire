@@ -49,6 +49,43 @@ As you can see, in addition to limiting the number of posts shown via the `Post:
 
 For more information on pagination using Laravel, check out [Laravel's comprehensive pagination documentation](https://laravel.com/docs/pagination).
 
+## Disabling URL query string tracking
+
+By default, Livewire's paginator tracks the current page in the browser URL's query string like so: `?page=2`.
+
+If you wish to still use Livewire's pagination utility, but disable query string tracking, you can do so using the `WithoutUrlPagination` trait:
+
+```php
+use Livewire\WithoutUrlPagination;
+use Livewire\WithPagination;
+use Livewire\Component;
+
+class ShowPosts extends Component
+{
+    use WithPagination, WithoutUrlPagination; // [tl! highlight]
+
+    // ...
+}
+```
+
+Now, pagination will work as expected, but the current page won't show up in the query string. This also means the current page won't be persisted across page changes.
+
+## Customizing scroll behavior
+
+By default, Livewire's paginator scrolls to the top of the page after every page change.
+
+You can disable this behavior by passing `false` to the `scrollTo` parameter of the `links()` method like so:
+
+```blade
+{{ $posts->links(data: ['scrollTo' => false]) }}
+```
+
+Alternatively, you can provide any CSS selector to the `scrollTo` parameter, and Livewire will find the nearest element matching that selector and scroll to it after each navigation:
+
+```blade
+{{ $posts->links(data: ['scrollTo' => '#paginated-posts']) }}
+```
+
 ## Resetting the page
 
 When sorting or filtering results, it is common to want to reset the page number back to `1`.
@@ -233,12 +270,12 @@ public function updatingInvoicesPage($page)
 If you prefer to not reference the paginator name in the hook method name, you can use the more generic alternatives and simply receive the `$pageName` as a second argument to the hook method:
 
 ```php
-public function updatingPaginator($page, $pageName)
+public function updatingPaginators($page, $pageName)
 {
     // Runs before the page is updated for this component...
 }
 
-public function updatedPaginator($page, $pageName)
+public function updatedPaginators($page, $pageName)
 {
     // Runs after the page is updated for this component...
 }
@@ -322,7 +359,7 @@ Once the files have been published, you have complete control over them. When re
 If you wish to bypass Livewire's pagination views entirely, you can render your own in one of two ways:
 
 1. The `->links()` method in your Blade view
-2. The `paginationView()` method in your component
+2. The `paginationView()` or `paginationSimpleView()` method in your component
 
 ### Via `->links()`
 
@@ -334,14 +371,19 @@ The first approach is to simply pass your custom pagination Blade view name to t
 
 When rendering the pagination links, Livewire will now look for a view at `resources/views/custom-pagination-links.blade.php`.
 
-### Via `paginationView()`
+### Via `paginationView()` or `paginationSimpleView()`
 
-The second approach is to declare a `paginationView` method inside your component which returns the name of the view you would like to use:
+The second approach is to declare a `paginationView` or `paginationSimpleView` method inside your component which returns the name of the view you would like to use:
 
 ```php
 public function paginationView()
 {
     return 'custom-pagination-links-view';
+}
+
+public function paginationSimpleView()
+{
+    return 'custom-simple-pagination-links-view';
 }
 ```
 

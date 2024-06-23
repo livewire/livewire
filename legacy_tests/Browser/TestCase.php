@@ -2,21 +2,15 @@
 
 namespace LegacyTests\Browser;
 
-use function Livewire\str;
 use Throwable;
 use Sushi\Sushi;
 use Psy\Shell;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Livewire\LivewireServiceProvider;
-use Livewire\Livewire;
-use Livewire\Component;
 use Laravel\Dusk\Browser;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +19,7 @@ use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Exception;
 use Closure;
+use Livewire\Features\SupportTesting\ShowDuskComponent;
 
 class TestCase extends BaseTestCase
 {
@@ -141,11 +136,7 @@ class TestCase extends BaseTestCase
             //     return View::file(__DIR__ . '/DynamicComponentLoading/view-dynamic-component.blade.php');
             // })->middleware('web')->name('dynamic-component');
 
-            Route::get('/livewire-dusk/{component}', function ($component) {
-                $class = urldecode($component);
-
-                return app()->call(new $class);
-            })->middleware('web');
+            Route::get('/livewire-dusk/{component}', ShowDuskComponent::class)->middleware('web');
 
             Route::middleware('web')->get('/entangle-turbo', function () {
                 return view('turbo', [
@@ -263,11 +254,7 @@ class TestCase extends BaseTestCase
         parent::browse(function (...$browsers) use ($callback) {
             try {
                 $callback(...$browsers);
-            } catch (Exception $e) {
-                if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
-
-                throw $e;
-            } catch (Throwable $e) {
+            } catch (Exception|Throwable $e) {
                 if (DuskOptions::hasUI()) $this->breakIntoATinkerShell($browsers, $e);
 
                 throw $e;

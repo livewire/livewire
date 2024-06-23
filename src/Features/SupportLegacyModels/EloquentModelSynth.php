@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportLegacyModels;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Database\ClassMorphViolationException;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -20,12 +21,20 @@ class EloquentModelSynth extends Synth
     {
         $class = $target::class;
 
-        // If no alias is found, this just returns the class name
-        $alias = $target->getMorphClass();
+        try {
+            // If no alias is found, this just returns the class name
+            $alias = $target->getMorphClass();
+        } catch (ClassMorphViolationException $e) {
+            // If the model is not using morph classes, this exception is thrown
+            $alias = $class;
+        }
 
         $meta = [];
 
-        $meta['key'] = $target->getKey();
+        if ($target->exists) {
+            $meta['key'] = $target->getKey();
+        }
+
         $meta['class'] = $alias;
 
         if ($target->getConnectionName() !== $class::make()->getConnectionName()) {
@@ -53,6 +62,8 @@ class EloquentModelSynth extends Synth
 
     public function hydrate($data, $meta, $hydrateChild)
     {
+        if ($data === '' || $data === null) return null;
+        
         if (isset($meta['__child_from_parent'])) {
             $model = $meta['__child_from_parent'];
 
@@ -97,6 +108,10 @@ class EloquentModelSynth extends Synth
             return $target->setRelation($key, $value);
         }
 
+        if (array_key_exists($key, $target->getCasts()) && enum_exists($target->getCasts()[$key]) && $value === '') {
+            $value = null;
+        }
+
         $target->$key = $value;
     }
 
@@ -123,8 +138,8 @@ class EloquentModelSynth extends Synth
     protected function getDataFromModel(Model $model, $rules)
     {
         return [
-            ...$this->filterData($this->getAttributes($model), $rules),
-            ...$this->filterData($model->getRelations(), $rules),
+            ...$this->filterAttributes($this->getAttributes($model), $rules),
+            ...$this->filterRelations($model->getRelations(), $rules),
         ];
     }
 
@@ -146,7 +161,25 @@ class EloquentModelSynth extends Synth
         return $attributes;
     }
 
-    protected function filterData($data, $rules)
+    protected function filterAttributes($data, $rules)
+    {
+        $filteredAttributes = [];
+
+        foreach($rules as $key => $rule) {
+            // If the rule is an array, take the key instead
+            if (is_array($rule)) {
+                $rule = $key;
+            }
+
+            // If someone has created an empty model, the attribute may not exist
+            // yet, so use data_get so it will still be sent to the front end.
+            $filteredAttributes[$rule] = data_get($data, $rule);
+        }
+
+        return $filteredAttributes;
+    }
+
+    protected function filterRelations($data, $rules)
     {
         return array_filter($data, function ($key) use ($rules) {
             return array_key_exists($key, $rules) || in_array($key, $rules);

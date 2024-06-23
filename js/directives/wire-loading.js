@@ -1,27 +1,31 @@
 import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from "@/directives"
-import { on } from '@/events'
+import { on } from '@/hooks'
+import { listen } from '@/utils'
 
-directive('loading', ({ el, directive, component }) => {
-    let targets = getTargets(el)
+directive('loading', ({ el, directive, component, cleanup }) => {
+    let { targets, inverted } = getTargets(el)
 
     let [delay, abortDelay] = applyDelay(directive)
 
-    toggleBooleanStateDirective(el, directive, false)
-
-    whenTargetsArePartOfRequest(component, targets, [
+    let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
 
-    whenTargetsArePartOfFileUpload(component, targets, [
+    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
     ])
+
+    cleanup(() => {
+        cleanupA()
+        cleanupB()
+    })
 })
 
 function applyDelay(directive) {
-    if (! directive.modifiers.includes('delay')) return [i => i(), i => i()]
+    if (! directive.modifiers.includes('delay') || directive.modifiers.includes('none')) return [i => i(), i => i()]
 
     let duration = 200
 
@@ -29,6 +33,7 @@ function applyDelay(directive) {
         'shortest': 50,
         'shorter': 100,
         'short': 150,
+        'default': 200,
         'long': 300,
         'longer': 500,
         'longest': 1000,
@@ -53,9 +58,10 @@ function applyDelay(directive) {
                 started = true
             }, duration)
         },
-        (callback) => { // Execute or abort...
+        async (callback) => { // Execute or abort...
             if (started) {
-                callback()
+                await callback()
+                started = false
             } else {
                 clearTimeout(timeout)
             }
@@ -63,11 +69,11 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, targets, [ startLoading, endLoading ]) {
-    on('commit', ({ component: iComponent, commit: payload, respond }) => {
+function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
+    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
         if (iComponent !== component) return
 
-        if (targets.length > 0 && ! containsTargets(payload, targets)) return
+        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
 
         startLoading()
 
@@ -87,23 +93,29 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
         return false
     }
 
-    window.addEventListener('livewire-upload-start', e => {
+    let cleanupA = listen(window, 'livewire-upload-start', e => {
         if (eventMismatch(e)) return
 
         startLoading()
     })
 
-    window.addEventListener('livewire-upload-finish', e => {
+    let cleanupB = listen(window, 'livewire-upload-finish', e => {
         if (eventMismatch(e)) return
 
         endLoading()
     })
 
-    window.addEventListener('livewire-upload-error', e => {
+    let cleanupC = listen(window, 'livewire-upload-error', e => {
         if (eventMismatch(e)) return
 
         endLoading()
     })
+
+    return () => {
+        cleanupA()
+        cleanupB()
+        cleanupC()
+    }
 }
 
 function containsTargets(payload, targets) {
@@ -111,13 +123,24 @@ function containsTargets(payload, targets) {
 
     return targets.some(({ target, params }) => {
         if (params) {
-            return calls.some(({ method, params: methodParams}) => {
+            return calls.some(({ method, params: methodParams }) => {
                 return target === method
                     && params === quickHash(JSON.stringify(methodParams))
             })
         }
 
-        if (Object.keys(updates).map(i => i.split('.')[0]).includes(target)) return true
+        let hasMatchingUpdate = Object.keys(updates).some(property => {
+            // If the property is nested, like `foo.bar`, we need to check if the root `foo` is the target.
+            if (property.includes('.')) {
+                let propertyRoot = property.split('.')[0]
+
+                if (propertyRoot === target) return true
+            }
+
+            return property === target
+        })
+
+        if (hasMatchingUpdate) return true
 
         if (calls.map(i => i.method).includes(target)) return true
     })
@@ -128,10 +151,14 @@ function getTargets(el) {
 
     let targets = []
 
+    let inverted = false
+
     if (directives.has('target')) {
         let directive = directives.get('target')
 
         let raw = directive.expression
+
+        if (directive.modifiers.includes("except")) inverted = true
 
         if (raw.includes('(') && raw.includes(')')) {
             targets.push({ target: directive.method, params: quickHash(JSON.stringify(directive.params)) })
@@ -154,7 +181,7 @@ function getTargets(el) {
             .forEach(target => targets.push({ target }))
     }
 
-    return targets
+    return { targets, inverted }
 }
 
 function quickHash(subject) {

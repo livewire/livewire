@@ -3,14 +3,12 @@
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Livewire\Features\SupportConsoleCommands\Commands\ComponentParser;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class FileManipulationCommandParserUnitTest extends \Tests\TestCase
 {
-    /**
-     * @test
-     * @dataProvider classPathProvider
-     */
-    public function something($input, $component, $namespace, $classPath, $viewName, $viewPath)
+    #[DataProvider('classPathProvider')]
+    public function test_something($input, $component, $namespace, $classPath, $viewName, $viewPath)
     {
         $parser = new ComponentParser(
             'App\Livewire',
@@ -25,7 +23,7 @@ class FileManipulationCommandParserUnitTest extends \Tests\TestCase
         $this->assertEquals($this->normalizeDirectories(resource_path('views/'.$viewPath)), $this->normalizeDirectories($parser->viewPath()));
     }
 
-    public function classPathProvider()
+    public static function classPathProvider()
     {
         return [
             [

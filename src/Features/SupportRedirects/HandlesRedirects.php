@@ -17,25 +17,20 @@ trait HandlesRedirects
         $shouldSkipRender && $this->skipRender();
     }
 
-    public function redirectRoute($name, $parameters = [], $absolute = true)
+    public function redirectRoute($name, $parameters = [], $absolute = true, $navigate = false)
     {
-        $to = route($name, $parameters, $absolute);
-
-        store($this)->set('redirect', $to);
-
-        $shouldSkipRender = ! config('livewire.render_on_redirect', false);
-
-        $shouldSkipRender && $this->skipRender();
+        $this->redirect(route($name, $parameters, $absolute), $navigate);
     }
 
-    public function redirectAction($name, $parameters = [], $absolute = true)
+    public function redirectIntended($default = '/', $navigate = false)
     {
-        $to = action($name, $parameters, $absolute);
+        $url = session()->pull('url.intended', $default);
+    
+        $this->redirect($url, $navigate);
+    }
 
-        store($this)->set('redirect', $to);
-
-        $shouldSkipRender = ! config('livewire.render_on_redirect', false);
-
-        $shouldSkipRender && $this->skipRender();
+    public function redirectAction($name, $parameters = [], $absolute = true, $navigate = false)
+    {
+        $this->redirect(action($name, $parameters, $absolute), $navigate);
     }
 }

@@ -1,5 +1,6 @@
-import Alpine from 'alpinejs'
-import { on } from './events'
+import { on } from './hooks'
+
+let customDirectiveNames = new Set
 
 export function matchesForLivewireDirective(attributeName) {
     return attributeName.match(new RegExp('wire:'))
@@ -12,10 +13,15 @@ export function extractDirective(el, name) {
 }
 
 export function directive(name, callback) {
+    // Prevent the same directive from registering multiple initialization listeners...
+    if (customDirectiveNames.has(name)) return
+
+    customDirectiveNames.add(name)
+
     on('directive.init', ({ el, component, directive, cleanup }) => {
         if (directive.value === name) {
             callback({
-                el, directive, component, cleanup
+                el, directive, component, $wire: component.$wire, cleanup
             })
         }
     })
@@ -23,6 +29,10 @@ export function directive(name, callback) {
 
 export function getDirectives(el) {
     return new DirectiveManager(el)
+}
+
+export function customDirectiveHasBeenRegistered(name) {
+    return customDirectiveNames.has(name)
 }
 
 class DirectiveManager {
@@ -52,11 +62,7 @@ class DirectiveManager {
             // Filter only the livewire directives.
             .filter(name => matchesForLivewireDirective(name))
             // Parse out the type, modifiers, and value from it.
-            .map(name => {
-                const [value, ...modifiers] = name.replace(new RegExp('wire:'), '').split('.')
-
-                return new Directive(value, modifiers, name, this.el)
-            }))
+            .map(name => extractDirective(this.el, name)))
     }
 }
 

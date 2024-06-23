@@ -11,18 +11,18 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 
 class UploadPhoto extends Component
 {
     use WithFileUploads;
 
-    #[Rule('image|max:1024')] // 1MB Max
+    #[Validate('image|max:1024')] // 1MB Max
     public $photo;
 
     public function save()
     {
-        $this->photo->store('photos');
+        $this->photo->store(path: 'photos');
     }
 }
 ```
@@ -37,8 +37,8 @@ class UploadPhoto extends Component
 </form>
 ```
 
-> [!warning] The term "upload" is reserved
-> The term "upload" is reserved by Livewire. You cannot use it as a method or property name.
+> [!warning] The "upload" method is reserved
+> Notice the above example uses a "save" method instead of an "upload" method. This is a common "gotcha". The term "upload" is reserved by Livewire. You cannot use it as a method or property name in your component.
 
 From the developer's perspective, handling file inputs is no different than handling any other input type: Add `wire:model` to the `<input>` tag and everything else is taken care of for you.
 
@@ -55,28 +55,31 @@ The previous example demonstrates the most basic storage scenario: moving the te
 
 However, you may want to customize the file name of the stored file or even specify a specific storage "disk" to keep the file on (such as S3).
 
+> [!tip] Original file names
+> You can access the original file name of a temporary upload, by calling its `->getClientOriginalName()` method.
+
 Livewire honors the same APIs Laravel uses for storing uploaded files, so feel free to consult [Laravel's file upload documentation](https://laravel.com/docs/filesystem#file-uploads). However, below are a few common storage scenarios and examples:
 
 ```php
 public function save()
 {
     // Store the file in the "photos" directory of the default filesystem disk
-    $this->photo->store('photos');
+    $this->photo->store(path: 'photos');
 
     // Store the file in the "photos" directory in a configured "s3" disk
-    $this->photo->store('photos', 's3');
+    $this->photo->store(path: 'photos', 's3');
 
     // Store the file in the "photos" directory with the filename "avatar.png"
-    $this->photo->storeAs('photos', 'avatar');
+    $this->photo->storeAs(path: 'photos', name: 'avatar');
 
     // Store the file in the "photos" directory in a configured "s3" disk with the filename "avatar.png"
-    $this->photo->storeAs('photos', 'avatar', 's3');
+    $this->photo->storeAs(path: 'photos', name: 'avatar', 's3');
 
     // Store the file in the "photos" directory, with "public" visibility in a configured "s3" disk
-    $this->photo->storePublicly('photos', 's3');
+    $this->photo->storePublicly(path: 'photos', 's3');
 
     // Store the file in the "photos" directory, with the name "avatar.png", with "public" visibility in a configured "s3" disk
-    $this->photo->storePubliclyAs('photos', 'avatar', 's3');
+    $this->photo->storePubliclyAs(path: 'photos', name: 'avatar', 's3');
 }
 ```
 
@@ -89,19 +92,19 @@ For example, below is a component with an array property named `$photos`. By add
 ```php
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 
 class UploadPhotos extends Component
 {
     use WithFileUploads;
 
-    #[Rule(['photos.*' => 'image|max:1024'])]
+    #[Validate(['photos.*' => 'image|max:1024'])]
     public $photos = [];
 
     public function save()
     {
         foreach ($this->photos as $photo) {
-            $photo->store('photos');
+            $photo->store(path: 'photos');
         }
     }
 }
@@ -122,7 +125,7 @@ class UploadPhotos extends Component
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
 
 > [!warning] Ensure S3 is properly configured
-> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#upload-to-s3), these validation rules will fail if the S3 file object is not publicly accessible.
+> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#uploading-directly-to-amazon-s3), these validation rules will fail if the S3 file object is not publicly accessible.
 
 For more information on file validation, consult [Laravel's file validation documentation](https://laravel.com/docs/validation#available-validation-rules).
 
@@ -140,13 +143,13 @@ Let's explore an example of a file upload with an image preview:
 ```php
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 
 class UploadPhoto extends Component
 {
     use WithFileUploads;
 
-    #[Rule('image|max:1024')]
+    #[Validate('image|max:1024')]
     public $photo;
 
     // ...
@@ -187,6 +190,7 @@ Below is a complete example of testing the `UploadPhoto` component with Livewire
 
 namespace Tests\Feature\Livewire;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use App\Livewire\UploadPhoto;
 use Livewire\Livewire;
@@ -290,7 +294,7 @@ You can display a loading indicator scoped to the file upload like so:
 
 Now, while the file is uploading, the "Uploading..." message will be shown and then hidden when the upload is finished.
 
-For more information on loading states, check out our comprehensive [loading state documentation](/docs/loading).
+For more information on loading states, check out our comprehensive [loading state documentation](/docs/wire-loading).
 
 ## Progress indicators
 
@@ -300,6 +304,7 @@ Event | Description
 --- | ---
 `livewire-upload-start` | Dispatched when the upload starts
 `livewire-upload-finish` | Dispatched if the upload is successfully finished
+`livewire-upload-cancel` | Dispatched if the upload was cancelled prematurely
 `livewire-upload-error` | Dispatched if the upload fails
 `livewire-upload-progress` | An event containing the upload progress percentage as the upload progresses
 
@@ -311,6 +316,7 @@ Below is an example of wrapping a Livewire file upload in an Alpine component to
         x-data="{ uploading: false, progress: 0 }"
         x-on:livewire-upload-start="uploading = true"
         x-on:livewire-upload-finish="uploading = false"
+        x-on:livewire-upload-cancel="uploading = false"
         x-on:livewire-upload-error="uploading = false"
         x-on:livewire-upload-progress="progress = $event.detail.progress"
     >
@@ -327,34 +333,67 @@ Below is an example of wrapping a Livewire file upload in an Alpine component to
 </form>
 ```
 
-## JavaScript upload API
+## Cancelling an upload
 
-Integrating with third-party file-uploading libraries often requires more control than a simple `<input type="file">` tag.
+If an upload is taking a long time, a user may want to cancel it. You can provide this functionality with Livewire's `$cancelUpload()` function in JavaScript.
 
-For these cases, Livewire exposes dedicated JavaScript functions.
-
-These functions exist on a JavaScript component object, which can be accessed using Livewire's convenient `@this` Blade directive from within your Livewire component's template:
+Here's an example of creating a "Cancel Upload" button in a Livewire component using `wire:click` to handle the click event:
 
 ```blade
-<script>
-    let file = document.querySelector('input[type="file"]').files[0]
+<form wire:submit="save">
+    <!-- File Input -->
+    <input type="file" wire:model="photo">
 
-    // Upload a file
-    @this.upload('photo', file, (uploadedFilename) => {
+    <!-- Cancel upload button -->
+    <button type="button" wire:click="$cancelUpload('photo')">Cancel Upload</button>
+
+    <!-- ... -->
+</form>
+```
+
+When "Cancel upload" is pressed, the file upload will request will be aborted and the file input will be cleared. The user can now attempt another upload with a different file.
+
+Alternatively, you can call `cancelUpload(...)` from Alpine like so:
+
+```blade
+<button type="button" x-on:click="$wire.cancelUpload('photo')">Cancel Upload</button>
+```
+
+## JavaScript upload API
+
+Integrating with third-party file-uploading libraries often requires more control than a simple `<input type="file" wire:model="...">` element.
+
+For these scenarios, Livewire exposes dedicated JavaScript functions.
+
+These functions exist on a JavaScript component object, which can be accessed using Livewire's convenient `$wire` object from within your Livewire component's template:
+
+```blade
+@script
+<script>
+    let file = $wire.el.querySelector('input[type="file"]').files[0]
+
+    // Upload a file...
+    $wire.upload('photo', file, (uploadedFilename) => {
         // Success callback...
     }, () => {
         // Error callback...
     }, (event) => {
         // Progress callback...
         // event.detail.progress contains a number between 1 and 100 as the upload progresses
+    }, () => {
+        // Cancelled callback...
     })
 
-    // Upload multiple files
-    @this.uploadMultiple('photos', [file], successCallback, errorCallback, progressCallback)
+    // Upload multiple files...
+    $wire.uploadMultiple('photos', [file], successCallback, errorCallback, progressCallback, cancelledCallback)
 
-    // Remove single file from multiple uploaded files
-    @this.removeUpload('photos', uploadedFilename, successCallback)
+    // Remove single file from multiple uploaded files...
+    $wire.removeUpload('photos', uploadedFilename, successCallback)
+
+    // Cancel an upload...
+    $wire.cancelUpload('photos')
 </script>
+@endscript
 ```
 
 ## Configuration

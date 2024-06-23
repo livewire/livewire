@@ -7,14 +7,13 @@ use Livewire\Component;
 
 class BrowserTest extends TestCase
 {
-    /** @test */
-    public function can_access_parent()
+    public function test_can_access_parent()
     {
-        $this->markTestSkipped();
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, [ParentCounter::class, 'child-counter' => ChildCounter::class])
                 ->assertSeeIn('@output', '1')
                 ->waitForLivewire()->click('@button')
+                ->waitForTextIn('@output', '2')
                 ->assertSeeIn('@output', '2')
             ;
         });

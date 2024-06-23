@@ -2,10 +2,13 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use function Livewire\invade;
-use function Livewire\store;
 use function Livewire\wrap;
+use function Livewire\store;
+use function Livewire\invade;
+use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\ComponentHook;
+use Livewire\Exceptions\EventHandlerDoesNotExist;
+use Livewire\Mechanisms\HandleComponents\BaseRenderless;
 
 class SupportEvents extends ComponentHook
 {
@@ -17,7 +20,7 @@ class SupportEvents extends ComponentHook
             $names = static::getListenerEventNames($this->component);
 
             if (! in_array($name, $names)) {
-                throw new \Exception('EventHandlerDoesNotExist'); // @todo...
+                throw new EventHandlerDoesNotExist($name);
             }
 
             $method = static::getListenerMethodName($this->component, $name);
@@ -25,6 +28,17 @@ class SupportEvents extends ComponentHook
             $returnEarly(
                 wrap($this->component)->$method(...$params)
             );
+
+            // Here we have to manually check to see if the event listener method
+            // is "renderless" as it's normal "call" hook doesn't get run when
+            // the method is called as an event listener...
+            $isRenderless = $this->component->getAttributes()
+                ->filter(fn ($i) => is_subclass_of($i, BaseRenderless::class))
+                ->filter(fn ($i) => $i->getName() === $method)
+                ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
+                ->count() > 0;
+
+            if ($isRenderless) $this->component->skipRender();
         }
     }
 
@@ -68,7 +82,7 @@ class SupportEvents extends ComponentHook
     {
         $fromClass = invade($component)->getListeners();
 
-        $fromAttributes = store($component)->get('listenersFromPropertyAttributes', []);
+        $fromAttributes = store($component)->get('listenersFromAttributes', []);
 
         $listeners = array_merge($fromClass, $fromAttributes);
 
@@ -99,14 +113,10 @@ class SupportEvents extends ComponentHook
 
     static function replaceDynamicPlaceholders($event, $component)
     {
-        return preg_replace_callback('/\{.*\}/U', function ($matches) use ($component) {
-            $value = str($matches[0])->between('{', '}')->toString();
-
-            $value = data_get($component, $value, function () use ($matches) {
+        return preg_replace_callback('/\{(.*)\}/U', function ($matches) use ($component) {
+            return data_get($component, $matches[1], function () use ($matches) {
                 throw new \Exception('Unable to evaluate dynamic event name placeholder: '.$matches[0]);
             });
-
-            return $value;
         }, $event);
     }
 }
