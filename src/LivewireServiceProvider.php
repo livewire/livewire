@@ -2,6 +2,7 @@
 
 namespace Livewire;
 use Composer\InstalledVersions;
+use Hamcrest\FeatureMatcher;
 use Illuminate\Foundation\Console\AboutCommand;
 
 class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
@@ -90,6 +91,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,
             Features\SupportNestingComponents\SupportNestingComponents::class,
             Features\SupportScriptsAndAssets\SupportScriptsAndAssets::class,
+            Features\SupportLockedProperties\SupportLockedProperties::class,
             Features\SupportBladeAttributes\SupportBladeAttributes::class,
             Features\SupportConsoleCommands\SupportConsoleCommands::class,
             Features\SupportPageComponents\SupportPageComponents::class,

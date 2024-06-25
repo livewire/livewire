@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void listen($name, $callback)
  * @method static array update($snapshot, $diff, $calls)
  * @method static bool isLivewireRequest()
+ * @method static void lockProperties()
  * @method static void setUpdateRoute($callback)
  * @method static string getUpdateUri($callback)
  * @method static void setScriptRoute($callback)
