@@ -116,5 +116,25 @@ trait WithFileUploads
             }
         }
     }
+
+    public function uploadMultipart($name, $fileHashName, $uploadId, $partNumber, $partsCount)
+    {
+        $this->dispatch(
+            'upload:generatedSignedUrlForS3',
+            name: $name,
+            payload: GenerateSignedUploadUrl::forMultipartUpload(
+                $fileHashName, $uploadId, $partNumber, $partsCount
+            ),
+        )->self();
+    }
+
+    public function completeMultipartUpload($name, $uploadId)
+    {
+        return $this->dispatch(
+            'upload:generatedSignedUrlForS3',
+            name: $name,
+            payload: GenerateSignedUploadUrl::completeMultipartUpload($uploadId),
+        )->self();
+    }
 }
 
