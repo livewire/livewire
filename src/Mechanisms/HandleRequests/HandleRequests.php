@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
 use Livewire\Mechanisms\Mechanism;
+
 use function Livewire\trigger;
 
 class HandleRequests extends Mechanism
@@ -77,8 +78,8 @@ class HandleRequests extends Mechanism
 
     function handleUpdate()
     {
-        $requestPayload = request('components');
-
+        $requestPayload = request(key: 'components', default: []);
+        
         $finish = trigger('request', $requestPayload);
 
         $requestPayload = $finish($requestPayload);
