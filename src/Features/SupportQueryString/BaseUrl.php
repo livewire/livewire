@@ -146,7 +146,7 @@ class BaseUrl extends LivewireAttribute
 
     public function getFromRefererUrlQueryString($url, $key, $default = null)
     {
-        $parsedUrl = parse_url($url);
+        $parsedUrl = parse_url($url ?? '');
         $query = [];
 
         if (isset($parsedUrl['query'])) {
