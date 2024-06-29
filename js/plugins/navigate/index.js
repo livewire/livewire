@@ -39,6 +39,8 @@ export default function (Alpine) {
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
+            if (! destination || el.getAttribute('target') === '_blank') return
+
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             })
@@ -47,18 +49,25 @@ export default function (Alpine) {
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
 
-            prefetchHtml(destination, (html, finalDestination) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
-            })
+            if (! destination) return
+
+            if (el.getAttribute('target') === '_blank') {
+                window.open(destination, '_blank')
+                return
+            }
 
             whenItIsReleased(() => {
                 let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
                     url: destination, history: false, cached: false,
-                 })
+                })
 
+                shouldPrefetchOnHover || prefetchHtml(destination, (html, finalDestination) => {
+                    storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+                })
+                
                 if (prevented) return
 
-                navigateTo(destination);
+                navigateTo(destination)
             })
         })
     })
