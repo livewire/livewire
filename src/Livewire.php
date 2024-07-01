@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Livewire\LivewireManager withUrlParams($params)
  * @method static \Livewire\LivewireManager withQueryParams($params)
  * @method static \Livewire\Features\SupportTesting\Testable test($name, $params = [])
- * @method static \Livewire\Features\SupportTesting\Testable actingAs($user, $driver = null)
+ * @method static \Livewire\LivewireManager actingAs($user, $driver = null)
  * @method static bool isRunningServerless()
  * @method static void addPersistentMiddleware($middleware)
  * @method static void setPersistentMiddleware($middleware)
