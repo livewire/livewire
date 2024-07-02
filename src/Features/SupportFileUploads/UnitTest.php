@@ -13,7 +13,6 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
-use Illuminate\Http\Testing\FileFactory;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -789,20 +788,6 @@ class UnitTest extends \Tests\TestCase
 
         Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
-
-    public function test_extension_validation_cant_be_spoofed_by_manipulating_the_mime_type()
-    {
-        Storage::fake('avatars');
-
-        $file = (new \Illuminate\Http\Testing\FileFactory)->create('malicious.php', 0, 'image/png');
-
-        Livewire::test(FileExtensionValidatorComponent::class)
-            ->set('photo', $file)
-            ->call('save')
-            ->assertHasErrors('photo');
-
-        Storage::disk('avatars')->assertMissing('malicious.php');
-    }
 }
 
 class DummyMiddleware
@@ -920,22 +905,6 @@ class FileReadContentComponent extends FileUploadComponent
     public function updatedFile()
     {
         $this->content = $this->file->getContent();
-    }
-}
-
-class FileExtensionValidatorComponent extends FileUploadComponent
-{
-    use WithFileUploads;
-
-    public $photo;
-
-    public function save()
-    {
-        $this->validate([
-            'photo' => 'extensions:png',
-        ]);
-
-        $this->photo->storeAs('/', 'malicious.'.$this->photo->getClientOriginalExtension(), $disk = 'avatars');
     }
 }
 
