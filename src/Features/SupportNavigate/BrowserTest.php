@@ -973,6 +973,24 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_dont_redirect_to_null_url_when_href_doesnt_exist()
+    {
+        Livewire::visit(new class extends Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <a wire:navigate dusk="link.without.href">Link Without Href</a>
+                    </div>
+                HTML;
+            }
+        })
+            ->click('@link.without.href')
+            ->pause(500)
+            ->assertPathIsNot('/livewire-dusk/null');
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

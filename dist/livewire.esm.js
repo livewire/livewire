@@ -8660,7 +8660,7 @@ function extractDestinationFromLink(linkEl) {
   return createUrlObjectFromString(linkEl.getAttribute("href"));
 }
 function createUrlObjectFromString(urlString) {
-  return new URL(urlString, document.baseURI);
+  return urlString !== null && new URL(urlString, document.baseURI);
 }
 function getUriStringFromUrlObject(urlObject) {
   return urlObject.pathname + urlObject.search + urlObject.hash;
@@ -9087,12 +9087,16 @@ function navigate_default(Alpine19) {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
+      if (!destination)
+        return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
     });
     whenThisLinkIsPressed(el, (whenItIsReleased) => {
       let destination = extractDestinationFromLink(el);
+      if (!destination)
+        return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
