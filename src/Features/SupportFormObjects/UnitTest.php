@@ -781,7 +781,7 @@ class UnitTest extends \Tests\TestCase
             ->set('form1.title', 'title1')
             ->set('form1.content', 'content1')
             ->set('form2.title', 'title2')
-            ->set('form2.content', 'content1')
+            ->set('form2.content', 'content2')
             ->call('save')
             ->assertHasNoErrors()
             ->assertSet('validated', [
