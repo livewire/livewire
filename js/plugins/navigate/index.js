@@ -39,6 +39,8 @@ export default function (Alpine) {
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
+            if (! destination) return
+
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             })
@@ -46,6 +48,8 @@ export default function (Alpine) {
 
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
+
+            if (! destination) return
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
