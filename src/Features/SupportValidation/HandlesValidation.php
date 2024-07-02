@@ -287,7 +287,7 @@ trait HandlesValidation
             try {
                 // Only run sub-validator if the sub-validator has rules...
                 if (filled($form->getRules())) {
-                    $cumulativeData = array_merge($cumulativeData, $validateForm($form));
+                    $cumulativeData[$form->getPropertyName()] = $validateForm($form);
                 }
             } catch (ValidationException $e) {
                 $cumulativeErrors->merge($e->validator->errors());
