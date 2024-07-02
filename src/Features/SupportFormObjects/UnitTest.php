@@ -763,6 +763,39 @@ class UnitTest extends \Tests\TestCase
         $this->assertEquals('baz', $component->form->foo);
         $this->assertEquals('lob', $component->form->bob);
     }
+
+    function test_can_have_multiple_form_object_instances_with_different_validated_result()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormValidateStub $form1;
+            public PostFormValidateStub $form2;
+            public $validated = [];
+
+            function save()
+            {
+                $this->validated = $this->validate();
+            }
+        })
+            ->assertHasNoErrors()
+            ->assertSet('validated', [])
+            ->set('form1.title', 'title1')
+            ->set('form1.content', 'content1')
+            ->set('form2.title', 'title2')
+            ->set('form2.content', 'content1')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('validated', [
+                'form1' => [
+                    'title' => 'title1',
+                    'content' => 'content1',
+                ],
+                'form2' => [
+                    'title' => 'title2',
+                    'content' => 'content2',
+                ],
+            ])
+        ;
+    }
 }
 
 class PostFormStub extends Form
