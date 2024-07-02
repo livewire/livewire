@@ -45,20 +45,20 @@ export default function (Alpine) {
         })
 
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
-            let destination = extractDestinationFromLink(el)
-
-            prefetchHtml(destination, (html, finalDestination) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
-            })
-
             whenItIsReleased(() => {
+                let destination = extractDestinationFromLink(el)
+
                 let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
                     url: destination, history: false, cached: false,
-                 })
+                })
+
+                shouldPrefetchOnHover || prefetchHtml(destination, (html, finalDestination) => {
+                    storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+                })
 
                 if (prevented) return
 
-                navigateTo(destination);
+                navigateTo(destination)
             })
         })
     })
