@@ -9344,24 +9344,24 @@ function queryStringUtils() {
       let search = url.search;
       if (!search)
         return false;
-      let data = fromQueryString(search);
+      let data = fromQueryString(search, key);
       return Object.keys(data).includes(key);
     },
     get(url, key) {
       let search = url.search;
       if (!search)
         return false;
-      let data = fromQueryString(search);
+      let data = fromQueryString(search, key);
       return data[key];
     },
     set(url, key, value) {
-      let data = fromQueryString(url.search);
+      let data = fromQueryString(url.search, key);
       data[key] = stripNulls(unwrap(value));
       url.search = toQueryString(data);
       return url;
     },
     remove(url, key) {
-      let data = fromQueryString(url.search);
+      let data = fromQueryString(url.search, key);
       delete data[key];
       url.search = toQueryString(data);
       return url;
@@ -9397,7 +9397,7 @@ function toQueryString(data) {
   let entries = buildQueryStringEntries(data);
   return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
 }
-function fromQueryString(search) {
+function fromQueryString(search, queryKey) {
   search = search.replace("?", "");
   if (search === "")
     return {};
@@ -9415,12 +9415,13 @@ function fromQueryString(search) {
   entries.forEach(([key, value]) => {
     if (typeof value == "undefined")
       return;
-    key = decodeURIComponent(key);
     value = decodeURIComponent(value.replaceAll("+", "%20"));
-    if (!key.includes("[")) {
+    let decodedKey = decodeURIComponent(key);
+    let shouldBeHandledAsArray = decodedKey.includes("[") && decodedKey.startsWith(queryKey);
+    if (!shouldBeHandledAsArray) {
       data[key] = value;
     } else {
-      let dotNotatedKey = key.replaceAll("[", ".").replaceAll("]", "");
+      let dotNotatedKey = decodedKey.replaceAll("[", ".").replaceAll("]", "");
       insertDotNotatedValueIntoData(dotNotatedKey, value, data);
     }
   });
