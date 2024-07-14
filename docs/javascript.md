@@ -324,6 +324,10 @@ let $wire = {
     // Usage: $wire.$on('post-created', () => { ... })
     $on(event, callback) { ... },
 
+    // Listen for a lifecycle hook triggered from this component or the request...
+    // Usage: $wire.$hook('commit', () => { ... })
+    $hook(name, callback) { ... },
+
     // Dispatch an event from this component...
     // Usage: $wire.$dispatch('post-created', { postId: 2 })
     $dispatch(event, params = {}) { ... },
