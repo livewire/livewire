@@ -16,6 +16,7 @@
         "@alpinejs/collapse": "^3.14.1",
         "@alpinejs/focus": "^3.14.1",
         "@alpinejs/intersect": "^3.14.1",
+        "@alpinejs/resize": "^3.14.1",
         "@alpinejs/mask": "^3.14.1",
         "@alpinejs/morph": "^3.14.1",
         "@alpinejs/persist": "^3.14.1",
