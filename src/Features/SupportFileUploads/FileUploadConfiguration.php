@@ -19,7 +19,7 @@ class FileUploadConfiguration
                 // this will throw an error and trip the second callback.
                 fn() => Storage::disk($disk),
                 fn() => Storage::fake($disk),
-                // swallows the error that is thrown on the frist try
+                // swallows the error that is thrown on the first try
                 report: false
             );
         }
