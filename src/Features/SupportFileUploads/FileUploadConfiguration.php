@@ -11,7 +11,7 @@ class FileUploadConfiguration
     {
         if (app()->runningUnitTests()) {
             // We want to "fake" the first time in a test run, but not again because
-            // ::fake() whipes the storage directory every time its called.
+            // ::fake() wipes the storage directory every time its called.
             rescue(function () {
                 // If the storage disk is not found (meaning it's the first time),
                 // this will throw an error and trip the second callback.
