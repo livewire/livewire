@@ -18,7 +18,8 @@ class FileUploadConfiguration
                 return Storage::disk(static::disk());
             }, function () {
                 return Storage::fake(static::disk());
-            });
+            },
+            false);
         }
 
         return Storage::disk(static::disk());
