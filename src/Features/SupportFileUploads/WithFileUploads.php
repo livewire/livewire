@@ -99,7 +99,7 @@ trait WithFileUploads
         }
     }
 
-    protected function cleanupOldUploads()
+    protected function cleanupOldUploads(int $interval = 24, string $unit = 'h')
     {
         if (FileUploadConfiguration::isUsingS3()) return;
 
@@ -110,8 +110,16 @@ trait WithFileUploads
             // of allFiles() to have already been deleted by another thread.
             if (! $storage->exists($filePathname)) continue;
 
-            $yesterdaysStamp = now()->subDay()->timestamp;
-            if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
+            $expirationTimestamp = match ($unit) {
+                'd',
+                'day'=>now()->subDays($interval)->timestamp,
+                'h',
+                'hour'=>now()->subHours($interval)->timestamp,
+                'm',
+                'minute'=>now()->subMinutes($interval)->timestamp,
+            };
+
+            if ($expirationTimestamp > $storage->lastModified($filePathname)) {
                 $storage->delete($filePathname);
             }
         }
