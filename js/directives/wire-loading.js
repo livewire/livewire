@@ -77,6 +77,8 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
 
         startLoading()
 
+        if (payload.calls?.[0]?.method === '_startUpload') return
+
         respond(() => {
             endLoading()
         })
