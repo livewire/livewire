@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLifecycleHooks;
 use function Livewire\store;
 use function Livewire\wrap;
 use Livewire\ComponentHook;
+use Livewire\Features\SupportFormObjects\Form;
 
 class SupportLifecycleHooks extends ComponentHook
 {
@@ -50,6 +51,7 @@ class SupportLifecycleHooks extends ComponentHook
         $name = str($fullPath);
 
         $propertyName = $name->studly()->before('.');
+        $keyBeforeFirstDot = $name->contains('.') ? $name->before('.')->__toString() : null;
         $keyAfterFirstDot = $name->contains('.') ? $name->after('.')->__toString() : null;
         $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.')->__toString() : null;
 
@@ -64,6 +66,14 @@ class SupportLifecycleHooks extends ComponentHook
             ? 'updated'.$name->replace('.', '_')->studly()
             : false;
 
+        $beforeFormMethod = $this->getProperty($keyBeforeFirstDot) instanceof Form
+            ? 'updating'.str($keyAfterFirstDot)->replace('.', '_')->studly()
+            : false;
+
+        $afterFormMethod = $this->getProperty($keyBeforeFirstDot) instanceof Form
+            ? 'updated'.str($keyAfterFirstDot)->replace('.', '_')->studly()
+            : false;
+
         $this->callHook('updating', [$fullPath, $newValue]);
         $this->callTraitHook('updating', [$fullPath, $newValue]);
 
@@ -71,13 +81,17 @@ class SupportLifecycleHooks extends ComponentHook
 
         $this->callHook($beforeNestedMethod, [$newValue, $keyAfterLastDot]);
 
-        return function () use ($fullPath, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
+        $this->callPropertyHook($keyBeforeFirstDot, $beforeFormMethod, [$newValue, $keyAfterFirstDot]);
+
+        return function () use ($fullPath, $afterMethod, $afterNestedMethod, $afterFormMethod, $keyBeforeFirstDot, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
             $this->callHook('updated', [$fullPath, $newValue]);
             $this->callTraitHook('updated', [$fullPath, $newValue]);
 
             $this->callHook($afterMethod, [$newValue, $keyAfterFirstDot]);
 
             $this->callHook($afterNestedMethod, [$newValue, $keyAfterLastDot]);
+
+            $this->callPropertyHook($keyBeforeFirstDot, $afterFormMethod, [$newValue, $keyAfterFirstDot]);
         };
     }
 
@@ -99,7 +113,7 @@ class SupportLifecycleHooks extends ComponentHook
 
         $this->callTraitHook('call', ['methodName' => $methodName, 'params' => $params, 'returnEarly' => $returnEarly]);
     }
-    
+
     public function exception($e, $stopPropagation)
     {
         $this->callHook('exception', ['e' => $e, 'stopPropagation' => $stopPropagation]);
@@ -143,6 +157,13 @@ class SupportLifecycleHooks extends ComponentHook
             if (method_exists($this->component, $method)) {
                 wrap($this->component)->$method(...$params);
             }
+        }
+    }
+
+    public function callPropertyHook($property, $name, $params = [])
+    {
+        if (is_object($this->getProperty($property)) && method_exists($this->getProperty($property), $name)) {
+            $this->getProperty($property)->$name(...$params);
         }
     }
 }

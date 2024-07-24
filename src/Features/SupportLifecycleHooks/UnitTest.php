@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportLifecycleHooks;
 
 use Illuminate\Support\Stringable;
 use Livewire\Component;
+use Livewire\Features\SupportFormObjects\Form;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Tests\TestComponent;
@@ -252,6 +253,49 @@ class UnitTest extends \Tests\TestCase
             'updatedBar' => true,
             'updatedBarBaz' => true,
         ], $component->lifecycles);
+    }
+
+    public function test_update_form_property()
+    {
+        $component = Livewire::test(FormLifecycleHooks::class, [
+            'expected' => [
+                'updating' => [[
+                    'foo.bar' => 'baz',
+                ]],
+                'updated' => [[
+                    'foo.bar' => 'baz',
+                ]],
+                'updatingFoo' => [[
+                    'bar' => [null, 'baz'],
+                ]],
+                'updatedFoo' => [[
+                    'bar' => 'baz'
+                ]],
+                'updatingFooBar' => ['baz'],
+                'updatedFooBar' => ['baz'],
+            ],
+            'formExpected' => [
+                'updatingBar' => ['baz'],
+                'updatedBar' => ['baz'],
+            ],
+        ])->set('foo.bar', 'baz');
+
+        $this->assertEquals([
+            'mount' => true,
+            'updating' => true,
+            'updated' => true,
+            'updatingFoo' => true,
+            'updatedFoo' => true,
+            'updatingFoo' => true,
+            'updatingFooBar' => true,
+            'updatedFoo' => true,
+            'updatedFooBar' => true,
+        ], $component->lifecycles);
+
+        $this->assertEquals([
+            'updatingBar' => true,
+            'updatedBar' => true,
+        ], $component->foo->lifecycles);
     }
 }
 
@@ -609,5 +653,110 @@ class ForLifecycleHooks extends TestComponent
     public function rendered()
     {
         $this->lifecycles['rendered']++;
+    }
+}
+
+class FormLifecycleHooks extends TestComponent
+{
+    public LifecycleHooksForm $foo;
+
+    public $expected;
+
+    public $lifecycles = [
+        'mount' => false,
+        'updating' => false,
+        'updated' => false,
+        'updatingFoo' => false,
+        'updatedFoo' => false,
+        'updatingFooBar' => false,
+        'updatedFooBar' => false,
+    ];
+
+    public function mount(array $expected = [], array $formExpected = [])
+    {
+        $this->expected = $expected;
+        $this->foo->expected = $formExpected;
+
+        $this->lifecycles['mount'] = true;
+    }
+
+    public function updating($name, $value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updating']), [$name => $value]);
+
+        $this->lifecycles['updating'] = true;
+    }
+
+    public function updated($name, $value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updated']), [$name => $value]);
+
+        $this->lifecycles['updated'] = true;
+    }
+
+    public function updatingFoo($value, $key)
+    {
+        $expected = array_shift($this->expected['updatingFoo']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+        [$before, $after] = $expected_value;
+
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
+        PHPUnit::assertEquals($expected_key, $key);
+        PHPUnit::assertEquals($before, data_get($this->foo, $key));
+        PHPUnit::assertEquals($after, $value);
+
+        $this->lifecycles['updatingFoo'] = true;
+    }
+
+    public function updatedFoo($value, $key)
+    {
+        $expected = array_shift($this->expected['updatedFoo']);
+        $expected_key = array_keys($expected)[0];
+        $expected_value = $expected[$expected_key];
+
+        PHPUnit::assertNotInstanceOf(Stringable::class, $key);
+        PHPUnit::assertEquals($expected_key, $key);
+        PHPUnit::assertEquals($expected_value, $value);
+        PHPUnit::assertEquals($expected_value, data_get($this->foo, $key));
+
+        $this->lifecycles['updatedFoo'] = true;
+    }
+
+    public function updatingFooBar($value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updatingFooBar']), $value);
+
+        $this->lifecycles['updatingFooBar'] = true;
+    }
+
+    public function updatedFooBar($value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updatedFooBar']), $value);
+
+        $this->lifecycles['updatedFooBar'] = true;
+    }
+}
+
+class LifecycleHooksForm extends Form
+{
+    public $expected;
+
+    public $bar;
+
+    public $lifecycles = [];
+
+    public function updatingBar($value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updatingBar']), $value);
+
+        $this->lifecycles['updatingBar'] = true;
+    }
+
+    public function updatedBar($value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updatedBar']), $value);
+
+        $this->lifecycles['updatedBar'] = true;
     }
 }
