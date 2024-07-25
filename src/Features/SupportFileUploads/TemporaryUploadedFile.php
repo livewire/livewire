@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportFileUploads;
 
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\URL;
@@ -10,6 +11,9 @@ use League\MimeTypeDetection\FinfoMimeTypeDetector;
 
 class TemporaryUploadedFile extends UploadedFile
 {
+    public const FILENAME_TRUNCATION_MAX_LENGTH = 159;
+    public const FILENAME_TRUNCATION_PREFIX = '[truncated]';
+
     protected $disk;
     protected $storage;
     protected $path;
@@ -164,10 +168,27 @@ class TemporaryUploadedFile extends UploadedFile
         return $newPath;
     }
 
+    public static function filenameRequiresTruncationBeforeEmbedding($file)
+    {
+        return mb_strlen($file->getClientOriginalName()) > static::FILENAME_TRUNCATION_MAX_LENGTH;
+    }
+
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
+        $originalFilename = $file->getClientOriginalName();
+
+        if (static::filenameRequiresTruncationBeforeEmbedding($file)) {
+            // Append the truncation prefix, whilst keeping the string within an acceptable length for the filesystem.
+            // This will allow us to identify later that the actual filename has been truncated.
+            $originalFilename = static::FILENAME_TRUNCATION_PREFIX.mb_substr(
+                $originalFilename,
+                0,
+                static::FILENAME_TRUNCATION_MAX_LENGTH - mb_strlen(static::FILENAME_TRUNCATION_PREFIX)
+            );
+        }
+
         $hash = str()->random(30);
-        $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
+        $meta = str('-meta'.base64_encode($originalFilename).'-')->replace('/', '_');
         $extension = '.'.$file->getClientOriginalExtension();
 
         return $hash.$meta.$extension;
@@ -184,7 +205,23 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function extractOriginalNameFromFilePath($path)
     {
-        return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
+        $decodedOriginalName = base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
+
+        if (! str($decodedOriginalName)->startsWith(static::FILENAME_TRUNCATION_PREFIX)) {
+            return $decodedOriginalName;
+        }
+
+        $fileBasename = pathinfo($path, PATHINFO_BASENAME);
+
+        try {
+            // Get the real client name from our truncated file reference.
+            return $this->storage->get(FileUploadConfiguration::truncatedFilenamesMetaPath() . '/' . $fileBasename)
+                ?? $decodedOriginalName;
+        } catch (FileNotFoundException) {
+            // The file may genuinely have our truncation prefix at the start of its name, without us having appended
+            // this ourselves. In this case, we'll return the decoded filename directory.
+            return $decodedOriginalName;
+        }
     }
 
     public static function createFromLivewire($filePath)

@@ -84,6 +84,11 @@ class FileUploadConfiguration
         return $prefix.($prefix ? '/' : '').$directory.($path ? '/' : '').$path;
     }
 
+    public static function truncatedFilenamesMetaPath()
+    {
+        return self::path().'/truncated-filenames-meta';
+    }
+
     public static function mimeType($filename)
     {
         $mimeType = static::storage()->mimeType(static::path($filename));
