@@ -30,19 +30,19 @@ Features:
     Teleport: { uri: /docs/teleport, file: /teleport.md }
 HTML Directives:
     wire:click: { uri: /docs/wire-click, file: /wire-click.md }
-    wire:submit: { uri: /docs/wire-submit, file: /wire-submit.md }
-    wire:model: { uri: /docs/wire-model, file: /wire-model.md }
-    wire:loading: { uri: /docs/wire-loading, file: /wire-loading.md }
-    wire:navigate: { uri: /docs/wire-navigate, file: /wire-navigate.md }
-    wire:dirty: { uri: /docs/wire-dirty, file: /wire-dirty.md }
     wire:confirm: { uri: /docs/wire-confirm, file: /wire-confirm.md }
-    wire:transition: { uri: /docs/wire-transition, file: /wire-transition.md }
-    wire:init: { uri: /docs/wire-init, file: /wire-init.md }
-    wire:poll: { uri: /docs/wire-poll, file: /wire-poll.md }
-    wire:offline: { uri: /docs/wire-offline, file: /wire-offline.md }
+    wire:dirty: { uri: /docs/wire-dirty, file: /wire-dirty.md }
     wire:ignore: { uri: /docs/wire-ignore, file: /wire-ignore.md }
+    wire:init: { uri: /docs/wire-init, file: /wire-init.md }
+    wire:loading: { uri: /docs/wire-loading, file: /wire-loading.md }
+    wire:model: { uri: /docs/wire-model, file: /wire-model.md }
+    wire:navigate: { uri: /docs/wire-navigate, file: /wire-navigate.md }
+    wire:offline: { uri: /docs/wire-offline, file: /wire-offline.md }
+    wire:poll: { uri: /docs/wire-poll, file: /wire-poll.md }
     wire:replace: { uri: /docs/wire-replace, file: /wire-replace.md }
     wire:stream: { uri: /docs/wire-stream, file: /wire-stream.md }
+    wire:submit: { uri: /docs/wire-submit, file: /wire-submit.md }
+    wire:transition: { uri: /docs/wire-transition, file: /wire-transition.md }
 Concepts:
     Morphing: { uri: /docs/morphing, file: /morph.md }
     Hydration: { uri: /docs/hydration, file: /hydration.md }
