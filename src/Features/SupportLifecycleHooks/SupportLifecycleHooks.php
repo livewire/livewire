@@ -187,7 +187,7 @@ class SupportLifecycleHooks extends ComponentHook
     public function callPropertyHook($property, $name, $params = [])
     {
         if (is_object($this->getProperty($property)) && method_exists($this->getProperty($property), $name)) {
-            $this->getProperty($property)->$name(...$params);
+            wrap($this->getProperty($property))->$name(...$params);
         }
     }
 }
