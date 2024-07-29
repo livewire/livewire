@@ -255,7 +255,7 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
     }
 
-    public function test_update_form_property()
+    public function test_form_property()
     {
         $component = Livewire::test(FormLifecycleHooks::class, [
             'expected' => [
@@ -281,6 +281,10 @@ class UnitTest extends \Tests\TestCase
         ])->set('foo.bar', 'baz');
 
         $this->assertEquals([
+            'hydrate' => 1,
+            'hydrateFoo' => 1,
+            'dehydrate' => 2,
+            'dehydrateFoo' => 2,
             'mount' => true,
             'updating' => true,
             'updated' => true,
@@ -293,6 +297,8 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
 
         $this->assertEquals([
+            'hydrateBar' => 1,
+            'dehydrateBar' => 2,
             'updatingBar' => true,
             'updatedBar' => true,
         ], $component->foo->lifecycles);
@@ -663,6 +669,10 @@ class FormLifecycleHooks extends TestComponent
     public $expected;
 
     public $lifecycles = [
+        'hydrate' => 0,
+        'hydrateFoo' => 0,
+        'dehydrate' => 0,
+        'dehydrateFoo' => 0,
         'mount' => false,
         'updating' => false,
         'updated' => false,
@@ -678,6 +688,26 @@ class FormLifecycleHooks extends TestComponent
         $this->foo->expected = $formExpected;
 
         $this->lifecycles['mount'] = true;
+    }
+
+    public function hydrate()
+    {
+        $this->lifecycles['hydrate']++;
+    }
+
+    public function hydrateFoo()
+    {
+        $this->lifecycles['hydrateFoo']++;
+    }
+
+    public function dehydrate()
+    {
+        $this->lifecycles['dehydrate']++;
+    }
+
+    public function dehydrateFoo()
+    {
+        $this->lifecycles['dehydrateFoo']++;
     }
 
     public function updating($name, $value)
@@ -744,7 +774,22 @@ class LifecycleHooksForm extends Form
 
     public $bar;
 
-    public $lifecycles = [];
+    public $lifecycles = [
+        'hydrateBar' => 0,
+        'dehydrateBar' => 0,
+        'updatingBar' => false,
+        'updatedBar' => false,
+    ];
+
+    public function hydrateBar()
+    {
+        $this->lifecycles['hydrateBar']++;
+    }
+
+    public function dehydrateBar()
+    {
+        $this->lifecycles['dehydrateBar']++;
+    }
 
     public function updatingBar($value)
     {

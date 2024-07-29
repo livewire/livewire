@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLifecycleHooks;
 use function Livewire\store;
 use function Livewire\wrap;
 use Livewire\ComponentHook;
+use Livewire\Drawer\Utils;
 use Livewire\Features\SupportFormObjects\Form;
 
 class SupportLifecycleHooks extends ComponentHook
@@ -40,6 +41,12 @@ class SupportLifecycleHooks extends ComponentHook
         // Call "hydrateXx" hooks for each property...
         foreach ($this->getProperties() as $property => $value) {
             $this->callHook('hydrate'.str($property)->studly(), [$value]);
+
+            if ($value instanceof Form) {
+                foreach (Utils::getPublicProperties($value) as $formProperty => $formValue) {
+                    $this->callPropertyHook($property, 'hydrate'.str($formProperty)->studly(), [$formValue]);
+                }
+            }
         }
 
         $this->callHook('booted');
@@ -139,6 +146,12 @@ class SupportLifecycleHooks extends ComponentHook
         // Call "dehydrateXx" hooks for each property...
         foreach ($this->getProperties() as $property => $value) {
             $this->callHook('dehydrate'.str($property)->studly(), [$value]);
+
+            if ($value instanceof Form) {
+                foreach (Utils::getPublicProperties($value) as $formProperty => $formValue) {
+                    $this->callPropertyHook($property, 'dehydrate'.str($formProperty)->studly(), [$formValue]);
+                }
+            }
         }
     }
 
