@@ -51,6 +51,37 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
 
+    public function test_can_set_a_file_with_160_character_filename_as_a_property_and_store_it()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image($filename = str_repeat('a', TemporaryUploadedFile::FILENAME_TRUNCATION_MAX_LENGTH - 3) . '.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->setFileWithoutFakeMeta('photo', $file)
+            ->call('upload', $filename);
+
+        // Ensure the clientOriginalName still matches the filename, despite the filename being 160 characters
+        $this->assertEquals($component->get('photo')->getClientOriginalName(), $filename);
+
+        Storage::disk('avatars')->assertExists($filename);
+    }
+
+    public function test_can_set_a_file_with_truncated_prefix_filename_as_a_property_and_store_it()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image($filename = TemporaryUploadedFile::FILENAME_TRUNCATION_PREFIX.'filename.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->setFileWithoutFakeMeta('photo', $file)
+            ->call('upload', $filename);
+
+        $this->assertEquals($component->get('photo')->getClientOriginalName(), $filename);
+
+        Storage::disk('avatars')->assertExists($filename);
+    }
+
     public function test_can_remove_a_file_property()
     {
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -67,7 +98,6 @@ class UnitTest extends \Tests\TestCase
 
     public function test_cant_remove_a_file_property_with_mismatched_filename_provided()
     {
-
         $file = UploadedFile::fake()->image('avatar.jpg');
 
         $component = Livewire::test(FileUploadComponent::class)
@@ -358,6 +388,34 @@ class UnitTest extends \Tests\TestCase
             ->call('upload', 'uploaded-avatar3.png');
 
         $this->assertCount(1, FileUploadConfiguration::storage()->allFiles());
+    }
+
+    public function test_temporary_files_with_truncated_filenames_have_their_truncation_meta_cleaned_up_on_every_new_upload()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image($filename = str_repeat('a', TemporaryUploadedFile::FILENAME_TRUNCATION_MAX_LENGTH - 3) . '.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->setFileWithoutFakeMeta('photo', $file)
+            ->call('upload', $filename);
+
+        $this->assertCount(1, FileUploadConfiguration::storage()->files(FileUploadConfiguration::path()));
+        $this->assertCount(1, FileUploadConfiguration::storage()->files(FileUploadConfiguration::truncatedFilenamesMetaPath()));
+
+        // Make temporary non-truncation meta files look 2 days old.
+        foreach (FileUploadConfiguration::storage()->files(FileUploadConfiguration::path()) as $fileShortPath) {
+            touch(FileUploadConfiguration::storage()->path($fileShortPath), now()->subDays(2)->timestamp);
+        }
+
+        $file2 = UploadedFile::fake()->image('avatar.jpg');
+
+        Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file2)
+            ->call('upload', 'uploaded-avatar2.png');
+
+        $this->assertCount(1, FileUploadConfiguration::storage()->files(FileUploadConfiguration::path()));
+        $this->assertCount(0, FileUploadConfiguration::storage()->files(FileUploadConfiguration::truncatedFilenamesMetaPath()));
     }
 
     public function test_temporary_files_older_than_24_hours_are_not_cleaned_up_if_configuration_specifies()

@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class FileUploadController implements HasMiddleware
@@ -34,9 +35,21 @@ class FileUploadController implements HasMiddleware
         ])->validate();
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
-            $filename = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
+            $filenameRequiresTruncationBeforeStorage = TemporaryUploadedFile::filenameRequiresTruncationBeforeEmbedding($file);
+            $hashedFilename = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
 
-            return $file->storeAs('/'.FileUploadConfiguration::path(), $filename, [
+            if ($filenameRequiresTruncationBeforeStorage) {
+                // Our filename has required truncation before storage, due to being too long for encoding whilst
+                // staying within filesystem filename size limits. We will write the original filename pre-truncation
+                // to the directory of truncated files so that we can reference it if the developer wants to access
+                // the original client name.
+                Storage::disk($disk)->put(
+                    FileUploadConfiguration::truncatedFilenamesMetaPath().'/'.$hashedFilename,
+                    $file->getClientOriginalName(),
+                );
+            }
+
+            return $file->storeAs('/'.FileUploadConfiguration::path(), $hashedFilename, [
                 'disk' => $disk
             ]);
         });
