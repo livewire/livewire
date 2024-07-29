@@ -275,6 +275,12 @@ class UnitTest extends \Tests\TestCase
                 'updatedFooBar' => ['baz'],
             ],
             'formExpected' => [
+                'updating' => [[
+                    'bar' => 'baz',
+                ]],
+                'updated' => [[
+                    'bar' => 'baz',
+                ]],
                 'updatingBar' => ['baz'],
                 'updatedBar' => ['baz'],
             ],
@@ -297,9 +303,13 @@ class UnitTest extends \Tests\TestCase
         ], $component->lifecycles);
 
         $this->assertEquals([
+            'hydrate' => 1,
             'hydrateBar' => 1,
+            'dehydrate' => 2,
             'dehydrateBar' => 2,
+            'updating' => true,
             'updatingBar' => true,
+            'updated' => true,
             'updatedBar' => true,
         ], $component->foo->lifecycles);
     }
@@ -775,20 +785,48 @@ class LifecycleHooksForm extends Form
     public $bar;
 
     public $lifecycles = [
+        'hydrate' => 0,
         'hydrateBar' => 0,
+        'dehydrate' => 0,
         'dehydrateBar' => 0,
+        'updating' => false,
         'updatingBar' => false,
+        'updated' => false,
         'updatedBar' => false,
     ];
+
+    public function hydrate()
+    {
+        $this->lifecycles['hydrate']++;
+    }
 
     public function hydrateBar()
     {
         $this->lifecycles['hydrateBar']++;
     }
 
+    public function dehydrate()
+    {
+        $this->lifecycles['dehydrate']++;
+    }
+
     public function dehydrateBar()
     {
         $this->lifecycles['dehydrateBar']++;
+    }
+
+    public function updating($name, $value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updating']), [$name => $value]);
+
+        $this->lifecycles['updating'] = true;
+    }
+
+    public function updated($name, $value)
+    {
+        PHPUnit::assertEquals(array_shift($this->expected['updated']), [$name => $value]);
+
+        $this->lifecycles['updated'] = true;
     }
 
     public function updatingBar($value)

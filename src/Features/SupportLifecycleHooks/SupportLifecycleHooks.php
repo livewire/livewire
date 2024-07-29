@@ -43,6 +43,8 @@ class SupportLifecycleHooks extends ComponentHook
             $this->callHook('hydrate'.str($property)->studly(), [$value]);
 
             if ($value instanceof Form) {
+                $this->callPropertyHook($property, 'hydrate');
+
                 foreach (Utils::getPublicProperties($value) as $formProperty => $formValue) {
                     $this->callPropertyHook($property, 'hydrate'.str($formProperty)->studly(), [$formValue]);
                 }
@@ -73,6 +75,9 @@ class SupportLifecycleHooks extends ComponentHook
             ? 'updated'.$name->replace('.', '_')->studly()
             : false;
 
+        $formBeforeMethod = $this->getProperty($keyBeforeFirstDot) instanceof Form ? 'updating' : false;
+        $formAfterMethod = $this->getProperty($keyBeforeFirstDot) instanceof Form ? 'updated' : false;
+
         $beforeFormMethod = $this->getProperty($keyBeforeFirstDot) instanceof Form
             ? 'updating'.str($keyAfterFirstDot)->replace('.', '_')->studly()
             : false;
@@ -88,15 +93,19 @@ class SupportLifecycleHooks extends ComponentHook
 
         $this->callHook($beforeNestedMethod, [$newValue, $keyAfterLastDot]);
 
+        $this->callPropertyHook($keyBeforeFirstDot, $formBeforeMethod, [$keyAfterFirstDot, $newValue]);
+
         $this->callPropertyHook($keyBeforeFirstDot, $beforeFormMethod, [$newValue, $keyAfterFirstDot]);
 
-        return function () use ($fullPath, $afterMethod, $afterNestedMethod, $afterFormMethod, $keyBeforeFirstDot, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
+        return function () use ($fullPath, $afterMethod, $afterNestedMethod, $formAfterMethod, $afterFormMethod, $keyBeforeFirstDot, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
             $this->callHook('updated', [$fullPath, $newValue]);
             $this->callTraitHook('updated', [$fullPath, $newValue]);
 
             $this->callHook($afterMethod, [$newValue, $keyAfterFirstDot]);
 
             $this->callHook($afterNestedMethod, [$newValue, $keyAfterLastDot]);
+
+            $this->callPropertyHook($keyBeforeFirstDot, $formAfterMethod, [$keyAfterFirstDot, $newValue]);
 
             $this->callPropertyHook($keyBeforeFirstDot, $afterFormMethod, [$newValue, $keyAfterFirstDot]);
         };
@@ -148,6 +157,8 @@ class SupportLifecycleHooks extends ComponentHook
             $this->callHook('dehydrate'.str($property)->studly(), [$value]);
 
             if ($value instanceof Form) {
+                $this->callPropertyHook($property, 'dehydrate');
+
                 foreach (Utils::getPublicProperties($value) as $formProperty => $formValue) {
                     $this->callPropertyHook($property, 'dehydrate'.str($formProperty)->studly(), [$formValue]);
                 }
