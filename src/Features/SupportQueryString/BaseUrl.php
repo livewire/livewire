@@ -60,9 +60,13 @@ class BaseUrl extends LivewireAttribute
 
         if ($initialValue === $nonExistentValue) return;
 
+        // If is an array, then json decode it
+        // If not an array json validate it to check for valid json
+        //   If valid json - json decode it
+        //   Else html_decode and urldecode it
         $decoded = is_array($initialValue)
             ? json_decode(json_encode($initialValue), true)
-            : json_decode($initialValue, true);
+            : (json_validate($initialValue) ? html_entity_decode(urldecode($initialValue)) : json_decode($initialValue, true));
 
         // If only part of an array is present in the query string,
         // we want to merge instead of override the value...
