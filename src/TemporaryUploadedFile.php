@@ -87,7 +87,7 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay(),
-                ['ResponseContentDisposition' => 'filename="' . $this->getClientOriginalName() . '"']
+                ['ResponseContentDisposition' => 'filename="' . urlencode($this->getClientOriginalName()) . '"']
             );
         }
 
