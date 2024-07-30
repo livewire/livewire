@@ -94,6 +94,15 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
             ->set('model', null)
             ->assertSuccessful();
     }
+
+    public function test_an_eloquent_model_property_can_be_set_to_boolean()
+    {
+        $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
+
+        Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
+            ->set('model', false)
+            ->assertSuccessful();
+    }
 }
 
 class ModelForAttributeBinding extends Model
