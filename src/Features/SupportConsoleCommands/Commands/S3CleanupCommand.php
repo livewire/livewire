@@ -58,6 +58,7 @@ class S3CleanupCommand extends Command
             ]);
         } catch (\Exception $e) {
             $this->error('Failed to configure S3 bucket ['.$bucket.'] to automatically cleanup files older than 24hrs!');
+            $this->error($e->getMessage());
 
             return;
         }
