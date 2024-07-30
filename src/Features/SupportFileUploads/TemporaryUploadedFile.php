@@ -104,7 +104,7 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay()->endOfHour(),
-                ['ResponseContentDisposition' => 'attachment; filename="' . $this->getClientOriginalName() . '"']
+                ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
             );
         }
 
