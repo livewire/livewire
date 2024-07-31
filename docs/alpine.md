@@ -131,7 +131,7 @@ public function deletePost($postId)
 {
     $post = Post::find($postId);
 
-    // Authorize user can delete...
+    // Authorized user can delete...
     auth()->user()->can('update', $post);
 
     $post->delete();
