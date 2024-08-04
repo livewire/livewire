@@ -747,9 +747,9 @@ class UnitTest extends \Tests\TestCase
         $component = Livewire::test(new class extends TestComponent {
             public ResetPropertiesForm $form;
 
-            function test(...$args)
+            function formResetExcept(...$args)
             {
-                $this->form->proxyResetExcept(...$args);
+                $this->form->resetExcept(...$args);
             }
         })
         ->assertSet('form.foo', 'bar')
@@ -758,7 +758,7 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.bob', 'lob')
         ->set('form.bob', 'loc')
         ->assertSet('form.bob', 'loc')
-        ->call('test', ['foo']);
+        ->call('formResetExcept', ['foo']);
 
         $this->assertEquals('baz', $component->form->foo);
         $this->assertEquals('lob', $component->form->bob);
@@ -977,10 +977,6 @@ class ResetPropertiesForm extends Form
 {
     public $foo = 'bar';
     public $bob = 'lob';
-
-    public function proxyResetExcept(...$args){
-        return $this->resetExcept(...$args);
-    }
 
     public function proxyPull(...$args){
         return $this->pull(...$args);
