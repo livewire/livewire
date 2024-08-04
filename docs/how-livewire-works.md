@@ -142,7 +142,7 @@ function updateComponent(el, component, action) {
 ```php
 Route::post('/livewire/update', function () {
     $snapshot = request('snapshot');
-    $calls = requets('calls');
+    $calls = request('calls');
 
     $component = Livewire::fromSnapshot($snapshot);
 
