@@ -178,7 +178,7 @@ Alpine.data('MyComponent', () => ({
             listener();  
         });
     }
-});
+}));
 ```
 ### Using lifecycle hooks
 

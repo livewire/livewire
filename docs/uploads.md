@@ -136,7 +136,7 @@ After a user chooses a file, you should typically show them a preview of that fi
 Livewire makes this trivial by using the `->temporaryUrl()` method on uploaded files.
 
 > [!info] Temporary URLs are restricted to images
-> For security reasons, temporary upload URLs are only supported on files with image MIME types.
+> For security reasons, temporary preview URLs are only supported on files with image MIME types.
 
 Let's explore an example of a file upload with an image preview:
 

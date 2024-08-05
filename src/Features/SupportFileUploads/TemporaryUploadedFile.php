@@ -168,7 +168,7 @@ class TemporaryUploadedFile extends UploadedFile
     {
         $hash = str()->random(30);
         $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
-        $extension = '.'.$file->guessExtension();
+        $extension = '.'.$file->getClientOriginalExtension();
 
         return $hash.$meta.$extension;
     }
