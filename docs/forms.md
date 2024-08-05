@@ -119,6 +119,9 @@ We'll also modify our Blade template to show any validation errors on the page.
 
 Now, if the user tries to submit the form without filling in any of the fields, they will see validation messages telling them which fields are required before saving the post.
 
+> [!warning] Same form for multiple properties
+> If you are using one form for multiple properties in one component the `$this->validate()` method will return only the latest validated form data. If you want all your form data to be returned by the `$this->validate()` method you need to use the `withFormsKeyed` parameter and set it to true like `$this->validate(withFormsKeyed: true)`.
+
 Livewire has a lot more validation features to offer. For more information, visit our [dedicated documentation page on Validation](/docs/validation).
 
 ### Extracting a form object
