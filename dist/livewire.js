@@ -8905,6 +8905,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       },
       lookahead: false
     });
+    trigger2("morphed", { el, component });
   }
   function isntElement(el) {
     return typeof el.hasAttribute !== "function";

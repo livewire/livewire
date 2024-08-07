@@ -9799,6 +9799,7 @@ function morph2(component, el, html) {
     },
     lookahead: false
   });
+  trigger("morphed", { el, component });
 }
 function isntElement(el) {
   return typeof el.hasAttribute !== "function";
