@@ -322,6 +322,16 @@ To achieve this using Volt, you may chain the `reactive` method on the state you
 state(['todos'])->reactive();
 ```
 
+### Modelable properties
+
+In cases where you don't want to make use of reactive properties, Livewire provides a [modelable feature](/docs/nesting#binding-to-child-data-using-wiremodel) where you may share state between parent component and child component using `wire:model` directly on a child component.
+
+To achieve this using Volt, simply chain the `modelable` method on the state you wish to be modelable:
+
+```php
+state(['form'])->modelable();
+```
+
 ### Computed properties
 
 Livewire also allows you to define [computed properties](/docs/computed-properties), which can be useful for lazily fetching information needed by your component. Computed property results are "memoized", or cached in memory, for an individual Livewire request lifecycle.
