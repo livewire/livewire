@@ -100,7 +100,7 @@ Instead of passing `$refresh`, you can pass any method you normally would to som
 <livewire:edit-post @saved="close">
 ```
 
-If the child dispatched parameters along with the request, for example `$this->dispatch('close', postId: 1)`, you can forward those values to the parent method using the following syntax:
+If the child dispatched parameters along with the request, for example `$this->dispatch('saved', postId: 1)`, you can forward those values to the parent method using the following syntax:
 
 ```blade
 <livewire:edit-post @saved="close($event.detail.postId)">
