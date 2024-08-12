@@ -8340,7 +8340,7 @@ var Component = class {
   mergeQueuedUpdates(diff2) {
     Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
       Object.entries(diff2).forEach(([diffKey, diffValue]) => {
-        if (diffKey.startsWith(updateValue)) {
+        if (typeof updateValue === "string" && updateValue.length > 0 && diffKey.startsWith(updateValue)) {
           delete diff2[diffKey];
         }
       });
