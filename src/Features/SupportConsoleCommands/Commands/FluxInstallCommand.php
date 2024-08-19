@@ -119,9 +119,13 @@ class FluxInstallCommand extends Command
 
     public function installFlux($key)
     {
+        $hashKey = app('encrypter')->getKey();
+
+        $fingerprint = hash_hmac('sha256', json_encode($key), $hashKey);
+
         $response = spin(
             message: 'Activating your license...',
-            callback: fn () => Http::post('https://fluxui.dev/api/activate', [ 'key' => $key ]),
+            callback: fn () => Http::post('https://fluxui.dev/api/activate', [ 'key' => $key, 'fingerprint' =>  $fingerprint ]),
         );
 
         if ($response->failed() && $response->json('error') === 'not-found') {
