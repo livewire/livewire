@@ -12,6 +12,7 @@ class SupportConsoleCommands extends ComponentHook
         if (! app()->runningInConsole()) return;
 
         static::commands([
+            Commands\FluxInstallCommand::class,  // flux:install
             Commands\MakeLivewireCommand::class, // make:livewire
             Commands\MakeCommand::class,         // livewire:make
             Commands\FormCommand::class,         // livewire:form
