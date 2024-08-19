@@ -250,7 +250,7 @@ Here's an example of two selects, one for states, one for cities. When the state
 </select>
 ```
 
-Again, the only thing non-standard here is the `wire:key` that has been added to the second select. This ensures that when the state changes, the "selectedCity" value will be reset propertly.
+Again, the only thing non-standard here is the `wire:key` that has been added to the second select. This ensures that when the state changes, the "selectedCity" value will be reset properly.
 
 ### Multi-select dropdowns
 
