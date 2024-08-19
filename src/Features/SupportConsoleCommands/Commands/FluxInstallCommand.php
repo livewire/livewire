@@ -92,7 +92,7 @@ use Illuminate\Support\Carbon;
  * If you found this command, can you plz not share your findings all over the internet? Thanks - Caleb
  */
 #[AsCommand(name: 'flux:install')]
-class InstallCommand extends Command
+class FluxInstallCommand extends Command
 {
     protected $signature = 'flux:install {key?}';
 
