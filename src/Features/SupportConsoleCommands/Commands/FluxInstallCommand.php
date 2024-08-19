@@ -98,6 +98,8 @@ class FluxInstallCommand extends Command
 
     protected $description = 'Install and activate Flux';
 
+    protected $hidden = true;
+
     public function handle()
     {
         $key = $this->argument('key');
