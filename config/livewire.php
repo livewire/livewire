@@ -42,6 +42,27 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Layout Type
+    |---------------------------------------------------------------------------
+    | The type of the layout
+    | Options are "component" or "extends"
+    |
+    */
+
+    'layout-type' => 'component',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Layout Slot Or Section
+    |---------------------------------------------------------------------------
+    | The name of the slot or section to render your content in
+    |
+    */
+
+    'layout-slot-or-section' => 'slot',
+
+    /*
+    |---------------------------------------------------------------------------
     | Lazy Loading Placeholder
     |---------------------------------------------------------------------------
     | Livewire allows you to lazy load components that would otherwise slow down
