@@ -23,74 +23,120 @@ export function morph(component, el, html) {
 
     to.__livewire = component
 
-    trigger('morph', { el, toEl: to, component })
 
-    Alpine.morph(el, to, {
-        updating: (el, toEl, childrenOnly, skip) => {
-            if (isntElement(el)) return
+    let doMorph = () => {
+        trigger('morph', { el, toEl: to, component })
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly })
+        Alpine.morph(el, to, {
+            updating: (el, toEl, childrenOnly, skip) => {
+                if (el.localName === 'textarea' && el.closest('code-candy')) {
+                    el.closest('code-candy').value = toEl.value
+                    skip()
+                   return
+                }
 
-            // bypass DOM diffing for children by overwriting the content
-            if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
-            // completely bypass DOM diffing for this element and all children
-            if (el.__livewire_replace_self === true) { el.outerHTML = toEl.outerHTML; return skip(); }
+                if (isntElement(el)) return
 
-            if (el.__livewire_ignore === true) return skip()
-            if (el.__livewire_ignore_self === true) childrenOnly()
+                trigger('morph.updating', { el, toEl, component, skip, childrenOnly })
 
-            // Children will update themselves.
-            if (isComponentRootEl(el) && el.getAttribute('wire:id') !== component.id) return skip()
+                // bypass DOM diffing for children by overwriting the content
+                if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
+                // completely bypass DOM diffing for this element and all children
+                if (el.__livewire_replace_self === true) { el.outerHTML = toEl.outerHTML; return skip(); }
 
-            // Give the root Livewire "to" element, the same object reference as the "from"
-            // element. This ensures new Alpine magics like $wire and @entangle can
-            // initialize in the context of a real Livewire component object.
-            if (isComponentRootEl(el)) toEl.__livewire = component
-        },
+                if (el.__livewire_ignore === true) return skip()
+                if (el.__livewire_ignore_self === true) childrenOnly()
 
-        updated: (el) => {
-            if (isntElement(el)) return
+                // Children will update themselves.
+                if (isComponentRootEl(el) && el.getAttribute('wire:id') !== component.id) return skip()
 
-            trigger('morph.updated', { el, component })
-        },
+                // Give the root Livewire "to" element, the same object reference as the "from"
+                // element. This ensures new Alpine magics like $wire and @entangle can
+                // initialize in the context of a real Livewire component object.
+                if (isComponentRootEl(el)) toEl.__livewire = component
+            },
 
-        removing: (el, skip) => {
-            if (isntElement(el)) return
+            updated: (el) => {
+                if (isntElement(el)) return
 
-            trigger('morph.removing', { el, component, skip })
-        },
+                trigger('morph.updated', { el, component })
+            },
 
-        removed: (el) => {
-            if (isntElement(el)) return
+            removing: (el, skip) => {
+                if (isntElement(el)) return
 
-            trigger('morph.removed', { el, component })
-        },
+                trigger('morph.removing', { el, component, skip })
+            },
 
-        adding: (el) => {
-            trigger('morph.adding', { el, component })
-        },
+            removed: (el) => {
+                if (isntElement(el)) return
 
-        added: (el) => {
-            if (isntElement(el)) return
+                trigger('morph.removed', { el, component })
+            },
 
-            const closestComponentId = closestComponent(el).id
+            adding: (el) => {
+                trigger('morph.adding', { el, component })
+            },
 
-            trigger('morph.added', { el })
-        },
+            added: (el) => {
+                if (isntElement(el)) return
 
-        key: (el) => {
-            if (isntElement(el)) return
+                const closestComponentId = closestComponent(el).id
 
-            return el.hasAttribute(`wire:key`)
-                ? el.getAttribute(`wire:key`)
-                : // If no "key", then first check for "wire:id", then "id"
-                el.hasAttribute(`wire:id`)
-                    ? el.getAttribute(`wire:id`)
-                    : el.id
-        },
+                trigger('morph.added', { el })
+            },
 
-        lookahead: false,
-    })
+            key: (el) => {
+                if (el.hasAttribute('wire:unique')) return (Math.random() + 1).toString(36).substring(7);
+
+                if (isntElement(el)) return
+
+                return el.hasAttribute(`wire:key`)
+                    ? el.getAttribute(`wire:key`)
+                    : // If no "key", then first check for "wire:id", then "id"
+                    el.hasAttribute(`wire:id`)
+                        ? el.getAttribute(`wire:id`)
+                        : el.id
+            },
+
+            lookahead: false,
+        })
+}
+
+    if (document.startViewTransition && el.querySelector('[wire\\:view-transition]')) {
+        let undos = []
+
+        Alpine.walk(el, (i, skip) => {
+            if (i.nodeType !== Node.ELEMENT_NODE) return
+            if (i.localName === 'svg') return skip()
+            if (i.localName === 'ui-code') return skip()
+            if (i.style.viewTransitionName !== '') return
+
+            if (i.matches('[wire\\:view-transition]')) {
+                i.style.viewTransitionName = (Math.random() + 1).toString(36).substring(7)
+
+                undos.push(() => {
+                    i.style.viewTransitionName = ''
+                })
+            } else if (i.closest('[wire\\:view-transition="deep"]')) {
+                i.style.viewTransitionName = (Math.random() + 1).toString(36).substring(7)
+
+                undos.push(() => {
+                    i.style.viewTransitionName = ''
+                })
+            }
+        })
+
+        let transition = document.startViewTransition(() => {
+            doMorph()
+        })
+
+        transition.finished.then(() => {
+            undos.forEach(i => i())
+        })
+    } else {
+        doMorph()
+    }
 }
 
 function isntElement(el) {
@@ -100,3 +146,4 @@ function isntElement(el) {
 function isComponentRootEl(el) {
     return el.hasAttribute('wire:id')
 }
+

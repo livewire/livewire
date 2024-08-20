@@ -1,6 +1,7 @@
 {
   "name": "livewire/livewire",
   "description": "A front-end framework for Laravel.",
+  "version": "3.6.0",
   "license": "MIT",
   "authors": [
     {
