@@ -12,12 +12,14 @@ class PageComponentConfig
     public $response;
 
     function __construct(
-        public $type = 'component',
+        public $type = '',
         public $view = '',
-        public $slotOrSection = 'slot',
+        public $slotOrSection = '',
         public $params = [],
     ) {
+        $this->type = $view ?: config('livewire.layout-type', 'component');
         $this->view = $view ?: config('livewire.layout');
+        $this->$slotOrSection = $view ?: config('livewire.layout-slot-or-section', 'slot');
         $this->viewContext = new ViewContext;
     }
 
