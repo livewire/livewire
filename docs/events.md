@@ -319,7 +319,7 @@ class CreatePost extends Component
 You can dispatch events directly from your Blade templates using the `$dispatch` JavaScript function. This is useful when you want to trigger an event from a user interaction, such as a button click:
 
 ```blade
-<button wire:click="$dispatch('show-post-modal', { id: {{ $post->id }} })">
+<button wire:click="$dispatch('show-post-modal', '{ id: {{ $post->id }}' })">
     EditPost
 </button>
 ```
