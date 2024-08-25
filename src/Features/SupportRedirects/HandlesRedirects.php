@@ -33,4 +33,26 @@ trait HandlesRedirects
     {
         $this->redirect(action($name, $parameters, $absolute), $navigate);
     }
+
+    public function navigateTo($name, $parameters = [], $absolute = true, $navigate = true)
+    {
+        $this->redirect(action($name, $parameters, $absolute), $navigate);
+    }
+
+    public function navigateRoute($name, $parameters = [], $absolute = true, $navigate = true)
+    {
+        $this->redirect(route($name, $parameters, $absolute), $navigate);
+    }
+
+    public function navigateIntended($default = '/', $navigate = true)
+    {
+        $url = session()->pull('url.intended', $default);
+    
+        $this->redirect($url, $navigate);
+    }
+
+    public function navigateAction($name, $parameters = [], $absolute = true, $navigate = true)
+    {
+        $this->redirect(action($name, $parameters, $absolute), $navigate);
+    }
 }
