@@ -329,7 +329,7 @@ In this example, when the button is clicked, the `show-post-modal` event will be
 If you want to dispatch an event directly to another component you can use the `$dispatchTo()` JavaScript function:
 
 ```blade
-<button wire:click="$dispatchTo('posts', 'show-post-modal', { id: {{ $post->id }} })">
+<button wire:click="$dispatchTo('posts', 'show-post-modal', { id: '{{ $post->id }}' })">
     EditPost
 </button>
 ```
