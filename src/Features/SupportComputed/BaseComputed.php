@@ -156,7 +156,7 @@ class BaseComputed extends Attribute
     {
         return preg_replace_callback('/\{(.*)\}/U', function ($matches) use ($component) {
             return data_get($component, $matches[1], function () use ($matches) {
-                throw new \Exception('Unable to evaluate dynamic session key placeholder: '.$matches[0]);
+                throw new \Exception('Unable to evaluate dynamic computed key placeholder: '.$matches[0]);
             });
         }, $key);
     }
