@@ -121,16 +121,20 @@ class BaseComputed extends Attribute
 
     protected function generatePersistedKey()
     {
-        if ($this->key) return $this->key;
+        if (! $this->key) {
+            return (string) 'lw_computed' . crc32($this->component->getId() . $this->getName());
+        }
 
-        return 'lw_computed.'.$this->component->getId().'.'.$this->getName();
+        return self::replaceDynamicPlaceholders($this->key, $this->component);
     }
 
     protected function generateCachedKey()
     {
-        if ($this->key) return $this->key;
+        if (! $this->key) {
+            return (string) 'lw_computed' . crc32($this->component->getName() . $this->getName());
+        }
 
-        return 'lw_computed.'.$this->component->getName().'.'.$this->getName();
+        return self::replaceDynamicPlaceholders($this->key, $this->component);
     }
 
     protected function evaluateComputed()
@@ -148,5 +152,12 @@ class BaseComputed extends Attribute
         return str($value)->camel()->toString();
     }
 
-
+    static function replaceDynamicPlaceholders($key, $component)
+    {
+        return preg_replace_callback('/\{(.*)\}/U', function ($matches) use ($component) {
+            return data_get($component, $matches[1], function () use ($matches) {
+                throw new \Exception('Unable to evaluate dynamic session key placeholder: '.$matches[0]);
+            });
+        }, $key);
+    }
 }
