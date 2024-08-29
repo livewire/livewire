@@ -7624,6 +7624,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var oldBodyScriptTagHashes = [];
   var attributesExemptFromScriptTagHashing = [
     "data-csrf",
+    "nonce",
     "aria-hidden"
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
