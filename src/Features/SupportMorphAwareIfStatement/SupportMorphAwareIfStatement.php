@@ -3,8 +3,8 @@
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
-use Livewire\Livewire;
 
 class SupportMorphAwareIfStatement extends ComponentHook
 {
@@ -34,7 +34,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
             '@for' => '@endfor',
         ];
 
-        Livewire::precompiler(function ($entire) use ($directives) {
+        Blade::precompiler(function ($entire) use ($directives) {
             $conditions = \Livewire\invade(app('blade.compiler'))->conditions;
 
             foreach (array_keys($conditions) as $conditionalDirective) {
@@ -121,7 +121,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
     {
         $foundEscaped = preg_quote($found, '/');
 
-        $prefix = '<!--[if BLOCK]><![endif]-->';
+        $prefix = '<?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?>';
 
         $prefixEscaped = preg_quote($prefix);
 
@@ -141,7 +141,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         $foundEscaped = preg_quote($found, '/');
 
-        $suffix = '<!--[if ENDBLOCK]><![endif]-->';
+        $suffix = '<?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>';
 
         $suffixEscaped = preg_quote($suffix);
 
@@ -167,7 +167,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 // by enforcing @empty has an opening parenthesis after it when matching...
                 ->map(fn ($directive) => str($directive)->startsWith('@empty') ? $directive.'[^\S\r\n]*\(' : $directive)
                 ->join('|')
-        .')';
+            .')';
 
         // Blade directives: (@if|@foreach|...)
         $pattern = '/'.$directivesPattern.'/mUxi';

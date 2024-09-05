@@ -53,6 +53,11 @@ class LivewireManager
         app(ExtendBlade::class)->livewireOnlyPrecompiler($callback);
     }
 
+    function isRenderingComponent()
+    {
+        return app(ExtendBlade::class)->isRenderingLivewireComponent();
+    }
+
     function new($name, $id = null)
     {
         return app(ComponentRegistry::class)->new($name, $id);
@@ -205,9 +210,9 @@ class LivewireManager
 
     function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
     {
-         Testable::actingAs($user, $driver);
+        Testable::actingAs($user, $driver);
 
-         return $this;
+        return $this;
     }
 
     function isRunningServerless()
