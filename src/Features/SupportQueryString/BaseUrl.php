@@ -98,6 +98,12 @@ class BaseUrl extends LivewireAttribute
 
     public function pushQueryStringEffect($context)
     {
+        $existingQuery = $this->getFromUrlQueryString($this->urlName());
+
+        $currentValue = $this->getValue();
+
+        if ($existingQuery === $currentValue) return;
+
         $queryString = [
             'as' => $this->as,
             'use' => $this->history ? 'push' : 'replace',
