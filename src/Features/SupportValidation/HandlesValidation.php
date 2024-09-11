@@ -5,15 +5,17 @@ namespace Livewire\Features\SupportValidation;
 use function Livewire\invade;
 use function Livewire\store;
 use Illuminate\Contracts\Support\Arrayable;
-use Livewire\Wireable;
-use Livewire\Exceptions\MissingRulesException;
-use Livewire\Drawer\Utils;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\MessageBag;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\Validation\ValidationException;
+use Livewire\Drawer\Utils;
+use Livewire\Exceptions\MissingRulesException;
 use Livewire\Form;
+use Livewire\Mechanisms\HandleComponents\ComponentContext;
+use Livewire\Mechanisms\HandleComponents\HandleComponents;
+use Livewire\Wireable;
 
 trait HandlesValidation
 {
@@ -503,8 +505,12 @@ trait HandlesValidation
     protected function unwrapDataForValidation($data)
     {
         return collect($data)->map(function ($value) {
+
+            $synth = app('livewire')->findSynth($value, $this);
+            
+            if ($synth && method_exists($synth, 'validate')) return $synth->validate($value);
             // @todo: this logic should be contained within "SupportWireables"...
-            if ($value instanceof Wireable) return $value->toLivewire();
+            else if ($value instanceof Wireable) return $value->toLivewire();
             else if ($value instanceof Arrayable) return $value->toArray();
 
             return $value;
