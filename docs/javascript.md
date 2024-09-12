@@ -552,7 +552,7 @@ These hooks expose `commit` objects. You can learn more about their schema by re
 The `commit.prepare` hook will be triggered immediately before a request is sent to the server. This gives you a chance to add any last minute updates or actions to the outgoing request:
 
 ```js
-Livewire.hook('commit.prepare', ({ component, commit }) => {
+Livewire.hook('commit.prepare', ({ component }) => {
     // Runs before commit payloads are collected and sent to the server...
 })
 ```
