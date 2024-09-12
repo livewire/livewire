@@ -16,7 +16,8 @@
     "illuminate/validation": "^10.0|^11.0",
     "league/mime-type-detection": "^1.9",
     "symfony/console": "^6.0|^7.0",
-    "symfony/http-kernel": "^6.2|^7.0"
+    "symfony/http-kernel": "^6.2|^7.0",
+    "laravel/prompts": "^0.1.24"
   },
   "require-dev": {
     "psy/psysh": "^0.11.22|^0.12",
@@ -25,8 +26,7 @@
     "laravel/framework": "^10.15.0|^11.0",
     "orchestra/testbench": "^8.21.0|^9.0",
     "orchestra/testbench-dusk": "^8.24|^9.1",
-    "calebporzio/sushi": "^2.1",
-    "laravel/prompts": "^0.1.6"
+    "calebporzio/sushi": "^2.1"
   },
   "autoload": {
     "files": [
