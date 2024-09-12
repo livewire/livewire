@@ -56,7 +56,9 @@ jobs:
           composer update --prefer-stable --no-interaction
 
       - name: Setup dusk/chrome
-        run: vendor/bin/dusk-updater detect --no-interaction
+        run: |
+          vendor/bin/dusk-updater detect --no-interaction
+          chmod -R 0755 vendor/laravel/dusk/bin/
 
       - name: Run Unit tests
         run: vendor/bin/phpunit --testsuite Unit
