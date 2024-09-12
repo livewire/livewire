@@ -17,8 +17,6 @@ class DuskTestable
     public static $browser;
 
     static function provide() {
-        BrowserTestCase::startChromeDriver(['--port=9515']);
-
         Route::get('livewire-dusk/{component}', ShowDuskComponent::class)->middleware('web');
 
         on('browser.testCase.setUp', function ($testCase) {
