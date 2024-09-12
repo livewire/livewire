@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportTesting;
 use Illuminate\Support\Facades\Route;
 use Laravel\Dusk\Browser;
 use PHPUnit\Framework\TestCase;
+use Tests\BrowserTestCase;
 use function Livewire\{ invade, on };
 use Illuminate\Support\Arr;
 
@@ -16,6 +17,8 @@ class DuskTestable
     public static $browser;
 
     static function provide() {
+        BrowserTestCase::startChromeDriver(['--port=9515']);
+
         Route::get('livewire-dusk/{component}', ShowDuskComponent::class)->middleware('web');
 
         on('browser.testCase.setUp', function ($testCase) {
