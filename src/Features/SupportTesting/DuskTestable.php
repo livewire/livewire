@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportTesting;
 use Illuminate\Support\Facades\Route;
 use Laravel\Dusk\Browser;
 use PHPUnit\Framework\TestCase;
-use Tests\BrowserTestCase;
 use function Livewire\{ invade, on };
 use Illuminate\Support\Arr;
 
