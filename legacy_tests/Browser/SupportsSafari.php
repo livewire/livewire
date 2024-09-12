@@ -12,7 +12,7 @@ trait SupportsSafari
         if (static::$useSafari) {
             static::startSafariDriver();
         } else {
-            static::startChromeDriver(['port' => 9515]);
+            static::startChromeDriver(['--port=9515']);
         }
     }
 
