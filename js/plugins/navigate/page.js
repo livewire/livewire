@@ -2,6 +2,7 @@ let oldBodyScriptTagHashes = []
 
 let attributesExemptFromScriptTagHashing = [
     'data-csrf',
+    'nonce',
     'aria-hidden',
 ]
 
