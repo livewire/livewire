@@ -229,4 +229,53 @@ class BrowserTest extends BrowserTestCase
             ->assertScript('document.getElementById(\'root\').querySelectorAll(\'div\').length', 3)
             ->assertConsoleLogMissingWarning('item is not defined');
     }
+
+    public function test_can_attach_and_removes_event_listener_correctly()
+    {
+        Livewire::visit(new class extends Component {
+            public $message = '';
+
+            public function first()
+            {
+                $this->dispatch('message', message: 'first');
+            }
+
+            public function second()
+            {
+                $this->dispatch('message', message: 'second');
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div x-data="{
+                    init() {
+                        const cleanup = $wire.$on('message', (event) => {
+                            window.eventReceived = event.message;
+                            $wire.set('message', event.message);
+                        });
+                        
+                        document.getElementById('cleanup').addEventListener('click', () => {
+                            cleanup();
+                            $wire.second();
+                        });
+                    }
+                }">
+                    <span dusk="messageDisplay">{{ $message }}</span>
+
+                    <button id="emitEvent" wire:click="first" dusk="emit.event">Emit Event</button>
+                    <button id="cleanup" dusk="cleanup.event">Cleanup</button>
+                </div>
+            HTML;
+            }
+        })
+            ->assertDontSeeIn('@messageDisplay', 'first')
+            ->click('@emit.event')
+            ->waitForLivewire()
+            ->pause(100)
+            ->assertSeeIn('@messageDisplay', 'first')
+            ->click('@cleanup.event')
+            ->pause(100)
+            ->assertDontSeeIn('@messageDisplay', 'second');
+    }
 }
