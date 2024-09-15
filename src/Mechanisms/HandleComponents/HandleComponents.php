@@ -347,7 +347,7 @@ class HandleComponents extends Mechanism
             ? data_get($context->component, str($path)->beforeLast('.')->toString())
             : $context->component;
 
-        $childKey = str($path)->afterLast('.');
+        $childKey = str($path)->afterLast('.')->toString();
 
         if ($parent && is_object($parent) && property_exists($parent, $childKey) && Utils::propertyIsTyped($parent, $childKey)) {
             $type = Utils::getProperty($parent, $childKey)->getType();
