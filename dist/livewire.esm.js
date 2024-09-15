@@ -8468,9 +8468,11 @@ function dispatchTo(componentName, name, params) {
   });
 }
 function listen2(component, name, callback) {
-  component.el.addEventListener(name, (e) => {
-    callback(e.detail);
-  });
+  const handler = (e) => callback(e.detail);
+  component.el.addEventListener(name, handler);
+  return () => {
+    component.el.removeEventListener(name, handler);
+  };
 }
 function on2(eventName, callback) {
   let handler = (e) => {

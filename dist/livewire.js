@@ -4654,9 +4654,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function listen2(component, name, callback) {
-    component.el.addEventListener(name, (e) => {
-      callback(e.detail);
-    });
+    const handler4 = (e) => callback(e.detail);
+    component.el.addEventListener(name, handler4);
+    return () => {
+      component.el.removeEventListener(name, handler4);
+    };
   }
   function on3(eventName, callback) {
     let handler4 = (e) => {
