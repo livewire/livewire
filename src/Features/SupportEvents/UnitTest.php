@@ -2,9 +2,15 @@
 
 namespace Livewire\Features\SupportEvents;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Component;
 use Tests\TestComponent;
+use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -222,6 +228,21 @@ class UnitTest extends \Tests\TestCase
             ->dispatch('bar')
             ->tap(fn () => $this->assertEquals(3, ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes::$counter));
     }
+
+    public function test_dispatch_method_accepts_jobs()
+    {
+        Bus::fake();
+        $component = Livewire::test(new class extends TestComponent {
+            public function dispatchFoo()
+            {
+                $this->dispatch(new TestJob);
+            }
+        });
+
+        $component->call('dispatchFoo');
+
+        Bus::assertDispatched(TestJob::class);
+    }
 }
 
 class ReceivesEvents extends TestComponent
@@ -334,4 +355,19 @@ class ReceivesMultipleEventsUsingMultipleUserlandRefreshAttributes extends Compo
     public static $counter = 0;
 
     public function render() { static::$counter++; return '<div></div>'; }
+}
+
+
+class TestJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, SerializesModels, Queueable;
+    
+    public function __construct(
+        public string $foo = "bar",
+    ) {}
+
+    public function handle()
+    {
+        $this->foo = "baz";
+    }
 }

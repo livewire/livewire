@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use function Livewire\store;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
 trait HandlesEvents
 {
@@ -14,6 +15,10 @@ trait HandlesEvents
 
     public function dispatch($event, ...$params)
     {
+        if(method_exists($event, 'dispatch')) {
+            return $event->dispatch();
+        }
+
         $event = new Event($event, $params);
 
         store($this)->push('dispatched', $event);
