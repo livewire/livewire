@@ -80,7 +80,16 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(NewComponent::class)
             ->assertMethodHasAttribute('jsMethod', Js::class)
             ->assertMethodHasAttribute('doubleFoo', On::class, 'fooEvent')
-            ->assertMethodHasAttribute('barMethod', On::class, ['barEvent', 'bazEvent']);
+            ->assertMethodHasAttribute('barMethod', On::class, ['barEvent', 'bazEvent'])
+            ->assertMethodHasAttribute('fooToThePowerOfTwo', Computed::class, [
+                'persist' => true,
+                'seconds' => 7200,
+            ])
+            ->assertMethodHasAttribute('anotherComputedProperty', Computed::class, [
+                'cache' => true,
+                'key' => 'homepage-posts',
+                'tags' => ['posts', 'homepage'],
+            ]);
     }
 
     public function test_component_has_property_level_attribute()
@@ -133,12 +142,26 @@ class NewComponent extends TestComponent {
     }
 
     #[On(['barEvent', 'bazEvent'])]
-    public function barMethod() {
+    public function barMethod(): string
+    {
         return 'bar';
     }
 
+    #[Computed(persist: true, seconds: 7200)]
+    public function fooToThePowerOfTwo(): int
+    {
+        return $this->foo ** 2;
+    }
+
+    #[Computed(cache: true, key: 'homepage-posts', tags: ['posts', 'homepage'])]
+    public function anotherComputedProperty(): string
+    {
+        return 'cached value';
+    }
+
     #[On('fooEvent')]
-    public function doubleFoo() {
+    public function doubleFoo(): int
+    {
         return $this->foo * 2;
     }
 }

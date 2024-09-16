@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAttributes;
 
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Session;
@@ -132,6 +133,7 @@ trait TestsAttributes
             Title::class => ['content'],
             Session::class => ['key'],
             Lazy::class => ['isolate'],
+            Computed::class => ['persist', 'cache', 'seconds', 'key', 'tags'],
         ];
 
         if (!isset($attributeComparisons[$attribute])) {
