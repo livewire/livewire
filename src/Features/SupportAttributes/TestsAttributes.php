@@ -143,8 +143,7 @@ trait TestsAttributes
         $fields = $attributeComparisons[$attribute];
 
         if (is_array($value)) {
-            $isAssociative = !array_is_list($value);
-            if (!$isAssociative) {
+            if (array_is_list($value)) {
                 $assigned = false;
                 foreach ($fields as $field) {
                     $actualValue = $this->getAttributeValue($item, $field);
