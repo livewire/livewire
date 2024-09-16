@@ -65,7 +65,8 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(NewComponent::class)
                 ->assertComponentHasAttribute(Title::class, 'Class Level Attribute')
                 ->assertComponentHasAttribute(Validate::class, ['required', 'integer'])
-                ->assertComponentHasAttribute(On::class, 'fooEvent');
+                ->assertComponentHasAttribute(On::class, 'fooEvent')
+            ->assertComponentHasAttribute(Modelable::class);
     }
 
     public function test_component_has_class_level_attribute_with_value()
@@ -95,6 +96,9 @@ class UnitTest extends \Tests\TestCase
     public function test_component_has_property_level_attribute()
     {
         Livewire::test(NewComponent::class)
+            ->assertPropertyHasAttribute('fizz', Reactive::class)
+            ->assertPropertyHasAttribute('count2', Locked::class)
+            ->assertPropertyHasAttribute('count2', LifecycleHookAttribute::class)
             ->assertPropertyHasAttribute('bar', Session::class, ['key' => 'foo'])
             ->assertPropertyHasAttribute('foo', Validate::class, ['required', 'integer']);
     }
@@ -119,8 +123,16 @@ class UnitTest extends \Tests\TestCase
 #[Title('Class Level Attribute')]
 class NewComponent extends TestComponent {
 
+    #[Modelable]
     #[Validate(['required', 'integer'])]
     public ?int $foo = null;
+
+    #[Reactive]
+    public string $fizz = 'buzz';
+
+    #[Locked]
+    #[LifecycleHookAttribute]
+    public int $count2 = 0;
 
     #[Validate('required', as: 'date of birth')]
     #[Session(key: 'foo')]
@@ -164,29 +176,6 @@ class NewComponent extends TestComponent {
     {
         return $this->foo * 2;
     }
-}
-
-class HasAllAttributes extends TestComponent {
-
-    #[Validate('required')]
-    public $content = '';
-
-    #[Locked]
-    public $foo = 'bar';
-
-    #[Computed]
-    public function getFoo() {
-        return $this->foo;
-    }
-
-    #[Reactive]
-    public $bar = 'foo';
-
-    #[Modelable]
-    public $baz = 'baz';
-
-    #[LifecycleHookAttribute]
-    public $count2 = 0;
 }
 
 #[\Attribute]
