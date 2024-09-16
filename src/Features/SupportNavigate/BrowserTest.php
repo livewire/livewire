@@ -40,6 +40,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Livewire::component('nav-bar-component', NavBarComponent::class);
 
+            Livewire::component('first-noscript-page', FirstNoscriptPage::class);
+            Livewire::component('second-noscript-page', SecondNoscriptPage::class);
+
             Route::get('/navbar/{page}', NavBarComponent::class)->middleware('web');
 
             Route::get('/query-page', QueryPage::class)->middleware('web');
@@ -85,6 +88,11 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
             Route::get('/script-component', ScriptComponent::class);
+
+            Route::get('/first-noscript', FirstNoscriptPage::class)->middleware('web');
+            Route::get('/second-noscript', SecondNoscriptPage::class)->middleware('web');
+            Route::get('/no-javascript', fn () => '<div dusk="no-javascript-side">No javascript side triggered.</div>')
+                ->middleware('web')->name('no-javascript');
         };
     }
 
@@ -991,6 +999,21 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertPathIsNot('/livewire-dusk/null');
     }
 
+    public function test_noscript_in_head_not_triggered_with_navigate()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-noscript')
+                ->assertScript('return _lw_dusk_asset_count', 1)
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return _lw_dusk_asset_count', 1)
+                ->pause(500)
+                ->assertPathIsNot('/no-javascript');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1390,5 +1413,23 @@ class ScriptComponent extends Component
                 <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
             </div>
         HTML;
+    }
+}
+
+class FirstNoscriptPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout-with-noscript')]
+    public function render()
+    {
+        return '<div>On first asset page <a href="/second-noscript" wire:navigate dusk="link.to.second">Go to second page</a></div>';
+    }
+}
+
+class SecondNoscriptPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout-with-noscript')]
+    public function render()
+    {
+        return '<div>On second asset page <a href="/first-noscript" wire:navigate dusk="link.to.first">Go to first page</a></div>';
     }
 }

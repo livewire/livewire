@@ -113,6 +113,8 @@ function mergeNewHead(newHead) {
 
     // Add new non-asset elements left over in the new head element.
     for (let child of Array.from(newHead.children)) {
+        if (child.tagName.toLowerCase() === 'noscript') continue
+
         document.head.appendChild(child)
     }
 
