@@ -155,13 +155,13 @@ trait TestsAttributes
                     }
                 }
                 if (!$assigned) {
-                    PHPUnit::fail("Unable to assign flat array to any field of attribute {$attribute}.");
+                    return false;
                 }
             }
         } else if (count($fields) === 1) {
             $value = [$fields[0] => $value];
         } else {
-            PHPUnit::fail("Expected value for attribute {$attribute} must be an associative array with keys: " . implode(', ', $fields) . ".");
+            return false;
         }
 
         foreach ($value as $key => $expectedValue) {
@@ -179,7 +179,7 @@ trait TestsAttributes
                     return false;
                 }
             } else {
-                PHPUnit::fail("Attribute {$attribute} does not have a field named '{$key}'.");
+                return false;
             }
         }
 
