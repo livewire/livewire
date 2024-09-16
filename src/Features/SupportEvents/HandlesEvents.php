@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportEvents;
 
 use function Livewire\store;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 trait HandlesEvents
 {

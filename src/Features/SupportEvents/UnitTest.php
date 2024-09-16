@@ -232,6 +232,7 @@ class UnitTest extends \Tests\TestCase
     public function test_dispatch_method_accepts_jobs()
     {
         Bus::fake();
+        
         $component = Livewire::test(new class extends TestComponent {
             public function dispatchFoo()
             {
