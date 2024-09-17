@@ -72,6 +72,10 @@ class EloquentModelSynth extends Synth
             $model = $this->loadModel($meta);
         }
 
+        if (is_null($model)) {
+            return null;
+        }
+
         if (isset($meta['relations'])) {
             foreach($meta['relations'] as $relationKey) {
                 if (! isset($data[$relationKey])) continue;
@@ -210,9 +214,7 @@ class EloquentModelSynth extends Synth
                 $query->with($meta['relations']);
             }
 
-            if ($query->first() !== null) {
-                $model = $query->first();
-            }
+            $model = $query->first();
         } else {
             $model = new $class();
         }

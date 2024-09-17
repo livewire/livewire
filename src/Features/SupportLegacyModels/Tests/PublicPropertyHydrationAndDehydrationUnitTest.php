@@ -879,12 +879,11 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 
     public function test_it_returns_null_if_the_model_was_deleted()
     {
-        $this->expectNotToPerformAssertions();
-
         $model = Author::create(['id' => 1, 'title' => 'foo', 'name' => 'bar', 'email' => 'baz']);
 
         $component = Livewire::test(ModelsComponent::class, ['model' => $model])
-            ->call('$refresh');
+            ->call('$refresh')
+            ->assertSuccessful();
 
         $model->delete();
 
