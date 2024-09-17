@@ -140,6 +140,13 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('page', 3)
             ->assertSetStrict('paginators.page', 3);
     }
+
+    public function test_gotoPage_can_deal_with_complex_invalid_page_numbers_and_fall_back_to_1()
+    {
+        Livewire::test(ComponentWithPaginationStub::class)
+            ->call('gotoPage', "0'XOR(if(now()=sysdate(),sleep(15),0))XOR'Z")
+            ->assertSetStrict('paginators.page', 1);
+    }
 }
 
 class ComponentWithPaginationStub extends TestComponent
