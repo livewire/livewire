@@ -210,7 +210,9 @@ class EloquentModelSynth extends Synth
                 $query->with($meta['relations']);
             }
 
-            $model = $query->first();
+            if ($query->first() !== null) {
+                $model = $query->first();
+            }
         } else {
             $model = new $class();
         }
