@@ -45,6 +45,8 @@ trait HandlesPagination
     {
         if (is_numeric($page)) {
             $page = (int) ($page <= 0 ? 1 : $page);
+        } else {
+            $page = 1;
         }
 
         $beforePaginatorMethod = 'updatingPaginators';
