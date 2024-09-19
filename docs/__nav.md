@@ -49,6 +49,7 @@ Concepts:
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
     Troubleshooting: { uri: /docs/troubleshooting, file: /troubleshooting.md }
+    Package Development: { uri: /docs/package-dev, file: /package-development.md }
     Security: { uri: /docs/security, file: /security.md }
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }
