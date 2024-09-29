@@ -11,7 +11,7 @@ class SupportNavigate extends ComponentHook
     static function provide()
     {
         Blade::directive('persist', function ($expression) {
-            return '<?php app("livewire")->forceAssetInjection(); ?><div x-persist="<?php echo e('.$expression.'); ?>">';
+            return '<?php app("livewire")->forceAssetInjection(); ?><div x-persist="<?php echo e('.$expression.'); ?>" style="display: contents">';
         });
 
         Blade::directive('endpersist', function ($expression) {
