@@ -125,6 +125,10 @@ class FrontendAssets extends Mechanism
             [x-cloak] {
                 display: none !important;
             }
+
+            [x-persist] {
+                display: contents;
+            }
         </style>
         HTML;
 
