@@ -6820,8 +6820,6 @@ var require_module_cjs8 = __commonJS({
         let toAttributes = Array.from(to.attributes);
         for (let i = domAttributes.length - 1; i >= 0; i--) {
           let name = domAttributes[i].name;
-          if (name === "style")
-            continue;
           if (!to.hasAttribute(name)) {
             from2.removeAttribute(name);
           }
@@ -6829,8 +6827,6 @@ var require_module_cjs8 = __commonJS({
         for (let i = toAttributes.length - 1; i >= 0; i--) {
           let name = toAttributes[i].name;
           let value = toAttributes[i].value;
-          if (name === "style")
-            continue;
           if (from2.getAttribute(name) !== value) {
             from2.setAttribute(name, value);
           }
@@ -9015,6 +9011,44 @@ function injectStyles() {
   document.head.appendChild(style);
 }
 
+// js/plugins/navigate/popover.js
+function packUpPersistedPopovers(persistedEl) {
+  persistedEl.querySelectorAll(":popover-open").forEach((el) => {
+    el.setAttribute("data-navigate-popover-open", "");
+    let animations = el.getAnimations();
+    el._pausedAnimations = animations.map((animation) => ({
+      keyframes: animation.effect.getKeyframes(),
+      options: {
+        duration: animation.effect.getTiming().duration,
+        easing: animation.effect.getTiming().easing,
+        fill: animation.effect.getTiming().fill,
+        iterations: animation.effect.getTiming().iterations
+      },
+      currentTime: animation.currentTime,
+      playState: animation.playState
+    }));
+    animations.forEach((i) => i.pause());
+  });
+}
+function unPackPersistedPopovers(persistedEl) {
+  persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
+    el.removeAttribute("data-navigate-popover-open");
+    queueMicrotask(() => {
+      if (!el.isConnected)
+        return;
+      el.showPopover();
+      el.getAnimations().forEach((i) => i.finish());
+      if (el._pausedAnimations) {
+        el._pausedAnimations.forEach(({ keyframes, options, currentTime, now, playState }) => {
+          let animation = el.animate(keyframes, options);
+          animation.currentTime = currentTime;
+        });
+        delete el._pausedAnimations;
+      }
+    });
+  });
+}
+
 // js/plugins/navigate/page.js
 var oldBodyScriptTagHashes = [];
 var attributesExemptFromScriptTagHashing = [
@@ -9206,6 +9240,7 @@ function navigate_default(Alpine19) {
       preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
+          packUpPersistedPopovers(persistedEl);
         });
         if (shouldPushToHistoryState) {
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
@@ -9216,6 +9251,7 @@ function navigate_default(Alpine19) {
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
+            unPackPersistedPopovers(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
           afterNewScriptsAreDoneLoading(() => {
@@ -9259,12 +9295,14 @@ function navigate_default(Alpine19) {
     preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
       enablePersist && storePersistantElementsForLater((persistedEl) => {
         packUpPersistedTeleports(persistedEl);
+        packUpPersistedPopovers(persistedEl);
       });
       swapCurrentPageWithNewHtml(html, () => {
         removeAnyLeftOverStaleProgressBars();
         removeAnyLeftOverStaleTeleportTargets(document.body);
         enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
           unPackPersistedTeleports(persistedEl);
+          unPackPersistedPopovers(persistedEl);
         });
         restoreScrollPositionOrScrollToTop();
         andAfterAllThis(() => {
