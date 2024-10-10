@@ -5,6 +5,7 @@ import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTelep
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndStartProgressBar } from "./bar"
+import { packUpPersistedPopovers, unPackPersistedPopovers } from "./popover"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
 
@@ -84,6 +85,7 @@ export default function (Alpine) {
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
                 enablePersist && storePersistantElementsForLater(persistedEl => {
                     packUpPersistedTeleports(persistedEl)
+                    packUpPersistedPopovers(persistedEl)
                 })
 
                 if (shouldPushToHistoryState) {
@@ -97,6 +99,7 @@ export default function (Alpine) {
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
                         unPackPersistedTeleports(persistedEl)
+                        unPackPersistedPopovers(persistedEl)
                     })
 
                     restoreScrollPositionOrScrollToTop()
@@ -156,6 +159,7 @@ export default function (Alpine) {
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
                 enablePersist && storePersistantElementsForLater(persistedEl => {
                     packUpPersistedTeleports(persistedEl)
+                    packUpPersistedPopovers(persistedEl)
                 })
 
                 swapCurrentPageWithNewHtml(html, () => {
@@ -165,6 +169,7 @@ export default function (Alpine) {
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
                         unPackPersistedTeleports(persistedEl)
+                        unPackPersistedPopovers(persistedEl)
                     })
 
                     restoreScrollPositionOrScrollToTop()
