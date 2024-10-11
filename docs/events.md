@@ -70,7 +70,7 @@ class UpdatePost extends Component
     {
         // ...
 
-        $this->dispatch('post-updated.{$post->id}'); // [tl! highlight]
+        $this->dispatch("post-updated.{$post->id}"); // [tl! highlight]
     }
 }
 ```
