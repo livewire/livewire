@@ -78,7 +78,24 @@ class UnitTest extends \Tests\TestCase
                 ]);
             }
         })
-            ->assertSetStrict('form.content', [1 => true, 2 => false])
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
+
+    function test_can_reset_form_object_handle_nested_dot_notation()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.foo',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
             ->call('resetForm')
         ;
     }
@@ -835,6 +852,7 @@ class PostFormStubWithArrayDefaults extends Form
     public $content = [
         1 => true,
         2 => false,
+        'foo' => ['bar' => 'baz'],
     ];
 }
 
