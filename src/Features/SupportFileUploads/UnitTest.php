@@ -803,6 +803,25 @@ class UnitTest extends \Tests\TestCase
 
         Storage::disk('avatars')->assertMissing('malicious.php');
     }
+
+    public function test_the_file_upload_configuration_has_middleware()
+    {
+        $this->assertEquals(
+            ['web', 'throttle:60,1'],
+            FileUploadConfiguration::middleware()
+        );
+    }
+
+    public function test_the_file_upload_configuration_middleware_can_be_customized()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', 'middleware');
+        config()->set('livewire.temporary_file_upload.default_middleware', 'default_middleware');
+
+        $this->assertEquals(
+            ['default_middleware', 'middleware'],
+            FileUploadConfiguration::middleware()
+        );
+    }
 }
 
 class DummyMiddleware
