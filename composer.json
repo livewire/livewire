@@ -17,7 +17,7 @@
     "league/mime-type-detection": "^1.9",
     "symfony/console": "^6.0|^7.0",
     "symfony/http-kernel": "^6.2|^7.0",
-    "laravel/prompts": "^0.1.24"
+    "laravel/prompts": "^0.1.24|^0.2|^0.3"
   },
   "require-dev": {
     "psy/psysh": "^0.11.22|^0.12",
