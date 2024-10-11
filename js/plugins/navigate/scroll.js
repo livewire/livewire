@@ -25,8 +25,10 @@ export function restoreScrollPositionOrScrollToTop() {
     }
 
     queueMicrotask(() => {
-        scroll(document.body)
+        queueMicrotask(() => { // Double microtask here to make sure scrolling restoration is the LAST thing to happen. (Even after Alpine's x-init functions)...
+            scroll(document.body)
 
-        document.querySelectorAll(['[x-navigate\\:scroll]', '[wire\\:scroll]']).forEach(scroll)
+            document.querySelectorAll(['[x-navigate\\:scroll]', '[wire\\:scroll]']).forEach(scroll)
+        })
     })
 }

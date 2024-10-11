@@ -443,7 +443,7 @@ class PostForm extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [
@@ -490,7 +490,7 @@ class PostForm extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [

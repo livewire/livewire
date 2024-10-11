@@ -599,7 +599,7 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
 If you would like to instead hook into the entire HTTP request going and returning from the server, you can do so using the `request` hook:
 
 ```js
-Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
+Livewire.hook('request', ({ url, options, payload, respond, succeed, fail }) => {
     // Runs after commit payloads are compiled, but before a network request is sent...
 
     respond(({ status, response }) => {
