@@ -102,7 +102,7 @@ class FileUploadConfiguration
     public static function middleware()
     {
         $middleware = config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1';
-        $default = config('livewire.temporary_file_upload.default_middleware') ?: 'web';
+        $default = config('livewire.temporary_file_upload.default_middleware') ?? 'web';
 
         return array_merge((array) $default, (array) $middleware);
     }

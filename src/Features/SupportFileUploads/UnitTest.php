@@ -822,6 +822,17 @@ class UnitTest extends \Tests\TestCase
             FileUploadConfiguration::middleware()
         );
     }
+
+    public function test_the_file_upload_configuration_default_middleware_can_be_removed()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', 'middleware');
+        config()->set('livewire.temporary_file_upload.default_middleware', []);
+
+        $this->assertEquals(
+            ['middleware'],
+            FileUploadConfiguration::middleware()
+        );
+    }
 }
 
 class DummyMiddleware
