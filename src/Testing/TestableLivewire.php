@@ -83,7 +83,7 @@ class TestableLivewire
 
         $this->lastResponse = $this->pretendWereMountingAComponentOnAPage($name, $params, $queryParams);
 
-        if (! $this->lastResponse->exception) {
+        if (! $this->lastResponse->exception && !empty($this->rawMountedResponse)) {
             $this->updateComponent([
                 'fingerprint' => $this->rawMountedResponse->fingerprint,
                 'serverMemo' => $this->rawMountedResponse->memo,
@@ -203,6 +203,9 @@ class TestableLivewire
 
     public function id()
     {
+        if (!array_key_exists('fingerprint', $this->payload)) {
+            return null;
+        }
         return $this->payload['fingerprint']['id'];
     }
 
