@@ -191,6 +191,18 @@ wireProperty('$parent', component => {
     return parent.$wire
 })
 
+let rootMemo = new WeakMap
+
+wireProperty('$root', component => {
+    if (rootMemo.has(component)) return rootMemo.get(component).$wire
+
+    let root = component.root
+
+    rootMemo.set(component, root)
+
+    return root.$wire
+})
+
 let overriddenMethods = new WeakMap
 
 export function overrideMethod(component, method, callback) {

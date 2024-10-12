@@ -1,6 +1,6 @@
 import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
-import { closestComponent, findComponent } from '@/store'
+import { closestComponent, farthestComponent, findComponent } from '@/store'
 import { trigger } from '@/hooks'
 
 export class Component {
@@ -146,6 +146,10 @@ export class Component {
 
     get parent() {
         return closestComponent(this.el.parentElement)
+    }
+
+    get root() {
+        return farthestComponent(this.el)
     }
 
     inscribeSnapshotAndEffectsOnElement() {

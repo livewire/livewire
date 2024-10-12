@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3831,9 +3831,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3952,9 +3952,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4954,9 +4954,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5043,9 +5043,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5197,9 +5197,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6735,9 +6735,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7102,9 +7102,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8311,6 +8311,14 @@ wireProperty("$parent", (component) => {
   parentMemo.set(component, parent);
   return parent.$wire;
 });
+var rootMemo = /* @__PURE__ */ new WeakMap();
+wireProperty("$root", (component) => {
+  if (rootMemo.has(component))
+    return rootMemo.get(component).$wire;
+  let root = component.root;
+  rootMemo.set(component, root);
+  return root.$wire;
+});
 var overriddenMethods = /* @__PURE__ */ new WeakMap();
 function overrideMethod(component, method, callback) {
   if (!overriddenMethods.has(component)) {
@@ -8417,6 +8425,9 @@ var Component = class {
   get parent() {
     return closestComponent(this.el.parentElement);
   }
+  get root() {
+    return farthestComponent(this.el);
+  }
   inscribeSnapshotAndEffectsOnElement() {
     let el = this.el;
     el.setAttribute("wire:snapshot", this.snapshotEncoded);
@@ -8472,6 +8483,14 @@ function closestComponent(el, strict = true) {
     return;
   }
   return closestRoot.__livewire;
+}
+function farthestComponent(el, strict = true) {
+  let lastClosestRoot = el;
+  let closestRoot;
+  while (closestRoot = Alpine.findClosest(lastClosestRoot.parentElement, (i) => i.__livewire)) {
+    lastClosestRoot = closestRoot;
+  }
+  return lastClosestRoot.__livewire;
 }
 function componentsByName(name) {
   return Object.values(components).filter((component) => {
@@ -9970,7 +9989,14 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => setT
   if (directive2.value !== "submit")
     return;
   el.addEventListener("submit", () => {
-    let componentId = directive2.expression.startsWith("$parent") ? component.parent.id : component.id;
+    let componentId;
+    if (directive2.expression.startsWith("$root")) {
+      componentId = component.root.id;
+    } else if (directive2.expression.startsWith("$parent")) {
+      componentId = component.parent.id;
+    } else {
+      componentId = component.id;
+    }
     let cleanup2 = disableForm(el);
     cleanups.add(componentId, cleanup2);
   });
@@ -10825,7 +10851,14 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
   let onBlur = modifiers.includes("blur");
   let isDebounced = modifiers.includes("debounce");
-  let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
+  let update;
+  if (expression.startsWith("$root")) {
+    update = () => component.$wire.$root.$commit();
+  } else if (expression.startsWith("$parent")) {
+    update = () => component.$wire.$parent.$commit();
+  } else {
+    update = () => component.$wire.$commit();
+  }
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
   import_alpinejs15.default.bind(el, {
     ["@change"]() {
@@ -10865,6 +10898,12 @@ function componentIsMissingProperty(component, property) {
     if (!parent)
       return true;
     return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+  }
+  if (property.startsWith("$root")) {
+    let root = farthestComponent(component.el, false);
+    if (!root)
+      return true;
+    return componentIsMissingProperty(root, property.split("$root.")[1]);
   }
   let baseProperty = property.split(".")[0];
   return !Object.keys(component.canonical).includes(baseProperty);

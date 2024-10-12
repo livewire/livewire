@@ -17,9 +17,15 @@ on('directive.init', ({ el, directive, cleanup, component }) => setTimeout(() =>
         // If using wire:submit="$parent...", we will need to use
         // the parent ID as a reference for undoing because it's
         // the ID that will come back from the network request.
-        let componentId = directive.expression.startsWith('$parent')
-            ? component.parent.id
-            : component.id
+        let componentId;
+
+        if (directive.expression.startsWith('$root')) {
+            componentId = component.root.id
+        } else if (directive.expression.startsWith('$parent')) {
+            componentId = component.parent.id
+        } else {
+            componentId = component.id
+        }
 
         let cleanup = disableForm(el)
 
