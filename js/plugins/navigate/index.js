@@ -19,7 +19,7 @@ export default function (Alpine) {
     Alpine.navigate = (url) => {
         let destination = createUrlObjectFromString(url)
 
-        let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+        let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
             url: destination, history: false, cached: false,
          })
 
@@ -57,7 +57,7 @@ export default function (Alpine) {
             })
 
             whenItIsReleased(() => {
-                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
                     url: destination, history: false, cached: false,
                  })
 
@@ -72,7 +72,7 @@ export default function (Alpine) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-            fireEventForOtherLibariesToHookInto('alpine:navigating')
+            fireEventForOtherLibrariesToHookInto('alpine:navigating')
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
@@ -112,7 +112,7 @@ export default function (Alpine) {
 
                             nowInitializeAlpineOnTheNewPage(Alpine)
 
-                            fireEventForOtherLibariesToHookInto('alpine:navigated')
+                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
                         })
                     })
                 })
@@ -125,7 +125,7 @@ export default function (Alpine) {
             ifThePageBeingVisitedHasntBeenCached((url) => {
                 let destination = createUrlObjectFromString(url)
 
-                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
                     url: destination, history: true, cached: false,
                  })
 
@@ -139,7 +139,7 @@ export default function (Alpine) {
         (html, url, currentPageUrl, currentPageKey) => {
             let destination = createUrlObjectFromString(url)
 
-            let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+            let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
                 url: destination, history: true, cached: true,
             })
 
@@ -150,7 +150,7 @@ export default function (Alpine) {
             storeScrollInformationInHtmlBeforeNavigatingAway()
 
             // This ensures the current HTML has the latest snapshot
-            fireEventForOtherLibariesToHookInto('alpine:navigating')
+            fireEventForOtherLibrariesToHookInto('alpine:navigating')
 
             // Only update the snapshot and not the history state as the history state
             // has already changed to the new page due to the popstate event
@@ -179,7 +179,7 @@ export default function (Alpine) {
 
                         nowInitializeAlpineOnTheNewPage(Alpine)
 
-                        fireEventForOtherLibariesToHookInto('alpine:navigated')
+                        fireEventForOtherLibrariesToHookInto('alpine:navigated')
                     })
                 })
             })
@@ -189,7 +189,7 @@ export default function (Alpine) {
     // Because DOMContentLoaded is fired on first load,
     // we should fire alpine:navigated as a replacement as well...
     setTimeout(() => {
-        fireEventForOtherLibariesToHookInto('alpine:navigated')
+        fireEventForOtherLibrariesToHookInto('alpine:navigated')
     })
 }
 
@@ -211,7 +211,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     })
 }
 
-function fireEventForOtherLibariesToHookInto(name, detail) {
+function fireEventForOtherLibrariesToHookInto(name, detail) {
     let event = new CustomEvent(name, {
         cancelable: true,
         bubbles: true,
