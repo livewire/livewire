@@ -712,7 +712,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -851,9 +851,10 @@
     });
   }
   function cleanupElement(el) {
-    el._x_effects?.forEach(dequeueJob);
-    while (el._x_cleanups?.length)
-      el._x_cleanups.pop()();
+    if (el._x_cleanups) {
+      while (el._x_cleanups.length)
+        el._x_cleanups.pop()();
+    }
   }
   var observer = new MutationObserver(onMutate);
   var currentlyObserving = false;
@@ -1091,22 +1092,26 @@
     magics[name] = callback;
   }
   function injectMagics(obj, el) {
-    let memoizedUtilities = getUtilities(el);
     Object.entries(magics).forEach(([name, callback]) => {
+      let memoizedUtilities = null;
+      function getUtilities() {
+        if (memoizedUtilities) {
+          return memoizedUtilities;
+        } else {
+          let [utilities, cleanup2] = getElementBoundUtilities(el);
+          memoizedUtilities = { interceptor, ...utilities };
+          onElRemoved(el, cleanup2);
+          return memoizedUtilities;
+        }
+      }
       Object.defineProperty(obj, `$${name}`, {
         get() {
-          return callback(el, memoizedUtilities);
+          return callback(el, getUtilities());
         },
         enumerable: false
       });
     });
     return obj;
-  }
-  function getUtilities(el) {
-    let [utilities, cleanup2] = getElementBoundUtilities(el);
-    let utils = { interceptor, ...utilities };
-    onElRemoved(el, cleanup2);
-    return utils;
   }
   function tryCatch(el, expression, callback, ...args) {
     try {
@@ -1481,8 +1486,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function destroyTree(root, walker = walk) {
     walker(root, (el) => {
-      cleanupElement(el);
       cleanupAttributes(el);
+      cleanupElement(el);
     });
   }
   function warnAboutMissingPlugins() {
@@ -2062,37 +2067,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return rawValue ? Boolean(rawValue) : null;
   }
-  var booleanAttributes = /* @__PURE__ */ new Set([
-    "allowfullscreen",
-    "async",
-    "autofocus",
-    "autoplay",
-    "checked",
-    "controls",
-    "default",
-    "defer",
-    "disabled",
-    "formnovalidate",
-    "inert",
-    "ismap",
-    "itemscope",
-    "loop",
-    "multiple",
-    "muted",
-    "nomodule",
-    "novalidate",
-    "open",
-    "playsinline",
-    "readonly",
-    "required",
-    "reversed",
-    "selected",
-    "shadowrootclonable",
-    "shadowrootdelegatesfocus",
-    "shadowrootserializable"
-  ]);
   function isBooleanAttr(attrName) {
-    return booleanAttributes.has(attrName);
+    const booleanAttributes = [
+      "disabled",
+      "checked",
+      "required",
+      "readonly",
+      "open",
+      "selected",
+      "autofocus",
+      "itemscope",
+      "multiple",
+      "novalidate",
+      "allowfullscreen",
+      "allowpaymentrequest",
+      "formnovalidate",
+      "autoplay",
+      "controls",
+      "loop",
+      "muted",
+      "playsinline",
+      "default",
+      "ismap",
+      "reversed",
+      "async",
+      "defer",
+      "nomodule"
+    ];
+    return booleanAttributes.includes(attrName);
   }
   function attributeShouldntBePreservedIfFalsy(name) {
     return !["aria-pressed", "aria-checked", "aria-expanded", "aria-selected"].includes(name);
@@ -2193,10 +2195,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return stores[name];
     }
     stores[name] = value;
-    initInterceptors(stores[name]);
     if (typeof value === "object" && value !== null && value.hasOwnProperty("init") && typeof value.init === "function") {
       stores[name].init();
     }
+    initInterceptors(stores[name]);
   }
   function getStores() {
     return stores;
@@ -2278,7 +2280,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.2",
+    version: "3.14.1",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3134,10 +3136,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         placeInDom(el._x_teleport, target2, modifiers);
       });
     };
-    cleanup2(() => mutateDom(() => {
-      clone2.remove();
-      destroyTree(clone2);
-    }));
+    cleanup2(() => clone2.remove());
   });
   var teleportContainerDuringClone = document.createElement("div");
   function getTarget(expression) {
@@ -3625,10 +3624,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el._x_lookup = {};
     effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
     cleanup2(() => {
-      Object.values(el._x_lookup).forEach((el2) => mutateDom(() => {
-        destroyTree(el2);
-        el2.remove();
-      }));
+      Object.values(el._x_lookup).forEach((el2) => el2.remove());
       delete el._x_prevKeys;
       delete el._x_lookup;
     });
@@ -3697,12 +3693,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       for (let i = 0; i < removes.length; i++) {
         let key = removes[i];
-        if (!(key in lookup))
-          continue;
-        mutateDom(() => {
-          destroyTree(lookup[key]);
-          lookup[key].remove();
-        });
+        if (!!lookup[key]._x_effects) {
+          lookup[key]._x_effects.forEach(dequeueJob);
+        }
+        lookup[key].remove();
+        lookup[key] = null;
         delete lookup[key];
       }
       for (let i = 0; i < moves.length; i++) {
@@ -3823,10 +3818,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       el._x_currentIfEl = clone2;
       el._x_undoIf = () => {
-        mutateDom(() => {
-          destroyTree(clone2);
-          clone2.remove();
+        walk(clone2, (node) => {
+          if (!!node._x_effects) {
+            node._x_effects.forEach(dequeueJob);
+          }
         });
+        clone2.remove();
         delete el._x_currentIfEl;
       };
       return clone2;
@@ -4459,6 +4456,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentMemo.set(component, parent);
     return parent.$wire;
   });
+  var rootMemo = /* @__PURE__ */ new WeakMap();
+  wireProperty("$root", (component) => {
+    if (rootMemo.has(component))
+      return rootMemo.get(component).$wire;
+    let root = component.root;
+    rootMemo.set(component, root);
+    return root.$wire;
+  });
   var overriddenMethods = /* @__PURE__ */ new WeakMap();
   function overrideMethod(component, method, callback) {
     if (!overriddenMethods.has(component)) {
@@ -4565,6 +4570,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get parent() {
       return closestComponent(this.el.parentElement);
     }
+    get root() {
+      return farthestComponent(this.el);
+    }
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
       el.setAttribute("wire:snapshot", this.snapshotEncoded);
@@ -4620,6 +4628,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     }
     return closestRoot2.__livewire;
+  }
+  function farthestComponent(el, strict = true) {
+    let lastClosestRoot = el;
+    let closestRoot2;
+    while (closestRoot2 = Alpine.findClosest(lastClosestRoot.parentElement, (i) => i.__livewire)) {
+      lastClosestRoot = closestRoot2;
+    }
+    return lastClosestRoot.__livewire;
   }
   function componentsByName(name) {
     return Object.values(components).filter((component) => {
@@ -4765,7 +4781,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4815,7 +4831,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             start: { height: current + "px" },
             end: { height: full + "px" }
           }, () => el._x_isShown = true, () => {
-            if (el.getBoundingClientRect().height == full) {
+            if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
               el.style.overflow = null;
             }
           });
@@ -4859,7 +4875,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5808,7 +5824,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5870,7 +5886,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -5970,7 +5986,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -8179,7 +8195,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8514,7 +8530,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -8994,7 +9010,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (directive3.value !== "submit")
       return;
     el.addEventListener("submit", () => {
-      let componentId = directive3.expression.startsWith("$parent") ? component.parent.id : component.id;
+      let componentId;
+      if (directive3.expression.startsWith("$root")) {
+        componentId = component.root.id;
+      } else if (directive3.expression.startsWith("$parent")) {
+        componentId = component.parent.id;
+      } else {
+        componentId = component.id;
+      }
       let cleanup3 = disableForm(el);
       cleanups.add(componentId, cleanup3);
     });
@@ -9794,7 +9817,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
-    let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
+    let update;
+    if (expression.startsWith("$root")) {
+      update = () => component.$wire.$root.$commit();
+    } else if (expression.startsWith("$parent")) {
+      update = () => component.$wire.$parent.$commit();
+    } else {
+      update = () => component.$wire.$commit();
+    }
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
@@ -9834,6 +9864,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!parent)
         return true;
       return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+    }
+    if (property.startsWith("$root")) {
+      let root = farthestComponent(component.el, false);
+      if (!root)
+        return true;
+      return componentIsMissingProperty(root, property.split("$root.")[1]);
     }
     let baseProperty = property.split(".")[0];
     return !Object.keys(component.canonical).includes(baseProperty);

@@ -51,6 +51,17 @@ export function closestComponent(el, strict = true) {
     return closestRoot.__livewire
 }
 
+export function farthestComponent(el, strict = true) {
+    let lastClosestRoot = el;
+    let closestRoot;
+
+    while(closestRoot = Alpine.findClosest(lastClosestRoot.parentElement, i => i.__livewire)) {
+        lastClosestRoot = closestRoot;
+    }
+
+    return lastClosestRoot.__livewire
+}
+
 export function componentsByName(name) {
     return Object.values(components).filter(component => {
         return name == component.name

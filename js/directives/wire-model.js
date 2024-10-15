@@ -1,6 +1,6 @@
 import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
-import { closestComponent } from '@/store'
+import { closestComponent, farthestComponent } from '@/store'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 
@@ -26,9 +26,15 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let isDebounced = modifiers.includes('debounce')
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
-    let update = expression.startsWith('$parent')
-        ? () => component.$wire.$parent.$commit()
-        : () => component.$wire.$commit()
+    let update
+
+    if (expression.startsWith('$root')) {
+        update = () => component.$wire.$root.$commit();
+    } else if (expression.startsWith('$parent')) {
+        update = () => component.$wire.$parent.$commit();
+    } else {
+        update = () => component.$wire.$commit();
+    }
 
     // If a plain wire:model is added to a text input, debounce the
     // trigerring of network requests.
@@ -90,6 +96,14 @@ function componentIsMissingProperty(component, property) {
         if (! parent) return true
 
         return componentIsMissingProperty(parent, property.split('$parent.')[1])
+    }
+
+    if (property.startsWith('$root')) {
+        let root = farthestComponent(component.el, false)
+
+        if (! root) return true
+
+        return componentIsMissingProperty(root, property.split('$root.')[1])
     }
 
     let baseProperty = property.split('.')[0]
