@@ -2557,7 +2557,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     function bindInputValue(el, value) {
-      if (el.type === "radio") {
+      if (isRadio(el)) {
         if (el.attributes.value === void 0) {
           el.value = value;
         }
@@ -2568,7 +2568,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             el.checked = checkedAttrLooseCompare(el.value, value);
           }
         }
-      } else if (el.type === "checkbox") {
+      } else if (isCheckbox(el)) {
         if (Number.isInteger(value)) {
           el.value = value;
         } else if (!Array.isArray(value) && typeof value !== "boolean" && ![null, void 0].includes(value)) {
@@ -2706,6 +2706,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return !![name, "true"].includes(attr);
       }
       return attr;
+    }
+    function isCheckbox(el) {
+      return el.type === "checkbox" || el.localName === "ui-checkbox" || el.localName === "ui-switch";
+    }
+    function isRadio(el) {
+      return el.type === "radio" || el.localName === "ui-radio";
     }
     function debounce2(func, wait) {
       var timeout;
@@ -2860,7 +2866,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.2",
+      version: "3.14.3",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3296,7 +3302,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         setValue(getInputValue(el, modifiers, e, getValue()));
       });
       if (modifiers.includes("fill")) {
-        if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
+        if ([void 0, null, ""].includes(getValue()) || isCheckbox(el) && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
           setValue(getInputValue(el, modifiers, { target: el }, getValue()));
         }
       }
@@ -3336,7 +3342,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return mutateDom(() => {
         if (event instanceof CustomEvent && event.detail !== void 0)
           return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
-        else if (el.type === "checkbox") {
+        else if (isCheckbox(el)) {
           if (Array.isArray(currentValue)) {
             let newValue = null;
             if (modifiers.includes("number")) {
@@ -3367,7 +3373,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
         } else {
           let newValue;
-          if (el.type === "radio") {
+          if (isRadio(el)) {
             if (event.target.checked) {
               newValue = event.target.value;
             } else {
