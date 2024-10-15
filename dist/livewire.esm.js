@@ -2860,7 +2860,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.1",
+      version: "3.14.2",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -9187,7 +9187,7 @@ var autofocus = false;
 function navigate_default(Alpine19) {
   Alpine19.navigate = (url) => {
     let destination = createUrlObjectFromString(url);
-    let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+    let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
       history: false,
       cached: false
@@ -9218,7 +9218,7 @@ function navigate_default(Alpine19) {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
       whenItIsReleased(() => {
-        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
           url: destination,
           history: false,
           cached: false
@@ -9232,7 +9232,7 @@ function navigate_default(Alpine19) {
   function navigateTo(destination, shouldPushToHistoryState = true) {
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      fireEventForOtherLibrariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
@@ -9260,7 +9260,7 @@ function navigate_default(Alpine19) {
                 autofocus && autofocusElementsWithTheAutofocusAttribute();
               });
               nowInitializeAlpineOnTheNewPage(Alpine19);
-              fireEventForOtherLibariesToHookInto("alpine:navigated");
+              fireEventForOtherLibrariesToHookInto("alpine:navigated");
             });
           });
         });
@@ -9270,7 +9270,7 @@ function navigate_default(Alpine19) {
   whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
     ifThePageBeingVisitedHasntBeenCached((url) => {
       let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: true,
         cached: false
@@ -9282,7 +9282,7 @@ function navigate_default(Alpine19) {
     });
   }, (html, url, currentPageUrl, currentPageKey) => {
     let destination = createUrlObjectFromString(url);
-    let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+    let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
       history: true,
       cached: true
@@ -9290,7 +9290,7 @@ function navigate_default(Alpine19) {
     if (prevented)
       return;
     storeScrollInformationInHtmlBeforeNavigatingAway();
-    fireEventForOtherLibariesToHookInto("alpine:navigating");
+    fireEventForOtherLibrariesToHookInto("alpine:navigating");
     updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
     preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
       enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -9308,13 +9308,13 @@ function navigate_default(Alpine19) {
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
           nowInitializeAlpineOnTheNewPage(Alpine19);
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
+          fireEventForOtherLibrariesToHookInto("alpine:navigated");
         });
       });
     });
   });
   setTimeout(() => {
-    fireEventForOtherLibariesToHookInto("alpine:navigated");
+    fireEventForOtherLibrariesToHookInto("alpine:navigated");
   });
 }
 function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -9331,7 +9331,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine19, callback) {
     });
   });
 }
-function fireEventForOtherLibariesToHookInto(name, detail) {
+function fireEventForOtherLibrariesToHookInto(name, detail) {
   let event = new CustomEvent(name, {
     cancelable: true,
     bubbles: true,

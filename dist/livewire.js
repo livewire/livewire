@@ -2278,7 +2278,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.1",
+    version: "3.14.2",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -7801,7 +7801,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function navigate_default(Alpine3) {
     Alpine3.navigate = (url) => {
       let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: false,
         cached: false
@@ -7832,7 +7832,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
-          let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+          let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
             url: destination,
             history: false,
             cached: false
@@ -7846,7 +7846,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function navigateTo(destination, shouldPushToHistoryState = true) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-        fireEventForOtherLibariesToHookInto("alpine:navigating");
+        fireEventForOtherLibrariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
@@ -7874,7 +7874,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                   autofocus && autofocusElementsWithTheAutofocusAttribute();
                 });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
-                fireEventForOtherLibariesToHookInto("alpine:navigated");
+                fireEventForOtherLibrariesToHookInto("alpine:navigated");
               });
             });
           });
@@ -7884,7 +7884,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
       ifThePageBeingVisitedHasntBeenCached((url) => {
         let destination = createUrlObjectFromString(url);
-        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
           url: destination,
           history: true,
           cached: false
@@ -7896,7 +7896,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }, (html, url, currentPageUrl, currentPageKey) => {
       let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: true,
         cached: true
@@ -7904,7 +7904,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (prevented)
         return;
       storeScrollInformationInHtmlBeforeNavigatingAway();
-      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      fireEventForOtherLibrariesToHookInto("alpine:navigating");
       updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
@@ -7922,13 +7922,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine3);
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
+            fireEventForOtherLibrariesToHookInto("alpine:navigated");
           });
         });
       });
     });
     setTimeout(() => {
-      fireEventForOtherLibariesToHookInto("alpine:navigated");
+      fireEventForOtherLibrariesToHookInto("alpine:navigated");
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -7945,7 +7945,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(name, detail) {
+  function fireEventForOtherLibrariesToHookInto(name, detail) {
     let event = new CustomEvent(name, {
       cancelable: true,
       bubbles: true,
