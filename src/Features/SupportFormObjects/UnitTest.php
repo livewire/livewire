@@ -66,6 +66,39 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.content', 'bar')
         ;
     }
+    function test_can_reset_form_object_handle_dot_notation_with_asterisk_wildcard()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.*',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
+
+    function test_can_reset_form_object_handle_nested_dot_notation()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.foo',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
 
     function test_set_form_object_with_typed_nullable_properties()
     {
@@ -289,7 +322,7 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
         ;
     }
-    
+
     public function test_validation_errors_persist_across_validation_errors()
     {
         $component = Livewire::test(new class extends Component {
@@ -810,6 +843,17 @@ class PostFormStubWithDefaults extends Form
     public $title = 'foo';
 
     public $content = 'bar';
+}
+
+class PostFormStubWithArrayDefaults extends Form
+{
+    public $title = 'foo';
+
+    public $content = [
+        1 => true,
+        2 => false,
+        'foo' => ['bar' => 'baz'],
+    ];
 }
 
 class PostFormWithTypedProperties extends Form
