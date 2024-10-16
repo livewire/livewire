@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3822,9 +3822,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3897,7 +3897,7 @@ var require_module_cjs2 = __commonJS({
               start: { height: current + "px" },
               end: { height: full + "px" }
             }, () => el._x_isShown = true, () => {
-              if (el.getBoundingClientRect().height == full) {
+              if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
                 el.style.overflow = null;
               }
             });
@@ -3943,9 +3943,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4945,9 +4945,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5034,9 +5034,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5188,9 +5188,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6726,9 +6726,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7088,9 +7088,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8561,18 +8561,24 @@ var Directive = class {
     this.expression = this.el.getAttribute(this.rawName);
   }
   get method() {
-    const { method } = this.parseOutMethodAndParams(this.expression);
-    return method;
+    const methods = this.parseOutMethodsAndParams(this.expression);
+    return methods[0].method;
+  }
+  get methods() {
+    return this.parseOutMethodsAndParams(this.expression);
   }
   get params() {
-    const { params } = this.parseOutMethodAndParams(this.expression);
-    return params;
+    const methods = this.parseOutMethodsAndParams(this.expression);
+    return methods[0].params;
   }
-  parseOutMethodAndParams(rawMethod) {
+  parseOutMethodsAndParams(rawMethod) {
+    const methodRegex = /(.*?)\((.*?)\) *(,*) */s;
     let method = rawMethod;
     let params = [];
-    const methodAndParamString = method.match(/(.*?)\((.*)\)/s);
-    if (methodAndParamString) {
+    let methodAndParamString = method.match(methodRegex);
+    let methods = [];
+    let slicedLength = 0;
+    while (methodAndParamString) {
       method = methodAndParamString[1];
       let func = new Function("$event", `return (function () {
                 for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
@@ -8581,8 +8587,14 @@ var Directive = class {
                 return [].concat(p);
             })(${methodAndParamString[2]})`);
       params = func(this.eventContext);
+      methods.push({ method, params });
+      slicedLength += methodAndParamString[0].length;
+      methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
     }
-    return { method, params };
+    if (methods.length === 0) {
+      methods.push({ method, params });
+    }
+    return methods;
   }
 };
 
@@ -10535,7 +10547,7 @@ function getTargets(el) {
     if (directive2.modifiers.includes("except"))
       inverted = true;
     if (raw.includes("(") && raw.includes(")")) {
-      targets.push({ target: directive2.method, params: quickHash(JSON.stringify(directive2.params)) });
+      targets = targets.concat(directive2.methods.map((method) => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })));
     } else if (raw.includes(",")) {
       raw.split(",").map((i) => i.trim()).forEach((target) => {
         targets.push({ target });
