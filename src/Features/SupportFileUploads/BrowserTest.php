@@ -97,7 +97,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertMissing('@preview')
         ->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
-        ->pause(10)
+        ->pause(5)
         ->click('@cancel')
         ->assertSeeIn('@output', 'cancelled')
         ;
