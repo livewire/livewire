@@ -161,7 +161,10 @@ function getTargets(el) {
         if (directive.modifiers.includes("except")) inverted = true
 
         if (raw.includes('(') && raw.includes(')')) {
-            targets.push({ target: directive.method, params: quickHash(JSON.stringify(directive.params)) })
+            targets = targets.concat(
+                directive.methods.map(
+                    method => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })
+            ))
         } else if (raw.includes(',')) {
             raw.split(',').map(i => i.trim()).forEach(target => {
                 targets.push({ target })
