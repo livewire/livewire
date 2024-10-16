@@ -351,7 +351,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             {
                 return <<<'HTML'
                     <div>
-                        <button wire:click="processFunction(JSON.parse('{\u0022bar\u0022:\u0022baz\u0022}'))" dusk="processButton">Process</button>
+                        <button wire:click="processFunction(@js(['bar' => 'baz']))" dusk="processButton">Process</button>
                         <button wire:click="resetFunction" dusk="resetButton">Reset</button>
                         <div wire:loading wire:target="resetFunction" dusk="loadingIndicator">
                             Waiting to process...
