@@ -84,9 +84,7 @@ export function dataGet(object, key) {
     if (key === '') return object
 
     return key.split('.').reduce((carry, i) => {
-        if (carry === undefined) return undefined
-
-        return carry[i]
+        return carry?.[i]
     }, object)
 }
 
