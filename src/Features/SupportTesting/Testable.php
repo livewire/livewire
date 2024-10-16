@@ -126,6 +126,17 @@ class Testable
         return $this;
     }
 
+    function setFileWithoutFakeMeta($name, $file)
+    {
+        if ($file instanceof \Illuminate\Http\UploadedFile) {
+            return $this->upload($name, [$file], fakeFileMeta: false);
+        } elseif (is_array($file) && isset($file[0]) && $file[0] instanceof \Illuminate\Http\UploadedFile) {
+            return $this->upload($name, $file, $isMultiple = true, fakeFileMeta: false);
+        }
+
+        throw new \Exception('The file must be an instance of \Illuminate\Http\UploadedFile');
+    }
+
     function setProperty($name, $value)
     {
         if ($value instanceof \Illuminate\Http\UploadedFile) {
@@ -189,7 +200,7 @@ class Testable
     }
 
     /** @todo Move me outta here and into the file upload folder somehow... */
-    function upload($name, $files, $isMultiple = false)
+    function upload($name, $files, $isMultiple = false, bool $fakeFileMeta = true)
     {
         // This method simulates the calls Livewire's JavaScript
         // normally makes for file uploads.
@@ -218,16 +229,20 @@ class Testable
             return $this;
         }
 
-        // We are going to encode the original file size and hashName in the filename
-        // so when we create a new TemporaryUploadedFile instance we can fake the
-        // same file size and hashName set for the original file upload.
-        $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
-            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-size={$file->getSize()}.");
-        })->toArray();
+        if ($fakeFileMeta) {
+            // We are going to encode the original file size and hashName in the filename
+            // so when we create a new TemporaryUploadedFile instance we can fake the
+            // same file size and hashName set for the original file upload.
+            $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
+                return (string)str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-size={$file->getSize()}.");
+            })->toArray();
 
-        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
-            $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
-        });
+            collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
+                $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
+            });
+        } else {
+            $newFileHashes = $fileHashes;
+        }
 
         // Now we finish the upload with a final call to the Livewire component
         // with the temporarily uploaded file path.
