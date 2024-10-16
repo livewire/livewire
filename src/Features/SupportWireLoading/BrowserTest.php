@@ -343,6 +343,48 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_target_works_with_function_JSONparse_params()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction(JSON.parse('{\u0022bar\u0022:\u0022baz\u0022}'))" dusk="processButton">Process</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target="resetFunction" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div wire:loading wire:target="processFunction" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction(mixed $value)
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+            ->press('@resetButton')
+            ->pause(250)
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@processButton')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+        ;
+    }
+
     /**
     function test_inverted_wire_target_hides_loading_for_file_upload()
     {

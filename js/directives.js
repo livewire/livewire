@@ -95,7 +95,7 @@ export class Directive {
 
     parseOutMethodsAndParams(rawMethod) {
         // regex selects first method it encounters including possible commas indicating more methods
-        const methodRegex = /(.*?)\((.*?)\) *(,*) */s;
+        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
 
         let method = rawMethod
         let params = []
