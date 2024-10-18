@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1432,10 +1432,10 @@ var require_module_cjs = __commonJS({
       });
     }
     function cleanupElement(el) {
-      if (el._x_cleanups) {
-        while (el._x_cleanups.length)
-          el._x_cleanups.pop()();
-      }
+      var _a, _b;
+      (_a = el._x_effects) == null ? void 0 : _a.forEach(dequeueJob);
+      while ((_b = el._x_cleanups) == null ? void 0 : _b.length)
+        el._x_cleanups.pop()();
     }
     var observer = new MutationObserver(onMutate);
     var currentlyObserving = false;
@@ -1673,26 +1673,22 @@ var require_module_cjs = __commonJS({
       magics[name] = callback;
     }
     function injectMagics(obj, el) {
+      let memoizedUtilities = getUtilities(el);
       Object.entries(magics).forEach(([name, callback]) => {
-        let memoizedUtilities = null;
-        function getUtilities() {
-          if (memoizedUtilities) {
-            return memoizedUtilities;
-          } else {
-            let [utilities, cleanup] = getElementBoundUtilities(el);
-            memoizedUtilities = { interceptor, ...utilities };
-            onElRemoved(el, cleanup);
-            return memoizedUtilities;
-          }
-        }
         Object.defineProperty(obj, `$${name}`, {
           get() {
-            return callback(el, getUtilities());
+            return callback(el, memoizedUtilities);
           },
           enumerable: false
         });
       });
       return obj;
+    }
+    function getUtilities(el) {
+      let [utilities, cleanup] = getElementBoundUtilities(el);
+      let utils = { interceptor, ...utilities };
+      onElRemoved(el, cleanup);
+      return utils;
     }
     function tryCatch(el, expression, callback, ...args) {
       try {
@@ -2067,8 +2063,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function destroyTree(root, walker = walk) {
       walker(root, (el) => {
-        cleanupAttributes(el);
         cleanupElement(el);
+        cleanupAttributes(el);
       });
     }
     function warnAboutMissingPlugins() {
@@ -2561,7 +2557,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
     function bindInputValue(el, value) {
-      if (el.type === "radio") {
+      if (isRadio(el)) {
         if (el.attributes.value === void 0) {
           el.value = value;
         }
@@ -2572,7 +2568,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             el.checked = checkedAttrLooseCompare(el.value, value);
           }
         }
-      } else if (el.type === "checkbox") {
+      } else if (isCheckbox(el)) {
         if (Number.isInteger(value)) {
           el.value = value;
         } else if (!Array.isArray(value) && typeof value !== "boolean" && ![null, void 0].includes(value)) {
@@ -2648,34 +2644,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       return rawValue ? Boolean(rawValue) : null;
     }
+    var booleanAttributes = /* @__PURE__ */ new Set([
+      "allowfullscreen",
+      "async",
+      "autofocus",
+      "autoplay",
+      "checked",
+      "controls",
+      "default",
+      "defer",
+      "disabled",
+      "formnovalidate",
+      "inert",
+      "ismap",
+      "itemscope",
+      "loop",
+      "multiple",
+      "muted",
+      "nomodule",
+      "novalidate",
+      "open",
+      "playsinline",
+      "readonly",
+      "required",
+      "reversed",
+      "selected",
+      "shadowrootclonable",
+      "shadowrootdelegatesfocus",
+      "shadowrootserializable"
+    ]);
     function isBooleanAttr(attrName) {
-      const booleanAttributes = [
-        "disabled",
-        "checked",
-        "required",
-        "readonly",
-        "open",
-        "selected",
-        "autofocus",
-        "itemscope",
-        "multiple",
-        "novalidate",
-        "allowfullscreen",
-        "allowpaymentrequest",
-        "formnovalidate",
-        "autoplay",
-        "controls",
-        "loop",
-        "muted",
-        "playsinline",
-        "default",
-        "ismap",
-        "reversed",
-        "async",
-        "defer",
-        "nomodule"
-      ];
-      return booleanAttributes.includes(attrName);
+      return booleanAttributes.has(attrName);
     }
     function attributeShouldntBePreservedIfFalsy(name) {
       return !["aria-pressed", "aria-checked", "aria-expanded", "aria-selected"].includes(name);
@@ -2707,6 +2706,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return !![name, "true"].includes(attr);
       }
       return attr;
+    }
+    function isCheckbox(el) {
+      return el.type === "checkbox" || el.localName === "ui-checkbox" || el.localName === "ui-switch";
+    }
+    function isRadio(el) {
+      return el.type === "radio" || el.localName === "ui-radio";
     }
     function debounce2(func, wait) {
       var timeout;
@@ -2776,10 +2781,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return stores[name];
       }
       stores[name] = value;
+      initInterceptors(stores[name]);
       if (typeof value === "object" && value !== null && value.hasOwnProperty("init") && typeof value.init === "function") {
         stores[name].init();
       }
-      initInterceptors(stores[name]);
     }
     function getStores() {
       return stores;
@@ -2861,7 +2866,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.1",
+      version: "3.14.3",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3070,7 +3075,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           placeInDom(el._x_teleport, target2, modifiers);
         });
       };
-      cleanup(() => clone2.remove());
+      cleanup(() => mutateDom(() => {
+        clone2.remove();
+        destroyTree(clone2);
+      }));
     });
     var teleportContainerDuringClone = document.createElement("div");
     function getTarget(expression) {
@@ -3294,7 +3302,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         setValue(getInputValue(el, modifiers, e, getValue()));
       });
       if (modifiers.includes("fill")) {
-        if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
+        if ([void 0, null, ""].includes(getValue()) || isCheckbox(el) && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
           setValue(getInputValue(el, modifiers, { target: el }, getValue()));
         }
       }
@@ -3334,7 +3342,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return mutateDom(() => {
         if (event instanceof CustomEvent && event.detail !== void 0)
           return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
-        else if (el.type === "checkbox") {
+        else if (isCheckbox(el)) {
           if (Array.isArray(currentValue)) {
             let newValue = null;
             if (modifiers.includes("number")) {
@@ -3365,7 +3373,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
         } else {
           let newValue;
-          if (el.type === "radio") {
+          if (isRadio(el)) {
             if (event.target.checked) {
               newValue = event.target.value;
             } else {
@@ -3558,7 +3566,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       el._x_lookup = {};
       effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
       cleanup(() => {
-        Object.values(el._x_lookup).forEach((el2) => el2.remove());
+        Object.values(el._x_lookup).forEach((el2) => mutateDom(() => {
+          destroyTree(el2);
+          el2.remove();
+        }));
         delete el._x_prevKeys;
         delete el._x_lookup;
       });
@@ -3627,11 +3638,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         for (let i = 0; i < removes.length; i++) {
           let key = removes[i];
-          if (!!lookup[key]._x_effects) {
-            lookup[key]._x_effects.forEach(dequeueJob);
-          }
-          lookup[key].remove();
-          lookup[key] = null;
+          if (!(key in lookup))
+            continue;
+          mutateDom(() => {
+            destroyTree(lookup[key]);
+            lookup[key].remove();
+          });
           delete lookup[key];
         }
         for (let i = 0; i < moves.length; i++) {
@@ -3752,12 +3764,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         el._x_currentIfEl = clone2;
         el._x_undoIf = () => {
-          walk(clone2, (node) => {
-            if (!!node._x_effects) {
-              node._x_effects.forEach(dequeueJob);
-            }
+          mutateDom(() => {
+            destroyTree(clone2);
+            clone2.remove();
           });
-          clone2.remove();
           delete el._x_currentIfEl;
         };
         return clone2;
@@ -3812,9 +3822,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3887,7 +3897,7 @@ var require_module_cjs2 = __commonJS({
               start: { height: current + "px" },
               end: { height: full + "px" }
             }, () => el._x_isShown = true, () => {
-              if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
+              if (el.getBoundingClientRect().height == full) {
                 el.style.overflow = null;
               }
             });
@@ -3933,9 +3943,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4935,9 +4945,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5024,9 +5034,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5178,9 +5188,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../alpine/packages/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6716,9 +6726,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7078,9 +7088,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8855,8 +8865,10 @@ function restoreScrollPositionOrScrollToTop() {
     }
   };
   queueMicrotask(() => {
-    scroll(document.body);
-    document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+    queueMicrotask(() => {
+      scroll(document.body);
+      document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+    });
   });
 }
 
@@ -9005,6 +9017,44 @@ function injectStyles() {
   document.head.appendChild(style);
 }
 
+// js/plugins/navigate/popover.js
+function packUpPersistedPopovers(persistedEl) {
+  persistedEl.querySelectorAll(":popover-open").forEach((el) => {
+    el.setAttribute("data-navigate-popover-open", "");
+    let animations = el.getAnimations();
+    el._pausedAnimations = animations.map((animation) => ({
+      keyframes: animation.effect.getKeyframes(),
+      options: {
+        duration: animation.effect.getTiming().duration,
+        easing: animation.effect.getTiming().easing,
+        fill: animation.effect.getTiming().fill,
+        iterations: animation.effect.getTiming().iterations
+      },
+      currentTime: animation.currentTime,
+      playState: animation.playState
+    }));
+    animations.forEach((i) => i.pause());
+  });
+}
+function unPackPersistedPopovers(persistedEl) {
+  persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
+    el.removeAttribute("data-navigate-popover-open");
+    queueMicrotask(() => {
+      if (!el.isConnected)
+        return;
+      el.showPopover();
+      el.getAnimations().forEach((i) => i.finish());
+      if (el._pausedAnimations) {
+        el._pausedAnimations.forEach(({ keyframes, options, currentTime, now, playState }) => {
+          let animation = el.animate(keyframes, options);
+          animation.currentTime = currentTime;
+        });
+        delete el._pausedAnimations;
+      }
+    });
+  });
+}
+
 // js/plugins/navigate/page.js
 var oldBodyScriptTagHashes = [];
 var attributesExemptFromScriptTagHashing = [
@@ -9143,7 +9193,7 @@ var autofocus = false;
 function navigate_default(Alpine19) {
   Alpine19.navigate = (url) => {
     let destination = createUrlObjectFromString(url);
-    let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+    let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
       history: false,
       cached: false
@@ -9174,7 +9224,7 @@ function navigate_default(Alpine19) {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
       });
       whenItIsReleased(() => {
-        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
           url: destination,
           history: false,
           cached: false
@@ -9188,7 +9238,7 @@ function navigate_default(Alpine19) {
   function navigateTo(destination, shouldPushToHistoryState = true) {
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      fireEventForOtherLibrariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       showProgressBar && finishAndHideProgressBar();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
@@ -9196,6 +9246,7 @@ function navigate_default(Alpine19) {
       preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
+          packUpPersistedPopovers(persistedEl);
         });
         if (shouldPushToHistoryState) {
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
@@ -9206,6 +9257,7 @@ function navigate_default(Alpine19) {
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
+            unPackPersistedPopovers(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
           afterNewScriptsAreDoneLoading(() => {
@@ -9214,7 +9266,7 @@ function navigate_default(Alpine19) {
                 autofocus && autofocusElementsWithTheAutofocusAttribute();
               });
               nowInitializeAlpineOnTheNewPage(Alpine19);
-              fireEventForOtherLibariesToHookInto("alpine:navigated");
+              fireEventForOtherLibrariesToHookInto("alpine:navigated");
             });
           });
         });
@@ -9224,7 +9276,7 @@ function navigate_default(Alpine19) {
   whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
     ifThePageBeingVisitedHasntBeenCached((url) => {
       let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: true,
         cached: false
@@ -9236,7 +9288,7 @@ function navigate_default(Alpine19) {
     });
   }, (html, url, currentPageUrl, currentPageKey) => {
     let destination = createUrlObjectFromString(url);
-    let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+    let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
       history: true,
       cached: true
@@ -9244,29 +9296,31 @@ function navigate_default(Alpine19) {
     if (prevented)
       return;
     storeScrollInformationInHtmlBeforeNavigatingAway();
-    fireEventForOtherLibariesToHookInto("alpine:navigating");
+    fireEventForOtherLibrariesToHookInto("alpine:navigating");
     updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
     preventAlpineFromPickingUpDomChanges(Alpine19, (andAfterAllThis) => {
       enablePersist && storePersistantElementsForLater((persistedEl) => {
         packUpPersistedTeleports(persistedEl);
+        packUpPersistedPopovers(persistedEl);
       });
       swapCurrentPageWithNewHtml(html, () => {
         removeAnyLeftOverStaleProgressBars();
         removeAnyLeftOverStaleTeleportTargets(document.body);
         enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
           unPackPersistedTeleports(persistedEl);
+          unPackPersistedPopovers(persistedEl);
         });
         restoreScrollPositionOrScrollToTop();
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
           nowInitializeAlpineOnTheNewPage(Alpine19);
-          fireEventForOtherLibariesToHookInto("alpine:navigated");
+          fireEventForOtherLibrariesToHookInto("alpine:navigated");
         });
       });
     });
   });
   setTimeout(() => {
-    fireEventForOtherLibariesToHookInto("alpine:navigated");
+    fireEventForOtherLibrariesToHookInto("alpine:navigated");
   });
 }
 function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -9283,7 +9337,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine19, callback) {
     });
   });
 }
-function fireEventForOtherLibariesToHookInto(name, detail) {
+function fireEventForOtherLibrariesToHookInto(name, detail) {
   let event = new CustomEvent(name, {
     cancelable: true,
     bubbles: true,
@@ -9799,6 +9853,7 @@ function morph2(component, el, html) {
     },
     lookahead: false
   });
+  trigger("morphed", { el, component });
 }
 function isntElement(el) {
   return typeof el.hasAttribute !== "function";
@@ -10868,3 +10923,4 @@ focus-trap/dist/focus-trap.js:
   * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
   *)
 */
+//# sourceMappingURL=livewire.esm.js.map
