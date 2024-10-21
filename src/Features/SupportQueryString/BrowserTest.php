@@ -52,6 +52,90 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_keep_option_does_not_duplicate_url_query_string_for_array_parameters_on_link_navigation()
+    {
+        Livewire::withQueryParams([
+            'filters' => [
+                'startDate' => '2024-01-01',
+                'endDate' => '2024-09-05',
+            ]
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl(keep: true)]
+                public array $filters = [
+                    'startDate' => '',
+                    'endDate' => '',
+                ];
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="startDate" wire:model.live="filters.startDate" />
+                        <input type="text" dusk="endDate" wire:model.live="filters.endDate" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertScript('return (new URLSearchParams(window.location.search)).toString()', 'filters%5BstartDate%5D=2024-01-01&filters%5BendDate%5D=2024-09-05');
+    }
+
+    public function test_does_not_duplicate_url_query_string_for_array_parameters_on_link_navigation()
+    {
+        Livewire::withQueryParams([
+            'filters' => [
+                'startDate' => '2024-01-01',
+                'endDate' => '2024-09-05',
+            ]
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public array $filters = [
+                    'startDate' => '',
+                    'endDate' => '',
+                ];
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="startDate" wire:model.live="filters.startDate" />
+                        <input type="text" dusk="endDate" wire:model.live="filters.endDate" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertScript('return (new URLSearchParams(window.location.search)).toString()', 'filters%5BstartDate%5D=2024-01-01&filters%5BendDate%5D=2024-09-05');
+    }
+
+    public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_link_navigation()
+    {
+        Livewire::withQueryParams([
+            'date' => '2024-01-01',
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl(keep: true)]
+                public $date = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="date" wire:model.live="date" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertScript('return (new URLSearchParams(window.location.search)).toString()', 'date=2024-01-01');
+    }
+
+
     public function can_encode_url_containing_spaces_and_commas()
     {
         Livewire::visit([
@@ -177,10 +261,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                             @switch($filter1)
                               @case('')
                                 <div>All</div>
-                              @case('some') 
+                              @case('some')
                                 <div>Some</div>
                               @break
-                            @endswitch   
+                            @endswitch
                         </div>
                         <select dusk="filter2" wire:model.change="filter2">
                             <option value="all">All</option>
@@ -191,10 +275,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                             @switch($filter2)
                               @case('all')
                                 <div>All</div>
-                              @case('some') 
+                              @case('some')
                                 <div>Some</div>
                               @break
-                            @endswitch   
+                            @endswitch
                         </div>
                     </div>
                     HTML;
