@@ -215,7 +215,6 @@ class UnitTest extends TestCase
             ->call('foo');
     }
 
-
     function test_can_use_multiple_computed_properties_for_different_properties()
     {
         Livewire::test(new class extends TestComponent {
@@ -277,6 +276,29 @@ class UnitTest extends TestCase
             public function fooBar()
             {
                 return strtolower($this->upperCasedFoo);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    {{ var_dump($this->foo_bar) }}
+                </div>
+                HTML;
+            }
+        })
+            ->assertSee('foo_bar');
+    }
+
+    function test_computed_property_is_accessible_using_dynamic_key()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $post = ['id' => 2];
+
+            #[Computed(key: 'baz.{post.id}')]
+            public function fooBar()
+            {
+                return 'foo_bar';
             }
 
             public function render()
