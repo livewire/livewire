@@ -3822,9 +3822,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3897,7 +3897,7 @@ var require_module_cjs2 = __commonJS({
               start: { height: current + "px" },
               end: { height: full + "px" }
             }, () => el._x_isShown = true, () => {
-              if (el.getBoundingClientRect().height == full) {
+              if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
                 el.style.overflow = null;
               }
             });
@@ -3943,9 +3943,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4945,9 +4945,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../alpine/packages/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5034,9 +5034,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7088,9 +7088,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7356,9 +7356,7 @@ function dataGet(object, key) {
   if (key === "")
     return object;
   return key.split(".").reduce((carry, i) => {
-    if (carry === void 0)
-      return void 0;
-    return carry[i];
+    return carry?.[i];
   }, object);
 }
 function dataSet(object, key, value) {
@@ -10637,8 +10635,8 @@ directive("ignore", ({ el, directive: directive2 }) => {
 
 // js/directives/wire-dirty.js
 var refreshDirtyStatesByComponent = new WeakBag();
-on("commit", ({ component, respond }) => {
-  respond(() => {
+on("commit", ({ component, succeed }) => {
+  succeed(() => {
     setTimeout(() => {
       refreshDirtyStatesByComponent.each(component, (i) => i(false));
     });
