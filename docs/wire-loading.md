@@ -137,9 +137,6 @@ Without passing `{{ $post->id }}` to `wire:target="remove"`, the "Removing post.
 
 However, because we are passing in unique parameters to each instance of `wire:target`, Livewire will only show the loading message when the matching parameters are passed to the "remove" action.
 
-> [!warning] Multiple action parameters aren't supported
-> At this time, Livewire only supports targeting a loading indicator by a single method/parameter pair. For example `wire:target="remove(1)"` is supported, however `wire:target="remove(1), add(1)"` is not.
-
 ### Targeting property updates
 
 Livewire also allows you to target specific component property updates by passing the property's name to the `wire:target` directive.
