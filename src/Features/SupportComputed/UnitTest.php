@@ -436,7 +436,7 @@ class UnitTest extends TestCase
         App::bind(ComputedPropertyInjectedStub::class);
 
         Livewire::test(new class extends TestComponent {
-            #[Computed(inject: true)]
+            #[Computed()]
             function foo(ComputedPropertyInjectedStub $stub) {
                 return $stub->foo;
             }

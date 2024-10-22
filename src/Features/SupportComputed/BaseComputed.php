@@ -9,6 +9,7 @@ use function Livewire\off;
 use Livewire\Features\SupportAttributes\Attribute;
 use Illuminate\Support\Facades\Cache;
 use Laravel\SerializableClosure\Support\ReflectionClosure;
+use Livewire\ImplicitlyBoundMethod;
 
 #[\Attribute]
 class BaseComputed extends Attribute
@@ -21,7 +22,6 @@ class BaseComputed extends Attribute
         public $cache = false,
         public $key = null,
         public $tags = null,
-        public $inject = false,
     ) {}
 
     function boot()
@@ -137,11 +137,7 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        if ($this->inject) {
-            return app()->call([$this->component, parent::getName()]);
-        }
-
-        return invade($this->component)->{parent::getName()}();
+        return ImplicitlyBoundMethod::call(app(), [$this->component, parent::getName()]);
     }
 
     public function getName()
