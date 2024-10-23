@@ -6,7 +6,7 @@ use Illuminate\Foundation\Console\AboutCommand;
 
 class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
 {
-    public function register()
+    public function register(): void
     {
         $this->registerLivewireSingleton();
         $this->registerConfig();
@@ -14,13 +14,13 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->registerMechanisms();
     }
 
-    public function boot()
+    public function boot(): void
     {
         $this->bootMechanisms();
         $this->bootFeatures();
     }
 
-    protected function registerLivewireSingleton()
+    protected function registerLivewireSingleton(): void
     {
         $this->app->alias(LivewireManager::class, 'livewire');
 
@@ -29,7 +29,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         app('livewire')->setProvider($this);
     }
 
-    protected function registerConfig()
+    protected function registerConfig(): void
     {
         $config = __DIR__.'/../config/livewire.php';
 
@@ -38,12 +38,12 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->mergeConfigFrom($config, 'livewire');
     }
 
-    protected function bootEventBus()
+    protected function bootEventBus(): void
     {
         app(EventBus::class)->boot();
     }
 
-    protected function getMechanisms()
+    protected function getMechanisms(): array
     {
         return [
             Mechanisms\PersistentMiddleware\PersistentMiddleware::class,
@@ -58,14 +58,14 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         ];
     }
 
-    protected function registerMechanisms()
+    protected function registerMechanisms(): void
     {
         foreach ($this->getMechanisms() as $mechanism) {
             app($mechanism)->register();
         }
     }
 
-    protected function bootMechanisms()
+    protected function bootMechanisms(): void
     {
         if (class_exists(AboutCommand::class) && class_exists(InstalledVersions::class)) {
             AboutCommand::add('Livewire', [
@@ -78,7 +78,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         }
     }
 
-    protected function bootFeatures()
+    protected function bootFeatures(): void
     {
         foreach([
             Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
