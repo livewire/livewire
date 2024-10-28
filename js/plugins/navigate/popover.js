@@ -1,6 +1,6 @@
 
 export function packUpPersistedPopovers(persistedEl) {
-    if (isIOS16orLower()) return;
+    if (!isPopoverSupported()) return;
 
     persistedEl.querySelectorAll(':popover-open').forEach(el => {
         el.setAttribute('data-navigate-popover-open', '')
@@ -25,7 +25,7 @@ export function packUpPersistedPopovers(persistedEl) {
 }
 
 export function unPackPersistedPopovers(persistedEl) {
-    if (isIOS16orLower()) return;
+    if (!isPopoverSupported()) return;
 
     persistedEl.querySelectorAll('[data-navigate-popover-open]').forEach(el => {
         el.removeAttribute('data-navigate-popover-open')
@@ -54,4 +54,6 @@ export function unPackPersistedPopovers(persistedEl) {
     })
 }
 
-const isIOS16orLower = () => /OS (1[0-6])_/.test(navigator.userAgent);
+function isPopoverSupported() {
+    return typeof document.createElement('div').showPopover === 'function';
+}

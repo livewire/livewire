@@ -7631,8 +7631,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/popover.js
   function packUpPersistedPopovers(persistedEl) {
-    if (isIOS16orLower())
+    if (!isPopoverSupported())
       return;
+    console.log("here");
     persistedEl.querySelectorAll(":popover-open").forEach((el) => {
       el.setAttribute("data-navigate-popover-open", "");
       let animations = el.getAnimations();
@@ -7651,7 +7652,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function unPackPersistedPopovers(persistedEl) {
-    if (isIOS16orLower())
+    if (!isPopoverSupported())
       return;
     persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
       el.removeAttribute("data-navigate-popover-open");
@@ -7670,7 +7671,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  var isIOS16orLower = () => /OS (1[0-6])_/.test(navigator.userAgent);
+  function isPopoverSupported() {
+    return typeof document.createElement("div").showPopover === "function";
+  }
 
   // js/plugins/navigate/page.js
   var oldBodyScriptTagHashes = [];
