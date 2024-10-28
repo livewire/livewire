@@ -370,9 +370,7 @@
     if (key === "")
       return object;
     return key.split(".").reduce((carry, i) => {
-      if (carry === void 0)
-        return void 0;
-      return carry[i];
+      return carry?.[i];
     }, object);
   }
   function dataSet(object, key, value) {
@@ -712,7 +710,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -4771,7 +4769,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4821,7 +4819,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             start: { height: current + "px" },
             end: { height: full + "px" }
           }, () => el._x_isShown = true, () => {
-            if (el.getBoundingClientRect().height == full) {
+            if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
               el.style.overflow = null;
             }
           });
@@ -4865,7 +4863,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5814,7 +5812,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5876,7 +5874,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -5976,7 +5974,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -7633,6 +7631,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/popover.js
   function packUpPersistedPopovers(persistedEl) {
+    if (isIOS16orLower())
+      return;
     persistedEl.querySelectorAll(":popover-open").forEach((el) => {
       el.setAttribute("data-navigate-popover-open", "");
       let animations = el.getAnimations();
@@ -7651,6 +7651,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function unPackPersistedPopovers(persistedEl) {
+    if (isIOS16orLower())
+      return;
     persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
       el.removeAttribute("data-navigate-popover-open");
       queueMicrotask(() => {
@@ -7668,6 +7670,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
+  var isIOS16orLower = () => /OS (1[0-6])_/.test(navigator.userAgent);
 
   // js/plugins/navigate/page.js
   var oldBodyScriptTagHashes = [];
@@ -8185,7 +8188,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8520,7 +8523,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;

@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3822,9 +3822,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3897,7 +3897,7 @@ var require_module_cjs2 = __commonJS({
               start: { height: current + "px" },
               end: { height: full + "px" }
             }, () => el._x_isShown = true, () => {
-              if (el.getBoundingClientRect().height == full) {
+              if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
                 el.style.overflow = null;
               }
             });
@@ -3943,9 +3943,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4945,9 +4945,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5034,9 +5034,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5188,9 +5188,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6726,9 +6726,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7088,9 +7088,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7356,9 +7356,7 @@ function dataGet(object, key) {
   if (key === "")
     return object;
   return key.split(".").reduce((carry, i) => {
-    if (carry === void 0)
-      return void 0;
-    return carry[i];
+    return carry?.[i];
   }, object);
 }
 function dataSet(object, key, value) {
@@ -9019,6 +9017,8 @@ function injectStyles() {
 
 // js/plugins/navigate/popover.js
 function packUpPersistedPopovers(persistedEl) {
+  if (isIOS16orLower())
+    return;
   persistedEl.querySelectorAll(":popover-open").forEach((el) => {
     el.setAttribute("data-navigate-popover-open", "");
     let animations = el.getAnimations();
@@ -9037,6 +9037,8 @@ function packUpPersistedPopovers(persistedEl) {
   });
 }
 function unPackPersistedPopovers(persistedEl) {
+  if (isIOS16orLower())
+    return;
   persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
     el.removeAttribute("data-navigate-popover-open");
     queueMicrotask(() => {
@@ -9054,6 +9056,7 @@ function unPackPersistedPopovers(persistedEl) {
     });
   });
 }
+var isIOS16orLower = () => /OS (1[0-6])_/.test(navigator.userAgent);
 
 // js/plugins/navigate/page.js
 var oldBodyScriptTagHashes = [];
