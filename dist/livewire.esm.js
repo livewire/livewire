@@ -9019,7 +9019,6 @@ function injectStyles() {
 function packUpPersistedPopovers(persistedEl) {
   if (!isPopoverSupported())
     return;
-  console.log("here");
   persistedEl.querySelectorAll(":popover-open").forEach((el) => {
     el.setAttribute("data-navigate-popover-open", "");
     let animations = el.getAnimations();
