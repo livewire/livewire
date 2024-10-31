@@ -46,6 +46,15 @@ class SupportEvents extends ComponentHook
     {
         if ($context->mounting) {
             $listeners = static::getListenerEventNames($this->component);
+            // Skip events for lazy-loaded components so they won't wake up on event dispatch
+            $isLazyLoadMounting = store($this->component)->get('isLazyLoadMounting') === true;
+
+            $listeners && ! $isLazyLoadMounting && $context->addEffect('listeners', $listeners);
+        }
+
+        // Defer the listener effect for when the actual loading happens
+        if (store($this->component)->get('isLazyLoadHydrating') === true) {
+            $listeners = static::getListenerEventNames($this->component);
 
             $listeners && $context->addEffect('listeners', $listeners);
         }
