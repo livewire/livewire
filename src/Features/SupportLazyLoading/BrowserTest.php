@@ -339,7 +339,7 @@ class BrowserTest extends BrowserTestCase
             ->click('@show') // Show component
             ->assertSee('loading') // now we should actually see the lazy component placeholder
             ->waitFor('#child') // wait for the lazy component to load because we previously removed the display: none
-            ->assertSee('Hello from mount!')
+            ->assertSee('Hello from mount!') // We should see the $message set from the mount method
             ;
     }
 }
