@@ -728,7 +728,7 @@ Just like controller request input, it's imperative to authorize action paramete
 
 Below is a `ShowPosts` component where users can view all their posts on one page. They can delete any post they like using one of the post's "Delete" buttons.
 
-Here is a vulnerable version of component:
+Here is a vulnerable version of the component:
 
 ```php
 <?php

@@ -17,6 +17,7 @@ use Illuminate\Support\Traits\Macroable;
 use BadMethodCallException;
 use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 
+#[\AllowDynamicProperties]
 abstract class Component
 {
     use Macroable { __call as macroCall; }

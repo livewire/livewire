@@ -4769,7 +4769,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4819,7 +4819,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             start: { height: current + "px" },
             end: { height: full + "px" }
           }, () => el._x_isShown = true, () => {
-            if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
+            if (el.getBoundingClientRect().height == full) {
               el.style.overflow = null;
             }
           });
@@ -4863,7 +4863,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5812,7 +5812,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5874,7 +5874,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -7631,6 +7631,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/popover.js
   function packUpPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported())
+      return;
     persistedEl.querySelectorAll(":popover-open").forEach((el) => {
       el.setAttribute("data-navigate-popover-open", "");
       let animations = el.getAnimations();
@@ -7649,6 +7651,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function unPackPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported())
+      return;
     persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
       el.removeAttribute("data-navigate-popover-open");
       queueMicrotask(() => {
@@ -7665,6 +7669,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
     });
+  }
+  function isPopoverSupported() {
+    return typeof document.createElement("div").showPopover === "function";
   }
 
   // js/plugins/navigate/page.js
@@ -8284,6 +8291,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let holdover = fromKeyHoldovers[toKey];
             from2.appendChild(holdover);
             currentFrom = holdover;
+            fromKey = getKey(currentFrom);
           } else {
             if (!shouldSkip(adding, currentTo)) {
               let clone2 = currentTo.cloneNode(true);
@@ -8357,6 +8365,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
+              fromKey = getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -8365,6 +8374,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
+              fromKey = getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom = addNodeBefore(from2, currentTo, currentFrom);
@@ -8518,7 +8528,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
