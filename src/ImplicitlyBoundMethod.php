@@ -102,8 +102,12 @@ class ImplicitlyBoundMethod extends BoundMethod
 
     protected static function getImplicitBinding($container, $className, $value)
     {
+        if (is_null($value)) {
+            return $value;
+        }
+
         if ((new ReflectionClass($className))->isEnum()) {
-            return $className::tryFrom($value);
+            return $className::try($value);
         }
 
         $model = $container->make($className)->resolveRouteBinding($value);
