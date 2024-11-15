@@ -107,7 +107,7 @@ class ImplicitlyBoundMethod extends BoundMethod
         }
 
         if ((new ReflectionClass($className))->isEnum()) {
-            return $className::try($value);
+            return $className::tryFrom($value);
         }
 
         $model = $container->make($className)->resolveRouteBinding($value);
