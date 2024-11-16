@@ -272,7 +272,7 @@ Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/doc
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\With\Url;
+use Livewire\Attributes\Url;
 use App\Models\Post;
 
 class SearchPosts extends Component
@@ -331,7 +331,7 @@ Below is a basic `Cart` component that loads a discount token from a cookie on m
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\With\Url;
+use Livewire\Attributes\Url;
 use App\Models\Post;
 
 class Cart extends Component
