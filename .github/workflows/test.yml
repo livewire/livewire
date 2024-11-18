@@ -69,6 +69,13 @@ jobs:
         env:
           RUNNING_IN_CI: true
 
+      - name: Run Cancel Upload test
+        if: success() || failure()
+        run: vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
+        env:
+          RUNNING_IN_CI: true
+          FORCE_RUN: true
+
       - name: Run Legacy Browser tests
         if: success() || failure()
         run: vendor/bin/phpunit --testsuite LegacyBrowser
