@@ -71,10 +71,10 @@ jobs:
 
       - name: Run Cancel Upload test
         if: success() || failure()
-        run: vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
+        run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
         env:
           RUNNING_IN_CI: true
-          FORCE_RUN: true
+          FORCE_RUN: 1
 
       - name: Run Legacy Browser tests
         if: success() || failure()
