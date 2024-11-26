@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\InputSelect;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class SelectWithSelectedOnOption extends BaseComponent

@@ -178,7 +178,7 @@ class UploadManager {
 
         request.upload.addEventListener('progress', e => {
             e.detail = {}
-            e.detail.progress = Math.round((e.loaded * 100) / e.total)
+            e.detail.progress = Math.floor((e.loaded * 100) / e.total)
 
             this.uploadBag.first(name).progressCallback(e)
         })
@@ -239,7 +239,9 @@ class UploadManager {
         let uploadItem = this.uploadBag.first(name);
 
         if (uploadItem) {
-            uploadItem.request.abort();
+            if (uploadItem.request) {
+                uploadItem.request.abort();
+            }
 
             this.uploadBag.shift(name).cancelledCallback();
 

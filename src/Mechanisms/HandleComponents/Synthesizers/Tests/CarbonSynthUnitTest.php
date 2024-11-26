@@ -4,13 +4,12 @@ namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class CarbonSynthUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function public_carbon_properties_can_be_cast()
+    public function test_public_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithPublicCarbonCaster::class)
             ->updateProperty('date', '2024-02-14')
@@ -20,115 +19,87 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_nullable_carbon_properties_can_be_cast()
+    public function test_public_nullable_carbon_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', Carbon::parse('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_carbon_immutable_properties_can_be_cast()
+    public function test_public_carbon_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicCarbonImmutableCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', CarbonImmutable::parse('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_datetime_properties_can_be_cast()
+    public function test_public_datetime_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', new \DateTime('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
     }
 
-    /** @test */
-    public function public_datetime_immutable_properties_can_be_cast()
+    public function test_public_datetime_immutable_properties_can_be_cast()
     {
         $testable = Livewire::test(ComponentWithNullablePublicDateTimeImmutableCaster::class)
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', '2024-02-14')
             ->assertSet('date', new \DateTimeImmutable('2024-02-14'))
             ->updateProperty('date', '')
-            ->assertSet('date', null, true)
+            ->assertSetStrict('date', null)
             ->updateProperty('date', null)
-            ->assertSet('date', null, true);
+            ->assertSetStrict('date', null);
 
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
     }
 }
 
-class ComponentWithPublicCarbonCaster extends Component
+class ComponentWithPublicCarbonCaster extends TestComponent
 {
     public Carbon $date;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
-class ComponentWithNullablePublicCarbonCaster extends Component
+
+class ComponentWithNullablePublicCarbonCaster extends TestComponent
 {
     public ?Carbon $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithNullablePublicCarbonImmutableCaster extends Component
+class ComponentWithNullablePublicCarbonImmutableCaster extends TestComponent
 {
     public ?CarbonImmutable $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithNullablePublicDateTimeCaster extends Component
+class ComponentWithNullablePublicDateTimeCaster extends TestComponent
 {
     public ?\DateTime $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
-class ComponentWithNullablePublicDateTimeImmutableCaster extends Component
+class ComponentWithNullablePublicDateTimeImmutableCaster extends TestComponent
 {
     public ?\DateTimeImmutable $date = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }

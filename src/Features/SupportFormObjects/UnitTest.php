@@ -9,70 +9,142 @@ use Livewire\Form;
 use Livewire\Livewire;
 use PHPUnit\Framework\Assert;
 use Sushi\Sushi;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    function can_use_a_form_object()
+    function test_can_use_a_form_object()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormStub $form;
-
-            public function render() {
-                return '<div></div>';
-            }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ->set('form.title', 'Some Title')
         ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some Title')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', 'Some Title')
+        ->assertSetStrict('form.content', 'Some content...')
         ;
     }
 
-    /** @test */
-    function can_reset_form_object_property()
+    function test_can_reset_form_object_property()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormStub $form;
 
             public function resetForm()
             {
                 $this->reset('form.title', 'form.content');
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.content', '')
             ->set('form.title', 'Some Title')
             ->set('form.content', 'Some content...')
             ->call('resetForm')
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.content', '')
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object()
+    function test_can_reset_form_object_property_to_defaults()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset('form.title', 'form.content');
+            }
+        })
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->call('resetForm')
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content', 'bar')
+        ;
+    }
+    function test_can_reset_form_object_handle_dot_notation_with_asterisk_wildcard()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.*',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
+
+    function test_can_reset_form_object_handle_nested_dot_notation()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.foo',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
+
+    function test_set_form_object_with_typed_nullable_properties()
     {
         Livewire::test(new class extends Component {
+            public PostFormWithTypedProperties $form;
+
+            public function render() {
+                return <<<'BLADE'
+                    <div>
+                        Title: "{{ $form->title }}"
+                        Content: "{{ $form->content }}"
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSetStrict('form.title', null)
+            ->assertSetStrict('form.content', null)
+            ->assertSee('Title: ""', false)
+            ->assertSee('Content: ""', false)
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'Some content...')
+            ->assertSee('Title: "Some Title"', false)
+            ->assertSee('Content: "Some content..."', false)
+            ->set('form.title', null)
+            ->set('form.content', null)
+            ->assertSetStrict('form.title', null)
+            ->assertSetStrict('form.content', null)
+            ->assertSee('Title: ""', false)
+            ->assertSee('Content: ""', false);
+        ;
+    }
+
+    function test_can_validate_a_form_object()
+    {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             function save()
             {
                 $this->form->validate();
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ->assertHasNoErrors()
         ->call('save')
         ->assertHasErrors('form.title')
@@ -80,19 +152,14 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_with_the_general_validate_function()
+    function test_can_validate_a_form_with_the_general_validate_function()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             function save()
             {
                 $this->validate();
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
             ->call('save')
@@ -103,41 +170,31 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_specific_rule_has_errors_in_a_form_object()
+    function test_can_validate_a_specific_rule_has_errors_in_a_form_object()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             function save()
             {
                 $this->validate();
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
-        ->assertSet('form.title', '')
+        ->assertSetStrict('form.title', '')
         ->assertHasNoErrors()
         ->call('save')
         ->assertHasErrors(['form.title' => 'required'])
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_with_validate_only()
+    function test_can_validate_a_form_object_with_validate_only()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             function save()
             {
                 $this->form->validateOnly('title');
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
         ->assertHasNoErrors()
@@ -147,19 +204,14 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_specific_rule_for_form_object_with_validate_only()
+    function test_can_validate_a_specific_rule_for_form_object_with_validate_only()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             function save()
             {
                 $this->form->validateOnly('title');
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
             ->assertHasNoErrors()
@@ -167,16 +219,11 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['form.title' => 'required']);
         ;
     }
-    
-    /** @test */
-    function can_validate_a_specific_rule_has_errors_on_update_in_a_form_object()
-    {
-        Livewire::test(new class extends Component {
-            public PostFormValidateOnUpdateStub $form;
 
-            public function render() {
-                return '<div></div>';
-            }
+    function test_can_validate_a_specific_rule_has_errors_on_update_in_a_form_object()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormValidateOnUpdateStub $form;
         })
             ->assertHasNoErrors()
             ->set('form.title', 'foo')
@@ -184,19 +231,14 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_with_root_component_validate_only()
+    function test_can_validate_a_form_object_with_root_component_validate_only()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             function save()
             {
                 $this->validateOnly('form.title');
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
         ->assertHasNoErrors()
@@ -206,23 +248,18 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_using_rule_attributes()
+    function test_can_validate_a_form_object_using_rule_attributes()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormRuleAttributeStub $form;
 
             function save()
             {
                 $this->form->validate();
             }
-
-            function render() {
-                return '<div></div>';
-            }
         })
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ->assertHasNoErrors()
         ->call('save')
         ->assertHasErrors('form.title')
@@ -234,22 +271,49 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_validate_a_form_object_using_rule_attribute_with_custom_name()
+    function test_multiple_forms_show_all_errors()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
+            public PostFormValidateStub $form1;
+            public PostFormValidateStub $form2;
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            function render()
+            {
+                return '<div>{{ $errors }}</div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form1.title')
+        ->assertHasErrors('form1.content')
+        ->assertHasErrors('form2.title')
+        ->assertHasErrors('form2.content')
+        ->assertSee('The title field is required')
+        ->assertSee('The content field is required')
+        ->set('form1.title', 'Valid Title 1')
+        ->set('form1.content', 'Valid Content 1')
+        ->set('form2.title', 'Valid Title 2')
+        ->set('form2.content', 'Valid Content 2')
+        ->call('save')
+        ->assertHasNoErrors();
+    }
+
+    function test_can_validate_a_form_object_using_rule_attribute_with_custom_name()
+    {
+        Livewire::test(new class extends TestComponent {
             public PostFormRuleAttributeWithCustomNameStub $form;
 
             function save()
             {
                 $this->form->validate();
             }
-
-            function render() {
-                return '<div></div>';
-            }
         })
-            ->assertSet('form.name', '')
+            ->assertSetStrict('form.name', '')
             ->assertHasNoErrors()
             ->call('save')
             ->assertHasErrors('form.name')
@@ -258,8 +322,8 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
         ;
     }
-    /** @test */
-    public function validation_errors_persist_across_validation_errors()
+
+    public function test_validation_errors_persist_across_validation_errors()
     {
         $component = Livewire::test(new class extends Component {
             public FormWithLiveValidation $form;
@@ -284,62 +348,51 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('The content field is required');
     }
 
-    /** @test */
-    function can_reset_property()
+    function test_can_reset_property()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormStub $form;
 
             function save()
             {
                 $this->form->reset('title');
             }
-
-            function render() {
-                return '<div></div>';
-            }
         })
         ->set('form.title', 'Some title...')
         ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', 'Some title...')
+        ->assertSetStrict('form.content', 'Some content...')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', 'Some content...')
         ;
     }
 
-    /** @test */
-    function can_reset_all_properties()
+    function test_can_reset_all_properties()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormStub $form;
 
             function save()
             {
                 $this->form->reset();
             }
-
-            function render() {
-                return '<div></div>';
-            }
         })
         ->set('form.title', 'Some title...')
         ->set('form.content', 'Some content...')
-        ->assertSet('form.title', 'Some title...')
-        ->assertSet('form.content', 'Some content...')
+        ->assertSetStrict('form.title', 'Some title...')
+        ->assertSetStrict('form.content', 'Some content...')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertSet('form.title', '')
-        ->assertSet('form.content', '')
+        ->assertSetStrict('form.title', '')
+        ->assertSetStrict('form.content', '')
         ;
     }
 
-    /** @test */
-    function all_properties_are_available_in_rules_method()
+    function test_all_properties_are_available_in_rules_method()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormWithRulesStub $form;
 
             public function mount()
@@ -350,20 +403,15 @@ class UnitTest extends \Tests\TestCase
             function save() {
                 $this->form->validate();
             }
-
-            function render() {
-                return '<div></div>';
-            }
         })
-        ->assertSet('form.post', 42)
+        ->assertSetStrict('form.post', 42)
         ->call('save')
-        ->assertSet('form.post', 42)
+        ->assertSetStrict('form.post', 42)
         ->assertHasErrors()
         ;
     }
 
-    /** @test */
-    function can_get_only_specific_properties()
+    function test_can_get_only_specific_properties()
     {
         $component = new class extends Component {};
 
@@ -385,8 +433,7 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    function can_get_properties_except()
+    function test_can_get_properties_except()
     {
         $component = new class extends Component {};
 
@@ -408,8 +455,7 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    function validation_can_show_a_form_object_dynamic_validation_attributes()
+    function test_validation_can_show_a_form_object_dynamic_validation_attributes()
     {
         Livewire::test(new class extends Component {
             public PostFormDynamicValidationAttributesStub $withDynamicValidationAttributesForm;
@@ -433,8 +479,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function multiple_form_objects_in_component_not_interfering_between()
+    function test_multiple_form_objects_in_component_not_interfering_between()
     {
         Livewire::test(new class extends Component {
             public PostFormDynamicValidationAttributesStub $firstForm;
@@ -476,8 +521,7 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function validation_showing_a_form_object_dynamic_messages()
+    function test_validation_showing_a_form_object_dynamic_messages()
     {
         Livewire::test(new class extends Component {
             public PostFormDynamicMessagesStub $form;
@@ -499,10 +543,9 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    public function can_fill_a_form_object_from_model()
+    public function test_can_fill_a_form_object_from_model()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostForFormObjectTesting $post;
             public PostFormStub $form;
 
@@ -515,24 +558,18 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->form->fill($this->post);
             }
-
-            public function render()
-            {
-                return '<div></div>';
-            }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.content', '')
             ->call('fillForm')
-            ->assertSet('form.title', 'A Title')
-            ->assertSet('form.content', 'Some content')
+            ->assertSetStrict('form.title', 'A Title')
+            ->assertSetStrict('form.content', 'Some content')
         ;
     }
 
-    /** @test */
-    public function can_fill_a_form_object_from_array()
+    public function test_can_fill_a_form_object_from_array()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormStub $form;
 
             public function fillForm()
@@ -542,24 +579,18 @@ class UnitTest extends \Tests\TestCase
                     'content' => 'Content from array',
                 ]);
             }
-
-            public function render()
-            {
-                return '<div></div>';
-            }
         })
-            ->assertSet('form.title', '')
-            ->assertSet('form.content', '')
+            ->assertSetStrict('form.title', '')
+            ->assertSetStrict('form.content', '')
             ->call('fillForm')
-            ->assertSet('form.title', 'Title from array')
-            ->assertSet('form.content', 'Content from array')
+            ->assertSetStrict('form.title', 'Title from array')
+            ->assertSetStrict('form.content', 'Content from array')
         ;
     }
 
-    /** @test */
-    function form_object_validation_runs_alongside_component_validation()
+    function test_form_object_validation_runs_alongside_component_validation()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             #[Validate('required')]
@@ -568,10 +599,6 @@ class UnitTest extends \Tests\TestCase
             function save()
             {
                 $this->validate();
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
         ->assertHasNoErrors()
@@ -582,10 +609,9 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function form_object_validation_wont_run_if_rules_are_passed_into_validate()
+    function test_form_object_validation_wont_run_if_rules_are_passed_into_validate()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             public $username = '';
@@ -593,10 +619,6 @@ class UnitTest extends \Tests\TestCase
             function save()
             {
                 $this->validate(['username' => 'required']);
-            }
-
-            public function render() {
-                return '<div></div>';
             }
         })
         ->assertHasNoErrors()
@@ -607,10 +629,9 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function allows_form_object_without_rules_without_throwing_an_error()
+    function test_allows_form_object_without_rules_without_throwing_an_error()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormWithoutRules $form;
 
             public $username = '';
@@ -626,10 +647,6 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->validate();
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
         ->assertHasNoErrors()
         ->call('save')
@@ -637,10 +654,9 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function allows_form_object_without_rules_but_can_still_validate_it_with_its_own_rules()
+    function test_allows_form_object_without_rules_but_can_still_validate_it_with_its_own_rules()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormWithoutRules $form;
 
             public $username = '';
@@ -657,10 +673,6 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->validate();
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
         ->assertHasNoErrors()
         ->call('save')
@@ -669,10 +681,9 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function form_object_without_rules_can_still_be_validated_and_return_proper_data()
+    function test_form_object_without_rules_can_still_be_validated_and_return_proper_data()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormWithoutRules $form;
 
             public $username = '';
@@ -693,10 +704,6 @@ class UnitTest extends \Tests\TestCase
                 \PHPUnit\Framework\Assert::assertEquals('bar', data_get($data, 'form.title'));
                 \PHPUnit\Framework\Assert::assertEquals('not-found', data_get($data, 'form.content', 'not-found'));
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
         ->assertHasNoErrors()
         ->set('username', 'foo')
@@ -706,10 +713,9 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function resetting_validation_errors_resets_form_objects_as_well()
+    function test_resetting_validation_errors_resets_form_objects_as_well()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateStub $form;
 
             #[Validate('required')]
@@ -724,10 +730,6 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->resetValidation();
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
         ->assertHasNoErrors()
         ->call('save')
@@ -739,10 +741,9 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
-    /** @test */
-    function can_intercept_form_object_validator_instance()
+    function test_can_intercept_form_object_validator_instance()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public PostFormValidateWithInterceptStub $form;
 
             function save()
@@ -754,10 +755,6 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->resetValidation();
             }
-
-            public function render() {
-                return '<div></div>';
-            }
         })
         ->assertHasNoErrors()
         ->set('form.title', '"title with quotes"')
@@ -767,6 +764,71 @@ class UnitTest extends \Tests\TestCase
         ->assertHasNoErrors('form.content')
         ;
     }
+
+    function test_can_reset_and_return_property_with_pull_method()
+    {
+        Livewire::test(new class extends TestComponent {
+            public ResetPropertiesForm $form;
+
+            public $pullResult;
+
+            function test(...$args)
+            {
+                $this->pullResult = $this->form->proxyPull(...$args);
+            }
+        })
+        ->assertSet('form.foo', 'bar')
+        ->assertSet('form.bob', 'lob')
+        ->set('form.foo', 'baz')
+        ->assertSet('form.foo', 'baz')
+        ->call('test', 'foo')
+        ->assertSet('form.foo', 'bar')
+        ->assertSet('pullResult', 'baz');
+    }
+
+    function test_can_pull_all_properties()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public ResetPropertiesForm $form;
+
+            public $pullResult;
+
+            function test(...$args)
+            {
+                $this->pullResult = $this->form->proxyPull(...$args);
+            }
+        })
+        ->assertSet('form.foo', 'bar')
+        ->set('form.foo', 'baz')
+        ->assertSet('form.foo', 'baz')
+        ->assertSet('pullResult', null)
+        ->call('test');
+
+        $this->assertEquals('baz', $component->pullResult['foo']);
+        $this->assertEquals('lob', $component->pullResult['bob']);
+    }
+
+    function test_can_pull_some_properties()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public ResetPropertiesForm $form;
+
+            function test(...$args)
+            {
+                $this->form->proxyResetExcept(...$args);
+            }
+        })
+        ->assertSet('form.foo', 'bar')
+        ->set('form.foo', 'baz')
+        ->assertSet('form.foo', 'baz')
+        ->assertSet('form.bob', 'lob')
+        ->set('form.bob', 'loc')
+        ->assertSet('form.bob', 'loc')
+        ->call('test', ['foo']);
+
+        $this->assertEquals('baz', $component->form->foo);
+        $this->assertEquals('lob', $component->form->bob);
+    }
 }
 
 class PostFormStub extends Form
@@ -774,6 +836,31 @@ class PostFormStub extends Form
     public $title = '';
 
     public $content = '';
+}
+
+class PostFormStubWithDefaults extends Form
+{
+    public $title = 'foo';
+
+    public $content = 'bar';
+}
+
+class PostFormStubWithArrayDefaults extends Form
+{
+    public $title = 'foo';
+
+    public $content = [
+        1 => true,
+        2 => false,
+        'foo' => ['bar' => 'baz'],
+    ];
+}
+
+class PostFormWithTypedProperties extends Form
+{
+    public ?string $title = null;
+
+    public ?string $content = null;
 }
 
 class PostFormWithRulesStub extends Form
@@ -960,5 +1047,19 @@ class FormWithLiveValidation extends Form
                 'required',
             ],
         ];
+    }
+}
+
+class ResetPropertiesForm extends Form
+{
+    public $foo = 'bar';
+    public $bob = 'lob';
+
+    public function proxyResetExcept(...$args){
+        return $this->resetExcept(...$args);
+    }
+
+    public function proxyPull(...$args){
+        return $this->pull(...$args);
     }
 }

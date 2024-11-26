@@ -272,7 +272,7 @@ Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/doc
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\With\Url;
+use Livewire\Attributes\Url;
 use App\Models\Post;
 
 class SearchPosts extends Component
@@ -331,7 +331,7 @@ Below is a basic `Cart` component that loads a discount token from a cookie on m
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\With\Url;
+use Livewire\Attributes\Url;
 use App\Models\Post;
 
 class Cart extends Component
@@ -654,6 +654,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `Livewire::withCookie('color', 'blue')`                      | Set the test's `color` cookie to the provided value (`blue`). |
 | `Livewire::withCookies(['color' => 'blue', 'name' => 'Taylor])`                      | Set the test's `color` and `name` cookies to the provided values (`blue`, `Taylor`). |
 | `Livewire::withHeaders(['X-COLOR' => 'blue', 'X-NAME' => 'Taylor])`                      | Set the test's `X-COLOR` and `X-NAME` headers to the provided values (`blue`, `Taylor`). |
+| `Livewire::withoutLazyLoading()`                      | Disable lazy loading in this and all child components under test. |
 
 
 ### Interacting with components
@@ -683,6 +684,8 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertDontSee($post->title)`                         | Assert that the rendered HTML does not contain the provided value                                                                                                                    |
 | `assertSeeHtml('<div>...</div>')`                     | Assert the provided string literal is contained in the rendered HTML without escaping the HTML characters (unlike `assertSee`, which does escape the provided characters by default) |
 | `assertDontSeeHtml('<div>...</div>')`                 | Assert the provided string is contained in the rendered HTML                                                                                                                         |
+| `assertSeeText($post->title)`                         | Assert that the provided string is contained within the rendered HTML text. The rendered content will be passed to the `strip_tags` PHP function before the assertion is made                                                                                          |
+| `assertDontSeeText($post->title)`                     | Assert that the provided string is not contained within the rendered HTML text. The rendered content will be passed to the `strip_tags` PHP function before the assertion is made                                                                                |
 | `assertSeeInOrder(['...', '...'])`                    | Assert that the provided strings appear in order in the rendered HTML output of the component                                                                                        |
 | `assertSeeHtmlInOrder([$firstString, $secondString])` | Assert that the provided HTML strings appear in order in the rendered output of the component                                                                                        |
 | `assertDispatched('post-created')`                    | Assert that the given event has been dispatched by the component                                                                                                                     |
@@ -694,6 +697,7 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertRedirect()`                                    | Assert that a redirect has been triggered from within the component                                                                                                                  |
 | `assertRedirect('/posts')`                            | Assert the component triggered a redirect to the `/posts` endpoint                                                                                                                   |
 | `assertRedirect(ShowPosts::class)`                    | Assert that the component triggered a redirect to the `ShowPosts` component                                                                                                          |
+| `assertRedirectToRoute('name', ['parameters'])`       | Assert that the component triggered a redirect to the given route                                                                                                                    |
 | `assertNoRedirect()`                                  | Assert that no redirect has been triggered                                                                                                                                           |
 | `assertViewHas('posts')`                              | Assert that the `render()` method has passed a `posts` item to the view data                                                                                                         |
 | `assertViewHas('postCount', 3)`                       | Assert that a `postCount` variable has been passed to the view with a value of `3`                                                                                                   |

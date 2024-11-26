@@ -45,7 +45,7 @@ Below is a simple Livewire component showing the details of a post model from th
 </div>
 ```
 
-By using Alpine, we can hide the content of the post until the user presses the "Show post content..." button. At that point, Alpine's `expanded` property will be set to `true` and the content will be shown on the page because `x-show="content"` is used to give Alpine control over the visibility of the post's content.
+By using Alpine, we can hide the content of the post until the user presses the "Show post content..." button. At that point, Alpine's `expanded` property will be set to `true` and the content will be shown on the page because `x-show="expanded"` is used to give Alpine control over the visibility of the post's content.
 
 This is an example of where Alpine shines: adding interactivity into your application without triggering Livewire server-roundtrips.
 

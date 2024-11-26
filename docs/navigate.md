@@ -154,7 +154,7 @@ document.addEventListener('livewire:navigate', (event) => {
     // A URL object of the intended destination of the navigation...
     context.url
 
-    // A boolean [true/false] indicating whether or not this naviation
+    // A boolean [true/false] indicating whether or not this navigation
     // was triggered by a back/forward (history state) navigation...
     context.history
 

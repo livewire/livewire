@@ -10,8 +10,7 @@ use Livewire\Attributes\Reactive;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_lazy_load_a_component()
+    public function test_can_lazy_load_a_component()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -38,8 +37,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_lazy_load_a_component_on_intersect_outside_viewport()
+    public function test_can_lazy_load_a_component_on_intersect_outside_viewport()
     {
         Livewire::visit([new class extends Component {
             public function render()
@@ -71,8 +69,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Child!');
     }
 
-    /** @test */
-    public function cant_lazy_load_a_component_on_intersect_outside_viewport()
+    public function test_cant_lazy_load_a_component_on_intersect_outside_viewport()
     {
         Livewire::visit([new class extends Component {
             public function render()
@@ -131,8 +128,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_lazy_load_component_using_route()
+    public function test_can_lazy_load_component_using_route()
     {
         $this->tweakApplication(function() {
             Livewire::component('page', Page::class);
@@ -152,8 +148,7 @@ class BrowserTest extends BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_lazy_load_a_component_with_a_placeholder()
+    public function test_can_lazy_load_a_component_with_a_placeholder()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -182,8 +177,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_pass_props_to_lazyilly_loaded_component()
+    public function test_can_pass_props_to_lazyilly_loaded_component()
     {
         Livewire::visit([new class extends Component {
             public $count = 1;
@@ -206,8 +200,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_pass_props_to_mount_method_to_lazyilly_loaded_component()
+    public function test_can_pass_props_to_mount_method_to_lazyilly_loaded_component()
     {
         Livewire::visit([new class extends Component {
             public $count = 1;
@@ -230,8 +223,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_pass_reactive_props_to_lazyilly_loaded_component()
+    public function test_can_pass_reactive_props_to_lazyilly_loaded_component()
     {
         Livewire::visit([new class extends Component {
             public $count = 1;
@@ -264,8 +256,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_access_component_parameters_in_placeholder_view()
+    public function test_can_access_component_parameters_in_placeholder_view()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML

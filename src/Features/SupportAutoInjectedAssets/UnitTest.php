@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Blade;
 
 class UnitTest extends TestCase
 {
-    /** @test */
-    public function it_injects_livewire_assets_before_closing_tags(): void
+    public function test_it_injects_livewire_assets_before_closing_tags(): void
     {
         $this->compare(
             $livewireStyles = FrontendAssets::styles(),
@@ -40,8 +39,7 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
-    public function it_injects_livewire_assets_html_only(): void
+    public function test_it_injects_livewire_assets_html_only(): void
     {
         $this->compare(
             $livewireStyles = FrontendAssets::styles(),
@@ -57,8 +55,7 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
-    public function it_injects_livewire_assets_weirdly_formatted_html(): void
+    public function test_it_injects_livewire_assets_weirdly_formatted_html(): void
     {
         $this->compare(
             $livewireStyles = FrontendAssets::styles(),
@@ -94,8 +91,7 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
-    public function it_injects_livewire_assets_html_with_header(): void
+    public function test_it_injects_livewire_assets_html_with_header(): void
     {
         $this->compare(
             $livewireStyles = FrontendAssets::styles(),
@@ -133,14 +129,12 @@ class UnitTest extends TestCase
         HTML);
     }
 
-    /** @test */
-    public function can_disable_auto_injection_using_global_method(): void
+    public function test_can_disable_auto_injection_using_global_method(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
-    public function can_disable_auto_injection_using_config(): void
+    public function test_can_disable_auto_injection_using_config(): void
     {
         config()->set('livewire.inject_assets', false);
 
@@ -156,8 +150,7 @@ class UnitTest extends TestCase
         $this->get('/with-livewire')->assertDontSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
-    public function can_force_injection_over_config(): void
+    public function test_can_force_injection_over_config(): void
     {
         config()->set('livewire.inject_assets', false);
 
@@ -177,8 +170,7 @@ class UnitTest extends TestCase
         $this->get('/without-livewire')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
-    public function only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
+    public function test_only_auto_injects_when_a_livewire_component_was_rendered_on_the_page(): void
     {
         Route::get('/with-livewire', function () {
             return (new class Extends TestComponent {})();
@@ -192,8 +184,7 @@ class UnitTest extends TestCase
         $this->get('/with-livewire')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
-    public function only_auto_injects_when_persist_was_rendered_on_the_page(): void
+    public function test_only_auto_injects_when_persist_was_rendered_on_the_page(): void
     {
         Route::get('/with-persist', function () {
             return Blade::render('<html>@persist("foo") ... @endpersist</html>');
@@ -207,20 +198,17 @@ class UnitTest extends TestCase
         $this->get('/with-persist')->assertSee('/livewire/livewire.min.js');
     }
 
-    /** @test */
-    public function only_injects_on_full_page_loads(): void
+    public function test_only_injects_on_full_page_loads(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
-    public function only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles(): void
+    public function test_only_inject_when_dev_doesnt_use_livewire_scripts_or_livewire_styles(): void
     {
         $this->markTestIncomplete();
     }
 
-    /** @test */
-    public function response_maintains_original_view_after_asset_injection(): void
+    public function test_response_maintains_original_view_after_asset_injection(): void
     {
         Livewire::component('foo', new class extends \Livewire\Component {
             public function render() {

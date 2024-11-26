@@ -9,8 +9,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_persist_a_property_to_the_session()
+    public function test_can_persist_a_property_to_the_session()
     {
         Livewire::visit(new class extends Component {
             #[Session]

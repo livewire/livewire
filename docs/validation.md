@@ -301,7 +301,7 @@ class CreatePost extends Component
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => 'required|min:5',
@@ -392,7 +392,7 @@ Here's an example:
 ```php
 use Livewire\Component;
 use App\Models\Post;
-use Illuminate\Validation\Rule as ValidationRule;
+use Illuminate\Validation\Rule;
 
 class CreatePost extends Component
 {
@@ -400,15 +400,15 @@ class CreatePost extends Component
 
     public $content = '';
 
-    public function rules() // [tl! highlight:6]
+    protected function rules() // [tl! highlight:6]
     {
         return [
-            'title' => ValidationRule::exists('posts', 'title'),
+            'title' => Rule::exists('posts', 'title'),
             'content' => 'required|min:3',
         ];
     }
 
-    public function messages() // [tl! highlight:6]
+    protected function messages() // [tl! highlight:6]
     {
         return [
             'content.required' => 'The :attribute are missing.',
@@ -416,7 +416,7 @@ class CreatePost extends Component
         ];
     }
 
-    public function validationAttributes() // [tl! highlight:6]
+    protected function validationAttributes() // [tl! highlight:6]
     {
         return [
             'content' => 'description',
@@ -442,7 +442,8 @@ class CreatePost extends Component
 > [!warning] The `rules()` method doesn't validate on data updates
 > When defining rules via the `rules()` method, Livewire will ONLY use these validation rules to validate properties when you run `$this->validate()`. This is different than standard `#[Validate]` attributes which are applied every time a field is updated via something like `wire:model`. To apply these validation rules to a property every time it's updated, you can still use `#[Validate]` with no extra parameters.
 
-> [!warning] While using Livewire's validation utilities, your component should **not** have the properties `$rules`, `$messages`, `$validationAttributes` or `$validationCustomValues`, unless you're customizing the validation process. Otherwise, those will conflict with Livewire's mechanisms.
+> [!warning] Don't conflict with Livewire's mechanisms
+> While using Livewire's validation utilities, your component should **not** have properties or methods named `rules`, `messages`, `validationAttributes` or `validationCustomValues`, unless you're customizing the validation process. Otherwise, those will conflict with Livewire's mechanisms.
 
 ## Using Laravel Rule objects
 
@@ -467,7 +468,7 @@ class UpdatePost extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [

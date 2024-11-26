@@ -6,8 +6,7 @@ use Livewire\Livewire;
 
 class DirectlyAssignComponentParametersAsPropertiesUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function parameters_are_directly_set_as_properties_without_mount_method()
+    public function test_parameters_are_directly_set_as_properties_without_mount_method()
     {
         Livewire::test(ComponentWithDirectlyAssignedProperties::class, [
             'foo' => 'bar',
@@ -15,8 +14,7 @@ class DirectlyAssignComponentParametersAsPropertiesUnitTest extends \Tests\TestC
         ])->assertSeeText('barbob');
     }
 
-    /** @test */
-    public function parameters_are_directly_set_as_properties_even_if_mount_method_accepts_them_too()
+    public function test_parameters_are_directly_set_as_properties_even_if_mount_method_accepts_them_too()
     {
         Livewire::test(ComponentWithDirectlyAssignedPropertiesAndMountMethod::class, [
             'foo' => 'bar',

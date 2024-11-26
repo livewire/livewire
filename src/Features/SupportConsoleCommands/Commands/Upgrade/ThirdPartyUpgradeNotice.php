@@ -8,7 +8,7 @@ class ThirdPartyUpgradeNotice extends UpgradeStep
 {
     public function handle(Command $console, \Closure $next)
     {
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> Third-party package upgrade 🚀 </>");
+        $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> Third-party package upgrade 🚀 </>');
         $console->newLine();
         $console->comment('!! Please be aware that the following upgrade steps are registered by third-parties !!');
         $console->newLine();

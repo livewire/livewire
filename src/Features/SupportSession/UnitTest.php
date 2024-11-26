@@ -10,8 +10,7 @@ use Tests\TestComponent;
 
 class UnitTest extends TestCase
 {
-    /** @test */
-    public function it_creates_a_session_key()
+    public function test_it_creates_a_session_key()
     {
         $component = Livewire::test(new class extends TestComponent {
             #[Session]
@@ -27,8 +26,7 @@ class UnitTest extends TestCase
         $this->assertTrue(FacadesSession::has('lw'.crc32($component->instance()->getName().'count')));
     }
 
-    /** @test */
-    public function it_creates_a_dynamic_session_id()
+    public function test_it_creates_a_dynamic_session_id()
     {
         Livewire::test(new class extends TestComponent {
             public $post = ['id' => 2];

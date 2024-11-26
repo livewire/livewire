@@ -29,7 +29,7 @@ class DuskCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $file = (new ReflectionClass($this->testCase))->getFilename();
+        $file = (new ReflectionClass($this->testCase))->getFileName();
 
         $line = collect($this->e->getTrace())
             ->first(function ($entry) use ($file) {

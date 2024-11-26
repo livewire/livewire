@@ -2,13 +2,11 @@
 
 namespace LegacyTests\Browser\Deployment;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function it_shows_page_expired_dialog_when_livewire_deployment_invalidation_hash_has_changed()
+    public function test_it_shows_page_expired_dialog_when_livewire_deployment_invalidation_hash_has_changed()
     {
         $this->markTestSkipped(); // @todo: Josh Hanley
 
@@ -25,8 +23,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
-    public function it_shows_page_expired_dialog_when_livewire_page_has_expired_exception_is_manually_thrown()
+    public function test_it_shows_page_expired_dialog_when_livewire_page_has_expired_exception_is_manually_thrown()
     {
         $this->markTestSkipped(); // @todo: Josh Hanley
 

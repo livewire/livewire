@@ -5,11 +5,11 @@ namespace Livewire\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
+use Tests\TestComponent;
 
 class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function component_mount_action_with_dependency()
+    public function test_component_mount_action_with_dependency()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class, ['id' => 123]);
 
@@ -17,8 +17,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(123, $component->bar);
     }
 
-    /** @test */
-    public function component_action_with_dependency()
+    public function test_component_action_with_dependency()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
@@ -28,8 +27,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals('foobar', $component->bar);
     }
 
-    /** @test */
-    public function component_action_with_spread_operator()
+    public function test_component_action_with_spread_operator()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
@@ -38,20 +36,18 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(['foo', 'bar', 'baz'], $component->foo);
     }
 
-    /** @test */
-    public function component_action_with_paramter_name_that_matches_a_container_registration_name()
+    public function test_component_action_with_paramter_name_that_matches_a_container_registration_name()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
-        app()->bind('foo', \StdClass::class);
+        app()->bind('foo', \stdClass::class);
 
         $component->runAction('actionWithContainerBoundNameCollision', 'bar');
 
         $this->assertEquals('bar', $component->foo);
     }
 
-    /** @test */
-    public function component_action_with_primitive()
+    public function test_component_action_with_primitive()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
@@ -60,8 +56,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(1, $component->foo);
     }
 
-    /** @test */
-    public function component_action_with_default_value()
+    public function test_component_action_with_default_value()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
@@ -82,8 +77,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals('foo', $component->bar);
     }
 
-    /** @test */
-    public function component_action_with_dependency_and_primitive()
+    public function test_component_action_with_dependency_and_primitive()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
@@ -93,8 +87,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertEquals(1, $component->bar);
     }
 
-    /** @test */
-    public function component_action_with_dependency_and_optional_primitive()
+    public function test_component_action_with_dependency_and_optional_primitive()
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
@@ -111,16 +104,14 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
         $this->assertNull($component->bar);
     }
 
-    /** @test */
-    public function component_render_method_with_dependency()
+    public function test_component_render_method_with_dependency()
     {
         $component = Livewire::test(CustomComponent::class);
 
         $component->assertSee('Results from the service');
     }
 
-    /** @test */
-    public function component_mount_action_with_primitive_union_types()
+    public function test_component_mount_action_with_primitive_union_types()
     {
         $component = Livewire::test(ComponentWithUnionTypes::class);
 
@@ -134,7 +125,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithDependencyInjection extends Component
+class ComponentWithDependencyInjection extends TestComponent
 {
     public $foo;
     public $bar;
@@ -183,11 +174,6 @@ class ComponentWithDependencyInjection extends Component
     {
         $this->foo = $foo;
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
 class CustomComponent extends Component
@@ -208,25 +194,20 @@ class CustomService
     }
 }
 
-class ComponentWithUnionTypes extends Component
+class ComponentWithUnionTypes extends TestComponent
 {
     public $foo;
     public $bar;
 
     public function mount(UrlGenerator $generator, string|int $id = 123)
     {
-        $this->foo = $generator->to("/some-url", $id);
+        $this->foo = $generator->to('/some-url', $id);
         $this->bar = $id;
     }
 
     public function injection(UrlGenerator $generator, $bar)
     {
-        $this->foo = $generator->to("/");
+        $this->foo = $generator->to('/');
         $this->bar = $bar;
-    }
-
-    public function render()
-    {
-        return view("null-view");
     }
 }

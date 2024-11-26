@@ -8,8 +8,7 @@ use Livewire\Component;
 
 class UnitTest extends TestCase
 {
-    /** @test */
-    function two_or_more_root_elements_throws_an_error()
+    function test_two_or_more_root_elements_throws_an_error()
     {
         config()->set('app.debug', true);
 
@@ -31,8 +30,7 @@ class UnitTest extends TestCase
         });
     }
 
-    /** @test */
-    function allow_script_tags_as_second_element()
+    function test_allow_script_tags_as_second_element()
     {
         config()->set('app.debug', true);
 
@@ -52,8 +50,7 @@ class UnitTest extends TestCase
         })->assertSuccessful();
     }
 
-    /** @test */
-    function dont_throw_error_in_production_so_that_there_is_no_perf_penalty()
+    function test_dont_throw_error_in_production_so_that_there_is_no_perf_penalty()
     {
         config()->set('app.debug', false);
 

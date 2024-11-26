@@ -10,10 +10,13 @@ class FileUploadController implements HasMiddleware
 {
     public static function middleware()
     {
-        return array_map(fn ($middleware) => new Middleware($middleware), array_merge(
-            ['web'],
-            (array) FileUploadConfiguration::middleware(),
-        ));
+        $middleware = (array) FileUploadConfiguration::middleware();
+
+        if (! in_array('web', $middleware)) {
+            $middleware = array_merge(['web'], $middleware);
+        }
+
+        return array_map(fn ($middleware) => new Middleware($middleware), $middleware);
     }
 
     public function handle()

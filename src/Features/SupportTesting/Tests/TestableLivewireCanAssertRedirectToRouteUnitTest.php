@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Route;
+use Tests\TestComponent;
 
 class TestableLivewireCanAssertRedirectToRouteUnitTest extends \Tests\TestCase
 {
@@ -17,8 +17,7 @@ class TestableLivewireCanAssertRedirectToRouteUnitTest extends \Tests\TestCase
         })->name('foo');
     }
 
-    /** @test */
-    function can_assert_a_redirect_to_a_route()
+    function test_can_assert_a_redirect_to_a_route()
     {
         $component = Livewire::test(RedirectRouteComponent::class);
 
@@ -27,8 +26,7 @@ class TestableLivewireCanAssertRedirectToRouteUnitTest extends \Tests\TestCase
         $component->assertRedirectToRoute('foo');
     }
 
-    /** @test */
-    function can_detect_failed_redirect()
+    function test_can_detect_failed_redirect()
     {
         $component = Livewire::test(RedirectRouteComponent::class);
 
@@ -38,15 +36,10 @@ class TestableLivewireCanAssertRedirectToRouteUnitTest extends \Tests\TestCase
     }
 }
 
-class RedirectRouteComponent extends Component
+class RedirectRouteComponent extends TestComponent
 {
     function performRedirect()
     {
         $this->redirectRoute('foo');
-    }
-
-    function render()
-    {
-        return view('null-view');
     }
 }

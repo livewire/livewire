@@ -7,7 +7,6 @@ use Illuminate\Contracts\Routing\UrlRoutable as ImplicitlyBindable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use ReflectionClass;
 use ReflectionNamedType;
-use UnitEnum;
 
 class ImplicitlyBoundMethod extends BoundMethod
 {

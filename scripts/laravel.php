@@ -22,7 +22,6 @@ class AppServiceProvider extends \Illuminate\Support\ServiceProvider
 $root = sys_get_temp_dir().'/__lwcmdcache';
 
 $cacheDir = $root.'/cache';
-$cacheDir = $root.'/cache';
 $viewsDir = $cacheDir.'/views';
 if (! file_exists($cacheDir)) mkdir($cacheDir);
 if (! file_exists($viewsDir)) mkdir($viewsDir);

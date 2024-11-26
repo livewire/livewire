@@ -2,10 +2,6 @@
 
 namespace Livewire\Mechanisms;
 
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Str;
-use Livewire\LivewireServiceProvider;
-
 abstract class Mechanism
 {
     function register()

@@ -227,7 +227,11 @@ class FrontendAssets extends Mechanism
 
         $versionedFileName = "{$fileName}?id={$versionedFileName}";
 
-        $assertUrl = config('livewire.asset_url') ?? url("vendor/livewire{$versionedFileName}");
+        $assertUrl = config('livewire.asset_url')
+            ?? (app('livewire')->isRunningServerless()
+                ? rtrim(config('app.asset_url'), '/')."/vendor/livewire$versionedFileName"
+                : url("vendor/livewire{$versionedFileName}")
+            );
 
         $url = $assertUrl;
 

@@ -6,8 +6,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_toggle_a_purely_js_property_with_a_purely_js_function()
+    public function test_can_toggle_a_purely_js_property_with_a_purely_js_function()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -42,8 +41,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_evaluate_js_code_after_an_action_is_performed()
+    public function test_can_evaluate_js_code_after_an_action_is_performed()
     {
         Livewire::visit(
             new class extends \Livewire\Component {

@@ -2,13 +2,14 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
+use function Livewire\{store, trigger, wrap };
+use ReflectionUnionType;
 use Livewire\Mechanisms\Mechanism;
-use function Livewire\{ invade, store, trigger, wrap };
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\View;
-use ReflectionUnionType;
 
 class HandleComponents extends Mechanism
 {
@@ -312,10 +313,15 @@ class HandleComponents extends Mechanism
 
         $finish = trigger('update', $component, $path, $value);
 
+        // Ensure that it's a public property, not on the base class first...
+        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {
+            throw new PublicPropertyNotFoundException($property, $component->getName());
+        }
+
         // If this isn't a "deep" set, set it directly, otherwise we have to
         // recursively get up and set down the value through the synths...
         if (empty($segments)) {
-            if (! $this->isRemoval($value)) $this->setComponentPropertyAwareOfTypes($component, $property, $value);
+            $this->setComponentPropertyAwareOfTypes($component, $property, $value);
         } else {
             $propertyValue = $component->$property;
 

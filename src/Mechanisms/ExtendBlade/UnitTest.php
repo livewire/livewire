@@ -12,11 +12,11 @@ use Livewire\Exceptions\BypassViewHandler;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()
+    public function test_livewire_only_directives_apply_to_livewire_components_and_not_normal_blade()
     {
         Livewire::directive('foo', function ($expression) {
             return 'bar';
@@ -33,8 +33,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(3, explode('@foo', $output));
     }
 
-    /** @test */
-    public function livewire_only_precompilers_apply_to_livewire_components_and_not_normal_blade()
+    public function test_livewire_only_precompilers_apply_to_livewire_components_and_not_normal_blade()
     {
         Livewire::precompiler(function ($string) {
             return preg_replace_callback('/@foo/sm',  function ($matches) {
@@ -53,59 +52,51 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(3, explode('@foo', $output));
     }
 
-    /** @test */
-    public function this_keyword_will_reference_the_livewire_component_class()
+    public function test_this_keyword_will_reference_the_livewire_component_class()
     {
         Livewire::test(ComponentForTestingThisKeyword::class)
             ->assertSee(ComponentForTestingThisKeyword::class);
     }
 
-    /** @test */
-    public function this_directive_returns_javascript_component_object_string()
+    public function test_this_directive_returns_javascript_component_object_string()
     {
         Livewire::test(ComponentForTestingDirectives::class)
             ->assertDontSee('@this')
             ->assertSee('window.Livewire.find(');
     }
 
-    /** @test */
-    public function this_directive_can_be_used_in_nested_blade_component()
+    public function test_this_directive_can_be_used_in_nested_blade_component()
     {
         Livewire::test(ComponentForTestingNestedThisDirective::class)
             ->assertDontSee('@this')
             ->assertSee('window.Livewire.find(');
     }
 
-    /** @test */
-    public function public_property_is_accessible_in_view_via_this()
+    public function test_public_property_is_accessible_in_view_via_this()
     {
         Livewire::test(PublicPropertiesInViewWithThisStub::class)
             ->assertSee('Caleb');
     }
 
-    /** @test */
-    public function public_properties_are_accessible_in_view_without_this()
+    public function test_public_properties_are_accessible_in_view_without_this()
     {
         Livewire::test(PublicPropertiesInViewWithoutThisStub::class)
             ->assertSee('Caleb');
     }
 
-    /** @test */
-    public function protected_property_is_accessible_in_view_via_this()
+    public function test_protected_property_is_accessible_in_view_via_this()
     {
         Livewire::test(ProtectedPropertiesInViewWithThisStub::class)
             ->assertSee('Caleb');
     }
 
-    /** @test */
-    public function protected_properties_are_not_accessible_in_view_without_this()
+    public function test_protected_properties_are_not_accessible_in_view_without_this()
     {
         Livewire::test(ProtectedPropertiesInViewWithoutThisStub::class)
             ->assertDontSee('Caleb');
     }
 
-    /** @test */
-    public function normal_errors_thrown_from_inside_a_livewire_view_are_wrapped_by_the_blade_handler()
+    public function test_normal_errors_thrown_from_inside_a_livewire_view_are_wrapped_by_the_blade_handler()
     {
         // Blade wraps thrown exceptions in "ErrorException" by default.
         $this->expectException(ErrorException::class);
@@ -115,8 +106,7 @@ class UnitTest extends \Tests\TestCase
         View::make('render-component', ['component' => 'foo'])->render();
     }
 
-    /** @test */
-    public function livewire_errors_thrown_from_inside_a_livewire_view_bypass_the_blade_wrapping()
+    public function test_livewire_errors_thrown_from_inside_a_livewire_view_bypass_the_blade_wrapping()
     {
         // Exceptions that use the "BypassViewHandler" trait remain unwrapped.
         $this->expectException(SomeCustomLivewireException::class);
@@ -126,8 +116,7 @@ class UnitTest extends \Tests\TestCase
         View::make('render-component', ['component' => 'foo'])->render();
     }
 
-    /** @test */
-    public function errors_thrown_by_abort_404_function_are_not_wrapped()
+    public function test_errors_thrown_by_abort_404_function_are_not_wrapped()
     {
         $this->expectException(NotFoundHttpException::class);
 
@@ -136,8 +125,7 @@ class UnitTest extends \Tests\TestCase
         View::make('render-component', ['component' => 'foo'])->render();
     }
 
-    /** @test */
-    public function errors_thrown_by_abort_500_function_are_not_wrapped()
+    public function test_errors_thrown_by_abort_500_function_are_not_wrapped()
     {
         $this->expectException(HttpException::class);
 
@@ -146,8 +134,7 @@ class UnitTest extends \Tests\TestCase
         View::make('render-component', ['component' => 'foo'])->render();
     }
 
-    /** @test */
-    public function errors_thrown_by_authorization_exception_function_are_not_wrapped()
+    public function test_errors_thrown_by_authorization_exception_function_are_not_wrapped()
     {
         $this->expectException(AuthorizationException::class);
 
@@ -259,41 +246,26 @@ class LivewireExceptionIsThrownInViewStub extends Component
     }
 }
 
-class Abort404IsThrownInComponentMountStub extends Component
+class Abort404IsThrownInComponentMountStub extends TestComponent
 {
     public function mount()
     {
         abort(404);
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class Abort500IsThrownInComponentMountStub extends Component
+class Abort500IsThrownInComponentMountStub extends TestComponent
 {
     public function mount()
     {
         abort(500);
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class AuthorizationExceptionIsThrownInComponentMountStub extends Component
+class AuthorizationExceptionIsThrownInComponentMountStub extends TestComponent
 {
     public function mount()
     {
         throw new AuthorizationException();
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

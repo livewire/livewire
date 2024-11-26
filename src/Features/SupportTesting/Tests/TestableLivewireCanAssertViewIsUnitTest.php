@@ -2,20 +2,19 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class TestableLivewireCanAssertViewIsUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    function can_assert_view_is()
+    function test_can_assert_view_is()
     {
         Livewire::test(ViewComponent::class)
             ->assertViewIs('null-view');
     }
 }
 
-class ViewComponent extends Component
+class ViewComponent extends TestComponent
 {
     function render()
     {
