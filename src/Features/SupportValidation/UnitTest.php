@@ -18,6 +18,78 @@ use Illuminate\Support\Collection;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function test_realtime_validation_works_when_calling_validate_only()
+    {
+        Livewire::test(new class extends Component {
+            public $name = '';
+            public $items = [];
+
+            public function rules()
+            {
+                return [
+                    'name' => 'required',
+                    'items' => 'required',
+                ];
+            }
+
+            public function updated($field)
+            {
+                $this->validateOnly($field);
+            }
+
+            public function save()
+            {
+                $this->validate();
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+        ->call('save')
+        ->assertHasErrors('name', 'required')
+        ->assertHasErrors('items', 'required')
+        ->set('items.0', 'true')
+        ->assertHasNoErrors('items')
+        ->assertHasErrors('name', 'required');
+    }
+
+    public function test_realtime_validation_works_when_using_validate_attribute()
+    {
+        Livewire::test(new class extends Component {
+            #[Validate]
+            public $name = '';
+
+            #[Validate]
+            public $items = [];
+
+            public function rules()
+            {
+                return [
+                    'name' => 'required',
+                    'items' => 'required',
+                ];
+            }
+
+            public function save()
+            {
+                $this->validate();
+            }
+
+            public function render()
+            {
+                return '<div></div>';
+            }
+        })
+        ->call('save')
+        ->assertHasErrors('name', 'required')
+        ->assertHasErrors('items', 'required')
+        ->set('items.0', 'true')
+        ->assertHasNoErrors('items')
+        ->assertHasErrors('name', 'required');
+    }
+
     public function test_update_triggers_rule_attribute()
     {
         Livewire::test(new class extends TestComponent {
