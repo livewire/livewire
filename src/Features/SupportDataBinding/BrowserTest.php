@@ -11,8 +11,7 @@ class BrowserTest extends BrowserTestCase
 {
     function test_can_use_wire_dirty()
     {
-        Livewire::visit(new class extends Component
-        {
+        Livewire::visit(new class extends Component {
             public $prop = false;
 
             public function render()
@@ -33,13 +32,13 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Unsaved changes...')
             ->uncheck('@checkbox')
             ->assertSee('The data is in-sync...')
-            ->assertDontSee('Unsaved changes...');
+            ->assertDontSee('Unsaved changes...')
+        ;
     }
 
     function test_can_update_bound_value_from_lifecyle_hook()
     {
-        Livewire::visit(new class extends Component
-        {
+        Livewire::visit(new class extends Component {
             public $foo = null;
 
             public $bar = null;
@@ -72,13 +71,13 @@ class BrowserTest extends BrowserTestCase
         })
             ->select('@barSelect', 'one')
             ->waitForLivewire()->select('@fooSelect', 'one')
-            ->assertSelected('@barSelect', '');
+            ->assertSelected('@barSelect', '')
+        ;
     }
 
     public function updates_dependent_select_options_correctly_when_wire_key_is_applied()
     {
-        Livewire::visit(new class extends Component
-        {
+        Livewire::visit(new class extends Component {
             public $parent = 'foo';
 
             public $child = 'bar';
