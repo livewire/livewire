@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class UpdatingTableRowsTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function component_renders_table_rows_and_updates_properly()
+    public function test_component_renders_table_rows_and_updates_properly()
     {
         Livewire::visit([new class extends Component {
             public function render() {

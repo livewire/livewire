@@ -9,19 +9,22 @@ class FileUploadConfiguration
 {
     public static function storage()
     {
+        $disk = static::disk();
+
         if (app()->runningUnitTests()) {
             // We want to "fake" the first time in a test run, but not again because
-            // ::fake() whipes the storage directory every time its called.
-            rescue(function () {
+            // Storage::fake() wipes the storage directory every time its called.
+            rescue(
                 // If the storage disk is not found (meaning it's the first time),
                 // this will throw an error and trip the second callback.
-                return Storage::disk(static::disk());
-            }, function () {
-                return Storage::fake(static::disk());
-            });
+                fn() => Storage::disk($disk),
+                fn() => Storage::fake($disk),
+                // swallows the error that is thrown on the first try
+                report: false
+            );
         }
 
-        return Storage::disk(static::disk());
+        return Storage::disk($disk);
     }
 
     public static function disk()
@@ -99,6 +102,11 @@ class FileUploadConfiguration
     public static function middleware()
     {
         return config('livewire.temporary_file_upload.middleware') ?: 'throttle:60,1';
+    }
+
+    public static function shouldCleanupOldUploads()
+    {
+        return config('livewire.temporary_file_upload.cleanup', true);
     }
 
     public static function rules()

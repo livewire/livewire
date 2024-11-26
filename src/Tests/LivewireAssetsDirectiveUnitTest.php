@@ -12,8 +12,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         $this->markTestSkipped('not sure exactly how we want to handle all this asset stuff for v3 so holding off on this...');
     }
 
-    /** @test */
-    public function livewire_js_is_unminified_when_app_is_in_debug_mode()
+    public function test_livewire_js_is_unminified_when_app_is_in_debug_mode()
     {
         config()->set('app.debug', true);
 
@@ -44,8 +43,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function livewire_js_calls_reference_relative_root()
+    public function test_livewire_js_calls_reference_relative_root()
     {
         $this->assertStringContainsString(
             '<script src="/livewire/livewire.js?',
@@ -58,8 +56,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function livewire_js_calls_reference_configured_asset_url()
+    public function test_livewire_js_calls_reference_configured_asset_url()
     {
         $this->assertStringContainsString(
             '<script src="https://foo.com/assets/livewire/livewire.js?',
@@ -72,8 +69,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function asset_url_trailing_slashes_are_trimmed()
+    public function test_asset_url_trailing_slashes_are_trimmed()
     {
         $this->assertStringContainsString(
             '<script src="https://foo.com/assets/livewire/livewire.js?',
@@ -86,8 +82,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function asset_url_passed_into_blade_assets_directive()
+    public function test_asset_url_passed_into_blade_assets_directive()
     {
         $output = View::make('assets-directive', [
             'options' => ['asset_url' => 'https://foo.com/assets/', 'app_url' => 'https://bar.com/'],
@@ -104,8 +99,7 @@ class LivewireAssetsDirectiveUnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function nonce_passed_into_directive_gets_added_as_script_tag_attribute()
+    public function test_nonce_passed_into_directive_gets_added_as_script_tag_attribute()
     {
         $output = View::make('assets-directive', [
             'options' => ['nonce' => 'foobarnonce'],

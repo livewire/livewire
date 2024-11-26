@@ -8,8 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_evaluate_a_script_inside_a_component()
+    public function test_can_evaluate_a_script_inside_a_component()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public $message = 'original';
@@ -34,8 +33,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_register_an_alpine_component_inside_a_script_tag()
+    public function test_can_register_an_alpine_component_inside_a_script_tag()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public $message = 'original';
@@ -60,8 +58,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function multiple_scripts_can_be_evaluated()
+    public function test_multiple_scripts_can_be_evaluated()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public function render() { return <<<'HTML'
@@ -88,8 +85,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function scripts_can_be_added_conditionally()
+    public function test_scripts_can_be_added_conditionally()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public $show = false;
@@ -121,8 +117,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function assets_can_be_loaded()
+    public function test_assets_can_be_loaded()
     {
         Route::get('/test.js', function () {
             return Utils::pretendResponseIsFile(__DIR__.'/test.js');
@@ -143,8 +138,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function remote_assets_can_be_loaded()
+    public function test_remote_assets_can_be_loaded()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public function render() { return <<<'HTML'
@@ -171,8 +165,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function remote_assets_can_be_loaded_lazily()
+    public function test_remote_assets_can_be_loaded_lazily()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public $load = false;
@@ -206,8 +199,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function remote_assets_can_be_loaded_from_a_deferred_nested_component()
+    public function test_remote_assets_can_be_loaded_from_a_deferred_nested_component()
     {
         Livewire::visit([new class extends \Livewire\Component {
             public $load = false;
@@ -249,8 +241,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function remote_inline_scripts_can_be_loaded_from_a_deferred_nested_component()
+    public function test_remote_inline_scripts_can_be_loaded_from_a_deferred_nested_component()
     {
         Livewire::visit([new class extends \Livewire\Component {
             public $load = false;
@@ -297,8 +288,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_listen_for_initial_dispatches_inside_script()
+    public function test_can_listen_for_initial_dispatches_inside_script()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public function render() {
@@ -323,8 +313,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function functions_loaded_in_scripts_are_not_auto_evaluated()
+    public function test_functions_loaded_in_scripts_are_not_auto_evaluated()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public function render() { return <<<'HTML'

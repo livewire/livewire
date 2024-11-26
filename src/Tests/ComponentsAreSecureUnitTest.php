@@ -4,14 +4,12 @@ namespace Livewire\Tests;
 
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
-use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\MethodNotFoundException;
-use Livewire\Component;
+use Tests\TestComponent;
 
 class ComponentsAreSecureUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function throws_method_not_found_exception_when_action_missing()
+    public function test_throws_method_not_found_exception_when_action_missing()
     {
         $this->expectException(MethodNotFoundException::class);
 
@@ -21,8 +19,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->runAction('missingMethod');
     }
 
-    /** @test */
-    public function can_only_call_methods_defined_by_user()
+    public function test_can_only_call_methods_defined_by_user()
     {
         $this->expectException(MethodNotFoundException::class);
 
@@ -33,10 +30,9 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->runAction('redirect');
     }
 
-    /** @test */
-    public function can_only_set_public_properties()
+    public function test_can_only_set_public_properties()
     {
-        $this->expectException(\Error::class);
+        $this->expectException(PublicPropertyNotFoundException::class);
 
         app('livewire')->component('security-target', SecurityTargetStub::class);
         $component = app('livewire')->test('security-target');
@@ -44,8 +40,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->updateProperty('protectedProperty', 'baz');
     }
 
-    /** @test */
-    public function data_cannot_be_tampered_with_on_frontend()
+    public function test_data_cannot_be_tampered_with_on_frontend()
     {
         $this->markTestSkipped(); // @todo: This needs to be fixed.
         $this->expectException(CorruptComponentPayloadException::class);
@@ -62,8 +57,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->call('$refresh');
     }
 
-    /** @test */
-    public function id_cannot_be_tampered_with_on_frontend()
+    public function test_id_cannot_be_tampered_with_on_frontend()
     {
         $this->markTestSkipped(); // @todo: This needs to be fixed.
         $this->expectException(CorruptComponentPayloadException::class);
@@ -80,8 +74,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->call('$refresh');
     }
 
-    /** @test */
-    public function component_name_cannot_be_tampered_with_on_frontend()
+    public function test_component_name_cannot_be_tampered_with_on_frontend()
     {
         $this->markTestSkipped(); // @todo: This needs to be fixed.
         $this->expectException(CorruptComponentPayloadException::class);
@@ -103,7 +96,7 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
     }
 }
 
-class SecurityTargetStub extends Component
+class SecurityTargetStub extends TestComponent
 {
     public $publicProperty = 'foo';
     protected $protectedProperty = 'bar';
@@ -115,22 +108,12 @@ class SecurityTargetStub extends Component
     protected function protectedMethod()
     {
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class UnsafeComponentStub extends Component
+class UnsafeComponentStub extends TestComponent
 {
     public function someMethod()
     {
         throw new \Exception('Should not be able to acess me!');
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

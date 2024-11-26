@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportPagination;
 use function Livewire\invade;
 use Livewire\WithPagination;
 use Livewire\Features\SupportQueryString\SupportQueryString;
-use Livewire\Features\SupportPagination\WithoutUrlPagination;
 use Livewire\ComponentHookRegistry;
 use Livewire\ComponentHook;
 use Illuminate\Pagination\Paginator;
@@ -135,6 +134,10 @@ class SupportPagination extends ComponentHook
 
     protected function paginationSimpleView()
     {
+        if (method_exists($this->component, 'paginationSimpleView')) {
+            return $this->component->paginationSimpleView();
+        }
+
         return 'livewire::simple-' . (property_exists($this->component, 'paginationTheme') ? invade($this->component)->paginationTheme : config('livewire.pagination_theme', 'tailwind'));
     }
 

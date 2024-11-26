@@ -12,8 +12,7 @@ use Livewire\Features\SupportEvents\BaseOn;
 
 class UnitTest extends TestCase
 {
-    /** @test */
-    function can_make_method_a_computed()
+    function test_can_make_method_a_computed()
     {
         Livewire::test(new class extends TestComponent {
             #[Computed]
@@ -21,11 +20,10 @@ class UnitTest extends TestCase
                 return 'bar';
             }
         })
-            ->assertSet('foo', 'bar');
+            ->assertSetStrict('foo', 'bar');
     }
 
-    /** @test */
-    function can_access_computed_properties_inside_views()
+    function test_can_access_computed_properties_inside_views()
     {
         Livewire::test(new class extends TestComponent {
             #[Computed]
@@ -42,8 +40,7 @@ class UnitTest extends TestCase
             ->assertSee('foobar');
     }
 
-    /** @test */
-    function computed_properties_only_get_accessed_once_per_request()
+    function test_computed_properties_only_get_accessed_once_per_request()
     {
         Livewire::test(new class extends TestComponent {
             public $count = 0;
@@ -66,13 +63,12 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('foobar')
-            ->assertSet('count', 1)
+            ->assertSetStrict('count', 1)
             ->call('$refresh')
-            ->assertSet('count', 2);
+            ->assertSetStrict('count', 2);
     }
 
-    /** @test */
-    function can_bust_computed_cache_using_unset()
+    function test_can_bust_computed_cache_using_unset()
     {
         Livewire::test(new class extends TestComponent {
             public $count = 0;
@@ -95,13 +91,12 @@ class UnitTest extends TestCase
             }
         })
             ->assertSee('foobar')
-            ->assertSet('count', 2)
+            ->assertSetStrict('count', 2)
             ->call('$refresh')
-            ->assertSet('count', 4);
+            ->assertSetStrict('count', 4);
     }
 
-    /** @test */
-    function can_tag_cached_computed_property()
+    function test_can_tag_cached_computed_property()
     {
         // need to set a cache driver, which can handle tags
         Cache::setDefaultDriver('array');
@@ -131,13 +126,12 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->call('$refresh')
-            ->assertSet('count', 1)
+            ->assertSetStrict('count', 1)
             ->call('deleteCachedTags')
-            ->assertSet('count', 2);
+            ->assertSetStrict('count', 2);
     }
 
-    /** @test */
-    function can_tag_persisten_computed_property()
+    function test_can_tag_persisten_computed_property()
     {
         // need to set a cache driver, which can handle tags
         Cache::setDefaultDriver('array');
@@ -167,13 +161,12 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->call('$refresh')
-            ->assertSet('count', 1)
+            ->assertSetStrict('count', 1)
             ->call('deleteCachedTags')
-            ->assertSet('count', 2);
+            ->assertSetStrict('count', 2);
     }
 
-    /** @test */
-    function can_tag_persisted_computed_with_custom_key_property()
+    function test_can_tag_persisted_computed_with_custom_key_property()
     {
         Cache::setDefaultDriver('array');
 
@@ -197,13 +190,12 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->call('$refresh')
-            ->assertSet('count', 1);
+            ->assertSetStrict('count', 1);
 
         $this->assertTrue(Cache::has('baz'));
     }
 
-    /** @test */
-    function cant_call_a_computed_directly()
+    function test_cant_call_a_computed_directly()
     {
         $this->expectException(CannotCallComputedDirectlyException::class);
 
@@ -224,8 +216,7 @@ class UnitTest extends TestCase
     }
 
 
-    /** @test */
-    function can_use_multiple_computed_properties_for_different_properties()
+    function test_can_use_multiple_computed_properties_for_different_properties()
     {
         Livewire::test(new class extends TestComponent {
             public $count = 0;
@@ -260,13 +251,12 @@ class UnitTest extends TestCase
         })
             ->assertSee('foobar')
             ->assertSee('boblob')
-            ->assertSet('count', 2)
+            ->assertSetStrict('count', 2)
             ->call('$refresh')
-            ->assertSet('count', 4);
+            ->assertSetStrict('count', 4);
     }
 
-    /** @test */
-    function parses_computed_properties()
+    function test_parses_computed_properties()
     {
         $this->assertEquals(
             ['foo' => 'bar', 'bar' => 'baz', 'bobLobLaw' => 'blog'],
@@ -278,8 +268,7 @@ class UnitTest extends TestCase
         );
     }
 
-    /** @test */
-    function computed_property_is_accessible_using_snake_case()
+    function test_computed_property_is_accessible_using_snake_case()
     {
         Livewire::test(new class extends TestComponent {
             public $upperCasedFoo = 'FOO_BAR';
@@ -302,8 +291,7 @@ class UnitTest extends TestCase
             ->assertSee('foo_bar');
     }
 
-    /** @test */
-    function computed_property_is_accessible_when_using_snake_case_or_camel_case_in_the_method_name_in_the_class()
+    function test_computed_property_is_accessible_when_using_snake_case_or_camel_case_in_the_method_name_in_the_class()
     {
         Livewire::test(new class extends TestComponent {
             public $upperCasedFoo = 'FOO_BAR';
@@ -347,67 +335,54 @@ class UnitTest extends TestCase
             ]);
     }
 
-    /** @test */
-    public function computed_property_is_accessable_within_blade_view()
+    public function test_computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(ComputedPropertyStub::class)
             ->assertSee('foo');
     }
 
-    /** @test */
-    public function injected_computed_property_is_accessable_within_blade_view()
+    public function test_injected_computed_property_is_accessable_within_blade_view()
     {
         Livewire::test(InjectedComputedPropertyStub::class)
             ->assertSee('bar');
     }
 
-    /** @test */
-    public function computed_property_is_memoized_after_its_accessed()
+    public function test_computed_property_is_memoized_after_its_accessed()
     {
         Livewire::test(MemoizedComputedPropertyStub::class)
             ->assertSee('int(2)');
     }
 
-    /** @test */
-    public function isset_is_true_on_existing_computed_property()
+    public function test_isset_is_true_on_existing_computed_property()
     {
         Livewire::test(IssetComputedPropertyStub::class)
             ->assertSee('true');
     }
 
-    /** @test */
-    public function isset_is_false_on_non_existing_computed_property()
+    public function test_isset_is_false_on_non_existing_computed_property()
     {
         Livewire::test(FalseIssetComputedPropertyStub::class)
             ->assertSee('false');
     }
 
-    /** @test */
-    public function isset_is_false_on_null_computed_property()
+    public function test_isset_is_false_on_null_computed_property()
     {
         Livewire::test(NullIssetComputedPropertyStub::class)
             ->assertSee('false');
     }
 
-    /** @test */
-    public function it_supports_legacy_computed_properties()
+    public function test_it_supports_legacy_computed_properties()
     {
         Livewire::test(new class extends TestComponent {
             public function getFooProperty()
             {
                 return 'bar';
             }
-
-            public function render()
-            {
-                return '<div></div>';
-            }
         })
-            ->assertSet('foo', 'bar');
+            ->assertSetStrict('foo', 'bar');
     }
 
-    /** @test */
-    public function it_supports_unsetting_legacy_computed_properties()
+    public function test_it_supports_unsetting_legacy_computed_properties()
     {
         Livewire::test(new class extends TestComponent {
             public $changeFoo = false;
@@ -426,19 +401,13 @@ class UnitTest extends TestCase
 
                 unset($this->foo);
             }
-
-            public function render()
-            {
-                return '<div></div>';
-            }
         })
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->call('save')
-            ->assertSet('foo', 'baz');
+            ->assertSetStrict('foo', 'baz');
     }
 
-    /** @test */
-    public function it_supports_unsetting_legacy_computed_properties_for_events()
+    public function test_it_supports_unsetting_legacy_computed_properties_for_events()
     {
         Livewire::test(new class extends TestComponent {
             public $changeFoo = false;
@@ -456,9 +425,9 @@ class UnitTest extends TestCase
                 unset($this->foo);
             }
         })
-            ->assertSet('foo', 'bar')
+            ->assertSetStrict('foo', 'bar')
             ->dispatch('bar', 'baz')
-            ->assertSet('foo', 'baz');
+            ->assertSetStrict('foo', 'baz');
     }
 }
 

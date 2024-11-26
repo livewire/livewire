@@ -176,12 +176,18 @@ class Utils extends BaseUtils
 
     static function applyMiddleware(\Illuminate\Http\Request $request, $middleware = [])
     {
-        return (new \Illuminate\Pipeline\Pipeline(app()))
+        $response = (new \Illuminate\Pipeline\Pipeline(app()))
             ->send($request)
             ->through($middleware)
             ->then(function() {
                 return new \Illuminate\Http\Response();
             });
+
+        if ($response instanceof \Illuminate\Http\RedirectResponse) {
+            abort($response);
+        }
+
+        return $response;
     }
 
     static function extractAttributeDataFromHtml($html, $attribute)

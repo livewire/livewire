@@ -3,7 +3,6 @@
 namespace Livewire\Features\SupportValidation;
 
 use Attribute;
-use Illuminate\Auth\Events\Validated;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\wrap;

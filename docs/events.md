@@ -59,7 +59,23 @@ As you can see, additional data sent with the event will be provided to the acti
 
 Occasionally, you may want to dynamically generate event listener names at run-time using data from your component.
 
-For example, if you wanted to scope an event listener to a specific Eloquent model, you could append the model's ID to the event name like so:
+For example, if you wanted to scope an event listener to a specific Eloquent model, you could append the model's ID to the event name when dispatching like so:
+
+```php
+use Livewire\Component;
+
+class UpdatePost extends Component
+{
+    public function update()
+    {
+        // ...
+
+        $this->dispatch("post-updated.{$post->id}"); // [tl! highlight]
+    }
+}
+```
+
+And then listen for that specific model:
 
 ```php
 use Livewire\Component;
@@ -100,7 +116,7 @@ Instead of passing `$refresh`, you can pass any method you normally would to som
 <livewire:edit-post @saved="close">
 ```
 
-If the child dispatched parameters along with the request, for example `$this->dispatch('close', postId: 1)`, you can forward those values to the parent method using the following syntax:
+If the child dispatched parameters along with the request, for example `$this->dispatch('saved', postId: 1)`, you can forward those values to the parent method using the following syntax:
 
 ```blade
 <livewire:edit-post @saved="close($event.detail.postId)">

@@ -9,14 +9,13 @@ const PROPERTY_NAME = 'virtualProperty';
 
 class VirtualPropertyUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function virtual_property_is_accessible()
+    public function test_virtual_property_is_accessible()
     {
         $this->markTestSkipped('Not sure we should support this.');
         $component = Livewire::test(ComponentWithPublicVirtualproperty::class)
             ->assertSee('Caleb')
             ->set(PROPERTY_NAME, 'Porzio')
-            ->assertSet('name', 'Porzio');
+            ->assertSetStrict('name', 'Porzio');
 
         $this->assertEquals($component->get(PROPERTY_NAME), 'Porzio');
     }

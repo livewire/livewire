@@ -2,21 +2,15 @@
 
 namespace LegacyTests\Browser;
 
-use function Livewire\str;
 use Throwable;
 use Sushi\Sushi;
 use Psy\Shell;
 use Orchestra\Testbench\Dusk\TestCase as BaseTestCase;
 use Orchestra\Testbench\Dusk\Options as DuskOptions;
 use Livewire\LivewireServiceProvider;
-use Livewire\Livewire;
-use Livewire\Component;
 use Laravel\Dusk\Browser;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Database\Eloquent\Model;

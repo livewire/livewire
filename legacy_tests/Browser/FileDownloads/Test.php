@@ -8,8 +8,7 @@ use Livewire\Component;
 
 class Test extends TestCase
 {
-    /** @test */
-    public function trigger_downloads_from_livewire_component()
+    public function test_trigger_downloads_from_livewire_component()
     {
         $this->onlyRunOnChrome();
 
@@ -63,8 +62,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
-    public function trigger_downloads_from_livewire_component_with_headers()
+    public function test_trigger_downloads_from_livewire_component_with_headers()
     {
         $this->onlyRunOnChrome();
 
@@ -201,8 +199,7 @@ class Test extends TestCase
         });
     }
 
-    /** @test */
-    public function trigger_downloads_from_event_listener()
+    public function test_trigger_downloads_from_event_listener()
     {
         $this->onlyRunOnChrome();
 

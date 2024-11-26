@@ -10,8 +10,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function realtime_validation_works_when_calling_validate_only()
+    public function test_realtime_validation_works_when_calling_validate_only()
     {
         Livewire::visit(new class extends Component {
             public $name = '';
@@ -58,8 +57,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@nameError', 'required');
     }
 
-    /** @test */
-    public function realtime_validation_works_when_using_validate_attribute()
+    public function test_realtime_validation_works_when_using_validate_attribute()
     {
         Livewire::visit(new class extends Component {
             #[Validate]
@@ -104,8 +102,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@nameError', 'required');
     }
 
-    /** @test */
-    public function corrupt_component_payload_exception_is_no_longer_thrown_from_data_incompatible_with_javascript()
+    public function test_corrupt_component_payload_exception_is_no_longer_thrown_from_data_incompatible_with_javascript()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public $subsequentRequest = false;
@@ -164,8 +161,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function it_converts_empty_strings_to_null_for_integer_properties()
+    public function test_it_converts_empty_strings_to_null_for_integer_properties()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public ?int $number = 5;
@@ -186,8 +182,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function it_uses_the_synthesizers_for_multiple_types_property_updates()
+    public function test_it_uses_the_synthesizers_for_multiple_types_property_updates()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public string|int $localValue = 15;
@@ -212,8 +207,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
+    public function test_it_uses_the_synthesizers_for_enum_property_updates_when_initial_state_is_null()
     {
         Livewire::visit(new class extends \Livewire\Component {
             public Suit $selected;

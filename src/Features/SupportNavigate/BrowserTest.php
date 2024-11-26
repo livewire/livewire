@@ -36,6 +36,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('second-scroll-page', SecondScrollPage::class);
             Livewire::component('parent-component', ParentComponent::class);
             Livewire::component('child-component', ChildComponent::class);
+            Livewire::component('script-component', ScriptComponent::class);
 
             Livewire::component('nav-bar-component', NavBarComponent::class);
 
@@ -83,11 +84,11 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/script-component', ScriptComponent::class);
         };
     }
 
-    /** @test */
-    public function back_button_works_with_teleports()
+    public function test_back_button_works_with_teleports()
     {
         $this->registerComponentTestRoutes([
             '/second' => new class extends Component {
@@ -135,8 +136,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function back_button_works_with_teleports_inside_persist()
+    public function test_back_button_works_with_teleports_inside_persist()
     {
         $this->registerComponentTestRoutes([
             '/second' => new class extends Component {
@@ -204,8 +204,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_configure_progress_bar()
+    public function test_can_configure_progress_bar()
     {
         $this->browse(function ($browser) {
             $browser
@@ -231,8 +230,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_navigate_to_page_without_reloading()
+    public function test_can_navigate_to_page_without_reloading()
     {
         $this->browse(function ($browser) {
             $browser
@@ -251,8 +249,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
+    public function test_can_navigate_to_page_without_reloading_by_hitting_the_enter_key()
     {
         $this->browse(function (Browser $browser) {
             $browser
@@ -267,8 +264,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_navigate_to_another_page_with_hash_fragment()
+    public function test_can_navigate_to_another_page_with_hash_fragment()
     {
         $this->browse(function ($browser) {
             $browser
@@ -278,8 +274,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function navigate_is_not_triggered_on_cmd_and_enter()
+    public function test_navigate_is_not_triggered_on_cmd_and_enter()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
 
@@ -300,8 +295,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_navigate_to_page_from_child_via_parent_component_without_reloading()
+    public function test_can_navigate_to_page_from_child_via_parent_component_without_reloading()
     {
         $this->browse(function (Browser $browser) {
             $browser
@@ -319,8 +313,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_redirect_with_reloading_from_a_page_that_was_loaded_by_wire_navigate()
+    public function test_can_redirect_with_reloading_from_a_page_that_was_loaded_by_wire_navigate()
     {
         $this->browse(function ($browser) {
             $browser
@@ -339,8 +332,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_redirect_without_reloading_using_the_helper_from_a_page_that_was_loaded_normally()
+    public function test_can_redirect_without_reloading_using_the_helper_from_a_page_that_was_loaded_normally()
     {
         $this->browse(function ($browser) {
             $browser
@@ -355,8 +347,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_redirect_to_a_page_after_destorying_session()
+    public function test_can_redirect_to_a_page_after_destorying_session()
     {
         $this->browse(function ($browser) {
             $browser
@@ -373,8 +364,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_persist_elements_across_pages()
+    public function test_can_persist_elements_across_pages()
     {
         $this->browse(function ($browser) {
             $browser
@@ -394,8 +384,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function new_assets_in_head_are_loaded_and_old_ones_are_not()
+    public function test_new_assets_in_head_are_loaded_and_old_ones_are_not()
     {
         $this->browse(function ($browser) {
             $browser
@@ -411,8 +400,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function tracked_assets_reload_the_page_when_they_change()
+    public function test_tracked_assets_reload_the_page_when_they_change()
     {
         $this->browse(function ($browser) {
             $browser
@@ -428,8 +416,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_use_wire_navigate_outside_of_a_livewire_component()
+    public function test_can_use_wire_navigate_outside_of_a_livewire_component()
     {
         $this->browse(function ($browser) {
             $browser
@@ -443,8 +430,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function script_runs_on_initial_page_visit()
+    public function test_script_runs_on_initial_page_visit()
     {
         $this->browse(function ($browser) {
             $browser
@@ -460,8 +446,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_navigate_to_component_with_url_attribute_and_update_correctly()
+    public function test_can_navigate_to_component_with_url_attribute_and_update_correctly()
     {
         $this->browse(function ($browser) {
             $browser
@@ -474,8 +459,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function navigate_scrolls_to_top_and_back_preserves_scroll()
+    public function test_navigate_scrolls_to_top_and_back_preserves_scroll()
     {
         $this->browse(function ($browser) {
             $browser
@@ -501,8 +485,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function navigate_back_works_from_page_without_a_livewire_component_that_has_a_script_with_data_navigate_track()
+    public function test_navigate_back_works_from_page_without_a_livewire_component_that_has_a_script_with_data_navigate_track()
     {
         // When using `@vite` on the page without a Livewire component,
         // it injects a script tag with `data-navigate-track`,
@@ -524,8 +507,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function navigate_is_only_triggered_on_left_click()
+    public function test_navigate_is_only_triggered_on_left_click()
     {
         $this->browse(function ($browser) {
             $browser
@@ -543,8 +525,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function livewire_navigated_event_is_fired_on_first_page_load()
+    public function test_livewire_navigated_event_is_fired_on_first_page_load()
     {
         $this->browse(function ($browser) {
             $browser
@@ -554,8 +535,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function livewire_before_navigate_event_is_fired_when_click()
+    public function test_livewire_before_navigate_event_is_fired_when_click()
     {
         $this->browse(function($browser) {
             $browser
@@ -575,8 +555,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function livewire_navigated_event_is_fired_after_redirect_without_reloading()
+    public function test_livewire_navigated_event_is_fired_after_redirect_without_reloading()
     {
         $this->browse(function ($browser) {
             $browser
@@ -591,8 +570,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function navigate_is_not_triggered_on_cmd_click()
+    public function test_navigate_is_not_triggered_on_cmd_click()
     {
         $key = PHP_OS_FAMILY === 'Darwin' ? \Facebook\WebDriver\WebDriverKeys::COMMAND : \Facebook\WebDriver\WebDriverKeys::CONTROL;
 
@@ -620,8 +598,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function events_from_child_components_still_function_after_navigation()
+    public function test_events_from_child_components_still_function_after_navigation()
     {
         $this->browse(function (Browser $browser) {
             $browser
@@ -648,8 +625,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function alpine_for_loop_still_functions_after_navigation()
+    public function test_alpine_for_loop_still_functions_after_navigation()
     {
         $this->browse(function (Browser $browser) {
             $browser
@@ -669,8 +645,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function injected_assets_such_as_nprogress_styles_are_retained_when_the_page_changes()
+    public function test_injected_assets_such_as_nprogress_styles_are_retained_when_the_page_changes()
     {
         $this->browse(function ($browser) {
             $browser
@@ -695,8 +670,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function remote_assets_loaded_with_the_directive_fully_load_before_component_scripts_and_initialization()
+    public function test_remote_assets_loaded_with_the_directive_fully_load_before_component_scripts_and_initialization()
     {
         $this->browse(function ($browser) {
             $browser
@@ -710,8 +684,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function redirects_are_reflected_properly_in_the_url()
+    public function test_redirects_are_reflected_properly_in_the_url()
     {
         $this->browse(function ($browser) {
             $browser
@@ -724,8 +697,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_programmatically_click_navigate_links()
+    public function test_can_programmatically_click_navigate_links()
     {
         $this->browse(function ($browser) {
             $browser
@@ -742,8 +714,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_binding_class_attribute_when_navigate_back()
+    public function test_can_binding_class_attribute_when_navigate_back()
     {
         Livewire::visit(new class extends Component {
             public function render(){
@@ -774,8 +745,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSee('foo');
     }
 
-    /** @test */
-    public function can_navigate_links_and_use_snapshot_cache_for_first_10_history_items()
+    public function test_can_navigate_links_and_use_snapshot_cache_for_first_10_history_items()
     {
         $this->browse(function ($browser) {
             $browser
@@ -910,8 +880,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function can_navigate_links_and_if_a_refresh_happens_then_make_requests_until_pages_are_cached_again()
+    public function test_can_navigate_links_and_if_a_refresh_happens_then_make_requests_until_pages_are_cached_again()
     {
         $this->browse(function ($browser) {
             $browser
@@ -975,6 +944,51 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertClassMissing('@link.two', 'active')
             ;
         });
+    }
+
+    public function test_navigate_back_reevaluates_scripts()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/script-component')
+                ->waitForDialog(seconds: 1)
+                ->assertDialogOpened('script was executed?')
+                ->acceptDialog()
+                ->assertSee('On script component')
+                ->click('@link.to.first')
+                ->waitForText('On first')
+                ->back()
+                ->waitForDialog(seconds: 1)
+                ->assertDialogOpened('script was executed?')
+                ->acceptDialog()
+                ->waitForText('On script component')
+                ->click('@link.to.first')
+                ->waitForText('On first')
+                ->back()
+                ->waitForDialog(seconds: 1)
+                ->assertDialogOpened('script was executed?')
+                ->acceptDialog()
+                ->waitForText('On script component')
+            ;
+        });
+    }
+
+    public function test_dont_redirect_to_null_url_when_href_doesnt_exist()
+    {
+        Livewire::visit(new class extends Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <a wire:navigate dusk="link.without.href">Link Without Href</a>
+                    </div>
+                HTML;
+            }
+        })
+            ->click('@link.without.href')
+            ->pause(500)
+            ->assertPathIsNot('/livewire-dusk/null');
     }
 
     protected function registerComponentTestRoutes($routes)
@@ -1122,7 +1136,7 @@ class FourthPage extends Component
 
             <script data-navigate-once>window.foo = 'bar';</script>
 
-            <script >
+            <script>
                 document.addEventListener('livewire:navigate', (event) => {
                     event.preventDefault();
                     if (window.foo === 'bar') {
@@ -1191,6 +1205,7 @@ class SecondRemoteAsset extends Component
     {
         return <<<'HTML'
             <div>
+                <div>On second asset page</div>
                 <div dusk="target">foo</div>
             </div>
 
@@ -1208,7 +1223,6 @@ class SecondRemoteAsset extends Component
             </script>
             @endscript
         HTML;
-        return '<div>On second asset page</div>';
     }
 }
 
@@ -1356,6 +1370,24 @@ class NavBarComponent extends Component
         return <<<'HTML'
             <div>
                 <div>Page: <span dusk="title">{{ $page }}</span></div>
+            </div>
+        HTML;
+    }
+}
+
+class ScriptComponent extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+            @script
+            <script>
+                confirm('script was executed?')
+            </script>
+            @endscript
+            <div>
+                <div>On script component</div>
+                <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
             </div>
         HTML;
     }

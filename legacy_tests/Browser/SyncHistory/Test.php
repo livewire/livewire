@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\SyncHistory;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 use LegacyTests\Browser\DataBinding\Defer\Component as DeferComponent;

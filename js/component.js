@@ -1,6 +1,6 @@
 import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
-import { findComponent } from '@/store'
+import { closestComponent, findComponent } from '@/store'
 import { trigger } from '@/hooks'
 
 export class Component {
@@ -144,6 +144,10 @@ export class Component {
         return childIds.map(id => findComponent(id))
     }
 
+    get parent() {
+        return closestComponent(this.el.parentElement)
+    }
+
     inscribeSnapshotAndEffectsOnElement() {
         let el = this.el
 
@@ -157,6 +161,11 @@ export class Component {
         // We need to re-register any url/query-string bindings...
         if (this.originalEffects.url) {
             effects.url = this.originalEffects.url
+        }
+
+        // We need to re-register any scripts that were originally registered...
+        if (this.originalEffects.scripts) {
+            effects.scripts = this.originalEffects.scripts;
         }
 
         el.setAttribute('wire:effects', JSON.stringify(effects))

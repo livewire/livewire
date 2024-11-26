@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Blade;
 
 class ComponentCanBeFilledUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function can_fill_from_an_array()
+    public function test_can_fill_from_an_array()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class);
 
@@ -29,8 +28,7 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('private');
     }
 
-    /** @test */
-    public function can_fill_from_an_object()
+    public function test_can_fill_from_an_object()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class);
 
@@ -45,8 +43,7 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('private');
     }
 
-    /** @test */
-    public function can_fill_from_an_eloquent_model()
+    public function test_can_fill_from_an_eloquent_model()
     {
         $component = Livewire::test(ComponentWithFillableProperties::class);
 
@@ -61,17 +58,16 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
         $component->assertSee('private');
     }
 
-    /** @test */
-    public function can_fill_using_dot_notation()
+    public function test_can_fill_using_dot_notation()
     {
         Livewire::test(ComponentWithFillableProperties::class)
-            ->assertSet('dotProperty', [])
+            ->assertSetStrict('dotProperty', [])
             ->call('callFill', [
                 'dotProperty.foo' => 'bar',
                 'dotProperty.bob' => 'lob',
             ])
-            ->assertSet('dotProperty.foo', 'bar')
-            ->assertSet('dotProperty.bob', 'lob');
+            ->assertSetStrict('dotProperty.foo', 'bar')
+            ->assertSetStrict('dotProperty.bob', 'lob');
     }
 }
 

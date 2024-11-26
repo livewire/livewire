@@ -3,15 +3,12 @@
 namespace Livewire\Tests;
 
 use function Livewire\invade;
-use Livewire\Component;
-use Illuminate\Support\Facades\Route;
 use Livewire\Request;
 use Livewire\Response;
 
 class InvadeHelperUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function get_property()
+    public function test_get_property()
     {
         $thing = new class {
             private $foo = 'bar';
@@ -20,8 +17,7 @@ class InvadeHelperUnitTest extends \Tests\TestCase
         $this->assertEquals('bar', invade($thing)->foo);
     }
 
-    /** @test */
-    public function set_property()
+    public function test_set_property()
     {
         $thing = new class {
             private $foo = 'bar';
@@ -32,8 +28,7 @@ class InvadeHelperUnitTest extends \Tests\TestCase
         $this->assertEquals('baz', invade($thing)->foo);
     }
 
-    /** @test */
-    public function call_method()
+    public function test_call_method()
     {
         $thing = new class {
             private $foo = 'bar';

@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\DataBinding\DirtyDetection;
 
-use Livewire\Livewire;
 use Laravel\Dusk\Browser;
 use LegacyTests\Browser\TestCase;
 

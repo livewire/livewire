@@ -10,8 +10,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_upload_preview_and_save_a_file()
+    public function test_can_upload_preview_and_save_a_file()
     {
         Storage::persistentFake('tmp-for-tests');
 
@@ -50,7 +49,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
         ->assertMissing('@preview')
         ->attach('@upload', __DIR__ . '/browser_test_image.png')
-        ->pause(250)
+        ->waitFor('@preview')
         ->assertVisible('@preview')
         ->tap(function () {
             Storage::disk('tmp-for-tests')->assertMissing('photos/photo.png');
@@ -63,8 +62,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_cancel_an_upload()
+    public function test_can_cancel_an_upload()
     {
         Storage::persistentFake('tmp-for-tests');
 
@@ -105,8 +103,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function an_element_targeting_a_file_upload_retains_loading_state_until_the_upload_has_finished()
+    public function test_an_element_targeting_a_file_upload_retains_loading_state_until_the_upload_has_finished()
     {
         Storage::persistentFake('tmp-for-tests');
 
@@ -143,8 +140,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function file_upload_being_renderless_is_not_impacted_by_real_time_validation()
+    public function test_file_upload_being_renderless_is_not_impacted_by_real_time_validation()
     {
         Storage::persistentFake('tmp-for-tests');
 
@@ -193,8 +189,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_clear_out_file_input_after_property_has_been_reset()
+    public function test_can_clear_out_file_input_after_property_has_been_reset()
     {
         Storage::persistentFake('tmp-for-tests');
 

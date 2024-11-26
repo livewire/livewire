@@ -20,9 +20,9 @@ class DisableBackButtonCacheMiddleware
 
         if ($response instanceof Response && SupportDisablingBackButtonCache::$disableBackButtonCache){
             $response->headers->add([
-                "Pragma" => "no-cache",
-                "Expires" => "Fri, 01 Jan 1990 00:00:00 GMT",
-                "Cache-Control" => "no-cache, must-revalidate, no-store, max-age=0, private",
+                'Pragma' => 'no-cache',
+                'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
+                'Cache-Control' => 'no-cache, must-revalidate, no-store, max-age=0, private',
             ]);
         }
 

@@ -321,6 +321,8 @@ class PostForm extends Form
 
     public function update()
     {
+        $this->validate();
+
         $this->post->update(
             $this->all()
         );
@@ -441,7 +443,7 @@ class PostForm extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [
@@ -488,7 +490,7 @@ class PostForm extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [

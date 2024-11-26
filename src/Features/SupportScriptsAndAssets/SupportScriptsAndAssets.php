@@ -28,7 +28,7 @@ class SupportScriptsAndAssets extends ComponentHook
         // from using load-balancers and such.
         // Therefore, we create a key based on the currently compiling view path and
         // number of already compiled directives here...
-        $viewPath = crc32(app('blade.compiler')->getPath());
+        $viewPath = crc32(app('blade.compiler')->getPath() ?? '');
 
         if (! isset(static::$countersByViewPath[$viewPath])) static::$countersByViewPath[$viewPath] = 0;
 
