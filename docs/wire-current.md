@@ -13,12 +13,12 @@ Here's a simple example of adding `wire:current` to links in a navbar so that th
 
 Now when a user visits `/posts`, the "Posts" link will have a stronger font treatment than the other links.
 
-You should note that `wire:current` works out of the box with `wire:navigate` links a and page changes as well.
+You should note that `wire:current` works out of the box with `wire:navigate` links and page changes.
 
 ## Troubleshooting
 
-If you `wire:current` is not detecting the current link correctly, ensure the following:
+If `wire:current` is not detecting the current link correctly, ensure the following:
 
-* You have a livewire at least one Livewire component on the page, or have hardcoded `@livewireScripts` in your layout
+* You have at least one Livewire component on the page, or have hardcoded `@livewireScripts` in your layout
 * You have a `href` attribute on the link.
 * The `href` attribute starts with a `/`
