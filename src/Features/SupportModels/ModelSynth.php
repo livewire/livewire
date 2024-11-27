@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Model;
+use function Livewire\store;
 
 class ModelSynth extends Synth {
     use SerializesAndRestoresModelIdentifiers;
@@ -19,7 +20,7 @@ class ModelSynth extends Synth {
 
     function dehydrate($target) {
         $class = $target::class;
-        
+
         try {
             // If no alias is found, this just returns the class name
             $alias = $target->getMorphClass();
@@ -37,7 +38,7 @@ class ModelSynth extends Synth {
         // If the model doesn't exist as it's an empty model or has been
         // recently deleted, then we don't want to include any key.
         if ($serializedModel) $meta['key'] = $serializedModel['id'];
-        
+
 
         return [
             null,
@@ -64,6 +65,7 @@ class ModelSynth extends Synth {
 
         $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
 
+        ds(store($this->context->component)->get('user'));
         return $model;
     }
 
