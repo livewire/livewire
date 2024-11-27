@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Database\Eloquent\Model;
-use function Livewire\store;
 
 class ModelSynth extends Synth {
     use SerializesAndRestoresModelIdentifiers;
@@ -65,7 +64,6 @@ class ModelSynth extends Synth {
 
         $model = (new $class)->newQueryForRestoration($key)->useWritePdo()->firstOrFail();
 
-        ds(store($this->context->component)->get('user'));
         return $model;
     }
 
