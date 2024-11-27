@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1483,16 +1483,28 @@ var require_module_cjs = __commonJS({
         deferredMutations = deferredMutations.concat(mutations);
         return;
       }
-      let addedNodes = /* @__PURE__ */ new Set();
-      let removedNodes = /* @__PURE__ */ new Set();
+      let addedNodes = [];
+      let removedNodes = [];
       let addedAttributes = /* @__PURE__ */ new Map();
       let removedAttributes = /* @__PURE__ */ new Map();
       for (let i = 0; i < mutations.length; i++) {
         if (mutations[i].target._x_ignoreMutationObserver)
           continue;
         if (mutations[i].type === "childList") {
-          mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.add(node));
-          mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.add(node));
+          mutations[i].removedNodes.forEach((node) => {
+            if (node.nodeType !== 1)
+              return;
+            if (!node._x_marker)
+              return;
+            removedNodes.push(node);
+          });
+          mutations[i].addedNodes.forEach((node) => {
+            if (node.nodeType !== 1)
+              return;
+            if (node._x_marker)
+              return;
+            addedNodes.push(node);
+          });
         }
         if (mutations[i].type === "attributes") {
           let el = mutations[i].target;
@@ -1525,29 +1537,15 @@ var require_module_cjs = __commonJS({
         onAttributeAddeds.forEach((i) => i(el, attrs));
       });
       for (let node of removedNodes) {
-        if (addedNodes.has(node))
+        if (addedNodes.some((i) => i.contains(node)))
           continue;
         onElRemoveds.forEach((i) => i(node));
       }
-      addedNodes.forEach((node) => {
-        node._x_ignoreSelf = true;
-        node._x_ignore = true;
-      });
       for (let node of addedNodes) {
-        if (removedNodes.has(node))
-          continue;
         if (!node.isConnected)
           continue;
-        delete node._x_ignoreSelf;
-        delete node._x_ignore;
         onElAddeds.forEach((i) => i(node));
-        node._x_ignore = true;
-        node._x_ignoreSelf = true;
       }
-      addedNodes.forEach((node) => {
-        delete node._x_ignoreSelf;
-        delete node._x_ignore;
-      });
       addedNodes = null;
       removedNodes = null;
       addedAttributes = null;
@@ -2050,10 +2048,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function interceptInit(callback) {
       initInterceptors2.push(callback);
     }
+    var markerDispenser = 1;
     function initTree(el, walker = walk, intercept = () => {
     }) {
+      if (findClosest(el, (i) => i._x_ignore))
+        return;
       deferHandlingDirectives(() => {
         walker(el, (el2, skip) => {
+          if (el2._x_marker)
+            return;
+          el2._x_marker = markerDispenser++;
           intercept(el2, skip);
           initInterceptors2.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
@@ -2065,6 +2069,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       walker(root, (el) => {
         cleanupElement(el);
         cleanupAttributes(el);
+        delete el._x_marker;
       });
     }
     function warnAboutMissingPlugins() {
@@ -2866,7 +2871,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.3",
+      version: "3.14.4",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3822,9 +3827,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3897,7 +3902,7 @@ var require_module_cjs2 = __commonJS({
               start: { height: current + "px" },
               end: { height: full + "px" }
             }, () => el._x_isShown = true, () => {
-              if (el.getBoundingClientRect().height == full) {
+              if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
                 el.style.overflow = null;
               }
             });
@@ -3943,9 +3948,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4945,9 +4950,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5034,9 +5039,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5188,9 +5193,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6726,9 +6731,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7081,6 +7086,8 @@ var require_module_cjs8 = __commonJS({
       let fromId = from && from._x_bindings && from._x_bindings.id;
       if (!fromId)
         return;
+      if (!to.setAttribute)
+        return;
       to.setAttribute("id", fromId);
       to.id = fromId;
     }
@@ -7091,9 +7098,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
