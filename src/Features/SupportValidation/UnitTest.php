@@ -34,7 +34,9 @@ class UnitTest extends \Tests\TestCase
 
             public function updated($field)
             {
-                $this->validateOnly($field);
+                $property = (string) str($field)->before('.');
+
+                $this->validateOnly($property);
             }
 
             public function save()
