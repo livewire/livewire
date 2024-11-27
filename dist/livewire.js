@@ -4712,6 +4712,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   }
+  function globalDirective(name, callback) {
+    if (customDirectiveNames.has(name))
+      return;
+    customDirectiveNames.add(name);
+    on2("directive.global.init", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+      if (directive3.value === name) {
+        callback({ el, directive: directive3, cleanup: cleanup2 });
+      }
+    });
+  }
   function getDirectives(el) {
     return new DirectiveManager(el);
   }
@@ -8740,10 +8750,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           destroyComponent(component2.id);
         });
       }
+      let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+      directives2.forEach((directive3) => {
+        trigger2("directive.global.init", { el, directive: directive3, cleanup: (callback) => {
+          module_default.onAttributeRemoved(el, directive3.raw, callback);
+        } });
+      });
       let component = closestComponent(el, false);
       if (component) {
         trigger2("element.init", { el, component });
-        let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives2.forEach((directive3) => {
           trigger2("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
             module_default.onAttributeRemoved(el, directive3.raw, callback);
@@ -9479,6 +9494,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           instead();
       }
     };
+  });
+
+  // js/directives/wire-current.js
+  module_default.addInitSelector(() => `[wire\\:current]`);
+  var onPageChanges = /* @__PURE__ */ new Map();
+  document.addEventListener("livewire:navigated", () => {
+    onPageChanges.forEach((i) => i(new URL(window.location.href)));
+  });
+  globalDirective("current", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+    let expression = directive3.expression;
+    if (expression.startsWith("#"))
+      return;
+    let href = el.getAttribute("href");
+    let classes = expression.split(" ").filter(String);
+    let refreshCurrent = (url) => {
+      if (href === url.pathname) {
+        el.classList.add(...classes);
+      } else {
+        el.classList.remove(...classes);
+      }
+    };
+    refreshCurrent(new URL(window.location.href));
+    onPageChanges.set(el, refreshCurrent);
+    cleanup2(() => onPageChanges.delete(el));
   });
 
   // js/directives/shared.js
