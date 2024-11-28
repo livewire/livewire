@@ -710,7 +710,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -917,8 +917,6 @@
         mutations[i].addedNodes.forEach((node) => {
           if (node.nodeType !== 1)
             return;
-          if (node._x_marker)
-            return;
           addedNodes.push(node);
         });
       }
@@ -960,6 +958,8 @@
     for (let node of addedNodes) {
       if (!node.isConnected)
         continue;
+      if (node._x_marker)
+        return;
       onElAddeds.forEach((i) => i(node));
     }
     addedNodes = null;
