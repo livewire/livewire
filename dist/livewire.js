@@ -900,7 +900,7 @@
       return;
     }
     let addedNodes = [];
-    let removedNodes = [];
+    let removedNodes = /* @__PURE__ */ new Set();
     let addedAttributes = /* @__PURE__ */ new Map();
     let removedAttributes = /* @__PURE__ */ new Map();
     for (let i = 0; i < mutations.length; i++) {
@@ -912,10 +912,16 @@
             return;
           if (!node._x_marker)
             return;
-          removedNodes.push(node);
+          removedNodes.add(node);
         });
         mutations[i].addedNodes.forEach((node) => {
           if (node.nodeType !== 1)
+            return;
+          if (removedNodes.has(node)) {
+            removedNodes.delete(node);
+            return;
+          }
+          if (node._x_marker)
             return;
           addedNodes.push(node);
         });
@@ -958,8 +964,6 @@
     for (let node of addedNodes) {
       if (!node.isConnected)
         continue;
-      if (node._x_marker)
-        return;
       onElAddeds.forEach((i) => i(node));
     }
     addedNodes = null;
@@ -2287,7 +2291,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.4",
+    version: "3.14.5",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
