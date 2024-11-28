@@ -230,7 +230,7 @@ As you can see, there is no "placeholder" attribute for a select menu like there
 
 Sometimes you may want one select menu to be dependent on another. For example, a list of cities that changes based on which state is selected.
 
-For the most part, this works as you'd expect, however there is one important gotcha: You must add a `wire:key` to the changing select so that Livewire properly refreshes it's value when the options change.
+For the most part, this works as you'd expect, however there is one important gotcha: You must add a `wire:key` to the changing select so that Livewire properly refreshes its value when the options change.
 
 Here's an example of two selects, one for states, one for cities. When the state select changes, the options in the city select will change properly:
 
