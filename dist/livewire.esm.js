@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// node_modules/alpinejs/dist/module.cjs.js
+// ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -1501,8 +1501,6 @@ var require_module_cjs = __commonJS({
           mutations[i].addedNodes.forEach((node) => {
             if (node.nodeType !== 1)
               return;
-            if (node._x_marker)
-              return;
             addedNodes.push(node);
           });
         }
@@ -1544,6 +1542,8 @@ var require_module_cjs = __commonJS({
       for (let node of addedNodes) {
         if (!node.isConnected)
           continue;
+        if (node._x_marker)
+          return;
         onElAddeds.forEach((i) => i(node));
       }
       addedNodes = null;
