@@ -212,7 +212,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
-                ->click('@link.to.third')
+                ->click('@link.to.thirds')
                 ->waitFor('#nprogress')
                 ->waitForText('Done loading...');
         });

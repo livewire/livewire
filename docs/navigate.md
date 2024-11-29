@@ -133,7 +133,7 @@ Simply pass any CSS classes you want to apply to the currently active link to `w
 
 ```blade
 <nav>
-    <a href="/" ... wire:current="font-bold text-zinc-800">Dashboard</a>
+    <a href="/dashboard" ... wire:current="font-bold text-zinc-800">Dashboard</a>
     <a href="/posts" ... wire:current="font-bold text-zinc-800">Posts</a>
     <a href="/users" ... wire:current="font-bold text-zinc-800">Users</a>
 </nav>

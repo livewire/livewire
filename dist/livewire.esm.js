@@ -10409,12 +10409,19 @@ document.addEventListener("livewire:navigated", () => {
 });
 globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   let expression = directive2.expression;
+  let options = {
+    exact: directive2.modifiers.includes("exact"),
+    strict: directive2.modifiers.includes("strict")
+  };
   if (expression.startsWith("#"))
     return;
+  if (!el.hasAttribute("href"))
+    return;
   let href = el.getAttribute("href");
+  let hrefUrl = new URL(href, window.location.href);
   let classes = expression.split(" ").filter(String);
   let refreshCurrent = (url) => {
-    if (href === url.pathname) {
+    if (pathMatches(hrefUrl, url, options)) {
       el.classList.add(...classes);
     } else {
       el.classList.remove(...classes);
@@ -10424,6 +10431,22 @@ globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   onPageChanges.set(el, refreshCurrent);
   cleanup(() => onPageChanges.delete(el));
 });
+function pathMatches(hrefUrl, actualUrl, options) {
+  if (hrefUrl.hostname !== actualUrl.hostname)
+    return false;
+  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+  if (options.exact) {
+    return hrefPath === actualPath;
+  }
+  let hrefPathSegments = hrefPath.split("/");
+  let actualPathSegments = actualPath.split("/");
+  for (let i = 0; i < hrefPathSegments.length; i++) {
+    if (hrefPathSegments[i] !== actualPathSegments[i])
+      return false;
+  }
+  return true;
+}
 
 // js/directives/shared.js
 function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {
