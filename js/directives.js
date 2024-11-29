@@ -27,6 +27,19 @@ export function directive(name, callback) {
     })
 }
 
+export function globalDirective(name, callback) {
+    // Prevent the same directive from registering multiple initialization listeners...
+    if (customDirectiveNames.has(name)) return
+
+    customDirectiveNames.add(name)
+
+    on('directive.global.init', ({ el, directive, cleanup }) => {
+        if (directive.value === name) {
+            callback({ el, directive, cleanup })
+        }
+    })
+}
+
 export function getDirectives(el) {
     return new DirectiveManager(el)
 }
