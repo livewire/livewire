@@ -111,8 +111,16 @@ trait WithFileUploads
             if (! $storage->exists($filePathname)) continue;
 
             $yesterdaysStamp = now()->subDay()->timestamp;
-            if ($yesterdaysStamp > $storage->lastModified($filePathname)) {
-                $storage->delete($filePathname);
+            if ($yesterdaysStamp <= $storage->lastModified($filePathname)) {
+                continue;
+            }
+
+            $storage->delete($filePathname);
+
+            $filename = pathinfo($filePathname, PATHINFO_BASENAME);
+
+            if ($storage->exists(FileUploadConfiguration::truncatedFilenamesMetaPath().'/'.$filename)) {
+                $storage->delete(FileUploadConfiguration::truncatedFilenamesMetaPath().'/'.$filename);
             }
         }
     }
