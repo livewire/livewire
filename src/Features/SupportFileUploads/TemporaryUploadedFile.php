@@ -184,7 +184,7 @@ class TemporaryUploadedFile extends UploadedFile
     public function hashName($path = null)
     {
         if (app()->runningUnitTests() && str($this->getFilename())->contains('-hash=')) {
-            return str($this->getFilename())->between('-hash=', '-')->value();
+            return str($this->getFilename())->between('-hash=', '-mimeType')->value();
         }
 
         return parent::hashName($path);
