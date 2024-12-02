@@ -141,7 +141,11 @@ function replace(url, key, object) {
 
     if (! state.alpine) state.alpine = {}
 
-    state.alpine[key] = unwrap(object)
+    let isDirty = JSON.stringify(state.alpine[key]) !== JSON.stringify(unwrap(object))
+
+    if (!isDirty) return;
+
+    state.alpine[key] = unwrap(object);
 
     window.history.replaceState(state, '', url.toString())
 }
