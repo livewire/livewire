@@ -370,9 +370,7 @@
     if (key === "")
       return object;
     return key.split(".").reduce((carry, i) => {
-      if (carry === void 0)
-        return void 0;
-      return carry[i];
+      return carry?.[i];
     }, object);
   }
   function dataSet(object, key, value) {
@@ -901,7 +899,7 @@
       deferredMutations = deferredMutations.concat(mutations);
       return;
     }
-    let addedNodes = /* @__PURE__ */ new Set();
+    let addedNodes = [];
     let removedNodes = /* @__PURE__ */ new Set();
     let addedAttributes = /* @__PURE__ */ new Map();
     let removedAttributes = /* @__PURE__ */ new Map();
@@ -909,8 +907,24 @@
       if (mutations[i].target._x_ignoreMutationObserver)
         continue;
       if (mutations[i].type === "childList") {
-        mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.add(node));
-        mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.add(node));
+        mutations[i].removedNodes.forEach((node) => {
+          if (node.nodeType !== 1)
+            return;
+          if (!node._x_marker)
+            return;
+          removedNodes.add(node);
+        });
+        mutations[i].addedNodes.forEach((node) => {
+          if (node.nodeType !== 1)
+            return;
+          if (removedNodes.has(node)) {
+            removedNodes.delete(node);
+            return;
+          }
+          if (node._x_marker)
+            return;
+          addedNodes.push(node);
+        });
       }
       if (mutations[i].type === "attributes") {
         let el = mutations[i].target;
@@ -943,29 +957,15 @@
       onAttributeAddeds.forEach((i) => i(el, attrs));
     });
     for (let node of removedNodes) {
-      if (addedNodes.has(node))
+      if (addedNodes.some((i) => i.contains(node)))
         continue;
       onElRemoveds.forEach((i) => i(node));
     }
-    addedNodes.forEach((node) => {
-      node._x_ignoreSelf = true;
-      node._x_ignore = true;
-    });
     for (let node of addedNodes) {
-      if (removedNodes.has(node))
-        continue;
       if (!node.isConnected)
         continue;
-      delete node._x_ignoreSelf;
-      delete node._x_ignore;
       onElAddeds.forEach((i) => i(node));
-      node._x_ignore = true;
-      node._x_ignoreSelf = true;
     }
-    addedNodes.forEach((node) => {
-      delete node._x_ignoreSelf;
-      delete node._x_ignore;
-    });
     addedNodes = null;
     removedNodes = null;
     addedAttributes = null;
@@ -1468,10 +1468,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function interceptInit(callback) {
     initInterceptors2.push(callback);
   }
+  var markerDispenser = 1;
   function initTree(el, walker = walk, intercept = () => {
   }) {
+    if (findClosest(el, (i) => i._x_ignore))
+      return;
     deferHandlingDirectives(() => {
       walker(el, (el2, skip) => {
+        if (el2._x_marker)
+          return;
+        el2._x_marker = markerDispenser++;
         intercept(el2, skip);
         initInterceptors2.forEach((i) => i(el2, skip));
         directives(el2, el2.attributes).forEach((handle) => handle());
@@ -1483,6 +1489,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     walker(root, (el) => {
       cleanupElement(el);
       cleanupAttributes(el);
+      delete el._x_marker;
     });
   }
   function warnAboutMissingPlugins() {
@@ -2284,7 +2291,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.3",
+    version: "3.14.5",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -4709,6 +4716,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   }
+  function globalDirective(name, callback) {
+    if (customDirectiveNames.has(name))
+      return;
+    customDirectiveNames.add(name);
+    on2("directive.global.init", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+      if (directive3.value === name) {
+        callback({ el, directive: directive3, cleanup: cleanup2 });
+      }
+    });
+  }
   function getDirectives(el) {
     return new DirectiveManager(el);
   }
@@ -4771,7 +4788,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4821,7 +4838,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             start: { height: current + "px" },
             end: { height: full + "px" }
           }, () => el._x_isShown = true, () => {
-            if (el.getBoundingClientRect().height == full) {
+            if (Math.abs(el.getBoundingClientRect().height - full) < 1) {
               el.style.overflow = null;
             }
           });
@@ -4865,7 +4882,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5814,7 +5831,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5876,7 +5893,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -5976,7 +5993,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -7633,6 +7650,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/popover.js
   function packUpPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported())
+      return;
     persistedEl.querySelectorAll(":popover-open").forEach((el) => {
       el.setAttribute("data-navigate-popover-open", "");
       let animations = el.getAnimations();
@@ -7651,6 +7670,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function unPackPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported())
+      return;
     persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
       el.removeAttribute("data-navigate-popover-open");
       queueMicrotask(() => {
@@ -7667,6 +7688,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
     });
+  }
+  function isPopoverSupported() {
+    return typeof document.createElement("div").showPopover === "function";
   }
 
   // js/plugins/navigate/page.js
@@ -8185,7 +8209,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8286,6 +8310,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let holdover = fromKeyHoldovers[toKey];
             from2.appendChild(holdover);
             currentFrom = holdover;
+            fromKey = getKey(currentFrom);
           } else {
             if (!shouldSkip(adding, currentTo)) {
               let clone2 = currentTo.cloneNode(true);
@@ -8359,6 +8384,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
+              fromKey = getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -8367,6 +8393,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
+              fromKey = getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom = addNodeBefore(from2, currentTo, currentFrom);
@@ -8512,6 +8539,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let fromId = from && from._x_bindings && from._x_bindings.id;
     if (!fromId)
       return;
+    if (!to.setAttribute)
+      return;
     to.setAttribute("id", fromId);
     to.id = fromId;
   }
@@ -8520,7 +8549,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../../../../usr/local/lib/node_modules/@alpinejs/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -8725,10 +8754,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           destroyComponent(component2.id);
         });
       }
+      let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+      directives2.forEach((directive3) => {
+        trigger2("directive.global.init", { el, directive: directive3, cleanup: (callback) => {
+          module_default.onAttributeRemoved(el, directive3.raw, callback);
+        } });
+      });
       let component = closestComponent(el, false);
       if (component) {
         trigger2("element.init", { el, component });
-        let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives2.forEach((directive3) => {
           trigger2("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
             module_default.onAttributeRemoved(el, directive3.raw, callback);
@@ -9466,6 +9500,53 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   });
 
+  // js/directives/wire-current.js
+  module_default.addInitSelector(() => `[wire\\:current]`);
+  var onPageChanges = /* @__PURE__ */ new Map();
+  document.addEventListener("livewire:navigated", () => {
+    onPageChanges.forEach((i) => i(new URL(window.location.href)));
+  });
+  globalDirective("current", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+    let expression = directive3.expression;
+    let options = {
+      exact: directive3.modifiers.includes("exact"),
+      strict: directive3.modifiers.includes("strict")
+    };
+    if (expression.startsWith("#"))
+      return;
+    if (!el.hasAttribute("href"))
+      return;
+    let href = el.getAttribute("href");
+    let hrefUrl = new URL(href, window.location.href);
+    let classes = expression.split(" ").filter(String);
+    let refreshCurrent = (url) => {
+      if (pathMatches(hrefUrl, url, options)) {
+        el.classList.add(...classes);
+      } else {
+        el.classList.remove(...classes);
+      }
+    };
+    refreshCurrent(new URL(window.location.href));
+    onPageChanges.set(el, refreshCurrent);
+    cleanup2(() => onPageChanges.delete(el));
+  });
+  function pathMatches(hrefUrl, actualUrl, options) {
+    if (hrefUrl.hostname !== actualUrl.hostname)
+      return false;
+    let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+    let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+    if (options.exact) {
+      return hrefPath === actualPath;
+    }
+    let hrefPathSegments = hrefPath.split("/");
+    let actualPathSegments = actualPath.split("/");
+    for (let i = 0; i < hrefPathSegments.length; i++) {
+      if (hrefPathSegments[i] !== actualPathSegments[i])
+        return false;
+    }
+    return true;
+  }
+
   // js/directives/shared.js
   function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
     isTruthy = directive3.modifiers.includes("remove") ? !isTruthy : isTruthy;
@@ -9737,8 +9818,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on2("commit", ({ component, respond }) => {
-    respond(() => {
+  on2("commit", ({ component, succeed }) => {
+    succeed(() => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
       });
