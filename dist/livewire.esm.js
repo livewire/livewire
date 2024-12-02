@@ -1484,7 +1484,7 @@ var require_module_cjs = __commonJS({
         return;
       }
       let addedNodes = [];
-      let removedNodes = [];
+      let removedNodes = /* @__PURE__ */ new Set();
       let addedAttributes = /* @__PURE__ */ new Map();
       let removedAttributes = /* @__PURE__ */ new Map();
       for (let i = 0; i < mutations.length; i++) {
@@ -1496,10 +1496,16 @@ var require_module_cjs = __commonJS({
               return;
             if (!node._x_marker)
               return;
-            removedNodes.push(node);
+            removedNodes.add(node);
           });
           mutations[i].addedNodes.forEach((node) => {
             if (node.nodeType !== 1)
+              return;
+            if (removedNodes.has(node)) {
+              removedNodes.delete(node);
+              return;
+            }
+            if (node._x_marker)
               return;
             addedNodes.push(node);
           });
@@ -1542,8 +1548,6 @@ var require_module_cjs = __commonJS({
       for (let node of addedNodes) {
         if (!node.isConnected)
           continue;
-        if (node._x_marker)
-          return;
         onElAddeds.forEach((i) => i(node));
       }
       addedNodes = null;
@@ -2057,10 +2061,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         walker(el, (el2, skip) => {
           if (el2._x_marker)
             return;
-          el2._x_marker = markerDispenser++;
           intercept(el2, skip);
           initInterceptors2.forEach((i) => i(el2, skip));
           directives(el2, el2.attributes).forEach((handle) => handle());
+          if (!el2._x_ignore)
+            el2._x_marker = markerDispenser++;
           el2._x_ignore && skip();
         });
       });
@@ -2871,7 +2876,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.4",
+      version: "3.14.6",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -3827,9 +3832,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// node_modules/@alpinejs/collapse/dist/module.cjs.js
+// ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3948,9 +3953,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/focus/dist/module.cjs.js
+// ../alpine/packages/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4950,9 +4955,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/persist/dist/module.cjs.js
+// ../alpine/packages/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5039,9 +5044,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/intersect/dist/module.cjs.js
+// ../alpine/packages/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5193,9 +5198,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/anchor/dist/module.cjs.js
+// ../alpine/packages/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6731,9 +6736,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/morph/dist/module.cjs.js
+// ../alpine/packages/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7098,9 +7103,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/mask/dist/module.cjs.js
+// ../alpine/packages/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
+  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -10408,12 +10413,19 @@ document.addEventListener("livewire:navigated", () => {
 });
 globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   let expression = directive2.expression;
+  let options = {
+    exact: directive2.modifiers.includes("exact"),
+    strict: directive2.modifiers.includes("strict")
+  };
   if (expression.startsWith("#"))
     return;
+  if (!el.hasAttribute("href"))
+    return;
   let href = el.getAttribute("href");
+  let hrefUrl = new URL(href, window.location.href);
   let classes = expression.split(" ").filter(String);
   let refreshCurrent = (url) => {
-    if (href === url.pathname) {
+    if (pathMatches(hrefUrl, url, options)) {
       el.classList.add(...classes);
     } else {
       el.classList.remove(...classes);
@@ -10423,6 +10435,22 @@ globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   onPageChanges.set(el, refreshCurrent);
   cleanup(() => onPageChanges.delete(el));
 });
+function pathMatches(hrefUrl, actualUrl, options) {
+  if (hrefUrl.hostname !== actualUrl.hostname)
+    return false;
+  let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+  let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+  if (options.exact) {
+    return hrefPath === actualPath;
+  }
+  let hrefPathSegments = hrefPath.split("/");
+  let actualPathSegments = actualPath.split("/");
+  for (let i = 0; i < hrefPathSegments.length; i++) {
+    if (hrefPathSegments[i] !== actualPathSegments[i])
+      return false;
+  }
+  return true;
+}
 
 // js/directives/shared.js
 function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = null) {

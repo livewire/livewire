@@ -36,24 +36,26 @@ npm install
 npm run build
 
 # Link all Alpine packages locally
-cd alpine/packages/alpinejs && npm link
-cd alpine/packages/anchor && npm link
-cd alpine/packages/collapse && npm link
-cd alpine/packages/csp && npm link
-cd alpine/packages/docs && npm link
-cd alpine/packages/focus && npm link
-cd alpine/packages/history && npm link
-cd alpine/packages/intersect && npm link
-cd alpine/packages/mask && npm link
-cd alpine/packages/morph && npm link
-cd alpine/packages/navigate && npm link
-cd alpine/packages/persist && npm link
+cd packages/alpinejs && npm link && cd ../../
+cd packages/anchor && npm link && cd ../../
+cd packages/collapse && npm link && cd ../../
+cd packages/csp && npm link && cd ../../
+cd packages/docs && npm link && cd ../../
+cd packages/focus && npm link && cd ../../
+cd packages/history && npm link && cd ../../
+cd packages/intersect && npm link && cd ../../
+cd packages/mask && npm link && cd ../../
+cd packages/morph && npm link && cd ../../
+cd packages/navigate && npm link && cd ../../
+cd packages/persist && npm link && cd ../../
+cd packages/sort && npm link && cd ../../
+cd packages/ui && npm link && cd ../../
 
 # Switch the working directory back to livewire
 cd ../livewire
 
 # Link all packages
-npm link alpinejs @alpinejs/anchor @alpinejs/collapse @alpinejs/csp @alpinejs/docs @alpinejs/focus @alpinejs/history @alpinejs/intersect @alpinejs/mask @alpinejs/morph @alpinejs/navigate @alpinejs/persist
+npm link alpinejs @alpinejs/anchor @alpinejs/collapse @alpinejs/csp @alpinejs/docs @alpinejs/focus @alpinejs/history @alpinejs/intersect @alpinejs/mask @alpinejs/morph @alpinejs/navigate @alpinejs/persist @alpinejs/sort @alpinejs/ui
 
 # Build Livewire
 npm run build
