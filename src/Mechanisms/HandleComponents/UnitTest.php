@@ -8,6 +8,7 @@ use Illuminate\Support\Stringable;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -17,7 +18,7 @@ class UnitTest extends \Tests\TestCase
         // trim strings and convert empty strings to null middleware
         Livewire::test(BasicComponent::class)
             ->set('name', 'test')
-            ->assertSet('name', 'test');
+            ->assertSetStrict('name', 'test');
 
         // Then make a standard laravel test and ensure that the input has
         // had trim strings re-applied
@@ -31,7 +32,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_synthesized_property_types_are_preserved_after_update()
     {
-        Livewire::test(new class extends Component {
+        Livewire::test(new class extends TestComponent {
             public $foo;
             public $isStringable;
             public function mount() { $this->foo = str('bar'); }
@@ -39,15 +40,14 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->isStringable = $this->foo instanceof Stringable;
             }
-            public function render() { return '<div></div>'; }
         })
             ->assertSet('foo', 'bar')
             ->call('checkStringable')
-            ->assertSet('isStringable', true)
+            ->assertSetStrict('isStringable', true)
             ->set('foo', 'baz')
             ->assertSet('foo', 'baz')
             ->call('checkStringable')
-            ->assertSet('isStringable', true)
+            ->assertSetStrict('isStringable', true)
         ;
     }
 
@@ -85,11 +85,11 @@ class UnitTest extends \Tests\TestCase
                 HTML;
             }
         })
-            ->assertSet('form.count', null)
+            ->assertSetStrict('form.count', null)
             ->set('form.count', 1)
-            ->assertSet('form.count', 1)
+            ->assertSetStrict('form.count', 1)
             ->set('form.count', '')
-            ->assertSet('form.count', null)
+            ->assertSetStrict('form.count', null)
         ;
     }
 
@@ -119,11 +119,11 @@ class UnitTest extends \Tests\TestCase
                 HTML;
             }
         })
-        ->assertSet('selected', null)
+        ->assertSetStrict('selected', null)
         ->set('selected', 'D')
-        ->assertSet('selected', UnitSuit::Diamonds)
+        ->assertSetStrict('selected', UnitSuit::Diamonds)
         ->set('selected', null)
-        ->assertSet('selected', null)
+        ->assertSetStrict('selected', null)
         ;
     }
 
@@ -141,11 +141,11 @@ class UnitTest extends \Tests\TestCase
                 HTML;
             }
         })
-        ->assertSet('form.selected', null)
+        ->assertSetStrict('form.selected', null)
         ->set('form.selected', 'D')
-        ->assertSet('form.selected', UnitSuit::Diamonds)
+        ->assertSetStrict('form.selected', UnitSuit::Diamonds)
         ->set('form.selected', null)
-        ->assertSet('form.selected', null)
+        ->assertSetStrict('form.selected', null)
         ;
     }
 
@@ -191,7 +191,7 @@ class UnitTest extends \Tests\TestCase
                 2 => Carbon::make('2003-03-03'),
             ])
             ->set('suits.1', '__rm__')
-            ->assertSet('suits', [
+            ->assertSetStrict('suits', [
                 0 => UnitSuit::Hearts,
                 2 => UnitSuit::Clubs,
                 3 => UnitSuit::Spades,
@@ -200,25 +200,15 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class BasicComponent extends Component
+class BasicComponent extends TestComponent
 {
     public $name;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithStringPropertiesStub extends Component
+class ComponentWithStringPropertiesStub extends TestComponent
 {
     public $emptyString = '';
     public $oneSpace = ' ';
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 enum UnitSuit: string

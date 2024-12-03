@@ -4,7 +4,7 @@ namespace Livewire\Tests;
 
 use Illuminate\Support\Str;
 use Livewire\Livewire;
-use Livewire\Component;
+use Tests\TestComponent;
 
 class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 {
@@ -14,23 +14,23 @@ class PublicPropertyHydrationHooksUnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentWithPublicPropertyCasters::class)
             ->call('storeTypeOfs')
-            ->assertSet('typeOfs.date', 'Carbon\Carbon')
-            ->assertSet('typeOfs.dateWithFormat', 'Carbon\Carbon')
-            ->assertSet('typeOfs.collection', 'Illuminate\Support\Collection')
-            ->assertSet('typeOfs.allCaps', 'FOO')
-            ->assertSet('typeOfs.stringable', 'Illuminate\Support\Stringable')
-            ->assertSet('dateWithFormat', '00-01-01')
-            ->assertSet('collection', function ($value) {
+            ->assertSetStrict('typeOfs.date', 'Carbon\Carbon')
+            ->assertSetStrict('typeOfs.dateWithFormat', 'Carbon\Carbon')
+            ->assertSetStrict('typeOfs.collection', 'Illuminate\Support\Collection')
+            ->assertSetStrict('typeOfs.allCaps', 'FOO')
+            ->assertSetStrict('typeOfs.stringable', 'Illuminate\Support\Stringable')
+            ->assertSetStrict('dateWithFormat', '00-01-01')
+            ->assertSetStrict('collection', function ($value) {
                 return $value->toArray() === ['foo', 'bar'];
             })
-            ->assertSet('allCaps', 'foo')
-            ->assertSet('stringable', 'Be excellent to each other')
+            ->assertSetStrict('allCaps', 'foo')
+            ->assertSetStrict('stringable', 'Be excellent to each other')
             ->set('dateWithFormat', '00-02-02')
-            ->assertSet('dateWithFormat', '00-02-02');
+            ->assertSetStrict('dateWithFormat', '00-02-02');
     }
 }
 
-class ComponentWithPublicPropertyCasters extends Component
+class ComponentWithPublicPropertyCasters extends TestComponent
 {
     public $date;
     public $dateWithFormat;
@@ -76,10 +76,5 @@ class ComponentWithPublicPropertyCasters extends Component
             'allCaps' => $this->allCaps,
             'stringable' => get_class($this->stringable),
         ];
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }

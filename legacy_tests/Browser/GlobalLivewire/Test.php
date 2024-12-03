@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\GlobalLivewire;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase
@@ -26,7 +25,7 @@ class Test extends TestCase
                 /**
                  * Rescanned components dont register twice.
                  **/
-                ->tap(function ($b) { $b->script("window.Livewire.rescan()"); })
+                ->tap(function ($b) { $b->script('window.Livewire.rescan()'); })
                 ->waitForLivewire()->click('@foo')
                 ->assertSeeIn('@output', 'foo')
                 ->refresh()

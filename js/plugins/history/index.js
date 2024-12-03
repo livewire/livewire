@@ -38,14 +38,17 @@ export default function history(Alpine) {
     Alpine.history = { track }
 }
 
-export function track(name, initialSeedValue, alwaysShow = false) {
+export function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils()
 
     let url = new URL(window.location.href)
     let isInitiallyPresentInUrl = has(url, name)
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
     let initialValueMemo = JSON.stringify(initialValue)
+    let exceptValueMemo = [false, null, undefined].includes(except) ? initialSeedValue : JSON.stringify(except)
+
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo
+    let hasReturnedToExceptValue = (newValue) =>  JSON.stringify(newValue) === exceptValueMemo
 
     if (alwaysShow) url = set(url, name, initialValue)
 
@@ -65,6 +68,8 @@ export function track(name, initialSeedValue, alwaysShow = false) {
         // is removed, we can handle it gracefully by removing the entry from the URL instead
         // of letting it get set to `?someKey=undefined` which causes issues on refresh...
         } else if (newValue === undefined) {
+            url = remove(url, name)
+        } else if (! alwaysShow && hasReturnedToExceptValue(newValue)) {
             url = remove(url, name)
         } else {
             url = set(url, name, newValue)

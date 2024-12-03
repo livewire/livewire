@@ -301,7 +301,7 @@ class CreatePost extends Component
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => 'required|min:5',
@@ -400,7 +400,7 @@ class CreatePost extends Component
 
     public $content = '';
 
-    public function rules() // [tl! highlight:6]
+    protected function rules() // [tl! highlight:6]
     {
         return [
             'title' => Rule::exists('posts', 'title'),
@@ -408,7 +408,7 @@ class CreatePost extends Component
         ];
     }
 
-    public function messages() // [tl! highlight:6]
+    protected function messages() // [tl! highlight:6]
     {
         return [
             'content.required' => 'The :attribute are missing.',
@@ -416,7 +416,7 @@ class CreatePost extends Component
         ];
     }
 
-    public function validationAttributes() // [tl! highlight:6]
+    protected function validationAttributes() // [tl! highlight:6]
     {
         return [
             'content' => 'description',
@@ -468,7 +468,7 @@ class UpdatePost extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [

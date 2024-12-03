@@ -115,6 +115,34 @@ Please be aware that the persisted element must be placed outside your Livewire 
 </html>
 ```
 
+### Highlighting active links
+
+You might be used to highlighting the currently active page link in a navbar using server-side Blade like so:
+
+```blade
+<nav>
+    <a href="/" class="@if (request->is('/')) font-bold text-zinc-800 @endif">Dashboard</a>
+    <a href="/posts" class="@if (request->is('/posts')) font-bold text-zinc-800 @endif">Posts</a>
+    <a href="/users" class="@if (request->is('/users')) font-bold text-zinc-800 @endif">Users</a>
+</nav>
+```
+
+However, this will not work inside persisted elements as they are re-used between page loads. Instead, you should use Livewire's `wire:current` directive to highlight the currently active link.
+
+Simply pass any CSS classes you want to apply to the currently active link to `wire:current`:
+
+```blade
+<nav>
+    <a href="/dashboard" ... wire:current="font-bold text-zinc-800">Dashboard</a>
+    <a href="/posts" ... wire:current="font-bold text-zinc-800">Posts</a>
+    <a href="/users" ... wire:current="font-bold text-zinc-800">Users</a>
+</nav>
+```
+
+Now, when the `/posts` page is visited, the "Posts" link will have a stronger font treatment than the other links.
+
+Read more in the [`wire:current` documentation](/docs/wire-current).
+
 ### Preserving scroll position
 
 By default, Livewire will preserve the scroll position of a page when navigating back and forth between pages. However, sometimes you may want to preserve the scroll position of an individual element you are persisting between page loads.
@@ -154,7 +182,7 @@ document.addEventListener('livewire:navigate', (event) => {
     // A URL object of the intended destination of the navigation...
     context.url
 
-    // A boolean [true/false] indicating whether or not this naviation
+    // A boolean [true/false] indicating whether or not this navigation
     // was triggered by a back/forward (history state) navigation...
     context.history
 
@@ -168,7 +196,7 @@ document.addEventListener('livewire:navigating', () => {
     // Triggered when new HTML is about to swapped onto the page...
 
     // This is a good place to mutate any HTML before the page
-    // is nagivated away from...
+    // is navigated away from...
 })
 
 document.addEventListener('livewire:navigated', () => {

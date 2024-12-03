@@ -3,10 +3,10 @@
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
 use Livewire\Livewire;
-use Livewire\Component;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
+use Tests\TestComponent;
 
 class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
 {
@@ -878,7 +878,7 @@ class PublicPropertyHydrationAndDehydrationUnitTest extends \Tests\TestCase
     }
 }
 
-class PostComponent extends Component
+class PostComponent extends TestComponent
 {
     public $post;
 
@@ -886,16 +886,9 @@ class PostComponent extends Component
     {
         $this->post = Post::first();
     }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div></div>
-        HTML;
-    }
 }
 
-class ModelsComponent extends Component
+class ModelsComponent extends TestComponent
 {
     public $model;
     public $models;
@@ -923,13 +916,6 @@ class ModelsComponent extends Component
         if (isset($rules)) {
             $this->_rules = $rules;
         }
-    }
-
-    public function render()
-    {
-        return <<<'HTML'
-        <div></div>
-        HTML;
     }
 }
 

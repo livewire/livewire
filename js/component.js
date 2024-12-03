@@ -163,6 +163,11 @@ export class Component {
             effects.url = this.originalEffects.url
         }
 
+        // We need to re-register any scripts that were originally registered...
+        if (this.originalEffects.scripts) {
+            effects.scripts = this.originalEffects.scripts;
+        }
+
         el.setAttribute('wire:effects', JSON.stringify(effects))
     }
 

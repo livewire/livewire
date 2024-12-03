@@ -9,6 +9,7 @@ use Livewire\Features\SupportLegacyModels\CannotBindToModelDataWithoutValidation
 use Livewire\Livewire;
 use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
+use Tests\TestComponent;
 use function Livewire\invade;
 
 class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
@@ -31,18 +32,18 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
 
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
-            ->assertSet('model.title', 'foo')
+            ->assertSetStrict('model.title', 'foo')
             ->set('model.title', 'ba')
-            ->assertSet('model.title', 'ba')
+            ->assertSetStrict('model.title', 'ba')
             ->call('refreshModel')
-            ->assertSet('model.title', 'foo')
+            ->assertSetStrict('model.title', 'foo')
             ->set('model.title', 'ba')
             ->call('save')
             ->assertHasErrors('model.title')
             ->set('model.title', 'bar')
             ->call('save')
             ->call('refreshModel')
-            ->assertSet('model.title', 'bar');
+            ->assertSetStrict('model.title', 'bar');
     }
 
 
@@ -53,9 +54,9 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
             ->assertNotSet('model.title', 'foo')
             ->set('model.title', 'i-exist-now')
-            ->assertSet('model.title', 'i-exist-now')
+            ->assertSetStrict('model.title', 'i-exist-now')
             ->call('save')
-            ->assertSet('model.title', 'i-exist-now');
+            ->assertSetStrict('model.title', 'i-exist-now');
 
         $this->assertTrue(ModelForAttributeBinding::whereTitle('i-exist-now')->exists());
     }
@@ -68,7 +69,7 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
 
         Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
             ->set('model.id', 2)
-            ->assertSet('model.id', null);
+            ->assertSetStrict('model.id', null);
     }
 
     public function test_an_eloquent_models_meta_cannot_be_hijacked_by_tampering_with_data()
@@ -93,6 +94,15 @@ class ModelAttributesCanBeBoundDirectlyUnitTest extends \Tests\TestCase
             ->set('model', null)
             ->assertSuccessful();
     }
+
+    public function test_an_eloquent_model_property_can_be_set_to_boolean()
+    {
+        $model = ModelForAttributeBinding::create(['id' => 1, 'title' => 'foo']);
+
+        Livewire::test(ComponentWithModelProperty::class, ['model' => $model])
+            ->set('model', false)
+            ->assertSuccessful();
+    }
 }
 
 class ModelForAttributeBinding extends Model
@@ -101,7 +111,7 @@ class ModelForAttributeBinding extends Model
     protected $guarded = [];
 }
 
-class ComponentWithModelProperty extends Component
+class ComponentWithModelProperty extends TestComponent
 {
     public $model;
 
@@ -125,25 +135,15 @@ class ComponentWithModelProperty extends Component
     {
         $this->model->refresh();
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithoutRulesArray extends Component
+class ComponentWithoutRulesArray extends TestComponent
 {
     public $model;
 
     public function mount(ModelForAttributeBinding $model)
     {
         $this->model = $model;
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }
 

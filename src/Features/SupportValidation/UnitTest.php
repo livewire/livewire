@@ -799,22 +799,22 @@ class UnitTest extends \Tests\TestCase
     public function test_can_use_withvalidator_method()
     {
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidationWithClosure')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidationWithClosure')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidationWithThisMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidationWithThisMethod')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidateOnlyWithClosure')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidateOnlyWithClosure')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('runValidateOnlyWithThisMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('runValidateOnlyWithThisMethod')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('clearWithValidatorAfterRunningValidateMethod')->assertSetStrict('count', 1);
 
         $component = Livewire::test(WithValidationMethod::class);
-        $component->assertSet('count', 0)->call('clearWithValidatorAfterRunningValidateOnlyMethod')->assertSet('count', 1);
+        $component->assertSetStrict('count', 0)->call('clearWithValidatorAfterRunningValidateOnlyMethod')->assertSetStrict('count', 1);
     }
 
     public function test_a_set_of_items_will_validate_individually()
@@ -884,7 +884,7 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithRulesProperty extends Component
+class ComponentWithRulesProperty extends TestComponent
 {
     public $foo;
     public $bar = 'baz';
@@ -913,25 +913,15 @@ class ComponentWithRulesProperty extends Component
     {
         $this->validate();
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ComponentWithoutRulesProperty extends Component
+class ComponentWithoutRulesProperty extends TestComponent
 {
     public $foo;
 
     public function save()
     {
         $this->validate();
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }
 
@@ -1236,7 +1226,7 @@ class WithValidationMethod extends Component
     }
 }
 
-class ValidatesOnlyTestComponent extends Component
+class ValidatesOnlyTestComponent extends TestComponent
 {
     public $image = '';
     public $image_alt = '';
@@ -1269,14 +1259,9 @@ class ValidatesOnlyTestComponent extends Component
     {
         $this->resetValidation();
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ValidatesComputedProperty extends Component
+class ValidatesComputedProperty extends TestComponent
 {
     public $helper;
 
@@ -1317,14 +1302,9 @@ class ValidatesComputedProperty extends Component
     {
         $this->resetValidation();
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ValidatesWireableProperty extends Component
+class ValidatesWireableProperty extends TestComponent
 {
     public CustomWireableValidationCollection $customCollection;
 
@@ -1342,11 +1322,6 @@ class ValidatesWireableProperty extends Component
     public function runValidation()
     {
         $this->validate();
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }
 

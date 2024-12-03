@@ -8,7 +8,6 @@ use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Blade;
 
 class EchoBrowserTest extends BrowserTestCase
 {

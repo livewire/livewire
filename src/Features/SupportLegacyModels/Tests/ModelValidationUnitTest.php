@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
+use Tests\TestComponent;
 use function Livewire\invade;
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
@@ -48,7 +48,7 @@ class FooModelForUniquenessValidation extends Model
     ];
 }
 
-class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends Component
+class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends TestComponent
 {
     public $foo;
 
@@ -73,14 +73,9 @@ class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends Compone
 
         $this->validate();
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions extends Component
+class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions extends TestComponent
 {
     public $foo;
 
@@ -105,10 +100,5 @@ class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions ext
         invade($db)->connections = $connections;
 
         $this->validate();
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

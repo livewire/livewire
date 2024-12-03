@@ -4,6 +4,7 @@ namespace Livewire\Tests;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class ComponentIsMacroableUnitTest extends \Tests\TestCase
 {
@@ -14,21 +15,16 @@ class ComponentIsMacroableUnitTest extends \Tests\TestCase
         });
 
         Livewire::test(ComponentWithMacroedMethodStub::class)
-            ->assertSet('foo', ['one', 'two']);
+            ->assertSetStrict('foo', ['one', 'two']);
     }
 }
 
-class ComponentWithMacroedMethodStub extends Component
+class ComponentWithMacroedMethodStub extends TestComponent
 {
     public $foo;
 
     public function mount()
     {
         $this->foo = $this->macroedMethod('one', 'two');
-    }
-
-    public function render()
-    {
-        return view('null-view');
     }
 }

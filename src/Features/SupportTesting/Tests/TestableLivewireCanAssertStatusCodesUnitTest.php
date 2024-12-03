@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportTesting\Tests;
 
-use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Livewire\Component;
 use Livewire\Livewire;

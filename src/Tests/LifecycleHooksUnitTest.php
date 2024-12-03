@@ -2,10 +2,10 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Support\Stringable;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Tests\TestComponent;
 
 class CustomException extends \Exception {};
 
@@ -77,7 +77,7 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
     }
 }
 
-class ForMagicMethods extends Component
+class ForMagicMethods extends TestComponent
 {
     public $foo;
 
@@ -226,10 +226,5 @@ class ForMagicMethods extends Component
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
 
         $this->lifecycles['updatedBarBaz'] = true;
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

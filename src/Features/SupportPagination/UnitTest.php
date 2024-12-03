@@ -8,6 +8,7 @@ use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\WithPagination;
 use Sushi\Sushi;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -16,35 +17,35 @@ class UnitTest extends \Tests\TestCase
         Livewire::test(ComponentWithPaginationStub::class)
             ->set('paginators.page', 2)
             ->call('previousPage')
-            ->assertSet('paginators.page', 1);
+            ->assertSetStrict('paginators.page', 1);
     }
 
     public function test_can_navigate_to_next_page()
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('nextPage')
-            ->assertSet('paginators.page', 2);
+            ->assertSetStrict('paginators.page', 2);
     }
 
     public function test_can_navigate_to_specific_page()
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('gotoPage', 5)
-            ->assertSet('paginators.page', 5);
+            ->assertSetStrict('paginators.page', 5);
     }
 
     public function test_previous_page_cannot_be_less_than_one()
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('previousPage')
-            ->assertSet('paginators.page', 1);
+            ->assertSetStrict('paginators.page', 1);
     }
 
     public function test_double_page_value_should_be_casted_to_int()
     {
         Livewire::test(ComponentWithPaginationStub::class)
             ->call('gotoPage', 2.5)
-            ->assertSet('paginators.page', 2);
+            ->assertSetStrict('paginators.page', 2);
     }
 
     public function test_can_set_a_custom_links_theme_in_component()
@@ -133,22 +134,17 @@ class UnitTest extends \Tests\TestCase
                 HTML;
             }
         })
-            ->assertSet('page', 5)
-            ->assertSet('paginators.page', 5)
+            ->assertSetStrict('page', 5)
+            ->assertSetStrict('paginators.page', 5)
             ->call('gotoPage', 3)
-            ->assertSet('page', 3)
-            ->assertSet('paginators.page', 3);
+            ->assertSetStrict('page', 3)
+            ->assertSetStrict('paginators.page', 3);
     }
 }
 
-class ComponentWithPaginationStub extends Component
+class ComponentWithPaginationStub extends TestComponent
 {
     use WithPagination;
-
-    public function render()
-    {
-        return '<div></div>';
-    }
 }
 
 class PaginatorPostTestModel extends Model

@@ -5,6 +5,7 @@ namespace Livewire\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Routing\UrlGenerator;
+use Tests\TestComponent;
 
 class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
 {
@@ -39,7 +40,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
     {
         $component = Livewire::test(ComponentWithDependencyInjection::class);
 
-        app()->bind('foo', \StdClass::class);
+        app()->bind('foo', \stdClass::class);
 
         $component->runAction('actionWithContainerBoundNameCollision', 'bar');
 
@@ -124,7 +125,7 @@ class ComponentDependencyInjectionUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithDependencyInjection extends Component
+class ComponentWithDependencyInjection extends TestComponent
 {
     public $foo;
     public $bar;
@@ -173,11 +174,6 @@ class ComponentWithDependencyInjection extends Component
     {
         $this->foo = $foo;
     }
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
 class CustomComponent extends Component
@@ -198,25 +194,20 @@ class CustomService
     }
 }
 
-class ComponentWithUnionTypes extends Component
+class ComponentWithUnionTypes extends TestComponent
 {
     public $foo;
     public $bar;
 
     public function mount(UrlGenerator $generator, string|int $id = 123)
     {
-        $this->foo = $generator->to("/some-url", $id);
+        $this->foo = $generator->to('/some-url', $id);
         $this->bar = $id;
     }
 
     public function injection(UrlGenerator $generator, $bar)
     {
-        $this->foo = $generator->to("/");
+        $this->foo = $generator->to('/');
         $this->bar = $bar;
-    }
-
-    public function render()
-    {
-        return view("null-view");
     }
 }

@@ -110,7 +110,7 @@ class ImplicitRouteBinding
 
         $parent = $route->parentOfParameter($parameterName);
 
-        if ($parent instanceof UrlRoutable && array_key_exists($parameterName, $route->bindingFields())) {
+        if ($parent instanceof UrlRoutable && ($route->enforcesScopedBindings() || array_key_exists($parameterName, $route->bindingFields()))) {
             $model = $parent->resolveChildRouteBinding($parameterName, $parameterValue, $route->bindingFieldFor($parameterName));
         } else {
             if ($route->allowsTrashedBindings()) {

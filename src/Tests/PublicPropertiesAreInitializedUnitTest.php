@@ -5,13 +5,14 @@ namespace Livewire\Tests;
 use Livewire\Component;
 use Livewire\Livewire;
 use Stringable;
+use Tests\TestComponent;
 
 class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
 {
     public function test_uninitialized_public_property_is_null()
     {
         Livewire::test(UninitializedPublicPropertyComponent::class)
-            ->assertSet('message', null);
+            ->assertSetStrict('message', null);
     }
 
     public function test_initialized_public_property_shows_value()
@@ -34,20 +35,20 @@ class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
     public function test_uninitialized_public_typed_property_is_null()
     {
         Livewire::test(UninitializedPublicTypedPropertyComponent::class)
-            ->assertSet('message', null);
+            ->assertSetStrict('message', null);
     }
 
     public function test_uninitialized_public_union_typed_property_is_null()
     {
         Livewire::test(UninitializedPublicUnionTypedPropertyComponent::class)
-            ->assertSet('message', null);
+            ->assertSetStrict('message', null);
     }
 
     public function test_uninitialized_public_typed_property_is_still_null_after_refresh()
     {
         Livewire::test(UninitializedPublicTypedPropertyAfterRefreshComponent::class)
             ->call('$refresh')
-            ->assertSet('message', null);
+            ->assertSetStrict('message', null);
     }
 
     public function test_initialized_public_typed_property_shows_value()
@@ -57,14 +58,9 @@ class PublicPropertiesAreInitializedUnitTest extends \Tests\TestCase
     }
 }
 
-class UninitializedPublicPropertyComponent extends Component
+class UninitializedPublicPropertyComponent extends TestComponent
 {
     public $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class InitializedPublicPropertyComponent extends Component
@@ -78,34 +74,19 @@ class InitializedPublicPropertyComponent extends Component
     }
 }
 
-class UninitializedPublicTypedPropertyComponent extends Component
+class UninitializedPublicTypedPropertyComponent extends TestComponent
 {
     public string $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class UninitializedPublicUnionTypedPropertyComponent extends Component
+class UninitializedPublicUnionTypedPropertyComponent extends TestComponent
 {
     public string | Stringable $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class UninitializedPublicTypedPropertyAfterRefreshComponent extends Component
+class UninitializedPublicTypedPropertyAfterRefreshComponent extends TestComponent
 {
     public string $message;
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class InitializedPublicTypedPropertyComponent extends Component

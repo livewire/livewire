@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\SupportCollections;
 
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase

@@ -3,7 +3,6 @@
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Tests\TestComponent;
-use Livewire\Component;
 use Livewire\Livewire;
 
 class DataBindingUnitTest extends \Tests\TestCase
@@ -39,12 +38,12 @@ class DataBindingUnitTest extends \Tests\TestCase
         // We can simulate Livewire's removing an item from an array
         // by hardcoding "__rm__"...
         ->set('tasks.1', '__rm__')
-        ->assertSet('tasks', [['id' => 123]])
+        ->assertSetStrict('tasks', [['id' => 123]])
         ;
     }
 }
 
-class DataBindingStub extends Component
+class DataBindingStub extends TestComponent
 {
     public $foo;
     public $bar;
@@ -69,10 +68,5 @@ class DataBindingStub extends Component
     public function removeArrayPropertyOne()
     {
         unset($this->arrayProperty[1]);
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

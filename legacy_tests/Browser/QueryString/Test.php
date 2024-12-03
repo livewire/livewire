@@ -3,9 +3,7 @@
 namespace LegacyTests\Browser\QueryString;
 
 use Sushi\Sushi;
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
-use LegacyTests\Browser\QueryString\NestedComponent;
 use Laravel\Dusk\Browser;
 use Illuminate\Database\Eloquent\Model;
 

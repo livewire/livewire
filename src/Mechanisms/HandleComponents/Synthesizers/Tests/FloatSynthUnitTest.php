@@ -2,9 +2,9 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
-use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class FloatSynthUnitTest extends \Tests\TestCase
 {
@@ -18,7 +18,7 @@ class FloatSynthUnitTest extends \Tests\TestCase
     public function test_hydrated_component_with_empty_string_returns_null()
     {
         Livewire::test(ComponentWithNullableFloat::class)
-            ->set('floatField', "")
+            ->set('floatField', '')
             ->assertSetStrict('floatField', null);
     }
 
@@ -32,7 +32,7 @@ class FloatSynthUnitTest extends \Tests\TestCase
     public function test_hydrated_form_with_empty_string_returns_null()
     {
         Livewire::test(FormComponentWithNullableFloat::class)
-            ->set('form.floatField', "")
+            ->set('form.floatField', '')
             ->assertSetStrict('form.floatField', null);
     }
 
@@ -83,44 +83,24 @@ class FloatSynthUnitTest extends \Tests\TestCase
     }
 }
 
-class ComponentWithNullableFloat extends Component
+class ComponentWithNullableFloat extends TestComponent
 {
     public ?float $floatField = null;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithFloat extends Component
+class ComponentWithFloat extends TestComponent
 {
     public float $floatField;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class ComponentWithFloatOrString extends Component
+class ComponentWithFloatOrString extends TestComponent
 {
     public float|string $floatOrStringField;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
-class FormComponentWithNullableFloat extends Component
+class FormComponentWithNullableFloat extends TestComponent
 {
     public FormWithNullableFloat $form;
-
-    public function render()
-    {
-        return view('null-view');
-    }
 }
 
 class FormWithNullableFloat extends Form

@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportNavigate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Livewire\Attributes\Url;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Livewire;
 

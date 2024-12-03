@@ -2,7 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents;
 
-use function Livewire\{ invade, store, trigger, wrap };
+use function Livewire\{store, trigger, wrap };
 use ReflectionUnionType;
 use Livewire\Mechanisms\Mechanism;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;

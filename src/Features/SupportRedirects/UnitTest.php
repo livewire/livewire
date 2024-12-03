@@ -224,7 +224,7 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class TriggersRedirectStub extends Component
+class TriggersRedirectStub extends TestComponent
 {
     public function triggerRedirect()
     {
@@ -282,23 +282,13 @@ class TriggersRedirectStub extends Component
     {
         return redirect()->away('foo');
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class TriggersRedirectOnMountStub extends Component
+class TriggersRedirectOnMountStub extends TestComponent
 {
     public function mount()
     {
         $this->redirect('/local');
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }
 

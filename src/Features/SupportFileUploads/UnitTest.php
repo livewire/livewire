@@ -5,16 +5,17 @@ namespace Livewire\Features\SupportFileUploads;
 use App\Livewire\UploadFile;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\Http;
 use Livewire\WithFileUploads;
 use Livewire\Livewire;
 use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
-use Livewire\Component;
 use League\Flysystem\PathTraversalDetected;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
+use Illuminate\Http\Testing\FileFactory;
+use Illuminate\Support\Arr;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -62,7 +63,7 @@ class UnitTest extends \Tests\TestCase
 
         $component->call('_removeUpload', 'photo', $tmpFilename)
             ->assertDispatched('upload:removed', name: 'photo', tmpFilename: $tmpFilename)
-            ->assertSet('photo', null);
+            ->assertSetStrict('photo', null);
     }
 
     public function test_cant_remove_a_file_property_with_mismatched_filename_provided()
@@ -772,7 +773,7 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::test(FileReadContentComponent::class)
             ->set('file', $file)
-            ->assertSet('content', $file->getContent());
+            ->assertSetStrict('content', $file->getContent());
     }
 
     public function test_validation_of_file_uploads_while_time_traveling()
@@ -789,6 +790,48 @@ class UnitTest extends \Tests\TestCase
 
         Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
+
+    public function test_extension_validation_cant_be_spoofed_by_manipulating_the_mime_type()
+    {
+        Storage::fake('avatars');
+
+        $file = (new \Illuminate\Http\Testing\FileFactory)->create('malicious.php', 0, 'image/png');
+
+        Livewire::test(FileExtensionValidatorComponent::class)
+            ->set('photo', $file)
+            ->call('save')
+            ->assertHasErrors('photo');
+
+        Storage::disk('avatars')->assertMissing('malicious.php');
+    }
+
+    public function test_the_file_upload_controller_middleware_prepends_the_web_group()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1']);
+
+        $middleware = Arr::pluck(FileUploadController::middleware(), 'middleware');
+
+        $this->assertEquals(['web', 'throttle:60,1'], $middleware);
+    }
+
+    public function test_the_file_upload_controller_middleware_only_adds_the_web_group_if_absent()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1', 'web']);
+
+        $middleware = Arr::pluck(FileUploadController::middleware(), 'middleware');
+
+        $this->assertEquals(['throttle:60,1', 'web'], $middleware);
+    }
+
+    public function test_temporary_file_uploads_guess_correct_mime_during_testing()
+    {
+        Livewire::test(UseProvidedMimeTypeDuringTestingComponent::class)
+            ->set('photo', UploadedFile::fake()->create('file.png', 1000, 'application/pdf'))
+            ->call('save')
+            ->assertHasErrors([
+                'photo' => 'mimetypes',
+            ]);
+    }
 }
 
 class DummyMiddleware
@@ -799,14 +842,12 @@ class DummyMiddleware
     }
 }
 
-class NonFileUploadComponent extends Component
+class NonFileUploadComponent extends TestComponent
 {
     public $photo;
-
-    public function render() { return app('view')->make('null-view'); }
 }
 
-class FileUploadComponent extends Component
+class FileUploadComponent extends TestComponent
 {
     use WithFileUploads;
 
@@ -879,8 +920,6 @@ class FileUploadComponent extends Component
     {
         $this->_uploadErrored($name, null, false);
     }
-
-    public function render() { return app('view')->make('null-view'); }
 }
 
 class FileUploadInArrayComponent extends FileUploadComponent
@@ -913,3 +952,32 @@ class FileReadContentComponent extends FileUploadComponent
     }
 }
 
+class FileExtensionValidatorComponent extends FileUploadComponent
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    public function save()
+    {
+        $this->validate([
+            'photo' => 'extensions:png',
+        ]);
+
+        $this->photo->storeAs('/', 'malicious.'.$this->photo->getClientOriginalExtension(), $disk = 'avatars');
+    }
+}
+
+class UseProvidedMimeTypeDuringTestingComponent extends FileUploadComponent
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    public function save()
+    {
+        $this->validate([
+            'photo' => 'mimetypes:image/png',
+        ]);
+    }
+}

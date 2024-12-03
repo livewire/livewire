@@ -8,7 +8,7 @@ class UpgradeIntroduction extends UpgradeStep
 {
     public function handle(Command $console, \Closure $next)
     {
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> LIVEWIRE v2 to v3 UPGRADE 🚀 </>");
+        $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> LIVEWIRE v2 to v3 UPGRADE 🚀 </>');
         $console->newLine();
         $console->comment('!! Running this command multiple times may result in incorrect replacements !!');
         $console->newLine();

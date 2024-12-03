@@ -8,7 +8,7 @@ class UpgradeAlpineInstructions extends UpgradeStep
 {
     public function handle(Command $console, \Closure $next)
     {
-        $console->line("<fg=#FB70A9;bg=black;options=bold,reverse> Manual Upgrade: Remove Alpine references </>");
+        $console->line('<fg=#FB70A9;bg=black;options=bold,reverse> Manual Upgrade: Remove Alpine references </>');
         $console->newLine();
         $console->line('Livewire version 3 ships with AlpineJS by default.');
         $console->line('If you use Alpine in your Livewire application, you will need to remove it and any of the plugins listed below so that Livewire\'s built-in version doesn\'t conflict with it.');

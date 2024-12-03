@@ -10,5 +10,6 @@ trait HandlesStreaming
     {
         $hook = ComponentHookRegistry::getHook($this, SupportStreaming::class);
 
-        $hook->stream($to, $content, $replace); }
+        $hook->stream($to, $content, $replace);
+    }
 }

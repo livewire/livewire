@@ -2,8 +2,8 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class QueryParamsUnitTest extends \Tests\TestCase
 {
@@ -13,27 +13,22 @@ class QueryParamsUnitTest extends \Tests\TestCase
 
         Livewire::withQueryParams(['name' => $name])
             ->test(QueryParamsComponent::class)
-            ->assertSet('name', $name);
+            ->assertSetStrict('name', $name);
     }
 
     public function test_it_does_not_set_name_when_no_query_params_are_provided()
     {
         Livewire::test(QueryParamsComponent::class)
-            ->assertSet('name', null);
+            ->assertSetStrict('name', null);
     }
 }
 
-class QueryParamsComponent extends Component
+class QueryParamsComponent extends TestComponent
 {
     public $name;
 
     public function mount()
     {
         $this->name = request('name');
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

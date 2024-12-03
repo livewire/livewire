@@ -11,6 +11,7 @@ use Illuminate\Testing\TestView;
 use Livewire\Component;
 use Livewire\Livewire;
 use Closure;
+use Tests\TestComponent;
 
 // TODO - Change this to \Tests\TestCase
 class UnitTest extends \LegacyTests\Unit\TestCase
@@ -217,7 +218,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         $this->expectException(\Exception::class);
 
-        Livewire::test(\StdClass::class);
+        Livewire::test(\stdClass::class);
     }
 
     function test_livewire_route_works_with_user_route_with_the_same_signature()
@@ -242,7 +243,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         Livewire::test(HasMountArguments::class, ['name' => 'foo'])
             ->set(['name' => 'bar'])
-            ->assertSet('name', 'bar');
+            ->assertSetStrict('name', 'bar');
     }
 
     function test_set_for_backed_enums()
@@ -282,7 +283,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $component = Livewire::test(HasMountArguments::class, ['name' => 'bar'])
             ->assertNotSet('name', 'foo')
             ->set('name', 100)
-            ->assertNotSet('name', "1e2", true)
+            ->assertNotSet('name', '1e2', true)
             ->set('name', 0)
             ->assertNotSet('name', false, true)
             ->assertNotSet('name', null, true);
@@ -312,6 +313,28 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
 
         $component->assertNotSetStrict('name', '');
+    }
+
+    function test_assert_snapshot_set_strict()
+    {
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+            ->set('name', '')
+            ->assertSnapshotSetStrict('name', '');
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
+        $component->assertSnapshotSetStrict('name', null);
+    }
+
+    function test_assert_snapshot_not_set_strict()
+    {
+        $component = Livewire::test(HasMountArguments::class, ['name' => 'foo'])
+            ->set('name', '')
+            ->assertSnapshotNotSetStrict('name', null);
+
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
+        $component->assertSnapshotNotSetStrict('name', '');
     }
 
     function test_assert_count()
@@ -543,7 +566,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
         Livewire::withCookies(['colour' => 'blue'])
             ->withCookie('name', 'Taylor')
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourCookie = '';
                 public $nameCookie = '';
                 public function mount()
@@ -551,21 +574,16 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                     $this->colourCookie = request()->cookie('colour');
                     $this->nameCookie = request()->cookie('name');
                 }
-
-                public function render()
-                {
-                    return '<div></div>';
-                }
             })
-            ->assertSet('colourCookie', 'blue')
-            ->assertSet('nameCookie', 'Taylor')
+            ->assertSetStrict('colourCookie', 'blue')
+            ->assertSetStrict('nameCookie', 'Taylor')
             ;
     }
 
     public function test_can_set_headers_for_use_with_testing()
     {
         Livewire::withHeaders(['colour' => 'blue', 'name' => 'Taylor'])
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourHeader = '';
                 public $nameHeader = '';
                 public function mount()
@@ -573,14 +591,9 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                     $this->colourHeader = request()->header('colour');
                     $this->nameHeader = request()->header('name');
                 }
-
-                public function render()
-                {
-                    return '<div></div>';
-                }
             })
-            ->assertSet('colourHeader', 'blue')
-            ->assertSet('nameHeader', 'Taylor')
+            ->assertSetStrict('colourHeader', 'blue')
+            ->assertSetStrict('nameHeader', 'Taylor')
             ;
     }
 
@@ -588,7 +601,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
     {
         // Test both the `withCookies` and `withCookie` methods that Laravel normally provides
         Livewire::withCookies(['colour' => 'blue'])->withCookie('name', 'Taylor')
-            ->test(new class extends Component {
+            ->test(new class extends TestComponent {
                 public $colourCookie = '';
                 public $nameCookie = '';
 
@@ -597,15 +610,10 @@ class UnitTest extends \LegacyTests\Unit\TestCase
                     $this->colourCookie = request()->cookie('colour');
                     $this->nameCookie = request()->cookie('name');
                 }
-
-                public function render()
-                {
-                    return '<div></div>';
-                }
             })
             ->call('setTheCookies')
-            ->assertSet('colourCookie', 'blue')
-            ->assertSet('nameCookie', 'Taylor');
+            ->assertSetStrict('colourCookie', 'blue')
+            ->assertSetStrict('nameCookie', 'Taylor');
     }
 }
 
@@ -632,15 +640,11 @@ class HasHtml extends Component
     }
 }
 
-class SomeComponentStub extends Component
+class SomeComponentStub extends TestComponent
 {
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class HasMountArgumentsButDoesntPassThemToBladeView extends Component
+class HasMountArgumentsButDoesntPassThemToBladeView extends TestComponent
 {
     public $name;
 
@@ -648,14 +652,9 @@ class HasMountArgumentsButDoesntPassThemToBladeView extends Component
     {
         $this->name = $name;
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class DispatchesEventsComponentStub extends Component
+class DispatchesEventsComponentStub extends TestComponent
 {
     function dispatchFoo()
     {
@@ -681,11 +680,6 @@ class DispatchesEventsComponentStub extends Component
     {
         $this->dispatch('foo')->to(ComponentWhichReceivesEvent::class);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class CustomValidationRule implements ValidationRule
@@ -698,7 +692,7 @@ class CustomValidationRule implements ValidationRule
     }
 }
 
-class ValidatesDataWithCustomRuleStub extends Component
+class ValidatesDataWithCustomRuleStub extends TestComponent
 {
     public bool $foo = false;
 
@@ -708,14 +702,9 @@ class ValidatesDataWithCustomRuleStub extends Component
             'foo' => new CustomValidationRule,
         ]);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ValidatesDataWithSubmitStub extends Component
+class ValidatesDataWithSubmitStub extends TestComponent
 {
     public $foo;
     public $bar;
@@ -732,14 +721,9 @@ class ValidatesDataWithSubmitStub extends Component
     {
         $this->addError('bob', 'lob');
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ValidatesDataWithRealTimeStub extends Component
+class ValidatesDataWithRealTimeStub extends TestComponent
 {
     public $foo;
     public $bar;
@@ -751,14 +735,10 @@ class ValidatesDataWithRealTimeStub extends Component
             'bar' => 'required',
         ]);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ValidatesDataWithRulesHasParams extends Component{
+class ValidatesDataWithRulesHasParams extends TestComponent
+{
     public $foo, $bar;
 
     function submit()
@@ -767,39 +747,23 @@ class ValidatesDataWithRulesHasParams extends Component{
             'foo' => 'string|min:2',
         ]);
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 class ComponentWhichReceivesEvent extends Component
 {
-
 }
 
-class ComponentWithMethodThatReturnsData extends Component
+class ComponentWithMethodThatReturnsData extends TestComponent
 {
     function foo()
     {
         return 'bar';
     }
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ComponentWithEnums extends Component
+class ComponentWithEnums extends TestComponent
 {
     public BackedFooBarEnum $backedFooBarEnum;
-
-    function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
 enum BackedFooBarEnum : string

@@ -2,8 +2,6 @@
 
 namespace Livewire\Features\SupportEntangle;
 
-use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;

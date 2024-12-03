@@ -9,7 +9,7 @@ class RootTagMissingFromViewException extends \Exception
     public function __construct()
     {
         parent::__construct(
-            "Livewire encountered a missing root tag when trying to render a " .
+            'Livewire encountered a missing root tag when trying to render a ' .
             "component. \n When rendering a Blade view, make sure it contains a root HTML tag."
         );
     }
