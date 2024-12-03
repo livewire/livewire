@@ -8280,12 +8280,14 @@ wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => await requestCommit(component));
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
-  return on(name, ({ component: hookComponent, ...params }) => {
+  let unhook = on(name, ({ component: hookComponent, ...params }) => {
     if (hookComponent === void 0)
       return callback(params);
     if (hookComponent.id === component.id)
       return callback({ component: hookComponent, ...params });
   });
+  component.addCleanup(unhook);
+  return unhook;
 });
 wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
 wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
