@@ -1,5 +1,7 @@
 
 export function packUpPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported()) return;
+
     persistedEl.querySelectorAll(':popover-open').forEach(el => {
         el.setAttribute('data-navigate-popover-open', '')
 
@@ -23,6 +25,8 @@ export function packUpPersistedPopovers(persistedEl) {
 }
 
 export function unPackPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported()) return;
+
     persistedEl.querySelectorAll('[data-navigate-popover-open]').forEach(el => {
         el.removeAttribute('data-navigate-popover-open')
 
@@ -48,4 +52,8 @@ export function unPackPersistedPopovers(persistedEl) {
             }
         })
     })
+}
+
+function isPopoverSupported() {
+    return typeof document.createElement('div').showPopover === 'function';
 }
