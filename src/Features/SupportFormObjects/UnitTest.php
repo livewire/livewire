@@ -66,6 +66,39 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.content', 'bar')
         ;
     }
+    function test_can_reset_form_object_handle_dot_notation_with_asterisk_wildcard()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.*',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
+
+    function test_can_reset_form_object_handle_nested_dot_notation()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.foo',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
 
     function test_set_form_object_with_typed_nullable_properties()
     {
@@ -238,6 +271,38 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    function test_multiple_forms_show_all_errors()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormValidateStub $form1;
+            public PostFormValidateStub $form2;
+
+            function save()
+            {
+                $this->validate();
+            }
+
+            function render()
+            {
+                return '<div>{{ $errors }}</div>';
+            }
+        })
+        ->assertHasNoErrors()
+        ->call('save')
+        ->assertHasErrors('form1.title')
+        ->assertHasErrors('form1.content')
+        ->assertHasErrors('form2.title')
+        ->assertHasErrors('form2.content')
+        ->assertSee('The title field is required')
+        ->assertSee('The content field is required')
+        ->set('form1.title', 'Valid Title 1')
+        ->set('form1.content', 'Valid Content 1')
+        ->set('form2.title', 'Valid Title 2')
+        ->set('form2.content', 'Valid Content 2')
+        ->call('save')
+        ->assertHasNoErrors();
+    }
+
     function test_can_validate_a_form_object_using_rule_attribute_with_custom_name()
     {
         Livewire::test(new class extends TestComponent {
@@ -257,6 +322,7 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
         ;
     }
+
     public function test_validation_errors_persist_across_validation_errors()
     {
         $component = Livewire::test(new class extends Component {
@@ -777,6 +843,17 @@ class PostFormStubWithDefaults extends Form
     public $title = 'foo';
 
     public $content = 'bar';
+}
+
+class PostFormStubWithArrayDefaults extends Form
+{
+    public $title = 'foo';
+
+    public $content = [
+        1 => true,
+        2 => false,
+        'foo' => ['bar' => 'baz'],
+    ];
 }
 
 class PostFormWithTypedProperties extends Form

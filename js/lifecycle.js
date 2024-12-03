@@ -5,6 +5,7 @@ import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
 import intersect from '@alpinejs/intersect'
+import resize from '@alpinejs/resize'
 import anchor from '@alpinejs/anchor'
 import navigate from './plugins/navigate'
 import history from './plugins/history'
@@ -22,6 +23,7 @@ export function start() {
     Alpine.plugin(morph)
     Alpine.plugin(history)
     Alpine.plugin(intersect)
+    Alpine.plugin(resize)
     Alpine.plugin(collapse)
     Alpine.plugin(anchor)
     Alpine.plugin(focus)
@@ -65,14 +67,20 @@ export function start() {
                 })
             }
 
+            let directives = Array.from(el.getAttributeNames())
+                .filter(name => matchesForLivewireDirective(name))
+                .map(name => extractDirective(el, name))
+
+            directives.forEach(directive => {
+                trigger('directive.global.init', { el, directive, cleanup: (callback) => {
+                    Alpine.onAttributeRemoved(el, directive.raw, callback)
+                } })
+            })
+
             let component = closestComponent(el, false)
 
             if (component) {
                 trigger('element.init', { el, component })
-
-                let directives = Array.from(el.getAttributeNames())
-                    .filter(name => matchesForLivewireDirective(name))
-                    .map(name => extractDirective(el, name))
 
                 directives.forEach(directive => {
                     trigger('directive.init', { el, component, directive, cleanup: (callback) => {

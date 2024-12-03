@@ -12,7 +12,7 @@ Here's a list of all the available component lifecycle hooks:
 | `rendering()`    | Called before `render()` is called                                              |
 | `rendered()`     | Called after `render()` is called                                               |
 | `dehydrate()`    | Called at the end of every component request                                    |
-| `exception($e, $stopProgation)` | Called when an exception is thrown                     |                    |
+| `exception($e, $stopPropagation)` | Called when an exception is thrown                     |                    |
 
 ## Mount
 
@@ -321,8 +321,8 @@ class ShowPost extends Component
     }
 
     public function exception($e, $stopPropagation) {
-        if($e instanceof NotFoundException) {
-            $this->notify('Post is not found')
+        if ($e instanceof NotFoundException) {
+            $this->notify('Post is not found');
             $stopPropagation();
         }
     }
