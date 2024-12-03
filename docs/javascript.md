@@ -541,6 +541,18 @@ Livewire.hook('morph.added',  ({ el }) => {
 })
 ```
 
+In addition to the events fired per element, a `morph` and `morphed` event is fired for each Livewire component:
+
+```js
+Livewire.hook('morph',  ({ el, component }) => {
+	// Runs just before the child elements in `component` are morphed
+})
+
+Livewire.hook('morphed',  ({ el, component }) => {
+    // Runs after all child elements in `component` are morphed
+})
+```
+
 ### Commit hooks
 
 Because Livewire requests contain multiple components, _request_ is too broad of a term to refer to an individual component's request and response payload. Instead, internally, Livewire refers to component updates as _commits_ — in reference to _committing_ component state to the server.
@@ -552,7 +564,7 @@ These hooks expose `commit` objects. You can learn more about their schema by re
 The `commit.prepare` hook will be triggered immediately before a request is sent to the server. This gives you a chance to add any last minute updates or actions to the outgoing request:
 
 ```js
-Livewire.hook('commit.prepare', ({ component, commit }) => {
+Livewire.hook('commit.prepare', ({ component }) => {
     // Runs before commit payloads are collected and sent to the server...
 })
 ```
@@ -587,7 +599,7 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
 If you would like to instead hook into the entire HTTP request going and returning from the server, you can do so using the `request` hook:
 
 ```js
-Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
+Livewire.hook('request', ({ url, options, payload, respond, succeed, fail }) => {
     // Runs after commit payloads are compiled, but before a network request is sent...
 
     respond(({ status, response }) => {

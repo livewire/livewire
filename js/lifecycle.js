@@ -67,14 +67,20 @@ export function start() {
                 })
             }
 
+            let directives = Array.from(el.getAttributeNames())
+                .filter(name => matchesForLivewireDirective(name))
+                .map(name => extractDirective(el, name))
+
+            directives.forEach(directive => {
+                trigger('directive.global.init', { el, directive, cleanup: (callback) => {
+                    Alpine.onAttributeRemoved(el, directive.raw, callback)
+                } })
+            })
+
             let component = closestComponent(el, false)
 
             if (component) {
                 trigger('element.init', { el, component })
-
-                let directives = Array.from(el.getAttributeNames())
-                    .filter(name => matchesForLivewireDirective(name))
-                    .map(name => extractDirective(el, name))
 
                 directives.forEach(directive => {
                     trigger('directive.init', { el, component, directive, cleanup: (callback) => {
