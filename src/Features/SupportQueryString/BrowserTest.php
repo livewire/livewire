@@ -52,7 +52,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_keep_option_does_not_duplicate_url_query_string_for_array_parameters_on_link_navigation()
+    public function test_keep_option_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
     {
         Livewire::withQueryParams([
             'filters' => [
@@ -79,10 +79,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return (new URLSearchParams(window.location.search)).toString()', 'filters%5BstartDate%5D=2024-01-01&filters%5BendDate%5D=2024-09-05');
+            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
-    public function test_does_not_duplicate_url_query_string_for_array_parameters_on_link_navigation()
+    public function test_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
     {
         Livewire::withQueryParams([
             'filters' => [
@@ -109,10 +109,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return (new URLSearchParams(window.location.search)).toString()', 'filters%5BstartDate%5D=2024-01-01&filters%5BendDate%5D=2024-09-05');
+            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
     }
 
-    public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_link_navigation()
+    public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_page_load()
     {
         Livewire::withQueryParams([
             'date' => '2024-01-01',
@@ -132,7 +132,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->assertScript('return (new URLSearchParams(window.location.search)).toString()', 'date=2024-01-01');
+            ->assertScript('return window.location.search', '?date=2024-01-01');
     }
 
 
@@ -992,7 +992,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_it_handles_query_string_encoded_keys()
     {
         Livewire::withQueryParams([
-            'foo' => ['bar'],
+            'foo' => ['bar' => 'baz'],
         ])
             ->visit([
                 new class extends Component
@@ -1000,26 +1000,40 @@ class BrowserTest extends \Tests\BrowserTestCase
                     #[Url]
                     public $foo;
 
-                    public function setFoo()
-                    {
-                        $this->foo = [];
-                    }
-
                     public function render()
                     {
                         return <<<'HTML'
                         <div>
-                            <button wire:click="setFoo" dusk="setButton">Set foo</button>
-                            <span dusk="output">@json($foo)</span>
                         </div>
                         HTML;
                     }
                 }
             ])
-            ->assertSeeIn('@output', '["bar"]')
-            ->waitForLivewire()->click('@setButton')
-            ->assertSeeIn('@output', '[]')
-            ->assertQueryStringMissing('foo');
+            ->assertScript('return window.location.search', '?foo[bar]=baz');
+    }
+
+    public function test_it_skips_query_string_encoded_keys_not_tracked_by_livewire()
+    {
+        Livewire::withQueryParams([
+            'foo' => ['bar' => 'baz'],
+            'bob' => ['lob' => 'law'],
+        ])
+            ->visit([
+                new class extends Component
+                {
+                    #[Url]
+                    public $foo;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                        </div>
+                        HTML;
+                    }
+                }
+            ])
+            ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
     }
 }
 
