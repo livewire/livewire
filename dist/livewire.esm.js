@@ -9163,6 +9163,8 @@ function mergeNewHead(newHead) {
       child.remove();
   }
   for (let child of Array.from(newHead.children)) {
+    if (child.tagName.toLowerCase() === "noscript")
+      continue;
     document.head.appendChild(child);
   }
   return Promise.all(remoteScriptsPromises);
