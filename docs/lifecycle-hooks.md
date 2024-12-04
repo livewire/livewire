@@ -321,8 +321,8 @@ class ShowPost extends Component
     }
 
     public function exception($e, $stopPropagation) {
-        if($e instanceof NotFoundException) {
-            $this->notify('Post is not found')
+        if ($e instanceof NotFoundException) {
+            $this->notify('Post is not found');
             $stopPropagation();
         }
     }
