@@ -218,11 +218,14 @@ class Testable
             return $this;
         }
 
-        // We are going to encode the original file size and hashName in the filename
+        // We are going to encode the original file size, mimeType and hashName in the filename
         // so when we create a new TemporaryUploadedFile instance we can fake the
-        // same file size and hashName set for the original file upload.
+        // same file size, mimeType and hashName set for the original file upload.
         $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
-            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-size={$file->getSize()}.");
+            // MimeTypes contain slashes, so we replace them with underscores to ensure the filename is valid.
+            $escapedMimeType = (string) str($file->getMimeType())->replace('/', '_');
+
+            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-mimeType={$escapedMimeType}-size={$file->getSize()}.");
         })->toArray();
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {

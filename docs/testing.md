@@ -272,7 +272,7 @@ Below is a basic `SearchPosts` component that uses [Livewire's URL feature](/doc
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\With\Url;
+use Livewire\Attributes\Url;
 use App\Models\Post;
 
 class SearchPosts extends Component
@@ -331,7 +331,7 @@ Below is a basic `Cart` component that loads a discount token from a cookie on m
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\With\Url;
+use Livewire\Attributes\Url;
 use App\Models\Post;
 
 class Cart extends Component
@@ -684,6 +684,8 @@ Livewire provides many more testing utilities. Below is a comprehensive list of 
 | `assertDontSee($post->title)`                         | Assert that the rendered HTML does not contain the provided value                                                                                                                    |
 | `assertSeeHtml('<div>...</div>')`                     | Assert the provided string literal is contained in the rendered HTML without escaping the HTML characters (unlike `assertSee`, which does escape the provided characters by default) |
 | `assertDontSeeHtml('<div>...</div>')`                 | Assert the provided string is contained in the rendered HTML                                                                                                                         |
+| `assertSeeText($post->title)`                         | Assert that the provided string is contained within the rendered HTML text. The rendered content will be passed to the `strip_tags` PHP function before the assertion is made                                                                                          |
+| `assertDontSeeText($post->title)`                     | Assert that the provided string is not contained within the rendered HTML text. The rendered content will be passed to the `strip_tags` PHP function before the assertion is made                                                                                |
 | `assertSeeInOrder(['...', '...'])`                    | Assert that the provided strings appear in order in the rendered HTML output of the component                                                                                        |
 | `assertSeeHtmlInOrder([$firstString, $secondString])` | Assert that the provided HTML strings appear in order in the rendered output of the component                                                                                        |
 | `assertDispatched('post-created')`                    | Assert that the given event has been dispatched by the component                                                                                                                     |

@@ -83,6 +83,23 @@ trait MakesAssertions
         return $this;
     }
 
+    function assertDontSeeText($value, $escape = true)
+    {
+        $value = Arr::wrap($value);
+
+        $values = $escape ? array_map('e', ($value)) : $value;
+
+        $content = $this->html();
+
+        tap(strip_tags($content), function ($content) use ($values) {
+            foreach ($values as $value) {
+                PHPUnit::assertStringNotContainsString((string) $value, $content);
+            }
+        });
+
+        return $this;
+    }
+
     function assertSet($name, $value, $strict = false)
     {
         $actual = $this->get($name);
