@@ -2292,7 +2292,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.6",
+    version: "3.14.7",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -5959,7 +5959,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // ../../../../../usr/local/lib/node_modules/@alpinejs/resize/dist/module.esm.js
+  // node_modules/@alpinejs/resize/dist/module.esm.js
   function src_default6(Alpine3) {
     Alpine3.directive("resize", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluator = evaluateLater2(expression);

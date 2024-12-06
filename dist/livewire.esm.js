@@ -2876,7 +2876,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.6",
+      version: "3.14.7",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -5125,9 +5125,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// ../../../../../usr/local/lib/node_modules/@alpinejs/resize/dist/module.cjs.js
+// node_modules/@alpinejs/resize/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "../../../../../usr/local/lib/node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
