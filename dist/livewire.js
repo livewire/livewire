@@ -3139,7 +3139,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       placeInDom(clone2, target, modifiers);
       skipDuringClone(() => {
         initTree(clone2);
-        clone2._x_ignore = true;
       })();
     });
     el._x_teleportPutBack = () => {
@@ -5960,7 +5959,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/resize/dist/module.esm.js
+  // ../../../../../usr/local/lib/node_modules/@alpinejs/resize/dist/module.esm.js
   function src_default6(Alpine3) {
     Alpine3.directive("resize", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluator = evaluateLater2(expression);
