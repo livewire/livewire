@@ -321,6 +321,9 @@ class CreatePost extends Component
 
 Now, in the above example, even though `#[Validate]` is empty, it will tell Livewire to run the fields validation provided by `rules()` everytime the property is updated.
 
+> [!warning] `.blur` does not trigger an error for an input with the "required" rule until an attempted form submit
+> Focusing an input that is required by the component and then unfocusing the field without adding a value does not trigger an error, but you will still see a request made in the Network tab. After the form submission attempt an empty required field will be marked as having an error, and updating the field will make the error go away. After the error has cleared from the field, focusing and then unfocusing the field will trigger the error if no value is entered.
+
 ## Customizing error messages
 
 Out-of-the-box, Laravel provides sensible validation messages like "The title field is required." if the `$title` property has the `required` rule attached to it.
