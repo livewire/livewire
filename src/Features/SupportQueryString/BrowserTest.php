@@ -1035,6 +1035,31 @@ class BrowserTest extends \Tests\BrowserTestCase
             ])
             ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
     }
+
+    public function test_it_handles_emojis_as_aliases()
+    {
+        Livewire::visit([
+                new class () extends Component {
+                    #[BaseUrl(as: '⭐', except: false)]
+                    public bool $starred = false;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <input wire:model.live="starred" type="checkbox" dusk="star" />
+                        </div>
+                        HTML;
+                    }
+                },
+            ])
+            ->assertQueryStringMissing('⭐')
+            ->waitForLivewire()->click('@star')
+            ->assertQueryStringHas('⭐', 'true')
+            ->waitForLivewire()->click('@star')
+            ->assertQueryStringMissing('⭐')
+        ;
+    }
 }
 
 class FormObject extends \Livewire\Form
