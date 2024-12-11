@@ -5,6 +5,7 @@ import { closestComponent } from '@/store'
 import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
+import { on as hook } from './hooks'
 
 let properties = {}
 let fallback
@@ -26,6 +27,7 @@ let aliases = {
     'get': '$get',
     'set': '$set',
     'call': '$call',
+    'hook': '$hook',
     'commit': '$commit',
     'watch': '$watch',
     'entangle': '$entangle',
@@ -153,6 +155,21 @@ wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => await requestCommit(component))
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
+
+wireProperty('$hook', (component) => (name, callback) => {
+    let unhook = hook(name, ({component: hookComponent, ...params}) => {
+        // Request level hooks don't have a component, so just run the callback
+        if (hookComponent === undefined) return callback(params)
+
+        // Run the callback if the component in the hook matches the $wire component
+        if (hookComponent.id === component.id) return callback({component: hookComponent, ...params})
+    })
+
+    component.addCleanup(unhook)
+
+    // Return the unhook function so it can be called manually if needed
+    return unhook
+})
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))

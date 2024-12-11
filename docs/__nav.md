@@ -34,6 +34,7 @@ HTML Directives:
     wire:model: { uri: /docs/wire-model, file: /wire-model.md }
     wire:loading: { uri: /docs/wire-loading, file: /wire-loading.md }
     wire:navigate: { uri: /docs/wire-navigate, file: /wire-navigate.md }
+    wire:current: { uri: /docs/wire-current, file: /wire-current.md }
     wire:dirty: { uri: /docs/wire-dirty, file: /wire-dirty.md }
     wire:confirm: { uri: /docs/wire-confirm, file: /wire-confirm.md }
     wire:transition: { uri: /docs/wire-transition, file: /wire-transition.md }
@@ -49,7 +50,6 @@ Concepts:
     Nesting: { uri: /docs/understanding-nesting, file: /understanding-nesting.md }
 Advanced:
     Troubleshooting: { uri: /docs/troubleshooting, file: /troubleshooting.md }
-    Package Development: { uri: /docs/package-dev, file: /package-development.md }
     Security: { uri: /docs/security, file: /security.md }
     JavaScript: { uri: /docs/javascript, file: /javascript.md }
     Synthesizers: { uri: /docs/synthesizers, file: /synthesizers.md }

@@ -14,6 +14,7 @@ build({
     format: 'esm',
     entryPoints: [`js/index.js`],
     outfile: `dist/livewire.esm.js`,
+    sourcemap: 'linked',
     bundle: true,
     platform: 'node',
     define: { CDN: true },

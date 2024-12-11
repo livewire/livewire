@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Facades\Livewire\Features\SupportFileUploads\GenerateSignedUploadUrl;
 use Illuminate\Http\Testing\FileFactory;
+use Illuminate\Support\Arr;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -803,6 +804,34 @@ class UnitTest extends \Tests\TestCase
 
         Storage::disk('avatars')->assertMissing('malicious.php');
     }
+
+    public function test_the_file_upload_controller_middleware_prepends_the_web_group()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1']);
+
+        $middleware = Arr::pluck(FileUploadController::middleware(), 'middleware');
+
+        $this->assertEquals(['web', 'throttle:60,1'], $middleware);
+    }
+
+    public function test_the_file_upload_controller_middleware_only_adds_the_web_group_if_absent()
+    {
+        config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1', 'web']);
+
+        $middleware = Arr::pluck(FileUploadController::middleware(), 'middleware');
+
+        $this->assertEquals(['throttle:60,1', 'web'], $middleware);
+    }
+
+    public function test_temporary_file_uploads_guess_correct_mime_during_testing()
+    {
+        Livewire::test(UseProvidedMimeTypeDuringTestingComponent::class)
+            ->set('photo', UploadedFile::fake()->create('file.png', 1000, 'application/pdf'))
+            ->call('save')
+            ->assertHasErrors([
+                'photo' => 'mimetypes',
+            ]);
+    }
 }
 
 class DummyMiddleware
@@ -939,3 +968,16 @@ class FileExtensionValidatorComponent extends FileUploadComponent
     }
 }
 
+class UseProvidedMimeTypeDuringTestingComponent extends FileUploadComponent
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    public function save()
+    {
+        $this->validate([
+            'photo' => 'mimetypes:image/png',
+        ]);
+    }
+}
