@@ -103,7 +103,7 @@ class ImplicitlyBoundMethod extends BoundMethod
     protected static function getImplicitBinding($container, $className, $value)
     {
         if (is_null($value)) {
-            return $value;
+            return null;
         }
 
         if ((new ReflectionClass($className))->isEnum()) {
