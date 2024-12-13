@@ -72,6 +72,10 @@ class EloquentModelSynth extends Synth
             $model = $this->loadModel($meta);
         }
 
+        if (! $model instanceof Model) {
+            return null;
+        }
+
         if (isset($meta['relations'])) {
             foreach($meta['relations'] as $relationKey) {
                 if (! isset($data[$relationKey])) continue;
