@@ -14,7 +14,7 @@ class SupportFileUploads extends ComponentHook
         if (app()->runningUnitTests()) {
             // Don't actually generate S3 signedUrls during testing.
             GenerateSignedUploadUrlFacade::swap(new class extends GenerateSignedUploadUrl {
-                public function forS3($file, $visibility = '') { return [] }
+                public function forS3($file, $visibility = '') { return []; }
             });
         }
 
