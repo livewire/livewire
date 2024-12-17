@@ -8,6 +8,10 @@ directive('loading', ({ el, directive, component, cleanup }) => {
 
     let [delay, abortDelay] = applyDelay(directive)
 
+    if (component.modifiers.includes('parent')) {
+        component = component.parent;
+    }
+
     let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
         () => delay(() => toggleBooleanStateDirective(el, directive, true)),
         () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
