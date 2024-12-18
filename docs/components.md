@@ -210,7 +210,7 @@ For example, if you are looping through an array of posts, you may set the `wire
 </div>
 ```
 
-If you are looping through an array that is rendering Livewire components you may set the key as a component attribute `:key()` or pass the key as a third argument when using the `@livewire` directive.
+If you are looping through an array that is rendering Livewire components you may set the key as a component attribute `:key` or pass the key as a third argument when using the `@livewire` directive.
 
 ```blade
 <div>
