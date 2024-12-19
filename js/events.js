@@ -21,9 +21,13 @@ export function dispatchTo(componentName, name, params) {
 }
 
 export function listen(component, name, callback) {
-    component.el.addEventListener(name, e => {
-        callback(e.detail)
-    })
+    const handler = e => callback(e.detail);
+
+    component.el.addEventListener(name, handler);
+
+    return () => {
+        component.el.removeEventListener(name, handler);
+    };
 }
 
 export function on(eventName, callback) {

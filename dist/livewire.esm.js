@@ -5125,9 +5125,9 @@ var require_module_cjs5 = __commonJS({
   }
 });
 
-// node_modules/@alpinejs/resize/dist/module.cjs.js
+// ../../../../../usr/local/lib/node_modules/@alpinejs/resize/dist/module.cjs.js
 var require_module_cjs6 = __commonJS({
-  "node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
+  "../../../../../usr/local/lib/node_modules/@alpinejs/resize/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -8501,9 +8501,11 @@ function dispatchTo(componentName, name, params) {
   });
 }
 function listen2(component, name, callback) {
-  component.el.addEventListener(name, (e) => {
-    callback(e.detail);
-  });
+  const handler = (e) => callback(e.detail);
+  component.el.addEventListener(name, handler);
+  return () => {
+    component.el.removeEventListener(name, handler);
+  };
 }
 function on2(eventName, callback) {
   let handler = (e) => {

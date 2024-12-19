@@ -4681,9 +4681,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function listen2(component, name, callback) {
-    component.el.addEventListener(name, (e) => {
-      callback(e.detail);
-    });
+    const handler4 = (e) => callback(e.detail);
+    component.el.addEventListener(name, handler4);
+    return () => {
+      component.el.removeEventListener(name, handler4);
+    };
   }
   function on3(eventName, callback) {
     let handler4 = (e) => {
@@ -5959,7 +5961,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default5 = src_default5;
 
-  // node_modules/@alpinejs/resize/dist/module.esm.js
+  // ../../../../../usr/local/lib/node_modules/@alpinejs/resize/dist/module.esm.js
   function src_default6(Alpine3) {
     Alpine3.directive("resize", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluator = evaluateLater2(expression);
