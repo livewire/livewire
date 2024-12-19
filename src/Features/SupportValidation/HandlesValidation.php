@@ -228,7 +228,7 @@ trait HandlesValidation
             });
     }
 
-    public function validate($rules = null, $messages = [], $attributes = [])
+    public function validate($rules = null, $messages = [], $attributes = [], $withFormsKeyed = false)
     {
         $isUsingGlobalRules = is_null($rules);
 
@@ -261,7 +261,7 @@ trait HandlesValidation
         }
 
         if ($this->isRootComponent() && $isUsingGlobalRules) {
-            $validatedData = $this->withFormObjectValidators($validator, fn () => $validator->validate(), fn ($form) => $form->validate());
+            $validatedData = $this->withFormObjectValidators($validator, fn () => $validator->validate(), fn ($form) => $form->validate(), $withFormsKeyed);
         } else {
             $validatedData = $validator->validate();
         }
@@ -277,7 +277,7 @@ trait HandlesValidation
         return $this instanceof \Livewire\Component;
     }
 
-    protected function withFormObjectValidators($validator, $validateSelf, $validateForm)
+    protected function withFormObjectValidators($validator, $validateSelf, $validateForm, $withFormsKeyed)
     {
         $cumulativeErrors = new MessageBag;
         $cumulativeData = [];
@@ -288,7 +288,11 @@ trait HandlesValidation
             try {
                 // Only run sub-validator if the sub-validator has rules...
                 if (filled($form->getRules())) {
-                    $cumulativeData = array_merge($cumulativeData, $validateForm($form));
+                    if ($withFormsKeyed) {
+                        $cumulativeData[$form->getPropertyName()] = $validateForm($form);
+                    } else {
+                        $cumulativeData = array_merge($cumulativeData, $validateForm($form));
+                    }
                 }
             } catch (ValidationException $e) {
                 $cumulativeErrors->merge($e->validator->errors());
