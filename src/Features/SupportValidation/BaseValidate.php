@@ -13,8 +13,8 @@ class BaseValidate extends LivewireAttribute
     function __construct(
         public $rule = null,
         protected $attribute = null,
-        protected $as = null,
-        protected $message = null,
+        public $as = null,
+        public $message = null,
         protected $onUpdate = true,
         protected bool $translate = true
     ) {}
