@@ -9206,7 +9206,7 @@ function extractUriAndQueryString(el) {
   return url.split("?");
 }
 function isAsset(el) {
-  return el.tagName.toLowerCase() === "link" && el.getAttribute("rel").toLowerCase() === "stylesheet" || el.tagName.toLowerCase() === "style" || el.tagName.toLowerCase() === "script";
+  return el.tagName.toLowerCase() === "link" && el.getAttribute("rel")?.toLowerCase() === "stylesheet" || el.tagName.toLowerCase() === "style" || el.tagName.toLowerCase() === "script";
 }
 function isScript(el) {
   return el.tagName.toLowerCase() === "script";
