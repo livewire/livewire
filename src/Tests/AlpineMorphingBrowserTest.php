@@ -134,4 +134,83 @@ class AlpineMorphingBrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('@hidden');
             // ->assertConsoleLogMissingWarning('show is not defined');
     }
+
+    public function test_alpine_property_persists_on_array_unshift()
+    {
+        Livewire::visit([TodoList::class, 'todo-editor' => TodoEditor::class])
+            ->assertSee('todo-Foo')
+            ->assertSee('todo-Bar')
+            ->waitForLivewire()->type('@input-6', 'Barrr')
+            ->assertSee('todo-Barrr')
+            ->waitForLivewire()->click('@add')
+            ->assertSee('todo-Baz')
+            ->assertSee('todo-Foo')
+            ->assertSee('todo-Bar')
+            ->waitForLivewire()->type('@input-6', 'BarrrBarrr')
+            ->assertSee('todo-BarrrBarrr')
+        ;
+    }
+}
+
+class TodoList extends Component
+{
+    public array $todos;
+
+    public string $todo = 'Baz';
+
+    public function mount() : void
+    {
+        $this->todos = [
+            ['id' => 1, 'todo' => 'Foo'],
+            ['id' => 6, 'todo' => 'Bar'],
+        ];
+    }
+
+    public function add() : void
+    {
+        array_unshift($this->todos, [
+            'id' => count($this->todos) + 1,
+            'todo' => $this->todo,
+        ]);
+    }
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                <button wire:click="add" dusk="add">Add</button>
+
+                @foreach($todos as $todo)
+
+                    <div wire:key="todo-{{ $todo['id'] }}">
+                        {{-- When you remove the following parent or child div, the test will pass. --}}
+                        {{-- It will also pass when you add a unique ID to the parent div (like the time). --}}
+                        {{-- It will also pass when you remove `x-show="false"` from the child div. --}}
+                        <div>
+                            <div x-show="false">some text</div>
+                        </div>
+
+                        <livewire:todo-editor :id="$todo['id']" :todo="$todo['todo']" :key="$todo['id']" />
+                    </div>
+
+                @endforeach
+            </div>
+        BLADE;
+    }
+}
+
+class TodoEditor extends Component
+{
+    public int $id;
+    public string $todo;
+
+    public function render() : string
+    {
+        return <<<'BLADE'
+            <div>
+                <input type="text" dusk="input-{{ $id }}" wire:model.live="todo" />
+                <div x-text="'todo-' + $wire.todo"></div>
+            </div>
+        BLADE;
+    }
 }
