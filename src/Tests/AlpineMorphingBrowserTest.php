@@ -186,7 +186,7 @@ class TodoList extends Component
                         {{-- When you remove the following div, the test will pass. --}}
                         {{-- It will also pass when you add a unique ID to the div (like the time). --}}
                         {{-- It will also pass when you remove `x-show="false"` from the div. --}}
-                        <div x-show="false">some text</div>
+                        <div x-show="false"></div>
 
                         <livewire:todo-editor :id="$todo['id']" :todo="$todo['todo']" :key="$todo['id']" />
                     </div>
