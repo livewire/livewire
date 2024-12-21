@@ -183,12 +183,10 @@ class TodoList extends Component
                 @foreach($todos as $todo)
 
                     <div wire:key="todo-{{ $todo['id'] }}">
-                        {{-- When you remove the following parent or child div, the test will pass. --}}
-                        {{-- It will also pass when you add a unique ID to the parent div (like the time). --}}
-                        {{-- It will also pass when you remove `x-show="false"` from the child div. --}}
-                        <div>
-                            <div x-show="false">some text</div>
-                        </div>
+                        {{-- When you remove the following div, the test will pass. --}}
+                        {{-- It will also pass when you add a unique ID to the div (like the time). --}}
+                        {{-- It will also pass when you remove `x-show="false"` from the div. --}}
+                        <div x-show="false">some text</div>
 
                         <livewire:todo-editor :id="$todo['id']" :todo="$todo['todo']" :key="$todo['id']" />
                     </div>
