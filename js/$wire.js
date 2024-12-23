@@ -9,6 +9,7 @@ import { on as hook } from './hooks'
 
 let properties = {}
 let fallback
+let currentElementCleanup
 
 function wireProperty(name, callback, component = null) {
     properties[name] = callback
@@ -79,6 +80,8 @@ Alpine.magic('wire', (el, { cleanup }) => {
     // so that a component is lazy-loaded when using $wire from Alpine...
     let component
 
+    currentElementCleanup = cleanup
+
     // Override $wire methods that need to be cleaned up when
     // and element is removed. For example, `x-data="{ foo: $wire.entangle(...) }"`:
     // we would want the entangle effect freed if the element was removed from the DOM...
@@ -148,6 +151,8 @@ wireProperty('$watch', (component) => (path, callback) => {
 
     let unwatch = Alpine.watch(getter, callback)
 
+    currentElementCleanup(unwatch)
+
     component.addCleanup(unwatch)
 })
 
@@ -164,6 +169,8 @@ wireProperty('$hook', (component) => (name, callback) => {
         // Run the callback if the component in the hook matches the $wire component
         if (hookComponent.id === component.id) return callback({component: hookComponent, ...params})
     })
+
+    currentElementCleanup(unhook)
 
     component.addCleanup(unhook)
 
