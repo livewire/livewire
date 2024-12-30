@@ -826,7 +826,12 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.bob', 'loc')
         ->call('formResetExcept', ['foo'])
         ->assertSet('form.foo', 'baz')
-        ->assertSet('form.bob', 'lob');
+        ->assertSet('form.bob', 'lob')
+        ->set('form.foo', 'bar2')
+        ->set('form.bob', 'lob2')
+        ->call('formResetExcept', ['foo', 'bob'])
+        ->assertSet('form.foo', 'bar2')
+        ->assertSet('form.bob', 'lob2');
     }
 }
 
