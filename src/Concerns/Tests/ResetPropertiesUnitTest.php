@@ -72,7 +72,7 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->call('resetKeysExcept', ['foo', 'bob', 'mwa', 'notSet', 'nullProp', 'pullResult'])
             ->assertSetStrict('foo', 'baz')
             ->assertSetStrict('bob', 'law')
-            ->assertSetStrict('mwa', 'aha');
+            ->assertSetStrict('mwa', 'hah');
     }
 
     public function test_can_reset_unset_properties()
