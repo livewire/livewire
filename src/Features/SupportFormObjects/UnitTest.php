@@ -810,7 +810,7 @@ class UnitTest extends \Tests\TestCase
 
     function test_can_pull_some_properties()
     {
-        $component = Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent {
             public ResetPropertiesForm $form;
 
             function formResetExcept(...$args)
@@ -824,10 +824,9 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.bob', 'lob')
         ->set('form.bob', 'loc')
         ->assertSet('form.bob', 'loc')
-        ->call('formResetExcept', ['foo']);
-
-        $this->assertEquals('baz', $component->form->foo);
-        $this->assertEquals('lob', $component->form->bob);
+        ->call('formResetExcept', ['foo'])
+        ->assertSet('form.foo', 'baz')
+        ->assertSet('form.bob', 'lob');
     }
 }
 
