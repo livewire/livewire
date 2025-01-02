@@ -16,7 +16,7 @@ let autofocus = false
 
 export default function (Alpine) {
 
-    Alpine.navigate = (url) => {
+    Alpine.navigate = (url, shouldPushToHistoryState = true) => {
         let destination = createUrlObjectFromString(url)
 
         let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
@@ -25,7 +25,7 @@ export default function (Alpine) {
 
         if (prevented) return
 
-        navigateTo(destination)
+        navigateTo(destination, shouldPushToHistoryState)
     }
 
     Alpine.navigate.disableProgressBar = () => {

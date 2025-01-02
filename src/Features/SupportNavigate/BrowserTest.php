@@ -1014,6 +1014,19 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_can_navigate_using_livewire_navigate_without_history_state()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/first')
+                ->click('@navigate.using.livewire.navigate.without.history.state')
+                ->pause(500)
+                ->back()
+                ->pause(500)
+                ->assertPathIsNot('/first');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1057,6 +1070,7 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
             <a href="/redirect-to-second" wire:navigate dusk="redirect.to.second.link">Redirect to second page from link</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
+            <button type="button" dusk="navigate.using.livewire.navigate.without.history.state" x-on:click="Livewire.navigate(window.location.href, false)">Go to same page using `Livewire.navigate` without history state</button>
 
             <livewire:first-page-child />
 
