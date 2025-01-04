@@ -7923,7 +7923,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var restoreScroll = true;
   var autofocus = false;
   function navigate_default(Alpine3) {
-    Alpine3.navigate = (url, history3 = true) => {
+    Alpine3.navigate = (url, pushState = true) => {
       let destination = createUrlObjectFromString(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
@@ -7932,7 +7932,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       if (prevented)
         return;
-      navigateTo(destination, history3);
+      navigateTo(destination, pushState);
     };
     Alpine3.navigate.disableProgressBar = () => {
       showProgressBar = false;

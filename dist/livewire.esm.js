@@ -9322,7 +9322,7 @@ var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
 function navigate_default(Alpine20) {
-  Alpine20.navigate = (url, history3 = true) => {
+  Alpine20.navigate = (url, pushState = true) => {
     let destination = createUrlObjectFromString(url);
     let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
@@ -9331,7 +9331,7 @@ function navigate_default(Alpine20) {
     });
     if (prevented)
       return;
-    navigateTo(destination, history3);
+    navigateTo(destination, pushState);
   };
   Alpine20.navigate.disableProgressBar = () => {
     showProgressBar = false;
