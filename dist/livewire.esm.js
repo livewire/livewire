@@ -10446,7 +10446,7 @@ globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   let refreshCurrent = (url) => {
     if (directive2.modifiers.includes("attr")) {
       if (pathMatches(hrefUrl, url, options)) {
-        el.setAttribute(expression, true);
+        el.setAttribute(expression, "");
       } else {
         el.removeAttribute(expression);
       }

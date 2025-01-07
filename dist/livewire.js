@@ -9545,7 +9545,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let refreshCurrent = (url) => {
       if (directive3.modifiers.includes("attr")) {
         if (pathMatches(hrefUrl, url, options)) {
-          el.setAttribute(expression, true);
+          el.setAttribute(expression, "");
         } else {
           el.removeAttribute(expression);
         }
