@@ -10444,10 +10444,18 @@ globalDirective("current", ({ el, directive: directive2, cleanup }) => {
   let hrefUrl = new URL(href, window.location.href);
   let classes = expression.split(" ").filter(String);
   let refreshCurrent = (url) => {
-    if (pathMatches(hrefUrl, url, options)) {
-      el.classList.add(...classes);
+    if (directive2.modifiers.includes("attr")) {
+      if (pathMatches(hrefUrl, url, options)) {
+        el.setAttribute(expression, true);
+      } else {
+        el.removeAttribute(expression);
+      }
     } else {
-      el.classList.remove(...classes);
+      if (pathMatches(hrefUrl, url, options)) {
+        el.classList.add(...classes);
+      } else {
+        el.classList.remove(...classes);
+      }
     }
   };
   refreshCurrent(new URL(window.location.href));
