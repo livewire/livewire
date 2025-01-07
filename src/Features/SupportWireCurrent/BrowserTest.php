@@ -109,6 +109,43 @@ class BrowserTest extends BrowserTestCase
                 ;
         });
     }
+
+    public function test_wire_current_supports_adding_attributes()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForText('On first')
+
+                ->assertAttribute('@attr.link.first', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.sub', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.second', 'data-current', '')
+                ->assertAttribute('@attr.link.first.exact', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.sub.exact', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.second.exact', 'data-current', '')
+
+                ->click('@link.sub')
+                ->waitForText('On sub')
+
+                ->assertAttribute('@attr.link.first', 'data-current', '')
+                ->assertAttribute('@attr.link.sub', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.second', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.first.exact', 'data-current', '')
+                ->assertAttribute('@attr.link.sub.exact', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.second.exact', 'data-current', '')
+
+                ->click('@link.second')
+                ->waitForText('On second')
+
+                ->assertAttributeMissing('@attr.link.first', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.sub', 'data-current', '')
+                ->assertAttribute('@attr.link.second', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.first.exact', 'data-current', '')
+                ->assertAttributeMissing('@attr.link.sub.exact', 'data-current', '')
+                ->assertAttribute('@attr.link.second.exact', 'data-current', '')
+                ;
+        });
+    }
 }
 
 #[Layout('test-views::navbar-sidebar')]
