@@ -32,7 +32,7 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     let refreshCurrent = url => {
         if (directive.modifiers.includes('attr')) {
             if (pathMatches(hrefUrl, url, options)) {
-                el.setAttribute(expression, true)
+                el.setAttribute(expression, '')
             } else {
                 el.removeAttribute(expression)
             }
