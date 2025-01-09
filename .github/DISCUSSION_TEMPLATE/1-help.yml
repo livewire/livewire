@@ -11,9 +11,9 @@ body:
         **To respect everyone's valuable time and help you resolve your issue as quickly as possible, before posting an issue, please**
 
         * Update to the latest version of Livewire by running `composer update livewire/livewire`
-        * Before opening a bug report, please search the existing discussions.
+        * Before opening a help request, please search the existing discussions.
 
-        To address this bug as fast as possible, we need the following information.
+        To address this help request, we need the following information.
 
   - type: input
     id: livewire-version
@@ -109,7 +109,7 @@ body:
           required: true
         - label: I have provided code samples as text and NOT images.
           required: true
-        - label: I understand my bug report will be removed if I haven't met the criteria above.
+        - label: I understand my help request will be removed if I haven't met the criteria above.
           required: true
 
   - type: markdown
