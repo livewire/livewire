@@ -10,25 +10,29 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 class BaseCookie extends LivewireAttribute
 {
     /**
-     * @param string|null $key
-     * @param int         $minutes
-     * @param string|null $path
-     * @param string|null $domain
-     * @param bool|null   $secure
-     * @param bool        $httpOnly
-     * @param bool        $raw
-     * @param string|null $sameSite
+     * @param string|null $key       The name of the cookie.
+     * @param int         $minutes   Expiration time in minutes (default: 30 days).
+     * @param string|null $path      The path on the server where the cookie is available.
+     * @param string|null $domain    The domain that the cookie is available to.
+     * @param bool|null   $secure    Whether the cookie should only be sent over HTTPS (default: true).
+     * @param bool        $httpOnly  Whether the cookie is inaccessible to JavaScript (default: true).
+     * @param bool        $raw       Whether to send the cookie without URL encoding (default: false).
+     * @param string|null $sameSite  Cross-site policy for the cookie (default: 'Lax').
      */
     public function __construct(
         protected $key = null,
-        protected $minutes = 60 * 24 * 365, // one year
-        protected $path = null,
+        protected $minutes = 60 * 24 * 30, // 30 days
+        protected $path = '/',
         protected $domain = null,
-        protected $secure = null,
-        protected $httpOnly = true,
+        protected $secure = true, // Default to HTTPS only
+        protected $httpOnly = true, // Default to HttpOnly
         protected $raw = false,
-        protected $sameSite = null,
+        protected $sameSite = 'Lax', // Default to Lax for cross-site protection
     ) {
+        if ($secure === null) {
+            // Automatically detect HTTPS
+            $this->secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        }
     }
 
     public function mount()
