@@ -36,7 +36,7 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertSetStrict('baz', UnbackedEnum::BAR);
 
         $this->expectException(ValueError::class);
-        $testable->updateProperty('baz', 'bar');
+        $testable->updateProperty('baz', 'BAR');
     }
 }
 
