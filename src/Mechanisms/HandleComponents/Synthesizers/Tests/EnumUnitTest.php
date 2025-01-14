@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
+use Error;
 use Livewire\Livewire;
 use Tests\TestComponent;
 use ValueError;
@@ -33,10 +34,12 @@ class EnumUnitTest extends \Tests\TestCase
     {
         $testable = Livewire::test(ComponentWithUnbackedEnum::class)
             ->updateProperty('baz', UnbackedEnum::BAR)
+            ->assertSetStrict('baz', UnbackedEnum::BAR)
+            ->updateProperty('baz', 'BAR')
             ->assertSetStrict('baz', UnbackedEnum::BAR);
 
-        $this->expectException(ValueError::class);
-        $testable->updateProperty('baz', 'BAR');
+        $this->expectException(Error::class);
+        $testable->updateProperty('baz', 'BAZ');
     }
 }
 

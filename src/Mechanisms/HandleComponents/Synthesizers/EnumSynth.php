@@ -19,9 +19,7 @@ class EnumSynth extends Synth {
         $backed = is_subclass_of($type, 'BackedEnum');
 
         if(! $backed) {
-            return is_subclass_of($value, 'UnitEnum')
-                ? $value
-                : constant("$type::$value");
+            return is_subclass_of($value, 'UnitEnum') ? $value : constant("$type::$value");
         }
 
         return $type::from($value);
