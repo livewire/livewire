@@ -40,14 +40,6 @@
                 <li><a href="{{ route('first') }}" dusk="native.link.first.exact" wire:current.exact="active">exact: Link first</a></li>
                 <li><a href="{{ route('first.sub') }}" dusk="native.link.sub.exact" wire:current.exact="active">exact: Link first/sub</a></li>
                 <li><a href="{{ route('second') }}" dusk="native.link.second.exact" wire:current.exact="active">exact: Link second</a></li>
-
-                <li style="padding-top: 1rem">Adding attributes:</li>
-                <li><a href="{{ route('first') }}" dusk="attr.link.first" wire:current.attr="data-current">Link first</a></li>
-                <li><a href="{{ route('first.sub') }}" dusk="attr.link.sub" wire:current.attr="data-current">Link first/sub</a></li>
-                <li><a href="{{ route('second') }}" dusk="attr.link.second" wire:current.attr="data-current">Link second</a></li>
-                <li><a href="{{ route('first') }}" dusk="attr.link.first.exact" wire:current.attr.exact="data-current">exact: Link first</a></li>
-                <li><a href="{{ route('first.sub') }}" dusk="attr.link.sub.exact" wire:current.attr.exact="data-current">exact: Link first/sub</a></li>
-                <li><a href="{{ route('second') }}" dusk="attr.link.second.exact" wire:current.attr.exact="data-current">exact: Link second</a></li>
             </ul>
         @endpersist
     </div>

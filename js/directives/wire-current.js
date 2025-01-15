@@ -30,18 +30,12 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     let classes = expression.split(' ').filter(String)
 
     let refreshCurrent = url => {
-        if (directive.modifiers.includes('attr')) {
-            if (pathMatches(hrefUrl, url, options)) {
-                el.setAttribute(expression, '')
-            } else {
-                el.removeAttribute(expression)
-            }
+        if (pathMatches(hrefUrl, url, options)) {
+            el.classList.add(...classes)
+            el.setAttribute('data-current', '')
         } else {
-            if (pathMatches(hrefUrl, url, options)) {
-                el.classList.add(...classes)
-            } else {
-                el.classList.remove(...classes)
-            }
+            el.classList.remove(...classes)
+            el.removeAttribute('data-current')
         }
     }
 
