@@ -9543,18 +9543,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let hrefUrl = new URL(href, window.location.href);
     let classes = expression.split(" ").filter(String);
     let refreshCurrent = (url) => {
-      if (directive3.modifiers.includes("attr")) {
-        if (pathMatches(hrefUrl, url, options)) {
-          el.setAttribute(expression, "");
-        } else {
-          el.removeAttribute(expression);
-        }
+      if (pathMatches(hrefUrl, url, options)) {
+        el.classList.add(...classes);
+        el.setAttribute("data-current", "");
       } else {
-        if (pathMatches(hrefUrl, url, options)) {
-          el.classList.add(...classes);
-        } else {
-          el.classList.remove(...classes);
-        }
+        el.classList.remove(...classes);
+        el.removeAttribute("data-current");
       }
     };
     refreshCurrent(new URL(window.location.href));
