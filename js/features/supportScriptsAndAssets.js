@@ -82,7 +82,11 @@ async function addAssetsToHeadTagOfPage(rawHtml) {
     let newDocument = (new DOMParser()).parseFromString(rawHtml, "text/html")
     let newHead = document.adoptNode(newDocument.head)
 
-    for (let child of newHead.children) {
+
+    // We convert the HTMLCollection to an static array, so it is not modified in the loop when an asset is moved 
+    // from the newHead to the document.head
+    let children = Array.from(newHead.children);
+    for (let child of children) {
         try {
             await runAssetSynchronously(child)
         } catch (error) {
