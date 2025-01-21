@@ -372,4 +372,46 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertDontSeeIn('@output', 'evaluated')
         ;
     }
+
+    public function test_script_after_non_script_asset_is_loaded_in_nested_components()
+    {
+        Livewire::visit([new class extends \Livewire\Component {
+            public $load = false;
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="$toggle('load')" dusk="button">Load assets</button>
+
+                <span dusk="output" x-text="'foo'"></span>
+
+                @if ($load)
+                    <livewire:child />
+                @endif
+            </div>
+            HTML; }
+        },
+        'child' => new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <input type="text" data-picker>
+            </div>
+
+            @assets
+                <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+                <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+            @endassets
+
+            @script
+                <script>
+                    window.datePicker = new Pikaday({ field: $wire.$el.querySelector('[data-picker]') });
+                </script>
+            @endscript
+            HTML; }
+        },
+        ])
+        ->waitForTextIn('@output', 'foo')
+        ->waitForLivewire()->click('@button')
+        ->waitUntil('!! window.datePicker === true')
+        ;
+    }
 }
