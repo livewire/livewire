@@ -42,7 +42,7 @@ class BaseSession extends LivewireAttribute
         Session::put($this->key(), $this->getValue());
     }
 
-    protected function key()
+    public function key()
     {
         if (! $this->key) {
             return (string) 'lw' . crc32($this->component->getName() . $this->getName());
