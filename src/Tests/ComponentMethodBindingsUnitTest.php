@@ -133,6 +133,23 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->assertEquals('implicitly bound:foo', $component->name);
     }
 
+    public function test_mount_method_receives_route_and_implicit_model_optional_binding_and_dependency_injection()
+    {
+        Livewire::component(ComponentWithOptionalModelMountInjections::class);
+
+        Route::get('/route-with-optional-params/{model?}', ComponentWithOptionalModelMountInjections::class);
+
+        /**
+         * This is expected since we don't have a database
+         * General error: 1 no such table: optional_model_to_be_bounds
+         **/
+        $this->get('/route-with-optional-params/1')
+            ->assertInternalServerError();
+
+        $this->get('/route-with-optional-params/')
+            ->assertSee('Nullable - No Model');
+    }
+
     public function test_action_receives_implicit_model_binding_independent_of_parameter_order()
     {
         $component = Livewire::test(ComponentWithBindings::class)
@@ -242,6 +259,32 @@ class ComponentWithBindings extends Component
     public function render()
     {
         return app('view')->make('show-name-with-this');
+    }
+}
+
+class OptionalModel extends Model
+{
+    protected $attributes = [
+        'name' => 'Livewire'
+    ];
+}
+
+class ComponentWithOptionalModelMountInjections extends Component
+{
+    public ?OptionalModel $model = null;
+
+    public function mount(?OptionalModel $model = null)
+    {
+        $this->model = $model;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ is_null($this->model) ? 'Nullable - No Model' : $this->model->name }}
+        </div>
+        HTML;
     }
 }
 
