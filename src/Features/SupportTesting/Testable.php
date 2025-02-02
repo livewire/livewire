@@ -7,6 +7,7 @@ use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
 use Livewire\Features\SupportValidation\TestsValidation;
 use Livewire\Features\SupportRedirects\TestsRedirects;
 use Livewire\Features\SupportEvents\TestsEvents;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /** @mixin \Illuminate\Testing\TestResponse */
 
@@ -18,7 +19,9 @@ class Testable
         TestsValidation,
         TestsFileDownloads;
 
-    use Macroable { Macroable::__call as macroCall; }
+    use Macroable {
+        Macroable::__call as macroCall;
+    }
 
     protected function __construct(
         protected RequestBroker $requestBroker,
@@ -79,7 +82,8 @@ class Testable
         auth()->shouldUse($driver);
     }
 
-    function id() {
+    function id()
+    {
         return $this->lastState->getComponent()->getId();
     }
 
@@ -218,11 +222,14 @@ class Testable
         // so when we create a new TemporaryUploadedFile instance we can fake the
         // same file size and hashName set for the original file upload.
         $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
-            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-size={$file->getSize()}.");
+            // MimeTypes contain slashes, so we replace them with underscores to ensure the filename is valid.
+            $escapedMimeType = (string) str($file->getMimeType())->replace('/', '_');
+
+            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-mimeType={$escapedMimeType}-size={$file->getSize()}.");
         })->toArray();
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
-            $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
+            $storage->move('/' . \Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/' . \Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
         });
 
         // Now we finish the upload with a final call to the Livewire component

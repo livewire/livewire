@@ -10,6 +10,8 @@ use League\MimeTypeDetection\FinfoMimeTypeDetector;
 
 class TemporaryUploadedFile extends UploadedFile
 {
+    public const FILENAME_TRUNCATION_MAX_LENGTH = 159;
+    public const FILENAME_TRUNCATION_PREFIX = '[truncated]';
     protected $disk;
     protected $storage;
     protected $path;
@@ -37,7 +39,7 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getSize(): int
     {
-        if (app()->runningUnitTests() && str($this->getfilename())->contains('-size=')) {
+        if (app()->runningUnitTests() && str($this->getFilename())->contains('-size=')) {
             return (int) str($this->getFilename())->between('-size=', '.')->__toString();
         }
 
@@ -46,6 +48,14 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getMimeType(): string
     {
+        if (app()->runningUnitTests() && str($this->getFilename())->contains('-mimeType=')) {
+            $escapedMimeType = str($this->getFilename())->between('-mimeType=', '-');
+
+            // MimeTypes contain slashes, but we replaced them with underscores in `SupportTesting\Testable`
+            // to ensure the filename is valid, so we now need to revert that.
+            return (string) $escapedMimeType->replace('_', '/');
+        }
+
         $mimeType = $this->storage->mimeType($this->path);
 
         // Flysystem V2.0+ removed guess mimeType from extension support, so it has been re-added back
@@ -106,16 +116,31 @@ class TemporaryUploadedFile extends UploadedFile
         }
 
         return URL::temporarySignedRoute(
-            'livewire.preview-file', now()->addMinutes(30)->endOfHour(), ['filename' => $this->getFilename()]
+            'livewire.preview-file',
+            now()->addMinutes(30)->endOfHour(),
+            ['filename' => $this->getFilename()]
         );
     }
 
     public function isPreviewable()
     {
         $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
-            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
-            'mov', 'avi', 'wmv', 'mp3', 'm4a',
-            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+            'png',
+            'gif',
+            'bmp',
+            'svg',
+            'wav',
+            'mp4',
+            'mov',
+            'avi',
+            'wmv',
+            'mp3',
+            'm4a',
+            'jpg',
+            'jpeg',
+            'mpga',
+            'webp',
+            'wma',
         ]);
 
         return in_array($this->guessExtension(),  $supportedPreviewTypes);
@@ -147,28 +172,43 @@ class TemporaryUploadedFile extends UploadedFile
 
         $disk = Arr::pull($options, 'disk') ?: $this->disk;
 
-        $newPath = trim($path.'/'.$name, '/');
+        $newPath = trim($path . '/' . $name, '/');
 
         Storage::disk($disk)->put(
-            $newPath, $this->storage->readStream($this->path), $options
+            $newPath,
+            $this->storage->readStream($this->path),
+            $options
         );
 
         return $newPath;
     }
 
+    public static function fileNameRequiresTruncation($filename)
+    {
+        return str($filename)->length() > TemporaryUploadedFile::FILENAME_TRUNCATION_MAX_LENGTH;
+    }
+
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
-        $hash = str()->random(30);
-        $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
-        $extension = '.'.$file->guessExtension();
+        $originalFilename = $file->getClientOriginalName();
+        $extension = '.' . $file->guessExtension();
 
-        return $hash.$meta.$extension;
+        if (static::fileNameRequiresTruncation($originalFilename)) {
+            $originalFilename = str(TemporaryUploadedFile::FILENAME_TRUNCATION_PREFIX)
+                ->append($file->hashName())
+                ->toString();
+        }
+
+        $hash = str()->random(30);
+        $meta = str('-meta' . base64_encode($originalFilename) . '-')->replace('/', '_');
+
+        return $hash . $meta . $extension;
     }
 
     public function hashName($path = null)
     {
         if (app()->runningUnitTests() && str($this->getfilename())->contains('-hash=')) {
-            return str($this->getFilename())->between('-hash=', '-')->value();
+            return str($this->getFilename())->between('-hash=', '-mimeType')->value();
         }
 
         return parent::hashName($path);
@@ -176,7 +216,28 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function extractOriginalNameFromFilePath($path)
     {
-        return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
+        if (app()->runningUnitTests() && str($this->getfilename())->contains('-hash=')) {
+            $path = str($this->getfilename())
+                ->replace([
+                    '-hash=' . $this->hashName(),
+                    '-mimeType=' . str($this->getMimeType())->replace('/', '_'),
+                    '-size=' . $this->getSize(),
+                ], '')
+                ->value();
+        }
+
+        $decodedFileName = base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
+
+        if (!str($decodedFileName)->startsWith(TemporaryUploadedFile::FILENAME_TRUNCATION_PREFIX)) {
+            return $decodedFileName;
+        }
+
+        $fileBasename = pathinfo($path, PATHINFO_BASENAME);
+        $metaFilePath = FileUploadConfiguration::metaPath($fileBasename);
+
+        return FileUploadConfiguration::storage()->exists($metaFilePath)
+            ? FileUploadConfiguration::storage()->get($metaFilePath)
+            : $decodedFileName;
     }
 
     public static function createFromLivewire($filePath)
@@ -209,7 +270,9 @@ class TemporaryUploadedFile extends UploadedFile
             if (str($subject)->startsWith('livewire-files:')) {
                 $paths = json_decode(str($subject)->after('livewire-files:'), true);
 
-                return collect($paths)->map(function ($path) { return static::createFromLivewire($path); })->toArray();
+                return collect($paths)->map(function ($path) {
+                    return static::createFromLivewire($path);
+                })->toArray();
             }
         }
 
@@ -224,11 +287,11 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function serializeForLivewireResponse()
     {
-        return 'livewire-file:'.$this->getFilename();
+        return 'livewire-file:' . $this->getFilename();
     }
 
     public static function serializeMultipleForLivewireResponse($files)
     {
-        return 'livewire-files:'.json_encode(collect($files)->map->getFilename());
+        return 'livewire-files:' . json_encode(collect($files)->map->getFilename());
     }
 }

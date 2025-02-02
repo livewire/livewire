@@ -10,7 +10,7 @@ class FileUploadController implements HasMiddleware
 {
     public static function middleware()
     {
-        return array_map(fn ($middleware) => new Middleware($middleware), array_merge(
+        return array_map(fn($middleware) => new Middleware($middleware), array_merge(
             ['web'],
             (array) FileUploadConfiguration::middleware(),
         ));
@@ -35,13 +35,23 @@ class FileUploadController implements HasMiddleware
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
             $filename = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
+            $originalFilename = $file->getClientOriginalName();
 
-            return $file->storeAs('/'.FileUploadConfiguration::path(), $filename, [
+            if (TemporaryUploadedFile::fileNameRequiresTruncation($originalFilename)) {
+                FileUploadConfiguration::storage()->put(
+                    FileUploadConfiguration::metaPath($filename),
+                    $originalFilename,
+                );
+            }
+
+            return $file->storeAs('/' . FileUploadConfiguration::path(), $filename, [
                 'disk' => $disk
             ]);
         });
 
         // Strip out the temporary upload directory from the paths.
-        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::path('/'), '', $path); });
+        return $fileHashPaths->map(function ($path) {
+            return str_replace(FileUploadConfiguration::path('/'), '', $path);
+        });
     }
 }

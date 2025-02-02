@@ -35,21 +35,21 @@ class FileUploadConfiguration
 
     public static function diskConfig()
     {
-        return config('filesystems.disks.'.static::disk());
+        return config('filesystems.disks.' . static::disk());
     }
 
     public static function isUsingS3()
     {
         $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
 
-        return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
+        return config('filesystems.disks.' . strtolower($diskBeforeTestFake) . '.driver') === 's3';
     }
 
     public static function isUsingGCS()
     {
         $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
 
-        return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 'gcs';
+        return config('filesystems.disks.' . strtolower($diskBeforeTestFake) . '.driver') === 'gcs';
     }
 
     public static function normalizeRelativePath($path)
@@ -81,7 +81,12 @@ class FileUploadConfiguration
         $directory = static::directory();
         $path = static::normalizeRelativePath($path);
 
-        return $prefix.($prefix ? '/' : '').$directory.($path ? '/' : '').$path;
+        return $prefix . ($prefix ? '/' : '') . $directory . ($path ? '/' : '') . $path;
+    }
+
+    public static function metaPath($filename = '')
+    {
+        return static::path('meta' . DIRECTORY_SEPARATOR . $filename);
     }
 
     public static function mimeType($filename)
