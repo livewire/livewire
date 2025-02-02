@@ -16,7 +16,7 @@ class FileUploadController implements HasMiddleware
             $middleware = array_merge(['web'], $middleware);
         }
 
-        return array_map(fn($middleware) => new Middleware($middleware), $middleware);
+        return array_map(fn ($middleware) => new Middleware($middleware), $middleware);
     }
 
     public function handle()

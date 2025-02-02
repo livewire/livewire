@@ -19,9 +19,7 @@ class Testable
         TestsValidation,
         TestsFileDownloads;
 
-    use Macroable {
-        Macroable::__call as macroCall;
-    }
+    use Macroable { Macroable::__call as macroCall; }
 
     protected function __construct(
         protected RequestBroker $requestBroker,
@@ -232,7 +230,7 @@ class Testable
         })->toArray();
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
-            $storage->move('/' . \Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/' . \Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
+            $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
         });
 
         // Now we finish the upload with a final call to the Livewire component

@@ -132,22 +132,9 @@ class TemporaryUploadedFile extends UploadedFile
     public function isPreviewable()
     {
         $supportedPreviewTypes = config('livewire.temporary_file_upload.preview_mimes', [
-            'png',
-            'gif',
-            'bmp',
-            'svg',
-            'wav',
-            'mp4',
-            'mov',
-            'avi',
-            'wmv',
-            'mp3',
-            'm4a',
-            'jpg',
-            'jpeg',
-            'mpga',
-            'webp',
-            'wma',
+            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
+            'mov', 'avi', 'wmv', 'mp3', 'm4a',
+            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ]);
 
         return in_array($this->guessExtension(),  $supportedPreviewTypes);
@@ -179,12 +166,10 @@ class TemporaryUploadedFile extends UploadedFile
 
         $disk = Arr::pull($options, 'disk') ?: $this->disk;
 
-        $newPath = trim($path . '/' . $name, '/');
+        $newPath = trim($path.'/'.$name, '/');
 
         Storage::disk($disk)->put(
-            $newPath,
-            $this->storage->readStream($this->path),
-            $options
+            $newPath, $this->storage->readStream($this->path), $options
         );
 
         return $newPath;
@@ -294,11 +279,11 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function serializeForLivewireResponse()
     {
-        return 'livewire-file:' . $this->getFilename();
+        return 'livewire-file:'.$this->getFilename();
     }
 
     public static function serializeMultipleForLivewireResponse($files)
     {
-        return 'livewire-files:' . json_encode(collect($files)->map->getFilename());
+        return 'livewire-files:'.json_encode(collect($files)->map->getFilename());
     }
 }
