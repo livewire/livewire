@@ -907,7 +907,7 @@ class FileUploadComponent extends TestComponent
         $number = 1;
 
         foreach ($this->photos as $photo) {
-            $photo->storeAs('/', $baseName . $number++ . '.png', $disk = 'avatars');
+            $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
         }
     }
 
@@ -996,7 +996,7 @@ class FileExtensionValidatorComponent extends FileUploadComponent
             'photo' => 'extensions:png',
         ]);
 
-        $this->photo->storeAs('/', 'malicious.' . $this->photo->getClientOriginalExtension(), $disk = 'avatars');
+        $this->photo->storeAs('/', 'malicious.'.$this->photo->getClientOriginalExtension(), $disk = 'avatars');
     }
 }
 
