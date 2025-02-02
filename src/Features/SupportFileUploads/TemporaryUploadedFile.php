@@ -218,8 +218,8 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function extractOriginalNameFromFilePath($path)
     {
-        if (app()->runningUnitTests() && str($this->getfilename())->contains('-hash=')) {
-            $path = str($this->getfilename())
+        if (app()->runningUnitTests() && str($filename = $this->getFilename())->contains('-hash=')) {
+            $path = str($filename)
                 ->replace([
                     '-hash=' . $this->hashName(),
                     '-mimeType=' . str($this->getMimeType())->replace('/', '_'),
