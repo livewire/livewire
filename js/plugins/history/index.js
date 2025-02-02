@@ -38,14 +38,17 @@ export default function history(Alpine) {
     Alpine.history = { track }
 }
 
-export function track(name, initialSeedValue, alwaysShow = false) {
+export function track(name, initialSeedValue, alwaysShow = false, except = null) {
     let { has, get, set, remove } = queryStringUtils()
 
     let url = new URL(window.location.href)
     let isInitiallyPresentInUrl = has(url, name)
     let initialValue = isInitiallyPresentInUrl ? get(url, name) : initialSeedValue
     let initialValueMemo = JSON.stringify(initialValue)
+    let exceptValueMemo = [false, null, undefined].includes(except) ? initialSeedValue : JSON.stringify(except)
+
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo
+    let hasReturnedToExceptValue = (newValue) =>  JSON.stringify(newValue) === exceptValueMemo
 
     if (alwaysShow) url = set(url, name, initialValue)
 
@@ -65,6 +68,8 @@ export function track(name, initialSeedValue, alwaysShow = false) {
         // is removed, we can handle it gracefully by removing the entry from the URL instead
         // of letting it get set to `?someKey=undefined` which causes issues on refresh...
         } else if (newValue === undefined) {
+            url = remove(url, name)
+        } else if (! alwaysShow && hasReturnedToExceptValue(newValue)) {
             url = remove(url, name)
         } else {
             url = set(url, name, newValue)
@@ -164,7 +169,7 @@ function queryStringUtils() {
 
             if (! search) return false
 
-            let data = fromQueryString(search)
+            let data = fromQueryString(search, key)
 
             return Object.keys(data).includes(key)
         },
@@ -173,12 +178,12 @@ function queryStringUtils() {
 
             if (! search) return false
 
-            let data = fromQueryString(search)
+            let data = fromQueryString(search, key)
 
             return data[key]
         },
         set(url, key, value) {
-            let data = fromQueryString(url.search)
+            let data = fromQueryString(url.search, key)
 
             data[key] = stripNulls(unwrap(value))
 
@@ -187,7 +192,7 @@ function queryStringUtils() {
             return url
         },
         remove(url, key) {
-            let data = fromQueryString(url.search)
+            let data = fromQueryString(url.search, key)
 
             delete data[key]
 
@@ -239,7 +244,7 @@ function toQueryString(data) {
 
 // This function converts bracketed query string notation back to JS data...
 // "items[0][0]=foo" -> { items: [['foo']] }
-function fromQueryString(search) {
+function fromQueryString(search, queryKey) {
     search = search.replace('?', '')
 
     if (search === '') return {}
@@ -261,16 +266,26 @@ function fromQueryString(search) {
 
     let entries = search.split('&').map(i => i.split('='))
 
-    let data = {}
+    // let data = {} creates a security (XSS) vulnerability here. We need to use
+    // Object.create(null) instead so that we have a "pure" object that doesnt
+    // inherit Object.prototype and expose the js internals to manipulation.
+    let data = Object.create(null)
 
     entries.forEach(([key, value]) => {
+        // Query string params don't always have values... (`?foo=`)
+        if ( typeof value == 'undefined' ) return;
+
         value = decodeURIComponent(value.replaceAll('+', '%20'))
 
-        if (! key.includes('[')) {
+        let decodedKey = decodeURIComponent(key)
+
+        let shouldBeHandledAsArray = decodedKey.includes('[') && decodedKey.startsWith(queryKey)
+
+        if (!shouldBeHandledAsArray) {
             data[key] = value
         } else {
             // Convert to dot notation because it's easier...
-            let dotNotatedKey = key.replaceAll('[', '.').replaceAll(']', '')
+            let dotNotatedKey = decodedKey.replaceAll('[', '.').replaceAll(']', '')
 
             insertDotNotatedValueIntoData(dotNotatedKey, value, data)
         }

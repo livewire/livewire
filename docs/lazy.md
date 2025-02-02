@@ -44,7 +44,7 @@ To enable lazy loading, you can pass the `lazy` parameter into the component:
 Now, instead of loading the component right away, Livewire will skip this component, loading the page without it. Then, when the component is visible in the viewport, Livewire will make a network request to fully load this component on the page.
 
 > [!info] Lazy requests are isolated by default
-> Unlike other network requests in Livewire, lazy loading updates are isolated from each other when sent to the server. This keeps lazy loading fast, by loading each component in parrallel when a page loads. [Read more on disabling this behavior here →](#disabling-request-isolation)
+> Unlike other network requests in Livewire, lazy loading updates are isolated from each other when sent to the server. This keeps lazy loading fast, by loading each component in parallel when a page loads. [Read more on disabling this behavior here →](#disabling-request-isolation)
 
 ## Rendering placeholder HTML
 
@@ -206,9 +206,9 @@ If you want to override lazy loading you can set the `lazy` parameter to `false`
 
 ### Disabling request isolation
 
-If there are multiple lazy-loaded components on the page, each component will make an independant network request, rather than each lazy update being bundled into a single request.
+If there are multiple lazy-loaded components on the page, each component will make an independent network request, rather than each lazy update being bundled into a single request.
 
-If you want to disabled this isolation behavior and instead bundle all updates together in a single network request you can do so with the `isolate: false` parameter:
+If you want to disable this isolation behavior and instead bundle all updates together in a single network request you can do so with the `isolate: false` parameter:
 
 ```php
 <?php
@@ -250,3 +250,33 @@ If you want to set a default placeholder view for all your components you can do
 ```
 
 Now, when a component is lazy-loaded and no `placeholder()` is defined, Livewire will use the configured Blade view (`livewire.placeholder` in this case.)
+
+## Disabling lazy loading for tests
+
+When unit testing a lazy component, or a page with nested lazy components, you may want to disable the "lazy" behavior so that you can assert the final rendered behavior. Otherwise, those components would be rendered as their placeholders during your tests.
+
+You can easily disable lazy loading using the `Livewire::withoutLazyLoading()` testing helper like so:
+
+```php
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use App\Livewire\Dashboard;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class DashboardTest extends TestCase
+{
+    /** @test */
+    public function renders_successfully()
+    {
+        Livewire::withoutLazyLoading() // [tl! highlight]
+            ->test(Dashboard::class)
+            ->assertSee(...);
+    }
+}
+```
+
+Now, when the dashboard component is rendered for this test, it will skip rendering the `placeholder()` and instead render the full component as if lazy loading wasn't applied at all.
+

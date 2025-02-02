@@ -5,6 +5,7 @@ import { closestComponent } from '@/store'
 import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
+import { on as hook } from './hooks'
 
 let properties = {}
 let fallback
@@ -26,6 +27,7 @@ let aliases = {
     'get': '$get',
     'set': '$set',
     'call': '$call',
+    'hook': '$hook',
     'commit': '$commit',
     'watch': '$watch',
     'entangle': '$entangle',
@@ -140,34 +142,34 @@ wireProperty('$toggle', (component) => (name, live = true) => {
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
-    let firstTime = true
-    let oldValue = undefined
+    let getter = () => {
+        return dataGet(component.reactive, path)
+    }
 
-   Alpine.effect(() => {
-    // JSON.stringify touches every single property at any level enabling deep watching
-        let value = dataGet(component.reactive, path)
-        JSON.stringify(value)
+    let unwatch = Alpine.watch(getter, callback)
 
-        if (! firstTime) {
-            // We have to queue this watcher as a microtask so that
-            // the watcher doesn't pick up its own dependencies.
-            queueMicrotask(() => {
-                callback(value, oldValue)
-
-                oldValue = value
-            })
-        } else {
-            oldValue = value
-        }
-
-        firstTime = false
-    })
+    component.addCleanup(unwatch)
 })
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => await requestCommit(component))
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
+
+wireProperty('$hook', (component) => (name, callback) => {
+    let unhook = hook(name, ({component: hookComponent, ...params}) => {
+        // Request level hooks don't have a component, so just run the callback
+        if (hookComponent === undefined) return callback(params)
+
+        // Run the callback if the component in the hook matches the $wire component
+        if (hookComponent.id === component.id) return callback({component: hookComponent, ...params})
+    })
+
+    component.addCleanup(unhook)
+
+    // Return the unhook function so it can be called manually if needed
+    return unhook
+})
 
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
@@ -182,7 +184,7 @@ let parentMemo = new WeakMap
 wireProperty('$parent', component => {
     if (parentMemo.has(component)) return parentMemo.get(component).$wire
 
-    let parent = closestComponent(component.el.parentElement)
+    let parent = component.parent
 
     parentMemo.set(component, parent)
 

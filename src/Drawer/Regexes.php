@@ -118,7 +118,7 @@ class Regexes
         \/>
     ";
 
-    static $livewireClosingTag = "<\/\s*livewire[-\:][\w\-\:\.]*\s*>";
+    static $livewireClosingTag = '<\/\s*livewire[-\:][\w\-\:\.]*\s*>';
 
     static $slotOpeningTag = "
         <
@@ -159,7 +159,7 @@ class Regexes
         >
     ";
 
-    static $slotClosingTag = "<\/\s*x[\-\:]slot[^>]*>";
+    static $slotClosingTag = '<\/\s*x[\-\:]slot[^>]*>';
 
     static $bladeDirective = "\B@(@?\w+(?:::\w+)?)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?";
 

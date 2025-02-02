@@ -8,8 +8,7 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    function can_listen_for_child_events_directly_on_child()
+    function test_can_listen_for_child_events_directly_on_child()
     {
         Livewire::visit([
             new class extends BaseComponent {
@@ -53,8 +52,7 @@ class BrowserTest extends BrowserTestCase
         ->waitForTextIn('@count', '3');
     }
 
-    /** @test */
-    function can_dispatch_parameters_to_listeners()
+    function test_can_dispatch_parameters_to_listeners()
     {
         Livewire::visit([
             new class extends BaseComponent {
@@ -89,8 +87,7 @@ class BrowserTest extends BrowserTestCase
         ->waitForTextIn('@count', '5');
     }
 
-    /** @test */
-    function can_dispatch_multi_word_event_names()
+    function test_can_dispatch_multi_word_event_names()
     {
         Livewire::visit([
             new class extends BaseComponent {

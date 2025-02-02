@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class LayoutCommandUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function layout_is_created_by_layout_command()
+    public function test_layout_is_created_by_layout_command()
     {
         Artisan::call('livewire:layout');
 

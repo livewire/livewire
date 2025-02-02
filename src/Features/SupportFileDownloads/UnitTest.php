@@ -10,8 +10,7 @@ use PHPUnit\Framework\ExpectationFailedException;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function can_download_a_file()
+    public function test_can_download_a_file()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('download')
@@ -19,8 +18,7 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
-    /** @test */
-    public function can_download_a_file_as_stream()
+    public function test_can_download_a_file_as_stream()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('streamDownload', 'download.txt')
@@ -34,72 +32,63 @@ class UnitTest extends \Tests\TestCase
                 ->assertFileDownloaded('download.txt', 'I\'m the file you should download.', 'text/plain');
     }
 
-    /** @test */
-    public function can_download_with_custom_filename()
+    public function test_can_download_with_custom_filename()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('download', 'download.csv')
                 ->assertFileDownloaded('download.csv', 'I\'m the file you should download.');
     }
 
-    /** @test */
-    public function can_download_a_file_as_stream_with_custom_filename()
+    public function test_can_download_a_file_as_stream_with_custom_filename()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('streamDownload', 'download.csv')
                 ->assertFileDownloaded('download.csv', 'alpinejs');
     }
 
-    /** @test */
-    public function can_download_with_custom_filename_and_headers()
+    public function test_can_download_with_custom_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('download', 'download.csv', ['Content-Type' => 'text/csv'])
                 ->assertFileDownloaded('download.csv', 'I\'m the file you should download.', 'text/csv');
     }
 
-    /** @test */
-    public function can_download_a_file_as_stream_with_custom_filename_and_headers()
+    public function test_can_download_a_file_as_stream_with_custom_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('streamDownload', 'download.csv', ['Content-Type' => 'text/csv'])
                 ->assertFileDownloaded('download.csv', 'alpinejs', 'text/csv');
     }
 
-    /** @test */
-    public function can_download_with_custom_japanese_filename()
+    public function test_can_download_with_custom_japanese_filename()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('download', 'ダウンロード.csv')
                 ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.');
     }
 
-    /** @test */
-    public function can_download_a_file_as_stream_with_custom_japanese_filename()
+    public function test_can_download_a_file_as_stream_with_custom_japanese_filename()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('streamDownload', 'ダウンロード.csv')
                 ->assertFileDownloaded('ダウンロード.csv', 'alpinejs');
     }
 
-    /** @test */
-    public function can_download_with_custom_japanese_filename_and_headers()
+    public function test_can_download_with_custom_japanese_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('download', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
                 ->assertFileDownloaded('ダウンロード.csv', 'I\'m the file you should download.', 'text/csv');
     }
 
-    /** @test */
-    public function can_download_a_file_as_stream_with_custom_japanese_filename_and_headers()
+    public function test_can_download_a_file_as_stream_with_custom_japanese_filename_and_headers()
     {
         Livewire::test(FileDownloadComponent::class)
                 ->call('streamDownload', 'ダウンロード.csv', ['Content-Type' => 'text/csv'])
                 ->assertFileDownloaded('ダウンロード.csv', 'alpinejs', 'text/csv');
     }
 
-    /** @test */
-    public function it_refreshes_html_after_download()
+    public function test_it_refreshes_html_after_download()
     {
         Livewire::test(FileDownloadComponent::class)
             ->call('download')
@@ -107,16 +96,14 @@ class UnitTest extends \Tests\TestCase
             ->assertSeeText('Thanks!');
     }
 
-    /** @test */
-    public function can_assert_that_nothing_was_downloaded()
+    public function test_can_assert_that_nothing_was_downloaded()
     {
         Livewire::test(FileDownloadComponent::class)
             ->call('noDownload')
             ->assertNoFileDownloaded();
     }
 
-    /** @test */
-    public function can_fail_to_assert_that_nothing_was_downloaded()
+    public function test_can_fail_to_assert_that_nothing_was_downloaded()
     {
         $this->expectException(ExpectationFailedException::class);
 

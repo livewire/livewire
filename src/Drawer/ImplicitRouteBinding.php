@@ -40,20 +40,27 @@ class ImplicitRouteBinding
         }
 
         // Cache the current route action (this callback actually), just to be safe.
-        $cache = $route->getAction('uses');
+        $cache = $route->getAction();
 
         // We'll set the route action to be the "mount" method from the chosen
         // Livewire component, to get the proper implicit bindings.
         $route->uses(get_class($component).'@mount');
 
-        // This is normally handled in the "SubstituteBindings" middleware, but
-        // because that middleware has already ran, we need to run them again.
-        $this->container['router']->substituteImplicitBindings($route);
+        try {
+            // This is normally handled in the "SubstituteBindings" middleware, but
+            // because that middleware has already ran, we need to run them again.
+            $this->container['router']->substituteImplicitBindings($route);
 
-        $parameters = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
+            $parameters = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
 
-        // Restore the original route action.
-        $route->uses($cache);
+            // Restore the original route action...
+            $route->setAction($cache);
+        } catch(\Exception $e) {
+            // Restore the original route action before an exception is thrown...
+            $route->setAction($cache);
+
+            throw $e;
+        }
 
         return new Collection($parameters);
     }
@@ -103,7 +110,7 @@ class ImplicitRouteBinding
 
         $parent = $route->parentOfParameter($parameterName);
 
-        if ($parent instanceof UrlRoutable && array_key_exists($parameterName, $route->bindingFields())) {
+        if ($parent instanceof UrlRoutable && ($route->enforcesScopedBindings() || array_key_exists($parameterName, $route->bindingFields()))) {
             $model = $parent->resolveChildRouteBinding($parameterName, $parameterValue, $route->bindingFieldFor($parameterName));
         } else {
             if ($route->allowsTrashedBindings()) {

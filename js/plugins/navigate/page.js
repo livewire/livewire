@@ -1,11 +1,13 @@
 let oldBodyScriptTagHashes = []
 
 let attributesExemptFromScriptTagHashing = [
-    'data-csrf'
+    'data-csrf',
+    'aria-hidden',
 ]
 
 export function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = (new DOMParser()).parseFromString(html, "text/html")
+    let newHtml = newDocument.documentElement
     let newBody = document.adoptNode(newDocument.body)
     let newHead = document.adoptNode(newDocument.head)
 
@@ -14,6 +16,8 @@ export function swapCurrentPageWithNewHtml(html, andThen) {
     }))
 
     let afterRemoteScriptsHaveLoaded = () => {}
+
+    replaceHtmlAttributes(newHtml)
 
     mergeNewHead(newHead).finally(() => {
         afterRemoteScriptsHaveLoaded()
@@ -46,6 +50,28 @@ function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes) {
         }
 
         i.replaceWith(cloneScriptTag(i))
+    })
+}
+
+function replaceHtmlAttributes(newHtmlElement) {
+    let currentHtmlElement = document.documentElement
+
+    // Process attributes that are in the new element...
+    Array.from(newHtmlElement.attributes).forEach(attr => {
+        const name = attr.name
+        const value = attr.value
+
+        if (currentHtmlElement.getAttribute(name) !== value) {
+            // Add or update attribute if the value differs...
+            currentHtmlElement.setAttribute(name, value)
+        }
+    })
+
+    // Remove remaining attributes that are not in the new element...
+    Array.from(currentHtmlElement.attributes).forEach(attr => {
+        if (!newHtmlElement.hasAttribute(attr.name)) {
+            currentHtmlElement.removeAttribute(attr.name)
+        }
     })
 }
 
@@ -112,6 +138,8 @@ function mergeNewHead(newHead) {
 
     // Add new non-asset elements left over in the new head element.
     for (let child of Array.from(newHead.children)) {
+        if (child.tagName.toLowerCase() === 'noscript') continue
+
         document.head.appendChild(child)
     }
 
@@ -197,6 +225,9 @@ function ignoreAttributes(subject, attributesToRemove) {
 
         result = result.replace(regex, '')
     })
+
+    // Remove all whitespace to make things less flaky...
+    result = result.replaceAll(' ', '')
 
     return result.trim()
 }

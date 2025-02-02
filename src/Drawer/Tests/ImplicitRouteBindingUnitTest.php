@@ -3,47 +3,57 @@
 namespace Livewire\Drawer\Tests;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Livewire;
+use Sushi\Sushi;
 
 class ImplicitRouteBindingUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function props_are_set_via_mount()
+    public function test_props_are_set_via_mount()
     {
         Livewire::test(ComponentWithPropBindings::class, [
             'model' => new PropBoundModel('mount-model'),
         ])->assertSeeText('prop:mount-model');
     }
 
-    /** @test */
-    public function props_are_set_via_implicit_binding()
+    public function test_props_are_set_via_implicit_binding()
     {
         Route::get('/foo/{model}', ComponentWithPropBindings::class);
 
         $this->withoutExceptionHandling()->get('/foo/route-model')->assertSeeText('prop:via-route:route-model');
     }
 
-    /** @test */
-    public function dependent_props_are_set_via_implicit_binding()
+    public function test_dependent_props_are_set_via_implicit_binding()
     {
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentPropBindings::class);
 
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
-    /** @test */
-    public function dependent_props_are_set_via_mount()
+    public function test_props_are_set_via_scope_binding()
+    {
+        Route::get('/scope-binding/{store:name}/{book:name}', ComponentWithScopeBindings::class)->scopeBindings();
+
+        $this->get('/scope-binding/First/Foo')
+            ->assertSeeText('Store ID: 1')
+            ->assertSeeText('Book ID: 1');
+
+        $this->get('/scope-binding/Second/Foo')
+            ->assertSeeText('Store ID: 2')
+            ->assertSeeText('Book ID: 2');
+    }
+
+    public function test_dependent_props_are_set_via_mount()
     {
         Route::get('/foo/{parent:custom}/bar/{child:custom}', ComponentWithDependentMountBindings::class);
 
         $this->get('/foo/robert/bar/bobby')->assertSeeText('prop:via-route:robert:via-parent:bobby');
     }
 
-    /** @test */
-    public function props_and_mount_work_together()
+    public function test_props_and_mount_work_together()
     {
         Route::get('/foo/{parent}/child/{child}', ComponentWithPropBindingsAndMountMethod::class);
 
@@ -52,8 +62,7 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo/parent-model/child/child-model')->assertSeeText('via-route:parent-model:via-route:child-model');
     }
 
-    /** @test */
-    public function props_are_set_via_implicit_binding_when_with_trashed()
+    public function test_props_are_set_via_implicit_binding_when_with_trashed()
     {
         Route::get('/foo/{model}', ComponentWithTrashedPropBindings::class);
 
@@ -65,6 +74,17 @@ class ImplicitRouteBindingUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()
             ->get('/foo/with-trashed/route-model')
             ->assertSeeText('prop:via-route:trashed:route-model');
+    }
+
+    public function test_props_are_set_via_implicit_binding_after_404()
+    {
+        Route::get('/foo/{user}', ComponentWithModelPropBindings::class);
+
+        $this->get('/foo/404')
+            ->assertNotFound();
+
+        $this->get('/foo/1')
+            ->assertSeeText('prop:John');
     }
 }
 
@@ -197,4 +217,103 @@ class ComponentWithTrashedPropBindings extends Component
 
         return app('view')->make('show-name-with-this');
     }
+}
+
+
+class ComponentWithModelPropBindings extends Component
+{
+    public User $user;
+
+    public function mount(User $user)
+    {
+        $this->user = $user;
+    }
+
+    public function render()
+    {
+        $this->name = 'prop:'.$this->user->name;
+
+        return app('view')->make('show-name-with-this');
+    }
+}
+
+class User extends Model
+{
+    use Sushi;
+
+    protected array $schema = [
+        'id' => 'integer',
+        'name' => 'string',
+    ];
+
+    protected array $rows = [
+        [
+            'id' => 1,
+            'name' => 'John',
+        ],
+    ];
+}
+
+class ComponentWithScopeBindings extends Component
+{
+    public Store $store;
+    public Book $book;
+
+    public function render()
+    {
+        return <<<'BLADE'
+            <div>
+                Store ID: {{ $store->id }}
+                Book ID: {{ $book->id }}
+            </div>
+        BLADE;
+    }
+}
+
+class Store extends Model
+{
+    use Sushi;
+
+    protected array $schema = [
+        'id' => 'integer',
+        'name' => 'string',
+    ];
+
+    protected array $rows = [
+        [
+            'id' => 1,
+            'name' => 'First',
+        ], [
+            'id' => 2,
+            'name' => 'Second',
+        ],
+    ];
+
+    public function books() : HasMany
+    {
+        return $this->hasMany(Book::class);
+    }
+}
+
+class Book extends Model
+{
+    use Sushi;
+
+    protected array $schema = [
+        'id' => 'integer',
+        'store_id' => 'integer',
+        'name' => 'string',
+    ];
+
+    protected array $rows = [
+        [
+            'id' => 1,
+            'store_id' => 1,
+            'name' => 'Foo',
+        ], [
+            'id' => 2,
+            'store_id' => 2,
+            'name' => 'Foo',
+        ],
+    ];
 }

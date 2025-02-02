@@ -55,6 +55,9 @@ The previous example demonstrates the most basic storage scenario: moving the te
 
 However, you may want to customize the file name of the stored file or even specify a specific storage "disk" to keep the file on (such as S3).
 
+> [!tip] Original file names
+> You can access the original file name of a temporary upload, by calling its `->getClientOriginalName()` method.
+
 Livewire honors the same APIs Laravel uses for storing uploaded files, so feel free to consult [Laravel's file upload documentation](https://laravel.com/docs/filesystem#file-uploads). However, below are a few common storage scenarios and examples:
 
 ```php
@@ -64,19 +67,19 @@ public function save()
     $this->photo->store(path: 'photos');
 
     // Store the file in the "photos" directory in a configured "s3" disk
-    $this->photo->store(path: 'photos', 's3');
+    $this->photo->store(path: 'photos', options: 's3');
 
     // Store the file in the "photos" directory with the filename "avatar.png"
     $this->photo->storeAs(path: 'photos', name: 'avatar');
 
     // Store the file in the "photos" directory in a configured "s3" disk with the filename "avatar.png"
-    $this->photo->storeAs(path: 'photos', name: 'avatar', 's3');
+    $this->photo->storeAs(path: 'photos', name: 'avatar', options: 's3');
 
     // Store the file in the "photos" directory, with "public" visibility in a configured "s3" disk
-    $this->photo->storePublicly(path: 'photos', 's3');
+    $this->photo->storePublicly(path: 'photos', options: 's3');
 
     // Store the file in the "photos" directory, with the name "avatar.png", with "public" visibility in a configured "s3" disk
-    $this->photo->storePubliclyAs(path: 'photos', name: 'avatar', 's3');
+    $this->photo->storePubliclyAs(path: 'photos', name: 'avatar', options: 's3');
 }
 ```
 
@@ -122,7 +125,7 @@ class UploadPhotos extends Component
 Like we've discussed, validating file uploads with Livewire is the same as handling file uploads from a standard Laravel controller.
 
 > [!warning] Ensure S3 is properly configured
-> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#upload-to-s3), these validation rules will fail if the S3 file object is not publicly accessible.
+> Many of the validation rules relating to files require access to the file. When [uploading directly to S3](#uploading-directly-to-amazon-s3), these validation rules will fail if the S3 file object is not publicly accessible.
 
 For more information on file validation, consult [Laravel's file validation documentation](https://laravel.com/docs/validation#available-validation-rules).
 
@@ -133,7 +136,7 @@ After a user chooses a file, you should typically show them a preview of that fi
 Livewire makes this trivial by using the `->temporaryUrl()` method on uploaded files.
 
 > [!info] Temporary URLs are restricted to images
-> For security reasons, temporary upload URLs are only supported on files with image MIME types.
+> For security reasons, temporary preview URLs are only supported on files with image MIME types.
 
 Let's explore an example of a file upload with an image preview:
 
@@ -350,7 +353,7 @@ Here's an example of creating a "Cancel Upload" button in a Livewire component u
 
 When "Cancel upload" is pressed, the file upload will request will be aborted and the file input will be cleared. The user can now attempt another upload with a different file.
 
-Alternativaly, you can call `cancelUplaod(...)` from Alpine like so:
+Alternatively, you can call `cancelUpload(...)` from Alpine like so:
 
 ```blade
 <button type="button" x-on:click="$wire.cancelUpload('photo')">Cancel Upload</button>

@@ -10,8 +10,7 @@ use Livewire\Attributes\Isolate;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function components_can_be_marked_as_isolated()
+    public function test_components_can_be_marked_as_isolated()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -64,8 +63,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function lazy_requests_are_isolated_by_default()
+    public function test_lazy_requests_are_isolated_by_default()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -103,8 +101,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function lazy_requests_are_isolated_by_default_but_bundled_on_next_request_when_polling()
+    public function test_lazy_requests_are_isolated_by_default_but_bundled_on_next_request_when_polling()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -155,8 +152,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function lazy_requests_can_be_bundled_with_attribute_parameter()
+    public function test_lazy_requests_can_be_bundled_with_attribute_parameter()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML

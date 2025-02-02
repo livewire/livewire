@@ -2,18 +2,19 @@
 
 namespace Livewire\Features\SupportMorphAwareIfStatement;
 
-use Livewire\Livewire;
 use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use PHPUnit\Framework\Attributes\{Test, DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
 {
-    #[Test]
-    public function conditional_markers_are_only_added_to_if_statements_wrapping_elements()
+    public function test_conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
-        Livewire::component('foo', new class extends \Livewire\Component {
-            public function render() {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
                 return '<div>@if (true) <div @if (true) @endif></div> @endif</div>';
             }
         });
@@ -27,8 +28,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
 
-    #[Test]
-    public function handles_custom_blade_conditional_directives()
+    public function test_handles_custom_blade_conditional_directives()
     {
         Blade::if('foo', function () {
             return '...';
@@ -46,9 +46,18 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
 
-    #[Test]
+    public function test_handles_if_statements_with_calculation_inside()
+    {
+        $template = '<div> @if (($someProperty) > 0) <span> {{ $someProperty }} </span> @endif </div>';
+
+        $output = $this->compile($template);
+
+        $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
+        $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
+    }
+
     #[DataProvider('templatesProvider')]
-    function foo($occurrences, $template, $expectedCompiled = null)
+    public function test_foo($occurrences, $template, $expectedCompiled = null)
     {
         $compiled = $this->compile($template);
 
@@ -318,24 +327,24 @@ class UnitTest extends \Tests\TestCase
                 </div>
                 HTML
             ],
-            // 21 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (0 < 1) bar="bob" @endif></div>
-            //     HTML
-            // ],
-            // 22 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
-            //     HTML
-            // ],
-            // 23 => [
-            //     0,
-            //     <<<'HTML'
-            //     <div @if (1 > 0) bar="bob" @endif></div>
-            //     HTML
-            // ],
+            21 => [
+                0,
+                <<<'HTML'
+                <div @if (0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            22 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0 && 0 < 1) bar="bob" @endif></div>
+                HTML
+            ],
+            23 => [
+                0,
+                <<<'HTML'
+                <div @if (1 > 0) bar="bob" @endif></div>
+                HTML
+            ],
             24 => [
                 1,
                 <<<'HTML'
@@ -354,6 +363,76 @@ class UnitTest extends \Tests\TestCase
                 @ENDIF
                 HTML
             ],
+            26 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @if ($someProperty > 0)
+                        <span> {{ $someProperty }} </span>
+                    @endif
+                </div>
+                HTML
+            ],
+            27 => [
+                1,
+                <<<'HTML'
+                <div>
+                    @if (preg_replace('/[^a-zA-Z]+/', '', $spinner))
+                        <span> {{ $someProperty }} </span>
+                    @endif
+                </div>
+                HTML
+            ],
+            28 => [
+                2,
+                <<<'HTML'
+                <div>
+                    @forelse([1, 2] as $post)
+                        @for($i=0; $i < 10; $i++)
+                            <span> {{ $i }} </span>
+                        @endfor
+                    @empty
+                        <span> {{ $someProperty }} </span>
+                    @endforelse
+                </div>
+                HTML,
+                <<<'HTML'
+                <div>
+                    <!--[if BLOCK]><![endif]--><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <!--[if BLOCK]><![endif]--><?php for($i=0; $i < 10; $i++): ?>
+                            <span> <?php echo e($i); ?> </span>
+                        <?php endfor; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <span> <?php echo e($someProperty); ?> </span>
+                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                </div>
+                HTML,
+            ],
+            29 => [
+                1,
+                <<<'HTML'
+                @if ($item > 2 && request()->is(str(url('/'))->replace('\\', '/')))
+                    foo
+                @endif
+                HTML,
+                <<<'HTML'
+                <!--[if BLOCK]><![endif]--><?php if($item > 2 && request()->is(str(url('/'))->replace('\\', '/'))): ?>
+                    foo
+                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                HTML,
+            ],
+            30 => [
+                1,
+                <<<'HTML'
+                <div> @if (preg_replace('/[^a-zA-Z]+/', '', $spinner))<span> {{ $someProperty }} </span> @endif Else</div>
+                HTML
+            ],
+            31 => [
+                1,
+                <<<'HTML'
+                <div> @for ($i=0; $i<3; $i++)<span> {{ $someProperty }} </span> @endfor Else</div>
+                HTML
+            ]
         ];
     }
 
@@ -366,6 +445,24 @@ class UnitTest extends \Tests\TestCase
         $undo();
 
         return $html;
+    }
+
+    protected function render($string, $data = [])
+    {
+        $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
+
+        $html = Blade::render($string, $data);
+
+        $undo();
+
+        return $html;
+    }
+
+    protected function compileStatements($template)
+    {
+        $bladeCompiler = app('blade.compiler');
+
+        return $bladeCompiler->compileStatements($template);
     }
 
     protected function assertOccurrences($expected, $needle, $haystack)

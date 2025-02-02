@@ -50,6 +50,12 @@ class SupportNestingComponents extends ComponentHook
         $children = $memo['children'];
 
         static::setPreviouslyRenderedChildren($this->component, $children);
+
+        $this->ifThisComponentIsAChildThatHasBeenRemovedByTheParent(function () {
+            // Let's skip its render so that we aren't wasting extra rendering time
+            // on a component that has already been thrown-away by its parent...
+            $this->component->skipRender();
+        });
     }
 
     function dehydrate($context)
@@ -57,6 +63,8 @@ class SupportNestingComponents extends ComponentHook
         $skipRender = $this->storeGet('skipRender');
 
         if ($skipRender) $this->keepRenderedChildren();
+
+        $this->storeRemovedChildrenToReferenceWhenThoseChildrenHydrateSoWeCanSkipTheirRenderAndAvoideUselessWork();
 
         $context->addMemo('children', $this->getChildren());
     }
@@ -87,5 +95,26 @@ class SupportNestingComponents extends ComponentHook
             ->each(function ($value, $property) use ($component) {
                 $component->{$property} = $value;
             });
+    }
+
+    protected function storeRemovedChildrenToReferenceWhenThoseChildrenHydrateSoWeCanSkipTheirRenderAndAvoideUselessWork()
+    {
+        // Get a list of children that we're "removed" in this request...
+        $removedChildren = array_diff_key($this->storeGet('previousChildren', []), $this->getChildren());
+
+        foreach ($removedChildren as $key => $child) {
+            store()->push('removedChildren', $key, $child[1]);
+        }
+    }
+
+    protected function ifThisComponentIsAChildThatHasBeenRemovedByTheParent($callback)
+    {
+        $removedChildren = store()->get('removedChildren', []);
+
+        if (isset($removedChildren[$this->component->getId()])) {
+            $callback();
+
+            store()->unset('removedChildren', $this->component->getId());
+        }
     }
 }

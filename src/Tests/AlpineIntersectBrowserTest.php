@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class AlpineIntersectBrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function component_with_intersect_plugin_works()
+    public function test_component_with_intersect_plugin_works()
     {
         Livewire::visit(new class () extends Component {
             public function render()

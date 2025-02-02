@@ -2,14 +2,25 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before opening a bug report, please search the existing discussions.
+        Hi there! 👋
+
+        Thank you for using Livewire!
+
+        Many of the people who help resolve issues here are enthusiastic Livewire users like yourself who volunteer their time to support fellow community members.
+
+        **To respect everyone's valuable time and help you resolve your issue as quickly as possible, before posting an issue, please**
+
+        * Update to the latest version of Livewire by running `composer update livewire/livewire`
+        * Before opening a bug report, please search the existing discussions.
+
         To address this bug as fast as possible, we need the following information.
+
   - type: input
     id: livewire-version
     attributes:
       label: Livewire version
-      description: Which version of Livewire are you using? Please provide the full version, e.g. v3.2.6.
-      placeholder: v3.2.6
+      description: Which version of Livewire are you using? Please provide the full version, e.g. v3.5.16.
+      placeholder: v3.5.16
     validations:
       required: true
 
@@ -17,8 +28,8 @@ body:
     id: laravel-version
     attributes:
       label: Laravel version
-      description: Which version of Laravel are you using? Please provide the full version, e.g. v10.0.0.
-      placeholder: v10.0.0
+      description: Which version of Laravel are you using? Please provide the full version, e.g. v11.34.2.
+      placeholder: v11.34.2
     validations:
       required: true      
 
@@ -27,6 +38,7 @@ body:
     attributes:
       label: Which PHP version are you using?
       options:
+        - PHP 8.4
         - PHP 8.3
         - PHP 8.2
         - PHP 8.1
@@ -40,26 +52,54 @@ body:
 
   - type: textarea
     attributes:
-      label: Steps To Reproduce
-      description: Which steps do we need to take to reproduce the problem you are having? Any code examples need to be **as short as possible**, remove any code that is unrelated to the bug. This issue will be closed if detailed replication steps are missing.**
-      placeholder: |
-        1.
-        2.
-        3.
+      label: What is the problem?
+      description: Please provide a clear and concise description of what the problem is and include screenshots.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Code snippets
+      description: Please include a code snippet (ideally a Volt component) we can copy and paste into our own apps with steps to reproduce. Be sure to **include any Blade variable definitions** that are used and use as little code as possible to reproduce the issue.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        Include code snippets in triple backticks (\```) with "blade" or "php" for better readability. Here's an example:
+
+        \```blade
+        // Your code here
+        \```
+
+        \```php
+        // Your code here
+        \```
 
   - type: input
     id: example-repository
     attributes:
-      label: Repository or Wirebox URL
-      description: Please provide the URL of public [repository](https://github.com/new) or [Wirebox](https://wirebox.app) that contains a fresh Laravel and Livewire installation that only contains the code that reproduces the bug. **Please do not link to your actual project**, only share an example that reproduces the bug with the least amount of code. **Make sure your Wirebox is set to public**.
+      label: Wirebox URL
+      description: Please provide the URL of a public [Wirebox](https://wirebox.app) that only contains the code that reproduces the bug. **Make sure your Wirebox is set to public**.
     validations:
       required: true
-      
+
   - type: textarea
     attributes:
-      label: Additional information
-      description: |
-        Links? References? Anything that will give us more context about the issue you are encountering! When providing code snippets, please provide the actual code that is easy to replicate and don't use code screenshots.
+      label: How do you expect it to work?
+      description: Please describe how you expect it to work.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        **We will close this issue for any of the following reasons**
+
+        * The code snippets contain unrelated code such as left-over Blade variables
+        * We cannot reproduce the issue with the provided code snippets
+        * The issue is a duplicate
 
   - type: checkboxes
     attributes:
@@ -71,3 +111,7 @@ body:
           required: true
         - label: I understand my bug report will be removed if I haven't met the criteria above.
           required: true
+
+  - type: markdown
+    attributes:
+      value: Thank you!

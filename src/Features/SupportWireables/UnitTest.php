@@ -10,8 +10,7 @@ use Livewire\Wireable;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_validates()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_validates()
     {
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = Str::random());
 
@@ -28,8 +27,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee($embeddedMessage);
     }
 
-    /** @test */
-    public function a_wireable_can_be_updated()
+    public function test_a_wireable_can_be_updated()
     {
         $wireable = new WireableClass('foo', '42');
 
@@ -40,8 +38,7 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('bar');
     }
 
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_validates_only()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_validates_only()
     {
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = Str::random());
 
@@ -60,8 +57,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee($embeddedMessage);
     }
 
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_has_single_validation_error()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_has_single_validation_error()
     {
         $wireable = new WireableClass($message = '', $embeddedMessage = Str::random());
 
@@ -78,8 +74,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee($embeddedMessage);
     }
 
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_has_single_validation_error_on_validates_only()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_has_single_validation_error_on_validates_only()
     {
         $wireable = new WireableClass($message = '', $embeddedMessage = Str::random());
 
@@ -96,8 +91,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee($embeddedMessage);
     }
 
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_has_embedded_validation_error()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_has_embedded_validation_error()
     {
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = '');
 
@@ -114,8 +108,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee($message);
     }
 
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_has_embedded_validation_error_on_validate_only()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_has_embedded_validation_error_on_validate_only()
     {
         $wireable = new WireableClass($message = Str::random(), $embeddedMessage = '');
 
@@ -132,8 +125,7 @@ class UnitTest extends \Tests\TestCase
             ->assertDontSee($message);
     }
 
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_has_single_and_embedded_validation_errors()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_has_single_and_embedded_validation_errors()
     {
         $wireable = new WireableClass($message = '', $embeddedMessage = '');
 
@@ -148,8 +140,7 @@ class UnitTest extends \Tests\TestCase
             ->call('removeWireable');
     }
 
-    /** @test */
-    public function a_wireable_can_be_set_as_a_public_property_and_has_single_and_embedded_validation_errors_on_validate_only()
+    public function test_a_wireable_can_be_set_as_a_public_property_and_has_single_and_embedded_validation_errors_on_validate_only()
     {
         $wireable = new WireableClass($message = '', $embeddedMessage = '');
 

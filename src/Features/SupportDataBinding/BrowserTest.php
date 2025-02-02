@@ -9,8 +9,7 @@ use Livewire\Attributes\Computed;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    function can_use_wire_dirty()
+    function test_can_use_wire_dirty()
     {
         Livewire::visit(new class extends Component {
             public $prop = false;
@@ -37,8 +36,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    function can_update_bound_value_from_lifecyle_hook()
+    function test_can_update_bound_value_from_lifecyle_hook()
     {
         Livewire::visit(new class extends Component {
             public $foo = null;

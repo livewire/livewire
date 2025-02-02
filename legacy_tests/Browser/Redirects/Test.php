@@ -4,7 +4,6 @@ namespace LegacyTests\Browser\Redirects;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Sushi\Sushi;
 use LegacyTests\Browser\TestCase;
 
@@ -12,8 +11,7 @@ class Test extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function it_correctly_shows_flash_messages_before_and_after_direct()
+    public function test_it_correctly_shows_flash_messages_before_and_after_direct()
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, Component::class)

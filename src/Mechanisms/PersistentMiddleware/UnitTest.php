@@ -3,17 +3,11 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Stringable;
-use Livewire\Component;
-use Livewire\Form;
 use Livewire\Livewire;
-use Tests\TestCase;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
-    /** @test */
-    public function it_does_not_have_persistent_middleware_memory_leak_when_adding_middleware()
+    public function test_it_does_not_have_persistent_middleware_memory_leak_when_adding_middleware()
     {
         $base = Livewire::getPersistentMiddleware();
         Livewire::addPersistentMiddleware('MyMiddleware');

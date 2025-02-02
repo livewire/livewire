@@ -25,6 +25,13 @@ class TemporaryUploadedFile extends UploadedFile
         $tmpFile = tmpfile();
 
         parent::__construct(stream_get_meta_data($tmpFile)['uri'], $this->path);
+
+        // While running tests, update the last modified timestamp to the current
+        // Carbon timestamp (which respects time traveling), because otherwise
+        // cleanupOldUploads() will mess up with the filesystem...
+        if (app()->runningUnitTests()) {
+            @touch($this->path(), now()->timestamp);
+        }
     }
 
     public function getPath(): string
@@ -106,7 +113,7 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay()->endOfHour(),
-                ['ResponseContentDisposition' => 'attachment; filename="' . $this->getClientOriginalName() . '"']
+                ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
             );
         }
 
@@ -191,7 +198,6 @@ class TemporaryUploadedFile extends UploadedFile
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
         $originalFilename = $file->getClientOriginalName();
-        $extension = '.' . $file->guessExtension();
 
         if (static::fileNameRequiresTruncation($originalFilename)) {
             $originalFilename = str(TemporaryUploadedFile::FILENAME_TRUNCATION_PREFIX)
@@ -201,13 +207,14 @@ class TemporaryUploadedFile extends UploadedFile
 
         $hash = str()->random(30);
         $meta = str('-meta' . base64_encode($originalFilename) . '-')->replace('/', '_');
+        $extension = '.' . $file->getClientOriginalExtension();
 
         return $hash . $meta . $extension;
     }
 
     public function hashName($path = null)
     {
-        if (app()->runningUnitTests() && str($this->getfilename())->contains('-hash=')) {
+        if (app()->runningUnitTests() && str($this->getFilename())->contains('-hash=')) {
             return str($this->getFilename())->between('-hash=', '-mimeType')->value();
         }
 

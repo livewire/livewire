@@ -92,7 +92,7 @@ public function save()
 {
     // ...
 
-    $this->redirect(ShowPage::class);
+    $this->redirect(ShowPosts::class);
 }
 ```
 
@@ -120,7 +120,7 @@ class UpdatePost extends Component
 }
 ```
 
-Assuming the page being redirected to contains the following Blade snippet, the user will see a "Post successfully updated." message after updating the post:
+Assuming the page being redirected to contain the following Blade snippet, the user will see a "Post successfully updated." message after updating the post:
 
 ```blade
 @if (session('status'))

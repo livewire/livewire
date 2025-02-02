@@ -3,7 +3,10 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\GeneratorCommand;
+use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:attribute')]
 class AttributeCommand extends GeneratorCommand
 {
     /**
@@ -34,7 +37,11 @@ class AttributeCommand extends GeneratorCommand
      */
     public function getStub()
     {
-        return __DIR__ . '/livewire.attribute.stub';
+        if (File::exists(base_path('stubs/livewire.attribute.stub'))) {
+            return base_path('stubs/livewire.attribute.stub');
+        }
+
+        return __DIR__ . DIRECTORY_SEPARATOR . 'livewire.attribute.stub';
     }
 
     /**

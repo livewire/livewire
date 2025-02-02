@@ -3,7 +3,6 @@
 namespace LegacyTests\Browser\PollingViewport;
 
 use Laravel\Dusk\Browser;
-use Livewire\Livewire;
 use LegacyTests\Browser\TestCase;
 
 class Test extends TestCase

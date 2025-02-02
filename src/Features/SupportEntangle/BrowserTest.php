@@ -2,16 +2,13 @@
 
 namespace Livewire\Features\SupportEntangle;
 
-use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_persist_entangled_data()
+    public function test_can_persist_entangled_data()
     {
         Livewire::visit(new class extends Component {
             public $input;
@@ -34,8 +31,7 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    /** @test */
-    public function is_not_live_by_default()
+    public function test_is_not_live_by_default()
     {
         Livewire::visit(new class extends Component {
             public $foo = 'foo';
@@ -66,8 +62,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@state', 'bar');
     }
 
-    /** @test */
-    public function can_be_forced_to_not_be_live()
+    public function test_can_be_forced_to_not_be_live()
     {
         Livewire::visit(new class extends Component {
             public $foo = 'foo';
@@ -98,8 +93,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@state', 'bar');
     }
 
-    /** @test */
-    public function can_be_live()
+    public function test_can_be_live()
     {
         Livewire::visit(new class extends Component {
             public $foo = 'foo';
@@ -124,8 +118,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@state', 'bar');
     }
 
-    /** @test */
-    public function can_remove_entangled_components_from_dom_without_side_effects()
+    public function test_can_remove_entangled_components_from_dom_without_side_effects()
     {
         Livewire::visit(new class extends Component {
             public $items = [];
@@ -202,8 +195,7 @@ class BrowserTest extends BrowserTestCase
             ->assertMissing('@item3');
     }
 
-    /** @test */
-    public function can_remove_dollar_sign_entangled_components_from_dom_without_side_effects()
+    public function test_can_remove_dollar_sign_entangled_components_from_dom_without_side_effects()
     {
         Livewire::visit(new class extends Component {
             public $items = [];
@@ -280,8 +272,7 @@ class BrowserTest extends BrowserTestCase
             ->assertMissing('@item3');
     }
 
-    /** @test */
-    public function can_removed_nested_items_without_multiple_requests_when_entangled_items_are_present()
+    public function test_can_removed_nested_items_without_multiple_requests_when_entangled_items_are_present()
     {
         Livewire::visit(new class extends Component {
             public $components = [];
@@ -387,8 +378,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@counter', '13');
     }
 
-    /** @test */
-    public function can_reorder_entangled_keys()
+    public function test_can_reorder_entangled_keys()
     {
         Livewire::visit(new class extends Component {
             public $test = [

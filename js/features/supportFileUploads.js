@@ -45,6 +45,23 @@ export function handleFileUpload(el, property, component, cleanup) {
 
     el.addEventListener('change', eventHandler)
 
+    // If the Livewire property has changed to null or an empty string, then reset the input...
+    component.$wire.$watch(property, (value) => {
+        // This watch will only be released when the component is removed. However, the
+        // actual file-upload element may be removed from the DOM withou the entire
+        // component being removed. In this case, let's just bail early on this.
+        if (! el.isConnected) return
+
+        if (value === null || value === '') {
+            el.value = ''
+        }
+        
+        // If the file input is a multiple file input and the value has been reset to an empty array, then reset the input...
+        if (el.multiple && Array.isArray(value) && value.length === 0) {
+            el.value = ''
+        }
+    })
+
     // There's a bug in browsers where selecting a file, removing it,
     // then re-adding it doesn't fire the change event. This fixes it.
     // Reference: https://stackoverflow.com/questions/12030686/html-input-file-selection-event-not-firing-upon-selecting-the-same-file
@@ -166,7 +183,7 @@ class UploadManager {
 
         request.upload.addEventListener('progress', e => {
             e.detail = {}
-            e.detail.progress = Math.round((e.loaded * 100) / e.total)
+            e.detail.progress = Math.floor((e.loaded * 100) / e.total)
 
             this.uploadBag.first(name).progressCallback(e)
         })
@@ -227,7 +244,9 @@ class UploadManager {
         let uploadItem = this.uploadBag.first(name);
 
         if (uploadItem) {
-            uploadItem.request.abort();
+            if (uploadItem.request) {
+                uploadItem.request.abort();
+            }
 
             this.uploadBag.shift(name).cancelledCallback();
 

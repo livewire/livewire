@@ -7,6 +7,10 @@ export class Bag {
         this.arrays[key].push(value)
     }
 
+    remove(key) {
+        if (this.arrays[key]) delete this.arrays[key]
+    }
+
     get(key) { return this.arrays[key] || [] }
 
     each(key, callback) { return this.get(key).forEach(callback) }
@@ -16,8 +20,12 @@ export class WeakBag {
     constructor() { this.arrays = new WeakMap }
 
     add(key, value) {
-        if (! this.arrays.has(key) ) this.arrays.set(key, [])
+        if (! this.arrays.has(key)) this.arrays.set(key, [])
         this.arrays.get(key).push(value)
+    }
+
+    remove(key) {
+        if (this.arrays.has(key)) this.arrays.delete(key, [])
     }
 
     get(key) { return this.arrays.has(key) ? this.arrays.get(key) : [] }
@@ -25,8 +33,8 @@ export class WeakBag {
     each(key, callback) { return this.get(key).forEach(callback) }
 }
 
-export function dispatch(el, name, detail = {}, bubbles = true) {
-    el.dispatchEvent(
+export function dispatch(target, name, detail = {}, bubbles = true) {
+    target.dispatchEvent(
         new CustomEvent(name, {
             detail,
             bubbles,
@@ -35,6 +43,12 @@ export function dispatch(el, name, detail = {}, bubbles = true) {
             cancelable: true,
         })
     )
+}
+
+export function listen(target, name, handler) {
+    target.addEventListener(name, handler)
+
+    return () => target.removeEventListener(name, handler)
 }
 
 /**
@@ -70,9 +84,7 @@ export function dataGet(object, key) {
     if (key === '') return object
 
     return key.split('.').reduce((carry, i) => {
-        if (carry === undefined) return undefined
-
-        return carry[i]
+        return carry?.[i]
     }, object)
 }
 

@@ -45,7 +45,7 @@ By including these assets manually on a page, Livewire knows not to inject the a
 > [!warning] AlpineJS is bundled with Livewire
 > Because Alpine is bundled with Livewire's JavaScript assets, you must include @verbatim`@livewireScripts`@endverbatim on every page you wish to use Alpine. Even if you're not using Livewire on that page.
 
-Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-config) in your application's `config/livewire.php` file:
+Though rarely required, you may disable Livewire's auto-injecting asset behavior by updating the `inject_assets` [configuration option](#publishing-the-configuration-file) in your application's `config/livewire.php` file:
 
 ```php
 'inject_assets' => false,
@@ -150,5 +150,33 @@ Alpine.plugin(Clipboard)
 Livewire.start()
 ```
 
+> [!tip] Rebuild your assets after composer update
+> Make sure that if you are manually bundling Livewire and Alpine, that you rebuild your assets whenever you run `composer update`.
+
 > [!warning] Not compatible with Laravel Mix
-> Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. We recommend you switch to Vite if you need this ability.
+> Laravel Mix will not work if you are manually bundling Livewire and AlpineJS. Instead, we recommend that you [switch to Vite](https://laravel.com/docs/vite).
+
+## Publishing Livewire's frontend assets
+
+> [!warning] Publishing assets isn't necessary
+> Publishing Livewire's assets isn't necessary for Livewire to run. Only do this if you have a specific need for it.
+
+If you prefer the JavaScript assets to be served by your web server not through Laravel, use the `livewire:publish` command:
+
+```bash
+php artisan livewire:publish --assets
+```
+
+To keep assets up-to-date and avoid issues in future updates, we strongly recommend that you add the following command to your composer.json file:
+
+```json
+{
+    "scripts": {
+        "post-update-cmd": [
+            // Other scripts
+            "@php artisan vendor:publish --tag=livewire:assets --ansi --force"
+        ]
+    }
+}
+```
+

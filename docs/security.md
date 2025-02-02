@@ -68,18 +68,6 @@ class PostPolicy
 }
 ```
 
-Before you can use the new Policy, you need to register it inside `app\Providers\AuthServiceProvider.php`:
-
-```php
-// ...
-
-protected $policies = [
-    Post::class => PostPolicy::class,
-];
-
-// ...
-```
-
 Now, we can use the `$this->authorize()` method from the Livewire component to ensure the user owns the post before deleting it:
 
 ```php
@@ -327,12 +315,11 @@ By default, Livewire persists the following middleware across network requests:
 \App\Http\Middleware\RedirectIfAuthenticated::class,
 \Illuminate\Auth\Middleware\Authenticate::class,
 \Illuminate\Auth\Middleware\Authorize::class,
-\App\Http\Middleware\Authenticate::class,
 ```
 
 If any of the above middlewares are applied to the initial page-load, they will be persisted (re-applied) to any future network requests.
 
-However, if you are applying a custom middleware from your application the initial page-load, and want it persisted between Livewire requests, you will need to add it to this list from a [Service Provider](https://laravel.com/docs/providers#main-content) in your app like so:
+However, if you are applying a custom middleware from your application on the initial page-load, and want it persisted between Livewire requests, you will need to add it to this list from a [Service Provider](https://laravel.com/docs/providers#main-content) in your app like so:
 
 ```php
 <?php

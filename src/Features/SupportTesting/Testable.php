@@ -2,12 +2,12 @@
 
 namespace Livewire\Features\SupportTesting;
 
-use Illuminate\Support\Traits\Macroable;
 use Livewire\Features\SupportFileDownloads\TestsFileDownloads;
 use Livewire\Features\SupportValidation\TestsValidation;
 use Livewire\Features\SupportRedirects\TestsRedirects;
 use Livewire\Features\SupportEvents\TestsEvents;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Illuminate\Support\Traits\Macroable;
+use BackedEnum;
 
 /** @mixin \Illuminate\Testing\TestResponse */
 
@@ -135,6 +135,8 @@ class Testable
             return $this->upload($name, [$value]);
         } elseif (is_array($value) && isset($value[0]) && $value[0] instanceof \Illuminate\Http\UploadedFile) {
             return $this->upload($name, $value, $isMultiple = true);
+        } elseif ($value instanceof BackedEnum) {
+            $value = $value->value;
         }
 
         return $this->update(updates: [$name => $value]);
@@ -181,6 +183,7 @@ class Testable
             $this->lastState,
             $calls,
             $updates,
+            app('request')->cookies->all()
         );
 
         $this->lastState = $newState;
@@ -218,9 +221,9 @@ class Testable
             return $this;
         }
 
-        // We are going to encode the original file size and hashName in the filename
+        // We are going to encode the original file size, mimeType and hashName in the filename
         // so when we create a new TemporaryUploadedFile instance we can fake the
-        // same file size and hashName set for the original file upload.
+        // same file size, mimeType and hashName set for the original file upload.
         $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
             // MimeTypes contain slashes, so we replace them with underscores to ensure the filename is valid.
             $escapedMimeType = (string) str($file->getMimeType())->replace('/', '_');
@@ -252,6 +255,11 @@ class Testable
     function instance()
     {
         return $this->lastState->getComponent();
+    }
+
+    function invade()
+    {
+        return \Livewire\invade($this->lastState->getComponent());
     }
 
     function dump()

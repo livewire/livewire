@@ -231,10 +231,8 @@ class TodoList extends Component
     public function add()
     {
         Todo::create([
-            'content' => $this->todo,
+            'content' => $this->pull('todo'),
         ]);
-
-        $this->reset('todo');
     }
 
     public function render()
@@ -515,7 +513,7 @@ class Steps extends Component
 
 ```blade
 <div>
-    <livewire:dynamic-component :is="$current" />
+    <livewire:dynamic-component :is="$current" :key="$current" />
 
     <button wire:click="next">Next</button>
 </div>
@@ -542,8 +540,13 @@ class StepOne extends Component
 If you prefer, you can use the alternative syntax:
 
 ```blade
-<livewire:is :component="$current" />
+<livewire:is :component="$current" :key="$current" />
 ```
+
+> [!warning]
+> Don't forget to assign each child component a unique key. Although Livewire automatically generates a key for `<livewire:dynamic-child />` and `<livewire:is />`, that same key will apply to _all_ your child components, meaning subsequent renders will be skipped.
+> 
+> See [forcing a child component to re-render](#forcing-a-child-component-to-re-render) for a deeper understanding of how keys affect component rendering.
 
 ## Recursive components
 
