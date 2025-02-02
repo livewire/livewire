@@ -10,8 +10,18 @@ use League\MimeTypeDetection\FinfoMimeTypeDetector;
 
 class TemporaryUploadedFile extends UploadedFile
 {
+    /**
+     * 255 : max length
+     * - 30 : hash
+     * - 5 : -meta prefix
+     * - 1 : meta '-' suffix
+     * - 5 : extension
+     * - 159 * 4/3 : max base64 encoded filename length
+     * = 2 : a small buffer
+     */
     public const FILENAME_TRUNCATION_MAX_LENGTH = 159;
     public const FILENAME_TRUNCATION_PREFIX = '[truncated]';
+
     protected $disk;
     protected $storage;
     protected $path;
