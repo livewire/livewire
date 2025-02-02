@@ -45,14 +45,14 @@ class FileUploadConfiguration
     {
         $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
 
-        return config('filesystems.disks.'.strtolower($diskBeforeTestFake) . '.driver') === 's3';
+        return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 's3';
     }
 
     public static function isUsingGCS()
     {
         $diskBeforeTestFake = config('livewire.temporary_file_upload.disk') ?: config('filesystems.default');
 
-        return config('filesystems.disks.'.strtolower($diskBeforeTestFake) . '.driver') === 'gcs';
+        return config('filesystems.disks.'.strtolower($diskBeforeTestFake).'.driver') === 'gcs';
     }
 
     public static function normalizeRelativePath($path)
