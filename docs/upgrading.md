@@ -581,7 +581,7 @@ Livewire.hook('message.processed', (message, component) => {}) // [tl! remove]
 Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => { // [tl! add:14]
     // Equivalent of 'message.sent'
 
-    succeed(({ snapshot, effect }) => {
+    succeed(({ snapshot, effects }) => {
         // Equivalent of 'message.received'
 
         queueMicrotask(() => {
