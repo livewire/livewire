@@ -26,6 +26,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('third-page', ThirdPage::class);
+            Livewire::component('first-html-attribute-page', FirstHtmlAttributesPage::class);
+            Livewire::component('second-html-attribute-page', SecondHtmlAttributesPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
             Livewire::component('third-asset-page', ThirdAssetPage::class);
@@ -57,6 +59,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
             Route::get('/fourth', FourthPage::class)->middleware('web');
+            Route::get('/first-html-attributes', FirstHtmlAttributesPage::class)->middleware('web');
+            Route::get('/second-html-attributes', SecondHtmlAttributesPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -389,6 +393,25 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->click('@increment')
                 ->assertSeeIn('@count', '3')
                 ->assertScript('return window._lw_dusk_test');
+        });
+    }
+
+    public function test_html_element_attributes_are_replaced_on_navigate()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-html-attributes')
+                ->assertSee('On first html attributes page')
+                // ->assertAttribute() won't work as it's scoped to the body...
+                ->assertScript('document.documentElement.getAttribute("class")', 'class1')
+                ->assertScript('document.documentElement.getAttribute("attr1")', 'value1')
+                ->assertScript('document.documentElement.hasAttribute("attr2")', false)
+                ->click('@link.to.second')
+                ->waitForText('On second html attributes page')
+                ->assertScript('document.documentElement.getAttribute("class")', 'class2')
+                ->assertScript('document.documentElement.getAttribute("attr2")', 'value2')
+                ->assertScript('document.documentElement.hasAttribute("attr1")', false)
+                ;
         });
     }
 
@@ -1174,6 +1197,24 @@ class FourthPage extends Component
             </script>
         </div>
         HTML;
+    }
+}
+
+class FirstHtmlAttributesPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::html-attributes1')]
+    public function render()
+    {
+        return '<div>On first html attributes page <a href="/second-html-attributes" wire:navigate dusk="link.to.second">Go to second page</a></div>';
+    }
+}
+
+class SecondHtmlAttributesPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::html-attributes2')]
+    public function render()
+    {
+        return '<div>On second html attributes page</div>';
     }
 }
 

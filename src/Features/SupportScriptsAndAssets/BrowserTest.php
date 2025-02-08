@@ -2,12 +2,38 @@
 
 namespace Livewire\Features\SupportScriptsAndAssets;
 
+use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Livewire\Drawer\Utils;
 use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            Route::get('/non-livewire-asset.js', function () {
+                return Utils::pretendResponseIsFile(__DIR__.'/non-livewire-asset.js');
+            });
+
+            Route::get('/non-livewire-assets', function () {
+                return Blade::render(<<< BLADE
+                <html>
+                    <head>
+                    </head>
+                    <body>
+                        <div>
+                            <h1 dusk="foo"></h1>
+                        </div>
+                        @assets
+                        <script src="/non-livewire-asset.js" defer></script>
+                        @endassets
+                    </body>
+                </html>
+                BLADE);
+            });
+        };
+    }
     public function test_can_evaluate_a_script_inside_a_component()
     {
         Livewire::visit(new class extends \Livewire\Component {
@@ -239,6 +265,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@button')
         ->waitUntil('!! window.datePicker === true')
         ;
+    }
+
+    public function test_assets_directive_can_be_used_outside_of_a_livewire_compoentn_and_can_be_loaded()
+    {
+        // See the `tweakApplicationHook` method for the route definition.
+        $this->browse(function ($browser) {
+            $browser->visit('/non-livewire-assets')
+                ->assertSeeIn('@foo', 'non livewire evaluated');
+        });
     }
 
     public function test_remote_inline_scripts_can_be_loaded_from_a_deferred_nested_component()

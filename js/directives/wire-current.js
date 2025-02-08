@@ -32,8 +32,10 @@ globalDirective('current', ({ el, directive, cleanup }) => {
     let refreshCurrent = url => {
         if (pathMatches(hrefUrl, url, options)) {
             el.classList.add(...classes)
+            el.setAttribute('data-current', '')
         } else {
             el.classList.remove(...classes)
+            el.removeAttribute('data-current')
         }
     }
 
