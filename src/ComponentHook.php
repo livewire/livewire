@@ -78,7 +78,7 @@ abstract class ComponentHook
 
     function getProperty($name)
     {
-        return data_get($this->getProperties(), $name);
+        return data_get($this->component, $name);
     }
 
     function storeSet($key, $value)
