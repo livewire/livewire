@@ -713,7 +713,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -4486,6 +4486,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentMemo.set(component, parent);
     return parent.$wire;
   });
+  var rootMemo = /* @__PURE__ */ new WeakMap();
+  wireProperty("$root", (component) => {
+    if (rootMemo.has(component))
+      return rootMemo.get(component).$wire;
+    let root = component.root;
+    rootMemo.set(component, root);
+    return root.$wire;
+  });
   var overriddenMethods = /* @__PURE__ */ new WeakMap();
   function overrideMethod(component, method, callback) {
     if (!overriddenMethods.has(component)) {
@@ -4592,6 +4600,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get parent() {
       return closestComponent(this.el.parentElement);
     }
+    get root() {
+      return farthestComponent(this.el);
+    }
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
       el.setAttribute("wire:snapshot", this.snapshotEncoded);
@@ -4647,6 +4658,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     }
     return closestRoot2.__livewire;
+  }
+  function farthestComponent(el, strict = true) {
+    let lastClosestRoot = el;
+    let closestRoot2;
+    while (closestRoot2 = Alpine.findClosest(lastClosestRoot.parentElement, (i) => i.__livewire)) {
+      lastClosestRoot = closestRoot2;
+    }
+    return lastClosestRoot.__livewire;
   }
   function componentsByName(name) {
     return Object.values(components).filter((component) => {
@@ -4802,7 +4821,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4896,7 +4915,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5845,7 +5864,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5907,7 +5926,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -6007,7 +6026,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -8244,7 +8263,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8584,7 +8603,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -9074,7 +9093,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (directive3.value !== "submit")
       return;
     el.addEventListener("submit", () => {
-      let componentId = directive3.expression.startsWith("$parent") ? component.parent.id : component.id;
+      let componentId;
+      if (directive3.expression.startsWith("$root")) {
+        componentId = component.root.id;
+      } else if (directive3.expression.startsWith("$parent")) {
+        componentId = component.parent.id;
+      } else {
+        componentId = component.id;
+      }
       let cleanup3 = disableForm(el);
       cleanups.add(componentId, cleanup3);
     });
@@ -9923,7 +9949,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
-    let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
+    let update;
+    if (expression.startsWith("$root")) {
+      update = () => component.$wire.$root.$commit();
+    } else if (expression.startsWith("$parent")) {
+      update = () => component.$wire.$parent.$commit();
+    } else {
+      update = () => component.$wire.$commit();
+    }
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
@@ -9963,6 +9996,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!parent)
         return true;
       return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+    }
+    if (property.startsWith("$root")) {
+      let root = farthestComponent(component.el, false);
+      if (!root)
+        return true;
+      return componentIsMissingProperty(root, property.split("$root.")[1]);
     }
     let baseProperty = property.split(".")[0];
     return !Object.keys(component.canonical).includes(baseProperty);

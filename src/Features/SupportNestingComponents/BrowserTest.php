@@ -2,6 +2,9 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
+use Laravel\Dusk\Browser;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Livewire;
@@ -309,6 +312,186 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->waitForTextIn('@output', 'hello')
             ->assertAttributeMissing('@input', 'readonly')
             ->assertAttributeMissing('@submit-btn', 'disabled');
+    }
+
+    public function test_can_submit_form_using_root_action_without_permenantly_disabling_form()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public $textFromChildComponent;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child />
+
+                        <span dusk="output">{{ $textFromChildComponent }}</span>
+                    </div>
+                    HTML;
+                }
+
+                public function submit($text)
+                {
+                    $this->textFromChildComponent = $text;
+                }
+            },
+            'child' => new class extends Component
+            {
+                public $text;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:nested-child />
+                    </div>
+                    HTML;
+                }
+            },
+            'nested-child' => new class extends Component
+            {
+                public $text;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <form wire:submit="$root.submit($wire.text)">
+                            <input type="text" name="test" wire:model="text" dusk="input" />
+                            <button type="submit" dusk="submit-btn">submit</button>
+                        </form>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->type('@input', 'hello')
+            ->click('@submit-btn')
+            ->waitForTextIn('@output', 'hello')
+            ->assertAttributeMissing('@input', 'readonly')
+            ->assertAttributeMissing('@submit-btn', 'disabled');
+    }
+
+    public function test_can_use_and_change_root_values_from_every_nested_child_component()
+    {
+        Livewire::visit([
+            new class extends Component
+            {
+                public $currentIteration = 0;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child />
+
+                        <span dusk="output">{{ $currentIteration }}</span>
+                    </div>
+                    HTML;
+                }
+
+                public function increment()
+                {
+                    $this->currentIteration++;
+                }
+            },
+            'child' => new class extends Component
+            {
+                public $level = 0;
+
+                public function mount() {
+                    $this->level++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input dusk="child-output-{{ $level }}" wire:model="$root.currentIteration" />
+                        <button dusk="child-button-{{ $level }}" wire:click="$root.increment()">Increment</button>
+                    
+                        @if($level < 3)
+                            <livewire:child :$level />
+                        @endif
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->click('@child-button-1')
+            ->waitForTextIn('@output', '1')
+            ->assertInputValue('@child-output-1', '1')
+            ->assertInputValue('@child-output-2', '1')
+            ->assertInputValue('@child-output-3', '1')
+            ->click('@child-button-2')
+            ->waitForTextIn('@output', '2')
+            ->assertInputValue('@child-output-1', '2')
+            ->assertInputValue('@child-output-2', '2')
+            ->assertInputValue('@child-output-3', '2')
+            ->click('@child-button-3')
+            ->waitForTextIn('@output', '3')
+            ->assertInputValue('@child-output-1', '3')
+            ->assertInputValue('@child-output-2', '3')
+            ->assertInputValue('@child-output-3', '3');
+    }
+
+    public function test_can_use_and_change_root_values_from_every_nested_child_component_if_root_is_the_same_component()
+    {
+        $this->tweakApplication(function() {
+            Livewire::component('recursion-component', new class extends Component
+                {
+                    public $level = 0;
+                    public $currentIteration = 0;
+
+                    public function mount()
+                    {
+                        $this->level++;
+                    }
+
+                    public function increment()
+                    {
+                        $this->currentIteration++;
+                    }
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                            <input dusk="child-output-{{ $level }}" wire:model="$root.currentIteration" />
+                            <button dusk="child-button-{{ $level }}" wire:click="$root.increment()">Increment</button>
+                        
+                            @if($level < 3)
+                                <livewire:recursion-component :$level />
+                            @endif
+                        </div>
+                        HTML;
+                    }
+                }
+            );
+
+            Route::get('/recursion-test', function () {
+                return Blade::render('<html><livewire:recursion-component /></html>');
+            })->middleware('web');
+        });
+
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/recursion-test')
+                ->pressAndWaitFor('@child-button-3', 0.5)
+                ->assertInputValue('@child-output-1', '1')
+                ->assertInputValue('@child-output-2', '1')
+                ->assertInputValue('@child-output-3', '1')
+                ->pressAndWaitFor('@child-button-2', 0.5)
+                ->assertInputValue('@child-output-1', '2')
+                ->assertInputValue('@child-output-2', '2')
+                ->assertInputValue('@child-output-3', '2')
+                ->pressAndWaitFor('@child-button-1', 0.5)
+                ->assertInputValue('@child-output-1', '3')
+                ->assertInputValue('@child-output-2', '3')
+                ->assertInputValue('@child-output-3', '3');
+        });
     }
 
     public function test_can_listen_to_multiple_events_using_at_directive_attribute_from_child_component()
