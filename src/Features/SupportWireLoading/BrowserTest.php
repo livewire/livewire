@@ -15,12 +15,14 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             public $localText = '';
 
-            public function updating() {
+            public function updating()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 usleep(500000);
             }
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <section>
@@ -57,34 +59,34 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForText('Loaded localText')
-        ->assertSee('Loaded localText')
-        ->type('@localInput', 'Text')
-        ->waitUntilMissingText('Loaded localText')
-        ->assertDontSee('Loaded localText')
-        ->waitForText('Loaded localText')
-        ->assertSee('Loaded localText')
-
-        ->waitForText('Loaded form.text')
-        ->assertSee('Loaded form.text')
-        ->type('@formInput', 'Text')
-        ->waitUntilMissingText('Loaded form.text')
-        ->assertDontSee('Loaded form.text')
-        ->waitForText('Loaded form.text')
-        ->assertSee('Loaded form.text')
-        ;
+            ->waitForText('Loaded localText')
+            ->assertSee('Loaded localText')
+            ->type('@localInput', 'Text')
+            ->waitUntilMissingText('Loaded localText')
+            ->assertDontSee('Loaded localText')
+            ->waitForText('Loaded localText')
+            ->assertSee('Loaded localText')
+            ->waitForText('Loaded form.text')
+            ->assertSee('Loaded form.text')
+            ->type('@formInput', 'Text')
+            ->waitUntilMissingText('Loaded form.text')
+            ->assertDontSee('Loaded form.text')
+            ->waitForText('Loaded form.text')
+            ->assertSee('Loaded form.text');
     }
 
     function test_wire_loading_remove_works_with_renderless_methods()
     {
         Livewire::visit(new class extends Component {
             #[\Livewire\Attributes\Renderless]
-            public function doSomething() {
+            public function doSomething()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 usleep(500000);
             }
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <button wire:click="doSomething" dusk="button">
@@ -95,13 +97,12 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForText('Do something')
-        ->click('@button')
-        ->waitForText('...')
-        ->assertDontSee('Do something')
-        ->waitForText('Do something')
-        ->assertDontSee('...')
-        ;
+            ->waitForText('Do something')
+            ->click('@button')
+            ->waitForText('...')
+            ->assertDontSee('Do something')
+            ->waitForText('Do something')
+            ->assertDontSee('...');
     }
 
     function test_wire_loading_attr_doesnt_conflict_with_exist_one()
@@ -109,12 +110,14 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit(new class extends Component {
             public $localText = '';
 
-            public function updating() {
+            public function updating()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 usleep(250000);
             }
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <section>
@@ -132,32 +135,71 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->waitForText('Submit')
-        ->assertSee('Submit')
-        ->assertAttribute('@button', 'disabled', 'true')
-        ->type('@localInput', 'Text')
-        ->assertAttribute('@button', 'disabled', 'true')
-        ->waitForText('Text')
-        ->assertAttribute('@button', 'disabled', 'true')
-        ;
+            ->waitForText('Submit')
+            ->assertSee('Submit')
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->type('@localInput', 'Text')
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->waitForText('Text')
+            ->assertAttribute('@button', 'disabled', 'true');
     }
 
-    function test_wire_loading_multiple_attr_and_doesnt_conflict_with_exist_one()
+    function test_wire_loading_single_attr()
     {
         Livewire::visit(new class extends Component {
             public $localText = '';
 
-            public function updating() {
+            public function updating()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 usleep(250000);
             }
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <section>
                             <button
-                                disabled
+                                dusk="button"
+                                wire:loading.attr="disabled"
+                                wire:target="localText">
+                                Submit
+                            </button>
+                            <input type="text" dusk="localInput" wire:model.live.debounce.100ms="localText">
+                            {{ $localText }}
+                        </section>
+                    </div>
+                HTML;
+            }
+        })
+            ->waitForText('Submit')
+            ->assertSee('Submit')
+            ->assertAttributeMissing('@button', 'disabled')
+            ->type('@localInput', 'Text')
+            ->pause(100)
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->waitForText('Text')
+            ->assertAttributeMissing('@button', 'disabled');
+    }
+
+    function test_wire_loading_multiple_attr()
+    {
+        Livewire::visit(new class extends Component {
+            public $localText = '';
+
+            public function updating()
+            {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(250000);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <section>
+                            <button
                                 dusk="button"
                                 wire:loading.attr="disabled data-disabled"
                                 wire:target="localText">
@@ -172,15 +214,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
             ->waitForText('Submit')
             ->assertSee('Submit')
-            ->assertAttribute('@button', 'disabled', 'true')
+            ->assertAttributeMissing('@button', 'disabled')
             ->assertAttributeMissing('@button', 'data-disabled')
             ->type('@localInput', 'Text')
+            ->pause(100)
             ->assertAttribute('@button', 'disabled', 'true')
             ->assertAttribute('@button', 'data-disabled', 'true')
             ->waitForText('Text')
-            ->assertAttribute('@button', 'disabled', 'true')
-            ->assertAttributeMissing('@button', 'data-disabled')
-        ;
+            ->assertAttributeMissing('@button', 'disabled')
+            ->assertAttributeMissing('@button', 'data-disabled');
     }
 
     function test_wire_loading_delay_is_removed_after_being_triggered_once()
@@ -195,7 +237,8 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             public $count = 0;
 
-            public function updating() {
+            public function updating()
+            {
                 // Need to delay the update, but only on the first request
                 if ($this->count === 0) {
                     usleep(500000);
@@ -205,7 +248,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
 
 
-            public function render() {
+            public function render()
+            {
                 return <<<'HTML'
                     <div>
                         <div wire:loading.delay>
@@ -216,42 +260,42 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-        ->type('@input', 'Hello Caleb')
-        ->waitForText('Loading...')
-        ->assertSee('Loading...')
-        ->waitUntilMissingText('Loading...')
-        ->assertDontSee('Loading...')
-        ->type('@input', 'Bye Caleb')
-        ->pause(500) // wait for the loader to show when it shouldn't (second request is fast)
-        ->assertDontSee('Loading...')
-        ;
+            ->type('@input', 'Hello Caleb')
+            ->waitForText('Loading...')
+            ->assertSee('Loading...')
+            ->waitUntilMissingText('Loading...')
+            ->assertDontSee('Loading...')
+            ->type('@input', 'Bye Caleb')
+            ->pause(500) // wait for the loader to show when it shouldn't (second request is fast)
+            ->assertDontSee('Loading...');
     }
 
-	function test_wire_loading_targets_single_correct_element()
+    function test_wire_loading_targets_single_correct_element()
     {
-		/*
-		 * Previously
-		 */
+        /*
+         * Previously
+         */
         Livewire::visit(new class extends Component {
 
-			public $myModel;
+            public $myModel;
 
-			public function mount()
-			{
-				$this->myModel = [
-					'prop' => 'one',
-					'prop2' => 'two',
-				];
-			}
+            public function mount()
+            {
+                $this->myModel = [
+                    'prop' => 'one',
+                    'prop2' => 'two',
+                ];
+            }
 
-			public function updating() {
+            public function updating()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 sleep(2);
             }
 
-			public function render()
-			{
-			    return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
                 <div>
                 	<input type="text" wire:model.live="myModel.prop" dusk="input">
                 	<div wire:loading wire:target="myModel.prop">Loading "prop"...</div>
@@ -263,18 +307,16 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
 
         })
-        ->type('@input', 'Foo')
-		->waitForText('Loading "prop"...')
-        ->assertSee('Loading "prop"...')
-        ->assertSee('Loading "myModel"...')
-        ->assertDontSee('Loading "prop2"...')
-
-        ->type('@input2', 'Hello Caleb')
-		->waitForText('Loading "prop2"...')
-        ->assertSee('Loading "prop2"...')
-        ->assertSee('Loading "myModel"...')
-        ->assertDontSee('Loading "prop"...')
-        ;
+            ->type('@input', 'Foo')
+            ->waitForText('Loading "prop"...')
+            ->assertSee('Loading "prop"...')
+            ->assertSee('Loading "myModel"...')
+            ->assertDontSee('Loading "prop2"...')
+            ->type('@input2', 'Hello Caleb')
+            ->waitForText('Loading "prop2"...')
+            ->assertSee('Loading "prop2"...')
+            ->assertSee('Loading "myModel"...')
+            ->assertDontSee('Loading "prop"...');
     }
 
     function test_inverted_wire_target_hides_loading_for_specified_action()
@@ -313,24 +355,23 @@ class BrowserTest extends \Tests\BrowserTestCase
                 usleep(500000); // Simulate reset time.
             }
         })
-        ->press('@resetButton')
-        ->waitForText('Waiting to process...')
-        ->assertSee('Waiting to process...')
-        ->assertDontSee('Processing...')
-        ->waitUntilMissingText('Waiting to process...')
-        ->press('@process1Button')
-        ->pause(250)
-        ->assertDontSee('Waiting to process...')
-        ->assertSee('Processing...')
-        ->press('@resetButton')
-        ->waitForText('Waiting to process...')
-        ->assertSee('Waiting to process...')
-        ->waitUntilMissingText('Waiting to process...')
-        ->press('@process2Button')
-        ->pause(250)
-        ->assertDontSee('Waiting to process...')
-        ->assertSee('Processing...')
-        ;
+            ->press('@resetButton')
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process1Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+            ->press('@resetButton')
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process2Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...');
     }
 
     /**
@@ -373,29 +414,30 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Waiting to process...')
         ;
     }
-    */
+     */
 
-	function test_wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
+    function test_wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
     {
         Livewire::visit(new class extends Component {
 
-			public $myModel;
+            public $myModel;
 
-			public function mount()
-			{
-				$this->myModel = [
-					'prop' => 'one',
-				];
-			}
+            public function mount()
+            {
+                $this->myModel = [
+                    'prop' => 'one',
+                ];
+            }
 
-			public function updating() {
+            public function updating()
+            {
                 // Need to delay the update so that Dusk can catch the loading state change in the DOM.
                 sleep(2);
             }
 
-			public function render()
-			{
-			    return <<<'HTML'
+            public function render()
+            {
+                return <<<'HTML'
                 <div>
                 	<input type="text" wire:model.live="myModel.prop" dusk="input">
                 	<div wire:loading.class="foo  bar" wire:target="myModel.prop">{{ $myModel['prop'] }}</div>
@@ -404,10 +446,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             }
 
         })
-        ->type('@input', 'Foo')
-		->waitForText('Foo')
-        ->assertSee('Foo')
-        ;
+            ->type('@input', 'Foo')
+            ->waitForText('Foo')
+            ->assertSee('Foo');
     }
 }
 

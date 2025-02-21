@@ -10501,10 +10501,11 @@ function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = n
       el.classList.remove(...classes);
     }
   } else if (directive2.modifiers.includes("attr")) {
+    let attributes = directive2.expression.split(" ").filter(String);
     if (isTruthy) {
-      el.setAttribute(directive2.expression, true);
+      attributes.forEach((attr) => el.setAttribute(attr, true));
     } else {
-      el.removeAttribute(directive2.expression);
+      attributes.forEach((attr) => el.removeAttribute(attr));
     }
   } else {
     let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
