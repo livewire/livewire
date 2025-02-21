@@ -11,10 +11,12 @@ export function toggleBooleanStateDirective(el, directive, isTruthy, cachedDispl
             el.classList.remove(...classes)
         }
     } else if (directive.modifiers.includes('attr')) {
+        let attributes = directive.expression.split(' ').filter(String)
+
         if (isTruthy) {
-            el.setAttribute(directive.expression, true)
+            attributes.forEach(attr => el.setAttribute(attr, true))
         } else {
-            el.removeAttribute(directive.expression)
+            attributes.forEach(attr => el.removeAttribute(attr))
         }
     } else {
         let cache = cachedDisplay ?? window

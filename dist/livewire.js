@@ -9600,10 +9600,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         el.classList.remove(...classes);
       }
     } else if (directive3.modifiers.includes("attr")) {
+      let attributes = directive3.expression.split(" ").filter(String);
       if (isTruthy) {
-        el.setAttribute(directive3.expression, true);
+        attributes.forEach((attr) => el.setAttribute(attr, true));
       } else {
-        el.removeAttribute(directive3.expression);
+        attributes.forEach((attr) => el.removeAttribute(attr));
       }
     } else {
       let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
