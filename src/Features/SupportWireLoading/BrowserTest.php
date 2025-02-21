@@ -142,6 +142,47 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_loading_multiple_attr_and_doesnt_conflict_with_exist_one()
+    {
+        Livewire::visit(new class extends Component {
+            public $localText = '';
+
+            public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(250000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <section>
+                            <button
+                                disabled
+                                dusk="button"
+                                wire:loading.attr="disabled data-disabled"
+                                wire:target="localText">
+                                Submit
+                            </button>
+                            <input type="text" dusk="localInput" wire:model.live.debounce.100ms="localText">
+                            {{ $localText }}
+                        </section>
+                    </div>
+                HTML;
+            }
+        })
+            ->waitForText('Submit')
+            ->assertSee('Submit')
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->assertAttributeMissing('@button', 'data-disabled')
+            ->type('@localInput', 'Text')
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->assertAttribute('@button', 'data-disabled', 'true')
+            ->waitForText('Text')
+            ->assertAttribute('@button', 'disabled', 'true')
+            ->assertAttributeMissing('@button', 'data-disabled')
+        ;
+    }
+
     function test_wire_loading_delay_is_removed_after_being_triggered_once()
     {
         /**
