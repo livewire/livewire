@@ -9,15 +9,16 @@ on('effect', ({ component, effects }) => {
     if (js) {
         Object.entries(js).forEach(([method, body]) => {
             overrideMethod(component, method, () => {
-                Alpine.evaluate(component.el, body)
+                Alpine.evaluate(component.el, body, { scope: component.jsActions })
             })
         })
     }
 
     if (xjs) {
-        xjs.forEach(expression => {
-            Alpine.evaluate(component.el, expression)
+        xjs.forEach(({ expression, params }) => {
+            params = Object.values(params)
+
+            Alpine.evaluate(component.el, expression, { scope: component.jsActions, params })
         })
     }
 })
-

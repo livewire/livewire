@@ -24,6 +24,7 @@ let aliases = {
     'on': '$on',
     'el': '$el',
     'id': '$id',
+    'js': '$js',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -47,6 +48,8 @@ export function generateWireObject(component, state) {
 
             if (property in aliases) {
                 return getProperty(component, aliases[property])
+            } else if (component.hasJsAction(property)) {
+                return component.getJsAction(property)
             } else if (property in properties) {
                 return getProperty(component, property)
             } else if (property in state) {
@@ -113,6 +116,18 @@ wireProperty('$el', (component) => {
 
 wireProperty('$id', (component) => {
     return component.id
+})
+
+wireProperty('$js', (component) => {
+    let fn = component.addJsAction.bind(component)
+
+    let jsActions = component.getJsActions()
+
+    Object.keys(jsActions).forEach((name) => {
+        fn[name] = component.getJsAction(name)
+    })
+
+    return fn
 })
 
 wireProperty('$set', (component) => async (property, value, live = true) => {
