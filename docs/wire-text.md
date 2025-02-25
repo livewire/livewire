@@ -1,19 +1,41 @@
+# `wire:text`
 
-`wire:text` sets the text content of an element to the result of a given expression.
+`wire:text` is a directive that dynamically updates an element's text content based on a component property or expression. Unlike using Blade's `{{ }}` syntax, `wire:text` updates the content without requiring a network roundtrip to re-render the component.
 
-Here's a basic example of using `wire:text` to display a name:
+If you are familiar with Alpine's `x-text` directive, it is essentially the same.
+
+## Basic usage
+
+Here's an example of using `wire:text` to optimistically show updates to a Livewire property without waiting for a network roundtrip.
 
 ```php
-class ShowName extends Component
+use Livewire\Component;
+use App\Models\Post;
+
+class ShowPost extends Component
 {
-    public $name = 'Caleb';
+    public Post $post;
+
+    public $likes;
+
+    public function mount()
+    {
+        $this->likes = $this->post->like_count;
+    }
+
+    public function like()
+    {
+        $this->post->like();
+
+        $this->likes = $this->post->fresh()->like_count;
+    }
 }
 ```
 
 ```blade
 <div>
-    <p wire:text="name"></p>
+    <button x-on:click="$wire.likes++; $wire.like()">❤️ Like</button>
+
+    Likes: <span wire:text="likes"></span>
 </div>
 ```
-
-Now the `<p>` tag's inner text content will be set to "Caleb".

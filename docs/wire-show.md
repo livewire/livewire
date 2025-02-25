@@ -2,7 +2,7 @@ Livewire's `wire:show` directive makes it easy to show and hide elements based o
 
 The `wire:show` directive is different than using `@if` in Blade in that it toggles an element's visibility using CSS (`display: none`) rather than removing the element from the DOM entirely. This means the element remains in the page but is hidden, allowing for smoother transitions without requiring a server round-trip.
 
-## Basic Usage
+## Basic usage
 
 Here's a practical example of using `wire:show` to toggle a "Create Post" modal:
 
