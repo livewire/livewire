@@ -8188,6 +8188,7 @@ var aliases = {
   "on": "$on",
   "el": "$el",
   "id": "$id",
+  "js": "$js",
   "get": "$get",
   "set": "$set",
   "call": "$call",
@@ -8210,6 +8211,8 @@ function generateWireObject(component, state) {
         return component;
       if (property in aliases) {
         return getProperty(component, aliases[property]);
+      } else if (component.hasJsAction(property)) {
+        return component.getJsAction(property);
       } else if (property in properties) {
         return getProperty(component, property);
       } else if (property in state) {
@@ -8258,6 +8261,14 @@ wireProperty("$el", (component) => {
 });
 wireProperty("$id", (component) => {
   return component.id;
+});
+wireProperty("$js", (component) => {
+  let fn = component.addJsAction.bind(component);
+  let jsActions = component.getJsActions();
+  Object.keys(jsActions).forEach((name) => {
+    fn[name] = component.getJsAction(name);
+  });
+  return fn;
 });
 wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
@@ -8356,6 +8367,7 @@ var Component = class {
     this.queuedUpdates = {};
     this.$wire = generateWireObject(this, this.reactive);
     this.cleanups = [];
+    this.jsActions = {};
     this.processEffects(this.effects);
   }
   mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -8431,6 +8443,18 @@ var Component = class {
   }
   addCleanup(cleanup) {
     this.cleanups.push(cleanup);
+  }
+  addJsAction(name, action) {
+    this.jsActions[name] = action;
+  }
+  hasJsAction(name) {
+    return this.jsActions[name] !== void 0;
+  }
+  getJsAction(name) {
+    return this.jsActions[name].bind(this.$wire);
+  }
+  getJsActions() {
+    return this.jsActions;
   }
   cleanup() {
     delete this.el.__livewire;
@@ -9844,19 +9868,24 @@ function cloneScriptTag2(el) {
 
 // js/features/supportJsEvaluation.js
 var import_alpinejs7 = __toESM(require_module_cjs());
+import_alpinejs7.default.magic("js", (el) => {
+  let component = closestComponent(el);
+  return component.$wire.js;
+});
 on("effect", ({ component, effects }) => {
   let js = effects.js;
   let xjs = effects.xjs;
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs7.default.evaluate(component.el, body);
+        import_alpinejs7.default.evaluate(component.el, body, { scope: component.jsActions });
       });
     });
   }
   if (xjs) {
-    xjs.forEach((expression) => {
-      import_alpinejs7.default.evaluate(component.el, expression);
+    xjs.forEach(({ expression, params }) => {
+      params = Object.values(params);
+      import_alpinejs7.default.evaluate(component.el, expression, { scope: component.jsActions, params });
     });
   }
 });
