@@ -13,3 +13,5 @@ import './wire-dirty';
 import './wire-model';
 import './wire-init';
 import './wire-poll';
+import './wire-show';
+import './wire-text';
