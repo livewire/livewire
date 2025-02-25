@@ -74,7 +74,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends \Livewire\Component {
                 public function render() { return <<<'HTML'
                 <div>
-                    <button wire:click="test" dusk="test">Test</button>
+                    <button wire:click="$js.test" dusk="test">Test</button>
                 </div>
 
                 @script
@@ -98,7 +98,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             new class extends \Livewire\Component {
                 public function render() { return <<<'HTML'
                 <div>
-                    <button wire:click="test" dusk="test">Test</button>
+                    <button wire:click="$js.test" dusk="test">Test</button>
                 </div>
 
                 @script
@@ -123,7 +123,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() {
                     return <<<'HTML'
                         <div>
-                            <button wire:click="test" dusk="test">Test</button>
+                            <button wire:click="$js.test" dusk="test">Test</button>
                         </div>
 
                         @script
@@ -149,7 +149,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() {
                     return <<<'HTML'
                         <div>
-                            <button wire:click="test('foo','bar')" dusk="test">Test</button>
+                            <button wire:click="$js.test('foo','bar')" dusk="test">Test</button>
                         </div>
 
                         @script

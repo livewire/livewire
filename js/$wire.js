@@ -48,8 +48,6 @@ export function generateWireObject(component, state) {
 
             if (property in aliases) {
                 return getProperty(component, aliases[property])
-            } else if (component.hasJsAction(property)) {
-                return component.getJsAction(property)
             } else if (property in properties) {
                 return getProperty(component, property)
             } else if (property in state) {

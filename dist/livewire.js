@@ -4386,8 +4386,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return component;
         if (property in aliases) {
           return getProperty(component, aliases[property]);
-        } else if (component.hasJsAction(property)) {
-          return component.getJsAction(property);
         } else if (property in properties) {
           return getProperty(component, property);
         } else if (property in state) {
@@ -4540,7 +4538,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.queuedUpdates = {};
-      trigger2("component.register", { component: this });
+      this.jsActions = {};
       this.$wire = generateWireObject(this, this.reactive);
       this.cleanups = [];
       this.processEffects(this.effects);
@@ -4615,6 +4613,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         effects.scripts = this.originalEffects.scripts;
       }
       el.setAttribute("wire:effects", JSON.stringify(effects));
+    }
+    addJsAction(name, action) {
+      this.jsActions[name] = action;
+    }
+    hasJsAction(name) {
+      return this.jsActions[name] !== void 0;
+    }
+    getJsAction(name) {
+      return this.jsActions[name].bind(this.$wire);
+    }
+    getJsActions() {
+      return this.jsActions;
     }
     addCleanup(cleanup2) {
       this.cleanups.push(cleanup2);
@@ -8890,7 +8900,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
           });
         });
       });
@@ -8966,30 +8976,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let component = closestComponent(el);
     return component.$wire.js;
   });
-  on2("component.register", ({ component }) => {
-    Object.assign(component, {
-      jsActions: {},
-      addJsAction(name, action) {
-        this.jsActions[name] = action;
-      },
-      hasJsAction(name) {
-        return this.jsActions[name] !== void 0;
-      },
-      getJsAction(name) {
-        return this.jsActions[name].bind(this.$wire);
-      },
-      getJsActions() {
-        return this.jsActions;
-      }
-    });
-  });
   on2("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
     if (js) {
       Object.entries(js).forEach(([method, body]) => {
         overrideMethod(component, method, () => {
-          module_default.evaluate(component.el, body, { scope: component.jsActions });
+          module_default.evaluate(component.el, body);
         });
       });
     }
