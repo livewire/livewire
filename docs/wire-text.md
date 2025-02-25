@@ -1,8 +1,7 @@
-# `wire:text`
 
 `wire:text` is a directive that dynamically updates an element's text content based on a component property or expression. Unlike using Blade's `{{ }}` syntax, `wire:text` updates the content without requiring a network roundtrip to re-render the component.
 
-If you are familiar with Alpine's `x-text` directive, it is essentially the same.
+If you are familiar with Alpine's `x-text` directive, the two are essentially the same.
 
 ## Basic usage
 
@@ -39,3 +38,7 @@ class ShowPost extends Component
     Likes: <span wire:text="likes"></span>
 </div>
 ```
+
+When the button is clicked, `$wire.likes++` immediately updates the displayed count through `wire:text`, while `$wire.like()` persists the change to the database in the background.
+
+This pattern makes `wire:text` perfect for building optimistic UIs in Livewire.
