@@ -475,11 +475,14 @@ In this example, if the `getPostCount()` method returns "10", the `<span>` tag w
 
 Alpine knowledge is not required when using Livewire; however, it's an extremely powerful tool and knowing Alpine will augment your Livewire experience and productivity.
 
-## Livewire's "hybrid" JavaScript functions
+## JavaScript actions
 
-Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript.
+Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript. Or you may want to optimisticly update the UI using JavaScript before triggering a request to the server.
 
-In these cases, rather than writing the actions inside your Blade template or another file, your component action may return the JavaScript function as a string. If the action is marked with the `#[Js]` attribute, it will be callable from your application's frontend:
+In these cases, you can use the `$wire.$js()` method, or simply `$js()`, to define JavaScript actions in your component.
+
+> [!info]
+> To learn more about `$wire` and using JavaScript with Livewire, [visit the JavaScript documentation](/docs/javascript).
 
 For example:
 
@@ -488,52 +491,64 @@ For example:
 
 namespace App\Livewire;
 
-use Livewire\Attributes\Js;
 use Livewire\Component;
-use App\Models\Post;
 
-class SearchPosts extends Component
+class FavouritePost extends Component
 {
-    public $query = '';
+    public $isFavorite = false;
 
-    #[Js] // [tl! highlight:6]
-    public function resetQuery()
+    public function save()
     {
-        return <<<'JS'
-            $wire.query = '';
-        JS;
+        // Persist to database...
     }
 
     public function render()
     {
-        return view('livewire.search-posts', [
-            'posts' => Post::whereTitle($this->query)->get(),
-        ]);
+        return view('livewire.favourite-post');
     }
 }
 ```
 
 ```blade
 <div>
-    <input wire:model.live="query">
+    <button wire:click="favorite" class="flex items-center gap-1">
+        {{-- Heroicon heart outline --}}
+        <svg wire:show="!isFavorite" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+        </svg>
 
-    <button wire:click="resetQuery">Reset Search</button> <!-- [tl! highlight] -->
-
-    @foreach ($posts as $post)
-        <!-- ... -->
-    @endforeach
+        {{-- Heroicon heart solid --}}
+        <svg wire:show="isFavorite" x-cloak xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+          <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+        </svg>
+        <span wire:text="isFavorite ? 'Unfavorite' : 'Favorite'"></span>
+    </button>
 </div>
+
+@script
+<script>
+    $js('favorite', () => {
+        $wire.isFavorite = !$wire.isFavorite;
+
+        $wire.save();
+    });
+</script>
+@endscript
 ```
 
-In the above example, when the "Reset Search" button is pressed, the text input will be cleared without sending any requests to the server.
+In the above example, when the favorite button is pressed, the "favorite" JavaScript action will be run, updating the icon and text and then `save()` action will be called.
 
-### Evaluating one-off JavaScript expressions
+### Calling from Alpine
 
-In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions.
+You can call JavaScript actions from Alpine using the `$wire` object. For example, you may use the `$wire` object to invoke the `favorite` JavaScript action:
 
-This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
+```blade
+<button x-on:click="$wire.favorite()">Favorite</button>
+```
 
-For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
+### Calling from the backend
+
+JavaScript actions can also be called from the `js()` method:
 
 ```php
 <?php
@@ -550,14 +565,28 @@ class CreatePost extends Component
     {
         // ...
 
-        $this->js("alert('Post saved!')"); // [tl! highlight:6]
+        $this->js("postSaved"); // [tl! highlight:6]
     }
 }
 ```
 
-The JavaScript expression `alert('Post saved!')` will now be executed on the client after the post has been saved to the database on the server.
+```blade
+<div>
+    <!-- ... -->
 
-Just like `#[Js]` methods, you can access the current component's `$wire` object inside the expression.
+    <button wire:click="save">Save</button>
+</div>
+
+@script
+<script>
+    $js('postSaved', () => {
+        alert('Post saved!');
+    });
+</script>
+@endscript
+```
+
+In this example, when the `save()` action is finished, the `postSaved` JavaScript action will be run, triggering the alert dialog.
 
 ## Magic actions
 

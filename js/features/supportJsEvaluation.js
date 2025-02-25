@@ -1,6 +1,13 @@
+import { closestComponent } from '@/store'
 import { overrideMethod } from '@/$wire'
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
+
+Alpine.magic('js', el => {
+    let component = closestComponent(el)
+
+    return component.$wire.js
+})
 
 on('effect', ({ component, effects }) => {
     let js = effects.js
