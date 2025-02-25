@@ -8188,6 +8188,7 @@ var aliases = {
   "on": "$on",
   "el": "$el",
   "id": "$id",
+  "js": "$js",
   "get": "$get",
   "set": "$set",
   "call": "$call",
@@ -8258,6 +8259,14 @@ wireProperty("$el", (component) => {
 });
 wireProperty("$id", (component) => {
   return component.id;
+});
+wireProperty("$js", (component) => {
+  let fn = component.addJsAction.bind(component);
+  let jsActions = component.getJsActions();
+  Object.keys(jsActions).forEach((name) => {
+    fn[name] = component.getJsAction(name);
+  });
+  return fn;
 });
 wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
@@ -8354,6 +8363,7 @@ var Component = class {
     this.ephemeral = extractData(deepClone(this.snapshot.data));
     this.reactive = Alpine.reactive(this.ephemeral);
     this.queuedUpdates = {};
+    this.jsActions = {};
     this.$wire = generateWireObject(this, this.reactive);
     this.cleanups = [];
     this.processEffects(this.effects);
@@ -8428,6 +8438,18 @@ var Component = class {
       effects.scripts = this.originalEffects.scripts;
     }
     el.setAttribute("wire:effects", JSON.stringify(effects));
+  }
+  addJsAction(name, action) {
+    this.jsActions[name] = action;
+  }
+  hasJsAction(name) {
+    return this.jsActions[name] !== void 0;
+  }
+  getJsAction(name) {
+    return this.jsActions[name].bind(this.$wire);
+  }
+  getJsActions() {
+    return this.jsActions;
   }
   addCleanup(cleanup) {
     this.cleanups.push(cleanup);
@@ -9771,7 +9793,7 @@ on("effect", ({ component, effects }) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
         import_alpinejs6.default.dontAutoEvaluateFunctions(() => {
-          import_alpinejs6.default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+          import_alpinejs6.default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
         });
       });
     });
@@ -9844,6 +9866,10 @@ function cloneScriptTag2(el) {
 
 // js/features/supportJsEvaluation.js
 var import_alpinejs7 = __toESM(require_module_cjs());
+import_alpinejs7.default.magic("js", (el) => {
+  let component = closestComponent(el);
+  return component.$wire.js;
+});
 on("effect", ({ component, effects }) => {
   let js = effects.js;
   let xjs = effects.xjs;
@@ -9855,8 +9881,9 @@ on("effect", ({ component, effects }) => {
     });
   }
   if (xjs) {
-    xjs.forEach((expression) => {
-      import_alpinejs7.default.evaluate(component.el, expression);
+    xjs.forEach(({ expression, params }) => {
+      params = Object.values(params);
+      import_alpinejs7.default.evaluate(component.el, expression, { scope: component.jsActions, params });
     });
   }
 });
