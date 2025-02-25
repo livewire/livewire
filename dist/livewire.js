@@ -10088,6 +10088,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return durationInMilliSeconds || defaultDuration;
   }
 
+  // js/directives/wire-show.js
+  module_default.interceptInit((el) => {
+    if (!el.hasAttribute("wire:show"))
+      return;
+    let value = el.getAttribute("wire:show");
+    let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+    module_default.bind(el, {
+      ["x-show"]() {
+        return module_default.evaluate(el, expression);
+      }
+    });
+  });
+
+  // js/directives/wire-text.js
+  module_default.interceptInit((el) => {
+    if (!el.hasAttribute("wire:text"))
+      return;
+    let value = el.getAttribute("wire:text");
+    let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+    module_default.bind(el, {
+      ["x-text"]() {
+        return module_default.evaluate(el, expression);
+      }
+    });
+  });
+
   // js/index.js
   var Livewire2 = {
     directive: directive2,
