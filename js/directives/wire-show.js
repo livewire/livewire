@@ -1,17 +1,21 @@
 import Alpine from 'alpinejs'
 
 Alpine.interceptInit(el => {
-    if (!el.hasAttribute('wire:show')) return
+    for (let i = 0; i < el.attributes.length; i++) {
+        if (el.attributes[i].name.startsWith('wire:show')) {
+            let { name, value } = el.attributes[i]
 
-    let value = el.getAttribute('wire:show')
+            let modifierString = name.split('wire:show')[1]
 
-    let expression = value.startsWith('!')
-        ? '!$wire.' + value.slice(1).trim()
-        : '$wire.' + value.trim()
+            let expression = value.startsWith('!')
+                ? '!$wire.' + value.slice(1).trim()
+                : '$wire.' + value.trim()
 
-    Alpine.bind(el, {
-        ['x-show']() {
-            return Alpine.evaluate(el, expression)
+            Alpine.bind(el, {
+                ['x-show' + modifierString]() {
+                    return Alpine.evaluate(el, expression)
+                }
+            })
         }
-    })
+    }
 })
