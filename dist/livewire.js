@@ -4540,9 +4540,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.queuedUpdates = {};
+      trigger2("component.register", { component: this });
       this.$wire = generateWireObject(this, this.reactive);
       this.cleanups = [];
-      this.jsActions = {};
       this.processEffects(this.effects);
     }
     mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -4618,18 +4618,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     addCleanup(cleanup2) {
       this.cleanups.push(cleanup2);
-    }
-    addJsAction(name, action) {
-      this.jsActions[name] = action;
-    }
-    hasJsAction(name) {
-      return this.jsActions[name] !== void 0;
-    }
-    getJsAction(name) {
-      return this.jsActions[name].bind(this.$wire);
-    }
-    getJsActions() {
-      return this.jsActions;
     }
     cleanup() {
       delete this.el.__livewire;
@@ -8977,6 +8965,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   module_default.magic("js", (el) => {
     let component = closestComponent(el);
     return component.$wire.js;
+  });
+  on2("component.register", ({ component }) => {
+    Object.assign(component, {
+      jsActions: {},
+      addJsAction(name, action) {
+        this.jsActions[name] = action;
+      },
+      hasJsAction(name) {
+        return this.jsActions[name] !== void 0;
+      },
+      getJsAction(name) {
+        return this.jsActions[name].bind(this.$wire);
+      },
+      getJsActions() {
+        return this.jsActions;
+      }
+    });
   });
   on2("effect", ({ component, effects }) => {
     let js = effects.js;

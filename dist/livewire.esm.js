@@ -8365,9 +8365,9 @@ var Component = class {
     this.ephemeral = extractData(deepClone(this.snapshot.data));
     this.reactive = Alpine.reactive(this.ephemeral);
     this.queuedUpdates = {};
+    trigger("component.register", { component: this });
     this.$wire = generateWireObject(this, this.reactive);
     this.cleanups = [];
-    this.jsActions = {};
     this.processEffects(this.effects);
   }
   mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
@@ -8443,18 +8443,6 @@ var Component = class {
   }
   addCleanup(cleanup) {
     this.cleanups.push(cleanup);
-  }
-  addJsAction(name, action) {
-    this.jsActions[name] = action;
-  }
-  hasJsAction(name) {
-    return this.jsActions[name] !== void 0;
-  }
-  getJsAction(name) {
-    return this.jsActions[name].bind(this.$wire);
-  }
-  getJsActions() {
-    return this.jsActions;
   }
   cleanup() {
     delete this.el.__livewire;
@@ -9871,6 +9859,23 @@ var import_alpinejs7 = __toESM(require_module_cjs());
 import_alpinejs7.default.magic("js", (el) => {
   let component = closestComponent(el);
   return component.$wire.js;
+});
+on("component.register", ({ component }) => {
+  Object.assign(component, {
+    jsActions: {},
+    addJsAction(name, action) {
+      this.jsActions[name] = action;
+    },
+    hasJsAction(name) {
+      return this.jsActions[name] !== void 0;
+    },
+    getJsAction(name) {
+      return this.jsActions[name].bind(this.$wire);
+    },
+    getJsActions() {
+      return this.jsActions;
+    }
+  });
 });
 on("effect", ({ component, effects }) => {
   let js = effects.js;
