@@ -37,12 +37,12 @@ export class Component {
 
         this.queuedUpdates = {}
 
+        trigger('component.register', { component: this })
+
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
 
         this.cleanups = []
-
-        this.jsActions = {}
 
         // Effects will be processed after every request, but we'll also handle them on initialization.
         this.processEffects(this.effects)
@@ -175,22 +175,6 @@ export class Component {
 
     addCleanup(cleanup) {
         this.cleanups.push(cleanup)
-    }
-
-    addJsAction(name, action) {
-        this.jsActions[name] = action
-    }
-
-    hasJsAction(name) {
-        return this.jsActions[name] !== undefined
-    }
-
-    getJsAction(name) {
-        return this.jsActions[name].bind(this.$wire)
-    }
-
-    getJsActions() {
-        return this.jsActions
     }
 
     cleanup() {
