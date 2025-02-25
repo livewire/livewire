@@ -11022,29 +11022,35 @@ function extractDurationFrom(modifiers, defaultDuration) {
 // js/directives/wire-show.js
 var import_alpinejs18 = __toESM(require_module_cjs());
 import_alpinejs18.default.interceptInit((el) => {
-  if (!el.hasAttribute("wire:show"))
-    return;
-  let value = el.getAttribute("wire:show");
-  let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-  import_alpinejs18.default.bind(el, {
-    ["x-show"]() {
-      return import_alpinejs18.default.evaluate(el, expression);
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:show")) {
+      let { name, value } = el.attributes[i];
+      let modifierString = name.split("wire:show")[1];
+      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+      import_alpinejs18.default.bind(el, {
+        ["x-show" + modifierString]() {
+          return import_alpinejs18.default.evaluate(el, expression);
+        }
+      });
     }
-  });
+  }
 });
 
 // js/directives/wire-text.js
 var import_alpinejs19 = __toESM(require_module_cjs());
 import_alpinejs19.default.interceptInit((el) => {
-  if (!el.hasAttribute("wire:text"))
-    return;
-  let value = el.getAttribute("wire:text");
-  let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-  import_alpinejs19.default.bind(el, {
-    ["x-text"]() {
-      return import_alpinejs19.default.evaluate(el, expression);
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:text")) {
+      let { name, value } = el.attributes[i];
+      let modifierString = name.split("wire:text")[1];
+      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+      import_alpinejs19.default.bind(el, {
+        ["x-text" + modifierString]() {
+          return import_alpinejs19.default.evaluate(el, expression);
+        }
+      });
     }
-  });
+  }
 });
 
 // js/index.js

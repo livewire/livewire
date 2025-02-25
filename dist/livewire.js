@@ -10117,28 +10117,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-show.js
   module_default.interceptInit((el) => {
-    if (!el.hasAttribute("wire:show"))
-      return;
-    let value = el.getAttribute("wire:show");
-    let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-    module_default.bind(el, {
-      ["x-show"]() {
-        return module_default.evaluate(el, expression);
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:show")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-show" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
       }
-    });
+    }
   });
 
   // js/directives/wire-text.js
   module_default.interceptInit((el) => {
-    if (!el.hasAttribute("wire:text"))
-      return;
-    let value = el.getAttribute("wire:text");
-    let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-    module_default.bind(el, {
-      ["x-text"]() {
-        return module_default.evaluate(el, expression);
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:text")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:text")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-text" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
       }
-    });
+    }
   });
 
   // js/index.js
