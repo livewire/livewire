@@ -9885,6 +9885,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
+  // js/directives/wire-cloak.js
+  module_default.interceptInit((el) => {
+    if (el.hasAttribute("wire:cloak")) {
+      module_default.mutateDom(() => el.removeAttribute("wire:cloak"));
+    }
+  });
+
   // js/directives/wire-dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
   on2("commit", ({ component, succeed }) => {

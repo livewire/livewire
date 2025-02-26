@@ -477,12 +477,9 @@ Alpine knowledge is not required when using Livewire; however, it's an extremely
 
 ## JavaScript actions
 
-Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript. Or you may want to optimisticly update the UI using JavaScript before triggering a request to the server.
+Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript. Other times, you may want to optimisticly update the UI using JavaScript before triggering a request to the server.
 
-In these cases, you can use the `$wire.$js()` method, or simply `$js()`, to define JavaScript actions in your component.
-
-> [!info]
-> To learn more about `$wire` and using JavaScript with Livewire, [visit the JavaScript documentation](/docs/javascript).
+In these cases, you can use the `$js()` function to define JavaScript actions from a `<script>` tag inside your component.
 
 For example:
 
@@ -492,63 +489,72 @@ For example:
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\Post;
 
-class FavouritePost extends Component
+class ShowPost extends Component
 {
-    public $isFavorite = false;
+    public Post $post;
 
-    public function save()
+    public $starred = false;
+
+    public function mount()
     {
-        // Persist to database...
+        $this->starred = $this->post->starred(auth()->user());
+    }
+
+    public function star()
+    {
+        $this->post->star(auth()->user());
+
+        $this->starred = $this->post->starred(auth()->user());
     }
 
     public function render()
     {
-        return view('livewire.favourite-post');
+        return view('livewire.show-post');
     }
 }
 ```
 
 ```blade
 <div>
-    <button wire:click="favorite" class="flex items-center gap-1">
+    <button wire:click="$js.star" class="flex items-center gap-1">
         {{-- Heroicon heart outline --}}
-        <svg wire:show="!isFavorite" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <svg wire:show="!starred" wire:cloak xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
         </svg>
 
         {{-- Heroicon heart solid --}}
-        <svg wire:show="isFavorite" x-cloak xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+        <svg wire:show="starred" wire:cloak xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
           <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
         </svg>
-        <span wire:text="isFavorite ? 'Unfavorite' : 'Favorite'"></span>
     </button>
 </div>
 
 @script
 <script>
-    $js('favorite', () => {
-        $wire.isFavorite = !$wire.isFavorite;
+    $js('star', () => {
+        $wire.starred = !$wire.starred
 
-        $wire.save();
-    });
+        $wire.star()
+    })
 </script>
 @endscript
 ```
 
-In the above example, when the favorite button is pressed, the "favorite" JavaScript action will be run, updating the icon and text and then `save()` action will be called.
+In the above example, when the heart button is pressed, the "starPost" JavaScript action will be run, updating the icon immediately, then the `save()` action will be called and the server will be updated.
 
 ### Calling from Alpine
 
 You can call JavaScript actions from Alpine using the `$wire` object. For example, you may use the `$wire` object to invoke the `favorite` JavaScript action:
 
 ```blade
-<button x-on:click="$wire.favorite()">Favorite</button>
+<button x-on:click="$wire.$js.star()">Favorite</button>
 ```
 
-### Calling from the backend
+### Calling from PHP
 
-JavaScript actions can also be called from the `js()` method:
+JavaScript actions can also be called using the `js()` method inside a Livewire method:
 
 ```php
 <?php
@@ -565,7 +571,7 @@ class CreatePost extends Component
     {
         // ...
 
-        $this->js("postSaved"); // [tl! highlight:6]
+        $this->js('postSaved'); // [tl! highlight]
     }
 }
 ```
@@ -580,8 +586,8 @@ class CreatePost extends Component
 @script
 <script>
     $js('postSaved', () => {
-        alert('Post saved!');
-    });
+        alert('Post saved!')
+    })
 </script>
 @endscript
 ```

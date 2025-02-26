@@ -35,6 +35,7 @@ HTML Directives:
     wire:loading: { uri: /docs/wire-loading, file: /wire-loading.md }
     wire:navigate: { uri: /docs/wire-navigate, file: /wire-navigate.md }
     wire:current: { uri: /docs/wire-current, file: /wire-current.md }
+    wire:cloak: { uri: /docs/wire-cloak, file: /wire-cloak.md }
     wire:dirty: { uri: /docs/wire-dirty, file: /wire-dirty.md }
     wire:confirm: { uri: /docs/wire-confirm, file: /wire-confirm.md }
     wire:transition: { uri: /docs/wire-transition, file: /wire-transition.md }

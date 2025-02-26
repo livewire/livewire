@@ -27,7 +27,7 @@ Here's a more full example where you can do something like register a JavaScript
 
 ```blade
 <div>
-    <button wire:click="increment">+</button>
+    <button wire:click="$js.increment">+</button>
 </div>
 
 @script
@@ -191,15 +191,15 @@ In certain scenarios, you might need to unregister global Livewire events. For i
 Alpine.data('MyComponent', () => ({
     listeners: [],
     init() {
-        this.listeners.push(  
-            Livewire.on('post-created', (options) => {  
+        this.listeners.push(
+            Livewire.on('post-created', (options) => {
                 // Do something...
             })
         );
     },
     destroy() {
-        this.listeners.forEach((listener) => {  
-            listener();  
+        this.listeners.forEach((listener) => {
+            listener();
         });
     }
 }));
