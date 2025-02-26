@@ -477,11 +477,14 @@ Alpine knowledge is not required when using Livewire; however, it's an extremely
 
 ## JavaScript actions
 
-Sometimes there are actions in your component that don't need to communicate with the server and can be more efficiently written using only JavaScript. Other times, you may want to optimisticly update the UI using JavaScript before triggering a request to the server.
+Livewire allows you to define JavaScript actions that run entirely on the client-side without making a server request. This is useful in two scenarios:
 
-In these cases, you can use the `$js()` function to define JavaScript actions from a `<script>` tag inside your component.
+1. When you want to perform simple UI updates that don't require server communication
+2. When you want to optimistically update the UI with JavaScript before making a server request
 
-For example:
+To define a JavaScript action, you can use the `$js()` function inside a `<script>` tag in your component.
+
+Here's an example of bookmarking a post that uses a JavaScript action to optimistically update the UI before making a server request. The JavaScript action immediately shows the filled bookmark icon, then makes a request to persist the bookmark in the database:
 
 ```php
 <?php
@@ -495,18 +498,18 @@ class ShowPost extends Component
 {
     public Post $post;
 
-    public $starred = false;
+    public $bookmarked = false;
 
     public function mount()
     {
-        $this->starred = $this->post->starred(auth()->user());
+        $this->bookmarked = $this->post->bookmarkedBy(auth()->user());
     }
 
-    public function star()
+    public function bookmarkPost()
     {
-        $this->post->star(auth()->user());
+        $this->post->bookmark(auth()->user());
 
-        $this->starred = $this->post->starred(auth()->user());
+        $this->bookmarked = $this->post->bookmarkedBy(auth()->user());
     }
 
     public function render()
@@ -518,43 +521,49 @@ class ShowPost extends Component
 
 ```blade
 <div>
-    <button wire:click="$js.star" class="flex items-center gap-1">
-        {{-- Heroicon heart outline --}}
-        <svg wire:show="!starred" wire:cloak xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+    <button wire:click="$js.bookmark" class="flex items-center gap-1">
+        {{-- Outlined bookmark icon... --}}
+        <svg wire:show="!bookmarked" wire:cloak xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
         </svg>
 
-        {{-- Heroicon heart solid --}}
-        <svg wire:show="starred" wire:cloak xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-          <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+        {{-- Solid bookmark icon... --}}
+        <svg wire:show="bookmarked" wire:cloak xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+            <path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd" />
         </svg>
     </button>
 </div>
 
 @script
 <script>
-    $js('star', () => {
-        $wire.starred = !$wire.starred
+    $js('bookmark', () => {
+        $wire.bookmarked = !$wire.bookmarked
 
-        $wire.star()
+        $wire.bookmarkPost()
     })
 </script>
 @endscript
 ```
 
-In the above example, when the heart button is pressed, the "starPost" JavaScript action will be run, updating the icon immediately, then the `save()` action will be called and the server will be updated.
+When a user clicks the heart button, the following sequence occurs:
+
+1. The "bookmark" JavaScript action is triggered
+2. The heart icon immediately updates by toggling `$wire.bookmarked` on the client-side
+3. The `bookmarkPost()` method is called to save the change to the database
+
+This provides instant visual feedback while ensuring the bookmark state is properly persisted.
 
 ### Calling from Alpine
 
-You can call JavaScript actions from Alpine using the `$wire` object. For example, you may use the `$wire` object to invoke the `favorite` JavaScript action:
+You can call JavaScript actions directly from Alpine using the `$wire` object. For example, you may use the `$wire` object to invoke the `bookmark` JavaScript action:
 
 ```blade
-<button x-on:click="$wire.$js.star()">Favorite</button>
+<button x-on:click="$wire.$js.bookmark()">Bookmark</button>
 ```
 
 ### Calling from PHP
 
-JavaScript actions can also be called using the `js()` method inside a Livewire method:
+JavaScript actions can also be called using the `js()` method from PHP:
 
 ```php
 <?php
@@ -571,7 +580,7 @@ class CreatePost extends Component
     {
         // ...
 
-        $this->js('postSaved'); // [tl! highlight]
+        $this->js('onPostSaved'); // [tl! highlight]
     }
 }
 ```
@@ -585,8 +594,8 @@ class CreatePost extends Component
 
 @script
 <script>
-    $js('postSaved', () => {
-        alert('Post saved!')
+    $js('onPostSaved', () => {
+        alert('Your post has been saved successfully!')
     })
 </script>
 @endscript
