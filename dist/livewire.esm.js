@@ -10353,6 +10353,14 @@ on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup }) => {
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:show")) {
+      import_alpinejs11.default.bind(el, {
+        [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
+      });
+      return;
+    }
+  }
   let visibility = import_alpinejs11.default.reactive({ state: el.__addedByMorph ? false : true });
   import_alpinejs11.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",

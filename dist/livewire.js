@@ -9455,6 +9455,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        module_default.bind(el, {
+          [directive3.rawName.replace("wire:transition", "x-transition")]: directive3.expression
+        });
+        return;
+      }
+    }
     let visibility = module_default.reactive({ state: el.__addedByMorph ? false : true });
     module_default.bind(el, {
       [directive3.rawName.replace("wire:", "x-")]: "",
