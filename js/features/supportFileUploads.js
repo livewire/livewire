@@ -55,6 +55,11 @@ export function handleFileUpload(el, property, component, cleanup) {
         if (value === null || value === '') {
             el.value = ''
         }
+        
+        // If the file input is a multiple file input and the value has been reset to an empty array, then reset the input...
+        if (el.multiple && Array.isArray(value) && value.length === 0) {
+            el.value = ''
+        }
     })
 
     // There's a bug in browsers where selecting a file, removing it,

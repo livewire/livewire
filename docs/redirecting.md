@@ -92,7 +92,7 @@ public function save()
 {
     // ...
 
-    $this->redirect(ShowPage::class);
+    $this->redirect(ShowPosts::class);
 }
 ```
 

@@ -7,6 +7,17 @@ on('morph.added', ({ el }) => {
 })
 
 directive('transition', ({ el, directive, component, cleanup }) => {
+    // Support using wire:transition with wire:show as well...
+    for (let i = 0; i < el.attributes.length; i++) {
+        if (el.attributes[i].name.startsWith('wire:show')) {
+            Alpine.bind(el, {
+                [directive.rawName.replace('wire:transition', 'x-transition')]: directive.expression,
+            })
+
+            return
+        }
+    }
+
     let visibility = Alpine.reactive({ state: el.__addedByMorph ? false : true })
 
     // We're going to control the element's transition with Alpine transitions...
@@ -46,6 +57,3 @@ directive('transition', ({ el, directive, component, cleanup }) => {
 
     cleanup(() => cleanups.forEach(i => i()))
 })
-
-
-
