@@ -2,6 +2,17 @@
 
 namespace Livewire\Features\SupportAttributes;
 
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Isolate;
+use Livewire\Attributes\Js;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\Modelable;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Reactive;
+use Livewire\Attributes\Session;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
+use Livewire\Attributes\Lazy;
 use Livewire\Livewire;
 use Tests\TestComponent;
 
@@ -47,6 +58,123 @@ class UnitTest extends \Tests\TestCase
             public $count = 0;
         })
             ->assertSetStrict('count', 0);
+    }
+
+    public function test_component_has_attribute()
+    {
+        Livewire::test(NewComponent::class)
+                ->assertComponentHasAttribute(Title::class, 'Class Level Attribute')
+                ->assertComponentHasAttribute(Validate::class, ['required', 'integer'])
+                ->assertComponentHasAttribute(On::class, 'fooEvent')
+            ->assertComponentHasAttribute(Modelable::class);
+    }
+
+    public function test_component_has_class_level_attribute_with_value()
+    {
+        Livewire::test(NewComponent::class)
+            ->assertClassHasAttribute(Lazy::class, ['isolate' => false])
+            ->assertClassHasAttribute(Title::class, 'Class Level Attribute');
+    }
+
+    public function test_component_has_method_level_attribute()
+    {
+        Livewire::test(NewComponent::class)
+            ->assertMethodHasAttribute('jsMethod', Js::class)
+            ->assertMethodHasAttribute('doubleFoo', On::class, 'fooEvent')
+            ->assertMethodHasAttribute('barMethod', On::class, ['barEvent', 'bazEvent'])
+            ->assertMethodHasAttribute('fooToThePowerOfTwo', Computed::class, [
+                'persist' => true,
+                'seconds' => 7200,
+            ])
+            ->assertMethodHasAttribute('anotherComputedProperty', Computed::class, [
+                'cache' => true,
+                'key' => 'homepage-posts',
+                'tags' => ['posts', 'homepage'],
+            ]);
+    }
+
+    public function test_component_has_property_level_attribute()
+    {
+        Livewire::test(NewComponent::class)
+            ->assertPropertyHasAttribute('fizz', Reactive::class)
+            ->assertPropertyHasAttribute('count2', Locked::class)
+            ->assertPropertyHasAttribute('count2', LifecycleHookAttribute::class)
+            ->assertPropertyHasAttribute('bar', Session::class, ['key' => 'foo'])
+            ->assertPropertyHasAttribute('foo', Validate::class, ['required', 'integer']);
+    }
+
+    public function test_component_has_property_with_multiple_attributes()
+    {
+        Livewire::test(NewComponent::class)
+            ->assertPropertyHasAttribute('bar', Validate::class, [
+                'rule' => 'required',
+                'as' => 'date of birth',
+            ])
+            ->assertPropertyHasAttribute('baz', Validate::class, [
+                'rule' => 'required',
+                'message' => 'This is a custom message',
+            ])
+            ->assertPropertyHasAttribute('baz', Isolate::class);
+    }
+
+}
+
+#[Lazy(isolate: false)]
+#[Title('Class Level Attribute')]
+class NewComponent extends TestComponent {
+
+    #[Modelable]
+    #[Validate(['required', 'integer'])]
+    public ?int $foo = null;
+
+    #[Reactive]
+    public string $fizz = 'buzz';
+
+    #[Locked]
+    #[LifecycleHookAttribute]
+    public int $count2 = 0;
+
+    #[Validate('required', as: 'date of birth')]
+    #[Session(key: 'foo')]
+    public string $bar = 'bar';
+
+    #[Validate('required', message: 'This is a custom message')]
+    #[Validate('integer', message: 'Why is this not an integer?')]
+    #[Isolate]
+    public $baz = 'baz';
+
+    #[Js]
+    public function jsMethod()
+    {
+        return <<<'JS'
+            $wire.on('fooEvent', () => {
+                console.log('fooEvent');
+            });
+        JS;
+    }
+
+    #[On(['barEvent', 'bazEvent'])]
+    public function barMethod(): string
+    {
+        return 'bar';
+    }
+
+    #[Computed(persist: true, seconds: 7200)]
+    public function fooToThePowerOfTwo(): int
+    {
+        return $this->foo ** 2;
+    }
+
+    #[Computed(cache: true, key: 'homepage-posts', tags: ['posts', 'homepage'])]
+    public function anotherComputedProperty(): string
+    {
+        return 'cached value';
+    }
+
+    #[On('fooEvent')]
+    public function doubleFoo(): int
+    {
+        return $this->foo * 2;
     }
 }
 
