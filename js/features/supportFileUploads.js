@@ -145,7 +145,7 @@ class UploadManager {
 
     handleSignedUrl(name, url) {
         let formData = new FormData()
-        Array.from(this.uploadBag.first(name).files).forEach(file => formData.append('files[]', file, file.name))
+        Array.from(this.uploadBag.first(name)?.files ?? []).forEach(file => formData.append('files[]', file, file.name))
 
         let headers = {
             'Accept': 'application/json',
