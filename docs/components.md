@@ -264,7 +264,7 @@ class CreatePost extends Component
 
     public function save() // [tl! highlight:8]
     {
-		$post = Post::create([
+		Post::create([
 			'title' => $this->title
 		]);
 
