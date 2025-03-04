@@ -4,8 +4,7 @@ namespace Livewire\Features\[FEATURE];
 
 class Test extends \Tests\TestCase
 {
-    /** @test */
-    public function can_()
+    public function test_can_()
     {
         $this->assertTrue(true);
     }

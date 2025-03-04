@@ -6,8 +6,7 @@ use Tests\TestCase;
 
 class UnitTest extends TestCase
 {
-    /** @test */
-    public function livewire_can_run_handle_request_without_components_on_payload(): void
+    public function test_livewire_can_run_handle_request_without_components_on_payload(): void
     {
         $handleRequestsInstance = new HandleRequests();
         $request = new Request();
