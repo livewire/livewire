@@ -615,7 +615,7 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
         // Runs after a response is received but before it's processed...
     })
 
-    succeed(({ snapshot, effect }) => {
+    succeed(({ snapshot, effects }) => {
         // Runs after a successful response is received and processed
         // with a new snapshot and list of effects...
     })
