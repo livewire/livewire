@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 use Illuminate\Support\Facades\Facade;
 use Livewire\Attributes\Persistent;
 use Livewire\Livewire;
+use function Livewire\invade;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
@@ -44,7 +45,7 @@ class UnitTest extends \LegacyTests\Unit\TestCase
 			PersistentMiddlewareViaMethodAndAttribute::class,
         ]);
 		
-		$filteredPersistentMiddleware = \Livewire\invade(app(PersistentMiddleware::class))->filterMiddlewareByPersistentMiddleware([
+		$filteredPersistentMiddleware = invade(app(PersistentMiddleware::class))->filterMiddlewareByPersistentMiddleware([
 			NonPersistentMiddleware::class,
 			PersistentMiddlewareViaMethod::class,
 			PersistentMiddlewareViaAttribute::class,
