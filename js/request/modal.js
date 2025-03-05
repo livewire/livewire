@@ -1,5 +1,5 @@
 
-// This code and concept is all Jonathan Reinink - thanks main!
+// This code and concept is all Jonathan Reinink - thanks man!
 export function showHtmlModal(html) {
     let page = document.createElement('html')
     page.innerHTML = html
