@@ -3,11 +3,15 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Routing\Router;
-use Livewire\Mechanisms\Mechanism;
-use function Livewire\on;
 use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
+use Livewire\Features\SupportAttributes\Attribute;
+use Livewire\Features\SupportAttributes\AttributeCollection;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
+use Livewire\Mechanisms\Mechanism;
+use ReflectionAttribute;
+use ReflectionClass;
+use function Livewire\on;
 
 class PersistentMiddleware extends Mechanism
 {
@@ -161,13 +165,27 @@ class PersistentMiddleware extends Mechanism
 
         return $middleware
             ->filter(function ($value, $key) use ($persistentMiddleware) {
-                return $persistentMiddleware->contains(function($iValue, $iKey) use ($value) {
-                    // Some middlewares can be closures.
-                    if (! is_string($value)) return false;
-
-                    // Ensure any middleware arguments aren't included in the comparison
-                    return Str::before($value, ':') == $iValue;
-                });
+				foreach ($persistentMiddleware as $iValue) {
+					if (! is_string($value)) {
+						continue;
+					}
+					
+					if (Str::before($value, ':') == $iValue) {
+						return true;
+					}
+				}
+				
+				$reflected = new ReflectionClass($value);
+	            
+	            while ($reflected) {
+		            foreach ($reflected->getAttributes(BasePersistent::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+			            return true;
+		            }
+		            
+		            $reflected = $reflected->getParentClass();
+	            }
+				
+				return false;
             })
             ->values()
             ->all();
