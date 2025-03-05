@@ -610,8 +610,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function cant_create_post_without_title()
+    public function test_cant_create_post_without_title()
     {
         Livewire::test(CreatePost::class)
             ->set('content', 'Sample content...')
@@ -624,8 +623,7 @@ class CreatePostTest extends TestCase
 In addition to testing the presence of errors, `assertHasErrors` allows you to also narrow down the assertion to specific rules by passing the rules to assert against as the second argument to the method:
 
 ```php
-/** @test */
-public function cant_create_post_with_title_shorter_than_3_characters()
+public function test_cant_create_post_with_title_shorter_than_3_characters()
 {
     Livewire::test(CreatePost::class)
         ->set('title', 'Sa')
@@ -638,8 +636,7 @@ public function cant_create_post_with_title_shorter_than_3_characters()
 You can also assert the presence of validation errors for multiple properties at the same time:
 
 ```php
-/** @test */
-public function cant_create_post_without_title_and_content()
+public function test_cant_create_post_without_title_and_content()
 {
     Livewire::test(CreatePost::class)
         ->call('save')

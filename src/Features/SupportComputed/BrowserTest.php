@@ -88,8 +88,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '1');
     }
 
-    /** @test */
-    public function computed_properties_cannot_be_set_on_front_end()
+    public function test_computed_properties_cannot_be_set_on_front_end()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;

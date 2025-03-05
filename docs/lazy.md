@@ -268,8 +268,7 @@ use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
-    /** @test */
-    public function renders_successfully()
+    public function test_renders_successfully()
     {
         Livewire::withoutLazyLoading() // [tl! highlight]
             ->test(Dashboard::class)
