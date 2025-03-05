@@ -166,10 +166,12 @@ class PersistentMiddleware extends Mechanism
         return $middleware
             ->filter(function ($value, $key) use ($persistentMiddleware) {
 				foreach ($persistentMiddleware as $iValue) {
+					// Some middlewares can be closures.
 					if (! is_string($value)) {
 						continue;
 					}
 					
+					// Ensure any middleware arguments aren't included in the comparison
 					if (Str::before($value, ':') == $iValue) {
 						return true;
 					}
