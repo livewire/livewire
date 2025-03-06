@@ -59,7 +59,8 @@ trait InteractsWithProperties
                 $propertyName = $property->afterLast('.');
                 $objectName = $property->before('.');
 
-                if (method_exists($this->{$objectName}, 'reset')) {
+                // form object reset
+                if (is_subclass_of($this->{$objectName}, Form::class)) {
                     $this->{$objectName}->reset($propertyName);
                     continue;
                 }
