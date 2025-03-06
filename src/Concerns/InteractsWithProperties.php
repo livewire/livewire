@@ -4,6 +4,7 @@ namespace Livewire\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Drawer\Utils;
+use Livewire\Form;
 
 trait InteractsWithProperties
 {
