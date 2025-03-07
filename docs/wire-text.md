@@ -33,12 +33,12 @@ class ShowPost extends Component
 
 ```blade
 <div>
-    <button x-on:click="$wire.likes++; $wire.like()">❤️ Like</button>
+    <button x-on:click="$wire.likes++" wire:click="like">❤️ Like</button>
 
     Likes: <span wire:text="likes"></span>
 </div>
 ```
 
-When the button is clicked, `$wire.likes++` immediately updates the displayed count through `wire:text`, while `$wire.like()` persists the change to the database in the background.
+When the button is clicked, `$wire.likes++` immediately updates the displayed count through `wire:text`, while `wire:click="like"` persists the change to the database in the background.
 
 This pattern makes `wire:text` perfect for building optimistic UIs in Livewire.
