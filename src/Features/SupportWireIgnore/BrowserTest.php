@@ -27,15 +27,15 @@ class BrowserTest extends BrowserTestCase
                              <span dusk="bar.output">{{ $bar ? 'new' : 'old' }}</span>
                         </button>
 
-                        <button wire:click="$set('baz', true)" @if ($baz) some-new-attribute="true" @endif wire:ignore dusk="baz">Baz</button>
+                        <button wire:click="$set('baz', true)" @if ($baz) some-new-attribute="true" @endif wire:ignore.self dusk="baz">
                              <span dusk="baz.output">{{ $baz ? 'new' : 'old' }}</span>
                         </button>
 
-                        <button wire:click="$set('bob', true)" wire:ignore dusk="bob">
+                        <button wire:click="$set('bob', true)" dusk="bob">
                              <span dusk="bob.output">{{ $bob ? 'new' : 'old' }}</span>
                         </button>
 
-                        <button wire:click="$set('lob', true)" @if ($lob) some-new-attribute="true" @endif wire:ignore dusk="lob">lob</button>
+                        <button wire:click="$set('lob', true)" @if ($lob) some-new-attribute="true" @endif dusk="lob">
                              <span dusk="lob.output">{{ $lob ? 'new' : 'old' }}</span>
                         </button>
                     </div>
