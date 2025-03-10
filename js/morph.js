@@ -26,10 +26,10 @@ export function morph(component, el, html) {
     trigger('morph', { el, toEl: to, component })
 
     Alpine.morph(el, to, {
-        updating: (el, toEl, childrenOnly, skip) => {
+        updating: (el, toEl, childrenOnly, skipChildren, skip) => {
             if (isntElement(el)) return
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly })
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
 
             // bypass DOM diffing for children by overwriting the content
             if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
@@ -38,6 +38,7 @@ export function morph(component, el, html) {
 
             if (el.__livewire_ignore === true) return skip()
             if (el.__livewire_ignore_self === true) childrenOnly()
+            if (el.__livewire_ignore_children === true) return skipChildren()
 
             // Children will update themselves.
             if (isComponentRootEl(el) && el.getAttribute('wire:id') !== component.id) return skip()
