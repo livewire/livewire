@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
+use Error;
 use Livewire\Livewire;
 use Tests\TestComponent;
 use ValueError;
@@ -28,11 +29,29 @@ class EnumUnitTest extends \Tests\TestCase
         $this->expectException(ValueError::class);
         $testable->updateProperty('status', 'Be excellent excellent to each other');
     }
+
+    public function test_unbacked_enum_can_be_used_as_property()
+    {
+        $testable = Livewire::test(ComponentWithUnbackedEnum::class)
+            ->updateProperty('baz', UnbackedEnum::BAR)
+            ->assertSetStrict('baz', UnbackedEnum::BAR)
+            ->updateProperty('baz', 'BAR')
+            ->assertSetStrict('baz', UnbackedEnum::BAR);
+
+        $this->expectException(Error::class);
+        $testable->updateProperty('baz', 'BAZ');
+    }
 }
 
 enum TestingEnum: string
 {
     case TEST = 'Be excellent to each other';
+}
+
+enum UnbackedEnum
+{
+    case FOO;
+    case BAR;
 }
 
 class ComponentWithPublicEnumCasters extends TestComponent
@@ -64,4 +83,8 @@ class ComponentWithPublicEnumCasters extends TestComponent
 class ComponentWithNullablePublicEnumCaster extends TestComponent
 {
     public ?TestingEnum $status = null;
+}
+
+class ComponentWithUnbackedEnum extends TestComponent {
+    public UnbackedEnum $baz;
 }
