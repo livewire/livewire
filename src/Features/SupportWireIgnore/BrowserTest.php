@@ -1,12 +1,12 @@
 <?php
 
-namespace LegacyTests\Browser\Ignore;
+namespace Livewire\Features\SupportWireIgnore;
 
+use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
-use Tests\BrowserTestCase;
 
-class Test extends BrowserTestCase
+class BrowserTest extends BrowserTestCase
 {
     public function test_wire_ignore()
     {
