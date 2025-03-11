@@ -26,7 +26,7 @@ export function morph(component, el, html) {
     trigger('morph', { el, toEl: to, component })
 
     Alpine.morph(el, to, {
-        updating: (el, toEl, childrenOnly, skipChildren, skip) => {
+        updating: (el, toEl, childrenOnly, skip, skipChildren) => {
             if (isntElement(el)) return
 
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
