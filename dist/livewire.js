@@ -8291,7 +8291,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let updateChildrenOnly = false;
       let skipChildren = false;
-      if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true, () => skipChildren = true))
+      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
         return;
       if (from2.nodeType === 1 && window.Alpine) {
         window.Alpine.cloneNode(from2, to);
@@ -8522,6 +8522,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function shouldSkip(hook, ...args) {
     let skip = false;
     hook(...args, () => skip = true);
+    return skip;
+  }
+  function shouldSkipChildren(hook, skipChildren, ...args) {
+    let skip = false;
+    hook(...args, () => skip = true, skipChildren);
     return skip;
   }
   var patched = false;
@@ -9012,7 +9017,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
     module_default.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skipChildren, skip) => {
+      updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
         if (isntElement(el2))
           return;
         trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });

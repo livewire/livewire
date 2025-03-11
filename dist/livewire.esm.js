@@ -6785,7 +6785,7 @@ var require_module_cjs8 = __commonJS({
         }
         let updateChildrenOnly = false;
         let skipChildren = false;
-        if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true, () => skipChildren = true))
+        if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
           return;
         if (from2.nodeType === 1 && window.Alpine) {
           window.Alpine.cloneNode(from2, to);
@@ -7016,6 +7016,11 @@ var require_module_cjs8 = __commonJS({
     function shouldSkip(hook, ...args) {
       let skip = false;
       hook(...args, () => skip = true);
+      return skip;
+    }
+    function shouldSkipChildren(hook, skipChildren, ...args) {
+      let skip = false;
+      hook(...args, () => skip = true, skipChildren);
       return skip;
     }
     var patched = false;
@@ -9907,7 +9912,7 @@ function morph2(component, el, html) {
   to.__livewire = component;
   trigger("morph", { el, toEl: to, component });
   import_alpinejs8.default.morph(el, to, {
-    updating: (el2, toEl, childrenOnly, skipChildren, skip) => {
+    updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
       if (isntElement(el2))
         return;
       trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
