@@ -228,7 +228,7 @@ Supported PHP types:
 | BackedEnum | `BackedEnum` |
 | Collection | `Illuminate\Support\Collection` |
 | Eloquent Collection | `Illuminate\Database\Eloquent\Collection` |
-| Model | `Illuminate\Database\Model` |
+| Model | `Illuminate\Database\Eloquent\Model` |
 | DateTime | `DateTime` |
 | Carbon | `Carbon\Carbon` |
 | Stringable | `Illuminate\Support\Stringable` |

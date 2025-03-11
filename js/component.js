@@ -37,6 +37,8 @@ export class Component {
 
         this.queuedUpdates = {}
 
+        this.jsActions = {}
+
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
 
@@ -169,6 +171,22 @@ export class Component {
         }
 
         el.setAttribute('wire:effects', JSON.stringify(effects))
+    }
+
+    addJsAction(name, action) {
+        this.jsActions[name] = action
+    }
+
+    hasJsAction(name) {
+        return this.jsActions[name] !== undefined
+    }
+
+    getJsAction(name) {
+        return this.jsActions[name].bind(this.$wire)
+    }
+
+    getJsActions() {
+        return this.jsActions
     }
 
     addCleanup(cleanup) {

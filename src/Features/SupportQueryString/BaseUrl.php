@@ -62,7 +62,7 @@ class BaseUrl extends LivewireAttribute
 
         $decoded = is_array($initialValue)
             ? json_decode(json_encode($initialValue), true)
-            : json_decode($initialValue, true);
+            : json_decode($initialValue ?? '', true);
 
         // If only part of an array is present in the query string,
         // we want to merge instead of override the value...

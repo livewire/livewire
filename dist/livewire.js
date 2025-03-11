@@ -370,9 +370,7 @@
     if (key === "")
       return object;
     return key.split(".").reduce((carry, i) => {
-      if (carry === void 0)
-        return void 0;
-      return carry[i];
+      return carry?.[i];
     }, object);
   }
   function dataSet(object, key, value) {
@@ -497,6 +495,9 @@
       if (!el.isConnected)
         return;
       if (value === null || value === "") {
+        el.value = "";
+      }
+      if (el.multiple && Array.isArray(value) && value.length === 0) {
         el.value = "";
       }
     });
@@ -851,10 +852,9 @@
     });
   }
   function cleanupElement(el) {
-    if (el._x_cleanups) {
-      while (el._x_cleanups.length)
-        el._x_cleanups.pop()();
-    }
+    el._x_effects?.forEach(dequeueJob);
+    while (el._x_cleanups?.length)
+      el._x_cleanups.pop()();
   }
   var observer = new MutationObserver(onMutate);
   var currentlyObserving = false;
@@ -902,7 +902,7 @@
       deferredMutations = deferredMutations.concat(mutations);
       return;
     }
-    let addedNodes = /* @__PURE__ */ new Set();
+    let addedNodes = [];
     let removedNodes = /* @__PURE__ */ new Set();
     let addedAttributes = /* @__PURE__ */ new Map();
     let removedAttributes = /* @__PURE__ */ new Map();
@@ -910,8 +910,24 @@
       if (mutations[i].target._x_ignoreMutationObserver)
         continue;
       if (mutations[i].type === "childList") {
-        mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.add(node));
-        mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.add(node));
+        mutations[i].removedNodes.forEach((node) => {
+          if (node.nodeType !== 1)
+            return;
+          if (!node._x_marker)
+            return;
+          removedNodes.add(node);
+        });
+        mutations[i].addedNodes.forEach((node) => {
+          if (node.nodeType !== 1)
+            return;
+          if (removedNodes.has(node)) {
+            removedNodes.delete(node);
+            return;
+          }
+          if (node._x_marker)
+            return;
+          addedNodes.push(node);
+        });
       }
       if (mutations[i].type === "attributes") {
         let el = mutations[i].target;
@@ -944,29 +960,15 @@
       onAttributeAddeds.forEach((i) => i(el, attrs));
     });
     for (let node of removedNodes) {
-      if (addedNodes.has(node))
+      if (addedNodes.some((i) => i.contains(node)))
         continue;
       onElRemoveds.forEach((i) => i(node));
     }
-    addedNodes.forEach((node) => {
-      node._x_ignoreSelf = true;
-      node._x_ignore = true;
-    });
     for (let node of addedNodes) {
-      if (removedNodes.has(node))
-        continue;
       if (!node.isConnected)
         continue;
-      delete node._x_ignoreSelf;
-      delete node._x_ignore;
       onElAddeds.forEach((i) => i(node));
-      node._x_ignore = true;
-      node._x_ignoreSelf = true;
     }
-    addedNodes.forEach((node) => {
-      delete node._x_ignoreSelf;
-      delete node._x_ignore;
-    });
     addedNodes = null;
     removedNodes = null;
     addedAttributes = null;
@@ -1092,26 +1094,22 @@
     magics[name] = callback;
   }
   function injectMagics(obj, el) {
+    let memoizedUtilities = getUtilities(el);
     Object.entries(magics).forEach(([name, callback]) => {
-      let memoizedUtilities = null;
-      function getUtilities() {
-        if (memoizedUtilities) {
-          return memoizedUtilities;
-        } else {
-          let [utilities, cleanup2] = getElementBoundUtilities(el);
-          memoizedUtilities = { interceptor, ...utilities };
-          onElRemoved(el, cleanup2);
-          return memoizedUtilities;
-        }
-      }
       Object.defineProperty(obj, `$${name}`, {
         get() {
-          return callback(el, getUtilities());
+          return callback(el, memoizedUtilities);
         },
         enumerable: false
       });
     });
     return obj;
+  }
+  function getUtilities(el) {
+    let [utilities, cleanup2] = getElementBoundUtilities(el);
+    let utils = { interceptor, ...utilities };
+    onElRemoved(el, cleanup2);
+    return utils;
   }
   function tryCatch(el, expression, callback, ...args) {
     try {
@@ -1473,21 +1471,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function interceptInit(callback) {
     initInterceptors2.push(callback);
   }
+  var markerDispenser = 1;
   function initTree(el, walker = walk, intercept = () => {
   }) {
+    if (findClosest(el, (i) => i._x_ignore))
+      return;
     deferHandlingDirectives(() => {
       walker(el, (el2, skip) => {
+        if (el2._x_marker)
+          return;
         intercept(el2, skip);
         initInterceptors2.forEach((i) => i(el2, skip));
         directives(el2, el2.attributes).forEach((handle) => handle());
+        if (!el2._x_ignore)
+          el2._x_marker = markerDispenser++;
         el2._x_ignore && skip();
       });
     });
   }
   function destroyTree(root, walker = walk) {
     walker(root, (el) => {
-      cleanupAttributes(el);
       cleanupElement(el);
+      cleanupAttributes(el);
+      delete el._x_marker;
     });
   }
   function warnAboutMissingPlugins() {
@@ -1980,7 +1986,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function bindInputValue(el, value) {
-    if (el.type === "radio") {
+    if (isRadio(el)) {
       if (el.attributes.value === void 0) {
         el.value = value;
       }
@@ -1991,7 +1997,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           el.checked = checkedAttrLooseCompare(el.value, value);
         }
       }
-    } else if (el.type === "checkbox") {
+    } else if (isCheckbox(el)) {
       if (Number.isInteger(value)) {
         el.value = value;
       } else if (!Array.isArray(value) && typeof value !== "boolean" && ![null, void 0].includes(value)) {
@@ -2067,34 +2073,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return rawValue ? Boolean(rawValue) : null;
   }
+  var booleanAttributes = /* @__PURE__ */ new Set([
+    "allowfullscreen",
+    "async",
+    "autofocus",
+    "autoplay",
+    "checked",
+    "controls",
+    "default",
+    "defer",
+    "disabled",
+    "formnovalidate",
+    "inert",
+    "ismap",
+    "itemscope",
+    "loop",
+    "multiple",
+    "muted",
+    "nomodule",
+    "novalidate",
+    "open",
+    "playsinline",
+    "readonly",
+    "required",
+    "reversed",
+    "selected",
+    "shadowrootclonable",
+    "shadowrootdelegatesfocus",
+    "shadowrootserializable"
+  ]);
   function isBooleanAttr(attrName) {
-    const booleanAttributes = [
-      "disabled",
-      "checked",
-      "required",
-      "readonly",
-      "open",
-      "selected",
-      "autofocus",
-      "itemscope",
-      "multiple",
-      "novalidate",
-      "allowfullscreen",
-      "allowpaymentrequest",
-      "formnovalidate",
-      "autoplay",
-      "controls",
-      "loop",
-      "muted",
-      "playsinline",
-      "default",
-      "ismap",
-      "reversed",
-      "async",
-      "defer",
-      "nomodule"
-    ];
-    return booleanAttributes.includes(attrName);
+    return booleanAttributes.has(attrName);
   }
   function attributeShouldntBePreservedIfFalsy(name) {
     return !["aria-pressed", "aria-checked", "aria-expanded", "aria-selected"].includes(name);
@@ -2126,6 +2135,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return !![name, "true"].includes(attr);
     }
     return attr;
+  }
+  function isCheckbox(el) {
+    return el.type === "checkbox" || el.localName === "ui-checkbox" || el.localName === "ui-switch";
+  }
+  function isRadio(el) {
+    return el.type === "radio" || el.localName === "ui-radio";
   }
   function debounce(func, wait) {
     var timeout;
@@ -2195,10 +2210,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return stores[name];
     }
     stores[name] = value;
+    initInterceptors(stores[name]);
     if (typeof value === "object" && value !== null && value.hasOwnProperty("init") && typeof value.init === "function") {
       stores[name].init();
     }
-    initInterceptors(stores[name]);
   }
   function getStores() {
     return stores;
@@ -2280,7 +2295,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.1",
+    version: "3.14.8",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3127,7 +3142,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       placeInDom(clone2, target, modifiers);
       skipDuringClone(() => {
         initTree(clone2);
-        clone2._x_ignore = true;
       })();
     });
     el._x_teleportPutBack = () => {
@@ -3136,7 +3150,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         placeInDom(el._x_teleport, target2, modifiers);
       });
     };
-    cleanup2(() => clone2.remove());
+    cleanup2(() => mutateDom(() => {
+      clone2.remove();
+      destroyTree(clone2);
+    }));
   });
   var teleportContainerDuringClone = document.createElement("div");
   function getTarget(expression) {
@@ -3360,7 +3377,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       setValue(getInputValue(el, modifiers, e, getValue()));
     });
     if (modifiers.includes("fill")) {
-      if ([void 0, null, ""].includes(getValue()) || el.type === "checkbox" && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
+      if ([void 0, null, ""].includes(getValue()) || isCheckbox(el) && Array.isArray(getValue()) || el.tagName.toLowerCase() === "select" && el.multiple) {
         setValue(getInputValue(el, modifiers, { target: el }, getValue()));
       }
     }
@@ -3400,7 +3417,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return mutateDom(() => {
       if (event instanceof CustomEvent && event.detail !== void 0)
         return event.detail !== null && event.detail !== void 0 ? event.detail : event.target.value;
-      else if (el.type === "checkbox") {
+      else if (isCheckbox(el)) {
         if (Array.isArray(currentValue)) {
           let newValue = null;
           if (modifiers.includes("number")) {
@@ -3431,7 +3448,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       } else {
         let newValue;
-        if (el.type === "radio") {
+        if (isRadio(el)) {
           if (event.target.checked) {
             newValue = event.target.value;
           } else {
@@ -3624,7 +3641,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el._x_lookup = {};
     effect3(() => loop(el, iteratorNames, evaluateItems, evaluateKey));
     cleanup2(() => {
-      Object.values(el._x_lookup).forEach((el2) => el2.remove());
+      Object.values(el._x_lookup).forEach((el2) => mutateDom(() => {
+        destroyTree(el2);
+        el2.remove();
+      }));
       delete el._x_prevKeys;
       delete el._x_lookup;
     });
@@ -3693,11 +3713,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       for (let i = 0; i < removes.length; i++) {
         let key = removes[i];
-        if (!!lookup[key]._x_effects) {
-          lookup[key]._x_effects.forEach(dequeueJob);
-        }
-        lookup[key].remove();
-        lookup[key] = null;
+        if (!(key in lookup))
+          continue;
+        mutateDom(() => {
+          destroyTree(lookup[key]);
+          lookup[key].remove();
+        });
         delete lookup[key];
       }
       for (let i = 0; i < moves.length; i++) {
@@ -3818,12 +3839,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       el._x_currentIfEl = clone2;
       el._x_undoIf = () => {
-        walk(clone2, (node) => {
-          if (!!node._x_effects) {
-            node._x_effects.forEach(dequeueJob);
-          }
+        mutateDom(() => {
+          destroyTree(clone2);
+          clone2.remove();
         });
-        clone2.remove();
         delete el._x_currentIfEl;
       };
       return clone2;
@@ -4344,9 +4363,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "on": "$on",
     "el": "$el",
     "id": "$id",
+    "js": "$js",
     "get": "$get",
     "set": "$set",
     "call": "$call",
+    "hook": "$hook",
     "commit": "$commit",
     "watch": "$watch",
     "entangle": "$entangle",
@@ -4414,6 +4435,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$id", (component) => {
     return component.id;
   });
+  wireProperty("$js", (component) => {
+    let fn = component.addJsAction.bind(component);
+    let jsActions = component.getJsActions();
+    Object.keys(jsActions).forEach((name) => {
+      fn[name] = component.getJsAction(name);
+    });
+    return fn;
+  });
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     if (live) {
@@ -4441,6 +4470,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
+  wireProperty("$hook", (component) => (name, callback) => {
+    let unhook = on2(name, ({ component: hookComponent, ...params }) => {
+      if (hookComponent === void 0)
+        return callback(params);
+      if (hookComponent.id === component.id)
+        return callback({ component: hookComponent, ...params });
+    });
+    component.addCleanup(unhook);
+    return unhook;
+  });
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
@@ -4499,6 +4538,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.queuedUpdates = {};
+      this.jsActions = {};
       this.$wire = generateWireObject(this, this.reactive);
       this.cleanups = [];
       this.processEffects(this.effects);
@@ -4573,6 +4613,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         effects.scripts = this.originalEffects.scripts;
       }
       el.setAttribute("wire:effects", JSON.stringify(effects));
+    }
+    addJsAction(name, action) {
+      this.jsActions[name] = action;
+    }
+    hasJsAction(name) {
+      return this.jsActions[name] !== void 0;
+    }
+    getJsAction(name) {
+      return this.jsActions[name].bind(this.$wire);
+    }
+    getJsActions() {
+      return this.jsActions;
     }
     addCleanup(cleanup2) {
       this.cleanups.push(cleanup2);
@@ -4697,6 +4749,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           $wire: component.$wire,
           cleanup: cleanup2
         });
+      }
+    });
+  }
+  function globalDirective(name, callback) {
+    if (customDirectiveNames.has(name))
+      return;
+    customDirectiveNames.add(name);
+    on2("directive.global.init", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+      if (directive3.value === name) {
+        callback({ el, directive: directive3, cleanup: cleanup2 });
       }
     });
   }
@@ -4968,11 +5030,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var checked = getCheckedRadio(radioSet, node.form);
     return !checked || checked === node;
   };
-  var isRadio = function isRadio2(node) {
+  var isRadio2 = function isRadio22(node) {
     return isInput(node) && node.type === "radio";
   };
   var isNonTabbableRadio = function isNonTabbableRadio2(node) {
-    return isRadio(node) && !isTabbableRadio(node);
+    return isRadio2(node) && !isTabbableRadio(node);
   };
   var isZeroArea = function isZeroArea2(node) {
     var _node$getBoundingClie = node.getBoundingClientRect(), width = _node$getBoundingClie.width, height = _node$getBoundingClie.height;
@@ -5921,6 +5983,51 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return values.length ? values.join(" ").trim() : fallback2;
   }
   var module_default5 = src_default5;
+
+  // node_modules/@alpinejs/resize/dist/module.esm.js
+  function src_default6(Alpine3) {
+    Alpine3.directive("resize", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
+      let evaluator = evaluateLater2(expression);
+      let evaluate3 = (width, height) => {
+        evaluator(() => {
+        }, { scope: { "$width": width, "$height": height } });
+      };
+      let off = modifiers.includes("document") ? onDocumentResize(evaluate3) : onElResize(el, evaluate3);
+      cleanup2(() => off());
+    }));
+  }
+  function onElResize(el, callback) {
+    let observer2 = new ResizeObserver((entries) => {
+      let [width, height] = dimensions(entries);
+      callback(width, height);
+    });
+    observer2.observe(el);
+    return () => observer2.disconnect();
+  }
+  var documentResizeObserver;
+  var documentResizeObserverCallbacks = /* @__PURE__ */ new Set();
+  function onDocumentResize(callback) {
+    documentResizeObserverCallbacks.add(callback);
+    if (!documentResizeObserver) {
+      documentResizeObserver = new ResizeObserver((entries) => {
+        let [width, height] = dimensions(entries);
+        documentResizeObserverCallbacks.forEach((i) => i(width, height));
+      });
+      documentResizeObserver.observe(document.documentElement);
+    }
+    return () => {
+      documentResizeObserverCallbacks.delete(callback);
+    };
+  }
+  function dimensions(entries) {
+    let width, height;
+    for (let entry of entries) {
+      width = entry.borderBoxSize[0].inlineSize;
+      height = entry.borderBoxSize[0].blockSize;
+    }
+    return [width, height];
+  }
+  var module_default6 = src_default6;
 
   // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
@@ -7096,7 +7203,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       platform: platformWithCache
     });
   };
-  function src_default6(Alpine3) {
+  function src_default7(Alpine3) {
     Alpine3.magic("anchor", (el) => {
       if (!el._x_anchor)
         throw "Alpine: No x-anchor directive found on element using $anchor...";
@@ -7154,7 +7261,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let unstyled = modifiers.includes("no-style");
     return { placement, offsetValue, unstyled };
   }
-  var module_default6 = src_default6;
+  var module_default7 = src_default7;
 
   // js/plugins/navigate/history.js
   var Snapshot = class {
@@ -7426,8 +7533,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
     queueMicrotask(() => {
-      scroll(document.body);
-      document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+      queueMicrotask(() => {
+        scroll(document.body);
+        document.querySelectorAll(["[x-navigate\\:scroll]", "[wire\\:scroll]"]).forEach(scroll);
+      });
     });
   }
 
@@ -7575,6 +7684,51 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     document.head.appendChild(style);
   }
 
+  // js/plugins/navigate/popover.js
+  function packUpPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported())
+      return;
+    persistedEl.querySelectorAll(":popover-open").forEach((el) => {
+      el.setAttribute("data-navigate-popover-open", "");
+      let animations = el.getAnimations();
+      el._pausedAnimations = animations.map((animation) => ({
+        keyframes: animation.effect.getKeyframes(),
+        options: {
+          duration: animation.effect.getTiming().duration,
+          easing: animation.effect.getTiming().easing,
+          fill: animation.effect.getTiming().fill,
+          iterations: animation.effect.getTiming().iterations
+        },
+        currentTime: animation.currentTime,
+        playState: animation.playState
+      }));
+      animations.forEach((i) => i.pause());
+    });
+  }
+  function unPackPersistedPopovers(persistedEl) {
+    if (!isPopoverSupported())
+      return;
+    persistedEl.querySelectorAll("[data-navigate-popover-open]").forEach((el) => {
+      el.removeAttribute("data-navigate-popover-open");
+      queueMicrotask(() => {
+        if (!el.isConnected)
+          return;
+        el.showPopover();
+        el.getAnimations().forEach((i) => i.finish());
+        if (el._pausedAnimations) {
+          el._pausedAnimations.forEach(({ keyframes, options, currentTime, now, playState }) => {
+            let animation = el.animate(keyframes, options);
+            animation.currentTime = currentTime;
+          });
+          delete el._pausedAnimations;
+        }
+      });
+    });
+  }
+  function isPopoverSupported() {
+    return typeof document.createElement("div").showPopover === "function";
+  }
+
   // js/plugins/navigate/page.js
   var oldBodyScriptTagHashes = [];
   var attributesExemptFromScriptTagHashing = [
@@ -7583,6 +7737,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = new DOMParser().parseFromString(html, "text/html");
+    let newHtml = newDocument.documentElement;
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
     oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll("script")).map((i) => {
@@ -7590,6 +7745,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }));
     let afterRemoteScriptsHaveLoaded = () => {
     };
+    replaceHtmlAttributes(newHtml);
     mergeNewHead(newHead).finally(() => {
       afterRemoteScriptsHaveLoaded();
     });
@@ -7607,6 +7763,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
       }
       i.replaceWith(cloneScriptTag(i));
+    });
+  }
+  function replaceHtmlAttributes(newHtmlElement) {
+    let currentHtmlElement = document.documentElement;
+    Array.from(newHtmlElement.attributes).forEach((attr) => {
+      const name = attr.name;
+      const value = attr.value;
+      if (currentHtmlElement.getAttribute(name) !== value) {
+        currentHtmlElement.setAttribute(name, value);
+      }
+    });
+    Array.from(currentHtmlElement.attributes).forEach((attr) => {
+      if (!newHtmlElement.hasAttribute(attr.name)) {
+        currentHtmlElement.removeAttribute(attr.name);
+      }
     });
   }
   function mergeNewHead(newHead) {
@@ -7642,6 +7813,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         child.remove();
     }
     for (let child of Array.from(newHead.children)) {
+      if (child.tagName.toLowerCase() === "noscript")
+        continue;
       document.head.appendChild(child);
     }
     return Promise.all(remoteScriptsPromises);
@@ -7713,7 +7886,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function navigate_default(Alpine3) {
     Alpine3.navigate = (url) => {
       let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: false,
         cached: false
@@ -7744,7 +7917,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
         });
         whenItIsReleased(() => {
-          let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+          let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
             url: destination,
             history: false,
             cached: false
@@ -7758,7 +7931,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function navigateTo(destination, shouldPushToHistoryState = true) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-        fireEventForOtherLibariesToHookInto("alpine:navigating");
+        fireEventForOtherLibrariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
         showProgressBar && finishAndHideProgressBar();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
@@ -7766,6 +7939,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
           enablePersist && storePersistantElementsForLater((persistedEl) => {
             packUpPersistedTeleports(persistedEl);
+            packUpPersistedPopovers(persistedEl);
           });
           if (shouldPushToHistoryState) {
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
@@ -7776,6 +7950,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             removeAnyLeftOverStaleTeleportTargets(document.body);
             enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
               unPackPersistedTeleports(persistedEl);
+              unPackPersistedPopovers(persistedEl);
             });
             restoreScrollPositionOrScrollToTop();
             afterNewScriptsAreDoneLoading(() => {
@@ -7784,7 +7959,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                   autofocus && autofocusElementsWithTheAutofocusAttribute();
                 });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
-                fireEventForOtherLibariesToHookInto("alpine:navigated");
+                fireEventForOtherLibrariesToHookInto("alpine:navigated");
               });
             });
           });
@@ -7794,7 +7969,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
       ifThePageBeingVisitedHasntBeenCached((url) => {
         let destination = createUrlObjectFromString(url);
-        let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+        let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
           url: destination,
           history: true,
           cached: false
@@ -7806,7 +7981,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }, (html, url, currentPageUrl, currentPageKey) => {
       let destination = createUrlObjectFromString(url);
-      let prevented = fireEventForOtherLibariesToHookInto("alpine:navigate", {
+      let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
         history: true,
         cached: true
@@ -7814,29 +7989,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (prevented)
         return;
       storeScrollInformationInHtmlBeforeNavigatingAway();
-      fireEventForOtherLibariesToHookInto("alpine:navigating");
+      fireEventForOtherLibrariesToHookInto("alpine:navigating");
       updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
       preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
+          packUpPersistedPopovers(persistedEl);
         });
         swapCurrentPageWithNewHtml(html, () => {
           removeAnyLeftOverStaleProgressBars();
           removeAnyLeftOverStaleTeleportTargets(document.body);
           enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
             unPackPersistedTeleports(persistedEl);
+            unPackPersistedPopovers(persistedEl);
           });
           restoreScrollPositionOrScrollToTop();
           andAfterAllThis(() => {
             autofocus && autofocusElementsWithTheAutofocusAttribute();
             nowInitializeAlpineOnTheNewPage(Alpine3);
-            fireEventForOtherLibariesToHookInto("alpine:navigated");
+            fireEventForOtherLibrariesToHookInto("alpine:navigated");
           });
         });
       });
     });
     setTimeout(() => {
-      fireEventForOtherLibariesToHookInto("alpine:navigated");
+      fireEventForOtherLibrariesToHookInto("alpine:navigated");
     });
   }
   function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
@@ -7853,7 +8030,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function fireEventForOtherLibariesToHookInto(name, detail) {
+  function fireEventForOtherLibrariesToHookInto(name, detail) {
     let event = new CustomEvent(name, {
       cancelable: true,
       bubbles: true,
@@ -8005,24 +8182,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let search = url.search;
         if (!search)
           return false;
-        let data2 = fromQueryString(search);
+        let data2 = fromQueryString(search, key);
         return Object.keys(data2).includes(key);
       },
       get(url, key) {
         let search = url.search;
         if (!search)
           return false;
-        let data2 = fromQueryString(search);
+        let data2 = fromQueryString(search, key);
         return data2[key];
       },
       set(url, key, value) {
-        let data2 = fromQueryString(url.search);
+        let data2 = fromQueryString(url.search, key);
         data2[key] = stripNulls(unwrap(value));
         url.search = toQueryString(data2);
         return url;
       },
       remove(url, key) {
-        let data2 = fromQueryString(url.search);
+        let data2 = fromQueryString(url.search, key);
         delete data2[key];
         url.search = toQueryString(data2);
         return url;
@@ -8058,7 +8235,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let entries = buildQueryStringEntries(data2);
     return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
   }
-  function fromQueryString(search) {
+  function fromQueryString(search, queryKey) {
     search = search.replace("?", "");
     if (search === "")
       return {};
@@ -8077,10 +8254,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (typeof value == "undefined")
         return;
       value = decodeURIComponent(value.replaceAll("+", "%20"));
-      if (!key.includes("[")) {
+      let decodedKey = decodeURIComponent(key);
+      let shouldBeHandledAsArray = decodedKey.includes("[") && decodedKey.startsWith(queryKey);
+      if (!shouldBeHandledAsArray) {
         data2[key] = value;
       } else {
-        let dotNotatedKey = key.replaceAll("[", ".").replaceAll("]", "");
+        let dotNotatedKey = decodedKey.replaceAll("[", ".").replaceAll("]", "");
         insertDotNotatedValueIntoData(dotNotatedKey, value, data2);
       }
     });
@@ -8188,6 +8367,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let holdover = fromKeyHoldovers[toKey];
             from2.appendChild(holdover);
             currentFrom = holdover;
+            fromKey = getKey(currentFrom);
           } else {
             if (!shouldSkip(adding, currentTo)) {
               let clone2 = currentTo.cloneNode(true);
@@ -8261,6 +8441,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
+              fromKey = getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -8269,6 +8450,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
+              fromKey = getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom = addNodeBefore(from2, currentTo, currentFrom);
@@ -8414,16 +8596,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let fromId = from && from._x_bindings && from._x_bindings.id;
     if (!fromId)
       return;
+    if (!to.setAttribute)
+      return;
     to.setAttribute("id", fromId);
     to.id = fromId;
   }
-  function src_default7(Alpine3) {
+  function src_default8(Alpine3) {
     Alpine3.morph = morph;
   }
-  var module_default7 = src_default7;
+  var module_default8 = src_default8;
 
   // ../alpine/packages/mask/dist/module.esm.js
-  function src_default8(Alpine3) {
+  function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
       let lastInputValue = "";
@@ -8448,8 +8632,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         } else {
           processInputValue(el, false);
         }
-        if (el._x_model)
+        if (el._x_model) {
+          if (el._x_model.get() === el.value)
+            return;
+          if (el._x_model.get() === null && el.value === "")
+            return;
           el._x_model.set(el.value);
+        }
       });
       const controller = new AbortController();
       cleanup2(() => {
@@ -8585,22 +8774,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     return template;
   }
-  var module_default8 = src_default8;
+  var module_default9 = src_default9;
 
   // js/lifecycle.js
   function start2() {
     setTimeout(() => ensureLivewireScriptIsntMisplaced());
     dispatch(document, "livewire:init");
     dispatch(document, "livewire:initializing");
-    module_default.plugin(module_default7);
+    module_default.plugin(module_default8);
     module_default.plugin(history2);
     module_default.plugin(module_default5);
-    module_default.plugin(module_default2);
     module_default.plugin(module_default6);
+    module_default.plugin(module_default2);
+    module_default.plugin(module_default7);
     module_default.plugin(module_default3);
     module_default.plugin(module_default4);
     module_default.plugin(navigate_default);
-    module_default.plugin(module_default8);
+    module_default.plugin(module_default9);
     module_default.addRootSelector(() => "[wire\\:id]");
     module_default.onAttributesAdded((el, attributes) => {
       if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
@@ -8626,10 +8816,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           destroyComponent(component2.id);
         });
       }
+      let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
+      directives2.forEach((directive3) => {
+        trigger2("directive.global.init", { el, directive: directive3, cleanup: (callback) => {
+          module_default.onAttributeRemoved(el, directive3.raw, callback);
+        } });
+      });
       let component = closestComponent(el, false);
       if (component) {
         trigger2("element.init", { el, component });
-        let directives2 = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
         directives2.forEach((directive3) => {
           trigger2("directive.init", { el, component, directive: directive3, cleanup: (callback) => {
             module_default.onAttributeRemoved(el, directive3.raw, callback);
@@ -8705,7 +8900,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
           });
         });
       });
@@ -8777,6 +8972,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
+  module_default.magic("js", (el) => {
+    let component = closestComponent(el);
+    return component.$wire.js;
+  });
   on2("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
@@ -8788,8 +8987,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     if (xjs) {
-      xjs.forEach((expression) => {
-        module_default.evaluate(component.el, expression);
+      xjs.forEach(({ expression, params }) => {
+        params = Object.values(params);
+        module_default.evaluate(component.el, expression, { scope: component.jsActions, params });
       });
     }
   });
@@ -8859,6 +9059,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       },
       lookahead: false
     });
+    trigger2("morphed", { el, component });
   }
   function isntElement(el) {
     return typeof el.hasAttribute !== "function";
@@ -9254,6 +9455,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        module_default.bind(el, {
+          [directive3.rawName.replace("wire:transition", "x-transition")]: directive3.expression
+        });
+        return;
+      }
+    }
     let visibility = module_default.reactive({ state: el.__addedByMorph ? false : true });
     module_default.bind(el, {
       [directive3.rawName.replace("wire:", "x-")]: "",
@@ -9365,6 +9574,55 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   });
+
+  // js/directives/wire-current.js
+  module_default.addInitSelector(() => `[wire\\:current]`);
+  var onPageChanges = /* @__PURE__ */ new Map();
+  document.addEventListener("livewire:navigated", () => {
+    onPageChanges.forEach((i) => i(new URL(window.location.href)));
+  });
+  globalDirective("current", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+    let expression = directive3.expression;
+    let options = {
+      exact: directive3.modifiers.includes("exact"),
+      strict: directive3.modifiers.includes("strict")
+    };
+    if (expression.startsWith("#"))
+      return;
+    if (!el.hasAttribute("href"))
+      return;
+    let href = el.getAttribute("href");
+    let hrefUrl = new URL(href, window.location.href);
+    let classes = expression.split(" ").filter(String);
+    let refreshCurrent = (url) => {
+      if (pathMatches(hrefUrl, url, options)) {
+        el.classList.add(...classes);
+        el.setAttribute("data-current", "");
+      } else {
+        el.classList.remove(...classes);
+        el.removeAttribute("data-current");
+      }
+    };
+    refreshCurrent(new URL(window.location.href));
+    onPageChanges.set(el, refreshCurrent);
+    cleanup2(() => onPageChanges.delete(el));
+  });
+  function pathMatches(hrefUrl, actualUrl, options) {
+    if (hrefUrl.hostname !== actualUrl.hostname)
+      return false;
+    let hrefPath = options.strict ? hrefUrl.pathname : hrefUrl.pathname.replace(/\/+$/, "");
+    let actualPath = options.strict ? actualUrl.pathname : actualUrl.pathname.replace(/\/+$/, "");
+    if (options.exact) {
+      return hrefPath === actualPath;
+    }
+    let hrefPathSegments = hrefPath.split("/");
+    let actualPathSegments = actualPath.split("/");
+    for (let i = 0; i < hrefPathSegments.length; i++) {
+      if (hrefPathSegments[i] !== actualPathSegments[i])
+        return false;
+    }
+    return true;
+  }
 
   // js/directives/shared.js
   function toggleBooleanStateDirective(el, directive3, isTruthy, cachedDisplay = null) {
@@ -9635,10 +9893,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
+  // js/directives/wire-cloak.js
+  module_default.interceptInit((el) => {
+    if (el.hasAttribute("wire:cloak")) {
+      module_default.mutateDom(() => el.removeAttribute("wire:cloak"));
+    }
+  });
+
   // js/directives/wire-dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on2("commit", ({ component, respond }) => {
-    respond(() => {
+  on2("commit", ({ component, succeed }) => {
+    succeed(() => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
       });
@@ -9864,6 +10129,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return durationInMilliSeconds || defaultDuration;
   }
+
+  // js/directives/wire-show.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:show")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-show" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
+      }
+    }
+  });
+
+  // js/directives/wire-text.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:text")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:text")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-text" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
+      }
+    }
+  });
 
   // js/index.js
   var Livewire2 = {

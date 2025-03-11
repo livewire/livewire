@@ -8,6 +8,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\MessageBag;
+use Illuminate\Support\Arr;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Validation\ValidationException;
 use Livewire\Drawer\Utils;
@@ -311,7 +312,9 @@ trait HandlesValidation
         // If main validation passed, go through other sub-validation exceptions
         // and throw the first one with the cumulative messages...
         foreach ($formExceptions as $e) {
-            $e->validator->errors()->merge($cumulativeErrors->unique());
+            $exceptionErrorKeys = $e->validator->errors()->keys();
+            $remainingErrors = Arr::except($cumulativeErrors->messages(), $exceptionErrorKeys);
+            $e->validator->errors()->merge($remainingErrors);
 
             throw $e;
         }

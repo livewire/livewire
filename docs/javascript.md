@@ -23,31 +23,23 @@ This also means that lazily or conditionally loaded Livewire components are stil
 @endscript
 ```
 
-Here's a more full example where you can do something like register a one-off Alpine component that is used in your Livewire component.
+Here's a more full example where you can do something like register a JavaScript action that is used in your Livewire component.
 
 ```blade
 <div>
-    Counter component in Alpine:
-
-    <div x-data="counter">
-        <h1 x-text="count"></h1>
-        <button x-on:click="increment">+</button>
-    </div>
+    <button wire:click="$js.increment">+</button>
 </div>
 
 @script
 <script>
-    Alpine.data('counter', () => {
-        return {
-            count: 0,
-            increment() {
-                this.count++
-            },
-        }
+    $js('increment', () => {
+        console.log('increment')
     })
 </script>
 @endscript
 ```
+
+To learn more about JavaScript actions, [visit the actions documentation](/docs/actions#javascript-actions).
 
 ### Using `$wire` from scripts
 
@@ -66,6 +58,38 @@ You can learn more about `$wire` on the [`$wire` documentation](#the-wire-object
 </script>
 @endscript
 ```
+
+### Evaluating one-off JavaScript expressions
+
+In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions on the backend.
+
+This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
+
+For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+
+class CreatePost extends Component
+{
+    public $title = '';
+
+    public function save()
+    {
+        // ...
+
+        $this->js("alert('Post saved!')"); // [tl! highlight:6]
+    }
+}
+```
+
+The JavaScript expression `alert('Post saved!')` will now be executed on the client after the post has been saved to the database on the server.
+
+You can access the current component's `$wire` object inside the expression.
 
 ### Loading assets
 
@@ -167,18 +191,18 @@ In certain scenarios, you might need to unregister global Livewire events. For i
 Alpine.data('MyComponent', () => ({
     listeners: [],
     init() {
-        this.listeners.push(  
-            Livewire.on('post-created', (options) => {  
+        this.listeners.push(
+            Livewire.on('post-created', (options) => {
                 // Do something...
             })
         );
     },
     destroy() {
-        this.listeners.forEach((listener) => {  
-            listener();  
+        this.listeners.forEach((listener) => {
+            listener();
         });
     }
-});
+}));
 ```
 ### Using lifecycle hooks
 
@@ -300,9 +324,13 @@ let $wire = {
     // Toggle the value of a boolean property...
     $toggle(name, live = true) { ... },
 
-    // Call the method
+    // Call the method...
     // Usage: $wire.$call('increment')
     $call(method, ...params) { ... },
+
+    // Define a JavaScript action...
+    // Usage: $wire.$js('increment', () => { ... })
+    $js(name, callback) { ... },
 
     // Entangle the value of a Livewire property with a different,
     // arbitrary, Alpine property...
@@ -323,6 +351,10 @@ let $wire = {
     // Listen for a an event dispatched from this component or its children...
     // Usage: $wire.$on('post-created', () => { ... })
     $on(event, callback) { ... },
+
+    // Listen for a lifecycle hook triggered from this component or the request...
+    // Usage: $wire.$hook('commit', () => { ... })
+    $hook(name, callback) { ... },
 
     // Dispatch an event from this component...
     // Usage: $wire.$dispatch('post-created', { postId: 2 })
@@ -398,7 +430,7 @@ let snapshot = {
     },
 
     // A securely encrypted hash of this snapshot. This way,
-    // if a malicous user tampers with the snapshot with
+    // if a malicious user tampers with the snapshot with
     // the goal of accessing un-owned resources on the server,
     // the checksum validation will fail and an error will
     // be thrown...
@@ -541,6 +573,18 @@ Livewire.hook('morph.added',  ({ el }) => {
 })
 ```
 
+In addition to the events fired per element, a `morph` and `morphed` event is fired for each Livewire component:
+
+```js
+Livewire.hook('morph',  ({ el, component }) => {
+	// Runs just before the child elements in `component` are morphed
+})
+
+Livewire.hook('morphed',  ({ el, component }) => {
+    // Runs after all child elements in `component` are morphed
+})
+```
+
 ### Commit hooks
 
 Because Livewire requests contain multiple components, _request_ is too broad of a term to refer to an individual component's request and response payload. Instead, internally, Livewire refers to component updates as _commits_ — in reference to _committing_ component state to the server.
@@ -552,7 +596,7 @@ These hooks expose `commit` objects. You can learn more about their schema by re
 The `commit.prepare` hook will be triggered immediately before a request is sent to the server. This gives you a chance to add any last minute updates or actions to the outgoing request:
 
 ```js
-Livewire.hook('commit.prepare', ({ component, commit }) => {
+Livewire.hook('commit.prepare', ({ component }) => {
     // Runs before commit payloads are collected and sent to the server...
 })
 ```
@@ -587,7 +631,7 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
 If you would like to instead hook into the entire HTTP request going and returning from the server, you can do so using the `request` hook:
 
 ```js
-Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
+Livewire.hook('request', ({ url, options, payload, respond, succeed, fail }) => {
     // Runs after commit payloads are compiled, but before a network request is sent...
 
     respond(({ status, response }) => {
