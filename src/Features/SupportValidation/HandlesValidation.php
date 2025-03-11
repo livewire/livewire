@@ -510,8 +510,6 @@ trait HandlesValidation
             $synth = app('livewire')->findSynth($value, $this);
             
             if ($synth && method_exists($synth, 'unwrap')) return $synth->unwrap($value);
-            // @todo: this logic should be contained within "SupportWireables"...
-            else if ($value instanceof Wireable) return $value->toLivewire();
             else if ($value instanceof Arrayable) return $value->toArray();
 
             return $value;
