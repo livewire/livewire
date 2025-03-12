@@ -506,8 +506,10 @@ trait HandlesValidation
     protected function unwrapDataForValidation($data)
     {
         return collect($data)->map(function ($value) {
-            // @todo: this logic should be contained within "SupportWireables"...
-            if ($value instanceof Wireable) return $value->toLivewire();
+
+            $synth = app('livewire')->findSynth($value, $this);
+
+            if ($synth && method_exists($synth, 'unwrapForValidation')) return $synth->unwrapForValidation($value);
             else if ($value instanceof Arrayable) return $value->toArray();
 
             return $value;
