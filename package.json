@@ -9,7 +9,7 @@
     "license": "MIT",
     "devDependencies": {
         "brotli-size": "^4.0.0",
-        "esbuild": "^0.14.49"
+        "esbuild": "^0.25.0"
     },
     "dependencies": {
         "@alpinejs/anchor": "^3.14.9",
