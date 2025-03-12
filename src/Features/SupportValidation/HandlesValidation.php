@@ -508,8 +508,8 @@ trait HandlesValidation
         return collect($data)->map(function ($value) {
 
             $synth = app('livewire')->findSynth($value, $this);
-            
-            if ($synth && method_exists($synth, 'unwrap')) return $synth->unwrap($value);
+
+            if ($synth && method_exists($synth, 'unwrapForValidation')) return $synth->unwrapForValidation($value);
             else if ($value instanceof Arrayable) return $value->toArray();
 
             return $value;

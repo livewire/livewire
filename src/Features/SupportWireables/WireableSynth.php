@@ -14,7 +14,7 @@ class WireableSynth extends Synth
         return is_object($target) && $target instanceof Wireable;
     }
 
-    static function unwrap($target)
+    static function unwrapForValidation($target)
     {
         return $target->toLivewire();
     }
