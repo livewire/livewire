@@ -497,6 +497,9 @@
       if (value === null || value === "") {
         el.value = "";
       }
+      if (el.multiple && Array.isArray(value) && value.length === 0) {
+        el.value = "";
+      }
     });
     let clearFileInputValue = () => {
       el.value = null;
@@ -2292,7 +2295,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.6",
+    version: "3.14.9",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -3139,7 +3142,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       placeInDom(clone2, target, modifiers);
       skipDuringClone(() => {
         initTree(clone2);
-        clone2._x_ignore = true;
       })();
     });
     el._x_teleportPutBack = () => {
@@ -4361,9 +4363,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "on": "$on",
     "el": "$el",
     "id": "$id",
+    "js": "$js",
     "get": "$get",
     "set": "$set",
     "call": "$call",
+    "hook": "$hook",
     "commit": "$commit",
     "watch": "$watch",
     "entangle": "$entangle",
@@ -4431,6 +4435,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$id", (component) => {
     return component.id;
   });
+  wireProperty("$js", (component) => {
+    let fn = component.addJsAction.bind(component);
+    let jsActions = component.getJsActions();
+    Object.keys(jsActions).forEach((name) => {
+      fn[name] = component.getJsAction(name);
+    });
+    return fn;
+  });
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     if (live) {
@@ -4458,6 +4470,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
+  wireProperty("$hook", (component) => (name, callback) => {
+    let unhook = on2(name, ({ component: hookComponent, ...params }) => {
+      if (hookComponent === void 0)
+        return callback(params);
+      if (hookComponent.id === component.id)
+        return callback({ component: hookComponent, ...params });
+    });
+    component.addCleanup(unhook);
+    return unhook;
+  });
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
@@ -4516,6 +4538,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.queuedUpdates = {};
+      this.jsActions = {};
       this.$wire = generateWireObject(this, this.reactive);
       this.cleanups = [];
       this.processEffects(this.effects);
@@ -4590,6 +4613,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         effects.scripts = this.originalEffects.scripts;
       }
       el.setAttribute("wire:effects", JSON.stringify(effects));
+    }
+    addJsAction(name, action) {
+      this.jsActions[name] = action;
+    }
+    hasJsAction(name) {
+      return this.jsActions[name] !== void 0;
+    }
+    getJsAction(name) {
+      return this.jsActions[name].bind(this.$wire);
+    }
+    getJsActions() {
+      return this.jsActions;
     }
     addCleanup(cleanup2) {
       this.cleanups.push(cleanup2);
@@ -7702,6 +7737,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = new DOMParser().parseFromString(html, "text/html");
+    let newHtml = newDocument.documentElement;
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
     oldBodyScriptTagHashes = oldBodyScriptTagHashes.concat(Array.from(document.body.querySelectorAll("script")).map((i) => {
@@ -7709,6 +7745,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }));
     let afterRemoteScriptsHaveLoaded = () => {
     };
+    replaceHtmlAttributes(newHtml);
     mergeNewHead(newHead).finally(() => {
       afterRemoteScriptsHaveLoaded();
     });
@@ -7726,6 +7763,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
       }
       i.replaceWith(cloneScriptTag(i));
+    });
+  }
+  function replaceHtmlAttributes(newHtmlElement) {
+    let currentHtmlElement = document.documentElement;
+    Array.from(newHtmlElement.attributes).forEach((attr) => {
+      const name = attr.name;
+      const value = attr.value;
+      if (currentHtmlElement.getAttribute(name) !== value) {
+        currentHtmlElement.setAttribute(name, value);
+      }
+    });
+    Array.from(currentHtmlElement.attributes).forEach((attr) => {
+      if (!newHtmlElement.hasAttribute(attr.name)) {
+        currentHtmlElement.removeAttribute(attr.name);
+      }
     });
   }
   function mergeNewHead(newHead) {
@@ -7761,6 +7813,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         child.remove();
     }
     for (let child of Array.from(newHead.children)) {
+      if (child.tagName.toLowerCase() === "noscript")
+        continue;
       document.head.appendChild(child);
     }
     return Promise.all(remoteScriptsPromises);
@@ -8128,24 +8182,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let search = url.search;
         if (!search)
           return false;
-        let data2 = fromQueryString(search);
+        let data2 = fromQueryString(search, key);
         return Object.keys(data2).includes(key);
       },
       get(url, key) {
         let search = url.search;
         if (!search)
           return false;
-        let data2 = fromQueryString(search);
+        let data2 = fromQueryString(search, key);
         return data2[key];
       },
       set(url, key, value) {
-        let data2 = fromQueryString(url.search);
+        let data2 = fromQueryString(url.search, key);
         data2[key] = stripNulls(unwrap(value));
         url.search = toQueryString(data2);
         return url;
       },
       remove(url, key) {
-        let data2 = fromQueryString(url.search);
+        let data2 = fromQueryString(url.search, key);
         delete data2[key];
         url.search = toQueryString(data2);
         return url;
@@ -8181,7 +8235,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let entries = buildQueryStringEntries(data2);
     return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
   }
-  function fromQueryString(search) {
+  function fromQueryString(search, queryKey) {
     search = search.replace("?", "");
     if (search === "")
       return {};
@@ -8200,10 +8254,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (typeof value == "undefined")
         return;
       value = decodeURIComponent(value.replaceAll("+", "%20"));
-      if (!key.includes("[")) {
+      let decodedKey = decodeURIComponent(key);
+      let shouldBeHandledAsArray = decodedKey.includes("[") && decodedKey.startsWith(queryKey);
+      if (!shouldBeHandledAsArray) {
         data2[key] = value;
       } else {
-        let dotNotatedKey = key.replaceAll("[", ".").replaceAll("]", "");
+        let dotNotatedKey = decodedKey.replaceAll("[", ".").replaceAll("]", "");
         insertDotNotatedValueIntoData(dotNotatedKey, value, data2);
       }
     });
@@ -8234,7 +8290,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return swapElements(from2, to);
       }
       let updateChildrenOnly = false;
-      if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true))
+      let skipChildren = false;
+      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
         return;
       if (from2.nodeType === 1 && window.Alpine) {
         window.Alpine.cloneNode(from2, to);
@@ -8251,7 +8308,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         patchAttributes(from2, to);
       }
       updated(from2, to);
-      patchChildren(from2, to);
+      if (!skipChildren) {
+        patchChildren(from2, to);
+      }
     }
     function differentElementNamesTypesOrKeys(from2, to) {
       return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
@@ -8465,6 +8524,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook(...args, () => skip = true);
     return skip;
   }
+  function shouldSkipChildren(hook, skipChildren, ...args) {
+    let skip = false;
+    hook(...args, () => skip = true, skipChildren);
+    return skip;
+  }
   var patched = false;
   function createElement(html) {
     const template = document.createElement("template");
@@ -8576,8 +8640,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         } else {
           processInputValue(el, false);
         }
-        if (el._x_model)
+        if (el._x_model) {
+          if (el._x_model.get() === el.value)
+            return;
+          if (el._x_model.get() === null && el.value === "")
+            return;
           el._x_model.set(el.value);
+        }
       });
       const controller = new AbortController();
       cleanup2(() => {
@@ -8839,7 +8908,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
           });
         });
       });
@@ -8911,6 +8980,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
+  module_default.magic("js", (el) => {
+    let component = closestComponent(el);
+    return component.$wire.js;
+  });
   on2("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
@@ -8922,8 +8995,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     if (xjs) {
-      xjs.forEach((expression) => {
-        module_default.evaluate(component.el, expression);
+      xjs.forEach(({ expression, params }) => {
+        params = Object.values(params);
+        module_default.evaluate(component.el, expression, { scope: component.jsActions, params });
       });
     }
   });
@@ -8943,10 +9017,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
     module_default.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip) => {
+      updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
         if (el2.__livewire_replace === true)
           el2.innerHTML = toEl.innerHTML;
         if (el2.__livewire_replace_self === true) {
@@ -8957,6 +9031,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return skip();
         if (el2.__livewire_ignore_self === true)
           childrenOnly();
+        if (el2.__livewire_ignore_children === true)
+          return skipChildren();
         if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
           return skip();
         if (isComponentRootEl(el2))
@@ -9389,6 +9465,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        module_default.bind(el, {
+          [directive3.rawName.replace("wire:transition", "x-transition")]: directive3.expression
+        });
+        return;
+      }
+    }
     let visibility = module_default.reactive({ state: el.__addedByMorph ? false : true });
     module_default.bind(el, {
       [directive3.rawName.replace("wire:", "x-")]: "",
@@ -9523,8 +9607,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let refreshCurrent = (url) => {
       if (pathMatches(hrefUrl, url, options)) {
         el.classList.add(...classes);
+        el.setAttribute("data-current", "");
       } else {
         el.classList.remove(...classes);
+        el.removeAttribute("data-current");
       }
     };
     refreshCurrent(new URL(window.location.href));
@@ -9812,8 +9898,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("ignore", ({ el, directive: directive3 }) => {
     if (directive3.modifiers.includes("self")) {
       el.__livewire_ignore_self = true;
+    } else if (directive3.modifiers.includes("children")) {
+      el.__livewire_ignore_children = true;
     } else {
       el.__livewire_ignore = true;
+    }
+  });
+
+  // js/directives/wire-cloak.js
+  module_default.interceptInit((el) => {
+    if (el.hasAttribute("wire:cloak")) {
+      module_default.mutateDom(() => el.removeAttribute("wire:cloak"));
     }
   });
 
@@ -10046,6 +10141,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return durationInMilliSeconds || defaultDuration;
   }
+
+  // js/directives/wire-show.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:show")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-show" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
+      }
+    }
+  });
+
+  // js/directives/wire-text.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:text")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:text")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-text" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
+      }
+    }
+  });
 
   // js/index.js
   var Livewire2 = {

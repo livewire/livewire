@@ -231,4 +231,45 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertInputValue('@upload', null)
         ;
     }
+
+    public function test_can_clear_out_multiple_file_input_after_property_has_been_reset()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photos = [];
+
+            function mount()
+            {
+                Storage::disk('tmp-for-tests')->deleteDirectory('photos');
+            }
+
+            function resetFileInput()
+            {
+                $this->photos = [];
+            }
+
+            function render() { return <<<'HTML'
+                <div>
+                    <input type="file" wire:model="photos" dusk="upload" multiple>
+
+                    <button wire:click="resetFileInput" dusk="resetFileInput">ResetFileInput</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertInputValue('@upload', null)
+        ->attach('@upload', __DIR__ . '/browser_test_image.png')
+        ->attach('@upload', __DIR__ . '/browser_test_image2.png')
+        // Browsers will return the `C:\fakepath\` prefix for security reasons
+        // The first file input should have the first file as the value, but it will display '2 files' in the label
+        ->assertInputValue('@upload', 'C:\fakepath\browser_test_image.png')
+        ->pause(250)
+        ->waitForLivewire()
+        ->click('@resetFileInput')
+        ->assertInputValue('@upload', null)
+        ;
+    }
 }

@@ -21,7 +21,7 @@ class BaseUtils
     static function getPublicPropertiesDefinedOnSubclass($target) {
         return static::getPublicProperties($target, function ($property) {
             // Filter out any properties from the first-party Component class...
-            return $property->getDeclaringClass()->getName() !== \Livewire\Component::class;
+            return $property->getDeclaringClass()->getName() !== \Livewire\Component::class && $property->getDeclaringClass()->getName() !== \Livewire\Volt\Component::class;
         });
     }
 
@@ -52,7 +52,7 @@ class BaseUtils
     static function getPublicMethodsDefinedBySubClass($target)
     {
         $methods = array_filter((new \ReflectionObject($target))->getMethods(), function ($method) {
-            $isInBaseComponentClass = $method->getDeclaringClass()->getName() === \Livewire\Component::class;
+            $isInBaseComponentClass = $method->getDeclaringClass()->getName() === \Livewire\Component::class || $method->getDeclaringClass()->getName() === \Livewire\Volt\Component::class;
 
             return $method->isPublic()
                 && ! $method->isStatic()

@@ -67,19 +67,19 @@ public function save()
     $this->photo->store(path: 'photos');
 
     // Store the file in the "photos" directory in a configured "s3" disk
-    $this->photo->store(path: 'photos', 's3');
+    $this->photo->store(path: 'photos', options: 's3');
 
     // Store the file in the "photos" directory with the filename "avatar.png"
     $this->photo->storeAs(path: 'photos', name: 'avatar');
 
     // Store the file in the "photos" directory in a configured "s3" disk with the filename "avatar.png"
-    $this->photo->storeAs(path: 'photos', name: 'avatar', 's3');
+    $this->photo->storeAs(path: 'photos', name: 'avatar', options: 's3');
 
     // Store the file in the "photos" directory, with "public" visibility in a configured "s3" disk
-    $this->photo->storePublicly(path: 'photos', 's3');
+    $this->photo->storePublicly(path: 'photos', options: 's3');
 
     // Store the file in the "photos" directory, with the name "avatar.png", with "public" visibility in a configured "s3" disk
-    $this->photo->storePubliclyAs(path: 'photos', name: 'avatar', 's3');
+    $this->photo->storePubliclyAs(path: 'photos', name: 'avatar', options: 's3');
 }
 ```
 
