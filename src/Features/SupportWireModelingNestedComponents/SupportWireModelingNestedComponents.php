@@ -72,7 +72,7 @@ class SupportWireModelingNestedComponents extends ComponentHook
 
             // Attach the necessary Alpine directives so that the child and
             // parent's JS, ephemeral, values are bound.
-            $replaceHtml(Utils::insertAttributesIntoHtmlRoot($html, [
+            $replaceHtml(app(Utils::class)::insertAttributesIntoHtmlRoot($html, [
                 $directive =>  '$parent.'.$outer,
                 'x-modelable' => '$wire.'.$inner,
             ]));

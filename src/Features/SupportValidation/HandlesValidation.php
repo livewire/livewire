@@ -169,7 +169,7 @@ trait HandlesValidation
 
         return collect($this->getRules())
             ->filter(function ($value, $key) use ($name) {
-                return Utils::beforeFirstDot($key) === $name;
+                return app(Utils::class)::beforeFirstDot($key) === $name;
             });
     }
 
@@ -222,7 +222,7 @@ trait HandlesValidation
             ->keys()
             ->each(function($ruleKey) use ($data) {
                 throw_unless(
-                    array_key_exists(Utils::beforeFirstDot($ruleKey), $data),
+                    array_key_exists(app(Utils::class)::beforeFirstDot($ruleKey), $data),
                     new \Exception('No property found for validation: ['.$ruleKey.']')
                 );
             });
@@ -457,7 +457,7 @@ trait HandlesValidation
         $toShorten = [];
 
         foreach ($rules as $key => $value) {
-            $propertyName = Utils::beforeFirstDot($key);
+            $propertyName = app(Utils::class)::beforeFirstDot($key);
 
             if ($data[$propertyName] instanceof Model) {
                 $toShorten[] = $key;
@@ -471,7 +471,7 @@ trait HandlesValidation
     {
         foreach ($ruleKeys as $key) {
             if (str($key)->snake()->replace('_', ' ')->is($validator->getDisplayableAttribute($key))) {
-                $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute(Utils::afterFirstDot($key))]);
+                $validator->addCustomAttributes([$key => $validator->getDisplayableAttribute(app(Utils::class)::afterFirstDot($key))]);
             }
         }
     }
@@ -500,7 +500,7 @@ trait HandlesValidation
 
     protected function getDataForValidation($rules)
     {
-        return Utils::getPublicPropertiesDefinedOnSubclass($this);
+        return app(Utils::class)::getPublicPropertiesDefinedOnSubclass($this);
     }
 
     protected function unwrapDataForValidation($data)

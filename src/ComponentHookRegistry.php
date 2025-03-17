@@ -56,7 +56,7 @@ class ComponentHookRegistry
         }
 
         on('update', function ($component, $fullPath, $newValue) {
-            $propertyName = Utils::beforeFirstDot($fullPath);
+            $propertyName = app(Utils::class)::beforeFirstDot($fullPath);
 
             return static::proxyCallToHooks($component, 'callUpdate')($propertyName, $fullPath, $newValue);
         });

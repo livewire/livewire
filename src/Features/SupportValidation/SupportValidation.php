@@ -20,7 +20,7 @@ class SupportValidation extends ComponentHook
     {
         $errors = (new ViewErrorBag)->put('default', $this->component->getErrorBag());
 
-        $revert = Utils::shareWithViews('errors', $errors);
+        $revert = app(Utils::class)::shareWithViews('errors', $errors);
 
         return function () use ($revert) {
             // After the component has rendered, let's revert our global
@@ -37,7 +37,7 @@ class SupportValidation extends ComponentHook
         // and not from custom validators (Validator::make) that were run.
         $context->addMemo('errors', collect($errors)
             ->filter(function ($value, $key) {
-                return Utils::hasProperty($this->component, $key);
+                return app(Utils::class)::hasProperty($this->component, $key);
             })
             ->toArray()
         );

@@ -77,7 +77,7 @@ class FrontendAssets extends Mechanism
 
     public function returnJavaScriptAsFile()
     {
-        return Utils::pretendResponseIsFile(
+        return app(Utils::class)::pretendResponseIsFile(
             config('app.debug')
                 ? __DIR__.'/../../../dist/livewire.js'
                 : __DIR__.'/../../../dist/livewire.min.js'
@@ -86,7 +86,7 @@ class FrontendAssets extends Mechanism
 
     public function maps()
     {
-        return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.min.js.map');
+        return app(Utils::class)::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.min.js.map');
     }
 
     public static function styles($options = [])
@@ -186,7 +186,7 @@ class FrontendAssets extends Mechanism
 
         $updateUri = app('livewire')->getUpdateUri();
 
-        $extraAttributes = Utils::stringifyHtmlAttributes(
+        $extraAttributes = app(Utils::class)::stringifyHtmlAttributes(
             app(static::class)->scriptTagAttributes,
         );
 

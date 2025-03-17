@@ -45,7 +45,7 @@ class ComponentState
     }
 
     function untupleify($payload) {
-        $value = Utils::isSyntheticTuple($payload) ? $payload[0] : $payload;
+        $value = app(Utils::class)::isSyntheticTuple($payload) ? $payload[0] : $payload;
 
         if (is_array($value)) {
             foreach ($value as $key => $child) {

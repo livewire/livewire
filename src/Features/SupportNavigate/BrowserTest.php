@@ -72,7 +72,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second-tracked-asset', SecondTrackedAssetPage::class)->middleware('web');
 
             Route::get('/test-navigate-asset.js', function () {
-                return Utils::pretendResponseIsFile(__DIR__ . '/test-views/test-navigate-asset.js');
+                return app(Utils::class)::pretendResponseIsFile(__DIR__ . '/test-views/test-navigate-asset.js');
             });
 
             Route::get('/parent', ParentComponent::class)->middleware('web');

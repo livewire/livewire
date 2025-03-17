@@ -88,7 +88,7 @@ class ImplicitRouteBinding
 
     public function getPublicPropertyTypes($component)
     {
-        return collect(Utils::getPublicPropertiesDefinedOnSubclass($component))
+        return collect(app(Utils::class)::getPublicPropertiesDefinedOnSubclass($component))
             ->map(function ($value, $name) use ($component) {
                 return Reflector::getParameterClassName(new \ReflectionProperty($component, $name));
             });

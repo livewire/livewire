@@ -34,7 +34,7 @@ class FormObjectSynth extends Synth {
         $callBootMethod = static::bootFormObject($this->context->component, $form, $this->path);
 
         foreach ($data as $key => $child) {
-            if ($child === null && Utils::propertyIsTypedAndUninitialized($form, $key)) {
+            if ($child === null && app(Utils::class)::propertyIsTypedAndUninitialized($form, $key)) {
                 continue;
             }
 
@@ -48,7 +48,7 @@ class FormObjectSynth extends Synth {
 
     function set(&$target, $key, $value)
     {
-        if ($value === null && Utils::propertyIsTyped($target, $key) && ! Utils::getProperty($target, $key)->getType()->allowsNull()) {
+        if ($value === null && app(Utils::class)::propertyIsTyped($target, $key) && ! app(Utils::class)::getProperty($target, $key)->getType()->allowsNull()) {
             unset($target->$key);
         } else {
             $target->$key = $value;

@@ -125,7 +125,7 @@ class SupportLazyLoading extends ComponentHook
             $viewContext->extractFromEnvironment($view->getFactory());
         });
 
-        $html = Utils::insertAttributesIntoHtmlRoot($html, [
+        $html = app(Utils::class)::insertAttributesIntoHtmlRoot($html, [
             ((isset($params['lazy']) and $params['lazy'] === 'on-load') ? 'x-init' : 'x-intersect') => '$wire.__lazyLoad(\''.$encoded.'\')',
         ]);
 
@@ -148,9 +148,9 @@ class SupportLazyLoading extends ComponentHook
 
         $viewOrString = wrap($component)->withFallback($placeholderHtml)->placeholder($params);
 
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $properties = app(Utils::class)::getPublicPropertiesDefinedOnSubclass($component);
 
-        $view = Utils::generateBladeView($viewOrString, $properties);
+        $view = app(Utils::class)::generateBladeView($viewOrString, $properties);
 
         return $view;
     }

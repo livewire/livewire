@@ -115,15 +115,15 @@ class Form implements Arrayable
 
     public function hasProperty($prop)
     {
-        return property_exists($this, Utils::beforeFirstDot($prop));
+        return property_exists($this, app(Utils::class)::beforeFirstDot($prop));
     }
 
     public function getPropertyValue($name)
     {
-        $value = $this->{Utils::beforeFirstDot($name)};
+        $value = $this->{app(Utils::class)::beforeFirstDot($name)};
 
-        if (Utils::containsDots($name)) {
-            return data_get($value, Utils::afterFirstDot($name));
+        if (app(Utils::class)::containsDots($name)) {
+            return data_get($value, app(Utils::class)::afterFirstDot($name));
         }
 
         return $value;
@@ -138,7 +138,7 @@ class Form implements Arrayable
         }
 
         foreach ($values as $key => $value) {
-            if (in_array(Utils::beforeFirstDot($key), $publicProperties)) {
+            if (in_array(app(Utils::class)::beforeFirstDot($key), $publicProperties)) {
                 data_set($this, $key, $value);
             }
         }
@@ -189,6 +189,6 @@ class Form implements Arrayable
 
     public function toArray()
     {
-        return Utils::getPublicProperties($this);
+        return app(Utils::class)::getPublicProperties($this);
     }
 }

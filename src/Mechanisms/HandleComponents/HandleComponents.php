@@ -62,7 +62,7 @@ class HandleComponents extends Mechanism
 
         trigger('destroy', $component, $context);
 
-        $html = Utils::insertAttributesIntoHtmlRoot($html, [
+        $html = app(Utils::class)::insertAttributesIntoHtmlRoot($html, [
             'wire:snapshot' => $snapshot,
             'wire:effects' => $context->effects,
         ]);
@@ -160,7 +160,7 @@ class HandleComponents extends Mechanism
 
     protected function dehydrateProperties($component, $context)
     {
-        $data = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $data = app(Utils::class)::getPublicPropertiesDefinedOnSubclass($component);
 
         foreach ($data as $key => $value) {
             $data[$key] = $this->dehydrate($value, $context, $key);
@@ -171,7 +171,7 @@ class HandleComponents extends Mechanism
 
     protected function dehydrate($target, $context, $path)
     {
-        if (Utils::isAPrimitive($target)) return $target;
+        if (app(Utils::class)::isAPrimitive($target)) return $target;
 
         $synth = $this->propertySynth($target, $context, $path);
 
@@ -200,7 +200,7 @@ class HandleComponents extends Mechanism
 
     protected function hydrate($valueOrTuple, $context, $path)
     {
-        if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
+        if (! app(Utils::class)::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
 
         [$value, $meta] = $tuple;
 
@@ -223,7 +223,7 @@ class HandleComponents extends Mechanism
 
             if (! $html) return;
 
-            return Utils::insertAttributesIntoHtmlRoot($html, [
+            return app(Utils::class)::insertAttributesIntoHtmlRoot($html, [
                 'wire:id' => $component->getId(),
             ]);
         }
@@ -233,8 +233,8 @@ class HandleComponents extends Mechanism
         return $this->trackInRenderStack($component, function () use ($component, $view, $properties) {
             $finish = trigger('render', $component, $view, $properties);
 
-            $revertA = Utils::shareWithViews('__livewire', $component);
-            $revertB = Utils::shareWithViews('_instance', $component); // @deprecated
+            $revertA = app(Utils::class)::shareWithViews('__livewire', $component);
+            $revertB = app(Utils::class)::shareWithViews('_instance', $component); // @deprecated
 
             $viewContext = new ViewContext;
 
@@ -245,7 +245,7 @@ class HandleComponents extends Mechanism
 
             $revertA(); $revertB();
 
-            $html = Utils::insertAttributesIntoHtmlRoot($html, [
+            $html = app(Utils::class)::insertAttributesIntoHtmlRoot($html, [
                 'wire:id' => $component->getId(),
             ]);
 
@@ -271,9 +271,9 @@ class HandleComponents extends Mechanism
             ? wrap($component)->render()
             : View::file($viewPath . '/' . $fileName . '.blade.php');
 
-        $properties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $properties = app(Utils::class)::getPublicPropertiesDefinedOnSubclass($component);
 
-        $view = Utils::generateBladeView($viewOrString, $properties);
+        $view = app(Utils::class)::generateBladeView($viewOrString, $properties);
 
         return [ $view, $properties ];
     }
@@ -314,7 +314,7 @@ class HandleComponents extends Mechanism
         $finish = trigger('update', $component, $path, $value);
 
         // Ensure that it's a public property, not on the base class first...
-        if (! in_array($property, array_keys(Utils::getPublicPropertiesDefinedOnSubclass($component)))) {
+        if (! in_array($property, array_keys(app(Utils::class)::getPublicPropertiesDefinedOnSubclass($component)))) {
             throw new PublicPropertyNotFoundException($property, $component->getName());
         }
 
@@ -349,8 +349,8 @@ class HandleComponents extends Mechanism
 
         $childKey = str($path)->afterLast('.');
 
-        if ($parent && is_object($parent) && property_exists($parent, $childKey) && Utils::propertyIsTyped($parent, $childKey)) {
-            $type = Utils::getProperty($parent, $childKey)->getType();
+        if ($parent && is_object($parent) && property_exists($parent, $childKey) && app(Utils::class)::propertyIsTyped($parent, $childKey)) {
+            $type = app(Utils::class)::getProperty($parent, $childKey)->getType();
 
             $types = $type instanceof ReflectionUnionType ? $type->getTypes() : [$type];
 
@@ -370,7 +370,7 @@ class HandleComponents extends Mechanism
 
         $first = array_shift($segments);
 
-        [$data, $meta] = Utils::isSyntheticTuple($raw) ? $raw : [$raw, null];
+        [$data, $meta] = app(Utils::class)::isSyntheticTuple($raw) ? $raw : [$raw, null];
 
         if ($path !== '') {
             $value = $data[$first] ?? null;
@@ -458,7 +458,7 @@ class HandleComponents extends Mechanism
                 continue;
             }
 
-            $methods = Utils::getPublicMethodsDefinedBySubClass($root);
+            $methods = app(Utils::class)::getPublicMethodsDefinedBySubClass($root);
 
             // Also remove "render" from the list...
             $methods =  array_values(array_diff($methods, ['render']));

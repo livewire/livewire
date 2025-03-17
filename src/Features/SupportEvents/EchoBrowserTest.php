@@ -14,7 +14,7 @@ class EchoBrowserTest extends BrowserTestCase
     public function test_can_listen_for_echo_event()
     {
         Route::get('/dusk/fake-echo', function () {
-            return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
+            return app(Utils::class)::pretendResponseIsFile(__DIR__.'/fake-echo.js');
         });
 
         Livewire::visit(new class extends Component {
@@ -46,7 +46,7 @@ class EchoBrowserTest extends BrowserTestCase
     public function test_can_listen_for_echo_event_with_payload()
     {
         Route::get('/dusk/fake-echo', function () {
-            return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
+            return app(Utils::class)::pretendResponseIsFile(__DIR__.'/fake-echo.js');
         });
 
         Livewire::visit(new class extends Component {
@@ -80,7 +80,7 @@ class EchoBrowserTest extends BrowserTestCase
     // public function test_echo_listeners_are_torn_down_when_navigating_pages_using_wire_navigate()
     // {
     //     Route::get('/dusk/fake-echo', function () {
-    //         return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
+    //         return app(Utils::class)::pretendResponseIsFile(__DIR__.'/fake-echo.js');
     //     });
 
     //     Route::get('/second-page', function (){

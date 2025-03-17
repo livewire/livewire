@@ -13,7 +13,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         return function () {
             Route::get('/non-livewire-asset.js', function () {
-                return Utils::pretendResponseIsFile(__DIR__.'/non-livewire-asset.js');
+                return app(Utils::class)::pretendResponseIsFile(__DIR__.'/non-livewire-asset.js');
             });
 
             Route::get('/non-livewire-assets', function () {
@@ -146,7 +146,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_assets_can_be_loaded()
     {
         Route::get('/test.js', function () {
-            return Utils::pretendResponseIsFile(__DIR__.'/test.js');
+            return app(Utils::class)::pretendResponseIsFile(__DIR__.'/test.js');
         });
 
         Livewire::visit(new class extends \Livewire\Component {

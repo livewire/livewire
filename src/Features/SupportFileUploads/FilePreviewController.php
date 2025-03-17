@@ -19,6 +19,6 @@ class FilePreviewController implements HasMiddleware
     {
         abort_unless(request()->hasValidSignature(), 401);
 
-        return Utils::pretendPreviewResponseIsPreviewFile($filename);
+        return app(Utils::class)::pretendPreviewResponseIsPreviewFile($filename);
     }
 }

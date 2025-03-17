@@ -91,7 +91,7 @@ class SupportNestingComponents extends ComponentHook
     static function setParametersToMatchingProperties($component, $params)
     {
         // Assign all public component properties that have matching parameters.
-        collect(array_intersect_key($params, Utils::getPublicPropertiesDefinedOnSubclass($component)))
+        collect(array_intersect_key($params, app(Utils::class)::getPublicPropertiesDefinedOnSubclass($component)))
             ->each(function ($value, $property) use ($component) {
                 $component->{$property} = $value;
             });
