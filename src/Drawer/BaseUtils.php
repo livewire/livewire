@@ -31,10 +31,6 @@ class BaseUtils
             ->filter(function ($property) {
                 return $property->isPublic() && ! $property->isStatic() && $property->isDefault();
             })
-            // TODO exclude based on Unreadable attribute
-            ->filter(function ($property) {
-                return 'variable1' !== $property->getName();
-            })
             ->filter($filter ?? fn () => true)
             ->mapWithKeys(function ($property) use ($target) {
                 // Ensures typed property is initialized in PHP >=7.4, if so, return its value,
