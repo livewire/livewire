@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleRequests;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
 use Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets;
 
@@ -79,7 +80,7 @@ class HandleRequests extends Mechanism
     function handleUpdate()
     {
         $requestPayload = request(key: 'components', default: []);
-        
+
         $finish = trigger('request', $requestPayload);
 
         $requestPayload = $finish($requestPayload);
@@ -91,7 +92,13 @@ class HandleRequests extends Mechanism
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
 
-            [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls);
+            try {
+                [$snapshot, $effects] = app('livewire')->update($snapshot, $updates, $calls);
+            } catch (ModelNotFoundException $e) {
+                // If a model is not found in the path, we'll just skip the component.
+                $effects = [];
+                $snapshot = [];
+            }
 
             $componentResponses[] = [
                 'snapshot' => json_encode($snapshot),
