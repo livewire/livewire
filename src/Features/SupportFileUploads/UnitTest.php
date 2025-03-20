@@ -822,6 +822,16 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertEquals(['throttle:60,1', 'web'], $middleware);
     }
+
+    public function test_temporary_file_uploads_guess_correct_mime_during_testing()
+    {
+        Livewire::test(UseProvidedMimeTypeDuringTestingComponent::class)
+            ->set('photo', UploadedFile::fake()->create('file.png', 1000, 'application/pdf'))
+            ->call('save')
+            ->assertHasErrors([
+                'photo' => 'mimetypes',
+            ]);
+    }
 }
 
 class DummyMiddleware
@@ -958,3 +968,16 @@ class FileExtensionValidatorComponent extends FileUploadComponent
     }
 }
 
+class UseProvidedMimeTypeDuringTestingComponent extends FileUploadComponent
+{
+    use WithFileUploads;
+
+    public $photo;
+
+    public function save()
+    {
+        $this->validate([
+            'photo' => 'mimetypes:image/png',
+        ]);
+    }
+}

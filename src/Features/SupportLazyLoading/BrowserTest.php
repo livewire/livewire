@@ -132,7 +132,7 @@ class BrowserTest extends BrowserTestCase
 
     public function test_can_lazy_load_component_using_route()
     {
-        $this->tweakApplication(function() {
+        $this->beforeServingApplication(function() {
             Livewire::component('page', Page::class);
             Route::get('/', Page::class)->lazy()->middleware('web');
         });

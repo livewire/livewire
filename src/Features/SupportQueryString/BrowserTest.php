@@ -52,6 +52,90 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_keep_option_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
+    {
+        Livewire::withQueryParams([
+            'filters' => [
+                'startDate' => '2024-01-01',
+                'endDate' => '2024-09-05',
+            ]
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl(keep: true)]
+                public array $filters = [
+                    'startDate' => '',
+                    'endDate' => '',
+                ];
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="startDate" wire:model.live="filters.startDate" />
+                        <input type="text" dusk="endDate" wire:model.live="filters.endDate" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+    }
+
+    public function test_does_not_duplicate_url_query_string_for_array_parameters_on_page_load()
+    {
+        Livewire::withQueryParams([
+            'filters' => [
+                'startDate' => '2024-01-01',
+                'endDate' => '2024-09-05',
+            ]
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl]
+                public array $filters = [
+                    'startDate' => '',
+                    'endDate' => '',
+                ];
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="startDate" wire:model.live="filters.startDate" />
+                        <input type="text" dusk="endDate" wire:model.live="filters.endDate" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertScript('return window.location.search', '?filters[startDate]=2024-01-01&filters[endDate]=2024-09-05');
+    }
+
+    public function test_keep_option_does_not_duplicate_url_query_string_for_string_parameter_on_page_load()
+    {
+        Livewire::withQueryParams([
+            'date' => '2024-01-01',
+        ])->visit([
+            new class extends Component
+            {
+                #[BaseUrl(keep: true)]
+                public $date = '';
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <input type="text" dusk="date" wire:model.live="date" />
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertScript('return window.location.search', '?date=2024-01-01');
+    }
+
+
     public function can_encode_url_containing_spaces_and_commas()
     {
         Livewire::visit([
@@ -177,10 +261,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                             @switch($filter1)
                               @case('')
                                 <div>All</div>
-                              @case('some') 
+                              @case('some')
                                 <div>Some</div>
                               @break
-                            @endswitch   
+                            @endswitch
                         </div>
                         <select dusk="filter2" wire:model.change="filter2">
                             <option value="all">All</option>
@@ -191,10 +275,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                             @switch($filter2)
                               @case('all')
                                 <div>All</div>
-                              @case('some') 
+                              @case('some')
                                 <div>Some</div>
                               @break
-                            @endswitch   
+                            @endswitch
                         </div>
                     </div>
                     HTML;
@@ -828,7 +912,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_cannot_inject_js_through_query_string()
     {
-        $this->tweakApplication(function() {
+        $this->beforeServingApplication(function() {
             app('livewire')->component('foo', new class extends Component {
                 #[Url]
                 public $foo = 'bar';
@@ -905,6 +989,52 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertQueryStringHas('foo', 'bar');
     }
 
+    public function test_it_handles_query_string_encoded_keys()
+    {
+        Livewire::withQueryParams([
+            'foo' => ['bar' => 'baz'],
+        ])
+            ->visit([
+                new class extends Component
+                {
+                    #[Url]
+                    public $foo;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                        </div>
+                        HTML;
+                    }
+                }
+            ])
+            ->assertScript('return window.location.search', '?foo[bar]=baz');
+    }
+
+    public function test_it_skips_query_string_encoded_keys_not_tracked_by_livewire()
+    {
+        Livewire::withQueryParams([
+            'foo' => ['bar' => 'baz'],
+            'bob' => ['lob' => 'law'],
+        ])
+            ->visit([
+                new class extends Component
+                {
+                    #[Url]
+                    public $foo;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                        <div>
+                        </div>
+                        HTML;
+                    }
+                }
+            ])
+            ->assertScript('return window.location.search', '?foo[bar]=baz&bob%5Blob%5D=law');
+    }
 }
 
 class FormObject extends \Livewire\Form
