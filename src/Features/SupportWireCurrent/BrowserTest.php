@@ -109,6 +109,43 @@ class BrowserTest extends BrowserTestCase
                 ;
         });
     }
+
+    public function test_wire_current_supports_adding_data_current_attribute()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForText('On first')
+
+                ->assertAttribute('@link.first', 'data-current', '')
+                ->assertAttributeMissing('@link.sub', 'data-current', '')
+                ->assertAttributeMissing('@link.second', 'data-current', '')
+                ->assertAttribute('@link.first.exact', 'data-current', '')
+                ->assertAttributeMissing('@link.sub.exact', 'data-current', '')
+                ->assertAttributeMissing('@link.second.exact', 'data-current', '')
+
+                ->click('@link.sub')
+                ->waitForText('On sub')
+
+                ->assertAttribute('@link.first', 'data-current', '')
+                ->assertAttribute('@link.sub', 'data-current', '')
+                ->assertAttributeMissing('@link.second', 'data-current', '')
+                ->assertAttributeMissing('@link.first.exact', 'data-current', '')
+                ->assertAttribute('@link.sub.exact', 'data-current', '')
+                ->assertAttributeMissing('@link.second.exact', 'data-current', '')
+
+                ->click('@link.second')
+                ->waitForText('On second')
+
+                ->assertAttributeMissing('@link.first', 'data-current', '')
+                ->assertAttributeMissing('@link.sub', 'data-current', '')
+                ->assertAttribute('@link.second', 'data-current', '')
+                ->assertAttributeMissing('@link.first.exact', 'data-current', '')
+                ->assertAttributeMissing('@link.sub.exact', 'data-current', '')
+                ->assertAttribute('@link.second.exact', 'data-current', '')
+                ;
+        });
+    }
 }
 
 #[Layout('test-views::navbar-sidebar')]

@@ -23,31 +23,23 @@ This also means that lazily or conditionally loaded Livewire components are stil
 @endscript
 ```
 
-Here's a more full example where you can do something like register a one-off Alpine component that is used in your Livewire component.
+Here's a more full example where you can do something like register a JavaScript action that is used in your Livewire component.
 
 ```blade
 <div>
-    Counter component in Alpine:
-
-    <div x-data="counter">
-        <h1 x-text="count"></h1>
-        <button x-on:click="increment">+</button>
-    </div>
+    <button wire:click="$js.increment">+</button>
 </div>
 
 @script
 <script>
-    Alpine.data('counter', () => {
-        return {
-            count: 0,
-            increment() {
-                this.count++
-            },
-        }
+    $js('increment', () => {
+        console.log('increment')
     })
 </script>
 @endscript
 ```
+
+To learn more about JavaScript actions, [visit the actions documentation](/docs/actions#javascript-actions).
 
 ### Using `$wire` from scripts
 
@@ -66,6 +58,38 @@ You can learn more about `$wire` on the [`$wire` documentation](#the-wire-object
 </script>
 @endscript
 ```
+
+### Evaluating one-off JavaScript expressions
+
+In addition to designating entire methods to be evaluated in JavaScript, you can use the `js()` method to evaluate smaller, individual expressions on the backend.
+
+This is generally useful for performing some kind of client-side follow-up after a server-side action is performed.
+
+For example, here is an example of a `CreatePost` component that triggers a client-side alert dialog after the post is saved to the database:
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+
+class CreatePost extends Component
+{
+    public $title = '';
+
+    public function save()
+    {
+        // ...
+
+        $this->js("alert('Post saved!')"); // [tl! highlight:6]
+    }
+}
+```
+
+The JavaScript expression `alert('Post saved!')` will now be executed on the client after the post has been saved to the database on the server.
+
+You can access the current component's `$wire` object inside the expression.
 
 ### Loading assets
 
@@ -167,15 +191,15 @@ In certain scenarios, you might need to unregister global Livewire events. For i
 Alpine.data('MyComponent', () => ({
     listeners: [],
     init() {
-        this.listeners.push(  
-            Livewire.on('post-created', (options) => {  
+        this.listeners.push(
+            Livewire.on('post-created', (options) => {
                 // Do something...
             })
         );
     },
     destroy() {
-        this.listeners.forEach((listener) => {  
-            listener();  
+        this.listeners.forEach((listener) => {
+            listener();
         });
     }
 }));
@@ -300,9 +324,13 @@ let $wire = {
     // Toggle the value of a boolean property...
     $toggle(name, live = true) { ... },
 
-    // Call the method
+    // Call the method...
     // Usage: $wire.$call('increment')
     $call(method, ...params) { ... },
+
+    // Define a JavaScript action...
+    // Usage: $wire.$js('increment', () => { ... })
+    $js(name, callback) { ... },
 
     // Entangle the value of a Livewire property with a different,
     // arbitrary, Alpine property...
@@ -587,7 +615,7 @@ Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
         // Runs after a response is received but before it's processed...
     })
 
-    succeed(({ snapshot, effect }) => {
+    succeed(({ snapshot, effects }) => {
         // Runs after a successful response is received and processed
         // with a new snapshot and list of effects...
     })

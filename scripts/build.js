@@ -51,6 +51,7 @@ function build(options) {
         ...options,
     }).catch(() => process.exit(1))
 }
+
 function outputSize(file) {
     let size = bytesToSize(brotliSize.sync(fs.readFileSync(file)))
 
@@ -63,4 +64,4 @@ function bytesToSize(bytes) {
     const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
     if (i === 0) return `${bytes} ${sizes[i]}`
     return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`
-  }
+}

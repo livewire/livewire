@@ -1,12 +1,12 @@
 <?php
 
-namespace LegacyTests\Browser\Ignore;
+namespace Livewire\Features\SupportWireIgnore;
 
+use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
-use Tests\BrowserTestCase;
 
-class Test extends BrowserTestCase
+class BrowserTest extends BrowserTestCase
 {
     public function test_wire_ignore()
     {
@@ -27,15 +27,15 @@ class Test extends BrowserTestCase
                              <span dusk="bar.output">{{ $bar ? 'new' : 'old' }}</span>
                         </button>
 
-                        <button wire:click="$set('baz', true)" @if ($baz) some-new-attribute="true" @endif wire:ignore dusk="baz">Baz</button>
+                        <button wire:click="$set('baz', true)" @if ($baz) some-new-attribute="true" @endif wire:ignore.self dusk="baz">
                              <span dusk="baz.output">{{ $baz ? 'new' : 'old' }}</span>
                         </button>
 
-                        <button wire:click="$set('bob', true)" wire:ignore dusk="bob">
+                        <button wire:click="$set('bob', true)" dusk="bob">
                              <span dusk="bob.output">{{ $bob ? 'new' : 'old' }}</span>
                         </button>
 
-                        <button wire:click="$set('lob', true)" @if ($lob) some-new-attribute="true" @endif wire:ignore dusk="lob">lob</button>
+                        <button wire:click="$set('lob', true)" @if ($lob) some-new-attribute="true" @endif dusk="lob">
                              <span dusk="lob.output">{{ $lob ? 'new' : 'old' }}</span>
                         </button>
                     </div>
@@ -82,6 +82,48 @@ class Test extends BrowserTestCase
             ->waitForLivewire()->click('@lob')
             ->assertAttributeMissing('@lob', 'some-new-attribute')
             ->assertSeeIn('@lob.output', 'new')
+        ;
+    }
+
+    public function test_wire_ignore_children()
+    {
+        Livewire::visit(new class extends Component {
+            public $baz = false;
+            public $lob = false;
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="$set('baz', true)" some-attribute="{{ $baz ? 'new' : 'old' }}" wire:ignore.children dusk="baz">
+                             <span dusk="baz.child">{{ $baz ? 'new' : 'old' }}</span>
+                        </button>
+
+                        <button wire:click="$set('lob', true)" some-attribute="{{ $lob ? 'new' : 'old' }}" dusk="lob">
+                             <span dusk="lob.child">{{ $lob ? 'new' : 'old' }}</span>
+                        </button>
+                    </div>
+                HTML;
+            }
+        })
+            /**
+             * wire:ignore.children ignores updates to children, but not self
+             */
+            ->assertSeeIn('@baz.child', 'old')
+            ->assertAttribute('@baz', 'some-attribute', 'old')
+            ->waitForLivewire()->click('@baz')
+            ->assertAttribute('@baz', 'some-attribute', 'new')
+            ->assertSeeIn('@baz.child', 'old')
+
+            /**
+             * adding .__livewire_ignore_children to element ignores updates to children, but not children
+             */
+            ->tap(function ($b) { $b->script("document.querySelector('[dusk=\"lob\"]').__livewire_ignore_children = true"); })
+            ->assertSeeIn('@lob.child', 'old')
+            ->assertAttribute('@lob', 'some-attribute', 'old')
+            ->waitForLivewire()->click('@lob')
+            ->assertAttribute('@lob', 'some-attribute', 'new')
+            ->assertSeeIn('@lob.child', 'old')
         ;
     }
 }

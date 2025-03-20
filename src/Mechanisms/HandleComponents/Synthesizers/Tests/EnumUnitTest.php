@@ -28,11 +28,26 @@ class EnumUnitTest extends \Tests\TestCase
         $this->expectException(ValueError::class);
         $testable->updateProperty('status', 'Be excellent excellent to each other');
     }
+
+    public function test_an_enum_can_be_validated()
+    {
+        Livewire::test(ComponentWithValidatedEnum::class)
+            ->call('save')
+            ->assertHasErrors('enum')
+            ->set('enum', ValidatedEnum::TEST->value)
+            ->call('save')
+            ->assertHasNoErrors();
+    }
 }
 
 enum TestingEnum: string
 {
     case TEST = 'Be excellent to each other';
+}
+
+enum ValidatedEnum: string
+{
+    case TEST = 'test';
 }
 
 class ComponentWithPublicEnumCasters extends TestComponent
@@ -64,4 +79,21 @@ class ComponentWithPublicEnumCasters extends TestComponent
 class ComponentWithNullablePublicEnumCaster extends TestComponent
 {
     public ?TestingEnum $status = null;
+}
+
+class ComponentWithValidatedEnum extends TestComponent
+{
+    public ValidatedEnum $enum;
+
+    public function rules()
+    {
+        return [
+            'enum' => ['required', 'in:' . collect(ValidatedEnum::cases())->pluck('value')->implode(',')],
+        ];
+    }
+
+    public function save()
+    {
+        $this->validate();
+    }
 }
