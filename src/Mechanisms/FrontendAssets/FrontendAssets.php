@@ -91,6 +91,8 @@ class FrontendAssets extends Mechanism
 
     public static function styles($options = [])
     {
+        if (app(static::class)->hasRenderedStyles) return '';
+
         app(static::class)->hasRenderedStyles = true;
 
         $nonce = isset($options['nonce']) ? "nonce=\"{$options['nonce']}\" data-livewire-style" : '';
@@ -137,6 +139,8 @@ class FrontendAssets extends Mechanism
 
     public static function scripts($options = [])
     {
+        if (app(static::class)->hasRenderedScripts) return '';
+
         app(static::class)->hasRenderedScripts = true;
 
         $debug = config('app.debug');
