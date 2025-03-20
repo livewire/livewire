@@ -912,7 +912,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
     public function test_cannot_inject_js_through_query_string()
     {
-        $this->tweakApplication(function() {
+        $this->beforeServingApplication(function() {
             app('livewire')->component('foo', new class extends Component {
                 #[Url]
                 public $foo = 'bar';
