@@ -101,8 +101,7 @@ use Tests\TestCase;
 
 class UnitTest extends TestCase
 {
-    /** @test */
-    public function livewire_can_run_action(): void
+    public function test_livewire_can_run_action(): void
     {
        // ...
     }
@@ -116,8 +115,7 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function livewire_can_run_action()
+    public function test_livewire_can_run_action()
     {
         // ...
     }
