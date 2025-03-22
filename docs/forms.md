@@ -324,7 +324,7 @@ class PostForm extends Form
         $this->validate();
 
         $this->post->update(
-            $this->all()
+            $this->only(['title', 'content'])
         );
     }
 }
