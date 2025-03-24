@@ -11,9 +11,98 @@ use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Route;
 
 class BrowserTest extends BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            Livewire::component('first-page', FirstPage::class);
+            Livewire::component('second-page-with-pagination', SecondPageWithPagination::class);
+
+            Route::get('/first-page', FirstPage::class)->middleware('web');
+            Route::get('/second-page-with-pagination', SecondPageWithPagination::class)->middleware('web');       
+        };
+    }
+
+    public function test_interaction_with_back_button_when_wire_navigate_was_previously_used()
+    {
+        $this->browse(function ($browser) {
+            $browser->visit('/first-page')
+                ->assertSee('First page')
+
+                ->click('@link.to.second') // We click on wire:navigate link
+
+                ->waitForText('Second page with pagination')
+                ->assertSee('Post #2') // Post from page 1
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertQueryStringHas('page', '2')
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4') // Post from page 2
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertQueryStringHas('page', '3')
+                ->assertDontSee('Post #6')
+                ->assertSee('Post #7') // Post from page 3
+                ->assertSee('Post #8')
+                ->assertSee('Post #9')
+                
+                ->waitForLivewire()->back()
+
+                ->assertQueryStringHas('page', '2')
+                ->assertDontSee('Post #7') // We shouldn't see post from page 3
+                ->assertDontSee('Post #2') // We shouldn't see post from page 1
+                ->assertSee('Post #4'); // We should see post from page 2
+        });
+    }
+
+    public function test_interaction_with_back_button_when_wire_navigate_was_used_later()
+    {
+        $this->browse(function ($browser) {
+            $browser->visit('/first-page')
+                ->assertSee('First page')
+
+                ->click('@link.to.second') // We click on wire:navigate link
+
+                ->waitForText('Second page with pagination')
+                ->assertSee('Post #2') // Post from page 1
+                ->assertSee('Post #3')
+                ->assertDontSee('Post #4')
+
+                ->waitForLivewire()->click('@nextPage')
+
+                ->assertQueryStringHas('page', '2')
+                ->assertDontSee('Post #3')
+                ->assertSee('Post #4') // Post from page 2
+                ->assertSee('Post #5')
+                ->assertSee('Post #6')
+
+                ->click('@link.to.first') // We click on wire:navigate link to the first page
+                
+                ->waitForText('First page')
+
+                ->back()
+
+                ->waitForText('Second page with pagination')
+                ->assertQueryStringHas('page', '2')
+                ->assertDontSee('Post #2') // We shouldn't see post from page 1
+                ->assertSee('Post #4') // We should see post from page 2
+
+                ->back()
+                
+                ->assertDontSee('Post #4') // We shouldn't see post from page 2
+                ->assertSee('Post #2'); // We should see post from page 1
+        });        
+    }
+
     public function test_tailwind()
     {
         Livewire::visit(new class extends Component {
@@ -1115,6 +1204,56 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Post #6')
             ->assertQueryStringMissing('page')
         ;
+    }
+}
+
+class FirstPage extends Component {
+    public function render()
+    { 
+        return Blade::render(
+            <<< 'HTML'
+            <div>
+                <h1>First page</h1>
+                <div>
+                    <a href="/second-page-with-pagination" wire:navigate dusk="link.to.second">
+                        Go to second page with pagination
+                    </a>
+                </div>
+            </div>
+            HTML
+        ); 
+    }
+};
+
+class SecondPageWithPagination extends Component {
+    use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
+
+    public function render()
+    { 
+        return Blade::render(
+            <<< 'HTML'
+            <div>
+                <h1>Second page with pagination</h1>
+                <div>
+                    <a href="/first-page" wire:navigate dusk="link.to.first">
+                        Go to first page
+                    </a>
+                </div>                            
+                <div>
+                    @foreach ($posts as $post)
+                        <h1 wire:key="post-{{ $post->id }}">{{ $post->title }}</h1>
+                    @endforeach
+
+                    {{ $posts->links() }}
+                </div>
+            </div>
+            HTML,
+            [
+                'posts' => Post::paginate(3),
+            ]
+        );
     }
 }
 
