@@ -11,8 +11,7 @@ class GenerateSignedUploadUrl
     public function forLocal()
     {
         return URL::temporarySignedRoute(
-            'livewire.upload-file',
-            now()->addMinutes(FileUploadConfiguration::maxUploadTime())
+            'livewire.upload-file', now()->addMinutes(FileUploadConfiguration::maxUploadTime())
         );
     }
 
