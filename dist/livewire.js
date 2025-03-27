@@ -4057,10 +4057,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     async send() {
       this.prepare();
-      let [commitPayloads, succeed, fail] = this.payload();
-      if (commitPayloads.length === 0) {
-        return Promise.resolve();
-      }
       await sendRequest(this);
     }
     prepare() {
@@ -4071,8 +4067,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let successReceivers = [];
       let failureReceivers = [];
       this.commits.forEach((commit) => {
-        if (commit.stale)
-          return;
         let [payload, succeed2, fail2] = commit.toRequestPayload();
         commitPayloads.push(payload);
         successReceivers.push(succeed2);
@@ -4089,8 +4083,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     constructor(component) {
       this.component = component;
       this.isolate = false;
-      this.interruptible = false;
-      this.stale = false;
       this.calls = [];
       this.receivers = [];
       this.resolvers = [];
@@ -4107,9 +4099,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           receiver(value);
         }
       });
-    }
-    markAsStale() {
-      this.stale = true;
     }
     prepare() {
       trigger2("commit.prepare", { component: this.component });
@@ -4146,10 +4135,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
       let handleResponse = (response) => {
-        if (this.stale) {
-          this.resolvers.forEach((i) => i());
-          return;
-        }
         let { snapshot, effects } = response;
         respond();
         this.component.mergeNewSnapshot(snapshot, effects, updates);
@@ -4167,10 +4152,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         succeed(response);
       };
       let handleFailure = () => {
-        if (this.stale) {
-          this.resolvers.forEach((i) => i());
-          return;
-        }
         respond();
         fail();
       };
@@ -4184,19 +4165,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.commits = /* @__PURE__ */ new Set();
       this.pools = /* @__PURE__ */ new Set();
     }
-    add(component, interruptible = false) {
+    add(component) {
       let commit = this.findCommitOr(component, () => {
         let newCommit = new Commit(component);
         this.commits.add(newCommit);
         return newCommit;
       });
-      commit.interruptible = interruptible;
       bufferPoolingForFiveMs(commit, () => {
         let pool = this.findPoolWithComponent(commit.component);
         if (!pool) {
-          this.createAndSendNewPool();
-        } else if (this.hasInterruptibleCommitInPool(commit.component)) {
-          this.interruptCommitsFor(commit.component);
           this.createAndSendNewPool();
         }
       });
@@ -4216,21 +4193,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return pool;
       }
     }
-    hasInterruptibleCommitInPool(component) {
-      const pool = this.findPoolWithComponent(component);
-      if (!pool)
-        return false;
-      const commit = pool.findCommitByComponent(component);
-      return commit && commit.interruptible;
-    }
-    interruptCommitsFor(component) {
-      this.pools.forEach((pool) => {
-        const commit = pool.findCommitByComponent(component);
-        if (commit && commit.interruptible) {
-          commit.markAsStale();
-        }
-      });
-    }
     createAndSendNewPool() {
       trigger2("commit.pooling", { commits: this.commits });
       let pools = this.corraleCommitsIntoPools();
@@ -4241,9 +4203,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         this.pools.add(pool);
         pool.send().then(() => {
-          this.pools.delete(pool);
-          this.sendAnyQueuedCommits();
-        }).catch(() => {
           this.pools.delete(pool);
           this.sendAnyQueuedCommits();
         });
@@ -4285,16 +4244,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/request/index.js
   var commitBus = new CommitBus();
-  async function requestCommit(component, interruptible = false) {
-    let commit = commitBus.add(component, interruptible);
+  async function requestCommit(component) {
+    let commit = commitBus.add(component);
     let promise = new Promise((resolve) => {
       commit.addResolver(resolve);
     });
     promise.commit = commit;
     return promise;
   }
-  async function requestCall(component, method, params, interruptible = false) {
-    let commit = commitBus.add(component, interruptible);
+  async function requestCall(component, method, params) {
+    let commit = commitBus.add(component);
     let promise = new Promise((resolve) => {
       commit.addCall(method, params, (value) => resolve(value));
     });
@@ -4303,9 +4262,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload();
-    if (payload.length === 0) {
-      return;
-    }
     let options = {
       method: "POST",
       body: JSON.stringify({

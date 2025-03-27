@@ -8,8 +8,6 @@ export class Commit {
     constructor(component) {
         this.component = component
         this.isolate = false
-        this.interruptible = false // Flag to mark if this commit can be interrupted
-        this.stale = false // Flag to mark if this commit has been interrupted
         this.calls = []
         this.receivers = []
         this.resolvers = []
@@ -28,11 +26,6 @@ export class Commit {
                 receiver(value)
             },
         })
-    }
-
-    // Mark this commit as stale (interrupted)
-    markAsStale() {
-        this.stale = true
     }
 
     prepare() {
@@ -85,13 +78,6 @@ export class Commit {
 
         // Handle the response payload for a commit...
         let handleResponse = (response) => {
-            // If this commit has been marked as stale (interrupted), don't process the response
-            if (this.stale) {
-                // Still resolve any promises to avoid hanging
-                this.resolvers.forEach(i => i())
-                return
-            }
-
             let { snapshot, effects } = response
 
             respond()
@@ -124,13 +110,6 @@ export class Commit {
         }
 
         let handleFailure = () => {
-            // Don't process failure for stale (interrupted) commits
-            if (this.stale) {
-                // Still resolve any promises to avoid hanging
-                this.resolvers.forEach(i => i())
-                return
-            }
-
             respond()
 
             fail()

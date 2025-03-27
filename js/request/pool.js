@@ -39,15 +39,6 @@ export class RequestPool {
     async send() {
         this.prepare()
 
-        // Get the pool payload
-        let [commitPayloads, succeed, fail] = this.payload()
-
-        // If all commits became stale and we have no payloads to send,
-        // resolve immediately without sending a request
-        if (commitPayloads.length === 0) {
-            return Promise.resolve()
-        }
-
         // Send this pool of commits to the server and let the commits
         // Manage their own response actions...
         await sendRequest(this)
@@ -68,9 +59,6 @@ export class RequestPool {
         let failureReceivers = []
 
         this.commits.forEach(commit => {
-            // Skip stale commits when generating the payload
-            if (commit.stale) return
-
             let [payload, succeed, fail] = commit.toRequestPayload()
 
             commitPayloads.push(payload)

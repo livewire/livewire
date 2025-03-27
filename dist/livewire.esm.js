@@ -7889,10 +7889,6 @@ var RequestPool = class {
   }
   async send() {
     this.prepare();
-    let [commitPayloads, succeed, fail] = this.payload();
-    if (commitPayloads.length === 0) {
-      return Promise.resolve();
-    }
     await sendRequest(this);
   }
   prepare() {
@@ -7903,8 +7899,6 @@ var RequestPool = class {
     let successReceivers = [];
     let failureReceivers = [];
     this.commits.forEach((commit) => {
-      if (commit.stale)
-        return;
       let [payload, succeed2, fail2] = commit.toRequestPayload();
       commitPayloads.push(payload);
       successReceivers.push(succeed2);
@@ -7921,8 +7915,6 @@ var Commit = class {
   constructor(component) {
     this.component = component;
     this.isolate = false;
-    this.interruptible = false;
-    this.stale = false;
     this.calls = [];
     this.receivers = [];
     this.resolvers = [];
@@ -7939,9 +7931,6 @@ var Commit = class {
         receiver(value);
       }
     });
-  }
-  markAsStale() {
-    this.stale = true;
   }
   prepare() {
     trigger("commit.prepare", { component: this.component });
@@ -7978,10 +7967,6 @@ var Commit = class {
       }
     });
     let handleResponse = (response) => {
-      if (this.stale) {
-        this.resolvers.forEach((i) => i());
-        return;
-      }
       let { snapshot, effects } = response;
       respond();
       this.component.mergeNewSnapshot(snapshot, effects, updates);
@@ -7999,10 +7984,6 @@ var Commit = class {
       succeed(response);
     };
     let handleFailure = () => {
-      if (this.stale) {
-        this.resolvers.forEach((i) => i());
-        return;
-      }
       respond();
       fail();
     };
@@ -8016,19 +7997,15 @@ var CommitBus = class {
     this.commits = /* @__PURE__ */ new Set();
     this.pools = /* @__PURE__ */ new Set();
   }
-  add(component, interruptible = false) {
+  add(component) {
     let commit = this.findCommitOr(component, () => {
       let newCommit = new Commit(component);
       this.commits.add(newCommit);
       return newCommit;
     });
-    commit.interruptible = interruptible;
     bufferPoolingForFiveMs(commit, () => {
       let pool = this.findPoolWithComponent(commit.component);
       if (!pool) {
-        this.createAndSendNewPool();
-      } else if (this.hasInterruptibleCommitInPool(commit.component)) {
-        this.interruptCommitsFor(commit.component);
         this.createAndSendNewPool();
       }
     });
@@ -8048,21 +8025,6 @@ var CommitBus = class {
         return pool;
     }
   }
-  hasInterruptibleCommitInPool(component) {
-    const pool = this.findPoolWithComponent(component);
-    if (!pool)
-      return false;
-    const commit = pool.findCommitByComponent(component);
-    return commit && commit.interruptible;
-  }
-  interruptCommitsFor(component) {
-    this.pools.forEach((pool) => {
-      const commit = pool.findCommitByComponent(component);
-      if (commit && commit.interruptible) {
-        commit.markAsStale();
-      }
-    });
-  }
   createAndSendNewPool() {
     trigger("commit.pooling", { commits: this.commits });
     let pools = this.corraleCommitsIntoPools();
@@ -8073,9 +8035,6 @@ var CommitBus = class {
         return;
       this.pools.add(pool);
       pool.send().then(() => {
-        this.pools.delete(pool);
-        this.sendAnyQueuedCommits();
-      }).catch(() => {
         this.pools.delete(pool);
         this.sendAnyQueuedCommits();
       });
@@ -8117,16 +8076,16 @@ function bufferPoolingForFiveMs(commit, callback) {
 
 // js/request/index.js
 var commitBus = new CommitBus();
-async function requestCommit(component, interruptible = false) {
-  let commit = commitBus.add(component, interruptible);
+async function requestCommit(component) {
+  let commit = commitBus.add(component);
   let promise = new Promise((resolve) => {
     commit.addResolver(resolve);
   });
   promise.commit = commit;
   return promise;
 }
-async function requestCall(component, method, params, interruptible = false) {
-  let commit = commitBus.add(component, interruptible);
+async function requestCall(component, method, params) {
+  let commit = commitBus.add(component);
   let promise = new Promise((resolve) => {
     commit.addCall(method, params, (value) => resolve(value));
   });
@@ -8135,9 +8094,6 @@ async function requestCall(component, method, params, interruptible = false) {
 }
 async function sendRequest(pool) {
   let [payload, handleSuccess, handleFailure] = pool.payload();
-  if (payload.length === 0) {
-    return;
-  }
   let options = {
     method: "POST",
     body: JSON.stringify({
