@@ -12,6 +12,7 @@ import './supportDispatches';
  * Features where order does NOT matter:
  */
 import './supportDisablingFormsDuringRequest';
+import './supportInterruptibleRequests';
 import './supportPropsAndModelables';
 import './supportFileDownloads';
 import './supportLazyLoading';

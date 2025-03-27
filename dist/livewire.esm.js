@@ -10077,6 +10077,22 @@ function markReadOnly(el) {
   return undo;
 }
 
+// js/features/supportInterruptibleRequests.js
+var componentsThatAreInterruptible = /* @__PURE__ */ new WeakSet();
+on("component.init", ({ component }) => {
+  let memo = component.snapshot.memo;
+  if (memo.interruptible !== true)
+    return;
+  componentsThatAreInterruptible.add(component);
+});
+on("commit.pooling", ({ commits }) => {
+  commits.forEach((commit) => {
+    if (!componentsThatAreInterruptible.has(commit.component))
+      return;
+    commit.interruptible = true;
+  });
+});
+
 // js/features/supportPropsAndModelables.js
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {

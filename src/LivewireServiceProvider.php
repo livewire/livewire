@@ -86,6 +86,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             Features\SupportNestedComponentListeners\SupportNestedComponentListeners::class,
             Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
+            Features\SupportInterruptibleRequests\SupportInterruptibleRequests::class,
             Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,
             Features\SupportNestingComponents\SupportNestingComponents::class,
@@ -125,5 +126,3 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         ComponentHookRegistry::boot();
     }
 }
-
-
