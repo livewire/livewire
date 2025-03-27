@@ -12,8 +12,10 @@ let commitBus = new CommitBus
 /**
  * Create a commit and trigger a network request...
  */
-export async function requestCommit(component) {
+export async function requestCommit(component, interruptible = false) {
     let commit = commitBus.add(component)
+
+    commit.interruptible = interruptible
 
     let promise = new Promise((resolve) => {
         commit.addResolver(resolve)
@@ -27,8 +29,10 @@ export async function requestCommit(component) {
 /**
  * Create a commit with an "action" call and trigger a network request...
  */
-export async function requestCall(component, method, params) {
+export async function requestCall(component, method, params, interruptible = false) {
     let commit = commitBus.add(component)
+
+    commit.interruptible = interruptible
 
     let promise = new Promise((resolve) => {
         commit.addCall(method, params, value => resolve(value))

@@ -8,6 +8,8 @@ export class Commit {
     constructor(component) {
         this.component = component
         this.isolate = false
+        this.interruptible = false
+        this.interrupted = false
         this.calls = []
         this.receivers = []
         this.resolvers = []
@@ -78,6 +80,11 @@ export class Commit {
 
         // Handle the response payload for a commit...
         let handleResponse = (response) => {
+            // If this commit has been interrupted, don't process the response
+            if (this.interrupted) {
+                return
+            }
+
             let { snapshot, effects } = response
 
             respond()

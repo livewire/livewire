@@ -16,6 +16,16 @@ export class CommitBus {
     }
 
     add(component) {
+        // If there's an active interruptible request for this component, we can interrupt it
+        let activePool = this.findPoolWithComponent(component)
+        if (activePool) {
+            let activeCommit = activePool.findCommitByComponent(component)
+            if (activeCommit && activeCommit.interruptible) {
+                // Mark this commit as interrupted - we'll ignore its response when it comes back
+                activeCommit.interrupted = true
+            }
+        }
+
         // If this component already has a commit, leave it, otherwise,
         // create a new commit and add it to the list...
         let commit = this.findCommitOr(component, () => {

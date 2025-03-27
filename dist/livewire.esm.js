@@ -7915,6 +7915,8 @@ var Commit = class {
   constructor(component) {
     this.component = component;
     this.isolate = false;
+    this.interruptible = false;
+    this.interrupted = false;
     this.calls = [];
     this.receivers = [];
     this.resolvers = [];
@@ -7967,6 +7969,9 @@ var Commit = class {
       }
     });
     let handleResponse = (response) => {
+      if (this.interrupted) {
+        return;
+      }
       let { snapshot, effects } = response;
       respond();
       this.component.mergeNewSnapshot(snapshot, effects, updates);
@@ -7998,6 +8003,13 @@ var CommitBus = class {
     this.pools = /* @__PURE__ */ new Set();
   }
   add(component) {
+    let activePool = this.findPoolWithComponent(component);
+    if (activePool) {
+      let activeCommit = activePool.findCommitByComponent(component);
+      if (activeCommit && activeCommit.interruptible) {
+        activeCommit.interrupted = true;
+      }
+    }
     let commit = this.findCommitOr(component, () => {
       let newCommit = new Commit(component);
       this.commits.add(newCommit);
@@ -8076,16 +8088,18 @@ function bufferPoolingForFiveMs(commit, callback) {
 
 // js/request/index.js
 var commitBus = new CommitBus();
-async function requestCommit(component) {
+async function requestCommit(component, interruptible = false) {
   let commit = commitBus.add(component);
+  commit.interruptible = interruptible;
   let promise = new Promise((resolve) => {
     commit.addResolver(resolve);
   });
   promise.commit = commit;
   return promise;
 }
-async function requestCall(component, method, params) {
+async function requestCall(component, method, params, interruptible = false) {
   let commit = commitBus.add(component);
+  commit.interruptible = interruptible;
   let promise = new Promise((resolve) => {
     commit.addCall(method, params, (value) => resolve(value));
   });
@@ -8302,6 +8316,7 @@ wireProperty("$watch", (component) => (path, callback) => {
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => await requestCommit(component));
+wireProperty("$commitRm", (component) => async () => await requestCommit(component, true));
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
   let unhook = on(name, ({ component: hookComponent, ...params }) => {
