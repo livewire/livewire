@@ -10954,24 +10954,14 @@ function isTextInput(el) {
   return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
 }
 function componentIsMissingProperty(component, property) {
-  let segments = property.split(".");
-  let nonArraySegments = segments.filter((segment) => {
-    return !isArrayIndex(segment);
-  });
-  let fullPropertyName = nonArraySegments.join(".");
-  return !propertyExistsDeep(component.reactive, fullPropertyName);
-}
-function isArrayIndex(subject) {
-  return Array.isArray(subject) || typeof subject === "string" && subject.match(/^[0-9]+$/);
-}
-function propertyExistsDeep(object, key) {
-  if (!key.includes(".")) {
-    return object[key] !== void 0;
+  if (property.startsWith("$parent")) {
+    let parent = closestComponent(component.el.parentElement, false);
+    if (!parent)
+      return true;
+    return componentIsMissingProperty(parent, property.split("$parent.")[1]);
   }
-  let segment = key.split(".")[0];
-  if (object[segment] === void 0)
-    return false;
-  return propertyExistsDeep(object[segment], key.split(".").slice(1).join("."));
+  let baseProperty = property.split(".")[0];
+  return !Object.keys(component.canonical).includes(baseProperty);
 }
 function debounce(func, wait) {
   var timeout;

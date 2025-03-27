@@ -70,7 +70,10 @@ function getModifierTail(modifiers) {
 }
 
 function isTextInput(el) {
-    return ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) && ! ['checkbox', 'radio'].includes(el.type)
+    return (
+        ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) &&
+        !['checkbox', 'radio'].includes(el.type)
+    )
 }
 
 function isDirty(subject, dirty) {
@@ -82,51 +85,33 @@ function isDirty(subject, dirty) {
 }
 
 function componentIsMissingProperty(component, property) {
-    // Breadcrumbs like: foo.0.bar
-    let segments = property.split('.')
+    if (property.startsWith('$parent')) {
+        let parent = closestComponent(component.el.parentElement, false)
 
-    // Filter out numeric (array) indices
-    // This is to skip validation of properties like: foo.0.bar
-    // Because JS can't validate that, and we can't use dataGet because
-    // this property doesn't actually exist yet.
-    let nonArraySegments = segments.filter(segment => {
-        return ! isArrayIndex(segment)
-    })
+        if (! parent) return true
 
-    let fullPropertyName = nonArraySegments.join('.')
-
-    return ! propertyExistsDeep(component.reactive, fullPropertyName)
-}
-
-function isArrayIndex(subject) {
-    return Array.isArray(subject) || (
-        typeof subject === 'string'
-        && subject.match(/^[0-9]+$/)
-    )
-}
-
-function propertyExistsDeep(object, key) {
-    if (! key.includes('.')) {
-        // If the key is undefined (not a property that was defined with a default value of "undefined")
-        return object[key] !== undefined
+        return componentIsMissingProperty(parent, property.split('$parent.')[1])
     }
 
-    let segment = key.split('.')[0]
+    let baseProperty = property.split('.')[0]
 
-    if (object[segment] === undefined) return false
-
-    return propertyExistsDeep(object[segment], key.split('.').slice(1).join('.'))
+    return ! Object.keys(component.canonical).includes(baseProperty)
 }
 
 function debounce(func, wait) {
-    var timeout
+    var timeout;
+
     return function() {
-        var context = this, args = arguments
-        var later = function() {
+      var context = this, args = arguments;
+
+      var later = function() {
             timeout = null
+
             func.apply(context, args)
-        }
-        clearTimeout(timeout)
-        timeout = setTimeout(later, wait)
+      }
+
+      clearTimeout(timeout)
+
+      timeout = setTimeout(later, wait)
     }
 }
