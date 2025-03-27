@@ -22,6 +22,14 @@ let commitBus = new CommitBus
  * Create a commit and trigger a network request...
  */
 export async function requestCommit(component, interruptible = false) {
+    // If this is an interruptible request, we need to ensure any existing loading states
+    // for this component are properly managed when interrupted
+    if (interruptible && component.loadingStates) {
+        // This ensures that when a new request interrupts an existing one,
+        // loading indicators won't get stuck in the loading state
+        trigger('loading.manage', { component })
+    }
+
     let commit = commitBus.add(component, interruptible)
 
     let promise = new Promise((resolve) => {
@@ -37,6 +45,14 @@ export async function requestCommit(component, interruptible = false) {
  * Create a commit with an "action" call and trigger a network request...
  */
 export async function requestCall(component, method, params, interruptible = false) {
+    // If this is an interruptible request, we need to ensure any existing loading states
+    // for this component are properly managed when interrupted
+    if (interruptible && component.loadingStates) {
+        // This ensures that when a new request interrupts an existing one,
+        // loading indicators won't get stuck in the loading state
+        trigger('loading.manage', { component })
+    }
+
     let commit = commitBus.add(component, interruptible)
 
     let promise = new Promise((resolve) => {

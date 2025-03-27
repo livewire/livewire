@@ -2,6 +2,7 @@
   "name": "livewire/livewire",
   "description": "A front-end framework for Laravel.",
   "license": "MIT",
+  "version": "3.6.2",
   "authors": [
     {
       "name": "Caleb Porzio",

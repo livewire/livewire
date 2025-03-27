@@ -167,6 +167,9 @@ wireProperty('$watch', (component) => (path, callback) => {
 wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => await requestCommit(component))
 
+// @todo: remove me...
+wireProperty('$commitRm', (component) => async () => await requestCommit(component, true))
+
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$hook', (component) => (name, callback) => {
