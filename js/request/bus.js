@@ -18,11 +18,14 @@ export class CommitBus {
     add(component) {
         // If there's an active interruptible request for this component, we can interrupt it
         let activePool = this.findPoolWithComponent(component)
+        let shouldSendImmediately = false
+
         if (activePool) {
             let activeCommit = activePool.findCommitByComponent(component)
             if (activeCommit && activeCommit.interruptible) {
                 // Mark this commit as interrupted - we'll ignore its response when it comes back
                 activeCommit.interrupted = true
+                shouldSendImmediately = true
             }
         }
 
@@ -35,6 +38,13 @@ export class CommitBus {
 
             return newCommit
         })
+
+        if (shouldSendImmediately) {
+            // For interruptible commits, we want to send immediately
+            // instead of waiting for the previous request to finish
+            this.createAndSendNewPool()
+            return commit
+        }
 
         // Buffer the sending of a pool for 5ms to account for UI interactions
         // that will trigger multiple events within a few milliseconds of each other.

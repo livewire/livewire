@@ -4172,10 +4172,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     add(component) {
       let activePool = this.findPoolWithComponent(component);
+      let shouldSendImmediately = false;
       if (activePool) {
         let activeCommit = activePool.findCommitByComponent(component);
         if (activeCommit && activeCommit.interruptible) {
           activeCommit.interrupted = true;
+          shouldSendImmediately = true;
         }
       }
       let commit = this.findCommitOr(component, () => {
@@ -4183,6 +4185,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         this.commits.add(newCommit);
         return newCommit;
       });
+      if (shouldSendImmediately) {
+        this.createAndSendNewPool();
+        return commit;
+      }
       bufferPoolingForFiveMs(commit, () => {
         let pool = this.findPoolWithComponent(commit.component);
         if (!pool) {
@@ -4482,7 +4488,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     component.addCleanup(unwatch);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
-  wireProperty("$commit", (component) => async () => await requestCommit(component));
+  wireProperty("$commit", (component) => async (interruptible = false) => await requestCommit(component, interruptible));
   wireProperty("$commitRm", (component) => async () => await requestCommit(component, true));
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
@@ -10008,7 +10014,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
-    let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
+    let isInterruptible = modifiers.includes("interruptible");
+    let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit(isInterruptible) : () => component.$wire.$commit(isInterruptible);
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
@@ -10033,7 +10040,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function getModifierTail(modifiers) {
     modifiers = modifiers.filter((i) => ![
       "lazy",
-      "defer"
+      "defer",
+      "interruptible"
     ].includes(i));
     if (modifiers.length === 0)
       return "";
@@ -10043,14 +10051,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return ["INPUT", "TEXTAREA"].includes(el.tagName.toUpperCase()) && !["checkbox", "radio"].includes(el.type);
   }
   function componentIsMissingProperty(component, property) {
-    if (property.startsWith("$parent")) {
-      let parent = closestComponent(component.el.parentElement, false);
-      if (!parent)
-        return true;
-      return componentIsMissingProperty(parent, property.split("$parent.")[1]);
+    let segments = property.split(".");
+    let nonArraySegments = segments.filter((segment) => {
+      return !isArrayIndex(segment);
+    });
+    let fullPropertyName = nonArraySegments.join(".");
+    return !propertyExistsDeep(component.reactive, fullPropertyName);
+  }
+  function isArrayIndex(subject) {
+    return Array.isArray(subject) || typeof subject === "string" && subject.match(/^[0-9]+$/);
+  }
+  function propertyExistsDeep(object, key) {
+    if (!key.includes(".")) {
+      return object[key] !== void 0;
     }
-    let baseProperty = property.split(".")[0];
-    return !Object.keys(component.canonical).includes(baseProperty);
+    let segment = key.split(".")[0];
+    if (object[segment] === void 0)
+      return false;
+    return propertyExistsDeep(object[segment], key.split(".").slice(1).join("."));
   }
   function debounce2(func, wait) {
     var timeout;

@@ -24,11 +24,12 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let isLazy = modifiers.includes('lazy') || modifiers.includes('change')
     let onBlur = modifiers.includes('blur')
     let isDebounced = modifiers.includes('debounce')
+    let isInterruptible = modifiers.includes('interruptible')
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = expression.startsWith('$parent')
-        ? () => component.$wire.$parent.$commit()
-        : () => component.$wire.$commit()
+        ? () => component.$wire.$parent.$commit(isInterruptible)
+        : () => component.$wire.$commit(isInterruptible)
 
     // If a plain wire:model is added to a text input, debounce the
     // trigerring of network requests.
@@ -60,7 +61,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
 function getModifierTail(modifiers) {
     modifiers = modifiers.filter(i => ! [
-        'lazy', 'defer'
+        'lazy', 'defer', 'interruptible'
     ].includes(i))
 
     if (modifiers.length === 0) return ''
@@ -69,10 +70,7 @@ function getModifierTail(modifiers) {
 }
 
 function isTextInput(el) {
-    return (
-        ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) &&
-        !['checkbox', 'radio'].includes(el.type)
-    )
+    return ['INPUT', 'TEXTAREA'].includes(el.tagName.toUpperCase()) && ! ['checkbox', 'radio'].includes(el.type)
 }
 
 function isDirty(subject, dirty) {
@@ -84,33 +82,51 @@ function isDirty(subject, dirty) {
 }
 
 function componentIsMissingProperty(component, property) {
-    if (property.startsWith('$parent')) {
-        let parent = closestComponent(component.el.parentElement, false)
+    // Breadcrumbs like: foo.0.bar
+    let segments = property.split('.')
 
-        if (! parent) return true
+    // Filter out numeric (array) indices
+    // This is to skip validation of properties like: foo.0.bar
+    // Because JS can't validate that, and we can't use dataGet because
+    // this property doesn't actually exist yet.
+    let nonArraySegments = segments.filter(segment => {
+        return ! isArrayIndex(segment)
+    })
 
-        return componentIsMissingProperty(parent, property.split('$parent.')[1])
+    let fullPropertyName = nonArraySegments.join('.')
+
+    return ! propertyExistsDeep(component.reactive, fullPropertyName)
+}
+
+function isArrayIndex(subject) {
+    return Array.isArray(subject) || (
+        typeof subject === 'string'
+        && subject.match(/^[0-9]+$/)
+    )
+}
+
+function propertyExistsDeep(object, key) {
+    if (! key.includes('.')) {
+        // If the key is undefined (not a property that was defined with a default value of "undefined")
+        return object[key] !== undefined
     }
 
-    let baseProperty = property.split('.')[0]
+    let segment = key.split('.')[0]
 
-    return ! Object.keys(component.canonical).includes(baseProperty)
+    if (object[segment] === undefined) return false
+
+    return propertyExistsDeep(object[segment], key.split('.').slice(1).join('.'))
 }
 
 function debounce(func, wait) {
-    var timeout;
-
+    var timeout
     return function() {
-      var context = this, args = arguments;
-
-      var later = function() {
+        var context = this, args = arguments
+        var later = function() {
             timeout = null
-
             func.apply(context, args)
-      }
-
-      clearTimeout(timeout)
-
-      timeout = setTimeout(later, wait)
+        }
+        clearTimeout(timeout)
+        timeout = setTimeout(later, wait)
     }
 }
