@@ -86,25 +86,10 @@ export class Commit {
         // Handle the response payload for a commit...
         let handleResponse = (response) => {
             // If this commit has been marked as stale (interrupted), don't process the response
-            // However, for array/object reordering, we should still apply the updates to ensure
-            // proper handling of certain edge cases like entangled data reordering
             if (this.stale) {
-                // Check if this is a potentially important update (like object reordering)
-                let hasImportantPropertyUpdates = false;
-
-                if (this.component.effects && response.effects) {
-                    // Check for property updates with the same keys but different order
-                    if (response.effects.updates) {
-                        hasImportantPropertyUpdates = true;
-                    }
-                }
-
-                if (!hasImportantPropertyUpdates) {
-                    // Regular stale commit handling - just resolve promises
-                    this.resolvers.forEach(i => i())
-                    return
-                }
-                // For important updates, continue with processing but skip some effects
+                // Still resolve any promises to avoid hanging
+                this.resolvers.forEach(i => i())
+                return
             }
 
             let { snapshot, effects } = response

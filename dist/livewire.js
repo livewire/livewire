@@ -4070,41 +4070,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let commitPayloads = [];
       let successReceivers = [];
       let failureReceivers = [];
-      let componentsWithStaleCommits = [];
       this.commits.forEach((commit) => {
-        if (commit.stale) {
-          componentsWithStaleCommits.push(commit.component);
+        if (commit.stale)
           return;
-        }
         let [payload, succeed2, fail2] = commit.toRequestPayload();
         commitPayloads.push(payload);
         successReceivers.push(succeed2);
         failureReceivers.push(fail2);
       });
-      let succeed = (components2) => {
-        successReceivers.forEach((receiver) => receiver(components2.shift()));
-        if (componentsWithStaleCommits.length > 0) {
-          componentsWithStaleCommits.forEach((component) => {
-            if (component && component.effects) {
-              component.loadingStates && component.loadingStates.forEach((state) => {
-                state.finish();
-              });
-            }
-          });
-        }
-      };
-      let fail = () => {
-        failureReceivers.forEach((receiver) => receiver());
-        if (componentsWithStaleCommits.length > 0) {
-          componentsWithStaleCommits.forEach((component) => {
-            if (component && component.effects) {
-              component.loadingStates && component.loadingStates.forEach((state) => {
-                state.finish();
-              });
-            }
-          });
-        }
-      };
+      let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
+      let fail = () => failureReceivers.forEach((receiver) => receiver());
       return [commitPayloads, succeed, fail];
     }
   };
@@ -4172,16 +4147,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       let handleResponse = (response) => {
         if (this.stale) {
-          let hasImportantPropertyUpdates = false;
-          if (this.component.effects && response.effects) {
-            if (response.effects.updates) {
-              hasImportantPropertyUpdates = true;
-            }
-          }
-          if (!hasImportantPropertyUpdates) {
-            this.resolvers.forEach((i) => i());
-            return;
-          }
+          this.resolvers.forEach((i) => i());
+          return;
         }
         let { snapshot, effects } = response;
         respond();
@@ -4261,9 +4228,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         const commit = pool.findCommitByComponent(component);
         if (commit && commit.interruptible) {
           commit.markAsStale();
-          if (component && component.loadingStates) {
-            trigger2("commit.interrupted", { component });
-          }
         }
       });
     }
@@ -4322,9 +4286,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/request/index.js
   var commitBus = new CommitBus();
   async function requestCommit(component, interruptible = false) {
-    if (interruptible && component.loadingStates) {
-      trigger2("loading.manage", { component });
-    }
     let commit = commitBus.add(component, interruptible);
     let promise = new Promise((resolve) => {
       commit.addResolver(resolve);
@@ -4333,9 +4294,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return promise;
   }
   async function requestCall(component, method, params, interruptible = false) {
-    if (interruptible && component.loadingStates) {
-      trigger2("loading.manage", { component });
-    }
     let commit = commitBus.add(component, interruptible);
     let promise = new Promise((resolve) => {
       commit.addCall(method, params, (value) => resolve(value));
@@ -4555,7 +4513,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
-  wireProperty("$commitRm", (component) => async () => await requestCommit(component, true));
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
     let unhook = on2(name, ({ component: hookComponent, ...params }) => {

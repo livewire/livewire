@@ -81,14 +81,6 @@ export class CommitBus {
             const commit = pool.findCommitByComponent(component)
             if (commit && commit.interruptible) {
                 commit.markAsStale()
-
-                // Ensure we handle any loading states that might need to be cleaned up
-                // when the component is being interrupted with a new request
-                if (component && component.loadingStates) {
-                    // Add a hook to ensure loading states get cleaned up
-                    // This is especially important for loading.delay elements
-                    trigger('commit.interrupted', { component })
-                }
             }
         })
     }

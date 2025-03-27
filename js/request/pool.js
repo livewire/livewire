@@ -67,15 +67,9 @@ export class RequestPool {
         let successReceivers = []
         let failureReceivers = []
 
-        // Track the components from stale commits to ensure their loading states are cleared
-        let componentsWithStaleCommits = []
-
         this.commits.forEach(commit => {
-            // For stale commits, track their components for loading state cleanup
-            if (commit.stale) {
-                componentsWithStaleCommits.push(commit.component)
-                return
-            }
+            // Skip stale commits when generating the payload
+            if (commit.stale) return
 
             let [payload, succeed, fail] = commit.toRequestPayload()
 
@@ -86,38 +80,9 @@ export class RequestPool {
 
         // Aggregate the success and failure callbacks for individual commits
         // into something that can be called singularly...
-        let succeed = components => {
-            // Process regular responses
-            successReceivers.forEach(receiver => receiver(components.shift()))
+        let succeed = components => successReceivers.forEach(receiver => receiver(components.shift()))
 
-            // Ensure loading states are cleaned up for stale components
-            if (componentsWithStaleCommits.length > 0) {
-                componentsWithStaleCommits.forEach(component => {
-                    if (component && component.effects) {
-                        // Make sure loading states are cleared
-                        component.loadingStates && component.loadingStates.forEach(state => {
-                            state.finish()
-                        })
-                    }
-                })
-            }
-        }
-
-        let fail = () => {
-            failureReceivers.forEach(receiver => receiver())
-
-            // Ensure loading states are cleaned up for stale components on failure too
-            if (componentsWithStaleCommits.length > 0) {
-                componentsWithStaleCommits.forEach(component => {
-                    if (component && component.effects) {
-                        // Make sure loading states are cleared
-                        component.loadingStates && component.loadingStates.forEach(state => {
-                            state.finish()
-                        })
-                    }
-                })
-            }
-        }
+        let fail = () => failureReceivers.forEach(receiver => receiver())
 
         return [ commitPayloads, succeed, fail ]
     }
