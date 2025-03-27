@@ -125,5 +125,3 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         ComponentHookRegistry::boot();
     }
 }
-
-

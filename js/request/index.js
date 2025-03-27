@@ -6,14 +6,23 @@ import { CommitBus } from './bus'
 /**
  * This is the bus that manages pooling and sending
  * commits to the server as network requests...
+ *
+ * Requests can be marked as "interruptible" by passing true as the last parameter
+ * to requestCommit or requestCall. Interruptible commits will be interrupted by
+ * new commits from the same component, allowing for scenarios like:
+ * - Background polling that shouldn't block user interactions
+ * - Search-as-you-type where newer requests should take priority
+ *
+ * Interrupted (stale) commits will have their responses ignored when they return
+ * from the server, ensuring component state stays consistent.
  */
 let commitBus = new CommitBus
 
 /**
  * Create a commit and trigger a network request...
  */
-export async function requestCommit(component) {
-    let commit = commitBus.add(component)
+export async function requestCommit(component, interruptible = false) {
+    let commit = commitBus.add(component, interruptible)
 
     let promise = new Promise((resolve) => {
         commit.addResolver(resolve)
@@ -27,8 +36,8 @@ export async function requestCommit(component) {
 /**
  * Create a commit with an "action" call and trigger a network request...
  */
-export async function requestCall(component, method, params) {
-    let commit = commitBus.add(component)
+export async function requestCall(component, method, params, interruptible = false) {
+    let commit = commitBus.add(component, interruptible)
 
     let promise = new Promise((resolve) => {
         commit.addCall(method, params, value => resolve(value))
@@ -44,6 +53,12 @@ export async function requestCall(component, method, params) {
  */
 export async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload()
+
+    // Safety check - if there are no payloads (all commits are stale),
+    // don't proceed with the request
+    if (payload.length === 0) {
+        return
+    }
 
     let options = {
         method: 'POST',

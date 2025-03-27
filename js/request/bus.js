@@ -15,7 +15,7 @@ export class CommitBus {
         this.pools = new Set
     }
 
-    add(component) {
+    add(component, interruptible = false) {
         // If this component already has a commit, leave it, otherwise,
         // create a new commit and add it to the list...
         let commit = this.findCommitOr(component, () => {
@@ -26,6 +26,9 @@ export class CommitBus {
             return newCommit
         })
 
+        // Set the interruptible flag
+        commit.interruptible = interruptible
+
         // Buffer the sending of a pool for 5ms to account for UI interactions
         // that will trigger multiple events within a few milliseconds of each other.
         // For example, clicking on a button that both unfocuses a field and registers a mousedown...
@@ -35,6 +38,11 @@ export class CommitBus {
 
             if (! pool) {
                 // If it's not, create a new pool or add it to an existing one and trigger a network request...
+                this.createAndSendNewPool()
+            } else if (this.hasInterruptibleCommitInPool(commit.component)) {
+                // If there's an interruptible commit for this component in an existing pool,
+                // interrupt it and send a new pool immediately
+                this.interruptCommitsFor(commit.component)
                 this.createAndSendNewPool()
             }
         })
@@ -56,6 +64,25 @@ export class CommitBus {
         for (let [idx, pool] of this.pools.entries()) {
             if (pool.hasCommitFor(component)) return pool
         }
+    }
+
+    // Check if there's an interruptible commit for a component in any pool
+    hasInterruptibleCommitInPool(component) {
+        const pool = this.findPoolWithComponent(component)
+        if (!pool) return false
+
+        const commit = pool.findCommitByComponent(component)
+        return commit && commit.interruptible
+    }
+
+    // Mark any interruptible commits for a component as stale
+    interruptCommitsFor(component) {
+        this.pools.forEach(pool => {
+            const commit = pool.findCommitByComponent(component)
+            if (commit && commit.interruptible) {
+                commit.markAsStale()
+            }
+        })
     }
 
     createAndSendNewPool() {
@@ -86,6 +113,13 @@ export class CommitBus {
 
                 // Trigger another pooling phase in case commits have
                 // been added while the current request was out...
+                this.sendAnyQueuedCommits()
+            }).catch(() => {
+                // If the pool send fails (likely due to all commits being stale),
+                // make sure we still clean up
+                this.pools.delete(pool)
+
+                // And check for any queued commits
                 this.sendAnyQueuedCommits()
             })
         })
