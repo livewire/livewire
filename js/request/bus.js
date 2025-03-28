@@ -16,6 +16,19 @@ export class CommitBus {
     }
 
     add(component) {
+        // If there's an active interruptible request for this component, we can interrupt it
+        let activePool = this.findPoolWithComponent(component)
+        let shouldSendImmediately = false
+
+        if (activePool) {
+            let activeCommit = activePool.findCommitByComponent(component)
+            if (activeCommit && activeCommit.interruptible) {
+                // Use the new handleInterruption method to reject promises
+                activeCommit.handleInterruption()
+                shouldSendImmediately = true
+            }
+        }
+
         // If this component already has a commit, leave it, otherwise,
         // create a new commit and add it to the list...
         let commit = this.findCommitOr(component, () => {
@@ -26,18 +39,24 @@ export class CommitBus {
             return newCommit
         })
 
-        // Buffer the sending of a pool for 5ms to account for UI interactions
-        // that will trigger multiple events within a few milliseconds of each other.
-        // For example, clicking on a button that both unfocuses a field and registers a mousedown...
-        bufferPoolingForFiveMs(commit, () => {
-            // If this commit is already in a pool, leave it be...
-            let pool = this.findPoolWithComponent(commit.component)
+        if (shouldSendImmediately) {
+            // Instead of sending immediately, we'll store the flag on the commit
+            // so we can send after calls are added to the commit
+            commit._sendImmediately = true
+        } else {
+            // Buffer the sending of a pool for 5ms to account for UI interactions
+            // that will trigger multiple events within a few milliseconds of each other.
+            // For example, clicking on a button that both unfocuses a field and registers a mousedown...
+            bufferPoolingForFiveMs(commit, () => {
+                // If this commit is already in a pool, leave it be...
+                let pool = this.findPoolWithComponent(commit.component)
 
-            if (! pool) {
-                // If it's not, create a new pool or add it to an existing one and trigger a network request...
-                this.createAndSendNewPool()
-            }
-        })
+                if (! pool) {
+                    // If it's not, create a new pool or add it to an existing one and trigger a network request...
+                    this.createAndSendNewPool()
+                }
+            })
+        }
 
         return commit
     }

@@ -10,16 +10,44 @@ import { CommitBus } from './bus'
 let commitBus = new CommitBus
 
 /**
+ * This is the global interruptible flag that is used to determine
+ * if a commit should be interruptible.
+ */
+let globalInterruptible = false
+
+export function makeInterruptible(condition, callback) {
+    if (! condition) return callback()
+
+    globalInterruptible = true
+
+    let result = callback()
+
+    globalInterruptible = false
+
+    return result
+}
+
+/**
  * Create a commit and trigger a network request...
  */
-export async function requestCommit(component) {
+export async function requestCommit(component, options = {}) {
     let commit = commitBus.add(component)
 
-    let promise = new Promise((resolve) => {
-        commit.addResolver(resolve)
+    commit.interruptible = options.interruptible === undefined ? globalInterruptible : options.interruptible
+    // Store if interruptions should be silent (default to true for framework features)
+    commit.silentInterruption = options.silentInterruption === undefined ? true : options.silentInterruption
+
+    let promise = new Promise((resolve, reject) => {
+        commit.addResolver(resolve, reject)
     })
 
     promise.commit = commit
+
+    // Check if this commit was flagged to be sent immediately (was an interruption)
+    if (commit._sendImmediately) {
+        delete commit._sendImmediately
+        commitBus.createAndSendNewPool()
+    }
 
     return promise
 }
@@ -27,14 +55,24 @@ export async function requestCommit(component) {
 /**
  * Create a commit with an "action" call and trigger a network request...
  */
-export async function requestCall(component, method, params) {
+export async function requestCall(component, method, params, options = {}) {
     let commit = commitBus.add(component)
 
-    let promise = new Promise((resolve) => {
-        commit.addCall(method, params, value => resolve(value))
+    commit.interruptible = options.interruptible === undefined ? globalInterruptible : options.interruptible
+    // Store if interruptions should be silent (default to false for API calls)
+    commit.silentInterruption = options.silentInterruption === undefined ? false : options.silentInterruption
+
+    let promise = new Promise((resolve, reject) => {
+        commit.addCall(method, params, resolve, reject)
     })
 
     promise.commit = commit
+
+    // Check if this commit was flagged to be sent immediately (was an interruption)
+    if (commit._sendImmediately) {
+        delete commit._sendImmediately
+        commitBus.createAndSendNewPool()
+    }
 
     return promise
 }

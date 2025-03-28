@@ -1,6 +1,7 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
+import { makeInterruptible } from '@/request'
 import Alpine from 'alpinejs'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
@@ -14,12 +15,18 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         attribute = attribute + '.prevent'
     }
 
+    let isInterruptible = directive.modifiers.includes('interrupt')
+
+    if (isInterruptible) {
+        attribute = attribute.replace('.interrupt', '')
+    }
+
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
                     // Forward these calls directly to $wire. Let them handle firing the request.
-                    Alpine.evaluate(el, '$wire.'+directive.expression, { scope: { $event: e }})
+                    makeInterruptible(isInterruptible, () => Alpine.evaluate(el, '$wire.'+directive.expression, { scope: { $event: e }}))
                 })
             }
 
