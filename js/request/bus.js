@@ -23,8 +23,8 @@ export class CommitBus {
         if (activePool) {
             let activeCommit = activePool.findCommitByComponent(component)
             if (activeCommit && activeCommit.interruptible) {
-                // Mark this commit as interrupted - we'll ignore its response when it comes back
-                activeCommit.interrupted = true
+                // Use the new handleInterruption method to reject promises
+                activeCommit.handleInterruption()
                 shouldSendImmediately = true
             }
         }
@@ -40,24 +40,23 @@ export class CommitBus {
         })
 
         if (shouldSendImmediately) {
-            // For interruptible commits, we want to send immediately
-            // instead of waiting for the previous request to finish
-            this.createAndSendNewPool()
-            return commit
+            // Instead of sending immediately, we'll store the flag on the commit
+            // so we can send after calls are added to the commit
+            commit._sendImmediately = true
+        } else {
+            // Buffer the sending of a pool for 5ms to account for UI interactions
+            // that will trigger multiple events within a few milliseconds of each other.
+            // For example, clicking on a button that both unfocuses a field and registers a mousedown...
+            bufferPoolingForFiveMs(commit, () => {
+                // If this commit is already in a pool, leave it be...
+                let pool = this.findPoolWithComponent(commit.component)
+
+                if (! pool) {
+                    // If it's not, create a new pool or add it to an existing one and trigger a network request...
+                    this.createAndSendNewPool()
+                }
+            })
         }
-
-        // Buffer the sending of a pool for 5ms to account for UI interactions
-        // that will trigger multiple events within a few milliseconds of each other.
-        // For example, clicking on a button that both unfocuses a field and registers a mousedown...
-        bufferPoolingForFiveMs(commit, () => {
-            // If this commit is already in a pool, leave it be...
-            let pool = this.findPoolWithComponent(commit.component)
-
-            if (! pool) {
-                // If it's not, create a new pool or add it to an existing one and trigger a network request...
-                this.createAndSendNewPool()
-            }
-        })
 
         return commit
     }

@@ -1,11 +1,14 @@
 import { directive, getDirectives } from "@/directives"
+import { makeInterruptible } from "@/request"
 import Alpine from 'alpinejs'
 
 directive('poll', ({ el, directive }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        triggerComponentRequest(el, directive)
+        makeInterruptible(true, () => {
+            triggerComponentRequest(el, directive)
+        })
     }, interval)
 
     start()
@@ -19,7 +22,7 @@ directive('poll', ({ el, directive }) => {
 
 function triggerComponentRequest(el, directive) {
     Alpine.evaluate(el,
-        directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
+        directive.expression ? '$wire.' + directive.expression : '$wire.$commit({ interruptible: true })'
     )
 }
 

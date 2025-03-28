@@ -7917,22 +7917,52 @@ var Commit = class {
     this.isolate = false;
     this.interruptible = false;
     this.interrupted = false;
+    this.silentInterruption = true;
     this.calls = [];
     this.receivers = [];
     this.resolvers = [];
+    this.rejectors = [];
   }
-  addResolver(resolver) {
+  addResolver(resolver, rejector) {
     this.resolvers.push(resolver);
+    this.rejectors.push(rejector);
   }
-  addCall(method, params, receiver) {
+  addCall(method, params, resolver, rejector) {
     this.calls.push({
       path: "",
       method,
       params,
       handleReturn(value) {
-        receiver(value);
+        resolver(value);
+      },
+      handleReject(error2) {
+        rejector(error2);
       }
     });
+  }
+  handleInterruption() {
+    this.interrupted = true;
+    const error2 = new Error("Request was interrupted by a newer request");
+    error2.name = "InterruptedException";
+    this.rejectors.forEach((reject) => {
+      try {
+        reject(error2);
+      } catch (e) {
+        console.error("Error rejecting promise:", e);
+      }
+    });
+    this.calls.forEach((call) => {
+      if (call.handleReject) {
+        try {
+          call.handleReject(error2);
+        } catch (e) {
+          console.error("Error rejecting call promise:", e);
+        }
+      }
+    });
+    this.resolvers = [];
+    this.rejectors = [];
+    this.calls = [];
   }
   prepare() {
     trigger("commit.prepare", { component: this.component });
@@ -7987,9 +8017,33 @@ var Commit = class {
       finishTarget({ snapshot: parsedSnapshot, effects });
       this.resolvers.forEach((i) => i());
       succeed(response);
+      this.resolvers = [];
+      this.rejectors = [];
+      this.calls = [];
     };
     let handleFailure = () => {
       respond();
+      const error2 = new Error("Request failed");
+      error2.name = "RequestFailedException";
+      this.rejectors.forEach((reject) => {
+        try {
+          reject(error2);
+        } catch (e) {
+          console.error("Error rejecting promise on failure:", e);
+        }
+      });
+      this.calls.forEach((call) => {
+        if (call.handleReject) {
+          try {
+            call.handleReject(error2);
+          } catch (e) {
+            console.error("Error rejecting call promise on failure:", e);
+          }
+        }
+      });
+      this.resolvers = [];
+      this.rejectors = [];
+      this.calls = [];
       fail();
     };
     return [payload, handleResponse, handleFailure];
@@ -8008,7 +8062,7 @@ var CommitBus = class {
     if (activePool) {
       let activeCommit = activePool.findCommitByComponent(component);
       if (activeCommit && activeCommit.interruptible) {
-        activeCommit.interrupted = true;
+        activeCommit.handleInterruption();
         shouldSendImmediately = true;
       }
     }
@@ -8018,15 +8072,15 @@ var CommitBus = class {
       return newCommit;
     });
     if (shouldSendImmediately) {
-      this.createAndSendNewPool();
-      return commit;
+      commit._sendImmediately = true;
+    } else {
+      bufferPoolingForFiveMs(commit, () => {
+        let pool = this.findPoolWithComponent(commit.component);
+        if (!pool) {
+          this.createAndSendNewPool();
+        }
+      });
     }
-    bufferPoolingForFiveMs(commit, () => {
-      let pool = this.findPoolWithComponent(commit.component);
-      if (!pool) {
-        this.createAndSendNewPool();
-      }
-    });
     return commit;
   }
   findCommitOr(component, callback) {
@@ -8094,22 +8148,58 @@ function bufferPoolingForFiveMs(commit, callback) {
 
 // js/request/index.js
 var commitBus = new CommitBus();
-async function requestCommit(component, interruptible = false) {
+var globalInterruptible = false;
+function makeInterruptible(condition, callback) {
+  if (!condition)
+    return callback();
+  globalInterruptible = true;
+  let result = callback();
+  globalInterruptible = false;
+  return result;
+}
+async function requestCommit(component, options = {}) {
   let commit = commitBus.add(component);
-  commit.interruptible = interruptible;
-  let promise = new Promise((resolve) => {
-    commit.addResolver(resolve);
+  commit.interruptible = options.interruptible === void 0 ? globalInterruptible : options.interruptible;
+  commit.silentInterruption = options.silentInterruption === void 0 ? true : options.silentInterruption;
+  let promise = new Promise((resolve, reject) => {
+    commit.addResolver(resolve, reject);
   });
+  if (commit.silentInterruption) {
+    promise = promise.catch((error2) => {
+      if (error2 && error2.name === "InterruptedException") {
+        return { interrupted: true };
+      }
+      throw error2;
+    });
+  }
   promise.commit = commit;
+  if (commit._sendImmediately) {
+    console.log("overwrite");
+    delete commit._sendImmediately;
+    commitBus.createAndSendNewPool();
+  }
   return promise;
 }
-async function requestCall(component, method, params, interruptible = false) {
+async function requestCall(component, method, params, options = {}) {
   let commit = commitBus.add(component);
-  commit.interruptible = interruptible;
-  let promise = new Promise((resolve) => {
-    commit.addCall(method, params, (value) => resolve(value));
+  commit.interruptible = options.interruptible === void 0 ? globalInterruptible : options.interruptible;
+  commit.silentInterruption = options.silentInterruption === void 0 ? true : options.silentInterruption;
+  let promise = new Promise((resolve, reject) => {
+    commit.addCall(method, params, resolve, reject);
   });
+  if (commit.silentInterruption) {
+    promise = promise.catch((error2) => {
+      if (error2 && error2.name === "InterruptedException") {
+        return { interrupted: true };
+      }
+      throw error2;
+    });
+  }
   promise.commit = commit;
+  if (commit._sendImmediately) {
+    delete commit._sendImmediately;
+    commitBus.createAndSendNewPool();
+  }
   return promise;
 }
 async function sendRequest(pool) {
@@ -8321,8 +8411,7 @@ wireProperty("$watch", (component) => (path, callback) => {
   component.addCleanup(unwatch);
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
-wireProperty("$commit", (component) => async (interruptible = false) => await requestCommit(component, interruptible));
-wireProperty("$commitRm", (component) => async () => await requestCommit(component, true));
+wireProperty("$commit", (component) => async (options = {}) => await requestCommit(component, options));
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
   let unhook = on(name, ({ component: hookComponent, ...params }) => {
@@ -8368,7 +8457,7 @@ wireFallback((component) => (property) => async (...params) => {
       return overrides[property](params);
     }
   }
-  return await requestCall(component, property, params);
+  return await requestCall(component, property, params, { interruptible: true });
 });
 
 // js/component.js
@@ -10455,11 +10544,15 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
     attribute = attribute + ".prevent";
   }
+  let isInterruptible = directive2.modifiers.includes("interrupt");
+  if (isInterruptible) {
+    attribute = attribute.replace(".interrupt", "");
+  }
   let cleanupBinding = import_alpinejs12.default.bind(el, {
     [attribute](e) {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs12.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+          makeInterruptible(isInterruptible, () => import_alpinejs12.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } }));
         });
       };
       if (el.__livewire_confirm) {
@@ -10917,8 +11010,8 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
   let onBlur = modifiers.includes("blur");
   let isDebounced = modifiers.includes("debounce");
-  let isInterruptible = modifiers.includes("interruptible");
-  let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit(isInterruptible) : () => component.$wire.$commit(isInterruptible);
+  let isInterruptible = true;
+  let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit({ interruptible: isInterruptible }) : () => component.$wire.$commit({ interruptible: isInterruptible });
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
   import_alpinejs16.default.bind(el, {
     ["@change"]() {
@@ -10944,7 +11037,7 @@ function getModifierTail(modifiers) {
   modifiers = modifiers.filter((i) => ![
     "lazy",
     "defer",
-    "interruptible"
+    "interrupt"
   ].includes(i));
   if (modifiers.length === 0)
     return "";
@@ -10988,7 +11081,9 @@ var import_alpinejs18 = __toESM(require_module_cjs());
 directive("poll", ({ el, directive: directive2 }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-    triggerComponentRequest(el, directive2);
+    makeInterruptible(true, () => {
+      triggerComponentRequest(el, directive2);
+    });
   }, interval);
   start2();
   throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
@@ -10998,7 +11093,7 @@ directive("poll", ({ el, directive: directive2 }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2) {
-  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit({ interruptible: true })");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];

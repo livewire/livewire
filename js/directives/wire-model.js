@@ -24,12 +24,12 @@ directive('model', ({ el, directive, component, cleanup }) => {
     let isLazy = modifiers.includes('lazy') || modifiers.includes('change')
     let onBlur = modifiers.includes('blur')
     let isDebounced = modifiers.includes('debounce')
-    let isInterruptible = modifiers.includes('interruptible')
+    let isInterruptible = true
 
     // Trigger a network request (only if .live or .lazy is added to wire:model)...
     let update = expression.startsWith('$parent')
-        ? () => component.$wire.$parent.$commit(isInterruptible)
-        : () => component.$wire.$commit(isInterruptible)
+        ? () => component.$wire.$parent.$commit({ interruptible: isInterruptible })
+        : () => component.$wire.$commit({ interruptible: isInterruptible })
 
     // If a plain wire:model is added to a text input, debounce the
     // trigerring of network requests.
@@ -61,7 +61,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
 function getModifierTail(modifiers) {
     modifiers = modifiers.filter(i => ! [
-        'lazy', 'defer', 'interruptible'
+        'lazy', 'defer', 'interrupt'
     ].includes(i))
 
     if (modifiers.length === 0) return ''

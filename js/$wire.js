@@ -165,8 +165,7 @@ wireProperty('$watch', (component) => (path, callback) => {
 })
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async (interruptible = false) => await requestCommit(component, interruptible))
-wireProperty('$commitRm', (component) => async () => await requestCommit(component, true))
+wireProperty('$commit', (component) => async (options = {}) => await requestCommit(component, options))
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
@@ -235,5 +234,5 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    return await requestCall(component, property, params)
+    return await requestCall(component, property, params, { interruptible: true })
 })

@@ -4085,22 +4085,52 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.isolate = false;
       this.interruptible = false;
       this.interrupted = false;
+      this.silentInterruption = true;
       this.calls = [];
       this.receivers = [];
       this.resolvers = [];
+      this.rejectors = [];
     }
-    addResolver(resolver) {
+    addResolver(resolver, rejector) {
       this.resolvers.push(resolver);
+      this.rejectors.push(rejector);
     }
-    addCall(method, params, receiver) {
+    addCall(method, params, resolver, rejector) {
       this.calls.push({
         path: "",
         method,
         params,
         handleReturn(value) {
-          receiver(value);
+          resolver(value);
+        },
+        handleReject(error2) {
+          rejector(error2);
         }
       });
+    }
+    handleInterruption() {
+      this.interrupted = true;
+      const error2 = new Error("Request was interrupted by a newer request");
+      error2.name = "InterruptedException";
+      this.rejectors.forEach((reject) => {
+        try {
+          reject(error2);
+        } catch (e) {
+          console.error("Error rejecting promise:", e);
+        }
+      });
+      this.calls.forEach((call) => {
+        if (call.handleReject) {
+          try {
+            call.handleReject(error2);
+          } catch (e) {
+            console.error("Error rejecting call promise:", e);
+          }
+        }
+      });
+      this.resolvers = [];
+      this.rejectors = [];
+      this.calls = [];
     }
     prepare() {
       trigger2("commit.prepare", { component: this.component });
@@ -4155,9 +4185,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         finishTarget({ snapshot: parsedSnapshot, effects });
         this.resolvers.forEach((i) => i());
         succeed(response);
+        this.resolvers = [];
+        this.rejectors = [];
+        this.calls = [];
       };
       let handleFailure = () => {
         respond();
+        const error2 = new Error("Request failed");
+        error2.name = "RequestFailedException";
+        this.rejectors.forEach((reject) => {
+          try {
+            reject(error2);
+          } catch (e) {
+            console.error("Error rejecting promise on failure:", e);
+          }
+        });
+        this.calls.forEach((call) => {
+          if (call.handleReject) {
+            try {
+              call.handleReject(error2);
+            } catch (e) {
+              console.error("Error rejecting call promise on failure:", e);
+            }
+          }
+        });
+        this.resolvers = [];
+        this.rejectors = [];
+        this.calls = [];
         fail();
       };
       return [payload, handleResponse, handleFailure];
@@ -4176,7 +4230,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (activePool) {
         let activeCommit = activePool.findCommitByComponent(component);
         if (activeCommit && activeCommit.interruptible) {
-          activeCommit.interrupted = true;
+          activeCommit.handleInterruption();
           shouldSendImmediately = true;
         }
       }
@@ -4186,15 +4240,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return newCommit;
       });
       if (shouldSendImmediately) {
-        this.createAndSendNewPool();
-        return commit;
+        commit._sendImmediately = true;
+      } else {
+        bufferPoolingForFiveMs(commit, () => {
+          let pool = this.findPoolWithComponent(commit.component);
+          if (!pool) {
+            this.createAndSendNewPool();
+          }
+        });
       }
-      bufferPoolingForFiveMs(commit, () => {
-        let pool = this.findPoolWithComponent(commit.component);
-        if (!pool) {
-          this.createAndSendNewPool();
-        }
-      });
       return commit;
     }
     findCommitOr(component, callback) {
@@ -4262,22 +4316,58 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/request/index.js
   var commitBus = new CommitBus();
-  async function requestCommit(component, interruptible = false) {
+  var globalInterruptible = false;
+  function makeInterruptible(condition, callback) {
+    if (!condition)
+      return callback();
+    globalInterruptible = true;
+    let result = callback();
+    globalInterruptible = false;
+    return result;
+  }
+  async function requestCommit(component, options = {}) {
     let commit = commitBus.add(component);
-    commit.interruptible = interruptible;
-    let promise = new Promise((resolve) => {
-      commit.addResolver(resolve);
+    commit.interruptible = options.interruptible === void 0 ? globalInterruptible : options.interruptible;
+    commit.silentInterruption = options.silentInterruption === void 0 ? true : options.silentInterruption;
+    let promise = new Promise((resolve, reject) => {
+      commit.addResolver(resolve, reject);
     });
+    if (commit.silentInterruption) {
+      promise = promise.catch((error2) => {
+        if (error2 && error2.name === "InterruptedException") {
+          return { interrupted: true };
+        }
+        throw error2;
+      });
+    }
     promise.commit = commit;
+    if (commit._sendImmediately) {
+      console.log("overwrite");
+      delete commit._sendImmediately;
+      commitBus.createAndSendNewPool();
+    }
     return promise;
   }
-  async function requestCall(component, method, params, interruptible = false) {
+  async function requestCall(component, method, params, options = {}) {
     let commit = commitBus.add(component);
-    commit.interruptible = interruptible;
-    let promise = new Promise((resolve) => {
-      commit.addCall(method, params, (value) => resolve(value));
+    commit.interruptible = options.interruptible === void 0 ? globalInterruptible : options.interruptible;
+    commit.silentInterruption = options.silentInterruption === void 0 ? true : options.silentInterruption;
+    let promise = new Promise((resolve, reject) => {
+      commit.addCall(method, params, resolve, reject);
     });
+    if (commit.silentInterruption) {
+      promise = promise.catch((error2) => {
+        if (error2 && error2.name === "InterruptedException") {
+          return { interrupted: true };
+        }
+        throw error2;
+      });
+    }
     promise.commit = commit;
+    if (commit._sendImmediately) {
+      delete commit._sendImmediately;
+      commitBus.createAndSendNewPool();
+    }
     return promise;
   }
   async function sendRequest(pool) {
@@ -4488,8 +4578,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     component.addCleanup(unwatch);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
-  wireProperty("$commit", (component) => async (interruptible = false) => await requestCommit(component, interruptible));
-  wireProperty("$commitRm", (component) => async () => await requestCommit(component, true));
+  wireProperty("$commit", (component) => async (options = {}) => await requestCommit(component, options));
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
     let unhook = on2(name, ({ component: hookComponent, ...params }) => {
@@ -4535,7 +4624,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return overrides[property](params);
       }
     }
-    return await requestCall(component, property, params);
+    return await requestCall(component, property, params, { interruptible: true });
   });
 
   // js/component.js
@@ -9556,11 +9645,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (directive3.value === "submit" && !directive3.modifiers.includes("prevent")) {
       attribute = attribute + ".prevent";
     }
+    let isInterruptible = directive3.modifiers.includes("interrupt");
+    if (isInterruptible) {
+      attribute = attribute.replace(".interrupt", "");
+    }
     let cleanupBinding = module_default.bind(el, {
       [attribute](e) {
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
-            module_default.evaluate(el, "$wire." + directive3.expression, { scope: { $event: e } });
+            makeInterruptible(isInterruptible, () => module_default.evaluate(el, "$wire." + directive3.expression, { scope: { $event: e } }));
           });
         };
         if (el.__livewire_confirm) {
@@ -10014,8 +10107,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isLazy = modifiers.includes("lazy") || modifiers.includes("change");
     let onBlur = modifiers.includes("blur");
     let isDebounced = modifiers.includes("debounce");
-    let isInterruptible = modifiers.includes("interruptible");
-    let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit(isInterruptible) : () => component.$wire.$commit(isInterruptible);
+    let isInterruptible = true;
+    let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit({ interruptible: isInterruptible }) : () => component.$wire.$commit({ interruptible: isInterruptible });
     let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce2(update, 150) : update;
     module_default.bind(el, {
       ["@change"]() {
@@ -10041,7 +10134,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     modifiers = modifiers.filter((i) => ![
       "lazy",
       "defer",
-      "interruptible"
+      "interrupt"
     ].includes(i));
     if (modifiers.length === 0)
       return "";
@@ -10083,7 +10176,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("poll", ({ el, directive: directive3 }) => {
     let interval = extractDurationFrom(directive3.modifiers, 2e3);
     let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-      triggerComponentRequest(el, directive3);
+      makeInterruptible(true, () => {
+        triggerComponentRequest(el, directive3);
+      });
     }, interval);
     start3();
     throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive3));
@@ -10093,7 +10188,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     stopWhen(() => theElementIsDisconnected(el));
   });
   function triggerComponentRequest(el, directive3) {
-    module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$commit()");
+    module_default.evaluate(el, directive3.expression ? "$wire." + directive3.expression : "$wire.$commit({ interruptible: true })");
   }
   function poll(callback, interval = 2e3) {
     let pauseConditions = [];

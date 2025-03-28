@@ -10,24 +10,67 @@ export class Commit {
         this.isolate = false
         this.interruptible = false
         this.interrupted = false
+        this.silentInterruption = true // Default to silent interruptions for framework features
         this.calls = []
         this.receivers = []
         this.resolvers = []
+        this.rejectors = []
     }
 
     // Add a new resolver to be resolved when a commit is returned from the server...
-    addResolver(resolver) {
+    addResolver(resolver, rejector) {
         this.resolvers.push(resolver)
+        this.rejectors.push(rejector)
     }
 
     // Add a new action "call" to the commit payload...
-    addCall(method, params, receiver) {
+    addCall(method, params, resolver, rejector) {
         this.calls.push({
             path: '', method, params,
             handleReturn(value) {
-                receiver(value)
+                resolver(value)
             },
+            handleReject(error) {
+                rejector(error)
+            }
         })
+    }
+
+    // Handle interruption by rejecting all promises
+    handleInterruption() {
+        this.interrupted = true
+
+        // Create a custom error for interruptions
+        const error = new Error('Request was interrupted by a newer request')
+        error.name = 'InterruptedException'
+
+        if (!this.silentInterruption) {
+            // Only reject promises if silent interruption is disabled
+            // Reject all promises using their reject functions
+            this.rejectors.forEach(reject => {
+                try {
+                    reject(error)
+                } catch (e) {
+                    console.error('Error rejecting promise:', e)
+                }
+            })
+
+            // Reject all call promises
+            this.calls.forEach(call => {
+                if (call.handleReject) {
+                    try {
+                        call.handleReject(error)
+                    } catch (e) {
+                        console.error('Error rejecting call promise:', e)
+                    }
+                }
+            })
+        }
+
+        // Clear the arrays since we've handled them
+        this.resolvers = []
+        this.rejectors = []
+        this.calls = []
     }
 
     prepare() {
@@ -114,10 +157,44 @@ export class Commit {
             this.resolvers.forEach(i => i())
 
             succeed(response)
+
+            // Clean up after successful response
+            this.resolvers = []
+            this.rejectors = []
+            this.calls = []
         }
 
         let handleFailure = () => {
             respond()
+
+            // Create a failure error object
+            const error = new Error('Request failed')
+            error.name = 'RequestFailedException'
+
+            // Reject all promises
+            this.rejectors.forEach(reject => {
+                try {
+                    reject(error)
+                } catch (e) {
+                    console.error('Error rejecting promise on failure:', e)
+                }
+            })
+
+            // Reject all call promises
+            this.calls.forEach(call => {
+                if (call.handleReject) {
+                    try {
+                        call.handleReject(error)
+                    } catch (e) {
+                        console.error('Error rejecting call promise on failure:', e)
+                    }
+                }
+            })
+
+            // Clean up after failure
+            this.resolvers = []
+            this.rejectors = []
+            this.calls = []
 
             fail()
         }
