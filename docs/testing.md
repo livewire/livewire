@@ -22,8 +22,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function renders_successfully()
+    public function test_renders_successfully()
     {
         Livewire::test(CreatePost::class)
             ->assertStatus(200);
@@ -51,8 +50,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function component_exists_on_the_page()
+    public function test_component_exists_on_the_page()
     {
         $this->get('/posts/create')
             ->assertSeeLivewire(CreatePost::class);
@@ -81,8 +79,7 @@ use Tests\TestCase;
 
 class ShowPostsTest extends TestCase
 {
-    /** @test */
-    public function displays_posts()
+    public function test_displays_posts()
     {
         Post::factory()->make(['title' => 'On bathing well']);
         Post::factory()->make(['title' => 'There\'s no time like bathtime']);
@@ -112,8 +109,7 @@ use Tests\TestCase;
 
 class ShowPostsTest extends TestCase
 {
-    /** @test */
-    public function displays_all_posts()
+    public function test_displays_all_posts()
     {
         Post::factory()->make(['title' => 'On bathing well']);
         Post::factory()->make(['title' => 'The bathtub is my sanctuary']);
@@ -155,8 +151,7 @@ use Tests\TestCase;
 
 class ShowPostsTest extends TestCase
 {
-    /** @test */
-    public function user_only_sees_their_own_posts()
+    public function test_user_only_sees_their_own_posts()
     {
         $user = User::factory()
             ->has(Post::factory()->count(3))
@@ -194,8 +189,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function can_set_title()
+    public function test_can_set_title()
     {
         Livewire::test(CreatePost::class)
             ->set('title', 'Confessions of a serial soaker')
@@ -220,8 +214,7 @@ use Tests\TestCase;
 
 class UpdatePostTest extends TestCase
 {
-    /** @test */
-    public function title_field_is_populated()
+    public function test_title_field_is_populated()
     {
         $post = Post::factory()->make([
             'title' => 'Top ten bath bombs',
@@ -305,8 +298,7 @@ use Tests\TestCase;
 
 class SearchPostsTest extends TestCase
 {
-    /** @test */
-    public function can_search_posts_via_url_query_string()
+    public function test_can_search_posts_via_url_query_string()
     {
         Post::factory()->create(['title' => 'Testing the first water-proof hair dryer']);
         Post::factory()->create(['title' => 'Rubber duckies that actually float']);
@@ -360,8 +352,7 @@ use Tests\TestCase;
 
 class CartTest extends TestCase
 {
-    /** @test */
-    public function can_load_discount_token_from_a_cookie()
+    public function test_can_load_discount_token_from_a_cookie()
     {
         Livewire::withCookies(['discountToken' => 'CALEB2023'])
             ->test(Cart::class)
@@ -390,8 +381,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function can_create_post()
+    public function test_can_create_post()
     {
         $this->assertEquals(0, Post::count());
 
@@ -428,8 +418,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function title_field_is_required()
+    public function test_title_field_is_required()
     {
         Livewire::test(CreatePost::class)
             ->set('title', '')
@@ -468,8 +457,7 @@ use Tests\TestCase;
 
 class UpdatePostTest extends TestCase
 {
-    /** @test */
-    public function cant_update_another_users_post()
+    public function test_cant_update_another_users_post()
     {
         $user = User::factory()->create();
         $stranger = User::factory()->create();
@@ -513,8 +501,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function redirected_to_all_posts_after_creating_a_post()
+    public function test_redirected_to_all_posts_after_creating_a_post()
     {
         Livewire::test(CreatePost::class)
             ->set('title', 'Using a loofah doesn\'t make you aloof...ugh')
@@ -546,8 +533,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function creating_a_post_dispatches_event()
+    public function test_creating_a_post_dispatches_event()
     {
         Livewire::test(CreatePost::class)
             ->set('title', 'Top 100 bubble bath brands')
@@ -572,8 +558,7 @@ use Tests\TestCase;
 
 class PostCountBadgeTest extends TestCase
 {
-    /** @test */
-    public function post_count_is_updated_when_event_is_dispatched()
+    public function test_post_count_is_updated_when_event_is_dispatched()
     {
         $badge = Livewire::test(PostCountBadge::class)
             ->assertSee("0");
@@ -603,8 +588,7 @@ use Tests\TestCase;
 
 class ShowPostsTest extends TestCase
 {
-    /** @test */
-    public function notification_is_dispatched_when_deleting_a_post()
+    public function test_notification_is_dispatched_when_deleting_a_post()
     {
         Livewire::test(ShowPosts::class)
             ->call('delete', postId: 3)
@@ -628,8 +612,7 @@ use Tests\TestCase;
 
 class ShowPostsTest extends TestCase
 {
-    /** @test */
-    public function notification_is_dispatched_when_deleting_a_post()
+    public function test_notification_is_dispatched_when_deleting_a_post()
     {
         Livewire::test(ShowPosts::class)
             ->call('delete', postId: 3)
