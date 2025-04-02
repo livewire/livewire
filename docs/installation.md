@@ -127,12 +127,12 @@ To address this issue, we need to inform Livewire that we want to use the ESM (E
 <head>
     <!-- ... -->
     @livewireStyles
+    @livewireScriptConfig <!-- [tl! highlight] -->
     @vite(['resources/js/app.js'])
 </head>
 <body>
     {{ $slot }}
 
-    @livewireScriptConfig <!-- [tl! highlight] -->
 </body>
 </html>
 ```
