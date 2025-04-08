@@ -37,7 +37,7 @@ class ExtendBlade extends Mechanism
 
     function boot()
     {
-        Blade::directive('this', fn() => "window.Livewire.find('{{ \$_instance->getId() }}')");
+        Blade::directive('this', fn() => "window.Livewire.find(@json(\$_instance->getId()))");
 
         on('render', function ($target, $view) {
             $this->startLivewireRendering($target);
