@@ -33,6 +33,7 @@ abstract class Component
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
 
+    /** @var string */
     protected $__id;
     protected $__name;
 
@@ -41,11 +42,18 @@ abstract class Component
         return $this->getId();
     }
 
+    /**
+     * @param string $id
+     * @return void
+     */
     function setId($id)
     {
         $this->__id = $id;
     }
 
+    /**
+     * @return string
+     */
     function getId()
     {
         return $this->__id;
