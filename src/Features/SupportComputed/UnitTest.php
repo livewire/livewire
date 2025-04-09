@@ -441,19 +441,27 @@ class UnitTest extends TestCase
                 return $stub->foo;
             }
 
+            #[Computed()]
+            protected function baz(ComputedPropertyInjectedStub $stub) {
+                return $stub->baz;
+            }
+
             function render() {
                 return <<<'HTML'
                     <div>foo{{ $this->foo }}</div>
+                    <div>baz{{ $this->baz }}</div>
                 HTML;
             }
         })
-            ->assertSee('foobar');
+            ->assertSee('foobar')
+            ->assertSee('bazqux');
     }
 }
 
 class ComputedPropertyInjectedStub
 {
     public $foo = 'bar';
+    public $baz = 'qux';
 }
 
 class ComputedPropertyStub extends Component
