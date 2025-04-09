@@ -2,6 +2,7 @@
 
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
+use Illuminate\Validation\Rule;
 use Livewire\Livewire;
 use Tests\TestComponent;
 use ValueError;
@@ -88,12 +89,16 @@ class ComponentWithValidatedEnum extends TestComponent
     public function rules()
     {
         return [
-            'enum' => ['required', 'in:' . collect(ValidatedEnum::cases())->pluck('value')->implode(',')],
+            'enum' => ['required', Rule::enum(ValidatedEnum::class)],
         ];
     }
 
     public function save()
     {
-        $this->validate();
+        $validatedData = $this->validate();
+        // Check that the validated enum is still an Enum value
+        if (!($this->enum instanceof ValidatedEnum)) {
+            throw new \Exception('The type of Enum has been changed.');
+        }
     }
 }
