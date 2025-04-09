@@ -25,8 +25,14 @@ class GenerateSignedUploadUrl
         // Flysystem V2+ doesn't allow direct access to client, so we need to invade instead.
         $client = invade($adapter)->client;
 
+        // Flysystem V2+ doesn't allow direct access to client, so we need to invade instead.
+        $config = invade($driver)->config;
+
         // Flysystem V2+ doesn't allow direct access to bucket, so we need to invade instead.
         $bucket = invade($adapter)->bucket;
+
+        // Flysystem V2+ doesn't allow direct access to bucket, so we need to invade instead.
+        $acl = invade($adapter)->determineAcl($config);
 
         $fileType = $file->getMimeType();
         $fileHashName = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
@@ -35,7 +41,7 @@ class GenerateSignedUploadUrl
         $command = $client->getCommand('putObject', array_filter([
             'Bucket' => $bucket,
             'Key' => $path,
-            'ACL' => $visibility,
+            'ACL' => $acl ?: $visibility,
             'ContentType' => $fileType ?: 'application/octet-stream',
             'CacheControl' => null,
             'Expires' => null,
