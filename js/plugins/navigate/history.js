@@ -90,6 +90,12 @@ export function whenTheBackOrForwardButtonIsClicked(
 
         if (! alpine.snapshotIdx) return
 
+        // If the previousUrl is not set, then the popstate 
+        // refers to the previous state of the component, not the return to the previous page.
+        // In this case, we do not want to recreate the entire document, only the state of the component.
+        // @see Livewire\Features\SupportPagination\BrowserTest::test_interaction_with_back_button_when_wire_navigate_was_previously_used
+        if (! state.previousUrl) return
+
         if (snapshotCache.has(alpine.snapshotIdx)) {
             let snapshot = snapshotCache.retrieve(alpine.snapshotIdx)
 
@@ -118,11 +124,22 @@ export function replaceUrl(url, html) {
 function updateUrl(method, url, html) {
     let key = url.toString() + '-' + Math.random()
 
-    method === 'pushState'
-        ? snapshotCache.push(key, new Snapshot(url, html))
-        : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
+    if (method === 'pushState') {
+        snapshotCache.push(key, new Snapshot(url, html))
+    } else {
+        // If the current url is different than the one for which the key was created,
+        // then we cannot replace the snapshot under the current key
+        // @see Livewire\Features\SupportPagination\BrowserTest::test_interaction_with_back_button_when_wire_navigate_was_used_later
+        key = snapshotCache.currentKey?.startsWith(window.location.href + '-')
+            ? snapshotCache.currentKey
+            : key
+
+        snapshotCache.replace(key, new Snapshot(url, html))
+    }
 
     let state = history.state || {}
+
+    state.previousUrl = window.location.href
 
     if (!state.alpine) state.alpine = {}
 
