@@ -173,7 +173,7 @@ class CreatePost extends Component
         $this->validate();
 
         Post::create(
-            $this->form->all() // [tl! highlight]
+            $this->form->only(['title', 'content']) // [tl! highlight]
         );
 
         return $this->redirect('/posts');
@@ -225,7 +225,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        Post::create($this->all());
+        Post::create($this->only(['title', 'content']));
     }
 }
 ```
@@ -361,7 +361,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        Post::create($this->all());
+        Post::create($this->only(['title', 'content']));
 
         $this->reset(); // [tl! highlight]
     }
@@ -460,7 +460,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($this->only(['title', 'content']));
 
         $this->reset();
     }
@@ -507,7 +507,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($this->only(['title', 'content']));
 
         $this->reset();
     }
