@@ -10824,8 +10824,8 @@ import_alpinejs15.default.interceptInit((el) => {
 
 // js/directives/wire-dirty.js
 var refreshDirtyStatesByComponent = new WeakBag();
-on("commit", ({ component, succeed }) => {
-  succeed(() => {
+on("commit", ({ component, respond }) => {
+  respond(() => {
     setTimeout(() => {
       refreshDirtyStatesByComponent.each(component, (i) => i(false));
     });
@@ -10833,7 +10833,6 @@ on("commit", ({ component, succeed }) => {
 });
 directive("dirty", ({ el, directive: directive2, component }) => {
   let targets = dirtyTargets(el);
-  let dirty = Alpine.reactive({ state: false });
   let oldIsDirty = false;
   let initialDisplay = el.style.display;
   let refreshDirtyState = (isDirty) => {
