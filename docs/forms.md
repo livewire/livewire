@@ -173,7 +173,7 @@ class CreatePost extends Component
         $this->validate();
 
         Post::create(
-            $this->form->all() // [tl! highlight]
+            $this->form->only(['title', 'content']) // [tl! highlight]
         );
 
         return $this->redirect('/posts');
@@ -225,7 +225,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        Post::create($this->all());
+        Post::create($this->only(['title', 'content']));
     }
 }
 ```
@@ -324,7 +324,7 @@ class PostForm extends Form
         $this->validate();
 
         $this->post->update(
-            $this->all()
+            $this->only(['title', 'content'])
         );
     }
 }
@@ -361,7 +361,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        Post::create($this->all());
+        Post::create($this->only(['title', 'content']));
 
         $this->reset(); // [tl! highlight]
     }
@@ -460,7 +460,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($this->only(['title', 'content']));
 
         $this->reset();
     }
@@ -507,7 +507,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($this->only(['title', 'content']));
 
         $this->reset();
     }
@@ -822,7 +822,7 @@ Because of `{{ $attributes }}`, when the HTML is rendered in the browser, `wire:
 
 `x-modelable="count"` tells Alpine to look for any `x-model` or `wire:model` statements and use "count" as the data to bind them to.
 
-Because `x-modelable` works for both `wire:model` and `x-model`, you can also use this Blade component interchangeably with Livewire and Alpine. For example, here's an example of using this Blade component in a purely Alpine context:
+Because `x-modelable` works for both `wire:model` and `x-model`, you can also use this Blade component interchangeably with Livewire and Alpine. Here’s an example of using this Blade component in a purely Alpine context:
 
 ```blade
 <x-input-counter x-model="quantity" />
