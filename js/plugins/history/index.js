@@ -155,6 +155,10 @@ function push(url, key, object) {
 
     if (! state.alpine) state.alpine = {}
 
+    let isDirty = JSON.stringify(state.alpine[key]) !== JSON.stringify(unwrap(object))
+
+    if (!isDirty) return;
+
     state = { alpine: {...state.alpine, ...{[key]: unwrap(object)}} }
 
     window.history.pushState(state, '', url.toString())
