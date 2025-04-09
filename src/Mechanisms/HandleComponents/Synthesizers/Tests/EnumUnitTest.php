@@ -35,7 +35,7 @@ class EnumUnitTest extends \Tests\TestCase
         Livewire::test(ComponentWithValidatedEnum::class)
             ->call('save')
             ->assertHasErrors('enum')
-            ->set('enum', ValidatedEnum::TEST)
+            ->set('enum', ValidatedEnum::TEST->value)
             ->call('save')
             ->assertHasNoErrors();
     }
