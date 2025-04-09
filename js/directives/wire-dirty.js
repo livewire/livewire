@@ -1,12 +1,12 @@
-import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from '@/directives'
+import { toggleBooleanStateDirective } from './shared'
 import { dataGet, WeakBag } from '@/utils'
 import { on } from '@/hooks'
 
 let refreshDirtyStatesByComponent = new WeakBag
 
-on('commit', ({ component, succeed }) => {
-    succeed(() => {
+on('commit', ({ component, respond }) => {
+    respond(() => {
         setTimeout(() => { // Doing a "setTimeout" to let morphdom do its thing first...
             refreshDirtyStatesByComponent.each(component, i => i(false))
         })
@@ -15,8 +15,6 @@ on('commit', ({ component, succeed }) => {
 
 directive('dirty', ({ el, directive, component }) => {
     let targets = dirtyTargets(el)
-
-    let dirty = Alpine.reactive({ state: false })
 
     let oldIsDirty = false
 
