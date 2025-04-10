@@ -421,8 +421,8 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
                         <button wire:click="$toggle('changeNumbers')" dusk="changeNumbers">Change numbers</button>
                         <div>
                             @foreach ($this->numbers as $index => $number)
-                                <div wire:key="number">
-                                    <livewire:child :$number :key="$number" />
+                                <div wire:key="{{ $number }}">
+                                    <livewire:child :$number :key="$index" />
                                 </div>
                             @endforeach
                         </div>
