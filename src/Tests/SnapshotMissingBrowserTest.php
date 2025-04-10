@@ -64,4 +64,108 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
             ->assertSee('child')
             ->assertConsoleLogHasNoErrors();
     }
+
+    // https://github.com/livewire/livewire/discussions/8921
+    public function test_scenario_2_keys_in_groups_passing()
+    {
+        Livewire::visit([
+            new #[\Livewire\Attributes\On('number-updated')] class () extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <h1>Section 1</h1>
+                        <div>
+                            @foreach (range(1, 2) as $number)
+                                <livewire:child section="1" :$number :key="$number" />
+                            @endforeach
+                        </div>
+
+                        <h1>Section 2</h1>
+                        <div>
+                            @foreach (range(3, 4) as $number)
+                                <livewire:child section="2" :$number :key="$number" />
+                            @endforeach
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class () extends Component {
+                public $section;
+                public $number;
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        {{ $section }}-{{ $number }} - <button type="button" wire:click="$dispatch('number-updated')" dusk="{{ $section }}-{{ $number }}-button">Change number</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertSee('1-1')
+            ->assertSee('1-2')
+            ->assertSee('2-3')
+            ->assertSee('2-4')
+            ->waitForLivewire()->click('@1-1-button')
+            ->assertConsoleLogHasNoErrors()
+            ->assertSee('1-1')
+            ->assertSee('1-2')
+            ->assertSee('2-3')
+            ->assertSee('2-4');
+    }
+
+    // https://github.com/livewire/livewire/discussions/8921
+    public function test_scenario_2_keys_in_groups_failing()
+    {
+        Livewire::visit([
+            new #[\Livewire\Attributes\On('number-updated')] class () extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <h1>Section 1</h1>
+                        <div>
+                            @foreach (range(1, 2) as $number)
+                                <livewire:child section="1" :$number :key="$number" />
+                            @endforeach
+                        </div>
+
+                        <h1>Section 2</h1>
+                        <div>
+                            @foreach (range(1, 2) as $number)
+                                <livewire:child section="2" :$number :key="$number" />
+                            @endforeach
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class () extends Component {
+                public $section;
+                public $number;
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        {{ $section }}-{{ $number }} - <button type="button" wire:click="$dispatch('number-updated')" dusk="{{ $section }}-{{ $number }}-button">Change number</button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertSee('1-1')
+            ->assertSee('1-2')
+            ->assertSee('2-1')
+            ->assertSee('2-2')
+            ->waitForLivewire()->click('@1-1-button')
+            ->assertConsoleLogHasNoErrors()
+            ->assertSee('1-1')
+            ->assertSee('1-2')
+            ->assertSee('2-1')
+            ->assertSee('2-2');
+    }
 }
