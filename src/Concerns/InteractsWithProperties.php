@@ -113,6 +113,30 @@ trait InteractsWithProperties
         return $beforeReset;
     }
 
+    /**
+     * @return string
+     */
+    public function pullString($property)
+    {
+        $value = $this->getPropertyValue($property);
+
+        $this->reset($property);
+
+        return is_string($value) ? $value : '';
+    }
+
+    /**
+     * @return int
+     */
+    public function pullInt($property)
+    {
+        $value = $this->getPropertyValue($property);
+
+        $this->reset($property);
+
+        return intval($value);
+    }
+
     public function only($properties)
     {
         $results = [];
