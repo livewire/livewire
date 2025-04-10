@@ -505,4 +505,46 @@ class DuskBrowserMacros
             return $this;
         };
     }
+
+    public function assertConsoleLogHasNoErrors()
+    {
+        return function(){
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $errors = [];
+            foreach ($logs as $log) {
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'SEVERE') continue;
+
+                // Ignore favicon.ico
+                if(str($log['message'])->contains('favicon.ico')) continue;
+
+                $errors[] = $log['message'];
+            }
+
+            PHPUnit::assertEmpty($errors, "Console log contained errors: " . implode(", ", $errors));
+
+            return $this;
+        };
+    }
+
+    public function assertConsoleLogHasErrors()
+    {
+        return function(){
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $errors = [];
+            foreach ($logs as $log) {
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'SEVERE') continue;
+
+                // Ignore favicon.ico
+                if(str($log['message'])->contains('favicon.ico')) continue;
+
+                $errors[] = $log['message'];
+            }
+
+            PHPUnit::assertNotEmpty($errors, "Console log contained no errors");
+
+            return $this;
+        };
+    }
 }
