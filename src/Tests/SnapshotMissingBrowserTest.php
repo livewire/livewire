@@ -396,4 +396,137 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
             ->assertSee('1')
             ->assertSee('2');
     }
+
+    // https://github.com/livewire/livewire/discussions/7697
+    public function test_scenario_3_keys_on_nested_in_div_failing_3_using_loop_index_in_key()
+    {
+        Livewire::visit([
+            new class () extends Component {
+                public $changeNumbers = false;
+
+                #[\Livewire\Attributes\Computed]
+                public function numbers()
+                {
+                    if ($this->changeNumbers) {
+                        return [2,1,4,3];
+                    }
+                    return [1,2,3,4];
+                }
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$toggle('changeNumbers')" dusk="changeNumbers">Change numbers</button>
+                        <div>
+                            @foreach ($this->numbers as $index => $number)
+                                <div wire:key="number">
+                                    <livewire:child :$number :key="$number" />
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class () extends Component {
+                public $number;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        {{ $number }}
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertSee('1')
+            ->assertSee('2')
+            ->assertSee('3')
+            ->assertSee('4')
+            ->waitForLivewire()->click('@changeNumbers')
+            ->assertConsoleLogHasNoErrors()
+            ->assertSee('2')
+            ->assertSee('1')
+            ->assertSee('4')
+            ->assertSee('3');
+    }
+
+    // https://github.com/livewire/livewire/discussions/7282
+    public function test_scenario_4_conditionally_removed_elements_passing()
+    {
+        Livewire::visit([
+            new class () extends Component {
+                public bool $showContents = false;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div x-init="$el.remove()">
+                            {{ __('Javascript required') }}
+                        </div>
+                        <button wire:click="$toggle('showContents')" dusk="showContents">Show/Hide</button>
+                        <div x-show="$wire.showContents" wire:key="container">
+                            <livewire:child wire:key="test" />
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class () extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>contents</div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertDontSee('contents')
+            ->waitForLivewire()->click('@showContents')
+            ->assertConsoleLogHasNoErrors()
+            ->assertSee('contents');
+    }
+
+    // https://github.com/livewire/livewire/discussions/7282
+    public function test_scenario_4_conditionally_removed_elements_failing_missing_key_on_wrapping_div()
+    {
+        Livewire::visit([
+            new class () extends Component {
+                public bool $showContents = false;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <div x-init="$el.remove()">
+                            {{ __('Javascript required') }}
+                        </div>
+                        <button wire:click="$toggle('showContents')" dusk="showContents">Show/Hide</button>
+                        <div x-show="$wire.showContents">
+                            <livewire:child wire:key="test" />
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class () extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>contents</div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertDontSee('contents')
+            ->waitForLivewire()->click('@showContents')
+            ->assertConsoleLogHasNoErrors()
+            ->assertSee('contents');
+    }
 }
