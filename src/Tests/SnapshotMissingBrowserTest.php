@@ -288,6 +288,8 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
     // https://github.com/livewire/livewire/discussions/8575
     // https://github.com/livewire/livewire/discussions/6698
     // https://github.com/livewire/livewire/discussions/6698#discussioncomment-7432437
+    // https://github.com/livewire/livewire/discussions/7193
+    // https://github.com/livewire/livewire/discussions/5802
     public function test_scenario_3_keys_on_nested_in_div_failing_2_no_key_on_loop_root_element()
     {
         Livewire::visit([
