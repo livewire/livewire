@@ -137,31 +137,44 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
 }
 
 function replace(url, key, object) {
-    let state = window.history.state || {}
+    let state = window.history.state || {};
 
-    if (! state.alpine) state.alpine = {}
+    if (!state.alpine) state.alpine = {};
 
-    let isDirty = JSON.stringify(state.alpine[key]) !== JSON.stringify(unwrap(object))
-
-    if (!isDirty) return;
+    if (shouldSkipHistoryUpdate(state, key, object)) {
+        return;
+    }
 
     state.alpine[key] = unwrap(object);
 
-    window.history.replaceState(state, '', url.toString())
+    window.history.replaceState(state, '', url.toString());
 }
 
 function push(url, key, object) {
-    let state = window.history.state || {}
+    let state = window.history.state || {};
 
-    if (! state.alpine) state.alpine = {}
+    if (!state.alpine) state.alpine = {};
 
-    let isDirty = JSON.stringify(state.alpine[key]) !== JSON.stringify(unwrap(object))
+    if (shouldSkipHistoryUpdate(state, key, object)) {
+        return;
+    }
 
-    if (!isDirty) return;
+    state = { alpine: {...state.alpine, [key]: unwrap(object)} };
 
-    state = { alpine: {...state.alpine, ...{[key]: unwrap(object)}} }
+    window.history.pushState(state, '', url.toString());
+}
 
-    window.history.pushState(state, '', url.toString())
+function shouldSkipHistoryUpdate(currentState, key, newObject) {
+    const currentValue = currentState.alpine?.[key];
+    const newValue = unwrap(newObject);
+
+    const hasChanges = JSON.stringify(currentValue) !== JSON.stringify(newValue);
+
+    if (!hasChanges) {
+        return currentValue?.value === newObject.value;
+    }
+
+    return false;
 }
 
 function unwrap(object) {
