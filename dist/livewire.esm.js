@@ -9569,7 +9569,11 @@ function replace(url, key, object) {
     return;
   }
   state.alpine[key] = unwrap(object);
-  window.history.replaceState(state, "", url.toString());
+  try {
+    window.history.replaceState(state, "", url.toString());
+  } catch (e) {
+    console.error(e);
+  }
 }
 function push(url, key, object) {
   let state = window.history.state || {};
@@ -9579,7 +9583,11 @@ function push(url, key, object) {
     return;
   }
   state = { alpine: { ...state.alpine, [key]: unwrap(object) } };
-  window.history.pushState(state, "", url.toString());
+  try {
+    window.history.pushState(state, "", url.toString());
+  } catch (e) {
+    console.error(e);
+  }
 }
 function shouldSkipHistoryUpdate(currentState, key, newObject) {
   const currentValue = currentState.alpine?.[key];
