@@ -93,6 +93,10 @@ trait InteractsWithProperties
 
         $keysToReset = array_diff(array_keys($this->all()), $properties);
 
+        if($keysToReset === []) {
+            return;
+        }
+
         $this->reset($keysToReset);
     }
 
