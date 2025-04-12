@@ -167,6 +167,10 @@ class Form implements Arrayable
 
         $keysToReset = array_diff(array_keys($this->all()), $properties);
 
+        if($keysToReset === []) {
+            return;
+        }
+
         $this->reset($keysToReset);
     }
 

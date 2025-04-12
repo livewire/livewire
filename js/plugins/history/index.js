@@ -147,7 +147,11 @@ function replace(url, key, object) {
 
     state.alpine[key] = unwrap(object);
 
-    window.history.replaceState(state, '', url.toString());
+    try {
+        window.history.replaceState(state, '', url.toString())
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 function push(url, key, object) {
@@ -174,7 +178,11 @@ function shouldSkipHistoryUpdate(currentState, key, newObject) {
         return currentValue?.value === newObject.value;
     }
 
-    return false;
+    try {
+        window.history.pushState(state, '', url.toString())
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 function unwrap(object) {
