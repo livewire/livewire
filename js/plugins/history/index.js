@@ -165,7 +165,11 @@ function push(url, key, object) {
 
     state = { alpine: {...state.alpine, [key]: unwrap(object)} };
 
-    window.history.pushState(state, '', url.toString());
+    try {
+        window.history.pushState(state, '', url.toString())
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 function shouldSkipHistoryUpdate(currentState, key, newObject) {
@@ -178,11 +182,7 @@ function shouldSkipHistoryUpdate(currentState, key, newObject) {
         return currentValue?.value === newObject.value;
     }
 
-    try {
-        window.history.pushState(state, '', url.toString())
-    } catch (e) {
-        console.error(e)
-    }
+    return false;
 }
 
 function unwrap(object) {
