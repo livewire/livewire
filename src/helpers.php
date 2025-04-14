@@ -5,6 +5,10 @@ namespace Livewire;
 use ReflectionClass;
 use Illuminate\Support\Str;
 
+/**
+ * @param ?string $string
+ * @return object
+ */
 function str($string = null)
 {
     if (is_null($string)) return new class {
@@ -16,6 +20,10 @@ function str($string = null)
     return Str::of($string);
 }
 
+/**
+ * @param object $obj
+ * @return object
+ */
 function invade($obj)
 {
     return new class($obj) {
@@ -59,6 +67,10 @@ function invade($obj)
     };
 }
 
+/**
+ * @param callable(mixed ...$params): mixed $fn
+ * @return callable(mixed ...$params): mixed
+ */
 function once($fn)
 {
     $hasRun = false;
@@ -72,11 +84,20 @@ function once($fn)
     };
 }
 
+/**
+ * @template TType
+ * @param TType ...$params
+ * @return list<TType>
+ */
 function of(...$params)
 {
     return $params;
 }
 
+/**
+ * @param mixed &$variable
+ * @return callable(): void
+ */
 function revert(&$variable)
 {
     $cache = $variable;
@@ -86,34 +107,71 @@ function revert(&$variable)
     };
 }
 
+/**
+ * @param string $subject
+ * @return Wrapped
+ */
 function wrap($subject) {
     return new Wrapped($subject);
 }
 
+/**
+ * @param string $subject
+ * @return Pipe
+ */
 function pipe($subject) {
     return new Pipe($subject);
 }
 
+/**
+ * @param string $name
+ * @param mixed ...$params
+ * @return callable(mixed &$forward, mixed ...$extras): mixed
+ */
 function trigger($name, ...$params) {
     return app(\Livewire\EventBus::class)->trigger($name, ...$params);
 }
 
+/**
+ * @param string $name
+ * @param callable(mixed ...$params): mixed $callback
+ * @return callable(): void
+ */
 function on($name, $callback) {
     return app(\Livewire\EventBus::class)->on($name, $callback);
 }
 
+/**
+ * @param string $name
+ * @param callable(mixed ...$params): mixed $callback
+ * @return callable(): void
+ */
 function after($name, $callback) {
     return app(\Livewire\EventBus::class)->after($name, $callback);
 }
 
+/**
+ * @param string $name
+ * @param callable(mixed ...$params): mixed $callback
+ * @return callable(): void
+ */
 function before($name, $callback) {
     return app(\Livewire\EventBus::class)->before($name, $callback);
 }
 
+/**
+ * @param string $name
+ * @param callable(mixed ...$params): mixed $callback
+ * @return void
+ */
 function off($name, $callback) {
-    return app(\Livewire\EventBus::class)->off($name, $callback);
+    app(\Livewire\EventBus::class)->off($name, $callback);
 }
 
+/**
+ * @param string $target
+ * @return object
+ */
 function memoize($target) {
     static $memo = new \WeakMap;
 
@@ -135,6 +193,10 @@ function memoize($target) {
     };
 }
 
+/**
+ * @param ?object $instance
+ * @return object
+ */
 function store($instance = null)
 {
     if (! $instance) $instance = app(\Livewire\Mechanisms\DataStore::class);
