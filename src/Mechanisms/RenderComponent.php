@@ -34,7 +34,9 @@ class RenderComponent extends Mechanism
 };
 [\$__name, \$__params] = \$__split($expression);
 
-\$__html = app('livewire')->mount(\$__name, \$__params, $key, \$__slots ?? [], get_defined_vars());
+\$key = isset(\$livewireLoopCount) ? \$livewireLoopCount . '-' . $key : $key;
+
+\$__html = app('livewire')->mount(\$__name, \$__params, \$key, \$__slots ?? [], get_defined_vars());
 
 echo \$__html;
 

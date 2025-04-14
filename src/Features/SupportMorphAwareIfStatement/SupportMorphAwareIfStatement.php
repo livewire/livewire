@@ -123,6 +123,10 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         $prefix = '<!--[if BLOCK]><![endif]-->';
 
+        if (static::isLoop($found)) {
+            $prefix .= "<?php isset(\$livewireLoopCount) ? \$livewireLoopCount++ : \$livewireLoopCount = 1; ?>";
+        }
+
         $prefixEscaped = preg_quote($prefix);
 
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
@@ -151,6 +155,20 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $pattern = "/{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
         return preg_replace($pattern, $foundWithSuffix, $template);
+    }
+
+    protected static function isLoop($found)
+    {
+        $loopDirectives = [
+            'foreach',
+            'forelse',
+            'for',
+            'while',
+        ];
+
+        $pattern = '/@(' . implode('|', $loopDirectives) . ')(?![a-zA-Z])/i';
+
+        return preg_match($pattern, $found);
     }
 
     protected static function directivesPattern($directives)
