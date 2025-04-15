@@ -17,6 +17,7 @@ class HandleComponents extends Mechanism
         Synthesizers\CarbonSynth::class,
         Synthesizers\CollectionSynth::class,
         Synthesizers\StringableSynth::class,
+        Synthesizers\HtmlStringSynth::class,
         Synthesizers\EnumSynth::class,
         Synthesizers\StdClassSynth::class,
         Synthesizers\ArraySynth::class,
