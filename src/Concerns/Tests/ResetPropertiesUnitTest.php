@@ -67,6 +67,11 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->call('resetKeysExcept', ['foo', 'bob'])
             ->assertSetStrict('foo', 'baz')
             ->assertSetStrict('bob', 'law')
+            ->assertSetStrict('mwa', 'hah')
+            // Reset all except all
+            ->call('resetKeysExcept', ['foo', 'bob', 'mwa', 'notSet', 'nullProp', 'pullResult'])
+            ->assertSetStrict('foo', 'baz')
+            ->assertSetStrict('bob', 'law')
             ->assertSetStrict('mwa', 'hah');
     }
 

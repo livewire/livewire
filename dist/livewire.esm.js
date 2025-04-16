@@ -9566,14 +9566,22 @@ function replace(url, key, object) {
   if (!state.alpine)
     state.alpine = {};
   state.alpine[key] = unwrap(object);
-  window.history.replaceState(state, "", url.toString());
+  try {
+    window.history.replaceState(state, "", url.toString());
+  } catch (e) {
+    console.error(e);
+  }
 }
 function push(url, key, object) {
   let state = window.history.state || {};
   if (!state.alpine)
     state.alpine = {};
   state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
-  window.history.pushState(state, "", url.toString());
+  try {
+    window.history.pushState(state, "", url.toString());
+  } catch (e) {
+    console.error(e);
+  }
 }
 function unwrap(object) {
   if (object === void 0)
@@ -10816,8 +10824,8 @@ import_alpinejs15.default.interceptInit((el) => {
 
 // js/directives/wire-dirty.js
 var refreshDirtyStatesByComponent = new WeakBag();
-on("commit", ({ component, succeed }) => {
-  succeed(() => {
+on("commit", ({ component, respond }) => {
+  respond(() => {
     setTimeout(() => {
       refreshDirtyStatesByComponent.each(component, (i) => i(false));
     });
@@ -10825,7 +10833,6 @@ on("commit", ({ component, succeed }) => {
 });
 directive("dirty", ({ el, directive: directive2, component }) => {
   let targets = dirtyTargets(el);
-  let dirty = Alpine.reactive({ state: false });
   let oldIsDirty = false;
   let initialDisplay = el.style.display;
   let refreshDirtyState = (isDirty) => {
