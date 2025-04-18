@@ -35,6 +35,51 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('baz');
     }
 
+    public function test_can_configure_an_array_of_layouts()
+    {
+        config()->set('livewire.layout', [
+            'admin/*' => 'layouts.app-with-qux-hardcoded',
+            '*' => 'layouts.app-with-baz-hardcoded',
+        ]);
+
+        Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
+        Route::get('/admin/configurable-layout', ComponentForConfigurableLayoutTest::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertSee('foo')
+            ->assertSee('baz')
+            ->assertDontSee('qux');
+
+        $this->get('/admin/configurable-layout')
+            ->assertSee('foo')
+            ->assertSee('qux')
+            ->assertDontSee('baz');
+    }
+
+    public function test_can_configure_layouts_from_a_callback()
+    {
+        config()->set('livewire.layout', function (Request $request) {
+            return $request->is('admin/*')
+                ? 'layouts.app-with-qux-hardcoded'
+                : 'layouts.app-with-baz-hardcoded';
+        });
+
+        Route::get('/configurable-layout', ComponentForConfigurableLayoutTest::class);
+        Route::get('/admin/configurable-layout', ComponentForConfigurableLayoutTest::class);
+
+        $this
+            ->get('/configurable-layout')
+            ->assertSee('foo')
+            ->assertSee('baz')
+            ->assertDontSee('qux');
+
+        $this->get('/admin/configurable-layout')
+            ->assertSee('foo')
+            ->assertSee('qux')
+            ->assertDontSee('baz');
+    }
+
     public function test_can_configure_the_default_layout_to_a_class_based_component_layout()
     {
         config()->set('livewire.layout', \LegacyTests\AppLayout::class);
