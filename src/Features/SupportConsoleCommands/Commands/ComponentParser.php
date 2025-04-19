@@ -140,6 +140,21 @@ class ComponentParser
             ->implode('.');
     }
 
+    public function absoluteClassPath()
+    {
+        return $this->generateAbsolutePath($this->classPath());
+    }
+
+    public function absoluteViewPath()
+    {
+        return $this->generateAbsolutePath($this->viewPath());
+    }
+
+    public function absoluteTestPath()
+    {
+        return $this->generateAbsolutePath($this->testPath());
+    }
+
     public function viewContents()
     {
         if( ! File::exists($stubPath = base_path($this->stubDirectory.'livewire.view.stub'))) {
@@ -221,5 +236,38 @@ class ComponentParser
         return base_path(str($namespace)
             ->replace('\\', '/', $namespace)
             ->replaceFirst('T', 't'));
+    }
+
+    public function handleFilename($absolutePath, $relativePath)
+    {
+        if (! config('livewire.command_output_links.enabled', false) || $this->isWindowsWSL()) {
+            return $relativePath;
+        }
+
+        return sprintf("\033]8;;%s\033\\%s\033]8;;\033\\", $absolutePath, $relativePath);
+    }
+
+    private function isWindowsWSL()
+    {
+        return file_exists('/proc/version') &&
+            preg_match('/(microsoft|wsl)/i', file_get_contents('/proc/version'));
+    }
+
+    private function convertPathToUri($path)
+    {
+        $normalizedPath = '/' . ltrim(str_replace(DIRECTORY_SEPARATOR, '/', $path), '/');
+
+        return 'file://' . $normalizedPath;
+    }
+
+    private function generateAbsolutePath($relativePath)
+    {
+        $localPath = config('livewire.command_output_links.local_path');
+
+        $path = filled($localPath)
+            ? str_replace(base_path(), $localPath, $relativePath)
+            : $relativePath;
+
+        return $this->convertPathToUri($path);
     }
 }
