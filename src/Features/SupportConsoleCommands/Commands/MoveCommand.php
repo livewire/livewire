@@ -42,7 +42,7 @@ class MoveCommand extends FileManipulationCommand
             sprintf('<options=bold;fg=green>CLASS:</> %s <options=bold;fg=green>=></> %s',
                 $this->parser->relativeClassPath(),
 
-                $this->newParser->handleClickablePath(
+                $this->newParser->handleFilename(
                     $this->newParser->absoluteClassPath(),
                     $this->newParser->relativeClassPath()
                 )
@@ -53,7 +53,7 @@ class MoveCommand extends FileManipulationCommand
             sprintf('<options=bold;fg=green>VIEW:</> %s <options=bold;fg=green>=></> %s',
                 $this->parser->relativeClassPath(),
 
-                $this->newParser->handleClickablePath(
+                $this->newParser->handleFilename(
                     $this->newParser->absoluteViewPath(),
                     $this->newParser->relativeViewPath()
                 )
@@ -64,7 +64,7 @@ class MoveCommand extends FileManipulationCommand
             sprintf('<options=bold;fg=green>TEST:</> %s <options=bold;fg=green>=></> %s',
                 $this->parser->relativeTestPath(),
 
-                $this->newParser->handleClickablePath(
+                $this->newParser->handleFilename(
                     $this->newParser->absoluteTestPath(),
                     $this->newParser->relativeTestPath()
                 )
@@ -78,7 +78,7 @@ class MoveCommand extends FileManipulationCommand
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
             $this->output->writeln(
                 sprintf('<fg=red;options=bold>Class already exists: </>%s',
-                    $this->parser->handleClickablePath(
+                    $this->parser->handleFilename(
                         $this->newParser->absoluteClassPath(),
                         $this->newParser->relativeClassPath()
                     )
@@ -102,7 +102,7 @@ class MoveCommand extends FileManipulationCommand
         if (File::exists($newViewPath)) {
             $this->output->writeln(
                 sprintf('<fg=red;options=bold>View already exists: </>%s',
-                    $this->parser->handleClickablePath(
+                    $this->parser->handleFilename(
                         $this->newParser->absoluteViewPath(),
                         $this->newParser->relativeViewPath()
                     )

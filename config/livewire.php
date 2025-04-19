@@ -169,7 +169,7 @@ return [
     */
 
     'command_output_links' => [
-        'enabled'          => true,
+        'enabled'          => false,
         'local_path'       => env('IGNITION_LOCAL_SITES_PATH', base_path()),
     ]
 ];

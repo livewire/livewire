@@ -44,7 +44,7 @@ class CopyCommand extends FileManipulationCommand
             sprintf('<options=bold;fg=green>CLASS:</> %s <options=bold;fg=green>=></> %s',
                 $this->parser->relativeClassPath(),
 
-                $this->newParser->handleClickablePath(
+                $this->newParser->handleFilename(
                     $this->newParser->absoluteClassPath(),
                     $this->newParser->relativeClassPath()
                 )
@@ -55,7 +55,7 @@ class CopyCommand extends FileManipulationCommand
             sprintf('<options=bold;fg=green>VIEW:</> %s <options=bold;fg=green>=></> %s',
                 $this->parser->relativeViewPath(),
 
-                $this->newParser->handleClickablePath(
+                $this->newParser->handleFilename(
                     $this->newParser->absoluteViewPath(),
                     $this->newParser->relativeViewPath()
                 )
@@ -66,7 +66,7 @@ class CopyCommand extends FileManipulationCommand
             sprintf('<options=bold;fg=green>TEST:</> %s <options=bold;fg=green>=></> %s',
                 $this->parser->relativeTestPath(),
 
-                $this->newParser->handleClickablePath(
+                $this->newParser->handleFilename(
                     $this->newParser->absoluteTestPath(),
                     $this->newParser->relativeTestPath()
                 )
@@ -81,7 +81,7 @@ class CopyCommand extends FileManipulationCommand
 
             $this->output->writeln(
                 sprintf('<fg=red;options=bold>Test class already exists: </>%s',
-                    $this->newParser->handleClickablePath(
+                    $this->newParser->handleFilename(
                         $this->newParser->absoluteTestPath(),
                         $this->newParser->relativeTestPath()
                     )
@@ -103,7 +103,7 @@ class CopyCommand extends FileManipulationCommand
 
             $this->output->writeln(
                 sprintf('<options=bold;fg=red>Class already exists: </>%s',
-                    $this->newParser->handleClickablePath(
+                    $this->newParser->handleFilename(
                         $this->newParser->absoluteClassPath(),
                         $this->newParser->relativeClassPath()
                     )
@@ -124,7 +124,7 @@ class CopyCommand extends FileManipulationCommand
 
             $this->output->writeln(
                 sprintf('<fg=red;options=bold>View already exists: </>%s',
-                    $this->newParser->handleClickablePath(
+                    $this->newParser->handleFilename(
                         $this->newParser->absoluteViewPath(),
                         $this->newParser->relativeViewPath()
                     )
