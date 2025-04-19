@@ -37,16 +37,53 @@ class MoveCommand extends FileManipulationCommand
         $test = $this->renameTest();
 
         if ($class) $this->line("<options=bold,reverse;fg=green> COMPONENT MOVED </> 🤙\n");
-        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
-        if (! $inline) $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
-        if ($test) $test && $this->line("<options=bold;fg=green>Test:</>  {$this->parser->relativeTestPath()} <options=bold;fg=green>=></> {$this->newParser->relativeTestPath()}");
+
+        $class && $this->output->writeln(
+            sprintf('<options=bold;fg=green>CLASS:</> %s <options=bold;fg=green>=></> %s',
+                $this->parser->relativeClassPath(),
+
+                $this->newParser->handleClickablePath(
+                    $this->newParser->absoluteClassPath(),
+                    $this->newParser->relativeClassPath()
+                )
+            )
+        );
+
+        if (! $inline) $view && $this->output->writeln(
+            sprintf('<options=bold;fg=green>VIEW:</> %s <options=bold;fg=green>=></> %s',
+                $this->parser->relativeClassPath(),
+
+                $this->newParser->handleClickablePath(
+                    $this->newParser->absoluteViewPath(),
+                    $this->newParser->relativeViewPath()
+                )
+            )
+        );
+
+        if ($test) $test && $this->output->writeln(
+            sprintf('<options=bold;fg=green>TEST:</> %s <options=bold;fg=green>=></> %s',
+                $this->parser->relativeTestPath(),
+
+                $this->newParser->handleClickablePath(
+                    $this->newParser->absoluteTestPath(),
+                    $this->newParser->relativeTestPath()
+                )
+            )
+        );
     }
 
     protected function renameClass()
     {
         if (File::exists($this->newParser->classPath())) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->newParser->relativeClassPath()}");
+            $this->output->writeln(
+                sprintf('<fg=red;options=bold>Class already exists: </>%s',
+                    $this->parser->handleClickablePath(
+                        $this->newParser->absoluteClassPath(),
+                        $this->newParser->relativeClassPath()
+                    )
+                )
+            );
 
             return false;
         }
@@ -63,7 +100,14 @@ class MoveCommand extends FileManipulationCommand
         $newViewPath = $this->newParser->viewPath();
 
         if (File::exists($newViewPath)) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->newParser->relativeViewPath()}");
+            $this->output->writeln(
+                sprintf('<fg=red;options=bold>View already exists: </>%s',
+                    $this->parser->handleClickablePath(
+                        $this->newParser->absoluteViewPath(),
+                        $this->newParser->relativeViewPath()
+                    )
+                )
+            );
 
             return false;
         }

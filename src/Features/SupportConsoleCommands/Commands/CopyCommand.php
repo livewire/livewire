@@ -39,16 +39,55 @@ class CopyCommand extends FileManipulationCommand
             $test = $this->copyTest($force);
         }
         $this->line("<options=bold,reverse;fg=green> COMPONENT COPIED </> 🤙\n");
-        $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()} <options=bold;fg=green>=></> {$this->newParser->relativeClassPath()}");
-        if (! $inline) $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()} <options=bold;fg=green>=></> {$this->newParser->relativeViewPath()}");
-        if ($test) $test && $this->line("<options=bold;fg=green>Test:</>  {$this->parser->relativeTestPath()} <options=bold;fg=green>=></> {$this->newParser->relativeTestPath()}");
+
+        $class && $this->output->writeln(
+            sprintf('<options=bold;fg=green>CLASS:</> %s <options=bold;fg=green>=></> %s',
+                $this->parser->relativeClassPath(),
+
+                $this->newParser->handleClickablePath(
+                    $this->newParser->absoluteClassPath(),
+                    $this->newParser->relativeClassPath()
+                )
+            )
+        );
+
+        if (! $inline) $view && $this->output->writeln(
+            sprintf('<options=bold;fg=green>VIEW:</> %s <options=bold;fg=green>=></> %s',
+                $this->parser->relativeViewPath(),
+
+                $this->newParser->handleClickablePath(
+                    $this->newParser->absoluteViewPath(),
+                    $this->newParser->relativeViewPath()
+                )
+            )
+        );
+
+        if ($test) $test && $this->output->writeln(
+            sprintf('<options=bold;fg=green>TEST:</> %s <options=bold;fg=green>=></> %s',
+                $this->parser->relativeTestPath(),
+
+                $this->newParser->handleClickablePath(
+                    $this->newParser->absoluteTestPath(),
+                    $this->newParser->relativeTestPath()
+                )
+            )
+        );
     }
 
     protected function copyTest($force)
     {
         if (File::exists($this->newParser->testPath()) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Test already exists:</> {$this->newParser->relativeTestPath()}");
+
+            $this->output->writeln(
+                sprintf('<fg=red;options=bold>Test class already exists: </>%s',
+                    $this->newParser->handleClickablePath(
+                        $this->newParser->absoluteTestPath(),
+                        $this->newParser->relativeTestPath()
+                    )
+                )
+            );
+
             return false;
         }
 
@@ -61,7 +100,15 @@ class CopyCommand extends FileManipulationCommand
     {
         if (File::exists($this->newParser->classPath()) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->newParser->relativeClassPath()}");
+
+            $this->output->writeln(
+                sprintf('<options=bold;fg=red>Class already exists: </>%s',
+                    $this->newParser->handleClickablePath(
+                        $this->newParser->absoluteClassPath(),
+                        $this->newParser->relativeClassPath()
+                    )
+                )
+            );
 
             return false;
         }
@@ -74,7 +121,15 @@ class CopyCommand extends FileManipulationCommand
     protected function copyView($force)
     {
         if (File::exists($this->newParser->viewPath()) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->newParser->relativeViewPath()}");
+
+            $this->output->writeln(
+                sprintf('<fg=red;options=bold>View already exists: </>%s',
+                    $this->newParser->handleClickablePath(
+                        $this->newParser->absoluteViewPath(),
+                        $this->newParser->relativeViewPath()
+                    )
+                )
+            );
 
             return false;
         }
