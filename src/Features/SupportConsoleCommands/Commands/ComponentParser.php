@@ -249,8 +249,7 @@ class ComponentParser
 
     private function isWindowsWSL()
     {
-        return file_exists('/proc/version') &&
-            preg_match('/(microsoft|wsl)/i', file_get_contents('/proc/version'));
+        return preg_match('/(microsoft|wsl)/i', php_uname());
     }
 
     private function isVSCode(): bool
