@@ -31,6 +31,12 @@ This command will generate two new files in your project:
 * `app/Livewire/Counter.php`
 * `resources/views/livewire/counter.blade.php`
 
+## Output files links
+
+If your terminal supports OSC8, you can enable file links by configuring the command_output_links option in `/config/livewire.php`. Clicking on a file path will open it directly in your default editor.
+
+> [!warning] Currently, this feature is only available for macOS and Linux
+
 ## Writing the class
 
 Open `app/Livewire/Counter.php` and replace its contents with the following:
