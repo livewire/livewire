@@ -253,11 +253,18 @@ class ComponentParser
             preg_match('/(microsoft|wsl)/i', file_get_contents('/proc/version'));
     }
 
+    private function isVSCode(): bool
+    {
+        return isset($_SERVER['TERM_PROGRAM']) && $_SERVER['TERM_PROGRAM'] === 'vscode';
+    }
+
     private function convertPathToUri($path)
     {
         $normalizedPath = '/' . ltrim(str_replace(DIRECTORY_SEPARATOR, '/', $path), '/');
 
-        return 'file://' . $normalizedPath;
+        return $this->isVSCode()
+            ? 'vscode://file' . $normalizedPath
+            : 'file://' . $normalizedPath;
     }
 
     private function generateAbsolutePath($relativePath)
