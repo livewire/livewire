@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportConsoleCommands\Tests;
 
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
 
@@ -165,6 +166,42 @@ class MakeCommandUnitTest extends \Tests\TestCase
 
         $this->assertFalse(File::exists($this->livewireClassesPath('!Class.php')));
         $this->assertFalse(File::exists($this->livewireViewsPath('!Class.blade.php')));
+    }
 
+    public function test_generate_command_output_with_links_uses_local_path_when_configured()
+    {
+        Config::set('livewire.command_output_links.enabled', true);
+        Config::set('livewire.command_output_links.local_path', '/custom/local/path');
+
+        Artisan::call('make:livewire', ['name' => 'Counter']);
+        $output = Artisan::output();
+
+        $cleanOutput = preg_replace("/\e\[[^m]*m/", '', $output);
+        $cleanOutput = preg_replace("/\e\]8;;.*?\e\\\/", '', $cleanOutput);
+
+        $this->assertStringContainsString('CLASS: app/Livewire/Counter.php', $cleanOutput);
+        $this->assertStringContainsString('VIEW: resources/views/livewire/counter.blade.php', $cleanOutput);
+
+        $this->assertStringContainsString("\033]8;;", $output);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Counter.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('counter.blade.php')));
+    }
+
+    public function test_cannot_generate_command_output_with_links_uses_local_path_when_configured()
+    {
+        Config::set('livewire.command_output_links.enabled', false);
+        Config::set('livewire.command_output_links.local_path', '/custom/local/path');
+
+        Artisan::call('make:livewire', ['name' => 'Counter']);
+        $output = Artisan::output();
+
+        $this->assertStringContainsString('CLASS: app/Livewire/Counter.php', $output);
+        $this->assertStringContainsString('VIEW: resources/views/livewire/counter.blade.php', $output);
+
+        $this->assertStringNotContainsString("\033]8;;", $output);
+
+        $this->assertTrue(File::exists($this->livewireClassesPath('Counter.php')));
+        $this->assertTrue(File::exists($this->livewireViewsPath('counter.blade.php')));
     }
 }
