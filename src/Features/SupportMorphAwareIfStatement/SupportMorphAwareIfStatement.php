@@ -124,7 +124,23 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $prefix = '<!--[if BLOCK]><![endif]-->';
 
         if (static::isLoop($found)) {
-            $prefix .= "<?php isset(\$livewireLoopCount) ? \$livewireLoopCount++ : \$livewireLoopCount = 1; ?>";
+            $prefix .= "<?php
+                if (!isset(\$depth)) {
+                    \$depth = 0;
+                }
+
+                if (!isset(\$livewireLoopCount)) {
+                    \$livewireLoopCount = [];
+                }
+
+                if (!isset(\$livewireLoopCount[\$depth])) {
+                    \$livewireLoopCount[\$depth] = 1;
+                } else {
+                    \$livewireLoopCount[\$depth]++;
+                }
+
+                \$depth++;
+            ?>";
         }
 
         $prefixEscaped = preg_quote($prefix);
@@ -147,6 +163,15 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         $suffix = '<!--[if ENDBLOCK]><![endif]-->';
 
+        if (static::isEndLoop($found)) {
+            $suffix = "<?php
+                if (isset(\$livewireLoopCount[\$depth])) {
+                    unset(\$livewireLoopCount[\$depth]);
+                }
+                \$depth--;
+            ?>" . $suffix;
+        }
+
         $suffixEscaped = preg_quote($suffix);
 
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
@@ -164,6 +189,20 @@ class SupportMorphAwareIfStatement extends ComponentHook
             'forelse',
             'for',
             'while',
+        ];
+
+        $pattern = '/@(' . implode('|', $loopDirectives) . ')(?![a-zA-Z])/i';
+
+        return preg_match($pattern, $found);
+    }
+
+    protected static function isEndLoop($found)
+    {
+        $loopDirectives = [
+            'endforeach',
+            'endforelse',
+            'endfor',
+            'endwhile',
         ];
 
         $pattern = '/@(' . implode('|', $loopDirectives) . ')(?![a-zA-Z])/i';
