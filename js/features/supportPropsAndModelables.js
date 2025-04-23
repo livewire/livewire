@@ -1,14 +1,17 @@
 import { on } from '@/hooks'
+import { hasComponent } from '@/store'
 
 // Ensure that all child components with reactive props (even deeply nested)
 // are included in the network request...
 on('commit.pooling', ({ commits }) => {
     commits.forEach(commit => {
         let component = commit.component
-
-        getDeepChildrenWithBindings(component, child => {
-            child.$wire.$commit()
-        })
+        if (hasComponent(commit.component.id)) {
+            // ensure component is not destroyed
+            getDeepChildrenWithBindings(component, child => {
+                child.$wire.$commit()
+            })
+        }
     })
 })
 
