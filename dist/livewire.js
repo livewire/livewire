@@ -10217,18 +10217,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 })();
 /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
- * @license MIT */
-/*! Bundled license information:
-
-tabbable/dist/index.esm.js:
-  (*!
-  * tabbable 5.3.3
-  * @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
-  *)
-
-focus-trap/dist/focus-trap.esm.js:
-  (*!
-  * focus-trap 6.9.4
-  * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
-  *)
-*/
+ * @license MIT 
+ *! Bundled license information:
+ *
+ *tabbable/dist/index.esm.js:
+ * (
+ *  tabbable 5.3.3
+ *  @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
+ * )
+ *
+ *focus-trap/dist/focus-trap.esm.js:
+ * (!
+ *  focus-trap 6.9.4
+ *  @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
+ * )
+ */
