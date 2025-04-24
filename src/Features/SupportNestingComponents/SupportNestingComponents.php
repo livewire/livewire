@@ -13,6 +13,7 @@ class SupportNestingComponents extends ComponentHook
     static function provide()
     {
         on('pre-mount', function ($name, $params, $key, $parent, $hijack) {
+            // ray('pre-mount', $name, $params, $key, store($parent)->get('previousChildren', []));
             // If this has already been rendered spoof it...
             if ($parent && static::hasPreviouslyRenderedChild($parent, $key)) {
                 [$tag, $childId] = static::getPreviouslyRenderedChild($parent, $key);
@@ -72,7 +73,11 @@ class SupportNestingComponents extends ComponentHook
     function getChildren() { return $this->storeGet('children', []); }
     function setChild($key, $tag, $id) { $this->storePush('children', [$tag, $id], $key); }
 
-    static function setParentChild($parent, $key, $tag, $id) { store($parent)->push('children', [$tag, $id], $key); }
+    static function setParentChild($parent, $key, $tag, $id) { 
+        // ray('setParentChild', $parent, $key, $tag, $id);
+        store($parent)->push('children', [$tag, $id], $key);// . '-' . $id);
+        // ray('store', store($parent)->get('children'));
+    }
     static function setPreviouslyRenderedChildren($component, $children) { store($component)->set('previousChildren', $children); }
     static function hasPreviouslyRenderedChild($parent, $key) {
         return array_key_exists($key, store($parent)->get('previousChildren', []));

@@ -140,6 +140,8 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 }
 
                 \$depth++;
+
+                ob_start();
             ?>";
         }
 
@@ -165,6 +167,8 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         if (static::isEndLoop($found)) {
             $suffix = "<?php
+                ob_end_flush();
+
                 if (isset(\$livewireLoopCount[\$depth])) {
                     unset(\$livewireLoopCount[\$depth]);
                 }

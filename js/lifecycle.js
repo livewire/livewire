@@ -59,7 +59,8 @@ export function start() {
             // This prevents Livewire from causing general slowness for other Alpine elements on the page...
             if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
-            if (el.hasAttribute('wire:id')) {
+            console.log('el', el.__livewire)
+            if (el.hasAttribute('wire:id') && ! el.__livewire) {
                 let component = initComponent(el)
 
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {

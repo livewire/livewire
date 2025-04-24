@@ -116,6 +116,17 @@ class HandleComponents extends Mechanism
 
         $this->popOffComponentStack();
 
+        if (isset($context->effects['html'])) {
+            $effects = $context->effects;
+            unset($effects['html']);
+            $context->effects['html'] = Utils::insertAttributesIntoHtmlRoot($context->effects['html'], [
+                'wire:snapshot' => $snapshot,
+                'wire:effects' => $effects,
+            ]);
+        }
+
+        ray($snapshot, $context);
+
         return [ $snapshot, $context->effects ];
     }
 

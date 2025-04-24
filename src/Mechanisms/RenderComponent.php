@@ -14,6 +14,7 @@ class RenderComponent extends Mechanism
     public static function livewire($expression)
     {
         $key = null;
+        $isDeterministic = 'false';
 
         $pattern = '/,\s*?key\(([\s\S]*)\)/'; // everything between ",key(" and ")"
 
@@ -25,7 +26,10 @@ class RenderComponent extends Mechanism
         if (! $key) {
             $key = app(\Livewire\Mechanisms\ExtendBlade\DeterministicBladeKeys::class)->generate();
             $key = "'{$key}'";
+            $isDeterministic = 'true';
         }
+
+        ray($key);
 
         return <<<EOT
 <?php
@@ -37,6 +41,12 @@ class RenderComponent extends Mechanism
 \$key = $key;
 
 \$key = isset(\$livewireLoopCount) ? \$key . '-' . implode('-', \$livewireLoopCount) : \$key;
+
+\$key = isset(\$loop) && $isDeterministic ? \$key . '-' . \$loop->index : \$key;
+
+ray('mount', \$key);
+
+ray('buffer contents', isset(\$loop) ? ob_get_contents() : 'no loop');
 
 \$__html = app('livewire')->mount(\$__name, \$__params, \$key, \$__slots ?? [], get_defined_vars());
 
@@ -51,3 +61,19 @@ if (isset(\$__slots)) unset(\$__slots);
 EOT;
     }
 }
+
+
+// What we want is something like this:
+/**
+ * loop - count = 1
+ * 
+ * loop - count = 2
+ *  - loop - count = 1
+ *    - loop - count = 1
+ *    - loop - count = 2
+ *    - loop - count = 3
+ *  - loop - count = 2
+ *  - loop - count = 3
+ * 
+ * loop - count = 3
+ */
