@@ -170,6 +170,7 @@ export function isSynthetic(subject) {
     return Array.isArray(subject)
         && subject.length === 2
         && typeof subject[1] === 'object'
+        && subject[1] !== null
         && Object.keys(subject[1]).includes('s')
 }
 
