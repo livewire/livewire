@@ -165,7 +165,7 @@ function before($name, $callback) {
  * @return void
  */
 function off($name, $callback) {
-    app(\Livewire\EventBus::class)->off($name, $callback);
+    return app(\Livewire\EventBus::class)->off($name, $callback);
 }
 
 /**
