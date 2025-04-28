@@ -69,7 +69,7 @@ class SupportNestingComponents extends ComponentHook
 
         $this->storeRemovedChildrenToReferenceWhenThoseChildrenHydrateSoWeCanSkipTheirRenderAndAvoideUselessWork();
 
-        ray($this->getChildren());
+        // ray($this->getChildren());
 
         $context->addMemo('children', $this->getChildren());
     }
