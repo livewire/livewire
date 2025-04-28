@@ -29,8 +29,6 @@ class RenderComponent extends Mechanism
             $isDeterministic = 'true';
         }
 
-        ray($key);
-
         return <<<EOT
 <?php
 \$__split = function (\$name, \$params = []) {
@@ -40,23 +38,31 @@ class RenderComponent extends Mechanism
 
 \$key = $key;
 
-\$key = isset(\$livewireLoopCount) ? \$key . '-' . implode('-', \$livewireLoopCount) : \$key;
-
 \$bufferContents = isset(\$depth) ? ob_get_contents() : null;
 
 preg_match('/^\s*<\w+[^>]*?\bwire:key="([^"]+)"/s', \$bufferContents, \$matches);
 
-ray('buffer contents', \$bufferContents, \$matches);
+if (isset(\$livewireLoopCount) && isset(\$depth) && isset(\$livewireLoopCount[\$depth - 1])) {
+    \$livewireLoopCount[\$depth -1]['key'] = isset(\$matches[1]) ? \$matches[1] : null;
+}
 
-\$foundKey = isset(\$matches[1]) ? \$matches[1] : null;
+if (isset(\$livewireLoopCount)) {
+    \$last = \$livewireLoopCount[count(\$livewireLoopCount) - 1];
 
-\$key = isset(\$loop) && $isDeterministic ? \$key . '-' . (\$foundKey ?? \$loop->index) : \$key;
+    for (\$i = 0; \$i < count(\$livewireLoopCount) - 1; \$i++) {
+        \$key .= '-' . \$livewireLoopCount[\$i]['count'];
+        if (isset(\$livewireLoopCount[\$i]['key'])) {
+            \$key .= '-' . \$livewireLoopCount[\$i]['key'];
+        }
+    }
 
-ray('mount', \$key);
-
-
-
-
+    \$key .= '-' . \$last['count'];
+    if ($isDeterministic) {
+        \$key .= '-' . (isset(\$last['key']) ? \$last['key'] : \$loop->index);
+    } else {
+        \$key .= '-' . $key;
+    }
+}
 
 \$__html = app('livewire')->mount(\$__name, \$__params, \$key, \$__slots ?? [], get_defined_vars());
 
@@ -76,7 +82,7 @@ EOT;
 // What we want is something like this:
 /**
  * loop - count = 1
- * 
+ *
  * loop - count = 2
  *  - loop - count = 1
  *    - loop - count = 1
@@ -84,6 +90,6 @@ EOT;
  *    - loop - count = 3
  *  - loop - count = 2
  *  - loop - count = 3
- * 
+ *
  * loop - count = 3
  */

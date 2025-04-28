@@ -50,7 +50,7 @@ class SupportNestingComponents extends ComponentHook
     {
         $children = $memo['children'];
 
-        ray($children);
+        // ray($children);
 
         static::setPreviouslyRenderedChildren($this->component, $children);
 

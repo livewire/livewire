@@ -105,8 +105,6 @@ class SupportMorphAwareIfStatement extends ComponentHook
                 $match[4] = $match[4].$rest;
             }
 
-            // ray($openingDirectivesPattern, $match[0]);
-
             // Now we can check to see if the current Blade directive is a conditional,
             // and if so, prefix/suffix it with HTML comment morph markers...
             if (preg_match($openingDirectivesPattern, $match[0])) {
@@ -119,6 +117,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
         return $template;
     }
 
+    public static function findKeyInBufferContents($bufferContents)
+    {
+        preg_match('/^\s*<\w+[^>]*?\bwire:key="([^"]+)"/s', $bufferContents, $matches);
+
+        return isset($matches[1]) ? $matches[1] : null;
+    }
+
     protected static function prefixOpeningDirective($found, $template)
     {
         $foundEscaped = preg_quote($found, '/');
@@ -128,25 +133,40 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $suffix = '';
 
         if (static::isLoop($found)) {
-            $prefix .= "<?php
-                ray('startOutsideLoop');
+            $prefix .= <<<EOT
+            <?php
+                if (
+                    isset(\$depth)
+                    && isset(\$livewireLoopCount)
+                ) {
+                    if (
+                        isset(\$livewireLoopCount[\$depth - 1])
+                        && \$livewireLoopCount[\$depth - 1]['key'] === null
+                    ) {
+                        \$bufferContents = ob_get_contents();
+
+                        \$livewireLoopCount[\$depth - 1]['key'] = \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::findKeyInBufferContents(\$bufferContents);
+                    }
+                }
 
                 if (!isset(\$depth)) {
                     \$depth = 0;
                 }
 
                 if (!isset(\$livewireLoopCount[\$depth])) {
-                    \$livewireLoopCount[\$depth] = 0;
+                    \$livewireLoopCount[\$depth] = [
+                        'count' => 0,
+                        'key' => null,
+                    ];
                 }
 
-                \$livewireLoopCount[\$depth]++;
+                \$livewireLoopCount[\$depth]['count']++;
 
                 \$depth++;
-            ?>";
+            ?>
+            EOT;
 
             $suffix = "<?php
-                ray('startInsideLoop');
-
                 ob_start();
             ?>";
         }
@@ -156,15 +176,11 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $suffixEscaped = preg_quote($suffix);
 
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
-        $foundWithPrefix = addcslashes($prefix.$found.$suffix, '$\\');
-
-        // ray($prefix, $found, $suffix, $prefixEscaped, $foundEscaped, $suffixEscaped);
+        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
 
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        // ray($found, $pattern, $foundWithPrefix, $template, preg_replace($pattern, $foundWithPrefix, $template));
-
-        return preg_replace($pattern, $foundWithPrefix, $template);
+        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
     }
 
     protected static function suffixClosingDirective($found, $template)
@@ -181,13 +197,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         if (static::isEndLoop($found)) {
             $prefix = "<?php
-                ray('endInsideLoop');
-
                 ob_end_flush();
+                if (isset(\$depth) && isset(\$livewireLoopCount) && isset(\$livewireLoopCount[\$depth - 1])) {
+                    \$livewireLoopCount[\$depth - 1]['key'] = null;
+                }
             ?>";
 
             $suffix = "<?php
-            ray('endOutsideLoop');
                 if (isset(\$depth)) {
                     if (isset(\$livewireLoopCount[\$depth])) {
                         unset(\$livewireLoopCount[\$depth]);
@@ -203,13 +219,11 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $suffixEscaped = preg_quote($suffix);
 
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
-        $foundWithSuffix = addcslashes($prefix.$found.$suffix, '$\\');
+        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
 
         $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
-        // ray($found, $pattern, $foundWithSuffix, $template, preg_replace($pattern, $foundWithSuffix, $template));
-
-        return preg_replace($pattern, $foundWithSuffix, $template);
+        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
     }
 
     protected static function isLoop($found)

@@ -125,7 +125,7 @@ class HandleComponents extends Mechanism
             ]);
         }
 
-        ray($snapshot, $context);
+        // ray($snapshot, $context);
 
         return [ $snapshot, $context->effects ];
     }
