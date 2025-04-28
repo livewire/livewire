@@ -4520,6 +4520,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/component.js
   var Component = class {
     constructor(el) {
+      console.log("initComponent", el.outerHTML);
       if (el.__livewire)
         throw "Component already initialized";
       el.__livewire = this;
@@ -4529,6 +4530,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.snapshotEncoded = el.getAttribute("wire:snapshot");
       this.snapshot = JSON.parse(this.snapshotEncoded);
       if (!this.snapshot) {
+        console.log("Snapshot missing", this, this.el.outerHTML);
         throw `Snapshot missing on Livewire component with id: ` + this.id;
       }
       this.name = this.snapshot.memo.name;
@@ -8826,7 +8828,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.interceptInit(module_default.skipDuringClone((el) => {
       if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
         return;
-      if (el.hasAttribute("wire:id")) {
+      console.log("el", el.__livewire);
+      if (el.hasAttribute("wire:id") && !el.__livewire) {
         let component2 = initComponent(el);
         module_default.onAttributeRemoved(el, "wire:id", () => {
           destroyComponent(component2.id);
@@ -9012,6 +9015,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/morph.js
   function morph2(component, el, html) {
+    console.log("morphstart", component.existingChildren);
     let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
     let wrapper = document.createElement(wrapperTag);
     wrapper.innerHTML = html;
@@ -9024,10 +9028,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
+    console.log("morph");
+    console.log("from", el.outerHTML);
+    console.log("to", to.outerHTML);
+    let toChildComponents = to.querySelectorAll("[wire\\:id]");
+    toChildComponents.forEach((child) => {
+      if (child.hasAttribute("wire:snapshot"))
+        return;
+      console.log("child", child.outerHTML);
+      let existingComponent = document.querySelector(`[wire\\:id="${child.getAttribute("wire:id")}"]`);
+      console.log("existingComponent", existingComponent.outerHTML);
+      child.replaceWith(existingComponent.cloneNode(true));
+    });
+    console.log("fromAFTER", el.outerHTML);
+    console.log("toAFTER", to.outerHTML);
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
         if (isntElement(el2))
           return;
+        console.log("updating");
+        console.log("from", el2.outerHTML);
+        console.log("to", toEl.outerHTML);
         trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
         if (el2.__livewire_replace === true)
           el2.innerHTML = toEl.innerHTML;
@@ -9041,6 +9062,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           childrenOnly();
         if (el2.__livewire_ignore_children === true)
           return skipChildren();
+        console.log("skippingComponent", isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id, isComponentRootEl(el2), el2.outerHTML, el2.getAttribute("wire:id"), component.id);
         if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
           return skip();
         if (isComponentRootEl(el2))
@@ -9062,11 +9084,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         trigger2("morph.removed", { el: el2, component });
       },
       adding: (el2) => {
+        console.log("adding", el2.outerHTML);
         trigger2("morph.adding", { el: el2, component });
       },
       added: (el2) => {
         if (isntElement(el2))
           return;
+        console.log("added", el2.outerHTML);
         const closestComponentId = closestComponent(el2).id;
         trigger2("morph.added", { el: el2 });
       },
