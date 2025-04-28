@@ -42,11 +42,21 @@ class RenderComponent extends Mechanism
 
 \$key = isset(\$livewireLoopCount) ? \$key . '-' . implode('-', \$livewireLoopCount) : \$key;
 
-\$key = isset(\$loop) && $isDeterministic ? \$key . '-' . \$loop->index : \$key;
+\$bufferContents = isset(\$depth) ? ob_get_contents() : null;
+
+preg_match('/^\s*<\w+[^>]*?\bwire:key="([^"]+)"/s', \$bufferContents, \$matches);
+
+ray('buffer contents', \$bufferContents, \$matches);
+
+\$foundKey = isset(\$matches[1]) ? \$matches[1] : null;
+
+\$key = isset(\$loop) && $isDeterministic ? \$key . '-' . (\$foundKey ?? \$loop->index) : \$key;
 
 ray('mount', \$key);
 
-ray('buffer contents', isset(\$loop) ? ob_get_contents() : 'no loop');
+
+
+
 
 \$__html = app('livewire')->mount(\$__name, \$__params, \$key, \$__slots ?? [], get_defined_vars());
 

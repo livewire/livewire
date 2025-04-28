@@ -50,6 +50,8 @@ class SupportNestingComponents extends ComponentHook
     {
         $children = $memo['children'];
 
+        ray($children);
+
         static::setPreviouslyRenderedChildren($this->component, $children);
 
         $this->ifThisComponentIsAChildThatHasBeenRemovedByTheParent(function () {
@@ -66,6 +68,8 @@ class SupportNestingComponents extends ComponentHook
         if ($skipRender) $this->keepRenderedChildren();
 
         $this->storeRemovedChildrenToReferenceWhenThoseChildrenHydrateSoWeCanSkipTheirRenderAndAvoideUselessWork();
+
+        ray($this->getChildren());
 
         $context->addMemo('children', $this->getChildren());
     }
