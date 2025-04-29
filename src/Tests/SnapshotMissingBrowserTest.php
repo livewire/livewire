@@ -30,7 +30,7 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->waitForLivewire()
+            ->waitForLivewireToLoad()
             ->waitForText('child')
             ->assertSee('child')
             ->assertConsoleLogHasNoErrors();
@@ -59,7 +59,7 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
                 }
             },
         ])
-            ->waitForLivewire()
+            ->waitForLivewireToLoad()
             ->waitForText('child')
             ->assertSee('child')
             ->assertConsoleLogHasNoErrors();
