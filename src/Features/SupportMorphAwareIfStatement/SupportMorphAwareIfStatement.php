@@ -198,6 +198,11 @@ class SupportMorphAwareIfStatement extends ComponentHook
         if (static::isEndLoop($found)) {
             $prefix = "<?php
                 ob_end_flush();
+                if (isset(\$depth) && isset(\$livewireLoopCount[\$depth])) {
+                    \$livewireLoopCount[\$depth]['count'] = 0;
+                    \$livewireLoopCount[\$depth]['key'] = null;
+                }
+
                 if (isset(\$depth) && isset(\$livewireLoopCount) && isset(\$livewireLoopCount[\$depth - 1])) {
                     \$livewireLoopCount[\$depth - 1]['key'] = null;
                 }

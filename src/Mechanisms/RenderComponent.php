@@ -47,9 +47,9 @@ if (isset(\$livewireLoopCount) && isset(\$depth) && isset(\$livewireLoopCount[\$
 }
 
 if (isset(\$livewireLoopCount)) {
-    \$last = \$livewireLoopCount[count(\$livewireLoopCount) - 1];
+    \$last = \$livewireLoopCount[\$depth - 1];
 
-    for (\$i = 0; \$i < count(\$livewireLoopCount) - 1; \$i++) {
+    for (\$i = 0; \$i < \$depth - 1; \$i++) {
         \$key .= '-' . \$livewireLoopCount[\$i]['count'];
         if (isset(\$livewireLoopCount[\$i]['key'])) {
             \$key .= '-' . \$livewireLoopCount[\$i]['key'];
