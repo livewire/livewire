@@ -40,7 +40,7 @@ class RenderComponent extends Mechanism
 
 \$bufferContents = isset(\$depth) ? ob_get_contents() : null;
 
-preg_match('/^\s*<\w+(?:[^>"\']+|"(?:\\\"|[^"])*"|\'(?:\\\\\'|[^\'])*\')*?\bwire:key="([^"]+)"/s', \$bufferContents, \$matches);
+preg_match('/^\s*<\w+(?:[^"\'>]|"[^"]*"|\'[^\']*\')*?\s+wire:key="([^"]+)"/s', \$bufferContents, \$matches);
 
 if (isset(\$livewireLoopCount) && isset(\$depth) && isset(\$livewireLoopCount[\$depth - 1])) {
     \$livewireLoopCount[\$depth -1]['key'] = isset(\$matches[1]) ? \$matches[1] : null;
