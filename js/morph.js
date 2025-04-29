@@ -3,7 +3,7 @@ import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 
 export function morph(component, el, html) {
-    console.log('morphstart', component.existingChildren)
+    // console.log('morphstart', component.existingChildren)
     let wrapperTag = el.parentElement
         // If the root element is a "tr", we need the wrapper to be a "table"...
         ? el.parentElement.tagName.toLowerCase()
@@ -26,9 +26,9 @@ export function morph(component, el, html) {
 
     trigger('morph', { el, toEl: to, component })
 
-    console.log('morph')
-    console.log('from', el.outerHTML)
-    console.log('to', to.outerHTML)
+    // console.log('morph')
+    // console.log('from', el.outerHTML)
+    // console.log('to', to.outerHTML)
     // console.log('component', component)
     // console.log('componentChildren', component.existingChildren)
 
@@ -37,17 +37,17 @@ export function morph(component, el, html) {
     toChildComponents.forEach(child => {
         if (child.hasAttribute('wire:snapshot')) return
         
-        console.log('child', child.outerHTML)
+        // console.log('child', child.outerHTML)
 
         let existingComponent = document.querySelector(`[wire\\:id="${child.getAttribute('wire:id')}"]`)
 
-        console.log('existingComponent', existingComponent.outerHTML)
+        // console.log('existingComponent', existingComponent.outerHTML)
 
         child.replaceWith(existingComponent.cloneNode(true))
     })
 
-    console.log('fromAFTER', el.outerHTML)
-    console.log('toAFTER', to.outerHTML)
+    // console.log('fromAFTER', el.outerHTML)
+    // console.log('toAFTER', to.outerHTML)
 
     // console.log('el', el)
 
@@ -63,9 +63,9 @@ export function morph(component, el, html) {
     Alpine.morph(el, to, {
         updating: (el, toEl, childrenOnly, skip, skipChildren) => {
             if (isntElement(el)) return
-            console.log('updating')
-            console.log('from', el.outerHTML)
-            console.log('to', toEl.outerHTML)
+            // console.log('updating')
+            // console.log('from', el.outerHTML)
+            // console.log('to', toEl.outerHTML)
 
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
 
@@ -79,7 +79,7 @@ export function morph(component, el, html) {
             if (el.__livewire_ignore_children === true) return skipChildren()
 
             // Children will update themselves.
-            console.log('skippingComponent', isComponentRootEl(el) && el.getAttribute('wire:id') !== component.id, isComponentRootEl(el), el.outerHTML, el.getAttribute('wire\:id'), component.id)
+            // console.log('skippingComponent', isComponentRootEl(el) && el.getAttribute('wire:id') !== component.id, isComponentRootEl(el), el.outerHTML, el.getAttribute('wire\:id'), component.id)
             if (isComponentRootEl(el) && el.getAttribute('wire:id') !== component.id) return skip()
 
             // Give the root Livewire "to" element, the same object reference as the "from"
@@ -108,7 +108,7 @@ export function morph(component, el, html) {
         },
 
         adding: (el) => {
-            console.log('adding', el.outerHTML)
+            // console.log('adding', el.outerHTML)
 
             trigger('morph.adding', { el, component })
         },
@@ -116,7 +116,7 @@ export function morph(component, el, html) {
         added: (el) => {
             if (isntElement(el)) return
 
-            console.log('added', el.outerHTML)
+            // console.log('added', el.outerHTML)
 
             const closestComponentId = closestComponent(el).id
             // console.log('added', el.outerHTML)

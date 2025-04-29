@@ -5,7 +5,7 @@ import { trigger } from '@/hooks'
 
 export class Component {
     constructor(el) {
-        console.log('initComponent', el.outerHTML)
+        // console.log('initComponent', el.outerHTML)
         if (el.__livewire) throw 'Component already initialized';
 
         el.__livewire = this
@@ -21,7 +21,7 @@ export class Component {
         this.snapshot = JSON.parse(this.snapshotEncoded)
 
         if (! this.snapshot) {
-            console.log('Snapshot missing', this, this.el.outerHTML)
+            // console.log('Snapshot missing', this, this.el.outerHTML)
             throw `Snapshot missing on Livewire component with id: ` + this.id
         }
 
