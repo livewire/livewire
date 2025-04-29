@@ -119,7 +119,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
     public static function findKeyInBufferContents($bufferContents)
     {
-        preg_match('/^\s*<\w+[^>]*?\bwire:key="([^"]+)"/s', $bufferContents, $matches);
+        preg_match('/^\s*<\w+(?:[^>"\']+|"(?:\\\"|[^"])*"|\'(?:\\\\\'|[^\'])*\')*?\bwire:key="([^"]+)"/s', $bufferContents, $matches);
 
         return isset($matches[1]) ? $matches[1] : null;
     }
