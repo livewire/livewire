@@ -77,19 +77,3 @@ if (isset(\$__slots)) unset(\$__slots);
 EOT;
     }
 }
-
-
-// What we want is something like this:
-/**
- * loop - count = 1
- *
- * loop - count = 2
- *  - loop - count = 1
- *    - loop - count = 1
- *    - loop - count = 2
- *    - loop - count = 3
- *  - loop - count = 2
- *  - loop - count = 3
- *
- * loop - count = 3
- */
