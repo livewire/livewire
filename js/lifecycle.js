@@ -1,4 +1,4 @@
-import { closestComponent, destroyComponent, initComponent } from './store'
+import { closestComponent, destroyComponent, initComponent, hasComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
@@ -59,8 +59,7 @@ export function start() {
             // This prevents Livewire from causing general slowness for other Alpine elements on the page...
             if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
-            // console.log('el', el.__livewire)
-            if (el.hasAttribute('wire:id') && ! el.__livewire) {
+            if (el.hasAttribute('wire:id') && ! el.__livewire && ! hasComponent(el.getAttribute('wire:id'))) {
                 let component = initComponent(el)
 
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {
