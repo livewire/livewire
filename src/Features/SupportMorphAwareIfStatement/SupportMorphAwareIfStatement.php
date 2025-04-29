@@ -178,7 +178,11 @@ class SupportMorphAwareIfStatement extends ComponentHook
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
         $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
 
-        $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+        if ($suffixEscaped !== '') {
+            $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+        } else {
+            $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?![^<]*(?<![?=-])>)/mUi";
+        }
 
         return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
     }
@@ -226,7 +230,11 @@ class SupportMorphAwareIfStatement extends ComponentHook
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
         $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
 
-        $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+        if ($prefixEscaped !== '') {
+            $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+        } else {
+            $pattern = "/{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+        }
 
         return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
     }
