@@ -79,7 +79,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSee('Child: loop-2-DB')
             ->assertSee('Child: loop-2-DD')
 
-            // Test prepending...
+            // Input some values to make sure state is retained...
             ->type('@child-loop-1-BB-input', '1bb')
             ->type('@child-loop-1-BD-input', '1bd')
             ->type('@child-loop-1-DB-input', '1db')
@@ -88,7 +88,10 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->type('@child-loop-2-BD-input', '2bd')
             ->type('@child-loop-2-DB-input', '2db')
             ->type('@child-loop-2-DD-input', '2dd')
+
+            // Test prepending...
             ->waitForLivewire()->click('@prepend')
+            ->assertConsoleLogHasNoErrors()
             ->assertSee('Child: loop-1-AA')
             ->assertSee('Child: loop-1-AB')
             ->assertSee('Child: loop-1-AD')
@@ -128,6 +131,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             // Test inserting...
             ->waitForLivewire()->click('@insert')
+            ->assertConsoleLogHasNoErrors()
             ->assertSee('Child: loop-1-BB')
             ->assertSee('Child: loop-1-BC')
             ->assertSee('Child: loop-1-BD')
@@ -167,6 +171,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             // Test appending...
             ->waitForLivewire()->click('@append')
+            ->assertConsoleLogHasNoErrors()
             ->assertSee('Child: loop-1-BB')
             ->assertSee('Child: loop-1-BD')
             ->assertSee('Child: loop-1-BE')
@@ -203,8 +208,6 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertValue('@child-loop-2-EB-input', '')
             ->assertValue('@child-loop-2-ED-input', '')
             ->assertValue('@child-loop-2-EE-input', '')
-
-
             ->assertConsoleLogHasNoErrors();
     }
 
