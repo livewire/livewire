@@ -30,11 +30,6 @@ class ExtendBlade extends Mechanism
         return end(static::$livewireComponents);
     }
 
-    static function allLivewireComponents()
-    {
-        return static::$livewireComponents;
-    }
-
     static function isRenderingLivewireComponent()
     {
         return ! empty(static::$livewireComponents);
