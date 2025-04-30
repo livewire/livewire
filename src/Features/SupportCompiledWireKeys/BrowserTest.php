@@ -7,6 +7,207 @@ use Livewire\Component;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public function test_nested_components_with_nested_and_sibling_loops_all_work_without_keys()
+    {
+        Livewire::visit([
+            new class () extends Component {
+                public $items = ['B', 'D'];
+
+                public function prepend() {
+                    $this->items = ['A','B','D'];
+                }
+
+                public function insert() {
+                    $this->items = ['B','C','D'];
+                }
+
+                public function append() {
+                    $this->items = ['B','D','E'];
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="prepend" dusk="prepend">Prepend</button>
+                        <button wire:click="insert" dusk="insert">Insert</button>
+                        <button wire:click="append" dusk="append">Append</button>
+                        <div>
+                            @foreach ($items as $item)
+                                <div wire:key="{{ $item }}">
+                                    @foreach ($items as $item2)
+                                        <div wire:key="{{ $item2 }}">
+                                            <livewire:child :item="'loop-1-' . $item . $item2" dusk="child-loop-1-{{ $item }}-{{ $item2 }}" />
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                            @foreach ($items as $item)
+                                <div wire:key="{{ $item }}">
+                                    @foreach ($items as $item2)
+                                        <div wire:key="{{ $item2 }}">
+                                            <livewire:child :item="'loop-2-' . $item . $item2" dusk="child-loop-2-{{ $item }}-{{ $item2 }}" />
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class () extends Component {
+                public $item;
+
+                public $other;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>Child: {{ $item }} <input wire:model="other" dusk="child-{{$item}}-input" /></div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->assertSee('Child: loop-1-BB')
+            ->assertSee('Child: loop-1-BD')
+            ->assertSee('Child: loop-1-DB')
+            ->assertSee('Child: loop-1-DD')
+            ->assertSee('Child: loop-2-BB')
+            ->assertSee('Child: loop-2-BD')
+            ->assertSee('Child: loop-2-DB')
+            ->assertSee('Child: loop-2-DD')
+
+            // Test prepending...
+            ->type('@child-loop-1-BB-input', '1bb')
+            ->type('@child-loop-1-BD-input', '1bd')
+            ->type('@child-loop-1-DB-input', '1db')
+            ->type('@child-loop-1-DD-input', '1dd')
+            ->type('@child-loop-2-BB-input', '2bb')
+            ->type('@child-loop-2-BD-input', '2bd')
+            ->type('@child-loop-2-DB-input', '2db')
+            ->type('@child-loop-2-DD-input', '2dd')
+            ->waitForLivewire()->click('@prepend')
+            ->assertSee('Child: loop-1-AA')
+            ->assertSee('Child: loop-1-AB')
+            ->assertSee('Child: loop-1-AD')
+            ->assertSee('Child: loop-1-BA')
+            ->assertSee('Child: loop-1-BB')
+            ->assertSee('Child: loop-1-BD')
+            ->assertSee('Child: loop-1-DA')
+            ->assertSee('Child: loop-1-DB')
+            ->assertSee('Child: loop-1-DD')
+            ->assertSee('Child: loop-2-AA')
+            ->assertSee('Child: loop-2-AB')
+            ->assertSee('Child: loop-2-AD')
+            ->assertSee('Child: loop-2-BA')
+            ->assertSee('Child: loop-2-BB')
+            ->assertSee('Child: loop-2-BD')
+            ->assertSee('Child: loop-2-DA')
+            ->assertSee('Child: loop-2-DB')
+            ->assertSee('Child: loop-2-DD')
+            ->assertValue('@child-loop-1-AA-input', '')
+            ->assertValue('@child-loop-1-AB-input', '')
+            ->assertValue('@child-loop-1-AD-input', '')
+            ->assertValue('@child-loop-1-BA-input', '')
+            ->assertValue('@child-loop-1-BB-input', '1bb')
+            ->assertValue('@child-loop-1-BD-input', '1bd')
+            ->assertValue('@child-loop-1-DA-input', '')
+            ->assertValue('@child-loop-1-DB-input', '1db')
+            ->assertValue('@child-loop-1-DD-input', '1dd')
+            ->assertValue('@child-loop-2-AA-input', '')
+            ->assertValue('@child-loop-2-AB-input', '')
+            ->assertValue('@child-loop-2-AD-input', '')
+            ->assertValue('@child-loop-2-BA-input', '')
+            ->assertValue('@child-loop-2-BB-input', '2bb')
+            ->assertValue('@child-loop-2-BD-input', '2bd')
+            ->assertValue('@child-loop-2-DA-input', '')
+            ->assertValue('@child-loop-2-DB-input', '2db')
+            ->assertValue('@child-loop-2-DD-input', '2dd')
+
+            // Test inserting...
+            ->waitForLivewire()->click('@insert')
+            ->assertSee('Child: loop-1-BB')
+            ->assertSee('Child: loop-1-BC')
+            ->assertSee('Child: loop-1-BD')
+            ->assertSee('Child: loop-1-CB')
+            ->assertSee('Child: loop-1-CC')
+            ->assertSee('Child: loop-1-CD')
+            ->assertSee('Child: loop-1-DB')
+            ->assertSee('Child: loop-1-DC')
+            ->assertSee('Child: loop-1-DD')
+            ->assertSee('Child: loop-2-BB')
+            ->assertSee('Child: loop-2-BC')
+            ->assertSee('Child: loop-2-BD')
+            ->assertSee('Child: loop-2-CB')
+            ->assertSee('Child: loop-2-CC')
+            ->assertSee('Child: loop-2-CD')
+            ->assertSee('Child: loop-2-DB')
+            ->assertSee('Child: loop-2-DC')
+            ->assertSee('Child: loop-2-DD')
+            ->assertValue('@child-loop-1-BB-input', '1bb')
+            ->assertValue('@child-loop-1-BC-input', '')
+            ->assertValue('@child-loop-1-BD-input', '1bd')
+            ->assertValue('@child-loop-1-CB-input', '')
+            ->assertValue('@child-loop-1-CC-input', '')
+            ->assertValue('@child-loop-1-CD-input', '')
+            ->assertValue('@child-loop-1-DB-input', '1db')
+            ->assertValue('@child-loop-1-DC-input', '')
+            ->assertValue('@child-loop-1-DD-input', '1dd')
+            ->assertValue('@child-loop-2-BB-input', '2bb')
+            ->assertValue('@child-loop-2-BC-input', '')
+            ->assertValue('@child-loop-2-BD-input', '2bd')
+            ->assertValue('@child-loop-2-CB-input', '')
+            ->assertValue('@child-loop-2-CC-input', '')
+            ->assertValue('@child-loop-2-CD-input', '')
+            ->assertValue('@child-loop-2-DB-input', '2db')
+            ->assertValue('@child-loop-2-DC-input', '')
+            ->assertValue('@child-loop-2-DD-input', '2dd')
+
+            // Test appending...
+            ->waitForLivewire()->click('@append')
+            ->assertSee('Child: loop-1-BB')
+            ->assertSee('Child: loop-1-BD')
+            ->assertSee('Child: loop-1-BE')
+            ->assertSee('Child: loop-1-DB')
+            ->assertSee('Child: loop-1-DD')
+            ->assertSee('Child: loop-1-DE')
+            ->assertSee('Child: loop-1-EB')
+            ->assertSee('Child: loop-1-ED')
+            ->assertSee('Child: loop-1-EE')
+            ->assertSee('Child: loop-2-BB')
+            ->assertSee('Child: loop-2-BD')
+            ->assertSee('Child: loop-2-BE')
+            ->assertSee('Child: loop-2-DB')
+            ->assertSee('Child: loop-2-DD')
+            ->assertSee('Child: loop-2-DE')
+            ->assertSee('Child: loop-2-EB')
+            ->assertSee('Child: loop-2-ED')
+            ->assertSee('Child: loop-2-EE')
+            ->assertValue('@child-loop-1-BB-input', '1bb')
+            ->assertValue('@child-loop-1-BD-input', '1bd')
+            ->assertValue('@child-loop-1-BE-input', '')
+            ->assertValue('@child-loop-1-DB-input', '1db')
+            ->assertValue('@child-loop-1-DD-input', '1dd')
+            ->assertValue('@child-loop-1-DE-input', '')
+            ->assertValue('@child-loop-1-EB-input', '')
+            ->assertValue('@child-loop-1-ED-input', '')
+            ->assertValue('@child-loop-1-EE-input', '')
+            ->assertValue('@child-loop-2-BB-input', '2bb')
+            ->assertValue('@child-loop-2-BD-input', '2bd')
+            ->assertValue('@child-loop-2-BE-input', '')
+            ->assertValue('@child-loop-2-DB-input', '2db')
+            ->assertValue('@child-loop-2-DD-input', '2dd')
+            ->assertValue('@child-loop-2-DE-input', '')
+            ->assertValue('@child-loop-2-EB-input', '')
+            ->assertValue('@child-loop-2-ED-input', '')
+            ->assertValue('@child-loop-2-EE-input', '')
+
+
+            ->assertConsoleLogHasNoErrors();
+    }
+
     // https://github.com/livewire/livewire/discussions/9037
     public function test_scenario_1_different_root_element_with_lazy_passing()
     {
@@ -537,4 +738,3 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSee('contents');
     }
 }
-
