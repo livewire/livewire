@@ -8,16 +8,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        dump('flushing', \Livewire\Mechanisms\ExtendBlade\ExtendBlade::allLivewireComponents());
-        Livewire::flushState();
-        dump('flushed', \Livewire\Mechanisms\ExtendBlade\ExtendBlade::allLivewireComponents());
-
-    }
-
     public function test_conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
         Livewire::component('foo', new class extends \Livewire\Component
