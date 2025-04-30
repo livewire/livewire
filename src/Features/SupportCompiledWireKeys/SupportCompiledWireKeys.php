@@ -180,9 +180,11 @@ class SupportCompiledWireKeys extends ComponentHook
 
             $finalKey .= '-' . static::$loopStack[$i]['count'];
 
-            $finalKey .= isset(static::$loopStack[$i]['key'])
-                ? '-' . static::$loopStack[$i]['key']
-                : '-' . static::$loopStack[$i]['index'];
+            if (isset(static::$loopStack[$i]['key']) || isset(static::$loopStack[$i]['index'])) {
+                $finalKey .= isset(static::$loopStack[$i]['key'])
+                    ? '-' . static::$loopStack[$i]['key']
+                    : '-' . static::$loopStack[$i]['index'];
+            }
         }
 
         if (isset($key) && $key !== '') {

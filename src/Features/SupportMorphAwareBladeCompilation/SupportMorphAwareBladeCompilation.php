@@ -122,7 +122,11 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     {
         $foundEscaped = preg_quote($found, '/');
 
-        $prefix = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?>';
+        $livewireCheckOpeningTag = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?>';
+
+        $livewireCheckClosingTag = '<?php endif; ?>';
+
+        $prefix = '<!--[if BLOCK]><![endif]-->';
 
         $suffix = '';
 
@@ -130,6 +134,14 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?>';
 
             $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?>';
+        }
+
+        if ($prefix !== '') {
+            $prefix = $livewireCheckOpeningTag.$prefix.$livewireCheckClosingTag;
+        }
+
+        if ($suffix !== '') {
+            $suffix = $livewireCheckOpeningTag.$suffix.$livewireCheckClosingTag;
         }
 
         $prefixEscaped = preg_quote($prefix);
@@ -159,14 +171,26 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $foundEscaped = preg_quote($found, '/');
 
+        $livewireCheckOpeningTag = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?>';
+
+        $livewireCheckClosingTag = '<?php endif; ?>';
+
         $prefix = '';
 
-        $suffix = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>';
+        $suffix = '<!--[if ENDBLOCK]><![endif]-->';
 
         if (static::isEndLoop($found)) {
             $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?>';
 
             $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?>';
+        }
+
+        if ($prefix !== '') {
+            $prefix = $livewireCheckOpeningTag.$prefix.$livewireCheckClosingTag;
+        }
+
+        if ($suffix !== '') {
+            $suffix = $livewireCheckOpeningTag.$suffix.$livewireCheckClosingTag;
         }
 
         $prefixEscaped = preg_quote($prefix);
