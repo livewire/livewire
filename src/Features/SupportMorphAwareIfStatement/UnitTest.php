@@ -67,8 +67,6 @@ class UnitTest extends \Tests\TestCase
 
         $output = $this->render($template);
 
-        dump($output);
-
         $this->assertStringContainsString('Test', $output);
         $this->assertOccurrences(0, '<!--[if BLOCK]><![endif]-->', $output);
         $this->assertOccurrences(0, '<!--[if ENDBLOCK]><![endif]-->', $output);
