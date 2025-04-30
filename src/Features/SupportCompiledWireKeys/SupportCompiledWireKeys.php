@@ -24,10 +24,10 @@ class SupportCompiledWireKeys extends ComponentHook
     public static function registerPrecompilers()
     {
         Livewire::precompiler(function ($contents) {
-            // $contents = static::compile($contents);
+            $contents = static::compile($contents);
 
             return $contents;
-        });
+        }, prepend: false);
     }
 
     public static function compile($contents)
