@@ -23,6 +23,8 @@ class UnitTest extends \Tests\TestCase
             <livewire:foo />
         ');
 
+        dump($output);
+
         $this->assertCount(2, explode('<!--[if BLOCK]><![endif]-->', $output));
         $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
@@ -66,6 +68,8 @@ class UnitTest extends \Tests\TestCase
         HTML;
 
         $output = $this->render($template);
+
+        dump($output);
 
         $this->assertStringContainsString('Test', $output);
         $this->assertOccurrences(0, '<!--[if BLOCK]><![endif]-->', $output);
