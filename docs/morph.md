@@ -163,8 +163,6 @@ This feature is extremely beneficial to Livewire applications, but because it re
 'inject_morph_markers' => false,
 ```
 
-This feature is not compatible with using [view caching](https://laravel.com/docs/10.x/views#optimizing-views). Views cached with `php artisan view:cache` build but will not contain morph markers.
-
 #### Wrapping conditionals
 
 If the above two solutions don't cover your situation, the most reliable way to avoid morphing problems is to wrap conditionals and loops in their own elements that are always present.
