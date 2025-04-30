@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportMorphAwareBladeCompilation;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
 use Livewire\Livewire;
 
@@ -34,7 +35,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             '@for' => '@endfor',
         ];
 
-        Livewire::precompiler(function ($entire) use ($directives) {
+        Blade::precompiler(function ($entire) use ($directives) {
             $conditions = \Livewire\invade(app('blade.compiler'))->conditions;
 
             foreach (array_keys($conditions) as $conditionalDirective) {
@@ -121,7 +122,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     {
         $foundEscaped = preg_quote($found, '/');
 
-        $prefix = '<!--[if BLOCK]><![endif]-->';
+        $prefix = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?>';
 
         $suffix = '';
 
@@ -160,7 +161,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $prefix = '';
 
-        $suffix = '<!--[if ENDBLOCK]><![endif]-->';
+        $suffix = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>';
 
         if (static::isEndLoop($found)) {
             $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?>';
