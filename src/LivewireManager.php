@@ -53,11 +53,6 @@ class LivewireManager
         app(ExtendBlade::class)->livewireOnlyPrecompiler($callback);
     }
 
-    function isRenderingComponent()
-    {
-        return app(ExtendBlade::class)->isRenderingLivewireComponent();
-    }
-
     function new($name, $id = null)
     {
         return app(ComponentRegistry::class)->new($name, $id);
