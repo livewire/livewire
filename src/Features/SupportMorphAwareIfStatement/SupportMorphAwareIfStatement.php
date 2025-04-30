@@ -133,42 +133,9 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $suffix = '';
 
         if (static::isLoop($found)) {
-            $prefix .= <<<EOT
-            <?php
-                if (
-                    isset(\$depth)
-                    && isset(\$livewireLoopCount)
-                ) {
-                    if (
-                        isset(\$livewireLoopCount[\$depth - 1])
-                        && \$livewireLoopCount[\$depth - 1]['key'] === null
-                    ) {
-                        \$bufferContents = ob_get_contents();
+            $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?>';
 
-                        \$livewireLoopCount[\$depth - 1]['key'] = \Livewire\Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::findKeyInBufferContents(\$bufferContents);
-                    }
-                }
-
-                if (!isset(\$depth)) {
-                    \$depth = 0;
-                }
-
-                if (!isset(\$livewireLoopCount[\$depth])) {
-                    \$livewireLoopCount[\$depth] = [
-                        'count' => 0,
-                        'key' => null,
-                    ];
-                }
-
-                \$livewireLoopCount[\$depth]['count']++;
-
-                \$depth++;
-            ?>
-            EOT;
-
-            $suffix = "<?php
-                ob_start();
-            ?>";
+            $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?>';
         }
 
         $prefixEscaped = preg_quote($prefix);
@@ -200,27 +167,9 @@ class SupportMorphAwareIfStatement extends ComponentHook
         $suffix = '<!--[if ENDBLOCK]><![endif]-->';
 
         if (static::isEndLoop($found)) {
-            $prefix = "<?php
-                ob_end_flush();
-                if (isset(\$depth) && isset(\$livewireLoopCount[\$depth])) {
-                    \$livewireLoopCount[\$depth]['count'] = 0;
-                    \$livewireLoopCount[\$depth]['key'] = null;
-                }
+            $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?>';
 
-                if (isset(\$depth) && isset(\$livewireLoopCount) && isset(\$livewireLoopCount[\$depth - 1])) {
-                    \$livewireLoopCount[\$depth - 1]['key'] = null;
-                }
-            ?>";
-
-            $suffix = "<?php
-                if (isset(\$depth)) {
-                    if (isset(\$livewireLoopCount[\$depth])) {
-                        unset(\$livewireLoopCount[\$depth]);
-                    }
-
-                    \$depth--;
-                }
-            ?>" . $suffix;
+            $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?>';
         }
 
         $prefixEscaped = preg_quote($prefix);

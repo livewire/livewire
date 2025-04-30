@@ -23,46 +23,17 @@ class RenderComponent extends Mechanism
             return '';
         }, $expression);
 
-        if (! $key) {
-            $key = app(\Livewire\Mechanisms\ExtendBlade\DeterministicBladeKeys::class)->generate();
-            $key = "'{$key}'";
-            $isDeterministic = 'true';
-        }
+        $deterministicBladeKey = app(\Livewire\Mechanisms\ExtendBlade\DeterministicBladeKeys::class)->generate();
+        $deterministicBladeKey = "'{$deterministicBladeKey}'";
 
         return <<<EOT
-<?php
+        <?php
 \$__split = function (\$name, \$params = []) {
     return [\$name, \$params];
 };
 [\$__name, \$__params] = \$__split($expression);
 
-\$key = $key;
-
-\$bufferContents = isset(\$depth) ? ob_get_contents() : null;
-
-preg_match('/^\s*<\w+(?:[^"\'>]|"[^"]*"|\'[^\']*\')*?\s+wire:key="([^"]+)"/s', \$bufferContents, \$matches);
-
-if (isset(\$livewireLoopCount) && isset(\$depth) && isset(\$livewireLoopCount[\$depth - 1])) {
-    \$livewireLoopCount[\$depth -1]['key'] = isset(\$matches[1]) ? \$matches[1] : null;
-}
-
-if (isset(\$livewireLoopCount)) {
-    \$last = \$livewireLoopCount[\$depth - 1];
-
-    for (\$i = 0; \$i < \$depth - 1; \$i++) {
-        \$key .= '-' . \$livewireLoopCount[\$i]['count'];
-        if (isset(\$livewireLoopCount[\$i]['key'])) {
-            \$key .= '-' . \$livewireLoopCount[\$i]['key'];
-        }
-    }
-
-    \$key .= '-' . \$last['count'];
-    if ($isDeterministic) {
-        \$key .= '-' . (isset(\$last['key']) ? \$last['key'] : \$loop->index);
-    } else {
-        \$key .= '-' . $key;
-    }
-}
+\$key = \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey($deterministicBladeKey, $key);
 
 \$__html = app('livewire')->mount(\$__name, \$__params, \$key, \$__slots ?? [], get_defined_vars());
 
