@@ -39,7 +39,6 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
 
-    /*
     public function test_handles_custom_blade_conditional_directives()
     {
         Blade::if('foo', function () {
@@ -488,7 +487,7 @@ class UnitTest extends \Tests\TestCase
                 HTML
             ]
         ];
-    }*/
+    }
 
     protected function compile($string)
     {
