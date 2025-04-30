@@ -3,9 +3,11 @@
 namespace Livewire\Features\SupportCompiledWireKeys;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use PHPUnit\Framework\Attributes\DataProvider;
+use function Livewire\invade;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -14,6 +16,567 @@ class UnitTest extends \Tests\TestCase
         parent::setUp();
 
         Livewire::flushState();
+    }
+
+    public function test_child_keys_are_correctly_generated()
+    {
+        app('livewire')->component('keys-parent', KeysParent::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParent::class);
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(2, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D'
+        ], $childKeys);
+    }
+
+    public function test_child_keys_are_correctly_generated_when_the_parent_data_is_prepended()
+    {
+        app('livewire')->component('keys-parent', KeysParent::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParent::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('prepend');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(3, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-A',
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D'
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_are_correctly_generated_when_the_parent_data_is_inserted()
+    {
+        app('livewire')->component('keys-parent', KeysParent::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParent::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('insert');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(3, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-C',
+            'lw-XXXXXXXX-0-0-D'
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_are_correctly_generated_when_the_parent_data_is_appended()
+    {
+        app('livewire')->component('keys-parent', KeysParent::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParent::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('append');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(3, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D',
+            'lw-XXXXXXXX-0-0-E'
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_a_nested_loop_are_correctly_generated()
+    {
+        app('livewire')->component('keys-parent-with-nested-loops', KeysParentWithNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithNestedLoops::class);
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(4, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-D',
+        ], $childKeys);
+    }
+
+    public function test_child_keys_in_a_nested_loop_are_correctly_generated_when_the_parent_data_is_prepended()
+    {
+        app('livewire')->component('keys-parent-with-nested-loops', KeysParentWithNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithNestedLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('prepend');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(9, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-A-0-A',
+            'lw-XXXXXXXX-0-0-A-0-B',
+            'lw-XXXXXXXX-0-0-A-0-D',
+            'lw-XXXXXXXX-0-0-B-0-A',
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-0-0-D-0-A',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-D',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_a_nested_loop_are_correctly_generated_when_the_parent_data_is_inserted()
+    {
+        app('livewire')->component('keys-parent-with-nested-loops', KeysParentWithNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithNestedLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('insert');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(9, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-C',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-0-0-C-0-B',
+            'lw-XXXXXXXX-0-0-C-0-C',
+            'lw-XXXXXXXX-0-0-C-0-D',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-C',
+            'lw-XXXXXXXX-0-0-D-0-D',
+
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_a_nested_loop_are_correctly_generated_when_the_parent_data_is_appended()
+    {
+        app('livewire')->component('keys-parent-with-nested-loops', KeysParentWithNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithNestedLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('append');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(9, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-0-0-B-0-E',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-D',
+            'lw-XXXXXXXX-0-0-D-0-E',
+            'lw-XXXXXXXX-0-0-E-0-B',
+            'lw-XXXXXXXX-0-0-E-0-D',
+            'lw-XXXXXXXX-0-0-E-0-E',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_a_sibling_loop_are_correctly_generated()
+    {
+        app('livewire')->component('keys-parent-with-sibling-loops', KeysParentWithSiblingLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingLoops::class);
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(4, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D',
+            'lw-XXXXXXXX-1-1-B',
+            'lw-XXXXXXXX-1-1-D',
+        ], $childKeys);
+    }
+
+    public function test_child_keys_in_a_sibling_loop_are_correctly_generated_when_the_parent_data_is_prepended()
+    {
+        app('livewire')->component('keys-parent-with-sibling-loops', KeysParentWithSiblingLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('prepend');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(6, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-A',
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D',
+            'lw-XXXXXXXX-1-1-A',
+            'lw-XXXXXXXX-1-1-B',
+            'lw-XXXXXXXX-1-1-D',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_a_sibling_loop_are_correctly_generated_when_the_parent_data_is_inserted()
+    {
+        app('livewire')->component('keys-parent-with-sibling-loops', KeysParentWithSiblingLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('insert');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(6, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-C',
+            'lw-XXXXXXXX-0-0-D',
+            'lw-XXXXXXXX-1-1-B',
+            'lw-XXXXXXXX-1-1-C',
+            'lw-XXXXXXXX-1-1-D',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_a_sibling_loop_are_correctly_generated_when_the_parent_data_is_appended()
+    {
+        app('livewire')->component('keys-parent-with-sibling-loops', KeysParentWithSiblingLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('append');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(6, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D',
+            'lw-XXXXXXXX-0-0-E',
+            'lw-XXXXXXXX-1-1-B',
+            'lw-XXXXXXXX-1-1-D',
+            'lw-XXXXXXXX-1-1-E',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_sibling_and_nested_loops_are_correctly_generated()
+    {
+        app('livewire')->component('keys-parent-with-sibling-and-nested-loops', KeysParentWithSiblingAndNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingAndNestedLoops::class);
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(16, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-1-0-B-1-B',
+            'lw-XXXXXXXX-1-0-B-1-D',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-D',
+            'lw-XXXXXXXX-1-0-D-1-B',
+            'lw-XXXXXXXX-1-0-D-1-D',
+            'lw-XXXXXXXX-2-1-B-0-B',
+            'lw-XXXXXXXX-2-1-B-0-D',
+            'lw-XXXXXXXX-3-1-B-1-B',
+            'lw-XXXXXXXX-3-1-B-1-D',
+            'lw-XXXXXXXX-2-1-D-0-B',
+            'lw-XXXXXXXX-2-1-D-0-D',
+            'lw-XXXXXXXX-3-1-D-1-B',
+            'lw-XXXXXXXX-3-1-D-1-D',
+        ], $childKeys);
+    }
+
+    public function test_child_keys_in_sibling_and_nested_loops_are_correctly_generated_when_the_parent_data_is_prepended()
+    {
+        app('livewire')->component('keys-parent-with-sibling-and-nested-loops', KeysParentWithSiblingAndNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingAndNestedLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('prepend');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(36, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-A-0-A',
+            'lw-XXXXXXXX-0-0-A-0-B',
+            'lw-XXXXXXXX-0-0-A-0-D',
+            'lw-XXXXXXXX-1-0-A-1-A',
+            'lw-XXXXXXXX-1-0-A-1-B',
+            'lw-XXXXXXXX-1-0-A-1-D',
+            'lw-XXXXXXXX-0-0-B-0-A',
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-1-0-B-1-A',
+            'lw-XXXXXXXX-1-0-B-1-B',
+            'lw-XXXXXXXX-1-0-B-1-D',
+            'lw-XXXXXXXX-0-0-D-0-A',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-D',
+            'lw-XXXXXXXX-1-0-D-1-A',
+            'lw-XXXXXXXX-1-0-D-1-B',
+            'lw-XXXXXXXX-1-0-D-1-D',
+            'lw-XXXXXXXX-2-1-A-0-A',
+            'lw-XXXXXXXX-2-1-A-0-B',
+            'lw-XXXXXXXX-2-1-A-0-D',
+            'lw-XXXXXXXX-3-1-A-1-A',
+            'lw-XXXXXXXX-3-1-A-1-B',
+            'lw-XXXXXXXX-3-1-A-1-D',
+            'lw-XXXXXXXX-2-1-B-0-A',
+            'lw-XXXXXXXX-2-1-B-0-B',
+            'lw-XXXXXXXX-2-1-B-0-D',
+            'lw-XXXXXXXX-3-1-B-1-A',
+            'lw-XXXXXXXX-3-1-B-1-B',
+            'lw-XXXXXXXX-3-1-B-1-D',
+            'lw-XXXXXXXX-2-1-D-0-A',
+            'lw-XXXXXXXX-2-1-D-0-B',
+            'lw-XXXXXXXX-2-1-D-0-D',
+            'lw-XXXXXXXX-3-1-D-1-A',
+            'lw-XXXXXXXX-3-1-D-1-B',
+            'lw-XXXXXXXX-3-1-D-1-D',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_sibling_and_nested_loops_are_correctly_generated_when_the_parent_data_is_inserted()
+    {
+        app('livewire')->component('keys-parent-with-sibling-and-nested-loops', KeysParentWithSiblingAndNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingAndNestedLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('insert');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(36, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-C',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-1-0-B-1-B',
+            'lw-XXXXXXXX-1-0-B-1-C',
+            'lw-XXXXXXXX-1-0-B-1-D',
+            'lw-XXXXXXXX-0-0-C-0-B',
+            'lw-XXXXXXXX-0-0-C-0-C',
+            'lw-XXXXXXXX-0-0-C-0-D',
+            'lw-XXXXXXXX-1-0-C-1-B',
+            'lw-XXXXXXXX-1-0-C-1-C',
+            'lw-XXXXXXXX-1-0-C-1-D',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-C',
+            'lw-XXXXXXXX-0-0-D-0-D',
+            'lw-XXXXXXXX-1-0-D-1-B',
+            'lw-XXXXXXXX-1-0-D-1-C',
+            'lw-XXXXXXXX-1-0-D-1-D',
+            'lw-XXXXXXXX-2-1-B-0-B',
+            'lw-XXXXXXXX-2-1-B-0-C',
+            'lw-XXXXXXXX-2-1-B-0-D',
+            'lw-XXXXXXXX-3-1-B-1-B',
+            'lw-XXXXXXXX-3-1-B-1-C',
+            'lw-XXXXXXXX-3-1-B-1-D',
+            'lw-XXXXXXXX-2-1-C-0-B',
+            'lw-XXXXXXXX-2-1-C-0-C',
+            'lw-XXXXXXXX-2-1-C-0-D',
+            'lw-XXXXXXXX-3-1-C-1-B',
+            'lw-XXXXXXXX-3-1-C-1-C',
+            'lw-XXXXXXXX-3-1-C-1-D',
+            'lw-XXXXXXXX-2-1-D-0-B',
+            'lw-XXXXXXXX-2-1-D-0-C',
+            'lw-XXXXXXXX-2-1-D-0-D',
+            'lw-XXXXXXXX-3-1-D-1-B',
+            'lw-XXXXXXXX-3-1-D-1-C',
+            'lw-XXXXXXXX-3-1-D-1-D',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
+    }
+
+    public function test_child_keys_in_sibling_and_nested_loops_are_correctly_generated_when_the_parent_data_is_appended()
+    {
+        app('livewire')->component('keys-parent-with-sibling-and-nested-loops', KeysParentWithSiblingAndNestedLoops::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithSiblingAndNestedLoops::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $component->call('append');
+
+        $childrenAfter = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(36, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B-0-B',
+            'lw-XXXXXXXX-0-0-B-0-D',
+            'lw-XXXXXXXX-0-0-B-0-E',
+            'lw-XXXXXXXX-1-0-B-1-B',
+            'lw-XXXXXXXX-1-0-B-1-D',
+            'lw-XXXXXXXX-1-0-B-1-E',
+            'lw-XXXXXXXX-0-0-D-0-B',
+            'lw-XXXXXXXX-0-0-D-0-D',
+            'lw-XXXXXXXX-0-0-D-0-E',
+            'lw-XXXXXXXX-1-0-D-1-B',
+            'lw-XXXXXXXX-1-0-D-1-D',
+            'lw-XXXXXXXX-1-0-D-1-E',
+            'lw-XXXXXXXX-0-0-E-0-B',
+            'lw-XXXXXXXX-0-0-E-0-D',
+            'lw-XXXXXXXX-0-0-E-0-E',
+            'lw-XXXXXXXX-1-0-E-1-B',
+            'lw-XXXXXXXX-1-0-E-1-D',
+            'lw-XXXXXXXX-1-0-E-1-E',
+            'lw-XXXXXXXX-2-1-B-0-B',
+            'lw-XXXXXXXX-2-1-B-0-D',
+            'lw-XXXXXXXX-2-1-B-0-E',
+            'lw-XXXXXXXX-3-1-B-1-B',
+            'lw-XXXXXXXX-3-1-B-1-D',
+            'lw-XXXXXXXX-3-1-B-1-E',
+            'lw-XXXXXXXX-2-1-D-0-B',
+            'lw-XXXXXXXX-2-1-D-0-D',
+            'lw-XXXXXXXX-2-1-D-0-E',
+            'lw-XXXXXXXX-3-1-D-1-B',
+            'lw-XXXXXXXX-3-1-D-1-D',
+            'lw-XXXXXXXX-3-1-D-1-E',
+            'lw-XXXXXXXX-2-1-E-0-B',
+            'lw-XXXXXXXX-2-1-E-0-D',
+            'lw-XXXXXXXX-2-1-E-0-E',
+            'lw-XXXXXXXX-3-1-E-1-B',
+            'lw-XXXXXXXX-3-1-E-1-D',
+            'lw-XXXXXXXX-3-1-E-1-E',
+        ], $childKeys);
+
+        // Ensure that the children from before match the children after including ID and element...
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfter[$key]);
+        }
     }
 
     public function test_we_can_open_a_loop()
@@ -146,9 +709,9 @@ class UnitTest extends \Tests\TestCase
             'open' => true,
         ], SupportCompiledWireKeys::$loopStack[0]);
     }
-    
 
-    #[DataProvider('templatesProvider')]
+
+    #[DataProvider('elementsTestProvider')]
     public function test_we_can_correctly_find_wire_keys_on_elements_only_but_not_blade_or_livewire_components($occurrences, $template)
     {
         $compiled = $this->compile($template);
@@ -156,7 +719,16 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences($occurrences, '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processKey', $compiled);
     }
 
-    public static function templatesProvider()
+
+    #[DataProvider('bladeComponentsTestProvider')]
+    public function test_we_can_correctly_find_wire_keys_on_blade_components_only_but_not_elmenets_or_livewire_components($occurrences, $template)
+    {
+        $compiled = $this->compile($template);
+
+        $this->assertOccurrences($occurrences, '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey', $compiled);
+    }
+
+    public static function elementsTestProvider()
     {
         return [
             [
@@ -234,6 +806,84 @@ class UnitTest extends \Tests\TestCase
         ];
     }
 
+    public static function bladeComponentsTestProvider()
+    {
+        return [
+            [
+                1,
+                <<<'HTML'
+                <x-basic-component wire:key="foo">
+                    Some contents
+                </x-basic-component>
+                HTML
+            ],
+            [
+                1,
+                <<<'HTML'
+                 <div>
+                     @foreach ($children as $child)
+                         <x-basic-component :wire:key="$child">
+                             <livewire:child />
+                         </x-basic-component>
+                     @endforeach
+                 </div>
+                HTML
+            ],
+            [
+                0,
+                <<<'HTML'
+                <div>
+                    <livewire:child wire:key="foo" />
+                </div>
+                HTML
+            ],
+            [
+                0,
+                <<<'HTML'
+                 <div>
+                     @foreach ($children as $child)
+                         <livewire:child :wire:key="$child, 5, '_', STR_PAD_BOTH)" />
+                     @endforeach
+                 </div>
+                HTML
+            ],
+            [
+                0,
+                <<<'HTML'
+                <div>
+                    @livewire('child', [], key('foo'))
+                </div>
+                HTML
+            ],
+            [
+                0,
+                <<<'HTML'
+                 <div>
+                     @foreach ($children as $child)
+                         @livewire('child', [], key($child, 5, '_', STR_PAD_BOTH)))
+                     @endforeach
+                 </div>
+                HTML
+            ],
+            [
+                0,
+                <<<'HTML'
+                <div wire:key="foo">
+                </div>
+                HTML
+            ],
+            [
+                0,
+                <<<'HTML'
+                <div wire:key="foo">
+                    <div wire:key="bar">
+                    </div>
+                </div>
+                HTML
+            ],
+        ];
+    }
+
     protected function compile($string)
     {
         $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
@@ -248,5 +898,178 @@ class UnitTest extends \Tests\TestCase
     protected function assertOccurrences($expected, $needle, $haystack)
     {
         $this->assertEquals($expected, count(explode($needle, $haystack)) - 1);
+    }
+
+    protected function assertKeysMatchPattern($expected, $keys)
+    {
+        for ($i = 0; $i < count($expected); $i++) {
+            $expectedKey = $expected[$i];
+            // The mock key should like like `lw-XXXXXXXX-0-0-A` with the `XXXXXXXX` being the hash of the path which we will replace with a regex check...
+            $pattern = str_replace('XXXXXXXX', '(\d{1,10})', $expectedKey);
+
+            $this->assertTrue((bool) preg_match('/'.$pattern.'/', $keys[$i]), 'Key '.$keys[$i].' does not match expected pattern '.$expected[$i]);
+        }
+    }
+}
+
+class KeysParent extends Component
+{
+    public $items = ['B', 'D'];
+
+    public function prepend() {
+        $this->items = ['A','B','D'];
+    }
+
+    public function insert() {
+        $this->items = ['B','C','D'];
+    }
+
+    public function append() {
+        $this->items = ['B','D','E'];
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @foreach ($items as $item)
+                <div wire:key="{{ $item }}">
+                    <livewire:keys-child :item="$item" />
+                </div>
+            @endforeach
+        </div>
+        HTML;
+    }
+}
+
+class KeysParentWithNestedLoops extends Component
+{
+    public $items = ['B', 'D'];
+
+    public function prepend() {
+        $this->items = ['A','B','D'];
+    }
+
+    public function insert() {
+        $this->items = ['B','C','D'];
+    }
+
+    public function append() {
+        $this->items = ['B','D','E'];
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @foreach ($items as $item)
+                <div wire:key="{{ $item }}">
+                    @foreach ($items as $item2)
+                        <div wire:key="{{ $item2 }}">
+                            <livewire:keys-child :item="$item . $item2" />
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
+        </div>
+        HTML;
+    }
+}
+
+class KeysParentWithSiblingLoops extends Component
+{
+    public $items = ['B', 'D'];
+
+    public function prepend() {
+        $this->items = ['A','B','D'];
+    }
+
+    public function insert() {
+        $this->items = ['B','C','D'];
+    }
+
+    public function append() {
+        $this->items = ['B','D','E'];
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @foreach ($items as $item)
+                <div wire:key="{{ $item }}">
+                    <livewire:keys-child :item="$item" />
+                </div>
+            @endforeach
+            @foreach ($items as $item)
+                <div wire:key="{{ $item }}">
+                    <livewire:keys-child :item="$item" />
+                </div>
+            @endforeach
+        </div>
+        HTML;
+    }
+}
+
+class KeysParentWithSiblingAndNestedLoops extends Component
+{
+    public $items = ['B', 'D'];
+
+    public function prepend() {
+        $this->items = ['A','B','D'];
+    }
+
+    public function insert() {
+        $this->items = ['B','C','D'];
+    }
+
+    public function append() {
+        $this->items = ['B','D','E'];
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @foreach ($items as $item)
+                <div wire:key="{{ $item }}">
+                    @foreach ($items as $item2)
+                        <div wire:key="{{ $item2 }}">
+                            <livewire:keys-child :item="$item . $item2" />
+                        </div>
+                    @endforeach
+                    @foreach ($items as $item2)
+                        <div wire:key="{{ $item2 }}">
+                            <livewire:keys-child :item="$item . $item2" />
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
+            @foreach ($items as $item)
+                <div wire:key="{{ $item }}">
+                    @foreach ($items as $item2)
+                        <div wire:key="{{ $item2 }}">
+                            <livewire:keys-child :item="$item . $item2" />
+                        </div>
+                    @endforeach
+                    @foreach ($items as $item2)
+                        <div wire:key="{{ $item2 }}">
+                            <livewire:keys-child :item="$item . $item2" />
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
+        </div>
+        HTML;
+    }
+}
+
+class KeysChild extends Component
+{
+    public $item;
+
+    public function render()
+    {
+        return '<div>Child: {{ $item }}</div>';
     }
 }
