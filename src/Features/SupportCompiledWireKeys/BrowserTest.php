@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\Tests;
+namespace Livewire\Features\SupportCompiledWireKeys;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Component;
 
-class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
+class BrowserTest extends \Tests\BrowserTestCase
 {
     // https://github.com/livewire/livewire/discussions/9037
     public function test_scenario_1_different_root_element_with_lazy_passing()
@@ -22,10 +22,15 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
                 }
             },
             'child' => new class () extends Component {
+                public function placeholder()
+                {
+                    return '<section></section>';
+                }
+
                 public function render()
                 {
                     return <<<'HTML'
-                    <div>child</div>
+                    <section>child</section>
                     HTML;
                 }
             },
@@ -532,3 +537,4 @@ class SnapshotMissingBrowserTest extends \Tests\BrowserTestCase
             ->assertSee('contents');
     }
 }
+
