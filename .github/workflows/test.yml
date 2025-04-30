@@ -59,8 +59,8 @@ jobs:
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --prefer-stable --no-interaction
 
-    #   - name: Setup dusk/chrome
-    #     run: vendor/bin/dusk-updater detect --no-interaction
+      - name: Setup dusk/chrome
+        run: vendor/bin/dusk-updater detect --no-interaction
 
       - name: Run Morph tests
         run: vendor/bin/phpunit src/Features/SupportMorphAwareIfStatement/UnitTest.php
