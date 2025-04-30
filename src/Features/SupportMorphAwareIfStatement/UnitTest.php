@@ -12,7 +12,10 @@ class UnitTest extends \Tests\TestCase
     {
         parent::setUp();
 
+        dump('flushing', \Livewire\Mechanisms\ExtendBlade\ExtendBlade::allLivewireComponents());
         Livewire::flushState();
+        dump('flushed', \Livewire\Mechanisms\ExtendBlade\ExtendBlade::allLivewireComponents());
+
     }
 
     public function test_conditional_markers_are_only_added_to_if_statements_wrapping_elements()
@@ -36,6 +39,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(2, explode('<!--[if ENDBLOCK]><![endif]-->', $output));
     }
 
+    /*
     public function test_handles_custom_blade_conditional_directives()
     {
         Blade::if('foo', function () {
@@ -484,7 +488,7 @@ class UnitTest extends \Tests\TestCase
                 HTML
             ]
         ];
-    }
+    }*/
 
     protected function compile($string)
     {

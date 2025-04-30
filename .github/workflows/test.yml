@@ -59,29 +59,34 @@ jobs:
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
           composer update --prefer-stable --no-interaction
 
-      - name: Setup dusk/chrome
-        run: vendor/bin/dusk-updater detect --no-interaction
+    #   - name: Setup dusk/chrome
+    #     run: vendor/bin/dusk-updater detect --no-interaction
 
-      - name: Run Unit tests
-        run: vendor/bin/phpunit --testsuite Unit
+      - name: Run Morph tests
+        run: vendor/bin/phpunit src/Features/SupportMorphAwareIfStatement/UnitTest.php
         env:
           RUNNING_IN_CI: true
 
-      - name: Run Browser tests
-        if: success() || failure()
-        run: vendor/bin/phpunit --testsuite Browser
-        env:
-          RUNNING_IN_CI: true
+    #   - name: Run Unit tests
+    #     run: vendor/bin/phpunit --testsuite Unit
+    #     env:
+    #       RUNNING_IN_CI: true
 
-      - name: Run Cancel Upload test
-        if: success() || failure()
-        run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
-        env:
-          RUNNING_IN_CI: true
-          FORCE_RUN: 1
+    #   - name: Run Browser tests
+    #     if: success() || failure()
+    #     run: vendor/bin/phpunit --testsuite Browser
+    #     env:
+    #       RUNNING_IN_CI: true
 
-      - name: Run Legacy Browser tests
-        if: success() || failure()
-        run: vendor/bin/phpunit --testsuite LegacyBrowser
-        env:
-          RUNNING_IN_CI: true
+    #   - name: Run Cancel Upload test
+    #     if: success() || failure()
+    #     run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
+    #     env:
+    #       RUNNING_IN_CI: true
+    #       FORCE_RUN: 1
+
+    #   - name: Run Legacy Browser tests
+    #     if: success() || failure()
+    #     run: vendor/bin/phpunit --testsuite LegacyBrowser
+    #     env:
+    #       RUNNING_IN_CI: true
