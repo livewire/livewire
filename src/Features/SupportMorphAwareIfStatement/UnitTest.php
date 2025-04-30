@@ -441,13 +441,13 @@ class UnitTest extends \Tests\TestCase
                 HTML,
                 <<<'HTML'
                 <div>
-                    <?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php for($i=0; $i < 10; $i++): ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php for($i=0; $i < 10; $i++): ?>
                             <span> <?php echo e($i); ?> </span>
-                        <?php endfor; ?><?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <span> <?php echo e($someProperty); ?> </span>
-                    <?php endif; ?><?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
                 HTML,
             ],
@@ -459,9 +459,9 @@ class UnitTest extends \Tests\TestCase
                 @endif
                 HTML,
                 <<<'HTML'
-                <?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($item > 2 && request()->is(str(url('/'))->replace('\\', '/'))): ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($item > 2 && request()->is(str(url('/'))->replace('\\', '/'))): ?>
                     foo
-                <?php endif; ?><?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 HTML,
             ],
             30 => [

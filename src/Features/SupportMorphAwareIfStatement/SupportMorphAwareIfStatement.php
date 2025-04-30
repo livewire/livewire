@@ -122,7 +122,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
     {
         $foundEscaped = preg_quote($found, '/');
 
-        $prefix = '<?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?>';
+        $prefix = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?>';
 
         $prefixEscaped = preg_quote($prefix);
 
@@ -142,7 +142,7 @@ class SupportMorphAwareIfStatement extends ComponentHook
 
         $foundEscaped = preg_quote($found, '/');
 
-        $suffix = '<?php if(\Livewire\Livewire::isRenderingComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>';
+        $suffix = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>';
 
         $suffixEscaped = preg_quote($suffix);
 
