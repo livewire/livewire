@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportMorphAwareIfStatement;
 
 use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
@@ -52,6 +51,48 @@ class UnitTest extends \Tests\TestCase
 
         $output = $this->compile($template);
 
+        $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
+        $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
+    }
+
+    public function test_morph_markers_are_not_output_when_not_used_within_a_livewire_context()
+    {
+        $template = <<<'HTML'
+        <div>
+            @if (true)
+                <span>Test</span>
+            @endif
+        </div>
+        HTML;
+
+        $output = $this->render($template);
+
+        dump($output);
+
+        $this->assertStringContainsString('Test', $output);
+        $this->assertOccurrences(0, '<!--[if BLOCK]><![endif]-->', $output);
+        $this->assertOccurrences(0, '<!--[if ENDBLOCK]><![endif]-->', $output);
+    }
+
+    public function test_morph_markers_are_output_when_used_within_a_livewire_context()
+    {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @if (true)
+                        <span>Test</span>
+                    @endif
+                </div>
+                HTML;
+            }
+        });
+
+        $output = $this->render('<livewire:foo />');
+
+        $this->assertStringContainsString('Test', $output);
         $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
     }
@@ -398,13 +439,13 @@ class UnitTest extends \Tests\TestCase
                 HTML,
                 <<<'HTML'
                 <div>
-                    <!--[if BLOCK]><![endif]--><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <!--[if BLOCK]><![endif]--><?php for($i=0; $i < 10; $i++): ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php for($i=0; $i < 10; $i++): ?>
                             <span> <?php echo e($i); ?> </span>
-                        <?php endfor; ?><!--[if ENDBLOCK]><![endif]-->
+                        <?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <span> <?php echo e($someProperty); ?> </span>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
                 HTML,
             ],
@@ -416,9 +457,9 @@ class UnitTest extends \Tests\TestCase
                 @endif
                 HTML,
                 <<<'HTML'
-                <!--[if BLOCK]><![endif]--><?php if($item > 2 && request()->is(str(url('/'))->replace('\\', '/'))): ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($item > 2 && request()->is(str(url('/'))->replace('\\', '/'))): ?>
                     foo
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 HTML,
             ],
             30 => [
@@ -438,22 +479,14 @@ class UnitTest extends \Tests\TestCase
 
     protected function compile($string)
     {
-        $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
-
         $html = Blade::compileString($string);
-
-        $undo();
 
         return $html;
     }
 
     protected function render($string, $data = [])
     {
-        $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
-
         $html = Blade::render($string, $data);
-
-        $undo();
 
         return $html;
     }
