@@ -33,10 +33,11 @@ class SupportCompiledWireKeys extends ComponentHook
     public static function compile($contents)
     {
         // Find all wire:key attributes...
-        preg_match_all('/\s+wire:key\s*=\s*(?:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\')/', $contents, $keys);
+        preg_match_all('/(?<=\s)wire:key\s*=\s*(?:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\')/', $contents, $keys);
 
         foreach ($keys[0] as $index => $key) {
-            $prefix = "<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processKey('{$keys[1][$index]}', get_defined_vars()); ?>";
+            $escapedKey = str_replace("'", "\'", $keys[1][$index]);
+            $prefix = "<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processKey('{$escapedKey}', get_defined_vars()); ?>";
             $contents = str_replace($key, $prefix . $key, $contents);
         }
 
