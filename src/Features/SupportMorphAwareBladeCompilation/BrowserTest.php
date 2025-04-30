@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportMorphAwareIfStatement;
+namespace Livewire\Features\SupportMorphAwareBladeCompilation;
 
 use Livewire\Livewire;
 use Livewire\Component;

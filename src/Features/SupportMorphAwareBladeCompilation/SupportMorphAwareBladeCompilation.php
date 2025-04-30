@@ -1,12 +1,12 @@
 <?php
 
-namespace Livewire\Features\SupportMorphAwareIfStatement;
+namespace Livewire\Features\SupportMorphAwareBladeCompilation;
 
 use Illuminate\Support\Arr;
 use Livewire\ComponentHook;
 use Livewire\Livewire;
 
-class SupportMorphAwareIfStatement extends ComponentHook
+class SupportMorphAwareBladeCompilation extends ComponentHook
 {
     public static function provide()
     {
