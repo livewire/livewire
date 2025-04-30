@@ -14,7 +14,6 @@ class RenderComponent extends Mechanism
     public static function livewire($expression)
     {
         $key = null;
-        $isDeterministic = 'false';
 
         $pattern = '/,\s*?key\(([\s\S]*)\)/'; // everything between ",key(" and ")"
 
@@ -27,7 +26,7 @@ class RenderComponent extends Mechanism
         $deterministicBladeKey = "'{$deterministicBladeKey}'";
 
         return <<<EOT
-        <?php
+<?php
 \$__split = function (\$name, \$params = []) {
     return [\$name, \$params];
 };

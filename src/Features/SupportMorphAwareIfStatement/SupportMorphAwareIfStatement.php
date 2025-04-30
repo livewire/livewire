@@ -117,13 +117,6 @@ class SupportMorphAwareIfStatement extends ComponentHook
         return $template;
     }
 
-    public static function findKeyInBufferContents($bufferContents)
-    {
-        preg_match('/^\s*<\w+(?:[^"\'>]|"[^"]*"|\'[^\']*\')*?\s+wire:key="([^"]+)"/s', $bufferContents, $matches);
-
-        return isset($matches[1]) ? $matches[1] : null;
-    }
-
     protected static function prefixOpeningDirective($found, $template)
     {
         $foundEscaped = preg_quote($found, '/');
@@ -145,11 +138,14 @@ class SupportMorphAwareIfStatement extends ComponentHook
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
         $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
 
+        $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}";
+
+        // If the suffix is not empty, then add it to the pattern...
         if ($suffixEscaped !== '') {
-            $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
-        } else {
-            $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?![^<]*(?<![?=-])>)/mUi";
+            $pattern .= "(?!{$suffixEscaped})";
         }
+
+        $pattern .= "(?![^<]*(?<![?=-])>)/mUi";
 
         return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
     }
@@ -179,11 +175,13 @@ class SupportMorphAwareIfStatement extends ComponentHook
         // `preg_replace` replacement prop needs `$` and `\` to be escaped
         $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
 
+        $pattern = "/";
+
+        // If the prefix is not empty, then add it to the pattern...
         if ($prefixEscaped !== '') {
-            $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
-        } else {
-            $pattern = "/{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+            $pattern .= "(?<!{$prefixEscaped})";
         }
+        $pattern .= "{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
         return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
     }

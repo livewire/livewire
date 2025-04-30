@@ -52,8 +52,6 @@ class SupportCompiledWireKeys extends ComponentHook
             $contents
         );
 
-        
-
         return $contents;
     }
 
