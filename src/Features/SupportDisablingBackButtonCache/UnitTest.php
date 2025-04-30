@@ -3,12 +3,11 @@
 namespace Livewire\Features\SupportDisablingBackButtonCache;
 
 use Illuminate\Support\Facades\Route;
-use Livewire\Component;
+use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function ensure_disable_browser_cache_middleware_is_not_applied_to_a_route_that_does_not_contain_a_component()
+    public function test_ensure_disable_browser_cache_middleware_is_not_applied_to_a_route_that_does_not_contain_a_component()
     {
         $this->markTestSkipped(); // @todo: Josh Hanley?
 
@@ -21,8 +20,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertFalse($response->baseResponse->headers->hasCacheControlDirective('must-revalidate'));
     }
 
-    /** @test */
-    public function ensure_browser_cache_middleware_is_applied_to_a_route_that_contains_a_component_with_disable_set_to_true()
+    public function test_ensure_browser_cache_middleware_is_applied_to_a_route_that_contains_a_component_with_disable_set_to_true()
     {
         Route::get('test-route-containing-livewire-component', DisableBrowserCache::class);
 
@@ -34,16 +32,11 @@ class UnitTest extends \Tests\TestCase
     }
 }
 
-class DisableBrowserCache extends Component
+class DisableBrowserCache extends TestComponent
 {
     public function mount()
     {
         $this->disableBackButtonCache();
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }
 

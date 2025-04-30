@@ -7,8 +7,7 @@ use Livewire\Component;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function blade_conditionals_are_handled_properly_by_morphdom()
+    public function test_blade_conditionals_are_handled_properly_by_morphdom()
     {
         Livewire::visit(new class extends Component {
             public $show = true;
@@ -44,8 +43,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function blade_conditional_actions_are_handled_properly_by_morphdom()
+    public function test_blade_conditional_actions_are_handled_properly_by_morphdom()
     {
         Livewire::visit(new class extends Component {
 

@@ -8,8 +8,7 @@ use Tests\BrowserTestCase;
 
 class UnitTest extends BrowserTestCase
 {
-    /** @test */
-    function can_use_wire_stdclass_property()
+    function test_can_use_wire_stdclass_property()
     {
         Livewire::test(new class extends Component {
             public $obj;
@@ -29,11 +28,11 @@ class UnitTest extends BrowserTestCase
                 HTML;
             }
         })
-            ->assertSet('obj.property', null)
+            ->assertSetStrict('obj.property', null)
             ->set('obj.property', 'foo')
-            ->assertSet('obj.property', 'foo')
+            ->assertSetStrict('obj.property', 'foo')
             ->set('obj.property', 'bar')
-            ->assertSet('obj.property', 'bar')
+            ->assertSetStrict('obj.property', 'bar')
         ;
     }
 }

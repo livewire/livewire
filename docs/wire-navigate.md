@@ -13,7 +13,7 @@ Below is a simple example of adding `wire:navigate` to links in a nav bar:
 </nav>
 ```
 
-When any of these links are clicked, Livewire will intercept the click and instead of allowing the browser to perform a full page visit, Livewire will fetch the page in the background and swap it with the current page (resulting in much faster and smoother page navigation).
+When any of these links are clicked, Livewire will intercept the click and, instead of allowing the browser to perform a full page visit, Livewire will fetch the page in the background and swap it with the current page (resulting in much faster and smoother page navigation).
 
 ## Prefetching pages on hover
 

@@ -55,7 +55,7 @@ class ComponentRegistry extends Mechanism
 
         $class = $this->generateClassFromName($name);
 
-        if (class_exists($class) && is_subclass_of($class, Component::class)) {
+        if (is_subclass_of($class, Component::class)) {
             return true;
         }
 
@@ -87,7 +87,7 @@ class ComponentRegistry extends Mechanism
         $nameOrClass = is_object($nameComponentOrClass) ? $nameComponentOrClass::class : $nameComponentOrClass;
 
         // If a component class was passed in, use that...
-        if (class_exists($nameOrClass)) {
+        if (is_subclass_of($nameOrClass, Component::class)) {
             $class = $nameOrClass;
         // Otherwise, assume it was a simple name...
         } else {

@@ -3,13 +3,11 @@
 namespace Livewire\Mechanisms\HandleComponents\Synthesizers\Tests;
 
 use Tests\TestComponent;
-use Livewire\Component;
 use Livewire\Livewire;
 
 class DataBindingUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function update_component_data()
+    public function test_update_component_data()
     {
         $component = Livewire::test(DataBindingStub::class);
 
@@ -18,8 +16,7 @@ class DataBindingUnitTest extends \Tests\TestCase
         $this->assertEquals('bar', $component->foo);
     }
 
-    /** @test */
-    public function update_nested_component_data_inside_array()
+    public function test_update_nested_component_data_inside_array()
     {
         $component = Livewire::test(DataBindingStub::class);
 
@@ -30,8 +27,7 @@ class DataBindingUnitTest extends \Tests\TestCase
         $this->assertEquals(['bar', 'bar' => 'baz'], $component->foo);
     }
 
-    /** @test */
-    public function can_remove_an_array_from_an_array()
+    public function test_can_remove_an_array_from_an_array()
     {
         Livewire::test(new class extends TestComponent {
             public $tasks = [
@@ -42,12 +38,12 @@ class DataBindingUnitTest extends \Tests\TestCase
         // We can simulate Livewire's removing an item from an array
         // by hardcoding "__rm__"...
         ->set('tasks.1', '__rm__')
-        ->assertSet('tasks', [['id' => 123]])
+        ->assertSetStrict('tasks', [['id' => 123]])
         ;
     }
 }
 
-class DataBindingStub extends Component
+class DataBindingStub extends TestComponent
 {
     public $foo;
     public $bar;
@@ -72,10 +68,5 @@ class DataBindingStub extends Component
     public function removeArrayPropertyOne()
     {
         unset($this->arrayProperty[1]);
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

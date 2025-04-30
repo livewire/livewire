@@ -2,13 +2,12 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class ComponentUsesCustomNameUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function uses_default_component_name()
+    public function test_uses_default_component_name()
     {
         $component = Livewire::test(UsesDefaultComponentName::class);
 
@@ -16,8 +15,7 @@ class ComponentUsesCustomNameUnitTest extends \Tests\TestCase
         $this->assertNotEquals('Hello World', $component->instance()->getName());
     }
 
-    /** @test */
-    public function preserves_name_property()
+    public function test_preserves_name_property()
     {
         $component = Livewire::test(PreservesNameProperty::class);
 
@@ -26,24 +24,14 @@ class ComponentUsesCustomNameUnitTest extends \Tests\TestCase
     }
 }
 
-class UsesDefaultComponentName extends Component
+class UsesDefaultComponentName extends TestComponent
 {
     public $name = 'Hello World';
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class PreservesNameProperty extends Component
+class PreservesNameProperty extends TestComponent
 {
     public $name = 'Hello World';
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 
     public function getName()
     {

@@ -12,8 +12,7 @@ class EloquentCollectionsBrowserTest extends TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function it_displays_all_nested_data()
+    public function test_it_displays_all_nested_data()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsComponent::class)
@@ -31,8 +30,7 @@ class EloquentCollectionsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
-    public function it_allows_nested_data_to_be_changed()
+    public function test_it_allows_nested_data_to_be_changed()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsComponent::class)
@@ -70,8 +68,7 @@ class EloquentCollectionsBrowserTest extends TestCase
         $author->push();
     }
 
-    /** @test */
-    public function hydrate_works_properly_without_rules()
+    public function test_hydrate_works_properly_without_rules()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutRulesComponent::class)
@@ -81,8 +78,7 @@ class EloquentCollectionsBrowserTest extends TestCase
         });
     }
 
-    /** @test */
-    public function hydrate_works_properly_when_collection_is_empty()
+    public function test_hydrate_works_properly_when_collection_is_empty()
     {
         $this->browse(function (Browser $browser) {
             $this->visitLivewireComponent($browser, EloquentCollectionsWithoutItemsComponent::class)

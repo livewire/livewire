@@ -8,12 +8,10 @@ use Livewire\Drawer\Utils;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Blade;
 
 class EchoBrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_listen_for_echo_event()
+    public function test_can_listen_for_echo_event()
     {
         Route::get('/dusk/fake-echo', function () {
             return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
@@ -45,8 +43,7 @@ class EchoBrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '1');
     }
 
-    /** @test */
-    public function can_listen_for_echo_event_with_payload()
+    public function test_can_listen_for_echo_event_with_payload()
     {
         Route::get('/dusk/fake-echo', function () {
             return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');
@@ -80,8 +77,7 @@ class EchoBrowserTest extends BrowserTestCase
 
     // This test asserts agains a scenario that fails silently. Therefore I can't easily make a test for it.
     // I'm leaving it here as a playground for the issue (that has been mostly resolved)...
-    // /** @test */
-    // public function echo_listeners_are_torn_down_when_navigating_pages_using_wire_navigate()
+    // public function test_echo_listeners_are_torn_down_when_navigating_pages_using_wire_navigate()
     // {
     //     Route::get('/dusk/fake-echo', function () {
     //         return Utils::pretendResponseIsFile(__DIR__.'/fake-echo.js');

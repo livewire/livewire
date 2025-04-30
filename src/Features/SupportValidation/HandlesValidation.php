@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\ViewErrorBag;
 use Livewire\Form;
 
@@ -309,7 +310,9 @@ trait HandlesValidation
         // If main validation passed, go through other sub-validation exceptions
         // and throw the first one with the cumulative messages...
         foreach ($formExceptions as $e) {
-            $e->validator->errors()->merge($cumulativeErrors->unique());
+            $exceptionErrorKeys = $e->validator->errors()->keys();
+            $remainingErrors = Arr::except($cumulativeErrors->messages(), $exceptionErrorKeys);
+            $e->validator->errors()->merge($remainingErrors);
 
             throw $e;
         }
@@ -503,8 +506,10 @@ trait HandlesValidation
     protected function unwrapDataForValidation($data)
     {
         return collect($data)->map(function ($value) {
-            // @todo: this logic should be contained within "SupportWireables"...
-            if ($value instanceof Wireable) return $value->toLivewire();
+
+            $synth = app('livewire')->findSynth($value, $this);
+
+            if ($synth && method_exists($synth, 'unwrapForValidation')) return $synth->unwrapForValidation($value);
             else if ($value instanceof Arrayable) return $value->toArray();
 
             return $value;

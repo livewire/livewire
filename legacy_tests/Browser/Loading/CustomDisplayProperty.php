@@ -2,7 +2,6 @@
 
 namespace LegacyTests\Browser\Loading;
 
-use Illuminate\Support\Facades\View;
 use Livewire\Component as BaseComponent;
 
 class CustomDisplayProperty extends BaseComponent

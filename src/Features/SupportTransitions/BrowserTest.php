@@ -6,8 +6,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_transition_blade_conditional_dom_segments()
+    public function test_can_transition_blade_conditional_dom_segments()
     {
         $opacity = 'parseFloat(getComputedStyle(document.querySelector(\'[dusk="target"]\')).opacity, 10)';
         $isBlock = 'getComputedStyle(document.querySelector(\'[dusk="target"]\')).display === "block"';
@@ -49,8 +48,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function elements_the_contain_transition_are_displayed_on_page_load()
+    public function test_elements_the_contain_transition_are_displayed_on_page_load()
     {
         Livewire::visit(
             new class extends \Livewire\Component {

@@ -7,8 +7,7 @@ use Livewire\Component;
 
 class BrowserTest extends TestCase
 {
-    /** @test */
-    public function can_access_parent()
+    public function test_can_access_parent()
     {
         $this->browse(function ($browser) {
             $this->visitLivewireComponent($browser, [ParentCounter::class, 'child-counter' => ChildCounter::class])

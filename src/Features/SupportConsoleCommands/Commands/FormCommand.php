@@ -3,7 +3,10 @@
 namespace Livewire\Features\SupportConsoleCommands\Commands;
 
 use Illuminate\Console\GeneratorCommand;
+use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:form')]
 class FormCommand extends GeneratorCommand
 {
     /**
@@ -34,7 +37,11 @@ class FormCommand extends GeneratorCommand
      */
     public function getStub()
     {
-        return __DIR__ . '/livewire.form.stub';
+        if (File::exists(base_path('stubs/livewire.form.stub'))) {
+            return base_path('stubs/livewire.form.stub');
+        }
+
+        return __DIR__ . DIRECTORY_SEPARATOR . 'livewire.form.stub';
     }
 
     /**

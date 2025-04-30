@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportEvents;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use Tests\BrowserTestCase;
 use Livewire\Component;
@@ -10,8 +11,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_listen_for_component_event_with_this_on_in_javascript()
+    public function test_can_listen_for_component_event_with_this_on_in_javascript()
     {
         Livewire::visit(new class extends Component {
             function foo() {
@@ -34,8 +34,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@target', 'bar');
     }
 
-    /** @test */
-    public function dont_call_render_on_renderless_event_handler()
+    public function test_dont_call_render_on_renderless_event_handler()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -61,8 +60,35 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@button', '1');
     }
 
-    /** @test */
-    public function dispatch_from_javascript_should_only_be_called_once()
+    public function test_can_dispatch_self_inside_script_directive()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = 'bar';
+
+            #[On('trigger')]
+            function changeFoo() {
+                $this->foo = 'baz';
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <h1 dusk="output">{{ $foo }}</h1>
+                </div>
+
+                @script
+                <script>
+                    $wire.dispatchSelf('trigger')
+                </script>
+                @endscript
+                HTML;
+            }
+        })
+            ->waitForTextIn('@output', 'baz');
+    }
+
+    public function test_dispatch_from_javascript_should_only_be_called_once()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -88,8 +114,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@button', '1');
     }
 
-    /** @test */
-    public function can_dispatch_to_another_component_globally()
+    public function test_can_dispatch_to_another_component_globally()
     {
         Livewire::visit([
             new class extends Component {
@@ -139,8 +164,7 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    /** @test */
-    public function can_unregister_global_livewire_listener()
+    public function test_can_unregister_global_livewire_listener()
     {
         Livewire::visit(new class extends Component {
             function render()
@@ -172,8 +196,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_use_event_data_in_alpine_for_loop_without_throwing_errors()
+    public function test_can_use_event_data_in_alpine_for_loop_without_throwing_errors()
     {
         Livewire::visit(new class extends Component {
             function fetchItems()

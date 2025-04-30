@@ -8,8 +8,7 @@ use Livewire\Component;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function polling_requests_are_batched_by_default()
+    public function test_polling_requests_are_batched_by_default()
     {
         Livewire::visit([new class extends Component {
             public function render() { return <<<HTML
@@ -26,7 +25,7 @@ class BrowserTest extends BrowserTestCase
             {
                 $this->time = LARAVEL_START;
             }
-            
+
             public function render() { return <<<'HTML'
             <div wire:poll.500ms id="child">
                 Child {{ $num }}

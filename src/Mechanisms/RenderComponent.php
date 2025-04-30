@@ -15,11 +15,11 @@ class RenderComponent extends Mechanism
     {
         $key = null;
 
-        $pattern = "/,\s*?key\(([\s\S]*)\)/"; // everything between ",key(" and ")"
+        $pattern = '/,\s*?key\(([\s\S]*)\)/'; // everything between ",key(" and ")"
 
         $expression = preg_replace_callback($pattern, function ($match) use (&$key) {
             $key = trim($match[1]) ?: $key;
-            return "";
+            return '';
         }, $expression);
 
         if (! $key) {

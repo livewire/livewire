@@ -34,9 +34,9 @@ class ComponentParserFromExistingComponent extends ComponentParser
         $escapedClassWithNamespace = preg_replace('/\\\/', '\\\\\\', $this->existingParser->classNamespace() . '\\' . $this->existingParser->className());
 
         $replaces = [
-            "/namespace {$escapedTestNamespace}/"              => "namespace " . $this->testNamespace(),
-            "/use {$escapedClassWithNamespace}/"               => "use " . $this->classNamespace() . '\\' . $this->className(),
-            "/class {$this->existingParser->testClassName()}/" => "class " . $this->testClassName(),
+            "/namespace {$escapedTestNamespace}/"              => 'namespace ' . $this->testNamespace(),
+            "/use {$escapedClassWithNamespace}/"               => 'use ' . $this->classNamespace() . '\\' . $this->className(),
+            "/class {$this->existingParser->testClassName()}/" => 'class ' . $this->testClassName(),
             "/{$this->existingParser->className()}::class/"    => $this->className() . '::class',
         ];
 

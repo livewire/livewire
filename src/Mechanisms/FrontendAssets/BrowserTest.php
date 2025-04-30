@@ -4,11 +4,11 @@ namespace Livewire\Mechanisms\FrontendAssets;
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
+use Tests\TestComponent;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function can_register_a_custom_javascript_endpoint()
+    public function test_can_register_a_custom_javascript_endpoint()
     {
         Livewire::setScriptRoute(function ($handle) {
             return Route::get('/custom/livewire.js', function () use ($handle) {
@@ -16,10 +16,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             });
         });
 
-        Livewire::visit(new class extends \Livewire\Component {
-            function render() { return '<div></div>'; }
-        })
-        ->assertDialogOpened('hi mom')
+        Livewire::visit(new class extends TestComponent {})
+            ->assertDialogOpened('hi mom')
         ;
     }
 }

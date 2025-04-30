@@ -83,6 +83,23 @@ trait MakesAssertions
         return $this;
     }
 
+    function assertDontSeeText($value, $escape = true)
+    {
+        $value = Arr::wrap($value);
+
+        $values = $escape ? array_map('e', ($value)) : $value;
+
+        $content = $this->html();
+
+        tap(strip_tags($content), function ($content) use ($values) {
+            foreach ($values as $value) {
+                PHPUnit::assertStringNotContainsString((string) $value, $content);
+            }
+        });
+
+        return $this;
+    }
+
     function assertSet($name, $value, $strict = false)
     {
         $actual = $this->get($name);
@@ -148,6 +165,20 @@ trait MakesAssertions
         } else {
             $strict ? PHPUnit::assertNotSame($value, data_get($data, $name)) : PHPUnit::assertNotEquals($value, data_get($data, $name));
         }
+
+        return $this;
+    }
+
+    function assertSnapshotSetStrict($name, $value)
+    {
+        $this->assertSnapshotSet($name, $value, true);
+
+        return $this;
+    }
+
+    function assertSnapshotNotSetStrict($name, $value)
+    {
+        $this->assertSnapshotNotSet($name, $value, true);
 
         return $this;
     }

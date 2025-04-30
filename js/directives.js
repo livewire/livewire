@@ -1,5 +1,7 @@
 import { on } from './hooks'
 
+let customDirectiveNames = new Set
+
 export function matchesForLivewireDirective(attributeName) {
     return attributeName.match(new RegExp('wire:'))
 }
@@ -11,17 +13,39 @@ export function extractDirective(el, name) {
 }
 
 export function directive(name, callback) {
+    // Prevent the same directive from registering multiple initialization listeners...
+    if (customDirectiveNames.has(name)) return
+
+    customDirectiveNames.add(name)
+
     on('directive.init', ({ el, component, directive, cleanup }) => {
         if (directive.value === name) {
             callback({
-                el, directive, component, cleanup
+                el, directive, component, $wire: component.$wire, cleanup
             })
+        }
+    })
+}
+
+export function globalDirective(name, callback) {
+    // Prevent the same directive from registering multiple initialization listeners...
+    if (customDirectiveNames.has(name)) return
+
+    customDirectiveNames.add(name)
+
+    on('directive.global.init', ({ el, directive, cleanup }) => {
+        if (directive.value === name) {
+            callback({ el, directive, cleanup })
         }
     })
 }
 
 export function getDirectives(el) {
     return new DirectiveManager(el)
+}
+
+export function customDirectiveHasBeenRegistered(name) {
+    return customDirectiveNames.has(name)
 }
 
 class DirectiveManager {

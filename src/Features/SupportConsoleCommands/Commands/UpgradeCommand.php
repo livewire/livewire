@@ -21,9 +21,12 @@ use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ThirdPartyUpgradeN
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeAlpineInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeConfigInstructions;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceEmitWithDispatch;
+use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ReplaceTemporaryUploadedFileNamespace;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\UpgradeIntroduction;
 use Livewire\Features\SupportConsoleCommands\Commands\Upgrade\ChangeForgetComputedToUnset;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'livewire:upgrade')]
 class UpgradeCommand extends Command
 {
     protected $signature = 'livewire:upgrade {--run-only=}';
@@ -51,6 +54,7 @@ class UpgradeCommand extends Command
             RepublishNavigation::class,
             ChangeTestAssertionMethods::class,
             ChangeForgetComputedToUnset::class,
+            ReplaceTemporaryUploadedFileNamespace::class,
 
             // Partially automated steps
             ReplaceEmitWithDispatch::class,

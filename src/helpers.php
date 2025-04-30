@@ -54,8 +54,6 @@ function invade($obj)
         {
             $method = $this->reflected->getMethod($name);
 
-            $method->setAccessible(true);
-
             return $method->invoke($this->obj, ...$params);
         }
     };
