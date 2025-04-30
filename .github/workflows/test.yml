@@ -62,15 +62,15 @@ jobs:
       - name: Setup dusk/chrome
         run: vendor/bin/dusk-updater detect --no-interaction
 
-      - name: Run Morph tests
-        run: vendor/bin/phpunit src/Features/SupportMorphAwareIfStatement/UnitTest.php
-        env:
-          RUNNING_IN_CI: true
-
-    #   - name: Run Unit tests
-    #     run: vendor/bin/phpunit --testsuite Unit
+    #   - name: Run Morph tests
+    #     run: vendor/bin/phpunit src/Features/SupportMorphAwareIfStatement/UnitTest.php
     #     env:
     #       RUNNING_IN_CI: true
+
+      - name: Run Unit tests
+        run: vendor/bin/phpunit --testsuite Unit
+        env:
+          RUNNING_IN_CI: true
 
     #   - name: Run Browser tests
     #     if: success() || failure()
