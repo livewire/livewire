@@ -24,7 +24,7 @@ class SupportCompiledWireKeys extends ComponentHook
     public static function registerPrecompilers()
     {
         Livewire::precompiler(function ($contents) {
-            $contents = static::compile($contents);
+            // $contents = static::compile($contents);
 
             return $contents;
         });
@@ -36,7 +36,7 @@ class SupportCompiledWireKeys extends ComponentHook
         $placeholder = '<__livewire-component-placeholder__>';
         $cleanedContents = preg_replace('/<livewire:[^>]+?\/>/is', $placeholder, $contents);
 
-        // Find all wire:key attributes on elements...
+        // Handle `wire:key` attributes on elements...
         preg_match_all('/(?<=\s)wire:key\s*=\s*(?:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\')/', $cleanedContents, $keys);
 
         foreach ($keys[0] as $index => $key) {
@@ -44,6 +44,15 @@ class SupportCompiledWireKeys extends ComponentHook
             $prefix = "<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processKey('{$escapedKey}', get_defined_vars()); ?>";
             $contents = str_replace($key, $prefix . $key, $contents);
         }
+
+        // Handle `wire:key` attributes on Blade components...
+        $contents = preg_replace(
+            '/(<\?php\s+\$component->withAttributes\(\[.*?\]\);\s*\?>)/s',
+            "$1\n<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey(\$component); ?>\n",
+            $contents
+        );
+
+        
 
         return $contents;
     }
@@ -110,6 +119,13 @@ class SupportCompiledWireKeys extends ComponentHook
         $key = Blade::render($keyString, $data);
 
         static::setLoopKey($key);
+    }
+
+    public static function processComponentKey($component)
+    {
+        if ($component->attributes->has('wire:key')) {
+            static::setLoopKey($component->attributes->get('wire:key'));
+        }
     }
 
     public static function startLoop($index)
