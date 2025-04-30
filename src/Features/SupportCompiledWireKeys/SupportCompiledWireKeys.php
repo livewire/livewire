@@ -32,8 +32,12 @@ class SupportCompiledWireKeys extends ComponentHook
 
     public static function compile($contents)
     {
-        // Find all wire:key attributes...
-        preg_match_all('/(?<=\s)wire:key\s*=\s*(?:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\')/', $contents, $keys);
+        // Strip out all livewire tag components as we don't want to match any of them...
+        $placeholder = '<__livewire-component-placeholder__>';
+        $cleanedContents = preg_replace('/<livewire:[^>]+?\/>/is', $placeholder, $contents);
+
+        // Find all wire:key attributes on elements...
+        preg_match_all('/(?<=\s)wire:key\s*=\s*(?:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"|\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\')/', $cleanedContents, $keys);
 
         foreach ($keys[0] as $index => $key) {
             $escapedKey = str_replace("'", "\'", $keys[1][$index]);
