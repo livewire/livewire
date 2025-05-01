@@ -1,6 +1,6 @@
 import Alpine from 'alpinejs'
 
-let secureMap = new WeakMap
+let hashMap = new WeakMap
 
 Alpine.interceptInit(el => {
     Array.from(el.attributes)
@@ -10,7 +10,7 @@ Alpine.interceptInit(el => {
 
             let hash = Math.random().toString(36).substring(2, 15)
 
-            secureMap.set(el, { expression: attr.value, hash })
+            hashMap.set(el, { expression: attr.value, hash })
 
             el.__livewire_hash = hash
 
@@ -21,6 +21,6 @@ Alpine.interceptInit(el => {
         })
 })
 
-export function hashMap(el) {
-    return secureMap.get(el)
+export function get(el) {
+    return hashMap.get(el)
 }
