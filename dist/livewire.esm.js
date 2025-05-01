@@ -10888,6 +10888,9 @@ import_alpinejs16.default.interceptInit((el) => {
 function get(el) {
   return hashMap.get(el);
 }
+function destroy(el) {
+  hashMap.delete(el);
+}
 
 // js/directives/wire-model.js
 var import_alpinejs17 = __toESM(require_module_cjs());
@@ -10898,6 +10901,7 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   }
   if (el.__livewire_hash) {
     expression = get(el).expression;
+    destroy(el);
   }
   if (componentIsMissingProperty(component, expression)) {
     return console.warn('Livewire: [wire:model="' + expression + '"] property does not exist on component: [' + component.name + "]", el);

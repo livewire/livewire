@@ -9985,6 +9985,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function get3(el) {
     return hashMap.get(el);
   }
+  function destroy(el) {
+    hashMap.delete(el);
+  }
 
   // js/directives/wire-model.js
   directive2("model", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
@@ -9994,6 +9997,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     if (el.__livewire_hash) {
       expression = get3(el).expression;
+      destroy(el);
     }
     if (componentIsMissingProperty(component, expression)) {
       return console.warn('Livewire: [wire:model="' + expression + '"] property does not exist on component: [' + component.name + "]", el);
