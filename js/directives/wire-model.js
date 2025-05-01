@@ -13,7 +13,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
     }
 
     if (el.__livewire_hash) {
-        expression = hashMap.get(el).expression
+        expression = hashMap(el).expression
     }
 
     if (componentIsMissingProperty(component, expression)) {

@@ -6,6 +6,8 @@ Alpine.interceptInit(el => {
     Array.from(el.attributes)
         .filter((attr) => attr.name.startsWith('wire:model') && attr.name.endsWith('.hash'))
         .forEach(attr => {
+            el.__livewire_ignore_self = true
+
             let hash = Math.random().toString(36).substring(2, 15)
 
             secureMap.set(el, { expression: attr.value, hash })
