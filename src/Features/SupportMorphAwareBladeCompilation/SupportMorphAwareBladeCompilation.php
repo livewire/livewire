@@ -60,6 +60,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $openingDirectivesPattern = static::directivesPattern($openings);
         $closingDirectivesPattern = static::directivesPattern($closings);
+        // This is for an `@empty` inside a `@forelse` loop, not `@empty()` conditional directive...
+        $loopEmptyDirectivePattern = '/@empty(?!\s*\()/mUxi';
 
         // First, let's match ALL blade directives on the page, not just conditionals...
         preg_match_all(
@@ -112,6 +114,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
                 $template = static::prefixOpeningDirective($match[0], $template);
             } elseif (preg_match($closingDirectivesPattern, $match[0])) {
                 $template = static::suffixClosingDirective($match[0], $template);
+            } elseif (preg_match($loopEmptyDirectivePattern, $match[0])) {
+                $template = static::suffixLoopEmptyDirective($match[0], $template);
             }
         }
 
@@ -207,6 +211,42 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             $pattern .= "(?<!{$prefixEscaped})";
         }
         $pattern .= "{$foundEscaped}(?!\w)(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
+
+        return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
+    }
+
+    /*
+     * This is for an `@empty` inside a `@forelse` loop, not `@empty()` conditional directive. When inside a `@forelse` loop,
+     * it is the `@empty` directive that actually closes the loop, not the `@endelseif` directive. So we need to ensure we
+     * target the `@empty` directive but not confuse it with the `@empty()` conditional directive...
+     */
+    protected static function suffixLoopEmptyDirective($found, $template)
+    {
+        // Opening directives can contain a space before the parens, but that causes issues with closing
+        // directives. So we will just remove the trailing space if it exists...
+        $found = rtrim($found);
+
+        $foundEscaped = preg_quote($found, '/');
+
+        $livewireCheckOpeningTag = '<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?>';
+
+        $livewireCheckClosingTag = '<?php endif; ?>';
+
+        $prefix = '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?>';
+
+        $suffix = '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?>';
+
+        $prefix = $livewireCheckOpeningTag.$prefix.$livewireCheckClosingTag;
+
+        $suffix = $livewireCheckOpeningTag.$suffix.$livewireCheckClosingTag;
+
+        $prefixEscaped = preg_quote($prefix);
+
+        $suffixEscaped = preg_quote($suffix);
+
+        $foundWithPrefixAndSuffix = addcslashes($prefix.$found.$suffix, '$\\');
+
+        $pattern = "/(?<!{$prefixEscaped}){$foundEscaped}(?!\s*\()(?!{$suffixEscaped})(?![^<]*(?<![?=-])>)/mUi";
 
         return preg_replace($pattern, $foundWithPrefixAndSuffix, $template);
     }

@@ -727,7 +727,6 @@ class UnitTest extends \Tests\TestCase
         ], SupportCompiledWireKeys::$loopStack[0]);
     }
 
-
     #[DataProvider('elementsTestProvider')]
     public function test_we_can_correctly_find_wire_keys_on_elements_only_but_not_blade_or_livewire_components($occurrences, $template)
     {
@@ -736,9 +735,8 @@ class UnitTest extends \Tests\TestCase
         $this->assertOccurrences($occurrences, '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processKey', $compiled);
     }
 
-
     #[DataProvider('bladeComponentsTestProvider')]
-    public function test_we_can_correctly_find_wire_keys_on_blade_components_only_but_not_elmenets_or_livewire_components($occurrences, $template)
+    public function test_we_can_correctly_find_wire_keys_on_blade_components_only_but_not_elements_or_livewire_components($occurrences, $template)
     {
         $compiled = $this->compile($template);
 
