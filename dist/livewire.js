@@ -713,7 +713,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -2599,7 +2599,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return instrumentations;
   }
   function createGetter(isReadonly = false, shallow = false) {
-    return function get3(target, key, receiver) {
+    return function get32(target, key, receiver) {
       if (key === "__v_isReactive") {
         return !isReadonly;
       } else if (key === "__v_isReadonly") {
@@ -2748,7 +2748,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function set$1(key, value) {
     value = toRaw(value);
     const target = toRaw(this);
-    const { has: has2, get: get3 } = getProto(target);
+    const { has: has2, get: get32 } = getProto(target);
     let hadKey = has2.call(target, key);
     if (!hadKey) {
       key = toRaw(key);
@@ -2756,7 +2756,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
-    const oldValue = get3.call(target, key);
+    const oldValue = get32.call(target, key);
     target.set(key, value);
     if (!hadKey) {
       trigger(target, "add", key, value);
@@ -2767,7 +2767,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function deleteEntry(key) {
     const target = toRaw(this);
-    const { has: has2, get: get3 } = getProto(target);
+    const { has: has2, get: get32 } = getProto(target);
     let hadKey = has2.call(target, key);
     if (!hadKey) {
       key = toRaw(key);
@@ -2775,7 +2775,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } else if (true) {
       checkIdentityKeys(target, has2, key);
     }
-    const oldValue = get3 ? get3.call(target, key) : void 0;
+    const oldValue = get32 ? get32.call(target, key) : void 0;
     const result = target.delete(key);
     if (hadKey) {
       trigger(target, "delete", key, void 0, oldValue);
@@ -4824,7 +4824,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4918,7 +4918,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5867,7 +5867,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5905,11 +5905,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     Object.defineProperty(Alpine3, "$persist", { get: () => persist() });
     Alpine3.magic("persist", persist);
-    Alpine3.persist = (key, { get: get3, set: set3 }, storage = localStorage) => {
-      let initial = storageHas(key, storage) ? storageGet(key, storage) : get3();
+    Alpine3.persist = (key, { get: get4, set: set3 }, storage = localStorage) => {
+      let initial = storageHas(key, storage) ? storageGet(key, storage) : get4();
       set3(initial);
       Alpine3.effect(() => {
-        let value = get3();
+        let value = get4();
         storageSet(key, value, storage);
         set3(value);
       });
@@ -5929,7 +5929,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -6029,7 +6029,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -8101,10 +8101,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Alpine3.history = { track: track2 };
   }
   function track2(name, initialSeedValue, alwaysShow = false, except = null) {
-    let { has: has2, get: get3, set: set3, remove } = queryStringUtils();
+    let { has: has2, get: get4, set: set3, remove } = queryStringUtils();
     let url = new URL(window.location.href);
     let isInitiallyPresentInUrl = has2(url, name);
-    let initialValue = isInitiallyPresentInUrl ? get3(url, name) : initialSeedValue;
+    let initialValue = isInitiallyPresentInUrl ? get4(url, name) : initialSeedValue;
     let initialValueMemo = JSON.stringify(initialValue);
     let exceptValueMemo = [false, null, void 0].includes(except) ? initialSeedValue : JSON.stringify(except);
     let hasReturnedToInitialValue = (newValue) => JSON.stringify(newValue) === initialValueMemo;
@@ -8274,7 +8274,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8622,7 +8622,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -9968,11 +9968,32 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return targets;
   }
 
+  // js/hash.js
+  var hashMap = /* @__PURE__ */ new WeakMap();
+  module_default.interceptInit((el) => {
+    Array.from(el.attributes).filter((attr) => attr.name.startsWith("wire:model") && attr.name.endsWith(".hash")).forEach((attr) => {
+      el.__livewire_ignore_self = true;
+      let hash = Math.random().toString(36).substring(2, 15);
+      hashMap.set(el, { expression: attr.value, hash });
+      el.__livewire_hash = hash;
+      module_default.mutateDom(() => {
+        el.removeAttribute(attr.name);
+        el.setAttribute(attr.name.replace(".hash", ""), hash);
+      });
+    });
+  });
+  function get3(el) {
+    return hashMap.get(el);
+  }
+
   // js/directives/wire-model.js
   directive2("model", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
     let { expression, modifiers } = directive3;
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);
+    }
+    if (el.__livewire_hash) {
+      expression = get3(el).expression;
     }
     if (componentIsMissingProperty(component, expression)) {
       return console.warn('Livewire: [wire:model="' + expression + '"] property does not exist on component: [' + component.name + "]", el);
