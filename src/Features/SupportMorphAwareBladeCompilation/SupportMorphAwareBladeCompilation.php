@@ -269,7 +269,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
     {
         $loopDirectives = [
             'endforeach',
-            'endforelse',
+            // This `endforelse` should NOT be included here, but it is left here for documentation purposes. The close of a `@forelse` loop is handled by the `@empty` directive...
+            // 'endforelse',
             'endfor',
             'endwhile',
         ];
