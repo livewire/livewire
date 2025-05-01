@@ -596,6 +596,23 @@ class UnitTest extends \Tests\TestCase
         ], $childKeys);
     }
 
+    public function test_when_using_a_for_else_statement_and_empty_is_shown_child_keys_are_correctly_generated()
+    {
+        app('livewire')->component('keys-parent-with-for-else', KeysParentWithForElse::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithForElse::class)
+            ->call('empty');
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(1, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-1', // There should be no loop suffixes here, because the empty block is shown...
+        ], $childKeys);
+    }
+
     public function test_we_can_open_a_loop()
     {
         SupportCompiledWireKeys::openLoop();
@@ -1108,7 +1125,9 @@ class KeysParentWithForElse extends Component
                     <livewire:keys-child :item="$item" />
                 </div>
             @empty
-                <div>No items</div>
+                <div>
+                    <livewire:keys-child item="empty" />
+                </div>
             @endforelse
         </div>
         HTML;

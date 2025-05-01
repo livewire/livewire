@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportMorphAwareBladeCompilation;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -93,6 +94,48 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('Test', $output);
         $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
+    }
+
+    public function test_loop_trackers_are_not_used_when_not_within_a_livewire_context()
+    {
+        $template = <<<'HTML'
+        <div>
+            @foreach ([1, 2, 3] as $item)
+                <span>Test</span>
+            @endforeach
+        </div>
+        HTML;
+
+        $output = $this->render($template);
+
+        $this->assertStringContainsString('Test', $output);
+
+        // When the template is rendered, there should be no loop trackers in the stack...
+        $this->assertEmpty(SupportCompiledWireKeys::$loopStack);
+    }
+
+    public function test_loop_trackers_are_used_when_used_within_a_livewire_context()
+    {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @foreach ([1, 2, 3] as $item)
+                        <span>Test</span>
+                    @endforeach
+                </div>
+                HTML;
+            }
+        });
+
+        $output = $this->render('<livewire:foo />');
+
+        $this->assertStringContainsString('Test', $output);
+        
+        // When the template is rendered, there should be 1 loop in the stack...
+        $this->assertCount(1, SupportCompiledWireKeys::$loopStack);
     }
 
     #[DataProvider('templatesProvider')]
