@@ -579,6 +579,23 @@ class UnitTest extends \Tests\TestCase
         }
     }
 
+    public function test_when_using_a_for_else_statement_child_keys_are_correctly_generated()
+    {
+        app('livewire')->component('keys-parent-with-for-else', KeysParentWithForElse::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithForElse::class);
+
+        $childKeys = array_keys(invade($component)->lastState->getSnapshot()['memo']['children']);
+
+        $this->assertEquals(2, count($childKeys));
+
+        $this->assertKeysMatchPattern([
+            'lw-XXXXXXXX-0-0-B',
+            'lw-XXXXXXXX-0-0-D'
+        ], $childKeys);
+    }
+
     public function test_we_can_open_a_loop()
     {
         SupportCompiledWireKeys::openLoop();
@@ -1059,6 +1076,42 @@ class KeysParentWithSiblingAndNestedLoops extends Component
                     @endforeach
                 </div>
             @endforeach
+        </div>
+        HTML;
+    }
+}
+
+class KeysParentWithForElse extends Component
+{
+    public $items = ['B', 'D'];
+
+    public function prepend() {
+        $this->items = ['A','B','D'];
+    }
+
+    public function insert() {
+        $this->items = ['B','C','D'];
+    }
+
+    public function append() {
+        $this->items = ['B','D','E'];
+    }
+
+    public function empty() {
+        $this->items = [];
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @forelse ($items as $item)
+                <div wire:key="{{ $item }}">
+                    <livewire:keys-child :item="$item" />
+                </div>
+            @empty
+                <div>No items</div>
+            @endforelse
         </div>
         HTML;
     }
