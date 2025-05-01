@@ -1,9 +1,10 @@
 import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { closestComponent } from '@/store'
-import { get } from '@/hash'
+import * as hash from '@/hash'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
+import { destroy } from '@/hash'
 
 directive('model', ({ el, directive, component, cleanup }) => {
     let { expression, modifiers } = directive
@@ -13,7 +14,8 @@ directive('model', ({ el, directive, component, cleanup }) => {
     }
 
     if (el.__livewire_hash) {
-        expression = get(el).expression
+        expression = hash.get(el).expression
+        hash.destroy(el)
     }
 
     if (componentIsMissingProperty(component, expression)) {

@@ -24,3 +24,7 @@ Alpine.interceptInit(el => {
 export function get(el) {
     return hashMap.get(el)
 }
+
+export function destroy(el) {
+    hashMap.delete(el)
+}
