@@ -4,7 +4,6 @@ import { closestComponent } from '@/store'
 import * as hash from '@/hash'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
-import { destroy } from '@/hash'
 
 directive('model', ({ el, directive, component, cleanup }) => {
     let { expression, modifiers } = directive
