@@ -1,6 +1,7 @@
 import { directive } from '@/directives'
 import { handleFileUpload } from '@/features/supportFileUploads'
 import { closestComponent } from '@/store'
+import { hashMap } from '@/hash'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 
@@ -9,6 +10,10 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     if (! expression) {
         return console.warn('Livewire: [wire:model] is missing a value.', el)
+    }
+
+    if (el.__livewire_hash) {
+        expression = hashMap.get(el).expression
     }
 
     if (componentIsMissingProperty(component, expression)) {
