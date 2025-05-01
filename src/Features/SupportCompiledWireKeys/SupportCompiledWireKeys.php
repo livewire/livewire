@@ -2,11 +2,10 @@
 
 namespace Livewire\Features\SupportCompiledWireKeys;
 
-use function Livewire\on;
 use Illuminate\Support\Facades\Blade;
-
 use Livewire\ComponentHook;
-use Livewire\Livewire;
+
+use function Livewire\on;
 
 class SupportCompiledWireKeys extends ComponentHook
 {
@@ -23,11 +22,11 @@ class SupportCompiledWireKeys extends ComponentHook
 
     public static function registerPrecompilers()
     {
-        Livewire::precompiler(function ($contents) {
+        Blade::precompiler(function ($contents) {
             $contents = static::compile($contents);
 
             return $contents;
-        }, prepend: false);
+        });
     }
 
     public static function compile($contents)
