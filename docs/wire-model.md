@@ -111,6 +111,7 @@ Any changes made to the text input will be automatically synchronized with the `
  `.number`         | Cast the text value of an input to `int` on the server
  `.boolean`        | Cast the text value of an input to `bool` on the server
  `.fill`           | Use the initial value provided by a "value" HTML attribute on page-load
+ `.hash`           | Convert the attribute value to a hash value
 
 ## Input fields
 
