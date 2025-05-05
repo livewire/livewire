@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string originalUrl()
  * @method static string originalPath()
  * @method static string originalMethod()
+ * @method static void withoutLazyLoading()
  *
  * @see \Livewire\LivewireManager
  */
