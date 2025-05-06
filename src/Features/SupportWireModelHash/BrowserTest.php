@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportWireModelHash;
 
+use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
 use Livewire\Wireable;
 use PHPUnit\Framework\Assert;
@@ -10,6 +11,13 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            View::addNamespace('test-views', __DIR__ . '/test-views');
+        };
+    }
+
     public function test_hash_wire_model_live_updates_and_hides_attribute()
     {
         Livewire::visit(new class () extends \Livewire\Component {
@@ -24,15 +32,15 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <input type="text" dusk="age" wire:model.live.hash="person.age" />
+                    <input type="text" dusk="input" wire:model.live.hash="person.age" />
                     <span>{{ $person->age }}</span>
                 </div>
                 HTML;
             }
         })
-            ->assertAttributeMissing('@age', 'wire:model.live.hash')
+            ->assertAttributeMissing('@input', 'wire:model.live.hash')
             ->tap(function ($browser) {
-                $value = $browser->attribute('@age', 'wire:model.live');
+                $value = $browser->attribute('@input', 'wire:model.live');
 
                 Assert::assertMatchesRegularExpression(
                     '/^[a-zA-Z0-9]+$/',
@@ -41,10 +49,10 @@ class BrowserTest extends BrowserTestCase
             })
             ->waitForText('42')
             ->assertSee('42')
-            ->type('@age', '43')
+            ->type('@input', '43')
             ->waitForText('43')
             ->assertSee('43')
-            ->type('@age', '34')
+            ->type('@input', '34')
             ->waitForText('34')
             ->assertSee('34')
             ;
@@ -64,15 +72,15 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <input type="text" dusk="age" wire:model.live.debounce.300ms.hash="person.age" />
+                    <input type="text" dusk="input" wire:model.live.debounce.300ms.hash="person.age" />
                     <span>{{ $person->age }}</span>
                 </div>
                 HTML;
             }
         })
-            ->assertAttributeMissing('@age', 'wire:model.live.debounce.300ms.hash')
+            ->assertAttributeMissing('@input', 'wire:model.live.debounce.300ms.hash')
             ->tap(function ($browser) {
-                $value = $browser->attribute('@age', 'wire:model.live.debounce.300ms');
+                $value = $browser->attribute('@input', 'wire:model.live.debounce.300ms');
 
                 Assert::assertMatchesRegularExpression(
                     '/^[a-zA-Z0-9]+$/',
@@ -81,10 +89,10 @@ class BrowserTest extends BrowserTestCase
             })
             ->waitForText('42')
             ->assertSee('42')
-            ->type('@age', '43')
+            ->type('@input', '43')
             ->waitForText('43')
             ->assertSee('43')
-            ->type('@age', '34')
+            ->type('@input', '34')
             ->waitForText('34')
             ->assertSee('34')
         ;
@@ -104,7 +112,7 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <input type="text" dusk="age" wire:model.hash="age" />
+                    <input type="text" dusk="input" wire:model.hash="age" />
                     <button type="button" wire:click="$set('age', 43)" dusk="save">Save</button>
                     <span>{{ $age }}</span>
                 </div>
@@ -114,9 +122,9 @@ class BrowserTest extends BrowserTestCase
             ->waitForText('42')
             ->assertSee('42')
             ->click('@save')
-            ->assertAttributeMissing('@age', 'wire:model.hash')
+            ->assertAttributeMissing('@input', 'wire:model.hash')
             ->tap(function ($browser) {
-                $value = $browser->attribute('@age', 'wire:model');
+                $value = $browser->attribute('@input', 'wire:model');
 
                 Assert::assertMatchesRegularExpression(
                     '/^[a-zA-Z0-9]+$/',
@@ -148,7 +156,7 @@ class BrowserTest extends BrowserTestCase
             {
                 return <<<'HTML'
                 <div>
-                    <input type="text" dusk="age" wire:model.hash="age" />
+                    <input type="text" dusk="input" wire:model.hash="age" />
                     <button type="button" wire:click="$set('age', 43)" dusk="save">Save</button>
                     <span>{{ $output }}</span>
                 </div>
@@ -157,9 +165,9 @@ class BrowserTest extends BrowserTestCase
         })
             ->waitForLivewire()
             ->click('@save')
-            ->assertAttributeMissing('@age', 'wire:model.hash')
+            ->assertAttributeMissing('@input', 'wire:model.hash')
             ->tap(function ($browser) {
-                $value = $browser->attribute('@age', 'wire:model');
+                $value = $browser->attribute('@input', 'wire:model');
 
                 Assert::assertMatchesRegularExpression(
                     '/^[a-zA-Z0-9]+$/',
@@ -167,6 +175,59 @@ class BrowserTest extends BrowserTestCase
                 );
             })
             ->assertSee('Updated age to 43')
+        ;
+    }
+
+    public function test_wire_model_binding_with_hash_modifier_in_view_components()
+    {
+        Livewire::visit(new class () extends \Livewire\Component {
+            public $age;
+
+            public function mount(): void
+            {
+                $this->age = 42;
+            }
+
+            public function render(): string
+            {
+                return <<<'HTML'
+                <div>
+                    <h3>Root</h3>
+                    <input type="text" dusk="input" wire:model.live.hash="age" />
+                    <span dusk="root.age">{{ $age }}</span>
+
+                    <h3>View</h3>
+                    <div>
+                        {!! view('test-views::attributes-wire', [
+                            'attributes' => new \Illuminate\View\ComponentAttributeBag([
+                                'wire:model.hash' => 'age',
+                            ]),
+                        ])->render() !!}
+                    </div>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForText('42')
+            ->assertSee('42')
+            ->type('@input', '43')
+            ->waitForText('43')
+            ->assertSee('43')
+            ->assertSeeIn('@view.model','age')
+            ->assertSeeIn('@root.age','43')
+            ->tap(function ($browser) {
+                $value = $browser->attribute('@view.input', 'wire:model.live');
+
+                Assert::assertMatchesRegularExpression(
+                    '/^[a-zA-Z0-9]+$/',
+                    $value,
+                );
+            })
+            ->type('@view.input', '34')
+            ->waitForLivewire()
+            ->pause(200)
+            ->assertSeeIn('@root.age','34')
+            ->assertSeeIn('@view.model','age')
         ;
     }
 }
