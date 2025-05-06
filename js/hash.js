@@ -8,7 +8,7 @@ Alpine.interceptInit(el => {
         .forEach(attr => {
             el.__livewire_ignore_self = true
 
-            let hash = Math.random().toString(36).substring(2, 15)
+            let hash = Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0')
 
             hashMap.set(el, { expression: attr.value, hash })
 
