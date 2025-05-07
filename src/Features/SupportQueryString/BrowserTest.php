@@ -329,6 +329,31 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_can_fill_form_object_properties()
+    {
+        Livewire::withQueryParams(['form' => ['foo' => 'baz', 'bob' => 'bar']])
+            ->visit([
+                new class extends Component
+                {
+                    #[BaseUrl]
+                    public FormObject $form;
+
+                    public function render()
+                    {
+                        return <<<'HTML'
+                    <div>
+                        <h1 dusk="output1">{{ $form->foo }}</h1>
+                        <h1 dusk="output2">{{ $form->bob }}</h1>
+                    </div>
+                    HTML;
+                    }
+                },
+            ])
+            ->assertSeeIn('@output1', 'baz')
+            ->assertSeeIn('@output2', 'bar')
+            ;
+    }
+
     public function test_can_use_url_on_string_backed_enum_object_properties()
     {
         Livewire::visit([
