@@ -7,6 +7,13 @@ let attributesExemptFromScriptTagHashing = [
 
 export function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = (new DOMParser()).parseFromString(html, "text/html")
+
+    document.dispatchEvent(new CustomEvent('alpine:navigate-swapping', {
+        cancelable: false,
+        bubbles: true,
+        detail: { document: newDocument },
+    }))
+
     let newHtml = newDocument.documentElement
     let newBody = document.adoptNode(newDocument.body)
     let newHead = document.adoptNode(newDocument.head)
@@ -30,6 +37,11 @@ export function swapCurrentPageWithNewHtml(html, andThen) {
     document.body.replaceWith(newBody)
 
     Alpine.destroyTree(oldBody)
+
+    document.dispatchEvent(new CustomEvent('alpine:navigate-swapped', {
+        cancelable: false,
+        bubbles: true,
+    }))
 
     andThen(i => afterRemoteScriptsHaveLoaded = i)
 }

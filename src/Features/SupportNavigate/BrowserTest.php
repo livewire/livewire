@@ -45,6 +45,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-noscript-page', FirstNoscriptPage::class);
             Livewire::component('second-noscript-page', SecondNoscriptPage::class);
 
+            Livewire::component('swapping-hook-page', SwappingHookPage::class);
+            Livewire::component('swapped-hook-page', SwappedHookPage::class);
+
             Route::get('/navbar/{page}', NavBarComponent::class)->middleware('web');
 
             Route::get('/query-page', QueryPage::class)->middleware('web');
@@ -97,6 +100,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second-noscript', SecondNoscriptPage::class)->middleware('web');
             Route::get('/no-javascript', fn () => '<div dusk="no-javascript-side">No javascript side triggered.</div>')
                 ->middleware('web')->name('no-javascript');
+
+            Route::get('/swapping-hook', SwappingHookPage::class)->middleware('web');
+            Route::get('/swapped-hook', SwappedHookPage::class)->middleware('web');
         };
     }
 
@@ -1037,6 +1043,28 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_swapping_hook_to_change_classes()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/swapping-hook')
+                ->assertScript('document.documentElement.classList.contains("swapping")', false)
+                ->waitForNavigate()->click('@link.to.swapping')
+                ->assertScript('document.documentElement.classList.contains("swapping")', true);
+        });
+    }
+
+    public function test_navigate_swapped_hook_to_change_classes()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/swapped-hook')
+                ->assertScript('document.documentElement.classList.contains("swapped")', false)
+                ->waitForNavigate()->click('@link.to.swapped')
+                ->assertScript('document.documentElement.classList.contains("swapped")', true);
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1472,5 +1500,23 @@ class SecondNoscriptPage extends Component
     public function render()
     {
         return '<div>On second asset page <a href="/first-noscript" wire:navigate dusk="link.to.first">Go to first page</a></div>';
+    }
+}
+
+class SwappingHookPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout-with-swapping-hook')]
+    public function render()
+    {
+        return '<div>Swapping hook page <a href="/swapping-hook" wire:navigate dusk="link.to.swapping">Navigate to same</a></div>';
+    }
+}
+
+class SwappedHookPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout-with-swapped-hook')]
+    public function render()
+    {
+        return '<div>Swapped hook page <a href="/swapped-hook" wire:navigate dusk="link.to.swapped">Navigate to same</a></div>';
     }
 }

@@ -713,7 +713,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -2295,7 +2295,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get raw() {
       return raw;
     },
-    version: "3.14.8",
+    version: "3.14.9",
     flushAndStopDeferringMutations,
     dontAutoEvaluateFunctions,
     disableEffectScheduling,
@@ -4802,7 +4802,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4896,7 +4896,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5845,7 +5845,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5907,7 +5907,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -6007,7 +6007,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -7715,6 +7715,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   ];
   function swapCurrentPageWithNewHtml(html, andThen) {
     let newDocument = new DOMParser().parseFromString(html, "text/html");
+    document.dispatchEvent(new CustomEvent("alpine:navigate-swapping", {
+      cancelable: false,
+      bubbles: true,
+      detail: { document: newDocument }
+    }));
     let newHtml = newDocument.documentElement;
     let newBody = document.adoptNode(newDocument.body);
     let newHead = document.adoptNode(newDocument.head);
@@ -7731,6 +7736,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let oldBody = document.body;
     document.body.replaceWith(newBody);
     Alpine.destroyTree(oldBody);
+    document.dispatchEvent(new CustomEvent("alpine:navigate-swapped", {
+      cancelable: false,
+      bubbles: true
+    }));
     andThen((i) => afterRemoteScriptsHaveLoaded = i);
   }
   function prepNewBodyScriptTagsToRun(newBody, oldBodyScriptTagHashes2) {
@@ -8244,7 +8253,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8268,7 +8277,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return swapElements(from2, to);
       }
       let updateChildrenOnly = false;
-      if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true))
+      let skipChildren = false;
+      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
         return;
       if (from2.nodeType === 1 && window.Alpine) {
         window.Alpine.cloneNode(from2, to);
@@ -8285,7 +8295,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         patchAttributes(from2, to);
       }
       updated(from2, to);
-      patchChildren(from2, to);
+      if (!skipChildren) {
+        patchChildren(from2, to);
+      }
     }
     function differentElementNamesTypesOrKeys(from2, to) {
       return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
@@ -8499,6 +8511,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook(...args, () => skip = true);
     return skip;
   }
+  function shouldSkipChildren(hook, skipChildren, ...args) {
+    let skip = false;
+    hook(...args, () => skip = true, skipChildren);
+    return skip;
+  }
   var patched = false;
   function createElement(html) {
     const template = document.createElement("template");
@@ -8584,7 +8601,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -9390,6 +9407,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
   document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
   document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
+  document.addEventListener("alpine:navigate-swapping", (e) => forwardEvent("livewire:navigate-swapping", e));
+  document.addEventListener("alpine:navigate-swapped", (e) => forwardEvent("livewire:navigate-swapped", e));
   function forwardEvent(name, original) {
     let event = new CustomEvent(name, { cancelable: true, bubbles: true, detail: original.detail });
     document.dispatchEvent(event);
