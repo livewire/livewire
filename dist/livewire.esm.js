@@ -7828,14 +7828,12 @@ function showHtmlModal(html) {
   if (typeof modal != "undefined" && modal != null) {
     modal.innerHTML = "";
   } else {
-    modal = document.createElement("div");
+    modal = document.createElement("dialog");
     modal.id = "livewire-error";
-    modal.style.position = "fixed";
-    modal.style.width = "100vw";
-    modal.style.height = "100vh";
-    modal.style.padding = "50px";
-    modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
-    modal.style.zIndex = 2e5;
+    modal.style.margin = "50px";
+    modal.style.width = "calc(100% - 100px)";
+    modal.style.height = "calc(100% - 100px)";
+    modal.style.borderRadius = "5px";
   }
   let iframe = document.createElement("iframe");
   iframe.style.backgroundColor = "#17161A";
@@ -7849,14 +7847,15 @@ function showHtmlModal(html) {
   iframe.contentWindow.document.write(page.outerHTML);
   iframe.contentWindow.document.close();
   modal.addEventListener("click", () => hideHtmlModal(modal));
-  modal.setAttribute("tabindex", 0);
-  modal.addEventListener("keydown", (e) => {
-    if (e.key === "Escape")
-      hideHtmlModal(modal);
-  });
+  modal.addEventListener("close", () => cleanupModal(modal));
+  modal.showModal();
   modal.focus();
+  modal.blur();
 }
 function hideHtmlModal(modal) {
+  modal.close();
+}
+function cleanupModal(modal) {
   modal.outerHTML = "";
   document.body.style.overflow = "visible";
 }
