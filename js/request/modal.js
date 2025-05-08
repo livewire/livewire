@@ -19,6 +19,7 @@ export function showHtmlModal(html) {
         modal.style.width = 'calc(100% - 100px)'
         modal.style.height = 'calc(100% - 100px)'
         modal.style.borderRadius = '5px'
+        modal.style.padding = '0px'
         // Background color is set on the ::backdrop in Livewire's styles...
     }
 
