@@ -4002,6 +4002,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       modal.style.width = "calc(100% - 100px)";
       modal.style.height = "calc(100% - 100px)";
       modal.style.borderRadius = "5px";
+      modal.style.padding = "0px";
     }
     let iframe = document.createElement("iframe");
     iframe.style.backgroundColor = "#17161A";
