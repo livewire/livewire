@@ -134,8 +134,8 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertStringContainsString('Test', $output);
         
-        // When the template is rendered, there should be 1 loop in the stack...
-        $this->assertCount(1, SupportCompiledWireKeys::$loopStack);
+        // When the template is rendered, there should be 1 loop in the stack, which will be a count of 0 so we don't have an offset compared to the loop indexes...
+        $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
     }
 
     #[DataProvider('templatesProvider')]
