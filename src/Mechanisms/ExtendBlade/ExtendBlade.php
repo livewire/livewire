@@ -11,7 +11,6 @@ class ExtendBlade extends Mechanism
 {
     protected $directives = [];
     protected $precompilers = [];
-    protected $appendedPrecompilers = [];
     protected $renderCounter = 0;
 
     protected static $livewireComponents = [];
@@ -90,13 +89,9 @@ class ExtendBlade extends Mechanism
         $this->directives[$name] = $handler;
     }
 
-    function livewireOnlyPrecompiler($handler, $prepend = true)
+    function livewireOnlyPrecompiler($handler)
     {
-        if ($prepend) {
-            $this->precompilers[] = $handler;
-        } else {
-            $this->appendedPrecompilers[] = $handler;
-        }
+        $this->precompilers[] = $handler;
     }
 
     function livewireifyBladeCompiler() {
@@ -125,26 +120,6 @@ class ExtendBlade extends Mechanism
             foreach ($this->precompilers as $handler) {
                 if (array_search($handler, $precompilers) === false) {
                     array_unshift($precompilers, $handler);
-
-                    invade(app('blade.compiler'))->precompilers = $precompilers;
-
-                    $removals[] = function () use ($handler) {
-                        $precompilers = invade(app('blade.compiler'))->precompilers;
-
-                        $index = array_search($handler, $precompilers);
-
-                        if ($index === false) return;
-
-                        unset($precompilers[$index]);
-
-                        invade(app('blade.compiler'))->precompilers = $precompilers;
-                    };
-                }
-            }
-
-            foreach ($this->appendedPrecompilers as $handler) {
-                if (array_search($handler, $precompilers) === false) {
-                    array_push($precompilers, $handler);
 
                     invade(app('blade.compiler'))->precompilers = $precompilers;
 
