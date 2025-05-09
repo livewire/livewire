@@ -8488,6 +8488,9 @@ function destroyComponent(id) {
   component.cleanup();
   delete components[id];
 }
+function hasComponent(id) {
+  return !!components[id];
+}
 function findComponent(id) {
   let component = components[id];
   if (!component)
@@ -9715,7 +9718,7 @@ function start() {
   import_alpinejs5.default.interceptInit(import_alpinejs5.default.skipDuringClone((el) => {
     if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
-    if (el.hasAttribute("wire:id")) {
+    if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
       let component2 = initComponent(el);
       import_alpinejs5.default.onAttributeRemoved(el, "wire:id", () => {
         destroyComponent(component2.id);
@@ -9919,6 +9922,13 @@ function morph2(component, el, html) {
   let to = wrapper.firstElementChild;
   to.__livewire = component;
   trigger("morph", { el, toEl: to, component });
+  let toChildComponents = to.querySelectorAll("[wire\\:id]");
+  toChildComponents.forEach((child) => {
+    if (child.hasAttribute("wire:snapshot"))
+      return;
+    let existingComponent = document.querySelector(`[wire\\:id="${child.getAttribute("wire:id")}"]`);
+    child.replaceWith(existingComponent.cloneNode(true));
+  });
   import_alpinejs8.default.morph(el, to, {
     updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
       if (isntElement(el2))

@@ -1,8 +1,9 @@
 <?php
 
-namespace Livewire\Features\SupportMorphAwareIfStatement;
+namespace Livewire\Features\SupportMorphAwareBladeCompilation;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -93,6 +94,48 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('Test', $output);
         $this->assertOccurrences(1, '<!--[if BLOCK]><![endif]-->', $output);
         $this->assertOccurrences(1, '<!--[if ENDBLOCK]><![endif]-->', $output);
+    }
+
+    public function test_loop_trackers_are_not_used_when_not_within_a_livewire_context()
+    {
+        $template = <<<'HTML'
+        <div>
+            @foreach ([1, 2, 3] as $item)
+                <span>Test</span>
+            @endforeach
+        </div>
+        HTML;
+
+        $output = $this->render($template);
+
+        $this->assertStringContainsString('Test', $output);
+
+        // When the template is rendered, there should be no loop trackers in the stack...
+        $this->assertEmpty(SupportCompiledWireKeys::$loopStack);
+    }
+
+    public function test_loop_trackers_are_used_when_used_within_a_livewire_context()
+    {
+        Livewire::component('foo', new class extends \Livewire\Component
+        {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @foreach ([1, 2, 3] as $item)
+                        <span>Test</span>
+                    @endforeach
+                </div>
+                HTML;
+            }
+        });
+
+        $output = $this->render('<livewire:foo />');
+
+        $this->assertStringContainsString('Test', $output);
+        
+        // When the template is rendered, there should be 1 loop in the stack, which will be a count of 0 so we don't have an offset compared to the loop indexes...
+        $this->assertEquals(0, SupportCompiledWireKeys::$currentLoop['count']);
     }
 
     #[DataProvider('templatesProvider')]
@@ -437,11 +480,11 @@ class UnitTest extends \Tests\TestCase
                 HTML,
                 <<<'HTML'
                 <div>
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php for($i=0; $i < 10; $i++): ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = [1, 2]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $post): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php for($i=0; $i < 10; $i++): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                             <span> <?php echo e($i); ?> </span>
-                        <?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         <span> <?php echo e($someProperty); ?> </span>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>

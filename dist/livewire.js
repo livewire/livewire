@@ -4655,6 +4655,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     component.cleanup();
     delete components[id];
   }
+  function hasComponent(id) {
+    return !!components[id];
+  }
   function findComponent(id) {
     let component = components[id];
     if (!component)
@@ -8826,7 +8829,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.interceptInit(module_default.skipDuringClone((el) => {
       if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
         return;
-      if (el.hasAttribute("wire:id")) {
+      if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
         let component2 = initComponent(el);
         module_default.onAttributeRemoved(el, "wire:id", () => {
           destroyComponent(component2.id);
@@ -9024,6 +9027,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let to = wrapper.firstElementChild;
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
+    let toChildComponents = to.querySelectorAll("[wire\\:id]");
+    toChildComponents.forEach((child) => {
+      if (child.hasAttribute("wire:snapshot"))
+        return;
+      let existingComponent = document.querySelector(`[wire\\:id="${child.getAttribute("wire:id")}"]`);
+      child.replaceWith(existingComponent.cloneNode(true));
+    });
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
         if (isntElement(el2))

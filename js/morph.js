@@ -25,6 +25,16 @@ export function morph(component, el, html) {
 
     trigger('morph', { el, toEl: to, component })
 
+    let toChildComponents = to.querySelectorAll('[wire\\:id]')
+
+    toChildComponents.forEach(child => {
+        if (child.hasAttribute('wire:snapshot')) return
+        
+        let existingComponent = document.querySelector(`[wire\\:id="${child.getAttribute('wire:id')}"]`)
+
+        child.replaceWith(existingComponent.cloneNode(true))
+    })
+
     Alpine.morph(el, to, {
         updating: (el, toEl, childrenOnly, skip, skipChildren) => {
             if (isntElement(el)) return
