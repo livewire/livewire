@@ -613,17 +613,42 @@ class UnitTest extends \Tests\TestCase
         ], $childKeys);
     }
 
+    public function test_loop_stack_defaults_are_correctly_set()
+    {
+        $this->assertEquals([], SupportCompiledWireKeys::$loopStack);
+        $this->assertEquals(
+            [
+                'count' => null,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
+    }
+
     public function test_we_can_open_a_loop()
     {
         SupportCompiledWireKeys::openLoop();
 
-        $this->assertEquals(1, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 0,
-            'index' => null,
-            'key' => null,
-            'open' => true,
-        ], SupportCompiledWireKeys::$loopStack[0]);
+        $this->assertEquals(
+            [
+                [
+                    'count' => 0,
+                    'index' => null,
+                    'key' => null,
+                ],
+            ],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => null,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     public function test_we_can_close_a_loop()
@@ -631,13 +656,19 @@ class UnitTest extends \Tests\TestCase
         SupportCompiledWireKeys::openLoop();
         SupportCompiledWireKeys::closeLoop();
 
-        $this->assertEquals(1, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 0,
-            'index' => null,
-            'key' => null,
-            'open' => false,
-        ], SupportCompiledWireKeys::$loopStack[0]);
+        $this->assertEquals(
+            [],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => 0,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     public function test_we_can_open_a_second_loop_after_the_first_one_is_closed()
@@ -646,13 +677,25 @@ class UnitTest extends \Tests\TestCase
         SupportCompiledWireKeys::closeLoop();
         SupportCompiledWireKeys::openLoop();
 
-        $this->assertEquals(1, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 1,
-            'index' => null,
-            'key' => null,
-            'open' => true,
-        ], SupportCompiledWireKeys::$loopStack[0]);
+        $this->assertEquals(
+            [
+                [
+                    'count' => 1,
+                    'index' => null,
+                    'key' => null,
+                ],
+            ],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => null,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     public function test_we_can_close_a_second_loop_after_the_first_one_is_closed()
@@ -662,13 +705,19 @@ class UnitTest extends \Tests\TestCase
         SupportCompiledWireKeys::openLoop();
         SupportCompiledWireKeys::closeLoop();
 
-        $this->assertEquals(1, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 1,
-            'index' => null,
-            'key' => null,
-            'open' => false,
-        ], SupportCompiledWireKeys::$loopStack[0]);
+        $this->assertEquals(
+            [],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => 1,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     public function test_we_can_open_an_inner_loop_while_the_first_one_is_open()
@@ -676,19 +725,30 @@ class UnitTest extends \Tests\TestCase
         SupportCompiledWireKeys::openLoop();
         SupportCompiledWireKeys::openLoop();
 
-        $this->assertEquals(2, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 0,
-            'index' => null,
-            'key' => null,
-            'open' => true,
-        ], SupportCompiledWireKeys::$loopStack[0]);
-        $this->assertEquals([
-            'count' => 0,
-            'index' => null,
-            'key' => null,
-            'open' => true,
-        ], SupportCompiledWireKeys::$loopStack[1]);
+        $this->assertEquals(
+            [
+                [
+                    'count' => 0,
+                    'index' => null,
+                    'key' => null,
+                ],
+                [
+                    'count' => 0,
+                    'index' => null,
+                    'key' => null,
+                ],
+            ],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => null,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     public function test_we_can_close_an_inner_loop_while_the_first_one_is_open()
@@ -697,19 +757,25 @@ class UnitTest extends \Tests\TestCase
         SupportCompiledWireKeys::openLoop();
         SupportCompiledWireKeys::closeLoop();
 
-        $this->assertEquals(2, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 0,
-            'index' => null,
-            'key' => null,
-            'open' => true,
-        ], SupportCompiledWireKeys::$loopStack[0]);
-        $this->assertEquals([
-            'count' => 0,
-            'index' => null,
-            'key' => null,
-            'open' => false,
-        ], SupportCompiledWireKeys::$loopStack[1]);
+        $this->assertEquals(
+            [
+                [
+                    'count' => 0,
+                    'index' => null,
+                    'key' => null,
+                ],
+            ],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => 0,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     public function test_an_inner_loop_is_removed_when_the_outer_loop_is_closed()
@@ -719,13 +785,19 @@ class UnitTest extends \Tests\TestCase
         SupportCompiledWireKeys::closeLoop();
         SupportCompiledWireKeys::closeLoop();
 
-        $this->assertEquals(1, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 0,
-            'index' => null,
-            'key' => null,
-            'open' => false,
-        ], SupportCompiledWireKeys::$loopStack[0]);
+        $this->assertEquals(
+            [],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => 0,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     public function test_a_second_outer_loop_is_added_when_the_first_one_is_closed_and_all_inner_loops_are_removed()
@@ -735,13 +807,59 @@ class UnitTest extends \Tests\TestCase
         SupportCompiledWireKeys::closeLoop();
         SupportCompiledWireKeys::closeLoop();
         SupportCompiledWireKeys::openLoop();
-        $this->assertEquals(1, count(SupportCompiledWireKeys::$loopStack));
-        $this->assertEquals([
-            'count' => 1,
-            'index' => null,
-            'key' => null,
-            'open' => true,
-        ], SupportCompiledWireKeys::$loopStack[0]);
+        
+        $this->assertEquals(
+            [
+                [
+                    'count' => 1,
+                    'index' => null,
+                    'key' => null,
+                ],
+            ],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => null,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
+    }
+
+    public function test_a_second_inner_loop_is_added_when_the_first_inner_loop_is_closed()
+    {
+        SupportCompiledWireKeys::openLoop();
+        SupportCompiledWireKeys::openLoop();
+        SupportCompiledWireKeys::closeLoop();
+        SupportCompiledWireKeys::openLoop();
+        
+        $this->assertEquals(
+            [
+                [
+                    'count' => 0,
+                    'index' => null,
+                    'key' => null,
+                ],
+                [
+                    'count' => 1,
+                    'index' => null,
+                    'key' => null,
+                ],
+            ],
+            SupportCompiledWireKeys::$loopStack
+        );
+
+        $this->assertEquals(
+            [
+                'count' => null,
+                'index' => null,
+                'key' => null,
+            ],
+            SupportCompiledWireKeys::$currentLoop
+        );
     }
 
     #[DataProvider('elementsTestProvider')]
@@ -749,7 +867,7 @@ class UnitTest extends \Tests\TestCase
     {
         $compiled = $this->compile($template);
 
-        $this->assertOccurrences($occurrences, '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processKey', $compiled);
+        $this->assertOccurrences($occurrences, '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processElementKey', $compiled);
     }
 
     #[DataProvider('bladeComponentsTestProvider')]
