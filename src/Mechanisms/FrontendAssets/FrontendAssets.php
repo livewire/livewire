@@ -129,6 +129,10 @@ class FrontendAssets extends Mechanism
             [wire\:cloak] {
                 display: none !important;
             }
+
+            dialog#livewire-error::backdrop {
+                background-color: rgba(0, 0, 0, .6);
+            }
         </style>
         HTML;
 
