@@ -340,11 +340,7 @@ class Testable
     }
 
     /**
-     * @template T of \Livewire\Component
-     *
-     * @param  T  $obj
-     *
-     * @return T
+     * @return \Livewire\Component
      */
     function invade()
     {
