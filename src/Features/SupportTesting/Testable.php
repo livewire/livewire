@@ -339,6 +339,13 @@ class Testable
         return $this->lastState->getComponent();
     }
 
+    /**
+     * @template T of \Livewire\Component
+     *
+     * @param  T  $obj
+     *
+     * @return T
+     */
     function invade()
     {
         return \Livewire\invade($this->lastState->getComponent());
