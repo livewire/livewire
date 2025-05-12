@@ -3,12 +3,26 @@
 namespace Livewire\Features\SupportMorphAwareBladeCompilation;
 
 use Illuminate\Support\Facades\Blade;
+use Livewire\ComponentHookRegistry;
 use Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        Livewire::flushState();
+
+        config()->set('livewire.compiled_wire_keys', true);
+
+        // We need to call these so provide gets called again to load the new config...
+        ComponentHookRegistry::register(SupportMorphAwareBladeCompilation::class);
+        ComponentHookRegistry::register(SupportCompiledWireKeys::class);
+    }
+
     public function test_conditional_markers_are_only_added_to_if_statements_wrapping_elements()
     {
         Livewire::component('foo', new class extends \Livewire\Component

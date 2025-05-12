@@ -27,6 +27,10 @@ class SupportCompiledWireKeys extends ComponentHook
             ];
         });
 
+        if (! config('livewire.compiled_wire_keys', false)) {
+            return;
+        }
+
         static::registerPrecompilers();
     }
 

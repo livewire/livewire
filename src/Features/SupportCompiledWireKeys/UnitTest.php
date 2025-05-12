@@ -2,12 +2,14 @@
 
 namespace Livewire\Features\SupportCompiledWireKeys;
 
+use function Livewire\invade;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
+use Livewire\ComponentHookRegistry;
+use Livewire\Features\SupportMorphAwareBladeCompilation\SupportMorphAwareBladeCompilation;
 use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use PHPUnit\Framework\Attributes\DataProvider;
-use function Livewire\invade;
 
 class UnitTest extends \Tests\TestCase
 {
@@ -16,6 +18,12 @@ class UnitTest extends \Tests\TestCase
         parent::setUp();
 
         Livewire::flushState();
+
+        config()->set('livewire.compiled_wire_keys', true);
+
+        // We need to call these so provide gets called again to load the new config...
+        ComponentHookRegistry::register(SupportMorphAwareBladeCompilation::class);
+        ComponentHookRegistry::register(SupportCompiledWireKeys::class);
     }
 
     public function test_child_keys_are_correctly_generated()

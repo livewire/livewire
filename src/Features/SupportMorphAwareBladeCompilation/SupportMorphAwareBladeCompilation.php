@@ -7,11 +7,24 @@ use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
 use Livewire\Livewire;
 
+use function Livewire\on;
+
 class SupportMorphAwareBladeCompilation extends ComponentHook
 {
+    protected static $shouldInjectConditionalMarkers = false;
+    protected static $shouldInjectLoopMarkers = false;
+
     public static function provide()
     {
-        if (! config('livewire.inject_morph_markers', true)) {
+        on('flush-state', function () {
+            static::$shouldInjectConditionalMarkers = false;
+            static::$shouldInjectLoopMarkers = false;
+        });
+
+        static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
+        static::$shouldInjectLoopMarkers = config('livewire.compiled_wire_keys', false);
+
+        if (! static::$shouldInjectConditionalMarkers && ! static::$shouldInjectLoopMarkers) {
             return;
         }
 
@@ -130,14 +143,22 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $livewireCheckClosingTag = '<?php endif; ?>';
 
-        $prefix = '<!--[if BLOCK]><![endif]-->';
-
+        $prefix = '';
+        
         $suffix = '';
+        
+        if (static::$shouldInjectConditionalMarkers) {
+            $prefix = '<!--[if BLOCK]><![endif]-->';
+        }
 
-        if (static::isLoop($found)) {
+        if (static::$shouldInjectLoopMarkers && static::isLoop($found)) {
             $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?>';
 
             $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?>';
+        }
+
+        if ($prefix === '' && $suffix === '') {
+            return $template;
         }
 
         if ($prefix !== '') {
@@ -181,12 +202,20 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $prefix = '';
 
-        $suffix = '<!--[if ENDBLOCK]><![endif]-->';
+        $suffix = '';
 
-        if (static::isEndLoop($found)) {
+        if (static::$shouldInjectConditionalMarkers) {
+            $suffix = '<!--[if ENDBLOCK]><![endif]-->';
+        }
+
+        if (static::$shouldInjectLoopMarkers && static::isEndLoop($found)) {
             $prefix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?>';
 
             $suffix .= '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?>';
+        }
+
+        if ($prefix === '' && $suffix === '') {
+            return $template;
         }
 
         if ($prefix !== '') {
@@ -232,13 +261,27 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
 
         $livewireCheckClosingTag = '<?php endif; ?>';
 
-        $prefix = '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?>';
+        $prefix = '';
 
-        $suffix = '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?>';
+        $suffix = '';
 
-        $prefix = $livewireCheckOpeningTag.$prefix.$livewireCheckClosingTag;
+        if (static::$shouldInjectLoopMarkers) {
+            $prefix = '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?>';
 
-        $suffix = $livewireCheckOpeningTag.$suffix.$livewireCheckClosingTag;
+            $suffix = '<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?>';
+        }
+
+        if ($prefix === '' && $suffix === '') {
+            return $template;
+        }
+
+        if ($prefix !== '') {
+            $prefix = $livewireCheckOpeningTag.$prefix.$livewireCheckClosingTag;
+        }
+
+        if ($suffix !== '') {
+            $suffix = $livewireCheckOpeningTag.$suffix.$livewireCheckClosingTag;
+        }
 
         $prefixEscaped = preg_quote($prefix);
 

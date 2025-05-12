@@ -7,6 +7,13 @@ use Livewire\Component;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    protected function defineEnvironment($app)
+    {
+        parent::defineEnvironment($app);
+
+        $app['config']->set('livewire.compiled_wire_keys', true);
+    }
+
     public function test_nested_components_with_nested_and_sibling_loops_all_work_without_keys()
     {
         Livewire::visit([
