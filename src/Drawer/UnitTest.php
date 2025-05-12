@@ -65,15 +65,15 @@ EOT
         );
     }
 
-    public function test_on_subsequent_renders_root_element_has_id_and_component_data()
+    public function test_on_subsequent_renders_root_element_has_id_but_not_component_id()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
         $component->call('$refresh');
 
-        $this->assertTrue(
-            str($component->html())->containsAll([$component->id(), 'foo'])
-        );
+        $this->assertStringContainsString($component->id(), $component->html());
+
+        $this->assertStringNotContainsString('foo', $component->html());
     }
 }
 
