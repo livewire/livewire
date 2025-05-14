@@ -9,5 +9,6 @@ class BaseTitle extends LivewireAttribute
 {
     function __construct(
         public $content,
+        public bool $translate = false,
     ) {}
 }

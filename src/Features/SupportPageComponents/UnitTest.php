@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Translation\Translator;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -372,6 +375,19 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('some-title');
     }
 
+    public function test_can_configure_title_using_translated_title_attribute()
+    {
+        Lang::addLines(['translatable.foo_title' => 'Translated Foo'], App::currentLocale());
+
+        Route::get('/configurable-layout', ComponentForTranslatedTitleAttribute::class);
+
+        $this
+            ->withoutExceptionHandling()
+            ->get('/configurable-layout')
+            ->assertSee('bob')
+            ->assertSee('Translated Foo');
+    }
+
     public function test_can_use_layout_slots_in_full_page_components()
     {
         Route::get('/configurable-layout', ComponentWithMultipleLayoutSlots::class);
@@ -707,6 +723,18 @@ class ComponentForTitleAttribute extends Component
     public $name = 'bob';
 
     #[BaseTitle('some-title')]
+    #[BaseLayout('layouts.app-with-title')]
+    public function render()
+    {
+        return view('show-name');
+    }
+}
+
+class ComponentForTranslatedTitleAttribute extends Component
+{
+    public $name = 'bob';
+
+    #[BaseTitle('translatable.foo_title', translate: true)]
     #[BaseLayout('layouts.app-with-title')]
     public function render()
     {
