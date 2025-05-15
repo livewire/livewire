@@ -21,7 +21,7 @@ export function morph(component, el, html) {
 
     let to = wrapper.firstElementChild
 
-    // Set the snapshot and effects on the `to` element that way if there's a 
+    // Set the snapshot and effects on the `to` element that way if there's a
     // mismatch or problem the component will able to be re-initialized...
     to.setAttribute('wire:snapshot', component.snapshotEncoded)
     to.setAttribute('wire:effects', JSON.stringify(component.effects))
@@ -30,18 +30,26 @@ export function morph(component, el, html) {
 
     trigger('morph', { el, toEl: to, component })
 
-    let toChildComponents = to.querySelectorAll('[wire\\:id]')
-
-    // Let's first do a lookup of all the child components to see if the component already 
+    // Let's first do a lookup of all the child components to see if the component already
     // exists and if so we'll clone it and replace the child component with the clone.
     // This is to ensure that components don't loose state even if there might be a
     // `wire:key` missing from elements within a loop around the component...
-    toChildComponents.forEach(child => {
-        if (child.hasAttribute('wire:snapshot')) return
-        
-        let existingComponent = el.querySelector(`[wire\\:id="${child.getAttribute('wire:id')}"]`)
+    let existingComponentsMap = {}
 
-        child.replaceWith(existingComponent.cloneNode(true))
+    el.querySelectorAll('[wire\\:id]').forEach(component => {
+        existingComponentsMap[component.getAttribute('wire:id')] = component
+    })
+
+    to.querySelectorAll('[wire\\:id]').forEach(child => {
+        // If the child has a `wire:snapshot` it means it's new, so we don't need to find it...
+        if (child.hasAttribute('wire:snapshot')) return
+
+        let wireId = child.getAttribute('wire:id')
+        let existingComponent = existingComponentsMap[wireId]
+
+        if (existingComponent) {
+            child.replaceWith(existingComponent.cloneNode(true))
+        }
     })
 
     Alpine.morph(el, to, {
