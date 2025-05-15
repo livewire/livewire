@@ -63,6 +63,7 @@ class SupportPagination extends ComponentHook
 
     protected function setPathResolvers()
     {
+        // Setting the path resolver here on the default paginator also works for the cursor paginator...
         Paginator::currentPathResolver(function () {
             return Livewire::originalPath();
         });
