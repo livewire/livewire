@@ -9029,12 +9029,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.setAttribute("wire:effects", JSON.stringify(component.effects));
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
-    let toChildComponents = to.querySelectorAll("[wire\\:id]");
-    toChildComponents.forEach((child) => {
+    let existingComponentsMap = {};
+    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+    });
+    to.querySelectorAll("[wire\\:id]").forEach((child) => {
       if (child.hasAttribute("wire:snapshot"))
         return;
-      let existingComponent = document.querySelector(`[wire\\:id="${child.getAttribute("wire:id")}"]`);
-      child.replaceWith(existingComponent.cloneNode(true));
+      let wireId = child.getAttribute("wire:id");
+      let existingComponent = existingComponentsMap[wireId];
+      if (existingComponent) {
+        child.replaceWith(existingComponent.cloneNode(true));
+      }
     });
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
