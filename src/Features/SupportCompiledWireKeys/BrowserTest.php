@@ -11,7 +11,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('livewire.compiled_wire_keys', true);
+        $app['config']->set('livewire.smart_wire_keys', true);
     }
 
     public function test_nested_components_with_nested_and_sibling_loops_all_work_without_keys()

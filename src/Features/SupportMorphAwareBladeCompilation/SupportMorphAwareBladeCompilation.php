@@ -22,7 +22,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         });
 
         static::$shouldInjectConditionalMarkers = config('livewire.inject_morph_markers', true);
-        static::$shouldInjectLoopMarkers = config('livewire.compiled_wire_keys', false);
+        static::$shouldInjectLoopMarkers = config('livewire.smart_wire_keys', false);
 
         if (! static::$shouldInjectConditionalMarkers && ! static::$shouldInjectLoopMarkers) {
             return;

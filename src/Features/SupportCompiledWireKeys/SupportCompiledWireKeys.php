@@ -27,7 +27,7 @@ class SupportCompiledWireKeys extends ComponentHook
             ];
         });
 
-        if (! config('livewire.compiled_wire_keys', false)) {
+        if (! config('livewire.smart_wire_keys', false)) {
             return;
         }
 

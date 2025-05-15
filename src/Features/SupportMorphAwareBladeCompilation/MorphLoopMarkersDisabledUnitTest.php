@@ -19,7 +19,7 @@ class MorphLoopMarkersDisabledUnitTest extends \Tests\TestCase
         Livewire::flushState();
 
         config()->set('livewire.inject_morph_markers', true);
-        config()->set('livewire.compiled_wire_keys', false);
+        config()->set('livewire.smart_wire_keys', false);
 
         // We need to call these so provide gets called again to load the new config...
         ComponentHookRegistry::register(SupportMorphAwareBladeCompilation::class);
