@@ -10,6 +10,8 @@ use Livewire\Livewire;
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Livewire\invade;
+
 class UnitTest extends \Tests\TestCase
 {
     public function setUp(): void
