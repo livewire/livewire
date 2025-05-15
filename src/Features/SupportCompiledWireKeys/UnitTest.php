@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportCompiledWireKeys;
 
-use function Livewire\invade;
 use Illuminate\Support\Facades\Blade;
 use Livewire\Component;
 use Livewire\ComponentHookRegistry;
@@ -21,9 +20,22 @@ class UnitTest extends \Tests\TestCase
 
         config()->set('livewire.smart_wire_keys', true);
 
-        // We need to call these so provide gets called again to load the new config...
-        ComponentHookRegistry::register(SupportMorphAwareBladeCompilation::class);
-        ComponentHookRegistry::register(SupportCompiledWireKeys::class);
+        // Reload the features so the config is loaded and the precompilers are registered if required...
+        $this->reloadFeatures();
+    }
+
+    public function test_keys_are_not_compiled_when_smart_wire_keys_are_disabled()
+    {
+        Livewire::flushState();
+
+        config()->set('livewire.smart_wire_keys', false);
+
+        // Reload the features so the config is loaded and the precompilers are registered if required...
+        $this->reloadFeatures();
+
+        $compiled = $this->compile('<div wire:key="foo">');
+
+        $this->assertStringNotContainsString('<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processElementKey', $compiled);
     }
 
     public function test_child_keys_are_correctly_generated()
@@ -1040,6 +1052,27 @@ class UnitTest extends \Tests\TestCase
                 HTML
             ],
         ];
+    }
+
+    protected function reloadFeatures()
+    {
+        // We need to remove these two precompilers so we can test if the 
+        // feature is disabled and whether they get registered again...
+        $precompilers = \Livewire\invade(app('blade.compiler'))->precompilers;
+
+        \Livewire\invade(app('blade.compiler'))->precompilers = array_filter($precompilers, function ($precompiler) {
+            if (! $precompiler instanceof \Closure) return true;
+
+            $closureClass = (new \ReflectionFunction($precompiler))->getClosureScopeClass()->getName();
+
+            return $closureClass !== SupportCompiledWireKeys::class 
+                && $closureClass !== SupportMorphAwareBladeCompilation::class;
+        });
+
+        // We need to call these so provide gets called again to load the
+        // new config and register the precompilers if required...
+        ComponentHookRegistry::register(SupportMorphAwareBladeCompilation::class);
+        ComponentHookRegistry::register(SupportCompiledWireKeys::class);
     }
 
     protected function compile($string)

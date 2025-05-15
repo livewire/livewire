@@ -18,9 +18,98 @@ class UnitTest extends \Tests\TestCase
 
         config()->set('livewire.smart_wire_keys', true);
 
-        // We need to call these so provide gets called again to load the new config...
-        ComponentHookRegistry::register(SupportMorphAwareBladeCompilation::class);
-        ComponentHookRegistry::register(SupportCompiledWireKeys::class);
+        // Reload the features so the config is loaded and the precompilers are registered if required...
+        $this->reloadFeatures();
+    }
+
+    public function test_loop_markers_are_not_output_when_smart_wire_keys_are_disabled()
+    {
+        Livewire::flushState();
+
+        config()->set('livewire.smart_wire_keys', false);
+
+        // Reload the features so the config is loaded and the precompilers are registered if required...
+        $this->reloadFeatures();
+
+        $compiled = $this->compile(<<< 'HTML'
+        <div>
+            @foreach([1, 2, 3] as $item)
+                <div wire:key="{{ $item }}">
+                    {{ $item }}
+                </div>
+            @endforeach
+        </div>
+        HTML);
+
+        $this->assertStringNotContainsString('SupportCompiledWireKeys::openLoop(', $compiled);
+        $this->assertStringNotContainsString('SupportCompiledWireKeys::startLoop(', $compiled);
+        $this->assertStringNotContainsString('SupportCompiledWireKeys::endLoop(', $compiled);
+        $this->assertStringNotContainsString('SupportCompiledWireKeys::closeLoop(', $compiled);
+    }
+
+    public function test_conditional_markers_are_still_output_when_smart_wire_keys_are_disabled()
+    {
+        Livewire::flushState();
+
+        config()->set('livewire.smart_wire_keys', false);
+
+        // Reload the features so the config is loaded and the precompilers are registered if required...
+        $this->reloadFeatures();
+
+        $compiled = $this->compile(<<<'HTML'
+        <div>
+            @if(true)
+                foo
+            @endif
+        </div>
+        HTML);
+
+        $this->assertStringContainsString('<!--[if BLOCK]><![endif]-->', $compiled);
+        $this->assertStringContainsString('<!--[if ENDBLOCK]><![endif]-->', $compiled);
+    }
+
+    public function test_conditional_markers_are_not_output_when_inject_morph_markers_is_disabled()
+    {
+        Livewire::flushState();
+
+        config()->set('livewire.inject_morph_markers', false);
+
+        // Reload the features so the config is loaded and the precompilers are registered if required...
+        $this->reloadFeatures();
+
+        $compiled = $this->compile(<<< 'HTML'
+        <div>
+            @if (true) <div @if (true) @endif></div> @endif
+        </div>
+        HTML);
+
+        $this->assertStringNotContainsString('<!--[if BLOCK]><![endif]-->', $compiled);
+        $this->assertStringNotContainsString('<!--[if ENDBLOCK]><![endif]-->', $compiled);
+    }
+
+    public function test_loop_markers_are_still_output_when_inject_morph_markers_is_disabled()
+    {
+        Livewire::flushState();
+
+        config()->set('livewire.inject_morph_markers', false);
+
+        // Reload the features so the config is loaded and the precompilers are registered if required...
+        $this->reloadFeatures();
+
+        $compiled = $this->compile(<<<'HTML'
+        <div>
+            @foreach([1, 2, 3] as $item)
+                <div wire:key="{{ $item }}">
+                    {{ $item }}
+                </div>
+            @endforeach
+        </div>
+        HTML);
+
+        $this->assertStringContainsString('SupportCompiledWireKeys::openLoop(', $compiled);
+        $this->assertStringContainsString('SupportCompiledWireKeys::startLoop(', $compiled);
+        $this->assertStringContainsString('SupportCompiledWireKeys::endLoop(', $compiled);
+        $this->assertStringContainsString('SupportCompiledWireKeys::closeLoop(', $compiled);
     }
 
     public function test_conditional_markers_are_only_added_to_if_statements_wrapping_elements()
@@ -530,6 +619,27 @@ class UnitTest extends \Tests\TestCase
                 HTML
             ]
         ];
+    }
+
+    protected function reloadFeatures()
+    {
+        // We need to remove these two precompilers so we can test if the 
+        // feature is disabled and whether they get registered again...
+        $precompilers = \Livewire\invade(app('blade.compiler'))->precompilers;
+
+        \Livewire\invade(app('blade.compiler'))->precompilers = array_filter($precompilers, function ($precompiler) {
+            if (! $precompiler instanceof \Closure) return true;
+
+            $closureClass = (new \ReflectionFunction($precompiler))->getClosureScopeClass()->getName();
+
+            return $closureClass !== SupportCompiledWireKeys::class 
+                && $closureClass !== SupportMorphAwareBladeCompilation::class;
+        });
+
+        // We need to call these so provide gets called again to load the
+        // new config and register the precompilers if required...
+        ComponentHookRegistry::register(SupportMorphAwareBladeCompilation::class);
+        ComponentHookRegistry::register(SupportCompiledWireKeys::class);
     }
 
     protected function compile($string)
