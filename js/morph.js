@@ -33,7 +33,7 @@ export function morph(component, el, html) {
     toChildComponents.forEach(child => {
         if (child.hasAttribute('wire:snapshot')) return
         
-        let existingComponent = document.querySelector(`[wire\\:id="${child.getAttribute('wire:id')}"]`)
+        let existingComponent = el.querySelector(`[wire\\:id="${child.getAttribute('wire:id')}"]`)
 
         child.replaceWith(existingComponent.cloneNode(true))
     })
