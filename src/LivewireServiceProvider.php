@@ -95,6 +95,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportConsoleCommands\SupportConsoleCommands::class,
             Features\SupportPageComponents\SupportPageComponents::class,
             Features\SupportReactiveProps\SupportReactiveProps::class,
+            Features\SupportReleaseTokens\SupportReleaseTokens::class,
             Features\SupportFileDownloads\SupportFileDownloads::class,
             Features\SupportJsEvaluation\SupportJsEvaluation::class,
             Features\SupportQueryString\SupportQueryString::class,
@@ -126,5 +127,3 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         ComponentHookRegistry::boot();
     }
 }
-
-
