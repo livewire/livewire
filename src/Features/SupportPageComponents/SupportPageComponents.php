@@ -99,7 +99,7 @@ class SupportPageComponents extends ComponentHook
             }
 
             if ($titleAttr) {
-                $view->title($titleAttr->content);
+                $view->title($titleAttr->translate ? __($titleAttr->content) : $titleAttr->content);
             }
 
             $layoutConfig = $view->layoutConfig ?? new PageComponentConfig;
