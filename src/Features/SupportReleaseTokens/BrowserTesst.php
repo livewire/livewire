@@ -1,24 +1,24 @@
 <?php
 
-namespace Livewire\Features\SupportDeploymentInvalidation;
+namespace Livewire\Features\SupportReleaseTokens;
 
 use Livewire\Component;
 use Livewire\Livewire;
 
 use function Livewire\on;
 
-class DeploymentCanBeInvalidatedBrowserTest extends \Tests\BrowserTestCase
+class BrowserTesst extends \Tests\BrowserTestCase
 {
     public static function tweakApplicationHook()
     {
         return function () {
             on('request', function ($request) {
-                SupportDeploymentInvalidation::$LIVEWIRE_DEPLOYMENT_INVALIDATION_HASH = 'bob';
+                ReleaseToken::$LIVEWIRE_RELEASE_TOKEN = 'bob';
             });
         };
     }
 
-    public function test_if_deployment_invalidation_hash_has_changed_it_should_show_the_page_expired_dialog()
+    public function test_if_release_token_has_changed_it_should_show_the_page_expired_dialog()
     {
         Livewire::visit(new class extends Component {
             public function render()
