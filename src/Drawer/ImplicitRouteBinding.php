@@ -40,7 +40,7 @@ class ImplicitRouteBinding
         }
 
         // Cache the current route action (this callback actually), just to be safe.
-        $cache = $route->getAction('uses');
+        $cache = $route->getAction();
 
         // We'll set the route action to be the "mount" method from the chosen
         // Livewire component, to get the proper implicit bindings.
@@ -54,10 +54,10 @@ class ImplicitRouteBinding
             $parameters = $route->resolveMethodDependencies($route->parameters(), new ReflectionMethod($component, 'mount'));
 
             // Restore the original route action...
-            $route->uses($cache);
+            $route->setAction($cache);
         } catch(\Exception $e) {
             // Restore the original route action before an exception is thrown...
-            $route->uses($cache);
+            $route->setAction($cache);
 
             throw $e;
         }

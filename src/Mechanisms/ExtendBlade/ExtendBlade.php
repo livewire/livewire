@@ -71,6 +71,8 @@ class ExtendBlade extends Mechanism
         // Reset this singleton between tests and Octane requests...
         on('flush-state', function () {
             app()->singleton(DeterministicBladeKeys::class);
+
+            static::$livewireComponents = [];
         });
 
         // We're using "precompiler" as a hook for the point in time when

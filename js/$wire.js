@@ -24,6 +24,7 @@ let aliases = {
     'on': '$on',
     'el': '$el',
     'id': '$id',
+    'js': '$js',
     'get': '$get',
     'set': '$set',
     'call': '$call',
@@ -113,6 +114,18 @@ wireProperty('$el', (component) => {
 
 wireProperty('$id', (component) => {
     return component.id
+})
+
+wireProperty('$js', (component) => {
+    let fn = component.addJsAction.bind(component)
+
+    let jsActions = component.getJsActions()
+
+    Object.keys(jsActions).forEach((name) => {
+        fn[name] = component.getJsAction(name)
+    })
+
+    return fn
 })
 
 wireProperty('$set', (component) => async (property, value, live = true) => {
