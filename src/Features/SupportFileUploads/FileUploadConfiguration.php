@@ -87,6 +87,11 @@ class FileUploadConfiguration
         return $prefix.($prefix ? '/' : '').$directory.($path ? '/' : '').$path;
     }
 
+    public static function metaPath($filename = '')
+    {
+        return static::path('meta' . DIRECTORY_SEPARATOR . $filename);
+    }
+
     public static function mimeType($filename)
     {
         $mimeType = static::storage()->mimeType(static::path($filename));
