@@ -87,6 +87,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             Features\SupportNestedComponentListeners\SupportNestedComponentListeners::class,
             Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
+            Features\SupportRequiredProperties\SupportRequiredProperties::class,
             Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,
             Features\SupportNestingComponents\SupportNestingComponents::class,
             Features\SupportCompiledWireKeys\SupportCompiledWireKeys::class,
