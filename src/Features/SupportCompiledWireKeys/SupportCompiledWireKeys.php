@@ -84,8 +84,14 @@ class SupportCompiledWireKeys extends ComponentHook
         ];
     }
     
-    public static function startLoop($index) {
+    public static function startLoop($index, $loopData) {
         static::$currentLoop['index'] = $index;
+        
+        $value = \Illuminate\Support\Collection::wrap($loopData)->values()[$index];
+
+        if ($value instanceof \Illuminate\Database\Eloquent\Model) {
+            static::$currentLoop['key'] = $value->getKey();
+        }
     }
 
     public static function endLoop() {
