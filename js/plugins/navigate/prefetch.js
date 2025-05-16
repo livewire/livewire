@@ -9,7 +9,7 @@ export function prefetchHtml(destination, callback) {
 
     if (prefetches[uri]) return
 
-    prefetches[uri] = { finished: false, html: null, whenFinished: () => {} }
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], 10 * 1000) }
 
     performFetch(uri, (html, routedUri) => {
         callback(html, routedUri)
