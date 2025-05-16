@@ -15,7 +15,7 @@ class ReleaseToken {
     {
         $componentClass = app(ComponentRegistry::class)->getClass($snapshot['memo']['name']);
 
-        if ($snapshot['memo']['release'] !== static::generate($componentClass)) {
+        if (!isset($snapshot['memo']['release']) || $snapshot['memo']['release'] !== static::generate($componentClass)) {
             throw new LivewireReleaseTokenMismatchException;
         }
     }
