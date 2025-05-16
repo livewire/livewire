@@ -83,13 +83,14 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         foreach([
             Features\SupportWireModelingNestedComponents\SupportWireModelingNestedComponents::class,
             Features\SupportMultipleRootElementDetection\SupportMultipleRootElementDetection::class,
+            Features\SupportMorphAwareBladeCompilation\SupportMorphAwareBladeCompilation::class,
             Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache::class,
             Features\SupportNestedComponentListeners\SupportNestedComponentListeners::class,
             Features\SupportDeploymentInvalidation\SupportDeploymentInvalidation::class,
-            Features\SupportMorphAwareIfStatement\SupportMorphAwareIfStatement::class,
             Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets::class,
             Features\SupportComputed\SupportLegacyComputedPropertySyntax::class,
             Features\SupportNestingComponents\SupportNestingComponents::class,
+            Features\SupportCompiledWireKeys\SupportCompiledWireKeys::class,
             Features\SupportScriptsAndAssets\SupportScriptsAndAssets::class,
             Features\SupportBladeAttributes\SupportBladeAttributes::class,
             Features\SupportConsoleCommands\SupportConsoleCommands::class,
@@ -126,5 +127,3 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         ComponentHookRegistry::boot();
     }
 }
-
-
