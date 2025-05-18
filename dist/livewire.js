@@ -3996,14 +3996,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (typeof modal != "undefined" && modal != null) {
       modal.innerHTML = "";
     } else {
-      modal = document.createElement("div");
+      modal = document.createElement("dialog");
       modal.id = "livewire-error";
-      modal.style.position = "fixed";
-      modal.style.width = "100vw";
-      modal.style.height = "100vh";
-      modal.style.padding = "50px";
-      modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
-      modal.style.zIndex = 2e5;
+      modal.style.margin = "50px";
+      modal.style.width = "calc(100% - 100px)";
+      modal.style.height = "calc(100% - 100px)";
+      modal.style.borderRadius = "5px";
+      modal.style.padding = "0px";
     }
     let iframe = document.createElement("iframe");
     iframe.style.backgroundColor = "#17161A";
@@ -4017,14 +4016,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     iframe.contentWindow.document.write(page.outerHTML);
     iframe.contentWindow.document.close();
     modal.addEventListener("click", () => hideHtmlModal(modal));
-    modal.setAttribute("tabindex", 0);
-    modal.addEventListener("keydown", (e) => {
-      if (e.key === "Escape")
-        hideHtmlModal(modal);
-    });
+    modal.addEventListener("close", () => cleanupModal(modal));
+    modal.showModal();
     modal.focus();
+    modal.blur();
   }
   function hideHtmlModal(modal) {
+    modal.close();
+  }
+  function cleanupModal(modal) {
     modal.outerHTML = "";
     document.body.style.overflow = "visible";
   }
@@ -4654,6 +4654,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     component.cleanup();
     delete components[id];
+  }
+  function hasComponent(id) {
+    return !!components[id];
   }
   function findComponent(id) {
     let component = components[id];
@@ -8826,7 +8829,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.interceptInit(module_default.skipDuringClone((el) => {
       if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
         return;
-      if (el.hasAttribute("wire:id")) {
+      if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
         let component2 = initComponent(el);
         module_default.onAttributeRemoved(el, "wire:id", () => {
           destroyComponent(component2.id);
@@ -9022,8 +9025,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
+    to.setAttribute("wire:snapshot", component.snapshotEncoded);
+    to.setAttribute("wire:effects", JSON.stringify(component.effects));
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
+    let existingComponentsMap = {};
+    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+    });
+    to.querySelectorAll("[wire\\:id]").forEach((child) => {
+      if (child.hasAttribute("wire:snapshot"))
+        return;
+      let wireId = child.getAttribute("wire:id");
+      let existingComponent = existingComponentsMap[wireId];
+      if (existingComponent) {
+        child.replaceWith(existingComponent.cloneNode(true));
+      }
+    });
     module_default.morph(el, to, {
       updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
         if (isntElement(el2))
