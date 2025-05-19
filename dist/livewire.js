@@ -9026,7 +9026,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
     to.setAttribute("wire:snapshot", component.snapshotEncoded);
-    to.setAttribute("wire:effects", JSON.stringify(component.effects));
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
     let existingComponentsMap = {};

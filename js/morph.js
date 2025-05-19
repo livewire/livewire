@@ -24,7 +24,6 @@ export function morph(component, el, html) {
     // Set the snapshot and effects on the `to` element that way if there's a
     // mismatch or problem the component will able to be re-initialized...
     to.setAttribute('wire:snapshot', component.snapshotEncoded)
-    to.setAttribute('wire:effects', JSON.stringify(component.effects))
 
     to.__livewire = component
 
