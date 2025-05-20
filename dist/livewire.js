@@ -4204,13 +4204,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         this.pools.add(pool);
         pool.send().then(() => {
           this.pools.delete(pool);
-          this.sendAnyQueuedCommits();
+          queueMicrotask(() => {
+            this.sendAnyQueuedCommits();
+          });
         });
       });
     }
     corraleCommitsIntoPools() {
       let pools = /* @__PURE__ */ new Set();
       for (let [idx, commit] of this.commits.entries()) {
+        if (this.findPoolWithComponent(commit.component))
+          return;
         let hasFoundPool = false;
         pools.forEach((pool) => {
           if (pool.shouldHoldCommit(commit)) {
