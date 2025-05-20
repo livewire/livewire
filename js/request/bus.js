@@ -100,6 +100,9 @@ export class CommitBus {
         // Go through each commit and assess wether it should be bundled
         // with other commits or sperated into it's own pool (network request)...
         for (let [idx, commit] of this.commits.entries()) {
+            // If this component is already in a pool, don't add it to another pool...
+            if (this.findPoolWithComponent(commit.component)) return
+
             let hasFoundPool = false
 
             // If an existing pool wants to claim a commit, let it...
