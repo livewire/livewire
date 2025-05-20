@@ -8028,7 +8028,6 @@ var CommitBus = class {
   createAndSendNewPool() {
     trigger("commit.pooling", { commits: this.commits });
     let pools = this.corraleCommitsIntoPools();
-    this.commits.clear();
     trigger("commit.pooled", { pools });
     pools.forEach((pool) => {
       if (pool.empty())
@@ -8046,7 +8045,7 @@ var CommitBus = class {
     let pools = /* @__PURE__ */ new Set();
     for (let [idx, commit] of this.commits.entries()) {
       if (this.findPoolWithComponent(commit.component))
-        return;
+        continue;
       let hasFoundPool = false;
       pools.forEach((pool) => {
         if (pool.shouldHoldCommit(commit)) {
@@ -8059,6 +8058,7 @@ var CommitBus = class {
         newPool.add(commit);
         pools.add(newPool);
       }
+      this.commits.delete(commit);
     }
     return pools;
   }
