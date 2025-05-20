@@ -480,7 +480,17 @@ class HandleComponents extends Mechanism
         $context->addEffect('returns', $returns);
     }
 
-    protected function propertySynth($keyOrTarget, $context, $path): Synth
+    public function findSynth($keyOrTarget, $component): ?Synth
+    {
+        $context = new ComponentContext($component);
+        try {
+            return $this->propertySynth($keyOrTarget, $context, null);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function propertySynth($keyOrTarget, $context, $path): Synth
     {
         return is_string($keyOrTarget)
             ? $this->getSynthesizerByKey($keyOrTarget, $context, $path)

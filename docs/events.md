@@ -369,8 +369,7 @@ class CreatePostTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function it_dispatches_post_created_event()
+    public function test_it_dispatches_post_created_event()
     {
         Livewire::test(CreatePost::class)
             ->call('save')
@@ -398,8 +397,7 @@ class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function it_updates_post_count_when_a_post_is_created()
+    public function test_it_updates_post_count_when_a_post_is_created()
     {
         Livewire::test(Dashboard::class)
             ->assertSee('Posts created: 0')
