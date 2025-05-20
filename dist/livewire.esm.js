@@ -10019,7 +10019,13 @@ on("effect", ({ component, effects }) => {
 
 // js/features/supportDispatches.js
 on("effect", ({ component, effects }) => {
-  dispatchEvents(component, effects.dispatches || []);
+  queueMicrotask(() => {
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        dispatchEvents(component, effects.dispatches || []);
+      });
+    });
+  });
 });
 function dispatchEvents(component, dispatches) {
   dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
