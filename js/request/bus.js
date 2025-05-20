@@ -84,9 +84,12 @@ export class CommitBus {
                 // When it comes back, remove it from the list...
                 this.pools.delete(pool)
 
-                // Trigger another pooling phase in case commits have
-                // been added while the current request was out...
-                this.sendAnyQueuedCommits()
+                // Wait for new Livewire components to be initialized first...
+                queueMicrotask(() => {
+                    // Trigger another pooling phase in case commits have
+                    // been added while the current request was out...
+                    this.sendAnyQueuedCommits()
+                })
             })
         })
     }
