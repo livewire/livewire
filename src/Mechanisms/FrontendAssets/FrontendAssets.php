@@ -89,6 +89,9 @@ class FrontendAssets extends Mechanism
         return Utils::pretendResponseIsFile(__DIR__.'/../../../dist/livewire.min.js.map');
     }
 
+    /**
+     * @return string
+     */
     public static function styles($options = [])
     {
         app(static::class)->hasRenderedStyles = true;
@@ -139,6 +142,9 @@ class FrontendAssets extends Mechanism
         return static::minify($html);
     }
 
+    /**
+     * @return string
+     */
     public static function scripts($options = [])
     {
         app(static::class)->hasRenderedScripts = true;
