@@ -383,7 +383,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     return <<<'HTML'
                     <div dusk="child">
                         Child
-                        <button type="button" x-on:click="$el.parentElement.remove()" dusk="remove-child">Remove</button>
+                        <button type="button" x-on:click="$el.parentElement.remove()" dusk="remove-child">Remove using javascript</button>
                     </div>
                     HTML;
                 }
