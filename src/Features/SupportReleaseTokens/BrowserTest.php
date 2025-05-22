@@ -7,7 +7,7 @@ use Livewire\Livewire;
 
 use function Livewire\on;
 
-class BrowserTesst extends \Tests\BrowserTestCase
+class BrowserTest extends \Tests\BrowserTestCase
 {
     public static function tweakApplicationHook()
     {
