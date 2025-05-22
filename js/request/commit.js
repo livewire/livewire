@@ -32,14 +32,23 @@ export class Commit {
         trigger('commit.prepare', { component: this.component })
     }
 
-    // The reason we are merging children into the encoded snapshot instead of the normal 
+    // The reason we are merging children into the encoded snapshot instead of the normal
     // snapshot is because we don't want to deal with the type issues that happen when
     // we deserialise and serialise the snapshot into JSON. So instead we merge the
     // children into the encoded snapshot manually by doing a string replace...
-    mergeChildrenIntoEncodedSnapshot(snapshotEncoded, children) {
-        let newChildrenString = JSON.stringify(children)
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+        let { snapshotEncoded, children, snapshot } = this.component
+        let childIds = children.map(child => child.id)
 
-        return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${newChildrenString}`)
+        let filteredChildren = Object.fromEntries(
+            Object.entries(snapshot.memo.children)
+                .filter(([key, value]) => childIds.includes(value[1]))
+        )
+
+        return snapshotEncoded.replace(
+            /"children":\{[^}]*\}/,
+            `"children":${JSON.stringify(filteredChildren)}`
+        )
     }
 
     // Generate a JSON-friendly server-request payload...
@@ -50,9 +59,9 @@ export class Commit {
 
         let updates = this.component.mergeQueuedUpdates(propertiesDiff)
 
-        // Merge the component's current children into the encoded snapshot. That 
+        // Merge the component's current children into the encoded snapshot. That
         // way if any have been removed, they do not get sent to the server...
-        let snapshotEncoded = this.mergeChildrenIntoEncodedSnapshot(this.component.snapshotEncoded, this.component.children)
+        let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn()
 
         let payload = {
             snapshot: snapshotEncoded,
