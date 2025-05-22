@@ -4103,14 +4103,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     prepare() {
       trigger2("commit.prepare", { component: this.component });
     }
-    mergeChildrenIntoEncodedSnapshot(snapshotEncoded, children) {
-      let newChildrenString = JSON.stringify(children);
-      return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${newChildrenString}`);
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+      let { snapshotEncoded, children, snapshot } = this.component;
+      let childIds = children.map((child) => child.id);
+      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+      return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
     }
     toRequestPayload() {
       let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
       let updates = this.component.mergeQueuedUpdates(propertiesDiff);
-      let snapshotEncoded = this.mergeChildrenIntoEncodedSnapshot(this.component.snapshotEncoded, this.component.children);
+      let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn();
       let payload = {
         snapshot: snapshotEncoded,
         updates,
