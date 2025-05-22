@@ -4601,7 +4601,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get children() {
       let meta = this.snapshot.memo;
       let childIds = Object.values(meta.children).map((i) => i[1]);
-      return childIds.map((id) => findComponent(id));
+      return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
     }
     get parent() {
       return closestComponent(this.el.parentElement);
