@@ -66,9 +66,6 @@ export class CommitBus {
         // Split commits up across one or multiple pools to be sent as seperate network requests...
         let pools = this.corraleCommitsIntoPools()
 
-        // Clear all commits in the queue now that they're in pools...
-        this.commits.clear()
-
         trigger('commit.pooled', { pools })
 
         // Go through each pool and...
@@ -84,9 +81,12 @@ export class CommitBus {
                 // When it comes back, remove it from the list...
                 this.pools.delete(pool)
 
-                // Trigger another pooling phase in case commits have
-                // been added while the current request was out...
-                this.sendAnyQueuedCommits()
+                // Wait for new Livewire components to be initialized first...
+                queueMicrotask(() => {
+                    // Trigger another pooling phase in case commits have
+                    // been added while the current request was out...
+                    this.sendAnyQueuedCommits()
+                })
             })
         })
     }
@@ -94,9 +94,12 @@ export class CommitBus {
     corraleCommitsIntoPools() {
         let pools = new Set
 
-        // Go through each commit and assess wether it should be bundled
+        // Go through each commit and assess whether it should be bundled
         // with other commits or sperated into it's own pool (network request)...
         for (let [idx, commit] of this.commits.entries()) {
+            // If this commit's component is already in a pool, don't add it to another pool...
+            if (this.findPoolWithComponent(commit.component)) continue
+
             let hasFoundPool = false
 
             // If an existing pool wants to claim a commit, let it...
@@ -116,6 +119,9 @@ export class CommitBus {
 
                 pools.add(newPool)
             }
+
+            // Remove the commit from the queued commits...
+            this.commits.delete(commit)
         }
 
         return pools
