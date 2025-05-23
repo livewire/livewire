@@ -7887,7 +7887,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var restoreScroll = true;
   var autofocus = false;
   function navigate_default(Alpine3) {
-    Alpine3.navigate = (url, { preserveScroll = false }) => {
+    Alpine3.navigate = (url, options = {}) => {
+      let { preserveScroll = false } = options;
       let destination = createUrlObjectFromString(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,

@@ -9291,7 +9291,8 @@ var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
 function navigate_default(Alpine23) {
-  Alpine23.navigate = (url, { preserveScroll = false }) => {
+  Alpine23.navigate = (url, options = {}) => {
+    let { preserveScroll = false } = options;
     let destination = createUrlObjectFromString(url);
     let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
