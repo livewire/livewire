@@ -16,7 +16,7 @@ let autofocus = false
 
 export default function (Alpine) {
 
-    Alpine.navigate = (url) => {
+    Alpine.navigate = (url, { preserveScroll = false }) => {
         let destination = createUrlObjectFromString(url)
 
         let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
@@ -25,7 +25,7 @@ export default function (Alpine) {
 
         if (prevented) return
 
-        navigateTo(destination)
+        navigateTo(destination, { preserveScroll })
     }
 
     Alpine.navigate.disableProgressBar = () => {
@@ -36,6 +36,8 @@ export default function (Alpine) {
 
     Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
+
+        let preserveScroll = modifiers.includes('preserve-scroll') || el.hasAttribute('preserve-scroll')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
@@ -63,12 +65,12 @@ export default function (Alpine) {
 
                 if (prevented) return
 
-                navigateTo(destination);
+                navigateTo(destination, { preserveScroll })
             })
         })
     })
 
-    function navigateTo(destination, shouldPushToHistoryState = true) {
+    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
@@ -102,7 +104,7 @@ export default function (Alpine) {
                         unPackPersistedPopovers(persistedEl)
                     })
 
-                    restoreScrollPositionOrScrollToTop()
+                    !preserveScroll && restoreScrollPositionOrScrollToTop()
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
@@ -131,9 +133,7 @@ export default function (Alpine) {
 
                 if (prevented) return
 
-                let shouldPushToHistoryState = false
-
-                navigateTo(destination, shouldPushToHistoryState)
+                navigateTo(destination, { shouldPushToHistoryState: false })
             })
         },
         (html, url, currentPageUrl, currentPageKey) => {
