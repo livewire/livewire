@@ -1400,7 +1400,7 @@ class FirstScrollPage extends Component
 
             <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href)"  dusk="link.to.second.using.javascript">Go to second page using javascript</a>
 
-            <a href="/second-scroll" wire:navigate.hover preserve-scroll dusk="link.to.second.with.preserve.scroll">Go to second page with preserve scroll</a>
+            <a href="/second-scroll" wire:navigate.hover.preserve-scroll dusk="link.to.second.with.preserve.scroll">Go to second page with preserve scroll</a>
 
             <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href, { preserveScroll: true })"  dusk="link.to.second.with.preserve.scroll.using.javascript">Go to second page with preserve scroll using javascript</a>
 

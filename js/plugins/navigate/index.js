@@ -39,7 +39,7 @@ export default function (Alpine) {
     Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
 
-        let preserveScroll = el.hasAttribute('preserve-scroll')
+        let preserveScroll = modifiers.includes('preserve-scroll')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
