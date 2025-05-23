@@ -9308,7 +9308,7 @@ function navigate_default(Alpine23) {
   Alpine23.addInitSelector(() => `[${Alpine23.prefixed("navigate")}]`);
   Alpine23.directive("navigate", (el, { modifiers }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
-    let preserveScroll = modifiers.includes("preserve-scroll") || el.hasAttribute("preserve-scroll");
+    let preserveScroll = el.hasAttribute("preserve-scroll");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
       if (!destination)
@@ -10471,20 +10471,11 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
 var import_alpinejs13 = __toESM(require_module_cjs());
 import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
 import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
 import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
     import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
     import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
-  } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-  } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-  } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
   }
 }));
 document.addEventListener("alpine:navigating", () => {
