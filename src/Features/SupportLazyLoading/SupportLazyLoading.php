@@ -42,6 +42,7 @@ class SupportLazyLoading extends ComponentHook
         $hasLazyParam = isset($params['lazy']);
         $lazyProperty = $params['lazy'] ?? false;
         $isolate = true;
+        $listening = false;
 
         $reflectionClass = new \ReflectionClass($this->component);
         $lazyAttribute = $reflectionClass->getAttributes(\Livewire\Attributes\Lazy::class)[0] ?? null;
@@ -57,12 +58,14 @@ class SupportLazyLoading extends ComponentHook
             $attribute = $lazyAttribute->newInstance();
 
             $isolate = $attribute->isolate;
+            $listening = $attribute->listening;
         }
 
         $this->component->skipMount();
 
         store($this->component)->set('isLazyLoadMounting', true);
         store($this->component)->set('isLazyIsolated', $isolate);
+        store($this->component)->set('lazyListening', $listening);
 
         $this->component->skipRender(
             $this->generatePlaceholderHtml($params)
@@ -77,6 +80,7 @@ class SupportLazyLoading extends ComponentHook
         $this->component->skipHydrate();
 
         store($this->component)->set('isLazyLoadHydrating', true);
+        store($this->component)->set('lazyListening', $memo['lazyListening'] ?? false);
     }
 
     function dehydrate($context)
@@ -84,6 +88,7 @@ class SupportLazyLoading extends ComponentHook
         if (store($this->component)->get('isLazyLoadMounting') === true) {
             $context->addMemo('lazyLoaded', false);
             $context->addMemo('lazyIsolated', store($this->component)->get('isLazyIsolated'));
+            $context->addMemo('lazyListening', store($this->component)->get('lazyListening'));
         } elseif (store($this->component)->get('isLazyLoadHydrating') === true) {
             $context->addMemo('lazyLoaded', true);
         }
