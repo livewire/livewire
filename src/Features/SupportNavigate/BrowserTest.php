@@ -516,6 +516,33 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_using_javascript_scrolls_to_top_and_back_preserves_scroll()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->tinker()
+                ->assertVisible('@first-target')
+                ->assertNotInViewPort('@first-target')
+                ->scrollTo('@first-target')
+                ->assertInViewPort('@first-target')
+
+                ->click('@link.to.second.using.javascript')
+                ->waitForText('On second')
+                ->assertNotInViewPort('@second-target')
+                ->scrollTo('@second-target')
+
+                ->back()
+                ->waitForText('On first')
+                ->assertInViewPort('@first-target')
+
+                ->forward()
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
+            ;
+        });
+    }
+
     public function test_navigate_preserves_scroll_when_using_preserve_scroll_attribute()
     {
         $this->browse(function ($browser) {
@@ -527,6 +554,31 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertInViewPort('@first-target')
 
                 ->click('@link.to.second.with.preserve.scroll')
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
+
+                ->back()
+                ->waitForText('On first')
+                ->assertInViewPort('@first-target')
+
+                ->forward()
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
+            ;
+        });
+    }
+
+    public function test_navigate_using_javascript_preserves_scroll_when_using_preserve_scroll_option()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->assertVisible('@first-target')
+                ->assertNotInViewPort('@first-target')
+                ->scrollTo('@first-target')
+                ->assertInViewPort('@first-target')
+
+                ->click('@link.to.second.with.preserve.scroll.using.javascript')
                 ->waitForText('On second')
                 ->assertInViewPort('@second-target')
 
@@ -1346,7 +1398,11 @@ class FirstScrollPage extends Component
 
             <a href="/second-scroll" wire:navigate.hover dusk="link.to.second">Go to second page</a>
 
+            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href)"  dusk="link.to.second.using.javascript">Go to second page using javascript</a>
+
             <a href="/second-scroll" wire:navigate.hover preserve-scroll dusk="link.to.second.with.preserve.scroll">Go to second page with preserve scroll</a>
+
+            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href, { preserveScroll: true })"  dusk="link.to.second.with.preserve.scroll.using.javascript">Go to second page with preserve scroll using javascript</a>
 
             <div style="height: 100vh;">spacer</div>
         </div>

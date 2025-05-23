@@ -16,7 +16,9 @@ let autofocus = false
 
 export default function (Alpine) {
 
-    Alpine.navigate = (url, { preserveScroll = false }) => {
+    Alpine.navigate = (url, options = {}) => {
+        let { preserveScroll = false } = options
+
         let destination = createUrlObjectFromString(url)
 
         let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
