@@ -7905,7 +7905,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Alpine3.addInitSelector(() => `[${Alpine3.prefixed("navigate")}]`);
     Alpine3.directive("navigate", (el, { modifiers }) => {
       let shouldPrefetchOnHover = modifiers.includes("hover");
-      let preserveScroll = el.hasAttribute("preserve-scroll");
+      let preserveScroll = modifiers.includes("preserve-scroll");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
         let destination = extractDestinationFromLink(el);
         if (!destination)
@@ -9572,11 +9572,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-navigate.js
   module_default.addInitSelector(() => `[wire\\:navigate]`);
   module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
   module_default.interceptInit(module_default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:navigate")) {
       module_default.bind(el, { ["x-navigate"]: true });
     } else if (el.hasAttribute("wire:navigate.hover")) {
       module_default.bind(el, { ["x-navigate.hover"]: true });
+    } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
+      module_default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+    } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
+      module_default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+    } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
+      module_default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
     }
   }));
   document.addEventListener("alpine:navigating", () => {
