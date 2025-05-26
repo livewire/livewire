@@ -29,16 +29,17 @@ let aliases = {
     'set': '$set',
     'call': '$call',
     'hook': '$hook',
-    'commit': '$commit',
+    'stop': '$stop',
     'watch': '$watch',
+    'commit': '$commit',
+    'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
-    'upload': '$upload',
-    'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
+    'uploadMultiple': '$uploadMultiple',
 }
 
 export function generateWireObject(component, state) {

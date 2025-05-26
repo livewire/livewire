@@ -8094,6 +8094,7 @@ async function requestCall(component, method, params) {
 }
 async function sendRequest(pool) {
   let [payload, handleSuccess, handleFailure] = pool.payload();
+  window.controller = new AbortController();
   let options = {
     method: "POST",
     body: JSON.stringify({
@@ -8103,7 +8104,8 @@ async function sendRequest(pool) {
     headers: {
       "Content-type": "application/json",
       "X-Livewire": ""
-    }
+    },
+    signal: window.controller.signal
   };
   let succeedCallbacks = [];
   let failCallbacks = [];
@@ -8487,6 +8489,9 @@ function destroyComponent(id) {
     return;
   component.cleanup();
   delete components[id];
+}
+function hasComponent(id) {
+  return !!components[id];
 }
 function findComponent(id) {
   let component = components[id];
@@ -10561,7 +10566,7 @@ function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = n
     }
   } else {
     let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
-    let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
+    let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
     display = directive2.modifiers.includes("remove") && !isTruthy ? cache : display;
     el.style.display = isTruthy ? display : "none";
   }
@@ -10731,9 +10736,26 @@ function quickHash(subject) {
 }
 
 // js/directives/wire-stream.js
+on("stream", (payload) => {
+  if (payload.type !== "update")
+    return;
+  let { id, key, value, replace: replace2 } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  if (replace2 === false) {
+    component.$wire.set(key, component.$wire.get(key) + value, false);
+  } else {
+    component.$wire.set(key, value, false);
+  }
+});
 directive("stream", ({ el, directive: directive2, cleanup }) => {
   let { expression, modifiers } = directive2;
-  let off = on("stream", ({ name, content, replace: replace2 }) => {
+  let off = on("stream", (payload) => {
+    payload.type = payload.type || "html";
+    if (payload.type !== "html")
+      return;
+    let { name, content, replace: replace2 } = payload;
     if (name !== expression)
       return;
     if (modifiers.includes("replace") || replace2) {

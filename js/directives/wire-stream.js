@@ -1,11 +1,35 @@
 import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/hooks'
+import { findComponent, hasComponent } from '@/store'
+
+on('stream', (payload) => {
+    if (payload.type !== 'update') return
+
+    let { id, key, value, replace } = payload
+
+    if (! hasComponent(id)) return
+
+    let component = findComponent(id)
+
+    if (replace === false) {
+        component.$wire.set(key, component.$wire.get(key) + value, false)
+    } else {
+        component.$wire.set(key, value, false)
+    }
+})
 
 directive('stream', ({el, directive, cleanup }) => {
     let { expression, modifiers } = directive
 
-    let off = on('stream', ({ name, content, replace }) => {
+    let off = on('stream', (payload) => {
+        // Default type is "html" becasue that was the original stream feature...
+        payload.type = payload.type || 'html'
+
+        if (payload.type !== 'html') return
+
+        let { name, content, replace } = payload
+
         if (name !== expression) return
 
         if (modifiers.includes('replace') || replace) {

@@ -4262,6 +4262,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload();
+    window.controller = new AbortController();
     let options = {
       method: "POST",
       body: JSON.stringify({
@@ -4271,7 +4272,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       headers: {
         "Content-type": "application/json",
         "X-Livewire": ""
-      }
+      },
+      signal: window.controller.signal
     };
     let succeedCallbacks = [];
     let failCallbacks = [];
@@ -4654,6 +4656,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     component.cleanup();
     delete components[id];
+  }
+  function hasComponent(id) {
+    return !!components[id];
   }
   function findComponent(id) {
     let component = components[id];
@@ -9660,7 +9665,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     } else {
       let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
-      let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
+      let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
       display = directive3.modifiers.includes("remove") && !isTruthy ? cache : display;
       el.style.display = isTruthy ? display : "none";
     }
@@ -9830,9 +9835,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-stream.js
+  on2("stream", (payload) => {
+    if (payload.type !== "update")
+      return;
+    let { id, key, value, replace: replace2 } = payload;
+    if (!hasComponent(id))
+      return;
+    let component = findComponent(id);
+    if (replace2 === false) {
+      component.$wire.set(key, component.$wire.get(key) + value, false);
+    } else {
+      component.$wire.set(key, value, false);
+    }
+  });
   directive2("stream", ({ el, directive: directive3, cleanup: cleanup2 }) => {
     let { expression, modifiers } = directive3;
-    let off = on2("stream", ({ name, content, replace: replace2 }) => {
+    let off = on2("stream", (payload) => {
+      payload.type = payload.type || "html";
+      if (payload.type !== "html")
+        return;
+      let { name, content, replace: replace2 } = payload;
       if (name !== expression)
         return;
       if (modifiers.includes("replace") || replace2) {
