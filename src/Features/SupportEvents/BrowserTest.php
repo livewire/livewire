@@ -69,20 +69,27 @@ class BrowserTest extends BrowserTestCase
 
             function onFoo($param) {
                 $this->button = $param;
-             }
+            }
+
+            function bar() {
+                $this->dispatch('foo', 'Bar set text');
+            }
 
             function render()
             {
                 return Blade::render(<<<'HTML'
                 <div>
                     <button @click="Livewire.dispatch('foo', 'Param Set Text')" dusk="button">{{ $button }}</button>
+                    <button wire:click="bar" dusk="bar-button">Bar</button>
                 </div>
                 HTML, ['button' => $this->button]);
             }
         })
             ->assertSeeIn('@button', 'Text')
             ->waitForLivewire()->click('@button')
-            ->assertSeeIn('@button', 'Param Set Text');
+            ->assertSeeIn('@button', 'Param Set Text')
+            ->waitForLivewire()->click('@bar-button')
+            ->assertSeeIn('@button', 'Bar set text');
     }
 
     public function test_can_dispatch_self_inside_script_directive()
