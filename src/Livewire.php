@@ -38,6 +38,6 @@ class Livewire extends Facade
 {
     public static function getFacadeAccessor()
     {
-        return 'livewire';
+        return \Livewire\LivewireManager::class;
     }
 }
