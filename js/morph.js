@@ -21,15 +21,46 @@ export function morph(component, el, html) {
 
     let to = wrapper.firstElementChild
 
+    // Set the snapshot and effects on the `to` element that way if there's a
+    // mismatch or problem the component will able to be re-initialized...
+    to.setAttribute('wire:snapshot', component.snapshotEncoded)
+
+    // Remove the 'html' key from the effects as the html will be morphed...
+    let effects = { ...component.effects }
+    delete effects.html
+    to.setAttribute('wire:effects', JSON.stringify(effects))
+
     to.__livewire = component
 
     trigger('morph', { el, toEl: to, component })
 
+    // Let's first do a lookup of all the child components to see if the component already
+    // exists and if so we'll clone it and replace the child component with the clone.
+    // This is to ensure that components don't loose state even if there might be a
+    // `wire:key` missing from elements within a loop around the component...
+    let existingComponentsMap = {}
+
+    el.querySelectorAll('[wire\\:id]').forEach(component => {
+        existingComponentsMap[component.getAttribute('wire:id')] = component
+    })
+
+    to.querySelectorAll('[wire\\:id]').forEach(child => {
+        // If the child has a `wire:snapshot` it means it's new, so we don't need to find it...
+        if (child.hasAttribute('wire:snapshot')) return
+
+        let wireId = child.getAttribute('wire:id')
+        let existingComponent = existingComponentsMap[wireId]
+
+        if (existingComponent) {
+            child.replaceWith(existingComponent.cloneNode(true))
+        }
+    })
+
     Alpine.morph(el, to, {
-        updating: (el, toEl, childrenOnly, skip) => {
+        updating: (el, toEl, childrenOnly, skip, skipChildren) => {
             if (isntElement(el)) return
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly })
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
 
             // bypass DOM diffing for children by overwriting the content
             if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
@@ -38,6 +69,7 @@ export function morph(component, el, html) {
 
             if (el.__livewire_ignore === true) return skip()
             if (el.__livewire_ignore_self === true) childrenOnly()
+            if (el.__livewire_ignore_children === true) return skipChildren()
 
             // Children will update themselves.
             if (isComponentRootEl(el) && el.getAttribute('wire:id') !== component.id) return skip()
