@@ -77,6 +77,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Route::get('/parent', ParentComponent::class)->middleware('web');
             Route::get('/page-with-link-to-page-without-livewire', PageWithLinkAway::class);
+
+            Route::get('/nonce', fn () => self::renderNoncePage('First Nonce Page', 'ABCD1234'));
+            Route::get('/nonce2', fn () => self::renderNoncePage('Second Nonce Page', 'EFGH5678'));
             Route::get('/page-without-livewire-component', fn () => Blade::render(<<<'HTML'
                 <html>
                     <head>
@@ -98,6 +101,24 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/no-javascript', fn () => '<div dusk="no-javascript-side">No javascript side triggered.</div>')
                 ->middleware('web')->name('no-javascript');
         };
+    }
+
+    public static function renderNoncePage(string $name, string $nonce): string
+    {
+        return Blade::render(<<<'HTML'
+                <html>
+                    <head>
+                        <meta name="empty-layout" content>
+
+                        <script src="/test-navigate-asset.js" data-navigate-track></script>
+                    </head>
+                    <body>
+                        <div dusk="nonce-page">{{ $name }}</div>
+                        <a href="/nonce2" wire:navigate dusk="link">to next nonce page</a>
+                        @livewireScripts(['nonce' => $nonce]);
+                    </body>
+                </html>
+            HTML, ['name' => $name, 'nonce' => $nonce]);
     }
 
     public function test_back_button_works_with_teleports()
@@ -359,7 +380,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_can_redirect_to_a_page_after_destorying_session()
+    public function test_can_redirect_to_a_page_after_destroying_session()
     {
         $this->browse(function ($browser) {
             $browser
@@ -371,6 +392,19 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.first')
                 ->assertSee('On second')
                 ->assertScript('return window._lw_dusk_test')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Livewire')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Alpine');
+        });
+    }
+
+    public function test_can_navigate_to_a_page_when_csp_nonce_present(): void
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/nonce')
+                ->assertSee('First Nonce Page')
+                ->click('@link')
+                ->waitForText('Second Nonce Page')
                 ->assertConsoleLogMissingWarning('Detected multiple instances of Livewire')
                 ->assertConsoleLogMissingWarning('Detected multiple instances of Alpine');
         });

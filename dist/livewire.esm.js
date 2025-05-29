@@ -9166,6 +9166,7 @@ function isPopoverSupported() {
 var oldBodyScriptTagHashes = [];
 var attributesExemptFromScriptTagHashing = [
   "data-csrf",
+  "nonce",
   "aria-hidden"
 ];
 function swapCurrentPageWithNewHtml(html, andThen) {
