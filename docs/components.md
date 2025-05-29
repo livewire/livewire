@@ -220,7 +220,7 @@ If you are looping through an array that is rendering Livewire components you ma
     @foreach ($posts as $post)
         <livewire:post-item :$post :key="$post->id">
 
-        @livewire(PostItem::class, ['post' => $post], key($post->id))
+        @livewire(PostItem::class, ['post' => $post], $post->id)
     @endforeach
 </div>
 ```
