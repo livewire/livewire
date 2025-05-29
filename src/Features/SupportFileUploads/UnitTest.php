@@ -836,7 +836,7 @@ class UnitTest extends \Tests\TestCase
     public function test_the_default_file_upload_controller_middleware_overwritten()
     {
         config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1']);
-        FileUploadController::$defaultMiddleware = 'tenant';
+        FileUploadController::$defaultMiddleware = ['tenant'];
 
         $middleware = Arr::pluck(FileUploadController::middleware(), 'middleware');
 
