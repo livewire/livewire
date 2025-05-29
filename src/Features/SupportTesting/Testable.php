@@ -307,8 +307,11 @@ class Testable
             // MimeTypes contain slashes, so we replace them with underscores to ensure the filename is valid.
             $escapedMimeType = (string) str($file->getMimeType())->replace('/', '_');
 
-            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-mimeType={$escapedMimeType}-size={$file->getSize()}.");
-        })->toArray();
+            return [
+                (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-mimeType={$escapedMimeType}-size={$file->getSize()}."),
+                $file->getClientOriginalName(),
+            ];
+        })->reduce(fn ($carry, $item) => $carry->put($item[0], $item[1]), collect())->toArray();
 
         collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
             $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));

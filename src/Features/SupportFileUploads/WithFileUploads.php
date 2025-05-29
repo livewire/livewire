@@ -32,12 +32,14 @@ trait WithFileUploads
         }
 
         if ($isMultiple) {
-            $file = collect($tmpPath)->map(function ($i) {
-                return TemporaryUploadedFile::createFromLivewire($i);
-            })->toArray();
+            $file = collect($tmpPath)->map(function ($i, $key) {
+                return TemporaryUploadedFile::createFromLivewire($i, $key);
+            })->values()->toArray();
+
             $this->dispatch('upload:finished', name: $name, tmpFilenames: collect($file)->map->getFilename()->toArray())->self();
         } else {
-            $file = TemporaryUploadedFile::createFromLivewire($tmpPath[0]);
+            $key = array_key_first($tmpPath);
+            $file = TemporaryUploadedFile::createFromLivewire($tmpPath[$key], is_numeric($key) ? null : $key);
             $this->dispatch('upload:finished', name: $name, tmpFilenames: [$file->getFilename()])->self();
 
             // If the property is an array, but the upload ISNT set to "multiple"
@@ -117,4 +119,3 @@ trait WithFileUploads
         }
     }
 }
-

@@ -13,12 +13,14 @@ class TemporaryUploadedFile extends UploadedFile
     protected $disk;
     protected $storage;
     protected $path;
+    protected $mappedName;
 
-    public function __construct($path, $disk)
+    public function __construct($path, $disk, $mappedName = null)
     {
         $this->disk = $disk;
         $this->storage = Storage::disk($this->disk);
         $this->path = FileUploadConfiguration::path($path, false);
+        $this->mappedName = $mappedName;
 
         $tmpFile = tmpfile();
 
@@ -90,9 +92,15 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->getRealPath();
     }
 
+    public function getMappedName(): ?string
+    {
+        return $this->mappedName;
+    }
+
     public function getClientOriginalName(): string
     {
-        return $this->extractOriginalNameFromFilePath($this->path);
+        // ray('getClientOriginalName', $this->mappedName);
+        return $this->mappedName ?? $this->extractOriginalNameFromFilePath($this->path);
     }
 
     public function dimensions()
@@ -175,7 +183,8 @@ class TemporaryUploadedFile extends UploadedFile
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
         $hash = str()->random(30);
-        $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
+        $meta = '';
+        // $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
         $extension = '.'.$file->getClientOriginalExtension();
 
         return $hash.$meta.$extension;
@@ -195,9 +204,9 @@ class TemporaryUploadedFile extends UploadedFile
         return base64_decode(head(explode('-', last(explode('-meta', str($path)->replace('_', '/'))))));
     }
 
-    public static function createFromLivewire($filePath)
+    public static function createFromLivewire($filePath, $mappedName = null)
     {
-        return new static($filePath, FileUploadConfiguration::disk());
+        return new static($filePath, FileUploadConfiguration::disk(), $mappedName);
     }
 
     public static function canUnserialize($subject)
@@ -219,7 +228,14 @@ class TemporaryUploadedFile extends UploadedFile
     {
         if (is_string($subject)) {
             if (str($subject)->startsWith('livewire-file:')) {
-                return static::createFromLivewire(str($subject)->after('livewire-file:'));
+                $mappedName = null;
+
+                if (str($subject)->contains('-name=')) {
+                    $mappedName = str($subject)->after('-name=')->value();
+                    $subject = str($subject)->before('-name=')->value();
+                }
+
+                return static::createFromLivewire(str($subject)->after('livewire-file:'), $mappedName);
             }
 
             if (str($subject)->startsWith('livewire-files:')) {
@@ -240,11 +256,13 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function serializeForLivewireResponse()
     {
-        return 'livewire-file:'.$this->getFilename();
+        return 'livewire-file:'.$this->getFilename().($this->getMappedName() ? '-name='.$this->getMappedName() : '');
     }
 
     public static function serializeMultipleForLivewireResponse($files)
     {
-        return 'livewire-files:'.json_encode(collect($files)->map->getFilename());
+        return 'livewire-files:'.json_encode(collect($files)->map(
+            fn ($file) => $file->getFilename().($file->getMappedName() ? '-name='.$file->getMappedName() : '')
+        ));
     }
 }
