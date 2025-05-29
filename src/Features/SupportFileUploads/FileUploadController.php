@@ -14,6 +14,7 @@ class FileUploadController implements HasMiddleware
     {
         $middleware = (array) FileUploadConfiguration::middleware();
 
+        // Prepend the default middleware to the middleware array if it's not already present...
         foreach (array_reverse(static::$defaultMiddleware) as $defaultMiddleware) {
             if (! in_array($defaultMiddleware, $middleware)) {
                 array_unshift($middleware, $defaultMiddleware);
