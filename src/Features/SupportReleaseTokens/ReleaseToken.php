@@ -6,9 +6,9 @@ use Livewire\Exceptions\LivewireReleaseTokenMismatchException;
 use Livewire\Mechanisms\ComponentRegistry;
 
 class ReleaseToken {
-    // This is the release token used by Livewire to verify that components running in the browser
-    // are compatible with the internal serverside implementation. Maintainers will update this
-    // token when deploying changes that would invalidate currently running components...
+    // This token is stored client-side and sent along with each request to check
+    // a users session to see if a new release has invalidated it. If there is
+    // a mismatch it will throw an error and prompt for a browser refresh.
     public static $LIVEWIRE_RELEASE_TOKEN = 'a';
 
     static function verify($snapshot): void

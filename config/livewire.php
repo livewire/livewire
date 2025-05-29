@@ -163,13 +163,9 @@ return [
     | Release Token
     |---------------------------------------------------------------------------
     |
-    | Livewire uses this value to verify components currently running in the browser
-    | match your application version. You should only change this token if you're
-    | deploying breaking changes. It invalidates all components running in the
-    | browser by throwing a `LivewireReleaseTokenMismatchException` causing
-    | a 419 response to be returned triggering a dialog requesting users
-    | to refresh the page. Component-specific invalidation is possible
-    | with the `releaseToken()` method.
+    | This token is stored client-side and sent along with each request to check
+    | a users session to see if a new release has invalidated it. If there is
+    | a mismatch it will throw an error and prompt for a browser refresh.
     |
     */
 
