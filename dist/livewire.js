@@ -7898,7 +7898,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var restoreScroll = true;
   var autofocus = false;
   function navigate_default(Alpine3) {
-    Alpine3.navigate = (url) => {
+    Alpine3.navigate = (url, options = {}) => {
+      let { preserveScroll = false } = options;
       let destination = createUrlObjectFromString(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
@@ -7907,7 +7908,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       if (prevented)
         return;
-      navigateTo(destination);
+      navigateTo(destination, { preserveScroll });
     };
     Alpine3.navigate.disableProgressBar = () => {
       showProgressBar = false;
@@ -7915,6 +7916,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Alpine3.addInitSelector(() => `[${Alpine3.prefixed("navigate")}]`);
     Alpine3.directive("navigate", (el, { modifiers }) => {
       let shouldPrefetchOnHover = modifiers.includes("hover");
+      let preserveScroll = modifiers.includes("preserve-scroll");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
         let destination = extractDestinationFromLink(el);
         if (!destination)
@@ -7938,16 +7940,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
           if (prevented)
             return;
-          navigateTo(destination);
+          navigateTo(destination, { preserveScroll });
         });
       });
     });
-    function navigateTo(destination, shouldPushToHistoryState = true) {
+    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
         fireEventForOtherLibrariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
-        showProgressBar && finishAndHideProgressBar();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
@@ -7966,7 +7967,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedTeleports(persistedEl);
               unPackPersistedPopovers(persistedEl);
             });
-            restoreScrollPositionOrScrollToTop();
+            !preserveScroll && restoreScrollPositionOrScrollToTop();
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
@@ -7974,6 +7975,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
                 fireEventForOtherLibrariesToHookInto("alpine:navigated");
+                showProgressBar && finishAndHideProgressBar();
               });
             });
           });
@@ -7990,8 +7992,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         if (prevented)
           return;
-        let shouldPushToHistoryState = false;
-        navigateTo(destination, shouldPushToHistoryState);
+        navigateTo(destination, { shouldPushToHistoryState: false });
       });
     }, (html, url, currentPageUrl, currentPageKey) => {
       let destination = createUrlObjectFromString(url);
@@ -9588,11 +9589,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-navigate.js
   module_default.addInitSelector(() => `[wire\\:navigate]`);
   module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
   module_default.interceptInit(module_default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:navigate")) {
       module_default.bind(el, { ["x-navigate"]: true });
     } else if (el.hasAttribute("wire:navigate.hover")) {
       module_default.bind(el, { ["x-navigate.hover"]: true });
+    } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
+      module_default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+    } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
+      module_default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+    } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
+      module_default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
     }
   }));
   document.addEventListener("alpine:navigating", () => {
@@ -9875,7 +9885,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (modifiers.includes("replace") || replace2) {
         el.innerHTML = content;
       } else {
-        el.innerHTML = el.innerHTML + content;
+        el.insertAdjacentHTML("beforeend", content);
       }
     });
     cleanup2(off);

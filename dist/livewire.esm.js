@@ -9302,7 +9302,8 @@ var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
 function navigate_default(Alpine23) {
-  Alpine23.navigate = (url) => {
+  Alpine23.navigate = (url, options = {}) => {
+    let { preserveScroll = false } = options;
     let destination = createUrlObjectFromString(url);
     let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
@@ -9311,7 +9312,7 @@ function navigate_default(Alpine23) {
     });
     if (prevented)
       return;
-    navigateTo(destination);
+    navigateTo(destination, { preserveScroll });
   };
   Alpine23.navigate.disableProgressBar = () => {
     showProgressBar = false;
@@ -9319,6 +9320,7 @@ function navigate_default(Alpine23) {
   Alpine23.addInitSelector(() => `[${Alpine23.prefixed("navigate")}]`);
   Alpine23.directive("navigate", (el, { modifiers }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
+    let preserveScroll = modifiers.includes("preserve-scroll");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
       if (!destination)
@@ -9342,16 +9344,15 @@ function navigate_default(Alpine23) {
         });
         if (prevented)
           return;
-        navigateTo(destination);
+        navigateTo(destination, { preserveScroll });
       });
     });
   });
-  function navigateTo(destination, shouldPushToHistoryState = true) {
+  function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibrariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
-      showProgressBar && finishAndHideProgressBar();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
@@ -9370,7 +9371,7 @@ function navigate_default(Alpine23) {
             unPackPersistedTeleports(persistedEl);
             unPackPersistedPopovers(persistedEl);
           });
-          restoreScrollPositionOrScrollToTop();
+          !preserveScroll && restoreScrollPositionOrScrollToTop();
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -9378,6 +9379,7 @@ function navigate_default(Alpine23) {
               });
               nowInitializeAlpineOnTheNewPage(Alpine23);
               fireEventForOtherLibrariesToHookInto("alpine:navigated");
+              showProgressBar && finishAndHideProgressBar();
             });
           });
         });
@@ -9394,8 +9396,7 @@ function navigate_default(Alpine23) {
       });
       if (prevented)
         return;
-      let shouldPushToHistoryState = false;
-      navigateTo(destination, shouldPushToHistoryState);
+      navigateTo(destination, { shouldPushToHistoryState: false });
     });
   }, (html, url, currentPageUrl, currentPageKey) => {
     let destination = createUrlObjectFromString(url);
@@ -10488,11 +10489,20 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
 var import_alpinejs13 = __toESM(require_module_cjs());
 import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
 import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
 import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
     import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
     import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
+  } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
+    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+  } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
+    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+  } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
+    import_alpinejs13.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
   }
 }));
 document.addEventListener("alpine:navigating", () => {
@@ -10776,7 +10786,7 @@ directive("stream", ({ el, directive: directive2, cleanup }) => {
     if (modifiers.includes("replace") || replace2) {
       el.innerHTML = content;
     } else {
-      el.innerHTML = el.innerHTML + content;
+      el.insertAdjacentHTML("beforeend", content);
     }
   });
   cleanup(off);
