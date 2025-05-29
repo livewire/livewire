@@ -10,6 +10,10 @@ class SupportReleaseTokens extends ComponentHook
 {
     public static function provide()
     {
+        on('dehydrate', function ($component, $context) {
+            $context->addMemo('release', ReleaseToken::generate($component));
+        });
+
         // Use `snapshot-verified` to run the check before any component properties are hydrated
         // but after the snapshot has been verified to ensure it hasn't been tampered with...
         on('snapshot-verified', function ($snapshot) {
@@ -18,10 +22,6 @@ class SupportReleaseTokens extends ComponentHook
             if ($snapshot['memo']['name'] === '__mountParamsContainer') return;
 
             ReleaseToken::verify($snapshot);
-        });
-
-        on('dehydrate', function ($component, $context) {
-            $context->addMemo('release', ReleaseToken::generate($component));
         });
     }
 }
