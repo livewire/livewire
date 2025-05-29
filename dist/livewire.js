@@ -4816,18 +4816,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.expression = this.el.getAttribute(this.rawName);
     }
     get method() {
-      const { method } = this.parseOutMethodAndParams(this.expression);
-      return method;
+      const methods = this.parseOutMethodsAndParams(this.expression);
+      return methods[0].method;
+    }
+    get methods() {
+      return this.parseOutMethodsAndParams(this.expression);
     }
     get params() {
-      const { params } = this.parseOutMethodAndParams(this.expression);
-      return params;
+      const methods = this.parseOutMethodsAndParams(this.expression);
+      return methods[0].params;
     }
-    parseOutMethodAndParams(rawMethod) {
+    parseOutMethodsAndParams(rawMethod) {
+      let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
       let method = rawMethod;
       let params = [];
-      const methodAndParamString = method.match(/(.*?)\((.*)\)/s);
-      if (methodAndParamString) {
+      let methodAndParamString = method.match(methodRegex);
+      let methods = [];
+      let slicedLength = 0;
+      while (methodAndParamString) {
         method = methodAndParamString[1];
         let func = new Function("$event", `return (function () {
                 for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
@@ -4836,8 +4842,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 return [].concat(p);
             })(${methodAndParamString[2]})`);
         params = func(this.eventContext);
+        methods.push({ method, params });
+        slicedLength += methodAndParamString[0].length;
+        methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
       }
-      return { method, params };
+      if (methods.length === 0) {
+        methods.push({ method, params });
+      }
+      return methods;
     }
   };
 
@@ -9861,7 +9873,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (directive3.modifiers.includes("except"))
         inverted = true;
       if (raw2.includes("(") && raw2.includes(")")) {
-        targets.push({ target: directive3.method, params: quickHash(JSON.stringify(directive3.params)) });
+        targets = targets.concat(directive3.methods.map((method) => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })));
       } else if (raw2.includes(",")) {
         raw2.split(",").map((i) => i.trim()).forEach((target) => {
           targets.push({ target });
