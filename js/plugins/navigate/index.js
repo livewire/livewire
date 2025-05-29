@@ -80,8 +80,6 @@ export default function (Alpine) {
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
 
-            showProgressBar && finishAndHideProgressBar()
-
             cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
 
             updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
@@ -117,6 +115,7 @@ export default function (Alpine) {
                             nowInitializeAlpineOnTheNewPage(Alpine)
 
                             fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                            showProgressBar && finishAndHideProgressBar()
                         })
                     })
                 })

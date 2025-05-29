@@ -7935,11 +7935,18 @@ var Commit = class {
   prepare() {
     trigger("commit.prepare", { component: this.component });
   }
+  getEncodedSnapshotWithLatestChildrenMergedIn() {
+    let { snapshotEncoded, children, snapshot } = this.component;
+    let childIds = children.map((child) => child.id);
+    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+    return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
+  }
   toRequestPayload() {
     let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
     let updates = this.component.mergeQueuedUpdates(propertiesDiff);
+    let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn();
     let payload = {
-      snapshot: this.component.snapshotEncoded,
+      snapshot: snapshotEncoded,
       updates,
       calls: this.calls.map((i) => ({
         path: i.path,
@@ -8028,7 +8035,6 @@ var CommitBus = class {
   createAndSendNewPool() {
     trigger("commit.pooling", { commits: this.commits });
     let pools = this.corraleCommitsIntoPools();
-    this.commits.clear();
     trigger("commit.pooled", { pools });
     pools.forEach((pool) => {
       if (pool.empty())
@@ -8036,13 +8042,17 @@ var CommitBus = class {
       this.pools.add(pool);
       pool.send().then(() => {
         this.pools.delete(pool);
-        this.sendAnyQueuedCommits();
+        queueMicrotask(() => {
+          this.sendAnyQueuedCommits();
+        });
       });
     });
   }
   corraleCommitsIntoPools() {
     let pools = /* @__PURE__ */ new Set();
     for (let [idx, commit] of this.commits.entries()) {
+      if (this.findPoolWithComponent(commit.component))
+        continue;
       let hasFoundPool = false;
       pools.forEach((pool) => {
         if (pool.shouldHoldCommit(commit)) {
@@ -8055,6 +8065,7 @@ var CommitBus = class {
         newPool.add(commit);
         pools.add(newPool);
       }
+      this.commits.delete(commit);
     }
     return pools;
   }
@@ -8430,7 +8441,7 @@ var Component = class {
   get children() {
     let meta = this.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
-    return childIds.map((id) => findComponent(id));
+    return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
   }
   get parent() {
     return closestComponent(this.el.parentElement);
@@ -9342,7 +9353,6 @@ function navigate_default(Alpine23) {
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibrariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
-      showProgressBar && finishAndHideProgressBar();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
@@ -9369,6 +9379,7 @@ function navigate_default(Alpine23) {
               });
               nowInitializeAlpineOnTheNewPage(Alpine23);
               fireEventForOtherLibrariesToHookInto("alpine:navigated");
+              showProgressBar && finishAndHideProgressBar();
             });
           });
         });
@@ -10016,7 +10027,13 @@ on("effect", ({ component, effects }) => {
 
 // js/features/supportDispatches.js
 on("effect", ({ component, effects }) => {
-  dispatchEvents(component, effects.dispatches || []);
+  queueMicrotask(() => {
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        dispatchEvents(component, effects.dispatches || []);
+      });
+    });
+  });
 });
 function dispatchEvents(component, dispatches) {
   dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
@@ -10769,7 +10786,7 @@ directive("stream", ({ el, directive: directive2, cleanup }) => {
     if (modifiers.includes("replace") || replace2) {
       el.innerHTML = content;
     } else {
-      el.innerHTML = el.innerHTML + content;
+      el.insertAdjacentHTML("beforeend", content);
     }
   });
   cleanup(off);
