@@ -54,6 +54,14 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getMimeType(): string
     {
+        if (app()->runningUnitTests() && str($this->getFilename())->contains('-mimeType=')) {
+            $escapedMimeType = str($this->getFilename())->between('-mimeType=', '-');
+
+            // MimeTypes contain slashes, but we replaced them with underscores in `SupportTesting\Testable`
+            // to ensure the filename is valid, so we now need to revert that.
+            return (string) $escapedMimeType->replace('_', '/');
+        }
+
         $mimeType = $this->storage->mimeType($this->path);
 
         // Flysystem V2.0+ removed guess mimeType from extension support, so it has been re-added back
@@ -104,7 +112,7 @@ class TemporaryUploadedFile extends UploadedFile
             return $this->storage->temporaryUrl(
                 $this->path,
                 now()->addDay()->endOfHour(),
-                ['ResponseContentDisposition' => 'attachment; filename="' . $this->getClientOriginalName() . '"']
+                ['ResponseContentDisposition' => 'attachment; filename="' . urlencode($this->getClientOriginalName()) . '"']
             );
         }
 
@@ -176,7 +184,7 @@ class TemporaryUploadedFile extends UploadedFile
     public function hashName($path = null)
     {
         if (app()->runningUnitTests() && str($this->getFilename())->contains('-hash=')) {
-            return str($this->getFilename())->between('-hash=', '-')->value();
+            return str($this->getFilename())->between('-hash=', '-mimeType')->value();
         }
 
         return parent::hashName($path);

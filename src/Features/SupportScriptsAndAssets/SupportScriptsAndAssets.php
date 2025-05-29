@@ -16,9 +16,30 @@ class SupportScriptsAndAssets extends ComponentHook
 
     public static $renderedAssets = [];
 
+    public static $nonLivewireAssets = [];
+
     public static function getAssets()
     {
         return static::$renderedAssets;
+    }
+
+    public static function processNonLivewireAssets()
+    {
+        // If any assets have been added outside of a Livewire component, then they will not be 
+        // processed like the other assets as there is no dehydrate being called. So instead 
+        // we process them manually that way they are included with the other assets when
+        // they are injected...
+        $alreadyRunAssetKeys = [];
+
+        foreach (static::$nonLivewireAssets as $key => $assets) {
+             if (! in_array($key, $alreadyRunAssetKeys)) {
+
+                // These will get injected into the HTML if it's an initial page load...
+                static::$renderedAssets[$key] = $assets;
+
+                $alreadyRunAssetKeys[] = $key;
+            }
+        }
     }
 
     public static function getUniqueBladeCompileTimeKey()
@@ -45,6 +66,7 @@ class SupportScriptsAndAssets extends ComponentHook
             static::$alreadyRunAssetKeys = [];
             static::$countersByViewPath = [];
             static::$renderedAssets = [];
+            static::$nonLivewireAssets = [];
         });
 
         Blade::directive('script', function () {
@@ -90,7 +112,13 @@ class SupportScriptsAndAssets extends ComponentHook
                         // Skip it...
                     } else {
                         \Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets::\$alreadyRunAssetKeys[] = \$__assetKey;
-                        \Livewire\store(\$this)->push('assets', \$__output, \$__assetKey);
+
+                        // Check if we're in a Livewire component or not and store the asset accordingly...
+                        if (isset(\$this)) {
+                            \Livewire\store(\$this)->push('assets', \$__output, \$__assetKey);
+                        } else {
+                            \Livewire\Features\SupportScriptsAndAssets\SupportScriptsAndAssets::\$nonLivewireAssets[\$__assetKey] = \$__output;
+                        }
                     }
                 ?>
             PHP;

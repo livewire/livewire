@@ -4,6 +4,7 @@ namespace Livewire\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Drawer\Utils;
+use Livewire\Form;
 
 trait InteractsWithProperties
 {
@@ -57,9 +58,10 @@ trait InteractsWithProperties
             // Check if the property contains a dot which means it is actually on a nested object like a FormObject
             if (str($property)->contains('.')) {
                 $propertyName = $property->afterLast('.');
-                $objectName = $property->beforeLast('.');
+                $objectName = $property->before('.');
 
-                if (method_exists($this->{$objectName}, 'reset')) {
+                // form object reset
+                if (is_subclass_of($this->{$objectName}, Form::class)) {
                     $this->{$objectName}->reset($propertyName);
                     continue;
                 }
@@ -92,6 +94,10 @@ trait InteractsWithProperties
         }
 
         $keysToReset = array_diff(array_keys($this->all()), $properties);
+
+        if($keysToReset === []) {
+            return;
+        }
 
         $this->reset($keysToReset);
     }

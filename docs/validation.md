@@ -301,7 +301,7 @@ class CreatePost extends Component
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => 'required|min:5',
@@ -400,7 +400,7 @@ class CreatePost extends Component
 
     public $content = '';
 
-    public function rules() // [tl! highlight:6]
+    protected function rules() // [tl! highlight:6]
     {
         return [
             'title' => Rule::exists('posts', 'title'),
@@ -408,7 +408,7 @@ class CreatePost extends Component
         ];
     }
 
-    public function messages() // [tl! highlight:6]
+    protected function messages() // [tl! highlight:6]
     {
         return [
             'content.required' => 'The :attribute are missing.',
@@ -416,7 +416,7 @@ class CreatePost extends Component
         ];
     }
 
-    public function validationAttributes() // [tl! highlight:6]
+    protected function validationAttributes() // [tl! highlight:6]
     {
         return [
             'content' => 'description',
@@ -468,7 +468,7 @@ class UpdatePost extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [
@@ -610,8 +610,7 @@ use Tests\TestCase;
 
 class CreatePostTest extends TestCase
 {
-    /** @test */
-    public function cant_create_post_without_title()
+    public function test_cant_create_post_without_title()
     {
         Livewire::test(CreatePost::class)
             ->set('content', 'Sample content...')
@@ -624,8 +623,7 @@ class CreatePostTest extends TestCase
 In addition to testing the presence of errors, `assertHasErrors` allows you to also narrow down the assertion to specific rules by passing the rules to assert against as the second argument to the method:
 
 ```php
-/** @test */
-public function cant_create_post_with_title_shorter_than_3_characters()
+public function test_cant_create_post_with_title_shorter_than_3_characters()
 {
     Livewire::test(CreatePost::class)
         ->set('title', 'Sa')
@@ -638,8 +636,7 @@ public function cant_create_post_with_title_shorter_than_3_characters()
 You can also assert the presence of validation errors for multiple properties at the same time:
 
 ```php
-/** @test */
-public function cant_create_post_without_title_and_content()
+public function test_cant_create_post_without_title_and_content()
 {
     Livewire::test(CreatePost::class)
         ->call('save')

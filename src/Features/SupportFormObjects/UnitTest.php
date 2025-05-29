@@ -66,6 +66,39 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.content', 'bar')
         ;
     }
+    function test_can_reset_form_object_handle_dot_notation_with_asterisk_wildcard()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.*',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
+
+    function test_can_reset_form_object_handle_nested_dot_notation()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetForm()
+            {
+                $this->reset([
+                    'form.content.foo',
+                ]);
+            }
+        })
+            ->assertSetStrict('form.content', [1 => true, 2 => false, 'foo' => ['bar' => 'baz']])
+            ->call('resetForm')
+        ;
+    }
 
     function test_set_form_object_with_typed_nullable_properties()
     {
@@ -289,7 +322,7 @@ class UnitTest extends \Tests\TestCase
             ->call('save')
         ;
     }
-    
+
     public function test_validation_errors_persist_across_validation_errors()
     {
         $component = Livewire::test(new class extends Component {
@@ -777,12 +810,12 @@ class UnitTest extends \Tests\TestCase
 
     function test_can_pull_some_properties()
     {
-        $component = Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent {
             public ResetPropertiesForm $form;
 
-            function test(...$args)
+            function formResetExcept(...$args)
             {
-                $this->form->proxyResetExcept(...$args);
+                $this->form->resetExcept(...$args);
             }
         })
         ->assertSet('form.foo', 'bar')
@@ -791,10 +824,14 @@ class UnitTest extends \Tests\TestCase
         ->assertSet('form.bob', 'lob')
         ->set('form.bob', 'loc')
         ->assertSet('form.bob', 'loc')
-        ->call('test', ['foo']);
-
-        $this->assertEquals('baz', $component->form->foo);
-        $this->assertEquals('lob', $component->form->bob);
+        ->call('formResetExcept', ['foo'])
+        ->assertSet('form.foo', 'baz')
+        ->assertSet('form.bob', 'lob')
+        ->set('form.foo', 'bar2')
+        ->set('form.bob', 'lob2')
+        ->call('formResetExcept', ['foo', 'bob'])
+        ->assertSet('form.foo', 'bar2')
+        ->assertSet('form.bob', 'lob2');
     }
 }
 
@@ -810,6 +847,17 @@ class PostFormStubWithDefaults extends Form
     public $title = 'foo';
 
     public $content = 'bar';
+}
+
+class PostFormStubWithArrayDefaults extends Form
+{
+    public $title = 'foo';
+
+    public $content = [
+        1 => true,
+        2 => false,
+        'foo' => ['bar' => 'baz'],
+    ];
 }
 
 class PostFormWithTypedProperties extends Form
@@ -1010,10 +1058,6 @@ class ResetPropertiesForm extends Form
 {
     public $foo = 'bar';
     public $bob = 'lob';
-
-    public function proxyResetExcept(...$args){
-        return $this->resetExcept(...$args);
-    }
 
     public function proxyPull(...$args){
         return $this->pull(...$args);

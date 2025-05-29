@@ -5,6 +5,7 @@ import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTelep
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndStartProgressBar } from "./bar"
+import { packUpPersistedPopovers, unPackPersistedPopovers } from "./popover"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
 
@@ -15,16 +16,18 @@ let autofocus = false
 
 export default function (Alpine) {
 
-    Alpine.navigate = (url) => {
+    Alpine.navigate = (url, options = {}) => {
+        let { preserveScroll = false } = options
+
         let destination = createUrlObjectFromString(url)
 
-        let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+        let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
             url: destination, history: false, cached: false,
          })
 
         if (prevented) return
 
-        navigateTo(destination)
+        navigateTo(destination, { preserveScroll })
     }
 
     Alpine.navigate.disableProgressBar = () => {
@@ -35,6 +38,8 @@ export default function (Alpine) {
 
     Alpine.directive('navigate', (el, { modifiers }) => {
         let shouldPrefetchOnHover = modifiers.includes('hover')
+
+        let preserveScroll = modifiers.includes('preserve-scroll')
 
         shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
@@ -56,26 +61,24 @@ export default function (Alpine) {
             })
 
             whenItIsReleased(() => {
-                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
                     url: destination, history: false, cached: false,
                  })
 
                 if (prevented) return
 
-                navigateTo(destination);
+                navigateTo(destination, { preserveScroll })
             })
         })
     })
 
-    function navigateTo(destination, shouldPushToHistoryState = true) {
+    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
-            fireEventForOtherLibariesToHookInto('alpine:navigating')
+            fireEventForOtherLibrariesToHookInto('alpine:navigating')
 
             restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway()
-
-            showProgressBar && finishAndHideProgressBar()
 
             cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement()
 
@@ -84,6 +87,7 @@ export default function (Alpine) {
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
                 enablePersist && storePersistantElementsForLater(persistedEl => {
                     packUpPersistedTeleports(persistedEl)
+                    packUpPersistedPopovers(persistedEl)
                 })
 
                 if (shouldPushToHistoryState) {
@@ -97,9 +101,10 @@ export default function (Alpine) {
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
                         unPackPersistedTeleports(persistedEl)
+                        unPackPersistedPopovers(persistedEl)
                     })
 
-                    restoreScrollPositionOrScrollToTop()
+                    !preserveScroll && restoreScrollPositionOrScrollToTop()
 
                     afterNewScriptsAreDoneLoading(() => {
                         andAfterAllThis(() => {
@@ -109,7 +114,8 @@ export default function (Alpine) {
 
                             nowInitializeAlpineOnTheNewPage(Alpine)
 
-                            fireEventForOtherLibariesToHookInto('alpine:navigated')
+                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                            showProgressBar && finishAndHideProgressBar()
                         })
                     })
                 })
@@ -122,21 +128,19 @@ export default function (Alpine) {
             ifThePageBeingVisitedHasntBeenCached((url) => {
                 let destination = createUrlObjectFromString(url)
 
-                let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+                let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
                     url: destination, history: true, cached: false,
                  })
 
                 if (prevented) return
 
-                let shouldPushToHistoryState = false
-
-                navigateTo(destination, shouldPushToHistoryState)
+                navigateTo(destination, { shouldPushToHistoryState: false })
             })
         },
         (html, url, currentPageUrl, currentPageKey) => {
             let destination = createUrlObjectFromString(url)
 
-            let prevented = fireEventForOtherLibariesToHookInto('alpine:navigate', {
+            let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
                 url: destination, history: true, cached: true,
             })
 
@@ -147,7 +151,7 @@ export default function (Alpine) {
             storeScrollInformationInHtmlBeforeNavigatingAway()
 
             // This ensures the current HTML has the latest snapshot
-            fireEventForOtherLibariesToHookInto('alpine:navigating')
+            fireEventForOtherLibrariesToHookInto('alpine:navigating')
 
             // Only update the snapshot and not the history state as the history state
             // has already changed to the new page due to the popstate event
@@ -156,6 +160,7 @@ export default function (Alpine) {
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
                 enablePersist && storePersistantElementsForLater(persistedEl => {
                     packUpPersistedTeleports(persistedEl)
+                    packUpPersistedPopovers(persistedEl)
                 })
 
                 swapCurrentPageWithNewHtml(html, () => {
@@ -165,6 +170,7 @@ export default function (Alpine) {
 
                     enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
                         unPackPersistedTeleports(persistedEl)
+                        unPackPersistedPopovers(persistedEl)
                     })
 
                     restoreScrollPositionOrScrollToTop()
@@ -174,7 +180,7 @@ export default function (Alpine) {
 
                         nowInitializeAlpineOnTheNewPage(Alpine)
 
-                        fireEventForOtherLibariesToHookInto('alpine:navigated')
+                        fireEventForOtherLibrariesToHookInto('alpine:navigated')
                     })
                 })
             })
@@ -184,7 +190,7 @@ export default function (Alpine) {
     // Because DOMContentLoaded is fired on first load,
     // we should fire alpine:navigated as a replacement as well...
     setTimeout(() => {
-        fireEventForOtherLibariesToHookInto('alpine:navigated')
+        fireEventForOtherLibrariesToHookInto('alpine:navigated')
     })
 }
 
@@ -206,7 +212,7 @@ function preventAlpineFromPickingUpDomChanges(Alpine, callback) {
     })
 }
 
-function fireEventForOtherLibariesToHookInto(name, detail) {
+function fireEventForOtherLibrariesToHookInto(name, detail) {
     let event = new CustomEvent(name, {
         cancelable: true,
         bubbles: true,

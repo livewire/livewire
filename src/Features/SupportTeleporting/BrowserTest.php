@@ -86,4 +86,54 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@first-check', '2')
             ->assertSeeIn('@second-check', '2');
     }
+
+    public function test_conditionally_rendered_elements_initialise_in_teleport()
+    {
+        Livewire::visit(new class extends Component {
+            public $show = false;
+
+            public $output = 'start';
+
+            public function thing1(){
+                $this->output .= 'thing1';
+            }
+
+            public function thing2(){
+                $this->output .= 'thing2';
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button wire:click="$toggle('show')" dusk="show">Show</button>
+
+                <p dusk="output">{{ $output }}</p>
+
+                @teleport('body')
+                <div>
+                    <button wire:click="thing1" dusk="thing1">Thing 1</button>
+
+                    @if ($show)
+                        <button wire:click="thing2" dusk="thing2">Thing 2</button>
+                    @endif
+                </div>
+                @endteleport
+            </div>
+            HTML; }
+        })
+            ->assertSeeIn('@output', 'start')
+            ->assertDontSeeIn('@output', 'thing1')
+            ->assertDontSeeIn('@output', 'thing2')
+            
+            ->waitForLivewire()->click('@thing1')
+            ->assertSeeIn('@output', 'startthing1')
+            ->assertDontSeeIn('@output', 'thing2')
+
+            ->waitForLivewire()->click('@show')
+            ->assertSeeIn('@output', 'startthing1')
+            ->assertDontSeeIn('@output', 'thing2')
+
+            ->waitForLivewire()->click('@thing2')
+            ->assertSeeIn('@output', 'startthing1thing2');
+
+    }
 }

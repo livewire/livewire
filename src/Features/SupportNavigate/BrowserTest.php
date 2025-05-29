@@ -26,6 +26,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('first-page-with-link-outside', FirstPageWithLinkOutside::class);
             Livewire::component('second-page', SecondPage::class);
             Livewire::component('third-page', ThirdPage::class);
+            Livewire::component('first-html-attribute-page', FirstHtmlAttributesPage::class);
+            Livewire::component('second-html-attribute-page', SecondHtmlAttributesPage::class);
             Livewire::component('first-asset-page', FirstAssetPage::class);
             Livewire::component('second-asset-page', SecondAssetPage::class);
             Livewire::component('third-asset-page', ThirdAssetPage::class);
@@ -39,6 +41,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('script-component', ScriptComponent::class);
 
             Livewire::component('nav-bar-component', NavBarComponent::class);
+
+            Livewire::component('first-noscript-page', FirstNoscriptPage::class);
+            Livewire::component('second-noscript-page', SecondNoscriptPage::class);
 
             Route::get('/navbar/{page}', NavBarComponent::class)->middleware('web');
 
@@ -54,6 +59,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/second', SecondPage::class)->middleware('web');
             Route::get('/third', ThirdPage::class)->middleware('web');
             Route::get('/fourth', FourthPage::class)->middleware('web');
+            Route::get('/first-html-attributes', FirstHtmlAttributesPage::class)->middleware('web');
+            Route::get('/second-html-attributes', SecondHtmlAttributesPage::class)->middleware('web');
             Route::get('/first-asset', FirstAssetPage::class)->middleware('web');
             Route::get('/second-asset', SecondAssetPage::class)->middleware('web');
             Route::get('/third-asset', ThirdAssetPage::class)->middleware('web');
@@ -88,6 +95,11 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
             Route::get('/script-component', ScriptComponent::class);
+
+            Route::get('/first-noscript', FirstNoscriptPage::class)->middleware('web');
+            Route::get('/second-noscript', SecondNoscriptPage::class)->middleware('web');
+            Route::get('/no-javascript', fn () => '<div dusk="no-javascript-side">No javascript side triggered.</div>')
+                ->middleware('web')->name('no-javascript');
         };
     }
 
@@ -418,6 +430,25 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_html_element_attributes_are_replaced_on_navigate()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-html-attributes')
+                ->assertSee('On first html attributes page')
+                // ->assertAttribute() won't work as it's scoped to the body...
+                ->assertScript('document.documentElement.getAttribute("class")', 'class1')
+                ->assertScript('document.documentElement.getAttribute("attr1")', 'value1')
+                ->assertScript('document.documentElement.hasAttribute("attr2")', false)
+                ->click('@link.to.second')
+                ->waitForText('On second html attributes page')
+                ->assertScript('document.documentElement.getAttribute("class")', 'class2')
+                ->assertScript('document.documentElement.getAttribute("attr2")', 'value2')
+                ->assertScript('document.documentElement.hasAttribute("attr1")', false)
+                ;
+        });
+    }
+
     public function test_new_assets_in_head_are_loaded_and_old_ones_are_not()
     {
         $this->browse(function ($browser) {
@@ -507,6 +538,83 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForText('On second')
                 ->assertNotInViewPort('@second-target')
                 ->scrollTo('@second-target')
+
+                ->back()
+                ->waitForText('On first')
+                ->assertInViewPort('@first-target')
+
+                ->forward()
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
+            ;
+        });
+    }
+
+    public function test_navigate_using_javascript_scrolls_to_top_and_back_preserves_scroll()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->tinker()
+                ->assertVisible('@first-target')
+                ->assertNotInViewPort('@first-target')
+                ->scrollTo('@first-target')
+                ->assertInViewPort('@first-target')
+
+                ->click('@link.to.second.using.javascript')
+                ->waitForText('On second')
+                ->assertNotInViewPort('@second-target')
+                ->scrollTo('@second-target')
+
+                ->back()
+                ->waitForText('On first')
+                ->assertInViewPort('@first-target')
+
+                ->forward()
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
+            ;
+        });
+    }
+
+    public function test_navigate_preserves_scroll_when_using_preserve_scroll_attribute()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->assertVisible('@first-target')
+                ->assertNotInViewPort('@first-target')
+                ->scrollTo('@first-target')
+                ->assertInViewPort('@first-target')
+
+                ->click('@link.to.second.with.preserve.scroll')
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
+
+                ->back()
+                ->waitForText('On first')
+                ->assertInViewPort('@first-target')
+
+                ->forward()
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
+            ;
+        });
+    }
+
+    public function test_navigate_using_javascript_preserves_scroll_when_using_preserve_scroll_option()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-scroll')
+                ->assertVisible('@first-target')
+                ->assertNotInViewPort('@first-target')
+                ->scrollTo('@first-target')
+                ->assertInViewPort('@first-target')
+
+                ->click('@link.to.second.with.preserve.scroll.using.javascript')
+                ->waitForText('On second')
+                ->assertInViewPort('@second-target')
 
                 ->back()
                 ->waitForText('On first')
@@ -1025,6 +1133,21 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertPathIsNot('/livewire-dusk/null');
     }
 
+    public function test_noscript_in_head_not_triggered_with_navigate()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-noscript')
+                ->assertScript('return _lw_dusk_asset_count', 1)
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->waitForText('On second')
+                ->assertScript('return _lw_dusk_asset_count', 1)
+                ->pause(500)
+                ->assertPathIsNot('/no-javascript');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1188,6 +1311,24 @@ class FourthPage extends Component
     }
 }
 
+class FirstHtmlAttributesPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::html-attributes1')]
+    public function render()
+    {
+        return '<div>On first html attributes page <a href="/second-html-attributes" wire:navigate dusk="link.to.second">Go to second page</a></div>';
+    }
+}
+
+class SecondHtmlAttributesPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::html-attributes2')]
+    public function render()
+    {
+        return '<div>On second html attributes page</div>';
+    }
+}
+
 class FirstAssetPage extends Component
 {
     #[\Livewire\Attributes\Layout('test-views::layout')]
@@ -1290,6 +1431,12 @@ class FirstScrollPage extends Component
             <div dusk="first-target">below the fold</div>
 
             <a href="/second-scroll" wire:navigate.hover dusk="link.to.second">Go to second page</a>
+
+            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href)"  dusk="link.to.second.using.javascript">Go to second page using javascript</a>
+
+            <a href="/second-scroll" wire:navigate.hover.preserve-scroll dusk="link.to.second.with.preserve.scroll">Go to second page with preserve scroll</a>
+
+            <a href="/second-scroll" x-on:click="$event.preventDefault(); Livewire.navigate($el.href, { preserveScroll: true })"  dusk="link.to.second.with.preserve.scroll.using.javascript">Go to second page with preserve scroll using javascript</a>
 
             <div style="height: 100vh;">spacer</div>
         </div>
@@ -1424,5 +1571,23 @@ class ScriptComponent extends Component
                 <a href="/first" wire:navigate dusk="link.to.first">Go to first page</a>
             </div>
         HTML;
+    }
+}
+
+class FirstNoscriptPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout-with-noscript')]
+    public function render()
+    {
+        return '<div>On first asset page <a href="/second-noscript" wire:navigate dusk="link.to.second">Go to second page</a></div>';
+    }
+}
+
+class SecondNoscriptPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::layout-with-noscript')]
+    public function render()
+    {
+        return '<div>On second asset page <a href="/first-noscript" wire:navigate dusk="link.to.first">Go to first page</a></div>';
     }
 }
