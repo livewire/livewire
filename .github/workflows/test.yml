@@ -19,11 +19,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: [8.1, 8.2, 8.3]
-        laravel: [10.*, 11.*]
+        php: [8.1, 8.2, 8.3, 8.4]
+        laravel: [10.*, 11.*, 12.*]
         exclude:
+          - php: 8.4
+            laravel: 10.*
           - php: 8.1
             laravel: 11.*
+          - php: 8.1
+            laravel: 12.*
 
     name: PHP:${{ matrix.php }} / Laravel:${{ matrix.laravel }}
 
@@ -68,6 +72,13 @@ jobs:
         run: vendor/bin/phpunit --testsuite Browser
         env:
           RUNNING_IN_CI: true
+
+      - name: Run Cancel Upload test
+        if: success() || failure()
+        run: FORCE_RUN=1 vendor/bin/phpunit --testsuite Browser --filter "test_can_cancel_an_upload"
+        env:
+          RUNNING_IN_CI: true
+          FORCE_RUN: 1
 
       - name: Run Legacy Browser tests
         if: success() || failure()

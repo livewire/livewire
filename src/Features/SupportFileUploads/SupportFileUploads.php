@@ -13,10 +13,9 @@ class SupportFileUploads extends ComponentHook
     {
         if (app()->runningUnitTests()) {
             // Don't actually generate S3 signedUrls during testing.
-            // Can't use ::partialMock because it's not available in older versions of Laravel.
-            $mock = \Mockery::mock(GenerateSignedUploadUrl::class);
-            $mock->makePartial()->shouldReceive('forS3')->andReturn([]);
-            GenerateSignedUploadUrlFacade::swap($mock);
+            GenerateSignedUploadUrlFacade::swap(new class extends GenerateSignedUploadUrl {
+                public function forS3($file, $visibility = '') { return []; }
+            });
         }
 
         app('livewire')->propertySynthesizer([
