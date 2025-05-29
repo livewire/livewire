@@ -9,8 +9,7 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_persist_computed_between_requests_and_bust_them()
+    public function test_can_persist_computed_between_requests_and_bust_them()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -52,8 +51,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '2');
     }
 
-    /** @test */
-    public function can_cache_computed_properties_for_all_components_and_bust_them()
+    public function test_can_cache_computed_properties_for_all_components_and_bust_them()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -88,5 +86,31 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@count', '1')
         ->refresh()
         ->assertSeeIn('@count', '1');
+    }
+
+    public function test_computed_properties_cannot_be_set_on_front_end()
+    {
+        Livewire::visit(new class extends Component {
+            public $count = 0;
+
+            #[Computed]
+            public function foo() {
+                return 'bar';
+            }
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <p>Foo: <span dusk="foo">{{ $this->foo }}</span></p>
+                    <button wire:click="$set('foo', 'other')" dusk="change-foo">Change Foo</button>
+                </div>
+                HTML;
+            }
+        })
+        ->assertSeeIn('@foo', 'bar')
+        ->waitForLivewire()->click('@change-foo')
+        ->assertSeeIn('@foo', 'bar')
+        ;
     }
 }

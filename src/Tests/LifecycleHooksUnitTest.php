@@ -2,16 +2,17 @@
 
 namespace Livewire\Tests;
 
-use Livewire\Component;
 use Livewire\Livewire;
 use Illuminate\Support\Stringable;
 use PHPUnit\Framework\Assert as PHPUnit;
+use Tests\TestComponent;
+
+class CustomException extends \Exception {};
 
 class LifecycleHooksUnitTest extends \Tests\TestCase
 {
 
-    /** @test */
-    public function refresh_magic_method()
+    public function test_refresh_magic_method()
     {
         $component = Livewire::test(ForMagicMethods::class);
 
@@ -31,11 +32,11 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
             'updatingBarBaz' => false,
             'updatedBar' => false,
             'updatedBarBaz' => false,
+            'caughtException' => false,
         ], $component->lifecycles);
     }
 
-    /** @test */
-    public function set_magic_method()
+    public function test_set_magic_method()
     {
         $component = Livewire::test(ForMagicMethods::class, [
             'expected' => [
@@ -66,11 +67,17 @@ class LifecycleHooksUnitTest extends \Tests\TestCase
             'updatingBarBaz' => false,
             'updatedBar' => false,
             'updatedBarBaz' => false,
+            'caughtException' => false,
         ], $component->lifecycles);
+
+
+        $component->call('testExceptionInterceptor');
+        $this->assertTrue($component->lifecycles['caughtException']);
+
     }
 }
 
-class ForMagicMethods extends Component
+class ForMagicMethods extends TestComponent
 {
     public $foo;
 
@@ -94,13 +101,26 @@ class ForMagicMethods extends Component
         'updatingBarBaz' => false,
         'updatedBar' => false,
         'updatedBarBaz' => false,
+        'caughtException' => false,
     ];
 
     public function mount(array $expected = [])
     {
         $this->expected = $expected;
-
         $this->lifecycles['mount'] = true;
+    }
+
+    public function exception($e, $stopPropagation)
+    {
+        if ($e instanceof CustomException) {
+            $this->lifecycles['caughtException'] = true;
+            $stopPropagation();
+        }
+    }
+
+    public function testExceptionInterceptor()
+    {
+        throw new CustomException;
     }
 
     public function hydrate()
@@ -126,7 +146,6 @@ class ForMagicMethods extends Component
     public function updating($name, $value)
     {
         PHPUnit::assertEquals(array_shift($this->expected['updating']), [$name => $value]);
-
         $this->lifecycles['updating'] = true;
     }
 
@@ -207,10 +226,5 @@ class ForMagicMethods extends Component
         PHPUnit::assertEquals($expected_value, data_get($this->bar, $key));
 
         $this->lifecycles['updatedBarBaz'] = true;
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

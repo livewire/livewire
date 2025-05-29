@@ -4,11 +4,11 @@ namespace Livewire\Mechanisms\Tests;
 
 use Livewire\Livewire;
 use Livewire\Component;
+use Tests\TestComponent;
 
 class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function component_keys_are_deterministic_across_load_balancers()
+    public function test_component_keys_are_deterministic_across_load_balancers()
     {
         $component = Livewire::test([new class extends Component {
             public function render()
@@ -16,12 +16,8 @@ class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
                 return '<div> <livewire:child /> </div>';
             }
         },
-        'child' => new class extends Component {
-            public function render()
-            {
-                return '<div></div>';
-            }
-        }]);
+        'child' => new class extends TestComponent {}
+        ]);
 
         $firstKey = array_keys($component->snapshot['memo']['children'])[0];
 
@@ -34,20 +30,15 @@ class LoadBalancerCompatibilityUnitTest extends \Tests\TestCase
                 return '<div> <livewire:child /> </div>';
             }
         },
-        'child' => new class extends Component {
-            public function render()
-            {
-                return '<div></div>';
-            }
-        }]);
+        'child' => new class extends TestComponent {}
+        ]);
 
         $secondKey = array_keys($component->snapshot['memo']['children'])[0];
 
         $this->assertEquals($firstKey, $secondKey);
     }
 
-    /** @test */
-    public function deterministic_keys_can_still_be_generated_from_blade_strings_not_files()
+    public function test_deterministic_keys_can_still_be_generated_from_blade_strings_not_files()
     {
         $contentsA = app('blade.compiler')->compileString(<<<'HTML'
         <div>

@@ -1,0 +1,117 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Hi there! 👋
+
+        Thank you for using Livewire!
+
+        Many of the people who help resolve issues here are enthusiastic Livewire users like yourself who volunteer their time to support fellow community members.
+
+        **To respect everyone's valuable time and help you resolve your issue as quickly as possible, before posting an issue, please**
+
+        * Update to the latest version of Livewire by running `composer update livewire/livewire`
+        * Before opening a help request, please search the existing discussions.
+
+        To address this help request, we need the following information.
+
+  - type: input
+    id: livewire-version
+    attributes:
+      label: Livewire version
+      description: Which version of Livewire are you using? Please provide the full version, e.g. v3.5.16.
+      placeholder: v3.5.16
+    validations:
+      required: true
+
+  - type: input
+    id: laravel-version
+    attributes:
+      label: Laravel version
+      description: Which version of Laravel are you using? Please provide the full version, e.g. v11.34.2.
+      placeholder: v11.34.2
+    validations:
+      required: true      
+
+  - type: dropdown
+    id: php-version
+    attributes:
+      label: Which PHP version are you using?
+      options:
+        - PHP 8.4
+        - PHP 8.3
+        - PHP 8.2
+        - PHP 8.1
+        - PHP 8.0
+        - PHP 7.4
+        - PHP 7.3
+        - PHP 7.2
+        - PHP 7.1
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: What is the problem?
+      description: Please provide a clear and concise description of what the problem is and include screenshots.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Code snippets
+      description: Please include a code snippet (ideally a Volt component) we can copy and paste into our own apps with steps to reproduce. Be sure to **include any Blade variable definitions** that are used and use as little code as possible to reproduce the issue.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        Include code snippets in triple backticks (\```) with "blade" or "php" for better readability. Here's an example:
+
+        \```blade
+        // Your code here
+        \```
+
+        \```php
+        // Your code here
+        \```
+
+  - type: input
+    id: example-repository
+    attributes:
+      label: Wirebox URL
+      description: Please provide the URL of a public [Wirebox](https://wirebox.app) that only contains the code that reproduces the bug. **Make sure your Wirebox is set to public**.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: How do you expect it to work?
+      description: Please describe how you expect it to work.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        **We will close this issue for any of the following reasons**
+
+        * The code snippets contain unrelated code such as left-over Blade variables
+        * We cannot reproduce the issue with the provided code snippets
+        * The issue is a duplicate
+
+  - type: checkboxes
+    attributes:
+      label: Please confirm (incomplete submissions will not be addressed)
+      options:
+        - label: I have provided easy and step-by-step instructions to reproduce the bug.
+          required: true
+        - label: I have provided code samples as text and NOT images.
+          required: true
+        - label: I understand my help request will be removed if I haven't met the criteria above.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: Thank you!

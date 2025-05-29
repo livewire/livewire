@@ -54,8 +54,6 @@ function invade($obj)
         {
             $method = $this->reflected->getMethod($name);
 
-            $method->setAccessible(true);
-
             return $method->invoke($this->obj, ...$params);
         }
     };
@@ -113,7 +111,7 @@ function before($name, $callback) {
 }
 
 function off($name, $callback) {
-    return app(\Livewire\EventBus::class)->off($name, $callback);
+    app(\Livewire\EventBus::class)->off($name, $callback);
 }
 
 function memoize($target) {

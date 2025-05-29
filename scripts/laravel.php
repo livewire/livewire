@@ -22,7 +22,6 @@ class AppServiceProvider extends \Illuminate\Support\ServiceProvider
 $root = sys_get_temp_dir().'/__lwcmdcache';
 
 $cacheDir = $root.'/cache';
-$cacheDir = $root.'/cache';
 $viewsDir = $cacheDir.'/views';
 if (! file_exists($cacheDir)) mkdir($cacheDir);
 if (! file_exists($viewsDir)) mkdir($viewsDir);
@@ -148,8 +147,6 @@ function invade($obj)
         {
             $property = $this->reflected->getProperty($name);
 
-            $property->setAccessible(true);
-
             return $property->getValue($this->obj);
         }
 
@@ -157,16 +154,12 @@ function invade($obj)
         {
             $property = $this->reflected->getProperty($name);
 
-            $property->setAccessible(true);
-
             $property->setValue($this->obj, $value);
         }
 
         public function __call($name, $params)
         {
             $method = $this->reflected->getMethod($name);
-
-            $method->setAccessible(true);
 
             return $method->invoke($this->obj, ...$params);
         }

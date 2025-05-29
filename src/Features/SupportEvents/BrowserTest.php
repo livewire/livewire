@@ -11,8 +11,7 @@ use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
-    /** @test */
-    public function can_listen_for_component_event_with_this_on_in_javascript()
+    public function test_can_listen_for_component_event_with_this_on_in_javascript()
     {
         Livewire::visit(new class extends Component {
             function foo() {
@@ -35,8 +34,7 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@target', 'bar');
     }
 
-    /** @test */
-    public function dont_call_render_on_renderless_event_handler()
+    public function test_dont_call_render_on_renderless_event_handler()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -62,8 +60,39 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@button', '1');
     }
 
-    /** @test */
-    public function can_dispatch_self_inside_script_directive()
+    public function test_event_handler_with_single_parameter()
+    {
+        Livewire::visit(new class extends Component {
+            public $button = 'Text';
+
+            protected $listeners = ['foo' => 'onFoo'];
+
+            function onFoo($param) {
+                $this->button = $param;
+            }
+
+            function bar() {
+                $this->dispatch('foo', 'Bar set text');
+            }
+
+            function render()
+            {
+                return Blade::render(<<<'HTML'
+                <div>
+                    <button @click="Livewire.dispatch('foo', 'Param Set Text')" dusk="button">{{ $button }}</button>
+                    <button wire:click="bar" dusk="bar-button">Bar</button>
+                </div>
+                HTML, ['button' => $this->button]);
+            }
+        })
+            ->assertSeeIn('@button', 'Text')
+            ->waitForLivewire()->click('@button')
+            ->assertSeeIn('@button', 'Param Set Text')
+            ->waitForLivewire()->click('@bar-button')
+            ->assertSeeIn('@button', 'Bar set text');
+    }
+
+    public function test_can_dispatch_self_inside_script_directive()
     {
         Livewire::visit(new class extends Component {
             public $foo = 'bar';
@@ -91,8 +120,7 @@ class BrowserTest extends BrowserTestCase
             ->waitForTextIn('@output', 'baz');
     }
 
-    /** @test */
-    public function dispatch_from_javascript_should_only_be_called_once()
+    public function test_dispatch_from_javascript_should_only_be_called_once()
     {
         Livewire::visit(new class extends Component {
             public $count = 0;
@@ -118,8 +146,7 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@button', '1');
     }
 
-    /** @test */
-    public function can_dispatch_to_another_component_globally()
+    public function test_can_dispatch_to_another_component_globally()
     {
         Livewire::visit([
             new class extends Component {
@@ -169,8 +196,7 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
-    /** @test */
-    public function can_unregister_global_livewire_listener()
+    public function test_can_unregister_global_livewire_listener()
     {
         Livewire::visit(new class extends Component {
             function render()
@@ -202,8 +228,7 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function can_use_event_data_in_alpine_for_loop_without_throwing_errors()
+    public function test_can_use_event_data_in_alpine_for_loop_without_throwing_errors()
     {
         Livewire::visit(new class extends Component {
             function fetchItems()
@@ -235,5 +260,66 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@text', '[object Object],[object Object],[object Object]')
             ->assertScript('document.getElementById(\'root\').querySelectorAll(\'div\').length', 3)
             ->assertConsoleLogMissingWarning('item is not defined');
+    }
+
+    public function test_nested_components_with_listeners_are_cleaned_up_before_events_are_dispatched()
+    {
+        Livewire::visit([
+            new class () extends Component {
+                public $test = 1;
+
+                public function change()
+                {
+                    $this->test = $this->test + 1;
+
+                    $this->dispatch("whatever");
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="change" dusk="change">change</button>
+
+                        <livewire:child1 :data="$test" :key="$test"/>
+                    </div>
+                    HTML;
+                }
+            },
+            'child1' => new class () extends Component {
+                public $data;
+
+                #[On('whatever')]
+                public function triggeredEvent() {
+                    //
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <p>Child : {{ $data }} <br/>ID: {{ $this->__id }}</p>
+
+                        <livewire:child2 :data="$data" :key="$data"/>
+                    </div>
+                    HTML;
+                }
+            },
+            'child2' => new class () extends Component {
+                public $data;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <p>
+                        Child 2: {{ $data }}<br/>ID :{{ $this->__id }}
+                    </p>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->waitForLivewire()->click('@change')
+            ->assertConsoleLogHasNoErrors();
     }
 }

@@ -1,6 +1,6 @@
 import { dataSet, deepClone, diff, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
-import { findComponent } from '@/store'
+import { closestComponent, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
 
 export class Component {
@@ -36,6 +36,8 @@ export class Component {
         this.reactive = Alpine.reactive(this.ephemeral)
 
         this.queuedUpdates = {}
+
+        this.jsActions = {}
 
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
@@ -141,7 +143,13 @@ export class Component {
         let meta = this.snapshot.memo
         let childIds = Object.values(meta.children).map(i => i[1])
 
-        return childIds.map(id => findComponent(id))
+        return childIds
+            .filter(id => hasComponent(id))
+            .map(id => findComponent(id))
+    }
+
+    get parent() {
+        return closestComponent(this.el.parentElement)
     }
 
     inscribeSnapshotAndEffectsOnElement() {
@@ -159,7 +167,28 @@ export class Component {
             effects.url = this.originalEffects.url
         }
 
+        // We need to re-register any scripts that were originally registered...
+        if (this.originalEffects.scripts) {
+            effects.scripts = this.originalEffects.scripts;
+        }
+
         el.setAttribute('wire:effects', JSON.stringify(effects))
+    }
+
+    addJsAction(name, action) {
+        this.jsActions[name] = action
+    }
+
+    hasJsAction(name) {
+        return this.jsActions[name] !== undefined
+    }
+
+    getJsAction(name) {
+        return this.jsActions[name].bind(this.$wire)
+    }
+
+    getJsActions() {
+        return this.jsActions
     }
 
     addCleanup(cleanup) {

@@ -2,9 +2,9 @@
 
 namespace Livewire\Features\SupportLegacyModels\Tests;
 
+use Tests\TestComponent;
 use function Livewire\invade;
 use Illuminate\Database\Eloquent\Model;
-use Livewire\Component;
 use Livewire\Livewire;
 use Sushi\Sushi;
 
@@ -12,8 +12,7 @@ class ModelValidationUnitTest extends \Tests\TestCase
 {
     use Concerns\EnableLegacyModels;
 
-    /** @test */
-    public function can_validate_uniqueness_on_a_model()
+    public function test_can_validate_uniqueness_on_a_model()
     {
         Livewire::test(ComponentWithRulesPropertyAndModelWithUniquenessValidation::class)
             ->set('foo.name', 'bar')
@@ -24,8 +23,7 @@ class ModelValidationUnitTest extends \Tests\TestCase
             ->assertHasNoErrors('foo.name');
     }
 
-    /** @test */
-    public function can_validate_uniqueness_on_a_model_but_exempt_the_model_itself()
+    public function test_can_validate_uniqueness_on_a_model_but_exempt_the_model_itself()
     {
         Livewire::test(ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions::class)
             ->set('foo.email', 'baz@example.com')
@@ -50,7 +48,7 @@ class FooModelForUniquenessValidation extends Model
     ];
 }
 
-class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends Component
+class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends TestComponent
 {
     public $foo;
 
@@ -75,14 +73,9 @@ class ComponentWithRulesPropertyAndModelWithUniquenessValidation extends Compone
 
         $this->validate();
     }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
-    }
 }
 
-class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions extends Component
+class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions extends TestComponent
 {
     public $foo;
 
@@ -107,10 +100,5 @@ class ComponentWithRulesPropertyAndModelUniquenessValidationWithIdExceptions ext
         invade($db)->connections = $connections;
 
         $this->validate();
-    }
-
-    public function render()
-    {
-        return app('view')->make('null-view');
     }
 }

@@ -8,8 +8,7 @@ use Livewire\Livewire;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function root_element_has_id_and_component_data()
+    public function test_root_element_has_id_and_component_data()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
@@ -18,16 +17,14 @@ class UnitTest extends \Tests\TestCase
         );
     }
 
-    /** @test */
-    public function root_element_exists()
+    public function test_root_element_exists()
     {
         $this->expectException(RootTagMissingFromViewException::class);
 
         Livewire::test(ComponentRootExists::class);
     }
 
-    /** @test */
-    public function component_data_stored_in_html_is_escaped()
+    public function test_component_data_stored_in_html_is_escaped()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
@@ -40,8 +37,7 @@ EOT
         );
     }
 
-    /** @test */
-    public function if_element_is_a_comment_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
+    public function test_if_element_is_a_comment_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
@@ -55,8 +51,7 @@ EOT
         );
     }
 
-    /** @test */
-    public function if_element_is_a_comment_and_contains_html_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
+    public function test_if_element_is_a_comment_and_contains_html_it_is_skipped_and_id_and_data_inserted_on_next_elemenet()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 
@@ -70,8 +65,7 @@ EOT
         );
     }
 
-    /** @test */
-    public function on_subsequent_renders_root_element_has_id_but_not_component_id()
+    public function test_on_subsequent_renders_root_element_has_id_but_not_component_id()
     {
         $component = Livewire::test(ComponentRootHasIdAndDataStub::class);
 

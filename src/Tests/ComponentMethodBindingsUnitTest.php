@@ -10,8 +10,7 @@ use Livewire\Livewire;
 
 class ComponentMethodBindingsUnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function mount_method_receives_explicit_model_binding()
+    public function test_mount_method_receives_explicit_model_binding()
     {
         Livewire::test(ComponentWithBindings::class, [
             'model' => new ModelToBeBound('new model'),
@@ -23,8 +22,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         ])->assertSeeText('new model')->assertSeeText('foo');
     }
 
-    /** @test */
-    public function mount_method_receives_explicit_enum_binding()
+    public function test_mount_method_receives_explicit_enum_binding()
     {
         Livewire::test(ComponentWithEnumBindings::class, [
             'enum' => EnumToBeBound::FIRST,
@@ -36,8 +34,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         ])->assertSeeText('enum-first')->assertSeeText('foo');
     }
 
-    /** @test */
-    public function mount_method_receives_implicit_model_binding()
+    public function test_mount_method_receives_implicit_model_binding()
     {
         Livewire::test(ComponentWithBindings::class, [
             'model' => 'new model',
@@ -59,8 +56,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         ])->assertSeeText('new model:foo');
     }
 
-    /** @test */
-    public function mount_method_receives_implicit_enum_binding()
+    public function test_mount_method_receives_implicit_enum_binding()
     {
         Livewire::test(ComponentWithEnumBindings::class, [
             'enum' => 'enum-first',
@@ -82,8 +78,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         ])->assertSeeText('enum-first:foo');
     }
 
-    /** @test */
-    public function mount_method_receives_route_and_implicit_model_binding_and_dependency_injection()
+    public function test_mount_method_receives_route_and_implicit_model_binding_and_dependency_injection()
     {
         Livewire::test(ComponentWithMountInjections::class, [
             'foo',
@@ -97,8 +92,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo/route-model')->assertSeeText('http://localhost/some-url:route-model:param-default');
     }
 
-    /** @test */
-    public function mount_method_receives_route_and_implicit_enum_binding_and_dependency_injection()
+    public function test_mount_method_receives_route_and_implicit_enum_binding_and_dependency_injection()
     {
         Livewire::test(ComponentWithEnumMountInjections::class, [
             'foo',
@@ -112,8 +106,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->withoutExceptionHandling()->get('/foo/enum-first')->assertSeeText('http://localhost/some-url:enum-first:param-default');
     }
 
-    /** @test */
-    public function mount_method_receives_route_and_implicit_enum_optional_binding_and_dependency_injection()
+    public function test_mount_method_receives_route_and_implicit_enum_optional_binding_and_dependency_injection()
     {
         Livewire::test(ComponentWithOptionalEnumMountInjections::class, [
             'foo',
@@ -128,8 +121,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->get('/foo')->assertSeeText('http://localhost/some-url:param-default');
     }
 
-    /** @test */
-    public function action_receives_implicit_model_binding()
+    public function test_action_receives_implicit_model_binding()
     {
         $component = Livewire::test(ComponentWithBindings::class)
             ->assertSee('model-default');
@@ -141,8 +133,24 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->assertEquals('implicitly bound:foo', $component->name);
     }
 
-    /** @test */
-    public function action_receives_implicit_model_binding_independent_of_parameter_order()
+    public function test_mount_method_receives_route_and_implicit_model_optional_binding_and_dependency_injection()
+    {
+        Livewire::component(ComponentWithOptionalModelMountInjections::class);
+
+        Route::get('/route-with-optional-params/{model?}', ComponentWithOptionalModelMountInjections::class);
+
+        /**
+         * This is expected since we don't have a database
+         * General error: 1 no such table: optional_model_to_be_bounds
+         **/
+        $this->get('/route-with-optional-params/1')
+            ->assertInternalServerError();
+
+        $this->get('/route-with-optional-params/')
+            ->assertSee('Nullable - No Model');
+    }
+
+    public function test_action_receives_implicit_model_binding_independent_of_parameter_order()
     {
         $component = Livewire::test(ComponentWithBindings::class)
             ->assertSee('model-default');
@@ -154,8 +162,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->assertEquals('bar:implicitly bound:foo', $component->name);
     }
 
-    /** @test */
-    public function action_implicit_model_binding_plays_well_with_dependency_injection()
+    public function test_action_implicit_model_binding_plays_well_with_dependency_injection()
     {
         $component = Livewire::test(ComponentWithBindings::class)
             ->assertSee('model-default');
@@ -167,8 +174,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->assertEquals('implicitly bound:http://localhost/some-url/foo', $component->name);
     }
 
-    /** @test */
-    public function action_receives_implicit_enum_binding()
+    public function test_action_receives_implicit_enum_binding()
     {
         $component = Livewire::test(ComponentWithEnumBindings::class, ['enum' => EnumToBeBound::FIRST])
             ->assertSee('enum-first:param-default');
@@ -180,8 +186,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->assertEquals('enum-first:foo', $component->name);
     }
 
-    /** @test */
-    public function action_receives_implicit_enum_binding_independent_of_parameter_order()
+    public function test_action_receives_implicit_enum_binding_independent_of_parameter_order()
     {
         $component = Livewire::test(ComponentWithEnumBindings::class, ['enum' => EnumToBeBound::FIRST])
             ->assertSee('enum-first:param-default');
@@ -193,8 +198,7 @@ class ComponentMethodBindingsUnitTest extends \Tests\TestCase
         $this->assertEquals('bar:enum-first:foo', $component->name);
     }
 
-    /** @test */
-    public function action_implicit_enum_binding_plays_well_with_dependency_injection()
+    public function test_action_implicit_enum_binding_plays_well_with_dependency_injection()
     {
         $component = Livewire::test(ComponentWithEnumBindings::class, ['enum' => EnumToBeBound::FIRST])
             ->assertSee('enum-first:param-default');
@@ -255,6 +259,32 @@ class ComponentWithBindings extends Component
     public function render()
     {
         return app('view')->make('show-name-with-this');
+    }
+}
+
+class OptionalModel extends Model
+{
+    protected $attributes = [
+        'name' => 'Livewire'
+    ];
+}
+
+class ComponentWithOptionalModelMountInjections extends Component
+{
+    public ?OptionalModel $model = null;
+
+    public function mount(?OptionalModel $model = null)
+    {
+        $this->model = $model;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ is_null($this->model) ? 'Nullable - No Model' : $this->model->name }}
+        </div>
+        HTML;
     }
 }
 

@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportRedirects;
 
-use Livewire\Attributes\Modelable;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\ComponentHook;
 use Livewire\Component;

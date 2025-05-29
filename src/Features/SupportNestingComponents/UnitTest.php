@@ -6,32 +6,29 @@ use Livewire\Component;
 
 class UnitTest extends \Tests\TestCase
 {
-    /** @test */
-    public function parent_renders_child()
+    public function test_parent_renders_child()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html());
+        $this->assertStringContainsString('Child: foo', $component->html());
     }
 
-    /** @test */
-    public function parent_renders_stub_element_in_place_of_child_on_subsequent_renders()
+    public function test_parent_renders_stub_element_in_place_of_child_on_subsequent_renders()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html());
+        $this->assertStringContainsString('Child: foo', $component->html());
 
         $component->runAction('$refresh');
 
-        $this->assertStringNotContainsString('foo', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
     }
 
-    /** @test */
-    public function stub_element_root_element_matches_original_child_component_root_element()
+    public function test_stub_element_root_element_matches_original_child_component_root_element()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildStub::class);
         app('livewire')->component('child', ChildComponentForNestingStub::class);
@@ -44,62 +41,58 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('span', $component->html());
     }
 
-    /** @test */
-    public function parent_tracks_subsequent_renders_of_children_inside_a_loop()
+    public function test_parent_tracks_subsequent_renders_of_children_inside_a_loop()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildrenStub::class);
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('Child: foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringContainsString('Child: bar', $component->html());
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringNotContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringNotContainsString('Child: bar', $component->html());
     }
 
-    /** @test */
-    public function parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_syntax()
+    public function test_parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_syntax()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildrenWithWireKeyStub::class);
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('Child: foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html() );
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringContainsString('Child: bar', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringNotContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringNotContainsString('Child: bar', $component->html());
     }
 
-    /** @test */
-    public function parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_having_comma()
+    public function test_parent_tracks_subsequent_renders_of_children_inside_a_loop_with_colon_wire_key_having_comma()
     {
         app('livewire')->component('parent', ParentComponentForNestingChildrenWithWireKeyHavingCommaStub::class);
         app('livewire')->component('child', ChildComponentForNestingStub::class);
         $component = app('livewire')->test('parent');
 
-        $this->assertStringContainsString('foo', $component->html() );
+        $this->assertStringContainsString('Child: foo', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringContainsString('bar', $component->html() );
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringContainsString('Child: bar', $component->html() );
 
         $component->runAction('setChildren', ['foo', 'bar']);
-        $this->assertStringNotContainsString('foo', $component->html());
-        $this->assertStringNotContainsString('bar', $component->html());
+        $this->assertStringNotContainsString('Child: foo', $component->html());
+        $this->assertStringNotContainsString('Child: bar', $component->html());
     }
 
-    /** @test */
-    public function parent_keeps_rendered_children_even_when_skipped_rendering()
+    public function test_parent_keeps_rendered_children_even_when_skipped_rendering()
     {
         app('livewire')->component('parent', ParentComponentForSkipRenderStub::class);
         app('livewire')->component('child', ChildComponentForNestingStub::class);
@@ -193,7 +186,7 @@ class ChildComponentForNestingStub extends Component
 
     public function render()
     {
-        return app('view')->make('show-name-with-this');
+        return '<span>Child: {{ $this->name }}</span>';
     }
 }
 

@@ -1,10 +1,11 @@
-import { closestComponent, destroyComponent, initComponent } from './store'
+import { closestComponent, destroyComponent, initComponent, hasComponent } from './store'
 import { matchesForLivewireDirective, extractDirective } from './directives'
 import { trigger } from './hooks'
 import collapse from '@alpinejs/collapse'
 import focus from '@alpinejs/focus'
 import persist from '@alpinejs/persist'
 import intersect from '@alpinejs/intersect'
+import resize from '@alpinejs/resize'
 import anchor from '@alpinejs/anchor'
 import navigate from './plugins/navigate'
 import history from './plugins/history'
@@ -22,6 +23,7 @@ export function start() {
     Alpine.plugin(morph)
     Alpine.plugin(history)
     Alpine.plugin(intersect)
+    Alpine.plugin(resize)
     Alpine.plugin(collapse)
     Alpine.plugin(anchor)
     Alpine.plugin(focus)
@@ -57,7 +59,7 @@ export function start() {
             // This prevents Livewire from causing general slowness for other Alpine elements on the page...
             if (! Array.from(el.attributes).some(attribute => matchesForLivewireDirective(attribute.name))) return
 
-            if (el.hasAttribute('wire:id')) {
+            if (el.hasAttribute('wire:id') && ! el.__livewire && ! hasComponent(el.getAttribute('wire:id'))) {
                 let component = initComponent(el)
 
                 Alpine.onAttributeRemoved(el, 'wire:id', () => {
@@ -65,14 +67,20 @@ export function start() {
                 })
             }
 
+            let directives = Array.from(el.getAttributeNames())
+                .filter(name => matchesForLivewireDirective(name))
+                .map(name => extractDirective(el, name))
+
+            directives.forEach(directive => {
+                trigger('directive.global.init', { el, directive, cleanup: (callback) => {
+                    Alpine.onAttributeRemoved(el, directive.raw, callback)
+                } })
+            })
+
             let component = closestComponent(el, false)
 
             if (component) {
                 trigger('element.init', { el, component })
-
-                let directives = Array.from(el.getAttributeNames())
-                    .filter(name => matchesForLivewireDirective(name))
-                    .map(name => extractDirective(el, name))
 
                 directives.forEach(directive => {
                     trigger('directive.init', { el, component, directive, cleanup: (callback) => {

@@ -7,8 +7,7 @@ use Livewire\Livewire;
 
 class AlpineUiBrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    public function component_with_listbox_and_wire_model_live_should_not_cause_infinite_loop()
+    public function test_component_with_listbox_and_wire_model_live_should_not_cause_infinite_loop()
     {
         Livewire::visit(new class extends Component {
             public ?array $foo = null;
@@ -64,8 +63,7 @@ class AlpineUiBrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    public function component_with_combobox_and_wire_model_live_should_not_cause_infinite_loop()
+    public function test_component_with_combobox_and_wire_model_live_should_not_cause_infinite_loop()
     {
         Livewire::visit(new class extends Component {
             public ?array $value = null;

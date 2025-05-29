@@ -5,7 +5,6 @@ namespace Livewire\Features\SupportNavigate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Livewire\Attributes\Url;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -22,8 +21,7 @@ class HooksBrowserTest extends \Tests\BrowserTestCase
         };
     }
 
-    /** @test */
-    public function navigation_triggers_lifecycle_hooks()
+    public function test_navigation_triggers_lifecycle_hooks()
     {
         $this->browse(function ($browser) {
             $browser
@@ -38,8 +36,7 @@ class HooksBrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function back_and_forward_button_triggers_the_same_lifecycle_hooks_as_a_normal_navigate()
+    public function test_back_and_forward_button_triggers_the_same_lifecycle_hooks_as_a_normal_navigate()
     {
         $this->browse(function ($browser) {
             $browser
@@ -62,8 +59,7 @@ class HooksBrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    /** @test */
-    public function back_button_hook_contains_info_about_caching_after_the_cache_runs_out()
+    public function test_back_button_hook_contains_info_about_caching_after_the_cache_runs_out()
     {
         $this->browse(function ($browser) {
             $browser

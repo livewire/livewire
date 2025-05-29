@@ -8,12 +8,20 @@ use Illuminate\Support\Facades\Validator;
 
 class FileUploadController implements HasMiddleware
 {
+    public static array $defaultMiddleware = ['web'];
+
     public static function middleware()
     {
-        return array_map(fn ($middleware) => new Middleware($middleware), array_merge(
-            ['web'],
-            (array) FileUploadConfiguration::middleware(),
-        ));
+        $middleware = (array) FileUploadConfiguration::middleware();
+
+        // Prepend the default middleware to the middleware array if it's not already present...
+        foreach (array_reverse(static::$defaultMiddleware) as $defaultMiddleware) {
+            if (! in_array($defaultMiddleware, $middleware)) {
+                array_unshift($middleware, $defaultMiddleware);
+            }
+        }
+
+        return array_map(fn ($middleware) => new Middleware($middleware), $middleware);
     }
 
     public function handle()

@@ -173,7 +173,7 @@ class CreatePost extends Component
         $this->validate();
 
         Post::create(
-            $this->form->all() // [tl! highlight]
+            $this->form->only(['title', 'content']) // [tl! highlight]
         );
 
         return $this->redirect('/posts');
@@ -225,7 +225,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        Post::create($this->all());
+        Post::create($this->only(['title', 'content']));
     }
 }
 ```
@@ -321,8 +321,10 @@ class PostForm extends Form
 
     public function update()
     {
+        $this->validate();
+
         $this->post->update(
-            $this->all()
+            $this->only(['title', 'content'])
         );
     }
 }
@@ -359,7 +361,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        Post::create($this->all());
+        Post::create($this->only(['title', 'content']));
 
         $this->reset(); // [tl! highlight]
     }
@@ -373,7 +375,51 @@ $this->reset('title');
 
 // Or multiple at once...
 
-$this->reset('title', 'content');
+$this->reset(['title', 'content']);
+```
+
+### Pulling form fields
+
+Alternatively, you can use the `pull()` method to both retrieve a form's properties and reset them in one operation.
+
+```php
+<?php
+
+namespace App\Livewire\Forms;
+
+use Livewire\Attributes\Validate;
+use App\Models\Post;
+use Livewire\Form;
+
+class PostForm extends Form
+{
+    #[Validate('required|min:5')]
+    public $title = '';
+
+    #[Validate('required|min:5')]
+    public $content = '';
+
+    // ...
+
+    public function store()
+    {
+        $this->validate();
+
+        Post::create(
+            $this->pull() // [tl! highlight]
+        );
+    }
+}
+```
+
+You can also pull specific properties by passing the property names into the `pull()` method:
+
+```php
+// Return a value before resetting...
+$this->pull('title');
+
+ // Return a key-value array of properties before resetting...
+$this->pull(['title', 'content']);
 ```
 
 ### Using Rule objects
@@ -397,7 +443,7 @@ class PostForm extends Form
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [
@@ -414,7 +460,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($this->only(['title', 'content']));
 
         $this->reset();
     }
@@ -437,14 +483,14 @@ use Livewire\Form;
 
 class PostForm extends Form
 {
-    public ?Post $post
+    public ?Post $post;
 
     #[Validate] // [tl! highlight]
     public $title = '';
 
     public $content = '';
 
-    public function rules()
+    protected function rules()
     {
         return [
             'title' => [
@@ -461,7 +507,7 @@ class PostForm extends Form
     {
         $this->validate();
 
-        $this->post->update($this->all());
+        $this->post->update($this->only(['title', 'content']));
 
         $this->reset();
     }
@@ -776,7 +822,7 @@ Because of `{{ $attributes }}`, when the HTML is rendered in the browser, `wire:
 
 `x-modelable="count"` tells Alpine to look for any `x-model` or `wire:model` statements and use "count" as the data to bind them to.
 
-Because `x-modelable` works for both `wire:model` and `x-model`, you can also use this Blade component interchangeably with Livewire and Alpine. For example, here's an example of using this Blade component in a purely Alpine context:
+Because `x-modelable` works for both `wire:model` and `x-model`, you can also use this Blade component interchangeably with Livewire and Alpine. Here’s an example of using this Blade component in a purely Alpine context:
 
 ```blade
 <x-input-counter x-model="quantity" />

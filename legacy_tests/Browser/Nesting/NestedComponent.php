@@ -3,7 +3,6 @@
 namespace LegacyTests\Browser\Nesting;
 
 use Livewire\Component as BaseComponent;
-use Illuminate\Support\Facades\View;
 
 class NestedComponent extends BaseComponent
 {

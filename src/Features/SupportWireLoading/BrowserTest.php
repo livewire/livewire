@@ -2,16 +2,13 @@
 
 namespace Livewire\Features\SupportWireLoading;
 
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
-use Livewire\WithFileUploads;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    /** @test */
-    function can_wire_target_to_a_form_object_property()
+    function test_can_wire_target_to_a_form_object_property()
     {
         Livewire::visit(new class extends Component {
             public PostFormStub $form;
@@ -78,8 +75,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    function wire_loading_remove_works_with_renderless_methods()
+    function test_wire_loading_remove_works_with_renderless_methods()
     {
         Livewire::visit(new class extends Component {
             #[\Livewire\Attributes\Renderless]
@@ -108,8 +104,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    function wire_loading_attr_doesnt_conflict_with_exist_one()
+    function test_wire_loading_attr_doesnt_conflict_with_exist_one()
     {
         Livewire::visit(new class extends Component {
             public $localText = '';
@@ -147,8 +142,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    function wire_loading_delay_is_removed_after_being_triggered_once()
+    function test_wire_loading_delay_is_removed_after_being_triggered_once()
     {
         /**
          * The (broken) scenario:
@@ -192,8 +186,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-	/** @test */
-    function wire_loading_targets_single_correct_element()
+	function test_wire_loading_targets_single_correct_element()
     {
 		/*
 		 * Previously
@@ -243,8 +236,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
-    function inverted_wire_target_hides_loading_for_specified_action()
+    function test_inverted_wire_target_hides_loading_for_specified_action()
     {
         Livewire::visit(new class extends Component {
 
@@ -300,9 +292,101 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /** @test */
+    function test_wire_target_works_with_multiple_function_including_multiple_params()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction('1', 2)" dusk="process1Button">Process 1 and 2</button>
+                        <button wire:click="processFunction('3', 4)" dusk="process2Button">Process 3 adn 4</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target="resetFunction" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div wire:loading wire:target="processFunction('1', 2), processFunction('3', 4)" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction(string $value)
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+            ->press('@resetButton')
+            ->pause(250)
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process1Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+            ->press('@resetButton')
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process2Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+        ;
+    }
+
+    function test_wire_target_works_with_function_JSONparse_params()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction(@js(['bar' => 'baz']))" dusk="processButton">Process</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div wire:loading wire:target="resetFunction" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div wire:loading wire:target="processFunction" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction(mixed $value)
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+            ->press('@resetButton')
+            ->pause(250)
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@processButton')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+        ;
+    }
+
     /**
-    function inverted_wire_target_hides_loading_for_file_upload()
+    function test_inverted_wire_target_hides_loading_for_file_upload()
     {
         Storage::persistentFake('tmp-for-tests');
         Livewire::visit(new class extends Component {
@@ -343,8 +427,7 @@ class BrowserTest extends \Tests\BrowserTestCase
     }
     */
 
-	/** @test */
-    function wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
+	function test_wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
     {
         Livewire::visit(new class extends Component {
 

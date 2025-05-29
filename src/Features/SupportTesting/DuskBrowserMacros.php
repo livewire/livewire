@@ -154,7 +154,7 @@ class DuskBrowserMacros
         return function () {
             /** @var \Laravel\Dusk\Browser $this */
             return $this->waitUsing(6, 25, function () {
-                return $this->driver->executeScript("return !! window.Livewire.initialRenderIsFinished");
+                return $this->driver->executeScript('return !! window.Livewire.initialRenderIsFinished');
             });
         };
     }
@@ -167,14 +167,18 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('request', ({ respond }) => {
+                "window.Livewire.hook('request', ({ respond, succeed, fail }) => {
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
-                    respond(() => {
+                    let handle = () => {
                         queueMicrotask(() => {
+                            console.log('test')
                             delete window.duskIsWaitingForLivewireRequest{$id}
                         })
-                    })
+                    }
+
+                    succeed(handle)
+                    fail(handle)
                 })",
             ]);
 
@@ -213,14 +217,17 @@ class DuskBrowserMacros
 
             $this->script([
                 "window.duskIsWaitingForLivewireRequest{$id} = true",
-                "window.Livewire.hook('request', ({ respond }) => {
+                "window.Livewire.hook('request', ({ respond, succeed, fail }) => {
                     window.duskIsWaitingForLivewireRequest{$id} = true
 
-                    respond(() => {
+                    let handle = () => {
                         queueMicrotask(() => {
                             delete window.duskIsWaitingForLivewireRequest{$id}
                         })
-                    })
+                    }
+
+                    succeed(handle)
+                    fail(handle)
                 })",
             ]);
 
@@ -494,6 +501,48 @@ class DuskBrowserMacros
             }
 
             PHPUnit::assertFalse($containsError, "Console log error message \"{$expectedMessage}\" was found");
+
+            return $this;
+        };
+    }
+
+    public function assertConsoleLogHasNoErrors()
+    {
+        return function(){
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $errors = [];
+            foreach ($logs as $log) {
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'SEVERE') continue;
+
+                // Ignore favicon.ico
+                if(str($log['message'])->contains('favicon.ico')) continue;
+
+                $errors[] = $log['message'];
+            }
+
+            PHPUnit::assertEmpty($errors, "Console log contained errors: " . implode(", ", $errors));
+
+            return $this;
+        };
+    }
+
+    public function assertConsoleLogHasErrors()
+    {
+        return function(){
+            $logs = $this->driver->manage()->getLog('browser');
+
+            $errors = [];
+            foreach ($logs as $log) {
+                if (! isset($log['message']) || ! isset($log['level']) || $log['level'] !== 'SEVERE') continue;
+
+                // Ignore favicon.ico
+                if(str($log['message'])->contains('favicon.ico')) continue;
+
+                $errors[] = $log['message'];
+            }
+
+            PHPUnit::assertNotEmpty($errors, "Console log contained no errors");
 
             return $this;
         };

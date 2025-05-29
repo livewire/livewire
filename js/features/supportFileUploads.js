@@ -55,6 +55,11 @@ export function handleFileUpload(el, property, component, cleanup) {
         if (value === null || value === '') {
             el.value = ''
         }
+        
+        // If the file input is a multiple file input and the value has been reset to an empty array, then reset the input...
+        if (el.multiple && Array.isArray(value) && value.length === 0) {
+            el.value = ''
+        }
     })
 
     // There's a bug in browsers where selecting a file, removing it,
@@ -178,7 +183,7 @@ class UploadManager {
 
         request.upload.addEventListener('progress', e => {
             e.detail = {}
-            e.detail.progress = Math.round((e.loaded * 100) / e.total)
+            e.detail.progress = Math.floor((e.loaded * 100) / e.total)
 
             this.uploadBag.first(name).progressCallback(e)
         })
@@ -239,7 +244,9 @@ class UploadManager {
         let uploadItem = this.uploadBag.first(name);
 
         if (uploadItem) {
-            uploadItem.request.abort();
+            if (uploadItem.request) {
+                uploadItem.request.abort();
+            }
 
             this.uploadBag.shift(name).cancelledCallback();
 

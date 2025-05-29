@@ -216,10 +216,10 @@ If you don't have a specific option selected by default, you may want to show a 
 
 ```blade
 <select wire:model="state">
-    <option disabled>Select a state...</option>
+    <option disabled value="">Select a state...</option>
 
     @foreach (\App\Models\State::all() as $state)
-        <option value="{{ $option->id }}">{{ $option->label }}</option>
+        <option value="{{ $state->id }}">{{ $state->label }}</option>
     @endforeach
 </select>
 ```
@@ -230,7 +230,7 @@ As you can see, there is no "placeholder" attribute for a select menu like there
 
 Sometimes you may want one select menu to be dependent on another. For example, a list of cities that changes based on which state is selected.
 
-For the most part, this works as you'd expect, however there is one important gotcha: You must add a `wire:key` to the changing select so that Livewire properly refreshes it's value when the options change.
+For the most part, this works as you'd expect, however there is one important gotcha: You must add a `wire:key` to the changing select so that Livewire properly refreshes its value when the options change.
 
 Here's an example of two selects, one for states, one for cities. When the state select changes, the options in the city select will change properly:
 
@@ -250,7 +250,7 @@ Here's an example of two selects, one for states, one for cities. When the state
 </select>
 ```
 
-Again, the only thing non-standard here is the `wire:key` that has been added to the second select. This ensures that when the state changes, the "selectedCity" value will be reset propertly.
+Again, the only thing non-standard here is the `wire:key` that has been added to the second select. This ensures that when the state changes, the "selectedCity" value will be reset properly.
 
 ### Multi-select dropdowns
 

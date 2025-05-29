@@ -7,13 +7,12 @@ trait SupportsSafari
 {
     protected static $safariProcess;
 
-    /** @beforeClass */
-    public static function prepare()
+    protected static function defineChromeDriver(): void
     {
         if (static::$useSafari) {
             static::startSafariDriver();
         } else {
-            static::startChromeDriver(['port' => 9515]);
+            static::startChromeDriver(['--port=9515']);
         }
     }
 
