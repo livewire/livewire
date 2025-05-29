@@ -42,6 +42,11 @@ export function on(eventName, callback) {
 }
 
 function dispatchEvent(target, name, params, bubbles = true) {
+    // We need to ensure the params are an array (or object), so we need to wrap them if they're not already...
+    if (typeof params === 'string') {
+        params = [params]
+    }
+
     let e = new CustomEvent(name, { bubbles, detail: params })
 
     e.__livewire = { name, params, receivedBy: [] }
