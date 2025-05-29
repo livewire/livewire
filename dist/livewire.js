@@ -3996,14 +3996,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (typeof modal != "undefined" && modal != null) {
       modal.innerHTML = "";
     } else {
-      modal = document.createElement("div");
+      modal = document.createElement("dialog");
       modal.id = "livewire-error";
-      modal.style.position = "fixed";
-      modal.style.width = "100vw";
-      modal.style.height = "100vh";
-      modal.style.padding = "50px";
-      modal.style.backgroundColor = "rgba(0, 0, 0, .6)";
-      modal.style.zIndex = 2e5;
+      modal.style.margin = "50px";
+      modal.style.width = "calc(100% - 100px)";
+      modal.style.height = "calc(100% - 100px)";
+      modal.style.borderRadius = "5px";
+      modal.style.padding = "0px";
     }
     let iframe = document.createElement("iframe");
     iframe.style.backgroundColor = "#17161A";
@@ -4017,14 +4016,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     iframe.contentWindow.document.write(page.outerHTML);
     iframe.contentWindow.document.close();
     modal.addEventListener("click", () => hideHtmlModal(modal));
-    modal.setAttribute("tabindex", 0);
-    modal.addEventListener("keydown", (e) => {
-      if (e.key === "Escape")
-        hideHtmlModal(modal);
-    });
+    modal.addEventListener("close", () => cleanupModal(modal));
+    modal.showModal();
     modal.focus();
+    modal.blur();
   }
   function hideHtmlModal(modal) {
+    modal.close();
+  }
+  function cleanupModal(modal) {
     modal.outerHTML = "";
     document.body.style.overflow = "visible";
   }
@@ -4103,11 +4103,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     prepare() {
       trigger2("commit.prepare", { component: this.component });
     }
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+      let { snapshotEncoded, children, snapshot } = this.component;
+      let childIds = children.map((child) => child.id);
+      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+      return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
+    }
     toRequestPayload() {
       let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
       let updates = this.component.mergeQueuedUpdates(propertiesDiff);
+      let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn();
       let payload = {
-        snapshot: this.component.snapshotEncoded,
+        snapshot: snapshotEncoded,
         updates,
         calls: this.calls.map((i) => ({
           path: i.path,
@@ -4196,7 +4203,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     createAndSendNewPool() {
       trigger2("commit.pooling", { commits: this.commits });
       let pools = this.corraleCommitsIntoPools();
-      this.commits.clear();
       trigger2("commit.pooled", { pools });
       pools.forEach((pool) => {
         if (pool.empty())
@@ -4204,13 +4210,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         this.pools.add(pool);
         pool.send().then(() => {
           this.pools.delete(pool);
-          this.sendAnyQueuedCommits();
+          queueMicrotask(() => {
+            this.sendAnyQueuedCommits();
+          });
         });
       });
     }
     corraleCommitsIntoPools() {
       let pools = /* @__PURE__ */ new Set();
       for (let [idx, commit] of this.commits.entries()) {
+        if (this.findPoolWithComponent(commit.component))
+          continue;
         let hasFoundPool = false;
         pools.forEach((pool) => {
           if (pool.shouldHoldCommit(commit)) {
@@ -4223,6 +4233,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           newPool.add(commit);
           pools.add(newPool);
         }
+        this.commits.delete(commit);
       }
       return pools;
     }
@@ -4363,6 +4374,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "on": "$on",
     "el": "$el",
     "id": "$id",
+    "js": "$js",
     "get": "$get",
     "set": "$set",
     "call": "$call",
@@ -4433,6 +4445,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$id", (component) => {
     return component.id;
+  });
+  wireProperty("$js", (component) => {
+    let fn = component.addJsAction.bind(component);
+    let jsActions = component.getJsActions();
+    Object.keys(jsActions).forEach((name) => {
+      fn[name] = component.getJsAction(name);
+    });
+    return fn;
   });
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
@@ -4529,6 +4549,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.ephemeral = extractData(deepClone(this.snapshot.data));
       this.reactive = Alpine.reactive(this.ephemeral);
       this.queuedUpdates = {};
+      this.jsActions = {};
       this.$wire = generateWireObject(this, this.reactive);
       this.cleanups = [];
       this.processEffects(this.effects);
@@ -4587,7 +4608,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     get children() {
       let meta = this.snapshot.memo;
       let childIds = Object.values(meta.children).map((i) => i[1]);
-      return childIds.map((id) => findComponent(id));
+      return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
     }
     get parent() {
       return closestComponent(this.el.parentElement);
@@ -4603,6 +4624,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         effects.scripts = this.originalEffects.scripts;
       }
       el.setAttribute("wire:effects", JSON.stringify(effects));
+    }
+    addJsAction(name, action) {
+      this.jsActions[name] = action;
+    }
+    hasJsAction(name) {
+      return this.jsActions[name] !== void 0;
+    }
+    getJsAction(name) {
+      return this.jsActions[name].bind(this.$wire);
+    }
+    getJsActions() {
+      return this.jsActions;
     }
     addCleanup(cleanup2) {
       this.cleanups.push(cleanup2);
@@ -4632,6 +4665,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     component.cleanup();
     delete components[id];
+  }
+  function hasComponent(id) {
+    return !!components[id];
   }
   function findComponent(id) {
     let component = components[id];
@@ -7865,7 +7901,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var restoreScroll = true;
   var autofocus = false;
   function navigate_default(Alpine3) {
-    Alpine3.navigate = (url) => {
+    Alpine3.navigate = (url, options = {}) => {
+      let { preserveScroll = false } = options;
       let destination = createUrlObjectFromString(url);
       let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
         url: destination,
@@ -7874,7 +7911,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       if (prevented)
         return;
-      navigateTo(destination);
+      navigateTo(destination, { preserveScroll });
     };
     Alpine3.navigate.disableProgressBar = () => {
       showProgressBar = false;
@@ -7882,6 +7919,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     Alpine3.addInitSelector(() => `[${Alpine3.prefixed("navigate")}]`);
     Alpine3.directive("navigate", (el, { modifiers }) => {
       let shouldPrefetchOnHover = modifiers.includes("hover");
+      let preserveScroll = modifiers.includes("preserve-scroll");
       shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
         let destination = extractDestinationFromLink(el);
         if (!destination)
@@ -7905,16 +7943,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           });
           if (prevented)
             return;
-          navigateTo(destination);
+          navigateTo(destination, { preserveScroll });
         });
       });
     });
-    function navigateTo(destination, shouldPushToHistoryState = true) {
+    function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
       showProgressBar && showAndStartProgressBar();
       fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
         fireEventForOtherLibrariesToHookInto("alpine:navigating");
         restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
-        showProgressBar && finishAndHideProgressBar();
         cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
         updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
         preventAlpineFromPickingUpDomChanges(Alpine3, (andAfterAllThis) => {
@@ -7933,7 +7970,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               unPackPersistedTeleports(persistedEl);
               unPackPersistedPopovers(persistedEl);
             });
-            restoreScrollPositionOrScrollToTop();
+            !preserveScroll && restoreScrollPositionOrScrollToTop();
             afterNewScriptsAreDoneLoading(() => {
               andAfterAllThis(() => {
                 setTimeout(() => {
@@ -7941,6 +7978,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
                 });
                 nowInitializeAlpineOnTheNewPage(Alpine3);
                 fireEventForOtherLibrariesToHookInto("alpine:navigated");
+                showProgressBar && finishAndHideProgressBar();
               });
             });
           });
@@ -7957,8 +7995,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         if (prevented)
           return;
-        let shouldPushToHistoryState = false;
-        navigateTo(destination, shouldPushToHistoryState);
+        navigateTo(destination, { shouldPushToHistoryState: false });
       });
     }, (html, url, currentPageUrl, currentPageKey) => {
       let destination = createUrlObjectFromString(url);
@@ -8143,14 +8180,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!state.alpine)
       state.alpine = {};
     state.alpine[key] = unwrap(object);
-    window.history.replaceState(state, "", url.toString());
+    try {
+      window.history.replaceState(state, "", url.toString());
+    } catch (e) {
+      console.error(e);
+    }
   }
   function push(url, key, object) {
     let state = window.history.state || {};
     if (!state.alpine)
       state.alpine = {};
     state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
-    window.history.pushState(state, "", url.toString());
+    try {
+      window.history.pushState(state, "", url.toString());
+    } catch (e) {
+      console.error(e);
+    }
   }
   function unwrap(object) {
     if (object === void 0)
@@ -8799,7 +8844,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.interceptInit(module_default.skipDuringClone((el) => {
       if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
         return;
-      if (el.hasAttribute("wire:id")) {
+      if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
         let component2 = initComponent(el);
         module_default.onAttributeRemoved(el, "wire:id", () => {
           destroyComponent(component2.id);
@@ -8889,7 +8934,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire });
+            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
           });
         });
       });
@@ -8961,6 +9006,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportJsEvaluation.js
+  module_default.magic("js", (el) => {
+    let component = closestComponent(el);
+    return component.$wire.js;
+  });
   on2("effect", ({ component, effects }) => {
     let js = effects.js;
     let xjs = effects.xjs;
@@ -8972,8 +9021,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     }
     if (xjs) {
-      xjs.forEach((expression) => {
-        module_default.evaluate(component.el, expression);
+      xjs.forEach(({ expression, params }) => {
+        params = Object.values(params);
+        module_default.evaluate(component.el, expression, { scope: component.jsActions, params });
       });
     }
   });
@@ -8990,13 +9040,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     parentComponent && (wrapper.__livewire = parentComponent);
     let to = wrapper.firstElementChild;
+    to.setAttribute("wire:snapshot", component.snapshotEncoded);
+    let effects = { ...component.effects };
+    delete effects.html;
+    to.setAttribute("wire:effects", JSON.stringify(effects));
     to.__livewire = component;
     trigger2("morph", { el, toEl: to, component });
+    let existingComponentsMap = {};
+    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+    });
+    to.querySelectorAll("[wire\\:id]").forEach((child) => {
+      if (child.hasAttribute("wire:snapshot"))
+        return;
+      let wireId = child.getAttribute("wire:id");
+      let existingComponent = existingComponentsMap[wireId];
+      if (existingComponent) {
+        child.replaceWith(existingComponent.cloneNode(true));
+      }
+    });
     module_default.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip) => {
+      updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
         if (isntElement(el2))
           return;
-        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly });
+        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
         if (el2.__livewire_replace === true)
           el2.innerHTML = toEl.innerHTML;
         if (el2.__livewire_replace_self === true) {
@@ -9007,6 +9074,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return skip();
         if (el2.__livewire_ignore_self === true)
           childrenOnly();
+        if (el2.__livewire_ignore_children === true)
+          return skipChildren();
         if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
           return skip();
         if (isComponentRootEl(el2))
@@ -9066,7 +9135,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/features/supportDispatches.js
   on2("effect", ({ component, effects }) => {
-    dispatchEvents(component, effects.dispatches || []);
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          dispatchEvents(component, effects.dispatches || []);
+        });
+      });
+    });
   });
   function dispatchEvents(component, dispatches) {
     dispatches.forEach(({ name, params = {}, self = false, to }) => {
@@ -9439,6 +9514,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     el.__addedByMorph = true;
   });
   directive2("transition", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        module_default.bind(el, {
+          [directive3.rawName.replace("wire:transition", "x-transition")]: directive3.expression
+        });
+        return;
+      }
+    }
     let visibility = module_default.reactive({ state: el.__addedByMorph ? false : true });
     module_default.bind(el, {
       [directive3.rawName.replace("wire:", "x-")]: "",
@@ -9509,11 +9592,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-navigate.js
   module_default.addInitSelector(() => `[wire\\:navigate]`);
   module_default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
+  module_default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
   module_default.interceptInit(module_default.skipDuringClone((el) => {
     if (el.hasAttribute("wire:navigate")) {
       module_default.bind(el, { ["x-navigate"]: true });
     } else if (el.hasAttribute("wire:navigate.hover")) {
       module_default.bind(el, { ["x-navigate.hover"]: true });
+    } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
+      module_default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+    } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
+      module_default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+    } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
+      module_default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
     }
   }));
   document.addEventListener("alpine:navigating", () => {
@@ -9796,7 +9888,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (modifiers.includes("replace") || replace2) {
         el.innerHTML = content;
       } else {
-        el.innerHTML = el.innerHTML + content;
+        el.insertAdjacentHTML("beforeend", content);
       }
     });
     cleanup2(off);
@@ -9864,15 +9956,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("ignore", ({ el, directive: directive3 }) => {
     if (directive3.modifiers.includes("self")) {
       el.__livewire_ignore_self = true;
+    } else if (directive3.modifiers.includes("children")) {
+      el.__livewire_ignore_children = true;
     } else {
       el.__livewire_ignore = true;
     }
   });
 
+  // js/directives/wire-cloak.js
+  module_default.interceptInit((el) => {
+    if (el.hasAttribute("wire:cloak")) {
+      module_default.mutateDom(() => el.removeAttribute("wire:cloak"));
+    }
+  });
+
   // js/directives/wire-dirty.js
   var refreshDirtyStatesByComponent = new WeakBag();
-  on2("commit", ({ component, succeed }) => {
-    succeed(() => {
+  on2("commit", ({ component, respond }) => {
+    respond(() => {
       setTimeout(() => {
         refreshDirtyStatesByComponent.each(component, (i) => i(false));
       });
@@ -9880,7 +9981,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   directive2("dirty", ({ el, directive: directive3, component }) => {
     let targets = dirtyTargets(el);
-    let dirty = Alpine.reactive({ state: false });
     let oldIsDirty = false;
     let initialDisplay = el.style.display;
     let refreshDirtyState = (isDirty) => {
@@ -10098,6 +10198,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return durationInMilliSeconds || defaultDuration;
   }
+
+  // js/directives/wire-show.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:show")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:show")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-show" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
+      }
+    }
+  });
+
+  // js/directives/wire-text.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:text")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:text")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        module_default.bind(el, {
+          ["x-text" + modifierString]() {
+            return module_default.evaluate(el, expression);
+          }
+        });
+      }
+    }
+  });
 
   // js/index.js
   var Livewire2 = {

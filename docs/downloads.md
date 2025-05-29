@@ -80,8 +80,7 @@ Livewire also provides a `->assertFileDownloaded()` method to easily test that a
 ```php
 use App\Models\Invoice;
 
-/** @test */
-public function can_download_invoice()
+public function test_can_download_invoice()
 {
     $invoice = Invoice::factory();
 
@@ -96,8 +95,7 @@ You can also test to ensure a file was not downloaded using the `->assertNoFileD
 ```php
 use App\Models\Invoice;
 
-/** @test */
-public function does_not_download_invoice_if_unauthorised()
+public function test_does_not_download_invoice_if_unauthorised()
 {
     $invoice = Invoice::factory();
 

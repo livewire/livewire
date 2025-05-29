@@ -198,8 +198,7 @@ use Tests\TestCase;
 
 class UploadPhotoTest extends TestCase
 {
-    /** @test */
-    public function can_upload_photo()
+    public function test_can_upload_photo()
     {
         Storage::fake('avatars');
 
