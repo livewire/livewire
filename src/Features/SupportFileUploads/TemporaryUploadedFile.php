@@ -99,7 +99,6 @@ class TemporaryUploadedFile extends UploadedFile
 
     public function getClientOriginalName(): string
     {
-        // ray('getClientOriginalName', $this->mappedName);
         return $this->mappedName ?? $this->extractOriginalNameFromFilePath($this->path);
     }
 
@@ -183,11 +182,9 @@ class TemporaryUploadedFile extends UploadedFile
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
         $hash = str()->random(30);
-        $meta = '';
-        // $meta = str('-meta'.base64_encode($file->getClientOriginalName()).'-')->replace('/', '_');
         $extension = '.'.$file->getClientOriginalExtension();
 
-        return $hash.$meta.$extension;
+        return $hash.$extension;
     }
 
     public function hashName($path = null)
