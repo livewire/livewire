@@ -1148,6 +1148,43 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_hover_prefetches_and_caches_for_a_default_30_seconds()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+
+                // Hover over the link to trigger prefetch
+                ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+
+                // Move mouse away
+                ->mouseover('@count')
+
+                // Hover again to trigger another prefetch (should use cache)
+                ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+
+                // Move mouse away
+                ->mouseover('@count')
+
+                // Wait for cache expiration (default of 30 seconds + buffer)
+                ->pause(31000)
+
+                // Hover again after cache expiration - should trigger new prefetch
+                ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+                ->assertScript('return window._lw_dusk_test')
+
+                // Move mouse away
+                ->mouseover('@count')
+
+                // Hover again to trigger another prefetch (should use cache)
+                ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+            ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1191,6 +1228,14 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
             <a href="/redirect-to-second" wire:navigate dusk="redirect.to.second.link">Redirect to second page from link</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
+
+            @script
+            <script>
+                Livewire.hook('navigate.request', () => {
+                    console.log('navigateRequest');
+                })
+            </script>
+            @endscript
 
             <livewire:first-page-child />
 
