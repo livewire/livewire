@@ -313,7 +313,7 @@ class Testable
             ];
         })->reduce(fn ($carry, $item) => $carry->put($item[0], $item[1]), collect())->toArray();
 
-        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
+        collect($fileHashes->keys())->zip(collect($newFileHashes)->keys())->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
             $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
         });
 
