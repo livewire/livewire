@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Validator;
 
 class FileUploadController implements HasMiddleware
 {
-    public static string $default_middleware = 'web';
+    public static array $defaultMiddleware = ['web'];
 
     public static function middleware()
     {
