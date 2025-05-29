@@ -7479,12 +7479,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
+  var cacheDuration = 3e4;
   function prefetchHtml(destination, callback) {
     let uri = getUriStringFromUrlObject(destination);
     if (prefetches[uri])
       return;
-    prefetches[uri] = { finished: false, html: null, whenFinished: () => {
-    } };
+    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
     performFetch(uri, (html, routedUri) => {
       callback(html, routedUri);
     });
