@@ -157,4 +157,17 @@ return [
     */
 
     'pagination_theme' => 'tailwind',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Release Token
+    |---------------------------------------------------------------------------
+    |
+    | This token is stored client-side and sent along with each request to check
+    | a users session to see if a new release has invalidated it. If there is
+    | a mismatch it will throw an error and prompt for a browser refresh.
+    |
+    */
+
+    'release_token' => 'a',
 ];

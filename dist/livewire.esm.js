@@ -8569,6 +8569,9 @@ function on2(eventName, callback) {
   };
 }
 function dispatchEvent(target, name, params, bubbles = true) {
+  if (typeof params === "string") {
+    params = [params];
+  }
   let e = new CustomEvent(name, { bubbles, detail: params });
   e.__livewire = { name, params, receivedBy: [] };
   target.dispatchEvent(e);
