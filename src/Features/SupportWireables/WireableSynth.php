@@ -14,6 +14,11 @@ class WireableSynth extends Synth
         return is_object($target) && $target instanceof Wireable;
     }
 
+    static function unwrapForValidation($target)
+    {
+        return $target->toLivewire();
+    }
+
     function dehydrate($target, $dehydrateChild)
     {
         $data = $target->toLivewire();

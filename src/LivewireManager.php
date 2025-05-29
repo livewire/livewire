@@ -92,6 +92,11 @@ class LivewireManager
         return last(app(HandleComponents::class)::$componentStack);
     }
 
+    function findSynth($keyOrTarget, $component)
+    {
+        return app(HandleComponents::class)->findSynth($keyOrTarget, $component);
+    }
+
     function update($snapshot, $diff, $calls)
     {
         return app(HandleComponents::class)->update($snapshot, $diff, $calls);
