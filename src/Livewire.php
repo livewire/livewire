@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static array update($snapshot, $diff, $calls)
  * @method static bool isLivewireRequest()
  * @method static void setUpdateRoute($callback)
- * @method static string getUpdateUri($callback)
+ * @method static string getUpdateUri()
  * @method static void setScriptRoute($callback)
  * @method static void useScriptTagAttributes($attributes)
  * @method static \Livewire\LivewireManager withUrlParams($params)
@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string originalUrl()
  * @method static string originalPath()
  * @method static string originalMethod()
+ * @method static \Livewire\LivewireManager withoutLazyLoading()
  *
  * @see \Livewire\LivewireManager
  */
@@ -37,6 +38,6 @@ class Livewire extends Facade
 {
     public static function getFacadeAccessor()
     {
-        return 'livewire';
+        return \Livewire\LivewireManager::class;
     }
 }

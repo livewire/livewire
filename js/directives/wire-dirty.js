@@ -1,5 +1,5 @@
-import { toggleBooleanStateDirective } from './shared'
 import { directive, getDirectives } from '@/directives'
+import { toggleBooleanStateDirective } from './shared'
 import { dataGet, WeakBag } from '@/utils'
 import { on } from '@/hooks'
 
@@ -15,8 +15,6 @@ on('commit', ({ component, respond }) => {
 
 directive('dirty', ({ el, directive, component }) => {
     let targets = dirtyTargets(el)
-
-    let dirty = Alpine.reactive({ state: false })
 
     let oldIsDirty = false
 

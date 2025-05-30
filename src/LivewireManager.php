@@ -73,9 +73,9 @@ class LivewireManager
         return app(HandleComponents::class)->mount($name, $params, $key);
     }
 
-    function snapshot($component)
+    function snapshot($component, $context = null)
     {
-        return app(HandleComponents::class)->snapshot($component);
+        return app(HandleComponents::class)->snapshot($component, $context);
     }
 
     function fromSnapshot($snapshot)
@@ -90,6 +90,11 @@ class LivewireManager
     function current()
     {
         return last(app(HandleComponents::class)::$componentStack);
+    }
+
+    function findSynth($keyOrTarget, $component)
+    {
+        return app(HandleComponents::class)->findSynth($keyOrTarget, $component);
     }
 
     function update($snapshot, $diff, $calls)
