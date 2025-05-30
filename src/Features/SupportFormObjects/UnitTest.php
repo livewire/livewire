@@ -100,6 +100,39 @@ class UnitTest extends \Tests\TestCase
         ;
     }
 
+    function test_form_update_lifecycle_hooks_are_called()
+    {
+        $component = Livewire::test(
+            new class extends TestComponent {
+                public LifecycleHooksForm $foo;
+
+                public function mount(array $expected = [])
+                {
+                    $this->foo->expected = $expected;
+                }
+            },
+            [
+                'expected' => [
+                    'updating' => [[
+                        'bar' => 'baz',
+                    ]],
+                    'updated' => [[
+                        'bar' => 'baz',
+                    ]],
+                    'updatingBar' => ['baz'],
+                    'updatedBar' => ['baz'],
+                ],
+            ]
+        )->set('foo.bar', 'baz');
+
+        $this->assertEquals([
+            'updating' => true,
+            'updatingBar' => true,
+            'updated' => true,
+            'updatedBar' => true,
+        ], $component->foo->lifecycles);
+    }
+
     function test_can_validate_a_form_object()
     {
         Livewire::test(new class extends TestComponent {
@@ -984,5 +1017,48 @@ class ResetPropertiesForm extends Form
 
     public function proxyPull(...$args){
         return $this->pull(...$args);
+    }
+}
+
+class LifecycleHooksForm extends Form
+{
+    public $expected;
+
+    public $bar;
+
+    public $lifecycles = [
+        'updating' => false,
+        'updatingBar' => false,
+        'updated' => false,
+        'updatedBar' => false,
+    ];
+
+    public function updating($name, $value)
+    {
+        ray('updating', $name, $value);
+        Assert::assertEquals(array_shift($this->expected['updating']), [$name => $value]);
+
+        $this->lifecycles['updating'] = true;
+    }
+
+    public function updated($name, $value)
+    {
+        Assert::assertEquals(array_shift($this->expected['updated']), [$name => $value]);
+
+        $this->lifecycles['updated'] = true;
+    }
+
+    public function updatingBar($value)
+    {
+        Assert::assertEquals(array_shift($this->expected['updatingBar']), $value);
+
+        $this->lifecycles['updatingBar'] = true;
+    }
+
+    public function updatedBar($value)
+    {
+        Assert::assertEquals(array_shift($this->expected['updatedBar']), $value);
+
+        $this->lifecycles['updatedBar'] = true;
     }
 }
