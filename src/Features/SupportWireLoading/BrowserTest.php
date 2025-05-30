@@ -461,9 +461,56 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Foo')
         ;
     }
+
+    function test_wire_loading_targets_parent_component()
+    {
+        Livewire::visit([\Livewire\Features\SupportWireLoading\ParentCounter::class, 'child-counter' => \Livewire\Features\SupportWireLoading\ChildCounter::class])
+            ->assertSeeIn('@output', '1')
+            ->assertDontSee('Loading...')
+            ->click('@button')
+            ->assertSee('Loading...')
+            ->waitForTextIn('@output', '2')
+            ->assertSeeIn('@output', '2')
+            ->assertDontSee('Loading...');
+    }
 }
 
 class PostFormStub extends Form
 {
     public $text = '';
+}
+
+class ParentCounter extends Component
+{
+    public $count = 1;
+
+    function increment()
+    {
+        sleep(2);
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+           <span dusk="output">{{ $count }}</span>
+
+            <livewire:child-counter />
+        </div>
+        HTML;
+    }
+}
+
+class ChildCounter extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <button wire:click="$parent.increment()" dusk="button"></button>
+            <span wire:loading="$parent.increment">Loading...</span>
+        </div>
+        HTML;
+    }
 }
