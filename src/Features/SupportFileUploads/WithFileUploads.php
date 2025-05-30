@@ -13,11 +13,12 @@ trait WithFileUploads
     function _startUpload($name, $fileInfo, $isMultiple)
     {
         if (FileUploadConfiguration::isUsingS3()) {
-            throw_if($isMultiple, S3DoesntSupportMultipleFileUploads::class);
+            $payload = collect($fileInfo)
+                ->map(fn ($info) => UploadedFile::fake()->create($info['name'], $info['size'] / 1024, $info['type']))
+                ->map(fn ($file) => GenerateSignedUploadUrl::forS3($file))
+                ->all();
 
-            $file = UploadedFile::fake()->create($fileInfo[0]['name'], $fileInfo[0]['size'] / 1024, $fileInfo[0]['type']);
-
-            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: GenerateSignedUploadUrl::forS3($file))->self();
+            $this->dispatch('upload:generatedSignedUrlForS3', name: $name, payload: $payload)->self();
 
             return;
         }

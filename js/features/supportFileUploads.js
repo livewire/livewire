@@ -3,7 +3,7 @@ import { getCsrfToken } from '@/utils';
 let uploadManagers = new WeakMap
 
 function getUploadManager(component) {
-    if (! uploadManagers.has(component)) {
+    if (!uploadManagers.has(component)) {
         let manager = new UploadManager(component)
 
         uploadManagers.set(component, manager)
@@ -17,12 +17,12 @@ function getUploadManager(component) {
 export function handleFileUpload(el, property, component, cleanup) {
     let manager = getUploadManager(component)
 
-    let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
-    let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property} }))
-    let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property} }))
-    let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property} }))
+    let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property } }))
+    let finish = () => el.dispatchEvent(new CustomEvent('livewire-upload-finish', { bubbles: true, detail: { id: component.id, property } }))
+    let error = () => el.dispatchEvent(new CustomEvent('livewire-upload-error', { bubbles: true, detail: { id: component.id, property } }))
+    let cancel = () => el.dispatchEvent(new CustomEvent('livewire-upload-cancel', { bubbles: true, detail: { id: component.id, property } }))
     let progress = (progressEvent) => {
-        var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total )
+        var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
 
         el.dispatchEvent(
             new CustomEvent('livewire-upload-progress', {
@@ -50,12 +50,12 @@ export function handleFileUpload(el, property, component, cleanup) {
         // This watch will only be released when the component is removed. However, the
         // actual file-upload element may be removed from the DOM withou the entire
         // component being removed. In this case, let's just bail early on this.
-        if (! el.isConnected) return
+        if (!el.isConnected) return
 
         if (value === null || value === '') {
             el.value = ''
         }
-        
+
         // If the file input is a multiple file input and the value has been reset to an empty array, then reset the input...
         if (el.multiple && Array.isArray(value) && value.length === 0) {
             el.value = ''
@@ -163,15 +163,69 @@ class UploadManager {
     }
 
     handleS3PreSignedUrl(name, payload) {
-        let formData = this.uploadBag.first(name).files[0]
+        let files = this.uploadBag.first(name).files
+        let uploads = Array.isArray(payload) ? payload : [payload]
 
-        let headers = payload.headers
-        if ('Host' in headers) delete headers.Host
-        let url = payload.url
+        let completedPaths = []
 
-        this.makeRequest(name, formData, 'put', url, headers, response => {
-            return [payload.path]
-        })
+        let uploadFileToS3 = (file, uploadPayload, onSuccess, onError, onProgress) => {
+            let headers = uploadPayload.headers
+            if ('Host' in headers) delete headers.Host
+            let url = uploadPayload.url
+
+            let request = new XMLHttpRequest()
+            request.open('PUT', url)
+
+            Object.entries(headers).forEach(([key, value]) => {
+                request.setRequestHeader(key, value)
+            })
+
+            request.upload.addEventListener('progress', e => {
+                e.detail = {}
+                e.detail.progress = Math.floor((e.loaded * 100) / e.total)
+                onProgress(e)
+            })
+
+            request.addEventListener('load', () => {
+                if ((request.status + '')[0] === '2') {
+                    onSuccess(uploadPayload.path)
+                } else {
+                    onError()
+                }
+            })
+
+            request.addEventListener('error', onError)
+
+            request.send(file)
+            return request
+        }
+
+        let uploadNext = (index = 0) => {
+            if (index >= uploads.length) {
+                this.component.$wire.call('_finishUpload', name, completedPaths, uploads.length > 1)
+                return
+            }
+
+            let file = files[index]
+            let uploadPayload = uploads[index]
+
+            this.uploadBag.first(name).request = uploadFileToS3(
+                file,
+                uploadPayload,
+                (path) => {
+                    completedPaths.push(path)
+                    uploadNext(index + 1)
+                },
+                () => {
+                    this.component.$wire.call('_uploadErrored', name, null, uploads.length > 1)
+                },
+                (e) => {
+                    this.uploadBag.first(name).progressCallback(e)
+                }
+            )
+        }
+
+        uploadNext()
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
@@ -191,7 +245,7 @@ class UploadManager {
         })
 
         request.addEventListener('load', () => {
-            if ((request.status+'')[0] === '2') {
+            if ((request.status + '')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
                 this.component.$wire.call('_finishUpload', name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append)
@@ -263,7 +317,7 @@ export default class MessageBag {
     }
 
     add(name, thing) {
-        if (! this.bag[name]) {
+        if (!this.bag[name]) {
             this.bag[name] = []
         }
 
@@ -275,7 +329,7 @@ export default class MessageBag {
     }
 
     first(name) {
-        if (! this.bag[name]) return null
+        if (!this.bag[name]) return null
 
         return this.bag[name][0]
     }
