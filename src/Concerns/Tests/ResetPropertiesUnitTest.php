@@ -98,6 +98,26 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertTrue(is_null($component->nullProp));
     }
 
+    public function test_can_reset_array_properties()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->set('arrayProp', ['bar'])
+            ->assertSetStrict('arrayProp', ['bar'])
+            ->call('resetKeys', 'arrayProp');
+
+        $this->assertTrue($component->arrayProp === []);
+    }
+
+    public function test_can_reset_nested_array_properties()
+    {
+        $component = Livewire::test(ResetPropertiesComponent::class)
+            ->set('nestedArrayProp.foo', 'bar')
+            ->assertSetStrict('nestedArrayProp.foo', 'bar')
+            ->call('resetKeys', 'nestedArrayProp.foo');
+
+        $this->assertTrue(!array_key_exists('foo', $component->nestedArrayProp));
+    }
+
     public function test_can_reset_and_return_property_with_pull_method()
     {
         $component = Livewire::test(ResetPropertiesComponent::class)
@@ -150,6 +170,12 @@ class ResetPropertiesComponent extends TestComponent
     public ?int $nullProp = null;
 
     public $pullResult = null;
+
+    public array $arrayProp = [];
+
+    public array $nestedArrayProp = [
+        'foo' => '',
+    ];
 
     public function resetAll()
     {
