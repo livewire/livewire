@@ -1963,12 +1963,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let typeB = directiveOrder.indexOf(b.type) === -1 ? DEFAULT : b.type;
       return directiveOrder.indexOf(typeA) - directiveOrder.indexOf(typeB);
     }
-    function dispatch3(el, name, detail = {}) {
-      el.dispatchEvent(new CustomEvent(name, {
+    function dispatch3(el, name, detail = {}, options = {}) {
+      return el.dispatchEvent(new CustomEvent(name, {
         detail,
         bubbles: true,
         composed: true,
-        cancelable: true
+        cancelable: true,
+        ...options
       }));
     }
     function walk(el, callback) {
@@ -2876,7 +2877,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       get raw() {
         return raw;
       },
-      version: "3.14.9",
+      version: "3.14.8",
       flushAndStopDeferringMutations,
       dontAutoEvaluateFunctions,
       disableEffectScheduling,
@@ -6784,8 +6785,7 @@ var require_module_cjs8 = __commonJS({
           return swapElements(from2, to);
         }
         let updateChildrenOnly = false;
-        let skipChildren = false;
-        if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
+        if (shouldSkip(updating, from2, to, () => updateChildrenOnly = true))
           return;
         if (from2.nodeType === 1 && window.Alpine) {
           window.Alpine.cloneNode(from2, to);
@@ -6802,9 +6802,7 @@ var require_module_cjs8 = __commonJS({
           patchAttributes(from2, to);
         }
         updated(from2, to);
-        if (!skipChildren) {
-          patchChildren(from2, to);
-        }
+        patchChildren(from2, to);
       }
       function differentElementNamesTypesOrKeys(from2, to) {
         return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
@@ -7016,11 +7014,6 @@ var require_module_cjs8 = __commonJS({
     function shouldSkip(hook, ...args) {
       let skip = false;
       hook(...args, () => skip = true);
-      return skip;
-    }
-    function shouldSkipChildren(hook, skipChildren, ...args) {
-      let skip = false;
-      hook(...args, () => skip = true, skipChildren);
       return skip;
     }
     var patched = false;
@@ -10702,11 +10695,18 @@ function applyDelay(directive2) {
   ];
 }
 function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+  const componentTargets = targets.filter((t) => !t.target.startsWith("$parent."));
+  const parentTargets = targets.filter((t) => t.target.startsWith("$parent.")).map((t) => t.target.replace("$parent.", ""));
   return on("commit", ({ component: iComponent, commit: payload, respond }) => {
-    if (iComponent !== component)
+    if (iComponent === component) {
+      if (componentTargets.length > 0 && containsTargets(payload, componentTargets) === inverted)
+        return;
+    } else if (iComponent === component.parent) {
+      if (parentTargets.length > 0 && containsTargets(payload, parentTargets) === inverted)
+        return;
+    } else {
       return;
-    if (targets.length > 0 && containsTargets(payload, targets) === inverted)
-      return;
+    }
     startLoading();
     respond(() => {
       endLoading();
@@ -10714,12 +10714,19 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading
   });
 }
 function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
+  const componentTargets = targets.filter((t) => !t.target.startsWith("$parent."));
+  const parentTargets = targets.filter((t) => t.target.startsWith("$parent.")).map((t) => t.target.replace("$parent.", ""));
   let eventMismatch = (e) => {
     let { id, property } = e.detail;
-    if (id !== component.id)
+    if (id === component.id) {
+      if (componentTargets.length > 0 && !componentTargets.map((i) => i.target).includes(property))
+        return true;
+    } else if (id === component.parent?.id) {
+      if (parentTargets.length > 0 && !parentTargets.map((i) => i.target).includes(property))
+        return true;
+    } else {
       return true;
-    if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
-      return true;
+    }
     return false;
   };
   let cleanupA = listen(window, "livewire-upload-start", (e) => {
