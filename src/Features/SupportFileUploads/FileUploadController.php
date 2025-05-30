@@ -43,13 +43,23 @@ class FileUploadController implements HasMiddleware
 
         $fileHashPaths = collect($files)->map(function ($file) use ($disk) {
             $filename = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
+            $originalFilename = $file->getClientOriginalName();
 
-            return $file->storeAs('/'.FileUploadConfiguration::path(), $filename, [
+            if (TemporaryUploadedFile::fileNameRequiresTruncation($originalFilename)) {
+                FileUploadConfiguration::storage()->put(
+                    FileUploadConfiguration::metaPath($filename),
+                    $originalFilename,
+                );
+            }
+
+            return $file->storeAs('/' . FileUploadConfiguration::path(), $filename, [
                 'disk' => $disk
             ]);
         });
 
         // Strip out the temporary upload directory from the paths.
-        return $fileHashPaths->map(function ($path) { return str_replace(FileUploadConfiguration::path('/'), '', $path); });
+        return $fileHashPaths->map(function ($path) {
+            return str_replace(FileUploadConfiguration::path('/'), '', $path);
+        });
     }
 }

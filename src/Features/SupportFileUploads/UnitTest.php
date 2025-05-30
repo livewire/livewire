@@ -52,6 +52,37 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
 
+    public function test_can_set_a_long_file_name_without_character_limit_as_a_property_and_store_it()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image($filename = str_repeat('a', 251) . '.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', $filename);
+
+        // Ensure the clientOriginalName still matches the filename, despite the filename being 160 characters
+        $this->assertEquals($component->get('photo')->getClientOriginalName(), $filename);
+
+        Storage::disk('avatars')->assertExists($filename);
+    }
+
+    public function test_can_set_a_file_with_truncated_prefix_filename_as_a_property_and_store_it()
+    {
+        Storage::fake('avatars');
+
+        $file = UploadedFile::fake()->image($filename = TemporaryUploadedFile::FILENAME_TRUNCATION_PREFIX . 'filename.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->call('upload', $filename);
+
+        $this->assertEquals($component->get('photo')->getClientOriginalName(), $filename);
+
+        Storage::disk('avatars')->assertExists($filename);
+    }
+
     public function test_can_remove_a_file_property()
     {
         $file = UploadedFile::fake()->image('avatar.jpg');
@@ -77,7 +108,6 @@ class UnitTest extends \Tests\TestCase
         $component->call('_removeUpload', 'photo', 'mismatched-filename.png')
             ->assertNotDispatched('upload:removed', name: 'photo', tmpFilename: 'mismatched-filename.png')
             ->assertNotSet('photo', null);
-
     }
 
     public function test_can_remove_a_file_from_an_array_of_files_property()
@@ -637,7 +667,7 @@ class UnitTest extends \Tests\TestCase
         $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
         $component = Livewire::test(FileUploadComponent::class)
-                             ->set('photos', [$file1, $file2, $file3, $file4]);
+            ->set('photos', [$file1, $file2, $file3, $file4]);
 
         $this->assertCount(4, $component->snapshot['data']['photos'][0]);
 
@@ -656,9 +686,9 @@ class UnitTest extends \Tests\TestCase
         $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
         $component = Livewire::test(FileUploadInArrayComponent::class)
-                             ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
-                             ->set('obj.first_name', 'john')
-                             ->set('obj.last_name', 'doe');
+            ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
+            ->set('obj.first_name', 'john')
+            ->set('obj.last_name', 'doe');
 
         $this->assertSame($component->get('obj.first_name'), 'john');
 
@@ -681,9 +711,9 @@ class UnitTest extends \Tests\TestCase
         $file4 = UploadedFile::fake()->image('avatar4.jpg');
 
         $component = Livewire::test(FileUploadInArrayComponent::class)
-                             ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
-                             ->set('obj.first_name', 'john')
-                             ->set('obj.last_name', 'doe');
+            ->set('obj.file_uploads', [$file1, $file2, $file3, $file4])
+            ->set('obj.first_name', 'john')
+            ->set('obj.last_name', 'doe');
 
         $tmpFiles = $component->viewData('obj')['file_uploads'];
 
@@ -710,9 +740,9 @@ class UnitTest extends \Tests\TestCase
         $file1 = UploadedFile::fake()->image('avatar1.jpg');
 
         $component = Livewire::test(FileUploadInArrayComponent::class)
-                             ->set('obj.file_uploads', $file1)
-                             ->set('obj.first_name', 'john')
-                             ->set('obj.last_name', 'doe');
+            ->set('obj.file_uploads', $file1)
+            ->set('obj.first_name', 'john')
+            ->set('obj.last_name', 'doe');
 
         $this->assertSame($component->get('obj.first_name'), 'john');
 
@@ -896,7 +926,7 @@ class FileUploadComponent extends TestComponent
         $number = 1;
 
         foreach ($this->photosArray as $photo) {
-            $photo->storeAs('/', $baseName.$number++.'.png', $disk = 'avatars');
+            $photo->storeAs('/', $baseName . $number++ . '.png', $disk = 'avatars');
         }
     }
 
@@ -922,7 +952,8 @@ class FileUploadComponent extends TestComponent
         ]);
     }
 
-    public function removePhoto($key) {
+    public function removePhoto($key)
+    {
         unset($this->photos[$key]);
     }
 
@@ -944,7 +975,8 @@ class FileUploadInArrayComponent extends FileUploadComponent
         'file_uploads' => null
     ];
 
-    public function removePhoto($key) {
+    public function removePhoto($key)
+    {
         unset($this->obj['file_uploads'][$key]);
     }
 }
