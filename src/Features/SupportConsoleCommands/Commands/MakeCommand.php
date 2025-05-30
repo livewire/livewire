@@ -56,15 +56,35 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
 
         if($class || $view) {
             $this->line("<options=bold,reverse;fg=green> COMPONENT CREATED </> 🤙\n");
-            $class && $this->line("<options=bold;fg=green>CLASS:</> {$this->parser->relativeClassPath()}");
+
+            $class && $this->output->writeln(
+                sprintf('<options=bold;fg=green>CLASS: </>%s',
+                    $this->parser->handleFilename(
+                        $this->parser->absoluteClassPath(),
+                        $this->parser->relativeClassPath()
+                    )
+                )
+            );
 
             if (! $inline) {
-                $view && $this->line("<options=bold;fg=green>VIEW:</>  {$this->parser->relativeViewPath()}");
+                $view && $this->output->writeln(
+                    sprintf('<options=bold;fg=green>VIEW: </>%s',
+                        $this->parser->handleFilename(
+                            $this->parser->absoluteViewPath(),
+                            $this->parser->relativeViewPath()
+                        )
+                    )
+                );
             }
 
-            if ($test) {
-                $test && $this->line("<options=bold;fg=green>TEST:</>  {$this->parser->relativeTestPath()}");
-            }
+            $test && $this->output->writeln(
+                sprintf('<options=bold;fg=green>TEST: </>%s',
+                    $this->parser->handleFilename(
+                        $this->parser->absoluteTestPath(),
+                        $this->parser->relativeTestPath()
+                    )
+                )
+            );
 
             if ($showWelcomeMessage && ! app()->runningUnitTests()) {
                 $this->writeWelcomeMessage();
@@ -78,7 +98,15 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
 
         if (File::exists($classPath) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Class already exists:</> {$this->parser->relativeClassPath()}");
+
+            $this->output->writeln(
+                sprintf('<fg=red;options=bold>Class already exists: </>%s',
+                    $this->parser->handleFileName(
+                        $this->parser->absoluteClassPath(),
+                        $this->parser->relativeClassPath()
+                    )
+                )
+            );
 
             return false;
         }
@@ -98,7 +126,14 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
         $viewPath = $this->parser->viewPath();
 
         if (File::exists($viewPath) && ! $force) {
-            $this->line("<fg=red;options=bold>View already exists:</> {$this->parser->relativeViewPath()}");
+            $this->output->writeln(
+                sprintf('<fg=red;options=bold>View already exists: </>%s',
+                    $this->parser->handleFileName(
+                        $this->parser->absoluteViewPath(),
+                        $this->parser->relativeViewPath()
+                    )
+                )
+            );
 
             return false;
         }
@@ -116,7 +151,15 @@ class MakeCommand extends FileManipulationCommand implements PromptsForMissingIn
 
         if (File::exists($testPath) && ! $force) {
             $this->line("<options=bold,reverse;fg=red> WHOOPS-IE-TOOTLES </> 😳 \n");
-            $this->line("<fg=red;options=bold>Test class already exists:</> {$this->parser->relativeTestPath()}");
+
+            $this->output->writeln(
+                sprintf('<fg=red;options=bold>Test class already exists: </>%s',
+                    $this->parser->handleFileName(
+                        $this->parser->absoluteTestPath(),
+                        $this->parser->relativeTestPath()
+                    )
+                )
+            );
 
             return false;
         }

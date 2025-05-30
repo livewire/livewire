@@ -183,4 +183,19 @@ return [
     */
 
     'release_token' => 'a',
+
+    /*
+    |---------------------------------------------------------------------------
+    | Command Output Links
+    |---------------------------------------------------------------------------
+    |
+    | When running Livewire commands, the output will include clickable
+    | file paths. This feature is enabled by default, but you can
+    | disable it here. If you want to change "enabled" to false,
+    */
+
+    'command_output_links' => [
+        'enabled'          => false,
+        'local_path'       => env('LIVEWIRE_LOCAL_PATH', base_path()),
+    ]
 ];
