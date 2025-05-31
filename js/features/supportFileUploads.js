@@ -48,7 +48,7 @@ export function handleFileUpload(el, property, component, cleanup) {
     // If the Livewire property has changed to null or an empty string, then reset the input...
     component.$wire.$watch(property, (value) => {
         // This watch will only be released when the component is removed. However, the
-        // actual file-upload element may be removed from the DOM withou the entire
+        // actual file-upload element may be removed from the DOM without the entire
         // component being removed. In this case, let's just bail early on this.
         if (!el.isConnected) return
 
@@ -86,7 +86,7 @@ class UploadManager {
 
     registerListeners() {
         this.component.$wire.$on('upload:generatedSignedUrl', ({ name, url }) => {
-            // We have to add reduntant "setLoading" calls because the dom-patch
+            // We have to add redundant "setLoading" calls because the dom-patch
             // from the first response will clear the setUploadLoading call
             // from the first upload call.
             setUploadLoading(this.component, name)
@@ -97,7 +97,9 @@ class UploadManager {
         this.component.$wire.$on('upload:generatedSignedUrlForS3', ({ name, payload }) => {
             setUploadLoading(this.component, name)
 
-            this.handleS3PreSignedUrl(name, payload)
+            Array.isArray(payload)
+                ? this.handleMultipleS3PreSignedUrl(name, payload)
+                : this.handleS3PreSignedUrl(name, payload)
         })
 
         this.component.$wire.$on('upload:finished', ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames))
@@ -163,8 +165,19 @@ class UploadManager {
     }
 
     handleS3PreSignedUrl(name, payload) {
+        let formData = this.uploadBag.first(name).files[0]
+
+        let headers = payload.headers
+        if ('Host' in headers) delete headers.Host
+        let url = payload.url
+
+        this.makeRequest(name, formData, 'put', url, headers, response => {
+            return [payload.path]
+        })
+    }
+
+    handleMultipleS3PreSignedUrl(name, payloads) {
         let files = this.uploadBag.first(name).files
-        let uploads = Array.isArray(payload) ? payload : [payload]
 
         let completedPaths = []
 
@@ -197,17 +210,18 @@ class UploadManager {
             request.addEventListener('error', onError)
 
             request.send(file)
+
             return request
         }
 
         let uploadNext = (index = 0) => {
-            if (index >= uploads.length) {
-                this.component.$wire.call('_finishUpload', name, completedPaths, uploads.length > 1)
+            if (index >= payloads.length) {
+                this.component.$wire.call('_finishUpload', name, completedPaths, payloads.length > 1)
                 return
             }
 
             let file = files[index]
-            let uploadPayload = uploads[index]
+            let uploadPayload = payloads[index]
 
             this.uploadBag.first(name).request = uploadFileToS3(
                 file,
@@ -216,8 +230,8 @@ class UploadManager {
                     completedPaths.push(path)
                     uploadNext(index + 1)
                 },
-                () => {
-                    this.component.$wire.call('_uploadErrored', name, null, uploads.length > 1)
+                (error) => {
+                    this.component.$wire.call('_uploadErrored', name, error, payloads.length > 1)
                 },
                 (e) => {
                     this.uploadBag.first(name).progressCallback(e)
@@ -272,7 +286,7 @@ class UploadManager {
             return { name: file.name, size: file.size, type: file.type }
         })
 
-        this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple);
+        this.component.$wire.call('_startUpload', name, fileInfos);
 
         setUploadLoading(this.component, name)
     }
