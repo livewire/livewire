@@ -167,6 +167,9 @@ wireProperty('$watch', (component) => (path, callback) => {
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => await requestCommit(component))
+wireProperty('$stop', (component) => () => {
+    window.controller.abort()
+})
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 

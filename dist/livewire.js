@@ -4312,21 +4312,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     respond(mutableObject);
     response = mutableObject.response;
     let content = await response.text();
-    if (!response.ok) {
-      finishProfile({ content: "{}", failed: true });
-      let preventDefault = false;
+    if (response.aborted) {
       handleFailure();
       fail({
         status: response.status,
         content,
         preventDefault: () => preventDefault = true
       });
-      if (preventDefault)
+      return;
+    }
+    if (!response.ok) {
+      finishProfile({ content: "{}", failed: true });
+      let preventDefault2 = false;
+      handleFailure();
+      fail({
+        status: response.status,
+        content,
+        preventDefault: () => preventDefault2 = true
+      });
+      if (preventDefault2)
         return;
       if (response.status === 419) {
         handlePageExpiry();
       }
-      return showFailureModal(content);
+      if (response.aborted) {
+        return;
+      } else {
+        return showFailureModal(content);
+      }
     }
     if (response.redirected) {
       window.location.href = response.url;
@@ -4370,16 +4383,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "set": "$set",
     "call": "$call",
     "hook": "$hook",
-    "commit": "$commit",
+    "stop": "$stop",
     "watch": "$watch",
+    "commit": "$commit",
+    "upload": "$upload",
     "entangle": "$entangle",
     "dispatch": "$dispatch",
     "dispatchTo": "$dispatchTo",
     "dispatchSelf": "$dispatchSelf",
-    "upload": "$upload",
-    "uploadMultiple": "$uploadMultiple",
     "removeUpload": "$removeUpload",
-    "cancelUpload": "$cancelUpload"
+    "cancelUpload": "$cancelUpload",
+    "uploadMultiple": "$uploadMultiple"
   };
   function generateWireObject(component, state) {
     return new Proxy({}, {
@@ -4471,6 +4485,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
+  wireProperty("$stop", (component) => () => {
+    window.controller.abort();
+  });
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
     let unhook = on2(name, ({ component: hookComponent, ...params }) => {
@@ -9749,7 +9766,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (targets.length > 0 && containsTargets(payload, targets) === inverted)
         return;
       startLoading();
+      console.log("startLoading");
       respond(() => {
+        console.log("endLoading");
         endLoading();
       });
     });
@@ -9875,9 +9894,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         redirected: false,
         status: 200,
         async text() {
-          let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger2("stream", streamed);
-          });
+          let finalResponse = "";
+          try {
+            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+              trigger2("stream", streamed);
+            });
+          } catch (e) {
+            this.aborted = true;
+            this.ok = false;
+          }
           if (contentIsFromDump(finalResponse)) {
             this.ok = false;
           }

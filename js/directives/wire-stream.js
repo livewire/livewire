@@ -42,6 +42,10 @@ directive('stream', ({el, directive, cleanup }) => {
     cleanup(off)
 })
 
+// Aborting a streamed request...
+// Handling a dd response
+// Handling an error response
+
 on('request', ({ respond }) => {
     respond(mutableObject => {
         let response = mutableObject.response
@@ -54,9 +58,16 @@ on('request', ({ respond }) => {
             status: 200,
 
             async text() {
-                let finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
-                    trigger('stream', streamed)
-                })
+                let finalResponse = ''
+
+                try {
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
+                        trigger('stream', streamed)
+                    })
+                } catch (e) {
+                    this.aborted = true
+                    this.ok = false
+                }
 
                 if (contentIsFromDump(finalResponse)) {
                     this.ok = false
