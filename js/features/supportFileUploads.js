@@ -178,57 +178,48 @@ class UploadManager {
 
     handleMultipleS3PreSignedUrl(name, payloads) {
         let files = this.uploadBag.first(name).files
-
         let completedPaths = []
 
-        let uploadFileToS3 = (file, uploadPayload, onSuccess, onError, onProgress) => {
-            let headers = uploadPayload.headers
-            if ('Host' in headers) delete headers.Host
-            let url = uploadPayload.url
+        const uploadFileToS3 = (file, { url, headers }, onSuccess, onError, onProgress) => {
+            delete headers.Host
 
-            let request = new XMLHttpRequest()
+            const request = new XMLHttpRequest()
             request.open('PUT', url)
 
-            Object.entries(headers).forEach(([key, value]) => {
+            for (const [key, value] of Object.entries(headers)) {
                 request.setRequestHeader(key, value)
-            })
+            }
 
-            request.upload.addEventListener('progress', e => {
-                e.detail = {}
-                e.detail.progress = Math.floor((e.loaded * 100) / e.total)
-                onProgress(e)
+            request.upload.addEventListener('progress', (e) => {
+                const progress = Math.floor((e.loaded * 100) / e.total)
+                onProgress({ ...e, detail: { progress } })
             })
 
             request.addEventListener('load', () => {
-                if ((request.status + '')[0] === '2') {
-                    onSuccess(uploadPayload.path)
-                } else {
-                    onError()
-                }
+                request.status.toString().startsWith('2') ? onSuccess(headers.path) : onError(request)
             })
 
             request.addEventListener('error', onError)
-
             request.send(file)
 
             return request
         }
 
-        let uploadNext = (index = 0) => {
+        const uploadNextFile = (index = 0) => {
             if (index >= payloads.length) {
                 this.component.$wire.call('_finishUpload', name, completedPaths, payloads.length > 1)
                 return
             }
 
-            let file = files[index]
-            let uploadPayload = payloads[index]
+            const file = files[index]
+            const payload = payloads[index]
 
             this.uploadBag.first(name).request = uploadFileToS3(
                 file,
-                uploadPayload,
+                payload,
                 (path) => {
                     completedPaths.push(path)
-                    uploadNext(index + 1)
+                    uploadNextFile(index + 1)
                 },
                 (error) => {
                     this.component.$wire.call('_uploadErrored', name, error, payloads.length > 1)
@@ -239,7 +230,7 @@ class UploadManager {
             )
         }
 
-        uploadNext()
+        uploadNextFile()
     }
 
     makeRequest(name, formData, method, url, headers, retrievePaths) {
