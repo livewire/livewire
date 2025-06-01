@@ -5,17 +5,18 @@ namespace Livewire;
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
 use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
-use Livewire\Features\SupportAttributes\HandlesAttributes;
+use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportValidation\HandlesValidation;
+use Livewire\Features\SupportAttributes\HandlesAttributes;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Features\SupportPartials\HandlesPartials;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use BadMethodCallException;
-use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 
 abstract class Component
 {
@@ -24,6 +25,7 @@ abstract class Component
     use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
+    use HandlesPartials;
     use HandlesRedirects;
     use HandlesStreaming;
     use HandlesAttributes;

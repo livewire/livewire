@@ -107,6 +107,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportIsolating\SupportIsolating::class,
             Features\SupportRedirects\SupportRedirects::class,
             Features\SupportStreaming\SupportStreaming::class,
+            Features\SupportPartials\SupportPartials::class,
             Features\SupportNavigate\SupportNavigate::class,
             Features\SupportEntangle\SupportEntangle::class,
             Features\SupportLocales\SupportLocales::class,
@@ -125,5 +126,3 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
         ComponentHookRegistry::boot();
     }
 }
-
-

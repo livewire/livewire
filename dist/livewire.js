@@ -9468,6 +9468,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
 
+  // js/features/supportPartials.js
+  on2("effect", ({ component, effects }) => {
+    let partials = effects.partials;
+    if (!partials)
+      return;
+    partials.forEach((partial) => {
+      let { name, mode, content } = partial;
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          let outerHTML = component.el.outerHTML;
+          let start3 = `<!--[if PARTIAL:${name}]><![endif]-->`;
+          let end = `<!--[if ENDPARTIAL:${name}]><![endif]-->`;
+          let startIndex = outerHTML.indexOf(start3);
+          let endIndex = outerHTML.indexOf(end) + end.length;
+          let strippedContent = content.replace(new RegExp(`<!--\\[if PARTIAL:${name}]><\\!\\[endif]-->`, "g"), "").replace(new RegExp(`<!--\\[if ENDPARTIAL:${name}]><\\!\\[endif]-->`, "g"), "");
+          if (mode === "prepend") {
+            outerHTML = outerHTML.slice(0, startIndex + start3.length) + strippedContent + outerHTML.slice(startIndex + start3.length);
+          } else if (mode === "append") {
+            outerHTML = outerHTML.slice(0, endIndex - end.length) + strippedContent + outerHTML.slice(endIndex - end.length);
+          } else {
+            outerHTML = outerHTML.slice(0, startIndex) + content + outerHTML.slice(endIndex);
+          }
+          morph2(component, component.el, outerHTML);
+        });
+      });
+    });
+  });
+
   // js/directives/wire-transition.js
   on2("morph.added", ({ el }) => {
     el.__addedByMorph = true;
