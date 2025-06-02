@@ -33,7 +33,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         $config = __DIR__.'/../config/livewire.php';
 
-        $this->publishes([$config => base_path('config/livewire.php')], ['livewire', 'livewire:config']);
+        $this->publishes([$config => base_path('config/livewire.php')], ['livewire', 'livewire-config']);
 
         $this->mergeConfigFrom($config, 'livewire');
     }
