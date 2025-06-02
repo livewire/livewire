@@ -8792,7 +8792,7 @@ var UploadManager = class {
     });
     this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
       setUploadLoading(this.component, name);
-      this.handleS3PreSignedUrl(name, payload);
+      Array.isArray(payload) ? this.handleMultipleS3PreSignedUrl(name, payload) : this.handleS3PreSignedUrl(name, payload);
     });
     this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
     this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
@@ -8856,6 +8856,51 @@ var UploadManager = class {
       return [payload.path];
     });
   }
+  handleMultipleS3PreSignedUrl(name, payloads) {
+    let files = this.uploadBag.first(name).files;
+    let completedPaths = [];
+    const uploadFileToS3 = (file, { url, headers }, onSuccess, onError, onProgress) => {
+      delete headers.Host;
+      const request = new XMLHttpRequest();
+      request.open("PUT", url);
+      for (const [key, value] of Object.entries(headers)) {
+        request.setRequestHeader(key, value);
+      }
+      request.upload.addEventListener("progress", (e) => {
+        const progress = Math.floor(e.loaded * 100 / e.total);
+        onProgress({ ...e, detail: { progress } });
+      });
+      request.addEventListener("load", () => {
+        request.status.toString().startsWith("2") ? onSuccess(headers.path) : onError(request);
+      });
+      request.addEventListener("error", onError);
+      request.send(file);
+      return request;
+    };
+    const uploadNextFile = (index = 0) => {
+      if (index >= payloads.length) {
+        this.component.$wire.call("_finishUpload", name, completedPaths, payloads.length > 1);
+        return;
+      }
+      const file = files[index];
+      const payload = payloads[index];
+      this.uploadBag.first(name).request = uploadFileToS3(
+        file,
+        payload,
+        (path) => {
+          completedPaths.push(path);
+          uploadNextFile(index + 1);
+        },
+        (error2) => {
+          this.component.$wire.call("_uploadErrored", name, error2, payloads.length > 1);
+        },
+        (e) => {
+          this.uploadBag.first(name).progressCallback(e);
+        }
+      );
+    };
+    uploadNextFile();
+  }
   makeRequest(name, formData, method, url, headers, retrievePaths) {
     let request = new XMLHttpRequest();
     request.open(method, url);
@@ -8886,7 +8931,7 @@ var UploadManager = class {
     let fileInfos = uploadObject.files.map((file) => {
       return { name: file.name, size: file.size, type: file.type };
     });
-    this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+    this.component.$wire.call("_startUpload", name, fileInfos);
     setUploadLoading(this.component, name);
   }
   markUploadFinished(name, tmpFilenames) {
