@@ -492,7 +492,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertDontSee('Same method in child loading...')
             ->assertSee('Child loading...')
             ->assertSee('Parent and child loading...')
-            ->pause(1000)
+            ->waitForTextIn('@testOutput', 'Test completed')
             ->assertDontSee('Loading...')
             ->assertDontSee('Parent loading...')
             ->assertDontSee('Same method in child loading...')
@@ -530,9 +530,12 @@ class ParentCounter extends Component
 
 class ChildCounter extends Component
 {
+    public $testResult = '';
+
     function test()
     {
         sleep(0.5);
+        $this->testResult = 'Test completed';
     }
 
     public function render()
@@ -541,6 +544,7 @@ class ChildCounter extends Component
         <div>
             <button wire:click="$parent.increment()" dusk="buttonIncrement"></button>
             <button wire:click="test()" dusk="buttonTest"></button>
+            <span dusk="testOutput">{{ $testResult }}</span>
             <span wire:loading>Loading...</span>
             <span wire:loading wire:target="test">Child loading...</span>
             <span wire:loading wire:target="$parent.increment">Parent loading...</span>
