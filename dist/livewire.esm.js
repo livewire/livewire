@@ -17,9 +17,9 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-// ../alpine/packages/alpinejs/dist/module.cjs.js
+// node_modules/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
-  "../alpine/packages/alpinejs/dist/module.cjs.js"(exports, module) {
+  "node_modules/alpinejs/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -3831,9 +3831,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
-// ../alpine/packages/collapse/dist/module.cjs.js
+// node_modules/@alpinejs/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
-  "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/collapse/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -3952,9 +3952,9 @@ var require_module_cjs2 = __commonJS({
   }
 });
 
-// ../alpine/packages/focus/dist/module.cjs.js
+// node_modules/@alpinejs/focus/dist/module.cjs.js
 var require_module_cjs3 = __commonJS({
-  "../alpine/packages/focus/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/focus/dist/module.cjs.js"(exports, module) {
     var __create2 = Object.create;
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -4954,9 +4954,9 @@ var require_module_cjs3 = __commonJS({
   }
 });
 
-// ../alpine/packages/persist/dist/module.cjs.js
+// node_modules/@alpinejs/persist/dist/module.cjs.js
 var require_module_cjs4 = __commonJS({
-  "../alpine/packages/persist/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/persist/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5043,9 +5043,9 @@ var require_module_cjs4 = __commonJS({
   }
 });
 
-// ../alpine/packages/intersect/dist/module.cjs.js
+// node_modules/@alpinejs/intersect/dist/module.cjs.js
 var require_module_cjs5 = __commonJS({
-  "../alpine/packages/intersect/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/intersect/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -5197,9 +5197,9 @@ var require_module_cjs6 = __commonJS({
   }
 });
 
-// ../alpine/packages/anchor/dist/module.cjs.js
+// node_modules/@alpinejs/anchor/dist/module.cjs.js
 var require_module_cjs7 = __commonJS({
-  "../alpine/packages/anchor/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/anchor/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -6735,9 +6735,9 @@ var require_nprogress = __commonJS({
   }
 });
 
-// ../alpine/packages/morph/dist/module.cjs.js
+// node_modules/@alpinejs/morph/dist/module.cjs.js
 var require_module_cjs8 = __commonJS({
-  "../alpine/packages/morph/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/morph/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7110,9 +7110,9 @@ var require_module_cjs8 = __commonJS({
   }
 });
 
-// ../alpine/packages/mask/dist/module.cjs.js
+// node_modules/@alpinejs/mask/dist/module.cjs.js
 var require_module_cjs9 = __commonJS({
-  "../alpine/packages/mask/dist/module.cjs.js"(exports, module) {
+  "node_modules/@alpinejs/mask/dist/module.cjs.js"(exports, module) {
     var __defProp2 = Object.defineProperty;
     var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
     var __getOwnPropNames2 = Object.getOwnPropertyNames;
@@ -7537,7 +7537,7 @@ var UploadManager = class {
     });
     this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
       setUploadLoading(this.component, name);
-      this.handleS3PreSignedUrl(name, payload);
+      Array.isArray(payload) ? this.handleMultipleS3PreSignedUrl(name, payload) : this.handleS3PreSignedUrl(name, payload);
     });
     this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
     this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
@@ -7599,6 +7599,45 @@ var UploadManager = class {
       return [payload.path];
     });
   }
+  handleMultipleS3PreSignedUrl(name, payloads) {
+    let files = this.uploadBag.first(name).files;
+    let completedPaths = [];
+    const uploadFileToS3 = (file, { url, headers }, onSuccess, onError, onProgress) => {
+      delete headers.Host;
+      const request = new XMLHttpRequest();
+      request.open("PUT", url);
+      for (const [key, value] of Object.entries(headers)) {
+        request.setRequestHeader(key, value);
+      }
+      request.upload.addEventListener("progress", (e) => {
+        const progress = Math.floor(e.loaded * 100 / e.total);
+        onProgress({ ...e, detail: { progress } });
+      });
+      request.addEventListener("load", () => {
+        request.status.toString().startsWith("2") ? onSuccess(headers.path) : onError(request);
+      });
+      request.addEventListener("error", onError);
+      request.send(file);
+      return request;
+    };
+    const uploadNextFile = (index = 0) => {
+      if (index >= payloads.length) {
+        this.component.$wire.call("_finishUpload", name, completedPaths, payloads.length > 1);
+        return;
+      }
+      const file = files[index];
+      const payload = payloads[index];
+      this.uploadBag.first(name).request = uploadFileToS3(file, payload, (path) => {
+        completedPaths.push(path);
+        uploadNextFile(index + 1);
+      }, (error2) => {
+        this.component.$wire.call("_uploadErrored", name, error2, payloads.length > 1);
+      }, (e) => {
+        this.uploadBag.first(name).progressCallback(e);
+      });
+    };
+    uploadNextFile();
+  }
   makeRequest(name, formData, method, url, headers, retrievePaths) {
     let request = new XMLHttpRequest();
     request.open(method, url);
@@ -7629,7 +7668,7 @@ var UploadManager = class {
     let fileInfos = uploadObject.files.map((file) => {
       return { name: file.name, size: file.size, type: file.type };
     });
-    this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+    this.component.$wire.call("_startUpload", name, fileInfos);
     setUploadLoading(this.component, name);
   }
   markUploadFinished(name, tmpFilenames) {

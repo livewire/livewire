@@ -524,7 +524,7 @@
       });
       this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
         setUploadLoading(this.component, name);
-        this.handleS3PreSignedUrl(name, payload);
+        Array.isArray(payload) ? this.handleMultipleS3PreSignedUrl(name, payload) : this.handleS3PreSignedUrl(name, payload);
       });
       this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
       this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
@@ -586,6 +586,45 @@
         return [payload.path];
       });
     }
+    handleMultipleS3PreSignedUrl(name, payloads) {
+      let files = this.uploadBag.first(name).files;
+      let completedPaths = [];
+      const uploadFileToS3 = (file, { url, headers }, onSuccess, onError, onProgress) => {
+        delete headers.Host;
+        const request = new XMLHttpRequest();
+        request.open("PUT", url);
+        for (const [key, value] of Object.entries(headers)) {
+          request.setRequestHeader(key, value);
+        }
+        request.upload.addEventListener("progress", (e) => {
+          const progress = Math.floor(e.loaded * 100 / e.total);
+          onProgress({ ...e, detail: { progress } });
+        });
+        request.addEventListener("load", () => {
+          request.status.toString().startsWith("2") ? onSuccess(headers.path) : onError(request);
+        });
+        request.addEventListener("error", onError);
+        request.send(file);
+        return request;
+      };
+      const uploadNextFile = (index = 0) => {
+        if (index >= payloads.length) {
+          this.component.$wire.call("_finishUpload", name, completedPaths, payloads.length > 1);
+          return;
+        }
+        const file = files[index];
+        const payload = payloads[index];
+        this.uploadBag.first(name).request = uploadFileToS3(file, payload, (path) => {
+          completedPaths.push(path);
+          uploadNextFile(index + 1);
+        }, (error2) => {
+          this.component.$wire.call("_uploadErrored", name, error2, payloads.length > 1);
+        }, (e) => {
+          this.uploadBag.first(name).progressCallback(e);
+        });
+      };
+      uploadNextFile();
+    }
     makeRequest(name, formData, method, url, headers, retrievePaths) {
       let request = new XMLHttpRequest();
       request.open(method, url);
@@ -616,7 +655,7 @@
       let fileInfos = uploadObject.files.map((file) => {
         return { name: file.name, size: file.size, type: file.type };
       });
-      this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+      this.component.$wire.call("_startUpload", name, fileInfos);
       setUploadLoading(this.component, name);
     }
     markUploadFinished(name, tmpFilenames) {
@@ -713,7 +752,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -4853,7 +4892,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4947,7 +4986,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5896,7 +5935,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5958,7 +5997,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -6058,7 +6097,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -8305,7 +8344,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8653,7 +8692,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
