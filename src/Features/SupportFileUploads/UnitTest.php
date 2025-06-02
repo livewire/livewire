@@ -21,8 +21,6 @@ class UnitTest extends \Tests\TestCase
 {
     public function test_component_must_have_file_uploads_trait_to_accept_file_uploads()
     {
-        $this->markTestSkipped(); // @todo: need to implement this properly...
-
         $this->expectException(MissingFileUploadsTraitException::class);
 
         Livewire::test(NonFileUploadComponent::class)
@@ -847,6 +845,44 @@ class UnitTest extends \Tests\TestCase
         $middleware = Arr::pluck(FileUploadController::middleware(), 'middleware');
 
         $this->assertEquals(['tenant', 'throttle:60,1'], $middleware);
+    }
+
+    public function test_a_meta_file_gets_stored_with_a_temporary_file()
+    {
+        $disk = Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $component = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file);
+
+        $temporaryFile = $component->get('photo');
+
+        $disk->assertExists('livewire-tmp/'.$temporaryFile->getFileName().'.json');
+
+        $metaFileData = $temporaryFile->metaFileData();
+
+        $this->assertEquals($file->getClientOriginalName(), $metaFileData['name']);
+        $this->assertEquals($file->getMimeType(), $metaFileData['type']);
+        $this->assertEquals($file->getSize(), $metaFileData['size']);
+        $this->assertEquals($file->hashName(), $metaFileData['hash']);
+    }
+
+    public function test_file_name_falls_back_to_extracting_file_name_from_hash_if_no_meta_file_is_present()
+    {
+        $disk = Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->image('avatar.jpg');
+
+        $hashWithOriginalNameEmbedded = TemporaryUploadedFile::generateHashNameWithOriginalNameEmbedded($file);
+
+        $disk->putFileAs('livewire-tmp', $file, $hashWithOriginalNameEmbedded);
+
+        $temporaryFile = TemporaryUploadedFile::createFromLivewire($disk->path('livewire-tmp/'.$hashWithOriginalNameEmbedded));
+
+        $disk->assertMissing('livewire-tmp/'.$temporaryFile->getFileName().'.json');
+
+        $this->assertEquals($file->getClientOriginalName(), $temporaryFile->getClientOriginalName());
     }
 }
 
