@@ -404,3 +404,68 @@ trait HasPostForm
     // ...
 }
 ```
+
+## Using hooks inside a form object
+
+Form objects in Livewire support property update hooks. These hooks work similarly to [component update hooks](#update), letting you perform actions when properties in the form object change.
+
+Below is an example of a component using a `PostForm` form object:
+
+```php
+use Livewire\Component;
+
+class CreatePost extends Component
+{
+    public PostForm $form;
+
+    // ...
+}
+```
+
+Here's the `PostForm` form object containing all the available hooks:
+
+```php
+namespace App\Livewire\Forms;
+
+use Livewire\Attributes\Validate;
+use Livewire\Form;
+
+class PostForm extends Form
+{
+    public $title = '';
+
+    public $tags = [];
+
+    public function updating($property, $value)
+    {
+        // ...
+    }
+
+    public function updated($property, $value)
+    {
+        // ...
+    }
+
+    public function updatingTitle($value)
+    {
+        // ...
+    }
+
+    public function updatedTitle($value)
+    {
+        // ...
+    }
+
+    public function updatingTags($value, $key)
+    {
+        // ...
+    }
+
+    public function updatedTags($value, $key)
+    {
+        // ...
+    }
+
+    // ...
+}
+```

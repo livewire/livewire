@@ -91,23 +91,34 @@ export class Directive {
     }
 
     get method() {
-        const { method } = this.parseOutMethodAndParams(this.expression)
+        const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return method
+        return methods[0].method;
+    }
+
+    get methods() {
+        return this.parseOutMethodsAndParams(this.expression);
     }
 
     get params() {
-        const { params } = this.parseOutMethodAndParams(this.expression)
+        const  methods  = this.parseOutMethodsAndParams(this.expression)
 
-        return params
+        return methods[0].params;
     }
 
-    parseOutMethodAndParams(rawMethod) {
+    parseOutMethodsAndParams(rawMethod) {
+        // regex selects first method it encounters including possible commas indicating more methods
+        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
+
         let method = rawMethod
         let params = []
-        const methodAndParamString = method.match(/(.*?)\((.*)\)/s)
+        let methodAndParamString = method.match(methodRegex)
 
-        if (methodAndParamString) {
+        let methods = [];
+        let slicedLength = 0;
+        // If there's a method and params, we need to parse them out.
+        // If there's multiple methods, parse them one at a time.
+        while (methodAndParamString) {
             method = methodAndParamString[1]
 
             // Use a function that returns it's arguments to parse and eval all params
@@ -120,8 +131,18 @@ export class Directive {
             })(${methodAndParamString[2]})`)
 
             params = func(this.eventContext)
+
+            methods.push({ method, params })
+            slicedLength += methodAndParamString[0].length;
+
+            // remove all parsed functions from rawMethod string.
+            methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex)
         }
 
-        return { method, params }
+        if(methods.length === 0) {
+            methods.push({ method, params })
+        }
+
+        return methods;
     }
 }
