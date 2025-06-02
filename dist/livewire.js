@@ -289,7 +289,7 @@
           });
           this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
             setUploadLoading(this.component, name);
-            this.handleS3PreSignedUrl(name, payload);
+            Array.isArray(payload) ? this.handleMultipleS3PreSignedUrl(name, payload) : this.handleS3PreSignedUrl(name, payload);
           });
           this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
           this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
@@ -351,6 +351,45 @@
             return [payload.path];
           });
         }
+        handleMultipleS3PreSignedUrl(name, payloads) {
+          let files = this.uploadBag.first(name).files;
+          let completedPaths = [];
+          const uploadFileToS3 = (file, { url, headers }, onSuccess, onError, onProgress) => {
+            delete headers.Host;
+            const request = new XMLHttpRequest();
+            request.open("PUT", url);
+            for (const [key2, value] of Object.entries(headers)) {
+              request.setRequestHeader(key2, value);
+            }
+            request.upload.addEventListener("progress", (e) => {
+              const progress = Math.floor(e.loaded * 100 / e.total);
+              onProgress({ ...e, detail: { progress } });
+            });
+            request.addEventListener("load", () => {
+              request.status.toString().startsWith("2") ? onSuccess(headers.path) : onError(request);
+            });
+            request.addEventListener("error", onError);
+            request.send(file);
+            return request;
+          };
+          const uploadNextFile = (index = 0) => {
+            if (index >= payloads.length) {
+              this.component.$wire.call("_finishUpload", name, completedPaths, payloads.length > 1);
+              return;
+            }
+            const file = files[index];
+            const payload = payloads[index];
+            this.uploadBag.first(name).request = uploadFileToS3(file, payload, (path) => {
+              completedPaths.push(path);
+              uploadNextFile(index + 1);
+            }, (error2) => {
+              this.component.$wire.call("_uploadErrored", name, error2, payloads.length > 1);
+            }, (e) => {
+              this.uploadBag.first(name).progressCallback(e);
+            });
+          };
+          uploadNextFile();
+        }
         makeRequest(name, formData, method, url, headers, retrievePaths) {
           let request = new XMLHttpRequest();
           request.open(method, url);
@@ -381,7 +420,7 @@
           let fileInfos = uploadObject.files.map((file) => {
             return { name: file.name, size: file.size, type: file.type };
           });
-          this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+          this.component.$wire.call("_startUpload", name, fileInfos);
           setUploadLoading(this.component, name);
         }
         markUploadFinished(name, tmpFilenames) {
@@ -449,7 +488,7 @@
     }
   });
 
-  // ../alpine/packages/alpinejs/dist/module.esm.js
+  // node_modules/alpinejs/dist/module.esm.js
   function scheduler(callback) {
     queueJob(callback);
   }
@@ -850,7 +889,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [], context } = {}) => {
+    }, { scope: scope2 = {}, params = [] } = {}) => {
       let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
       runIfTypeOfFunction(receiver, result);
     };
@@ -881,12 +920,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function generateEvaluatorFromString(dataStack, expression, el) {
     let func = generateFunctionFromString(expression, el);
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [], context } = {}) => {
+    }, { scope: scope2 = {}, params = [] } = {}) => {
       func.result = void 0;
       func.finished = false;
       let completeScope = mergeProxies([scope2, ...dataStack]);
       if (typeof func === "function") {
-        let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
+        let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
         if (func.finished) {
           runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
           func.result = void 0;
@@ -2559,7 +2598,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
-      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
@@ -2869,7 +2908,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var flushPending, flushing, queue, lastFlushedIndex, reactive, effect, release, raw, shouldSchedule, onAttributeAddeds, onElRemoveds, onElAddeds, observer, currentlyObserving, queuedMutations, isCollecting, deferredMutations, mergeProxyTrap, magics, shouldAutoEvaluateFunctions, theEvaluatorFunction, evaluatorMemo, prefixAsString, directiveHandlers, isDeferringHandlers, directiveHandlerStacks, currentHandlerStackKey, startingWith, into, attributeTransformers, alpineAttributeRegex, DEFAULT, directiveOrder, started, rootSelectorCallbacks, initSelectorCallbacks, initInterceptors2, markerDispenser, tickStack, isHolding, isCloning, interceptors, isCloningLegacy, booleanAttributes, stores, isReactive, binds, datas, Alpine2, alpine_default, specialBooleanAttrs, isBooleanAttr2, EMPTY_OBJ, EMPTY_ARR, hasOwnProperty, hasOwn, isArray2, isMap, isString, isSymbol, isObject2, objectToString, toTypeString, toRawType, isIntegerKey, cacheStringFunction, camelizeRE, camelize, hyphenateRE, hyphenate, capitalize, toHandlerKey, hasChanged, targetMap, effectStack, activeEffect, ITERATE_KEY, MAP_KEY_ITERATE_KEY, uid, shouldTrack, trackStack, isNonTrackableKeys, builtInSymbols, get2, readonlyGet, arrayInstrumentations, set2, mutableHandlers, readonlyHandlers, toReactive, toReadonly, toShallow, getProto, mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations, shallowReadonlyInstrumentations, mutableCollectionHandlers, readonlyCollectionHandlers, reactiveMap, shallowReactiveMap, readonlyMap, shallowReadonlyMap, globalIdMemo, teleportContainerDuringClone, handler, handler2, src_default, module_default;
   var init_module_esm = __esm({
-    "../alpine/packages/alpinejs/dist/module.esm.js"() {
+    "node_modules/alpinejs/dist/module.esm.js"() {
       flushPending = false;
       flushing = false;
       queue = [];
@@ -6759,7 +6798,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   init_directives();
   init_hooks();
 
-  // ../alpine/packages/collapse/dist/module.esm.js
+  // node_modules/@alpinejs/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -6853,7 +6892,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // ../alpine/packages/focus/dist/module.esm.js
+  // node_modules/@alpinejs/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -7802,7 +7841,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // ../alpine/packages/persist/dist/module.esm.js
+  // node_modules/@alpinejs/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -7864,7 +7903,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // ../alpine/packages/intersect/dist/module.esm.js
+  // node_modules/@alpinejs/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -7964,7 +8003,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // ../alpine/packages/anchor/dist/module.esm.js
+  // node_modules/@alpinejs/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -10291,158 +10330,116 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // ../alpine/packages/morph/dist/module.esm.js
+  // node_modules/@alpinejs/morph/dist/module.esm.js
   function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let context = createMorphContext(options);
-    let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-      toEl._x_dataStack = window.Alpine.closestDataStack(from);
-      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+    let fromEl;
+    let toEl;
+    let key2, lookahead, updating, updated, removing, removed, adding, added;
+    function assignOptions(options2 = {}) {
+      let defaultGetKey = (el) => el.getAttribute("key");
+      let noop = () => {
+      };
+      updating = options2.updating || noop;
+      updated = options2.updated || noop;
+      removing = options2.removing || noop;
+      removed = options2.removed || noop;
+      adding = options2.adding || noop;
+      added = options2.added || noop;
+      key2 = options2.key || defaultGetKey;
+      lookahead = options2.lookahead || false;
     }
-    context.patch(from, toEl);
-    return from;
-  }
-  function morphBetween(startMarker, endMarker, toHtml, options = {}) {
-    monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let context = createMorphContext(options);
-    let fromContainer = startMarker.parentNode;
-    let fromBlock = new Block(startMarker, endMarker);
-    let toContainer = typeof toHtml === "string" ? (() => {
-      let container = document.createElement("div");
-      container.insertAdjacentHTML("beforeend", toHtml);
-      return container;
-    })() : toHtml;
-    let toStartMarker = document.createComment("[morph-start]");
-    let toEndMarker = document.createComment("[morph-end]");
-    toContainer.insertBefore(toStartMarker, toContainer.firstChild);
-    toContainer.appendChild(toEndMarker);
-    let toBlock = new Block(toStartMarker, toEndMarker);
-    if (window.Alpine && window.Alpine.closestDataStack) {
-      toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
-      toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
-    }
-    context.patchChildren(fromBlock, toBlock);
-  }
-  function createMorphContext(options = {}) {
-    let defaultGetKey = (el) => el.getAttribute("key");
-    let noop = () => {
-    };
-    let context = {
-      key: options.key || defaultGetKey,
-      lookahead: options.lookahead || false,
-      updating: options.updating || noop,
-      updated: options.updated || noop,
-      removing: options.removing || noop,
-      removed: options.removed || noop,
-      adding: options.adding || noop,
-      added: options.added || noop
-    };
-    context.patch = function(from, to) {
-      if (context.differentElementNamesTypesOrKeys(from, to)) {
-        return context.swapElements(from, to);
+    function patch(from2, to) {
+      if (differentElementNamesTypesOrKeys(from2, to)) {
+        return swapElements(from2, to);
       }
       let updateChildrenOnly = false;
       let skipChildren = false;
-      let skipUntil = (predicate) => context.skipUntilCondition = predicate;
-      if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
+      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
         return;
-      if (from.nodeType === 1 && window.Alpine) {
-        window.Alpine.cloneNode(from, to);
-        if (from._x_teleport && to._x_teleport) {
-          context.patch(from._x_teleport, to._x_teleport);
+      if (from2.nodeType === 1 && window.Alpine) {
+        window.Alpine.cloneNode(from2, to);
+        if (from2._x_teleport && to._x_teleport) {
+          patch(from2._x_teleport, to._x_teleport);
         }
       }
       if (textOrComment(to)) {
-        context.patchNodeValue(from, to);
-        context.updated(from, to);
+        patchNodeValue(from2, to);
+        updated(from2, to);
         return;
       }
       if (!updateChildrenOnly) {
-        context.patchAttributes(from, to);
+        patchAttributes(from2, to);
       }
-      context.updated(from, to);
+      updated(from2, to);
       if (!skipChildren) {
-        context.patchChildren(from, to);
+        patchChildren(from2, to);
       }
-    };
-    context.differentElementNamesTypesOrKeys = function(from, to) {
-      return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
-    };
-    context.swapElements = function(from, to) {
-      if (shouldSkip(context.removing, from))
+    }
+    function differentElementNamesTypesOrKeys(from2, to) {
+      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
+    }
+    function swapElements(from2, to) {
+      if (shouldSkip(removing, from2))
         return;
       let toCloned = to.cloneNode(true);
-      if (shouldSkip(context.adding, toCloned))
+      if (shouldSkip(adding, toCloned))
         return;
-      from.replaceWith(toCloned);
-      context.removed(from);
-      context.added(toCloned);
-    };
-    context.patchNodeValue = function(from, to) {
+      from2.replaceWith(toCloned);
+      removed(from2);
+      added(toCloned);
+    }
+    function patchNodeValue(from2, to) {
       let value = to.nodeValue;
-      if (from.nodeValue !== value) {
-        from.nodeValue = value;
+      if (from2.nodeValue !== value) {
+        from2.nodeValue = value;
       }
-    };
-    context.patchAttributes = function(from, to) {
-      if (from._x_transitioning)
+    }
+    function patchAttributes(from2, to) {
+      if (from2._x_transitioning)
         return;
-      if (from._x_isShown && !to._x_isShown) {
-        return;
-      }
-      if (!from._x_isShown && to._x_isShown) {
+      if (from2._x_isShown && !to._x_isShown) {
         return;
       }
-      let domAttributes = Array.from(from.attributes);
+      if (!from2._x_isShown && to._x_isShown) {
+        return;
+      }
+      let domAttributes = Array.from(from2.attributes);
       let toAttributes = Array.from(to.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          from.removeAttribute(name);
+          from2.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
         let name = toAttributes[i].name;
         let value = toAttributes[i].value;
-        if (from.getAttribute(name) !== value) {
-          from.setAttribute(name, value);
+        if (from2.getAttribute(name) !== value) {
+          from2.setAttribute(name, value);
         }
       }
-    };
-    context.patchChildren = function(from, to) {
-      let fromKeys = context.keyToMap(from.children);
+    }
+    function patchChildren(from2, to) {
+      let fromKeys = keyToMap(from2.children);
       let fromKeyHoldovers = {};
       let currentTo = getFirstNode(to);
-      let currentFrom = getFirstNode(from);
+      let currentFrom = getFirstNode(from2);
       while (currentTo) {
         seedingMatchingId(currentTo, currentFrom);
-        let toKey = context.getKey(currentTo);
-        let fromKey = context.getKey(currentFrom);
-        if (context.skipUntilCondition) {
-          let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
-          let toDone = !currentTo || context.skipUntilCondition(currentTo);
-          if (fromDone && toDone) {
-            context.skipUntilCondition = null;
-          } else {
-            if (!fromDone)
-              currentFrom = currentFrom && getNextSibling(from, currentFrom);
-            if (!toDone)
-              currentTo = currentTo && getNextSibling(to, currentTo);
-            continue;
-          }
-        }
+        let toKey = getKey(currentTo);
+        let fromKey = getKey(currentFrom);
         if (!currentFrom) {
           if (toKey && fromKeyHoldovers[toKey]) {
             let holdover = fromKeyHoldovers[toKey];
-            from.appendChild(holdover);
+            from2.appendChild(holdover);
             currentFrom = holdover;
-            fromKey = context.getKey(currentFrom);
+            fromKey = getKey(currentFrom);
           } else {
-            if (!shouldSkip(context.adding, currentTo)) {
+            if (!shouldSkip(adding, currentTo)) {
               let clone2 = currentTo.cloneNode(true);
-              from.appendChild(clone2);
-              context.added(clone2);
+              from2.appendChild(clone2);
+              added(clone2);
             }
             currentTo = getNextSibling(to, currentTo);
             continue;
@@ -10454,7 +10451,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
           while (currentFrom) {
-            let next = getNextSibling(from, currentFrom);
+            let next = getNextSibling(from2, currentFrom);
             if (isIf(next)) {
               nestedIfCount++;
             } else if (isEnd(next) && nestedIfCount > 0) {
@@ -10483,17 +10480,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let toBlockEnd = currentTo;
           let fromBlock = new Block(fromBlockStart, fromBlockEnd);
           let toBlock = new Block(toBlockStart, toBlockEnd);
-          context.patchChildren(fromBlock, toBlock);
+          patchChildren(fromBlock, toBlock);
           continue;
         }
-        if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
+        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = getNextSibling(to, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
             if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
-              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
-              fromKey = context.getKey(currentFrom);
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              fromKey = getKey(currentFrom);
             }
             nextToElementSibling = getNextSibling(to, nextToElementSibling);
           }
@@ -10501,9 +10498,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
             fromKeyHoldovers[fromKey] = currentFrom;
-            currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+            currentFrom = addNodeBefore(from2, currentTo, currentFrom);
             fromKeyHoldovers[fromKey].remove();
-            currentFrom = getNextSibling(from, currentFrom);
+            currentFrom = getNextSibling(from2, currentFrom);
             currentTo = getNextSibling(to, currentTo);
             continue;
           }
@@ -10511,7 +10508,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
-              fromKey = context.getKey(currentFrom);
+              fromKey = getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -10520,57 +10517,67 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
-              fromKey = context.getKey(currentFrom);
+              fromKey = getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from, currentFrom);
+              currentFrom = getNextSibling(from2, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
           }
         }
-        let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
-        context.patch(currentFrom, currentTo);
+        let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
+        patch(currentFrom, currentTo);
         currentTo = currentTo && getNextSibling(to, currentTo);
         currentFrom = currentFromNext;
       }
       let removals = [];
       while (currentFrom) {
-        if (!shouldSkip(context.removing, currentFrom))
+        if (!shouldSkip(removing, currentFrom))
           removals.push(currentFrom);
-        currentFrom = getNextSibling(from, currentFrom);
+        currentFrom = getNextSibling(from2, currentFrom);
       }
       while (removals.length) {
         let domForRemoval = removals.shift();
         domForRemoval.remove();
-        context.removed(domForRemoval);
+        removed(domForRemoval);
       }
-    };
-    context.getKey = function(el) {
-      return el && el.nodeType === 1 && context.key(el);
-    };
-    context.keyToMap = function(els2) {
+    }
+    function getKey(el) {
+      return el && el.nodeType === 1 && key2(el);
+    }
+    function keyToMap(els2) {
       let map = {};
       for (let el of els2) {
-        let theKey = context.getKey(el);
+        let theKey = getKey(el);
         if (theKey) {
           map[theKey] = el;
         }
       }
       return map;
-    };
-    context.addNodeBefore = function(parent, node, beforeMe) {
-      if (!shouldSkip(context.adding, node)) {
+    }
+    function addNodeBefore(parent, node, beforeMe) {
+      if (!shouldSkip(adding, node)) {
         let clone2 = node.cloneNode(true);
         parent.insertBefore(clone2, beforeMe);
-        context.added(clone2);
+        added(clone2);
         return clone2;
       }
       return node;
-    };
-    return context;
+    }
+    assignOptions(options);
+    fromEl = from;
+    toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+      toEl._x_dataStack = window.Alpine.closestDataStack(from);
+      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
+    }
+    patch(from, toEl);
+    fromEl = void 0;
+    toEl = void 0;
+    return from;
   }
   morph2.step = () => {
   };
@@ -10581,9 +10588,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     hook(...args, () => skip = true);
     return skip;
   }
-  function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
+  function shouldSkipChildren(hook, skipChildren, ...args) {
     let skip = false;
-    hook(...args, () => skip = true, skipChildren, skipUntil);
+    hook(...args, () => skip = true, skipChildren);
     return skip;
   }
   var patched = false;
@@ -10668,11 +10675,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function src_default8(Alpine3) {
     Alpine3.morph = morph2;
-    Alpine3.morphBetween = morphBetween;
   }
   var module_default8 = src_default8;
 
-  // ../alpine/packages/mask/dist/module.esm.js
+  // node_modules/@alpinejs/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
