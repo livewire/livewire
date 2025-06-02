@@ -13,6 +13,12 @@ const alpineCSPPlugin = {
     }
 }
 
+// Ensure dist directory exists
+let distDir = path.join(__dirname, '..', 'dist')
+if (!fs.existsSync(distDir)) {
+    fs.mkdirSync(distDir, { recursive: true })
+}
+
 build({
     entryPoints: [`js/index.js`],
     outfile: `dist/livewire.js`,
@@ -54,7 +60,7 @@ build({
 
 let hash = crypto.randomBytes(4).toString('hex');
 
-fs.writeFileSync(__dirname+'/../dist/manifest.json', `
+fs.writeFileSync(__dirname + '/../dist/manifest.json', `
 {"/livewire.js":"${hash}"}
 `)
 
