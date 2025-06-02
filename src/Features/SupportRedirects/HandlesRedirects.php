@@ -10,9 +10,7 @@ trait HandlesRedirects
     {
         store($this)->set('redirect', $url);
 
-        if ($navigate) {
-            store($this)->set('redirectUsingNavigate', true);
-        }
+        if ($navigate) store($this)->set('redirectUsingNavigate', true);
 
         $shouldSkipRender = ! config('livewire.render_on_redirect', false);
 
@@ -27,7 +25,7 @@ trait HandlesRedirects
     public function redirectIntended($default = '/', $navigate = false)
     {
         $url = session()->pull('url.intended', $default);
-
+    
         $this->redirect($url, $navigate);
     }
 
