@@ -467,11 +467,17 @@ class BrowserTest extends \Tests\BrowserTestCase
         Livewire::visit([\Livewire\Features\SupportWireLoading\ParentCounter::class, 'child-counter' => \Livewire\Features\SupportWireLoading\ChildCounter::class])
             ->assertSeeIn('@output', '1')
             ->assertDontSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Child loading...')
             ->click('@button')
-            ->assertSee('Loading...')
+            ->assertDontSee('Loading...')
+            ->assertSee('Parent loading...')
+            ->assertDontSee('Child loading...')
             ->waitForTextIn('@output', '2')
             ->assertSeeIn('@output', '2')
-            ->assertDontSee('Loading...');
+            ->assertDontSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Child loading...');
     }
 }
 
@@ -509,7 +515,9 @@ class ChildCounter extends Component
         return <<<'HTML'
         <div>
             <button wire:click="$parent.increment()" dusk="button"></button>
-            <span wire:loading="$parent.increment">Loading...</span>
+            <span wire:loading>Loading...</span>
+            <span wire:loading wire:target="increment">Child loading...</span>
+            <span wire:loading wire:target="$parent.increment">Parent loading...</span>
         </div>
         HTML;
     }

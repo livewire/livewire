@@ -10702,17 +10702,27 @@ function applyDelay(directive2) {
   ];
 }
 function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
-  const componentTargets = targets.filter((t) => !t.target.startsWith("$parent."));
-  const parentTargets = targets.filter((t) => t.target.startsWith("$parent.")).map((t) => t.target.replace("$parent.", ""));
+  const componentTargets = [];
+  const parentTargets = [];
+  targets.forEach((t) => {
+    if (t.target.startsWith("$parent.")) {
+      t.target = t.target.replace("$parent.", "");
+      parentTargets.push(t);
+    } else {
+      componentTargets.push(t);
+    }
+  });
   return on("commit", ({ component: iComponent, commit: payload, respond }) => {
-    if (iComponent === component) {
-      if (componentTargets.length > 0 && containsTargets(payload, componentTargets) === inverted)
+    if (parentTargets.length > 0) {
+      if (iComponent !== component.parent)
         return;
-    } else if (iComponent === component.parent) {
-      if (parentTargets.length > 0 && containsTargets(payload, parentTargets) === inverted)
+      if (containsTargets(payload, parentTargets) === inverted)
         return;
     } else {
-      return;
+      if (iComponent !== component)
+        return;
+      if (componentTargets.length > 0 && containsTargets(payload, componentTargets) === inverted)
+        return;
     }
     startLoading();
     respond(() => {
@@ -10721,18 +10731,28 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading
   });
 }
 function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
-  const componentTargets = targets.filter((t) => !t.target.startsWith("$parent."));
-  const parentTargets = targets.filter((t) => t.target.startsWith("$parent.")).map((t) => t.target.replace("$parent.", ""));
+  const componentTargets = [];
+  const parentTargets = [];
+  targets.forEach((t) => {
+    if (t.target.startsWith("$parent.")) {
+      t.target = t.target.replace("$parent.", "");
+      parentTargets.push(t);
+    } else {
+      componentTargets.push(t);
+    }
+  });
   let eventMismatch = (e) => {
     let { id, property } = e.detail;
-    if (id === component.id) {
-      if (componentTargets.length > 0 && !componentTargets.map((i) => i.target).includes(property))
+    if (parentTargets.length > 0) {
+      if (id !== component.parent?.id)
         return true;
-    } else if (id === component.parent?.id) {
-      if (parentTargets.length > 0 && !parentTargets.map((i) => i.target).includes(property))
+      if (!parentTargets.map((i) => i.target).includes(property))
         return true;
     } else {
-      return true;
+      if (id !== component.id)
+        return true;
+      if (componentTargets.length > 0 && !componentTargets.map((i) => i.target).includes(property))
+        return true;
     }
     return false;
   };
