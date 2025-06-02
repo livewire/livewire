@@ -347,7 +347,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file2)
             ->call('upload', 'uploaded-avatar2.png');
 
-        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+        // 4 files because we have 2 files and 2 meta files...
+        $this->assertCount(4, FileUploadConfiguration::storage()->allFiles());
 
         // Make temporary files look 2 days old.
         foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
@@ -358,7 +359,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file3)
             ->call('upload', 'uploaded-avatar3.png');
 
-        $this->assertCount(1, FileUploadConfiguration::storage()->allFiles());
+        // 2 files because we have 1 file and 1 meta file...
+        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
     }
 
     public function test_temporary_files_older_than_24_hours_are_not_cleaned_up_if_configuration_specifies()
@@ -379,7 +381,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file2)
             ->call('upload', 'uploaded-avatar2.png');
 
-        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+        // 4 files because we have 2 files and 2 meta files...
+        $this->assertCount(4, FileUploadConfiguration::storage()->allFiles());
 
         // Make temporary files look 2 days old.
         foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
@@ -390,7 +393,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file3)
             ->call('upload', 'uploaded-avatar3.png');
 
-        $this->assertCount(3, FileUploadConfiguration::storage()->allFiles());
+        // 6 files because we have 2 files and 4 meta files...
+        $this->assertCount(6, FileUploadConfiguration::storage()->allFiles());
     }
 
     public function test_temporary_files_older_than_24_hours_are_not_cleaned_up_on_every_new_upload_when_using_S3()
@@ -411,7 +415,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file2)
             ->call('upload', 'uploaded-avatar2.png');
 
-        $this->assertCount(2, FileUploadConfiguration::storage()->allFiles());
+        // 4 files because we have 2 files and 2 meta files...
+        $this->assertCount(4, FileUploadConfiguration::storage()->allFiles());
 
         // Make temporary files look 2 days old.
         foreach (FileUploadConfiguration::storage()->allFiles() as $fileShortPath) {
@@ -422,7 +427,8 @@ class UnitTest extends \Tests\TestCase
             ->set('photo', $file3)
             ->call('upload', 'uploaded-avatar3.png');
 
-        $this->assertCount(3, FileUploadConfiguration::storage()->allFiles());
+        // 6 files because we have 2 files and 4 meta files...
+        $this->assertCount(6, FileUploadConfiguration::storage()->allFiles());
     }
 
     public function test_S3_can_be_configured_so_that_temporary_files_older_than_24_hours_are_cleaned_up_automatically()
