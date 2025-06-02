@@ -10713,16 +10713,16 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading
     }
   });
   return on("commit", ({ component: iComponent, commit: payload, respond }) => {
-    if (parentTargets.length > 0) {
-      if (iComponent !== component.parent)
-        return;
-      if (containsTargets(payload, parentTargets) === inverted)
-        return;
-    } else {
-      if (iComponent !== component)
-        return;
-      if (componentTargets.length > 0 && containsTargets(payload, componentTargets) === inverted)
-        return;
+    if (componentTargets.length > 0 || parentTargets.length > 0) {
+      if (iComponent === component) {
+        if (containsTargets(payload, componentTargets) === inverted)
+          return;
+      } else if (iComponent === component.parent) {
+        if (containsTargets(payload, parentTargets) === inverted)
+          return;
+      }
+    } else if (iComponent !== component) {
+      return;
     }
     startLoading();
     respond(() => {
@@ -10743,16 +10743,16 @@ function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLo
   });
   let eventMismatch = (e) => {
     let { id, property } = e.detail;
-    if (parentTargets.length > 0) {
-      if (id !== component.parent?.id)
-        return true;
-      if (!parentTargets.map((i) => i.target).includes(property))
-        return true;
-    } else {
-      if (id !== component.id)
-        return true;
-      if (componentTargets.length > 0 && !componentTargets.map((i) => i.target).includes(property))
-        return true;
+    if (componentTargets.length > 0 || parentTargets.length > 0) {
+      if (id === component.id) {
+        if (!componentTargets.map((i) => i.target).includes(property))
+          return true;
+      } else if (id === component.parent?.id) {
+        if (!parentTargets.map((i) => i.target).includes(property))
+          return true;
+      }
+    } else if (id !== component.id) {
+      return true;
     }
     return false;
   };
