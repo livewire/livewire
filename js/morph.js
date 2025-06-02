@@ -25,7 +25,44 @@ export function morph(component, el, html) {
 
     trigger('morph', { el, toEl: to, component })
 
-    Alpine.morph(el, to, {
+    Alpine.morph(el, to, getMorphConfig(component))
+
+    trigger('morphed', { el, component })
+}
+
+export function morphPartial(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
+
+    let toContainer = document.createElement(fromContainerTag)
+    toContainer.innerHTML = toHTML
+    toContainer.__livewire = component
+
+    // Add the parent component reference to an outer wrapper if it exists...
+    let parentElement = component.el.parentElement
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+
+    let parentComponent
+
+    try {
+        parentComponent = parentElement ? closestComponent(parentElement) : null
+    } catch (e) {}
+
+    if (parentComponent) {
+        let parentProviderWrapper = document.createElement(parentElementTag)
+        parentProviderWrapper.appendChild(toContainer)
+        parentProviderWrapper.__livewire = parentComponent
+    }
+
+    trigger('partial.morph', { startNode, endNode, component })
+
+    Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+
+    trigger('partial.morphed', { startNode, endNode, component })
+}
+
+function getMorphConfig(component) {
+    return {
         updating: (el, toEl, childrenOnly, skip, skipChildren) => {
             if (isntElement(el)) return
 
@@ -91,9 +128,7 @@ export function morph(component, el, html) {
         },
 
         lookahead: false,
-    })
-
-    trigger('morphed', { el, component })
+    }
 }
 
 function isntElement(el) {
