@@ -1,8 +1,8 @@
-import { contentIsFromDump } from '@/utils'
+import { contentIsFromDump, dispatch } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/hooks'
 
-directive('stream', ({el, directive, cleanup }) => {
+directive('stream', ({ el, directive, cleanup }) => {
     let { expression, modifiers } = directive
 
     let off = on('stream', ({ name, content, replace }) => {
@@ -13,6 +13,8 @@ directive('stream', ({el, directive, cleanup }) => {
         } else {
             el.insertAdjacentHTML('beforeend', content)
         }
+
+        dispatch(el, 'streamed', { name, content, replace })
     })
 
     cleanup(off)
