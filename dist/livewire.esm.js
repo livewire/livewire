@@ -10788,6 +10788,7 @@ directive("stream", ({ el, directive: directive2, cleanup }) => {
     } else {
       el.insertAdjacentHTML("beforeend", content);
     }
+    dispatch(el, "streamed", { name, content, replace: replace2 });
   });
   cleanup(off);
 });

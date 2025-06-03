@@ -9887,6 +9887,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       } else {
         el.insertAdjacentHTML("beforeend", content);
       }
+      dispatch(el, "streamed", { name, content, replace: replace2 });
     });
     cleanup2(off);
   });
