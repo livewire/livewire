@@ -9664,7 +9664,8 @@ var UploadManager = class {
   handleMultipleS3PreSignedUrl(name, payloads) {
     let files = this.uploadBag.first(name).files;
     let completedPaths = [];
-    const uploadFileToS3 = (file, { url, headers }, onSuccess, onError, onProgress) => {
+    const uploadFileToS3 = (file, payload, onSuccess, onError, onProgress) => {
+      let { url, headers } = payload;
       delete headers.Host;
       const request = new XMLHttpRequest();
       request.open("PUT", url);
@@ -9672,11 +9673,12 @@ var UploadManager = class {
         request.setRequestHeader(key, value);
       }
       request.upload.addEventListener("progress", (e) => {
-        const progress = Math.floor(e.loaded * 100 / e.total);
-        onProgress({ ...e, detail: { progress } });
+        e.detail = {};
+        e.detail.progress = Math.floor(e.loaded * 100 / e.total);
+        onProgress(e);
       });
       request.addEventListener("load", () => {
-        request.status.toString().startsWith("2") ? onSuccess(headers.path) : onError(request);
+        request.status.toString().startsWith("2") ? onSuccess(payload.path) : onError(request);
       });
       request.addEventListener("error", onError);
       request.send(file);
