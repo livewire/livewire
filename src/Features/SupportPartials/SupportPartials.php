@@ -10,7 +10,7 @@ class SupportPartials extends ComponentHook
     static function provide()
     {
         Blade::directive('partial', function ($expression) {
-            return "<?php if (isset(\$_instance)) echo \$_instance->partial({$expression}, array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1])); ?>";
+            return "<?php if (isset(\$_instance)) echo \$_instance->partial({$expression}); ?>";
         });
     }
 
