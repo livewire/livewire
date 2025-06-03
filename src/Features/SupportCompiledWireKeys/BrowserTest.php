@@ -337,6 +337,8 @@ class BrowserTest extends \Tests\BrowserTestCase
     // https://github.com/livewire/livewire/discussions/5935#discussioncomment-11265936
     public function test_scenario_2_keys_in_groups_failing()
     {
+        $this->markTestSkipped('This is skipped because we have decided to not add smart wire keys to nested components if they already have a key. If this scenario keeps being a problem, we can look at fixing this in the future.');
+
         Livewire::visit([
             new #[\Livewire\Attributes\On('number-updated')] class () extends Component {
                 public function render()

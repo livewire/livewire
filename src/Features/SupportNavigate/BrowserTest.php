@@ -77,6 +77,9 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Route::get('/parent', ParentComponent::class)->middleware('web');
             Route::get('/page-with-link-to-page-without-livewire', PageWithLinkAway::class);
+
+            Route::get('/nonce', fn () => self::renderNoncePage('First Nonce Page', 'ABCD1234'));
+            Route::get('/nonce2', fn () => self::renderNoncePage('Second Nonce Page', 'EFGH5678'));
             Route::get('/page-without-livewire-component', fn () => Blade::render(<<<'HTML'
                 <html>
                     <head>
@@ -98,6 +101,24 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/no-javascript', fn () => '<div dusk="no-javascript-side">No javascript side triggered.</div>')
                 ->middleware('web')->name('no-javascript');
         };
+    }
+
+    public static function renderNoncePage(string $name, string $nonce): string
+    {
+        return Blade::render(<<<'HTML'
+                <html>
+                    <head>
+                        <meta name="empty-layout" content>
+
+                        <script src="/test-navigate-asset.js" data-navigate-track></script>
+                    </head>
+                    <body>
+                        <div dusk="nonce-page">{{ $name }}</div>
+                        <a href="/nonce2" wire:navigate dusk="link">to next nonce page</a>
+                        @livewireScripts(['nonce' => $nonce]);
+                    </body>
+                </html>
+            HTML, ['name' => $name, 'nonce' => $nonce]);
     }
 
     public function test_back_button_works_with_teleports()
@@ -359,7 +380,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
-    public function test_can_redirect_to_a_page_after_destorying_session()
+    public function test_can_redirect_to_a_page_after_destroying_session()
     {
         $this->browse(function ($browser) {
             $browser
@@ -371,6 +392,19 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitFor('@link.to.first')
                 ->assertSee('On second')
                 ->assertScript('return window._lw_dusk_test')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Livewire')
+                ->assertConsoleLogMissingWarning('Detected multiple instances of Alpine');
+        });
+    }
+
+    public function test_can_navigate_to_a_page_when_csp_nonce_present(): void
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/nonce')
+                ->assertSee('First Nonce Page')
+                ->click('@link')
+                ->waitForText('Second Nonce Page')
                 ->assertConsoleLogMissingWarning('Detected multiple instances of Livewire')
                 ->assertConsoleLogMissingWarning('Detected multiple instances of Alpine');
         });
@@ -1113,6 +1147,43 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_navigate_hover_prefetches_and_caches_for_a_default_30_seconds()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertSee('On first')
+
+                // Hover over the link to trigger prefetch
+                ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+
+                // Move mouse away
+                ->mouseover('@count')
+
+                // Hover again to trigger another prefetch (should use cache)
+                ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+
+                // Move mouse away
+                ->mouseover('@count')
+
+                // Wait for cache expiration (default of 30 seconds + buffer)
+                ->pause(31000)
+
+                // Hover again after cache expiration - should trigger new prefetch
+                ->waitForNavigatePrefetchRequest()->mouseover('@link.to.second')
+                ->assertScript('return window._lw_dusk_test')
+
+                // Move mouse away
+                ->mouseover('@count')
+
+                // Hover again to trigger another prefetch (should use cache)
+                ->waitForNoNavigatePrefetchRequest()->mouseover('@link.to.second')
+            ;
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
@@ -1156,6 +1227,14 @@ class FirstPage extends Component
             <button type="button" wire:click="redirectToPageTwoUsingNavigate" dusk="redirect.to.second">Redirect to second page</button>
             <a href="/redirect-to-second" wire:navigate dusk="redirect.to.second.link">Redirect to second page from link</a>
             <button type="button" wire:click="redirectToPageTwoUsingNavigateAndDestroyingSession" dusk="redirect.to.second.and.destroy.session">Redirect to second page and destroy session</button>
+
+            @script
+            <script>
+                Livewire.hook('navigate.request', () => {
+                    console.log('navigateRequest');
+                })
+            </script>
+            @endscript
 
             <livewire:first-page-child />
 
