@@ -159,3 +159,34 @@ Append/replace can also be specified at the target element level by appending or
 // Replace contents...
 <div wire:stream.replace="target">
 ```
+
+## JavaScript event
+
+Sometimes you may want to execute some JavaScript code as the response is streamed to the front end.
+
+Simply listen for the `streamed` event dispatched on the `wire:stream` target. We can do that with Alpine:
+
+```blade
+<div x-on:streamed="$el.scrollIntoView({block: 'end'})">
+    <div wire:stream="target"></div>
+</div>
+```
+
+In this example, as content is streamed in, we scroll the parent container so the bottom of it is within the viewport.
+
+The following is attached to `$event.detail`:
+- name: the `wire:stream` value
+- content: the content that was streamed
+- replace: boolean indicating whether it was appended to or replaced.
+
+```blade
+<div wire:stream="target" @streamed="console.log($event.detail)"></div>
+```
+
+```js
+{
+    name: "target",
+    content: "long winded llm response\n",
+    replace: true,
+}
+```
