@@ -7373,7 +7373,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function updateUrl(method, url, html) {
     let key = url.toString() + "-" + Math.random();
     method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
-    let state = history.state || {};
+    let state = {};
     if (!state.alpine)
       state.alpine = {};
     state.alpine.snapshotIdx = key;
@@ -8189,7 +8189,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function replace(url, key, object) {
-    let state = window.history.state || {};
+    let state = {};
     if (!state.alpine)
       state.alpine = {};
     state.alpine[key] = unwrap(object);
@@ -8200,7 +8200,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function push(url, key, object) {
-    let state = window.history.state || {};
+    let state = {};
     if (!state.alpine)
       state.alpine = {};
     state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };

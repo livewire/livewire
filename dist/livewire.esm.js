@@ -8775,7 +8775,7 @@ function replaceUrl(url, html) {
 function updateUrl(method, url, html) {
   let key = url.toString() + "-" + Math.random();
   method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
-  let state = history.state || {};
+  let state = {};
   if (!state.alpine)
     state.alpine = {};
   state.alpine.snapshotIdx = key;
@@ -9593,7 +9593,7 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
   };
 }
 function replace(url, key, object) {
-  let state = window.history.state || {};
+  let state = {};
   if (!state.alpine)
     state.alpine = {};
   state.alpine[key] = unwrap(object);
@@ -9604,7 +9604,7 @@ function replace(url, key, object) {
   }
 }
 function push(url, key, object) {
-  let state = window.history.state || {};
+  let state = {};
   if (!state.alpine)
     state.alpine = {};
   state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };

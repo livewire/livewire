@@ -137,7 +137,7 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
 }
 
 function replace(url, key, object) {
-    let state = window.history.state || {}
+    let state = {}
 
     if (! state.alpine) state.alpine = {}
 
@@ -151,7 +151,7 @@ function replace(url, key, object) {
 }
 
 function push(url, key, object) {
-    let state = window.history.state || {}
+    let state = {}
 
     if (! state.alpine) state.alpine = {}
 

@@ -122,7 +122,7 @@ function updateUrl(method, url, html) {
         ? snapshotCache.push(key, new Snapshot(url, html))
         : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
 
-    let state = history.state || {}
+    let state = {}
 
     if (!state.alpine) state.alpine = {}
 
