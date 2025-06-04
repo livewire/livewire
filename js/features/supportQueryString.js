@@ -15,10 +15,12 @@ on('effect', ({ component, effects, cleanup }) => {
 
         let initialValue = [false, null, undefined].includes(except) ? dataGet(component.ephemeral, name) : except
 
+        console.log('supportQueryStringTrack', as, initialValue, alwaysShow, except, use)
         let { replace, push, pop } = track(as, initialValue, alwaysShow, except)
 
         if (use === 'replace') {
             let effectReference = Alpine.effect(() => {
+                console.log('initialEffectRunningReplace')
                 replace(dataGet(component.reactive, name))
             })
 
@@ -34,6 +36,7 @@ on('effect', ({ component, effects, cleanup }) => {
 
                     if (JSON.stringify(beforeValue) === JSON.stringify(afterValue)) return
 
+                    console.log('pushing', afterValue)
                     push(afterValue)
                 })
             })

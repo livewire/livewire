@@ -9,6 +9,7 @@ export default function history(Alpine) {
         return interceptor((initialSeedValue, getter, setter, path, key) => {
             let queryKey = alias || path
 
+            console.log('queryStringMagicTrack', queryKey)
             let { initial, replace, push, pop } = track(queryKey, initialSeedValue, alwaysShow)
 
             setter(initial)
@@ -52,7 +53,9 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
 
     if (alwaysShow) url = set(url, name, initialValue)
 
+    console.log('historyTrack', name, initialValue)
     replace(url, name, { value: initialValue })
+    console.log('historyTrackFinished')
 
     let lock = false
 
@@ -100,18 +103,27 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
         initial: initialValue,
 
         replace(newValue) { // Update via replaceState...
+            console.log('returnReplace', JSON.stringify(newValue))
             update(replace, newValue)
+            console.log('returnReplaceFinished')
         },
 
         push(newValue) { // Update via pushState...
+            console.log('returnPush', JSON.stringify(newValue))
             update(push, newValue)
+            console.log('returnPushFinished')
         },
 
         pop(receiver) { // "popstate" handler...
             let handler = (e) => {
-                if (! e.state || ! e.state.alpine) return
+                console.log('historyPOP')
+                if (! e.state || ! e.state.alpine || ! e.state.alpine.props) return
 
-                Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
+                console.log('historyPOPDoItBefore', JSON.stringify(e.state.alpine.props))
+
+                Object.entries(e.state.alpine.props).forEach(([iName, { value: newValue }]) => {
+                    console.log('historyPOPDoIt', name, iName, newValue)
+
                     if (iName !== name) return
 
                     lock = true
@@ -136,32 +148,57 @@ export function track(name, initialSeedValue, alwaysShow = false, except = null)
     }
 }
 
+let start
+
 function replace(url, key, object) {
-    let state = {}
+    if (! start) start = Date.now()
+    console.log('REPLACE', start, Date.now(), Date.now() - start)
+    let state = { alpine: {} }
 
-    if (! state.alpine) state.alpine = {}
+    // console.log('historyReplace', key, JSON.stringify(object), JSON.stringify(state))
+    console.log('historyReplace', JSON.stringify(state), key, JSON.stringify(object))
 
-    state.alpine[key] = unwrap(object)
+    // if (! state.alpine) state.alpine = {}
+
+    state.alpine.props = window.history.state?.alpine?.props || {}
+
+    console.log('replace REALLY', JSON.stringify(state.alpine.props))
+
+    state.alpine.props[key] = unwrap(object)
+
+    // state.alpine[key] = unwrap(object)
 
     try {
         window.history.replaceState(state, '', url.toString())
     } catch (e) {
         console.error(e)
     }
+
+    console.log('historyReplaceFinished', JSON.stringify(window.history.state))
 }
 
 function push(url, key, object) {
-    let state = {}
+    let state = { alpine: {} }
 
-    if (! state.alpine) state.alpine = {}
+    console.log('historyPush', key, JSON.stringify(object), JSON.stringify(state))
 
-    state = { alpine: {...state.alpine, ...{[key]: unwrap(object)}} }
+    // if (! state.alpine) state.alpine = {}
+
+    state.alpine.props = window.history.state?.alpine?.props || {}
+
+    console.log('replace REALLY', JSON.stringify(state.alpine.props))
+
+    state.alpine.props[key] = unwrap(object)
+
+    // state = { alpine: {...state.alpine, ...{[key]: unwrap(object)}} }
 
     try {
         window.history.pushState(state, '', url.toString())
     } catch (e) {
         console.error(e)
     }
+
+    console.log('historyPushFinished', JSON.stringify(window.history.state))
 }
 
 function unwrap(object) {

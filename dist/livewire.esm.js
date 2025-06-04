@@ -1990,7 +1990,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       console.warn(`Alpine Warning: ${message}`, ...args);
     }
     var started = false;
-    function start2() {
+    function start3() {
       if (started)
         warn("Alpine has already been initialized on this page. Calling Alpine.start() more than once can cause problems.");
       started = true;
@@ -2919,7 +2919,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       plugin,
       magic,
       store,
-      start: start2,
+      start: start3,
       clone,
       cloneNode,
       bound: getBinding,
@@ -5241,8 +5241,8 @@ var require_module_cjs7 = __commonJS({
       start: "end",
       end: "start"
     };
-    function clamp(start2, value, end) {
-      return max(start2, min(value, end));
+    function clamp(start3, value, end) {
+      return max(start3, min(value, end));
     }
     function evaluate(value, param) {
       return typeof value === "function" ? value(param) : value;
@@ -7033,8 +7033,8 @@ var require_module_cjs8 = __commonJS({
       return el.nodeType === 3 || el.nodeType === 8;
     }
     var Block = class {
-      constructor(start2, end) {
-        this.startComment = start2;
+      constructor(start3, end) {
+        this.startComment = start3;
         this.endComment = end;
       }
       get children() {
@@ -7482,7 +7482,7 @@ function getUploadManager(component) {
 }
 function handleFileUpload(el, property, component, cleanup) {
   let manager = getUploadManager(component);
-  let start2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+  let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
   let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
   let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
   let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
@@ -7496,7 +7496,7 @@ function handleFileUpload(el, property, component, cleanup) {
   let eventHandler = (e) => {
     if (e.target.files.length === 0)
       return;
-    start2();
+    start3();
     if (e.target.multiple) {
       manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
     } else {
@@ -8737,6 +8737,12 @@ var snapshotCache = {
     }
   }
 };
+function clearSnapshotCache() {
+  snapshotCache.keys = [];
+  snapshotCache.lookup = {};
+  return true;
+}
+window.clearSnapshotCache = clearSnapshotCache;
 function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
   let url = new URL(window.location.href, document.baseURI);
   replaceUrl(url, document.documentElement.outerHTML);
@@ -8749,6 +8755,7 @@ function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
   let fallback2;
   registerFallback((i) => fallback2 = i);
   window.addEventListener("popstate", (e) => {
+    console.log("navigatePOP");
     let state = e.state || {};
     let alpine = state.alpine || {};
     if (Object.keys(state).length === 0)
@@ -8774,12 +8781,14 @@ function replaceUrl(url, html) {
 }
 function updateUrl(method, url, html) {
   let key = url.toString() + "-" + Math.random();
+  console.log(url.toString(), key);
   method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
-  let state = {};
+  let state = history.state || {};
   if (!state.alpine)
     state.alpine = {};
   state.alpine.snapshotIdx = key;
   state.alpine.url = url.toString();
+  console.log("navigate" + method, url.toString(), JSON.stringify(history.state), JSON.stringify(state));
   try {
     history[method](state, JSON.stringify(document.title), url);
     snapshotCache.currentKey = key;
@@ -8790,6 +8799,7 @@ function updateUrl(method, url, html) {
     }
     console.error(error2);
   }
+  console.log("navgiate" + method, JSON.stringify(history.state));
 }
 
 // js/plugins/navigate/links.js
@@ -9377,8 +9387,10 @@ function navigate_default(Alpine23) {
           packUpPersistedPopovers(persistedEl);
         });
         if (shouldPushToHistoryState) {
+          console.log("navigateNewPagePush");
           updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
         } else {
+          console.log("navigateNewPageReplace");
           replaceUrl(finalDestination, html);
         }
         swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
@@ -9505,6 +9517,7 @@ function history2(Alpine23) {
     let usePush = false;
     return interceptor((initialSeedValue, getter, setter, path, key) => {
       let queryKey = alias || path;
+      console.log("queryStringMagicTrack", queryKey);
       let { initial, replace: replace2, push: push2, pop } = track(queryKey, initialSeedValue, alwaysShow);
       setter(initial);
       if (!usePush) {
@@ -9546,7 +9559,9 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
   let hasReturnedToExceptValue = (newValue) => JSON.stringify(newValue) === exceptValueMemo;
   if (alwaysShow)
     url = set(url, name, initialValue);
+  console.log("historyTrack", name, initialValue);
   replace(url, name, { value: initialValue });
+  console.log("historyTrackFinished");
   let lock = false;
   let update = (strategy, newValue) => {
     if (lock)
@@ -9566,16 +9581,23 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
   return {
     initial: initialValue,
     replace(newValue) {
+      console.log("returnReplace", JSON.stringify(newValue));
       update(replace, newValue);
+      console.log("returnReplaceFinished");
     },
     push(newValue) {
+      console.log("returnPush", JSON.stringify(newValue));
       update(push, newValue);
+      console.log("returnPushFinished");
     },
     pop(receiver) {
       let handler = (e) => {
-        if (!e.state || !e.state.alpine)
+        console.log("historyPOP");
+        if (!e.state || !e.state.alpine || !e.state.alpine.props)
           return;
-        Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
+        console.log("historyPOPDoItBefore", JSON.stringify(e.state.alpine.props));
+        Object.entries(e.state.alpine.props).forEach(([iName, { value: newValue }]) => {
+          console.log("historyPOPDoIt", name, iName, newValue);
           if (iName !== name)
             return;
           lock = true;
@@ -9592,27 +9614,35 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
     }
   };
 }
+var start;
 function replace(url, key, object) {
-  let state = {};
-  if (!state.alpine)
-    state.alpine = {};
-  state.alpine[key] = unwrap(object);
+  if (!start)
+    start = Date.now();
+  console.log("REPLACE", start, Date.now(), Date.now() - start);
+  let state = { alpine: {} };
+  console.log("historyReplace", JSON.stringify(state), key, JSON.stringify(object));
+  state.alpine.props = window.history.state?.alpine?.props || {};
+  console.log("replace REALLY", JSON.stringify(state.alpine.props));
+  state.alpine.props[key] = unwrap(object);
   try {
     window.history.replaceState(state, "", url.toString());
   } catch (e) {
     console.error(e);
   }
+  console.log("historyReplaceFinished", JSON.stringify(window.history.state));
 }
 function push(url, key, object) {
-  let state = {};
-  if (!state.alpine)
-    state.alpine = {};
-  state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
+  let state = { alpine: {} };
+  console.log("historyPush", key, JSON.stringify(object), JSON.stringify(state));
+  state.alpine.props = window.history.state?.alpine?.props || {};
+  console.log("replace REALLY", JSON.stringify(state.alpine.props));
+  state.alpine.props[key] = unwrap(object);
   try {
     window.history.pushState(state, "", url.toString());
   } catch (e) {
     console.error(e);
   }
+  console.log("historyPushFinished", JSON.stringify(window.history.state));
 }
 function unwrap(object) {
   if (object === void 0)
@@ -9713,7 +9743,7 @@ function fromQueryString(search, queryKey) {
 var import_morph = __toESM(require_module_cjs8());
 var import_mask = __toESM(require_module_cjs9());
 var import_alpinejs5 = __toESM(require_module_cjs());
-function start() {
+function start2() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
@@ -10265,9 +10295,11 @@ on("effect", ({ component, effects, cleanup }) => {
     if (!as)
       as = name;
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
+    console.log("supportQueryStringTrack", as, initialValue, alwaysShow, except, use);
     let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow, except);
     if (use === "replace") {
       let effectReference = import_alpinejs10.default.effect(() => {
+        console.log("initialEffectRunningReplace");
         replace2(dataGet(component.reactive, name));
       });
       cleanup(() => import_alpinejs10.default.release(effectReference));
@@ -10280,6 +10312,7 @@ on("effect", ({ component, effects, cleanup }) => {
           let afterValue = dataGet(component.canonical, name);
           if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
             return;
+          console.log("pushing", afterValue);
           push2(afterValue);
         });
       });
@@ -11018,10 +11051,10 @@ directive("init", ({ el, directive: directive2 }) => {
 var import_alpinejs18 = __toESM(require_module_cjs());
 directive("poll", ({ el, directive: directive2 }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
-  let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+  let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
     triggerComponentRequest(el, directive2);
   }, interval);
-  start2();
+  start3();
   throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
   pauseWhile(() => theDirectiveHasVisible(directive2) && theElementIsNotInTheViewport(el));
   pauseWhile(() => theDirectiveIsOffTheElement(el));
@@ -11155,7 +11188,7 @@ import_alpinejs20.default.interceptInit((el) => {
 var Livewire2 = {
   directive,
   dispatchTo,
-  start,
+  start: start2,
   first,
   find,
   getByName,

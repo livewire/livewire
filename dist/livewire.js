@@ -469,7 +469,7 @@
   }
   function handleFileUpload(el, property, component, cleanup2) {
     let manager = getUploadManager(component);
-    let start3 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+    let start4 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
     let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
     let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
     let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
@@ -483,7 +483,7 @@
     let eventHandler = (e) => {
       if (e.target.files.length === 0)
         return;
-      start3();
+      start4();
       if (e.target.multiple) {
         manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
       } else {
@@ -6077,8 +6077,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     start: "end",
     end: "start"
   };
-  function clamp(start3, value, end) {
-    return max(start3, min(value, end));
+  function clamp(start4, value, end) {
+    return max(start4, min(value, end));
   }
   function evaluate2(value, param) {
     return typeof value === "function" ? value(param) : value;
@@ -7335,6 +7335,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   };
+  function clearSnapshotCache() {
+    snapshotCache.keys = [];
+    snapshotCache.lookup = {};
+    return true;
+  }
+  window.clearSnapshotCache = clearSnapshotCache;
   function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     let url = new URL(window.location.href, document.baseURI);
     replaceUrl(url, document.documentElement.outerHTML);
@@ -7347,6 +7353,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let fallback2;
     registerFallback((i) => fallback2 = i);
     window.addEventListener("popstate", (e) => {
+      console.log("navigatePOP");
       let state = e.state || {};
       let alpine = state.alpine || {};
       if (Object.keys(state).length === 0)
@@ -7372,12 +7379,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function updateUrl(method, url, html) {
     let key = url.toString() + "-" + Math.random();
+    console.log(url.toString(), key);
     method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
-    let state = {};
+    let state = history.state || {};
     if (!state.alpine)
       state.alpine = {};
     state.alpine.snapshotIdx = key;
     state.alpine.url = url.toString();
+    console.log("navigate" + method, url.toString(), JSON.stringify(history.state), JSON.stringify(state));
     try {
       history[method](state, JSON.stringify(document.title), url);
       snapshotCache.currentKey = key;
@@ -7388,6 +7397,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       console.error(error2);
     }
+    console.log("navgiate" + method, JSON.stringify(history.state));
   }
 
   // js/plugins/navigate/links.js
@@ -7973,8 +7983,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             packUpPersistedPopovers(persistedEl);
           });
           if (shouldPushToHistoryState) {
+            console.log("navigateNewPagePush");
             updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination);
           } else {
+            console.log("navigateNewPageReplace");
             replaceUrl(finalDestination, html);
           }
           swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
@@ -8101,6 +8113,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let usePush = false;
       return interceptor2((initialSeedValue, getter, setter, path, key) => {
         let queryKey = alias || path;
+        console.log("queryStringMagicTrack", queryKey);
         let { initial, replace: replace2, push: push2, pop } = track2(queryKey, initialSeedValue, alwaysShow);
         setter(initial);
         if (!usePush) {
@@ -8142,7 +8155,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let hasReturnedToExceptValue = (newValue) => JSON.stringify(newValue) === exceptValueMemo;
     if (alwaysShow)
       url = set3(url, name, initialValue);
+    console.log("historyTrack", name, initialValue);
     replace(url, name, { value: initialValue });
+    console.log("historyTrackFinished");
     let lock = false;
     let update = (strategy, newValue) => {
       if (lock)
@@ -8162,16 +8177,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return {
       initial: initialValue,
       replace(newValue) {
+        console.log("returnReplace", JSON.stringify(newValue));
         update(replace, newValue);
+        console.log("returnReplaceFinished");
       },
       push(newValue) {
+        console.log("returnPush", JSON.stringify(newValue));
         update(push, newValue);
+        console.log("returnPushFinished");
       },
       pop(receiver) {
         let handler4 = (e) => {
-          if (!e.state || !e.state.alpine)
+          console.log("historyPOP");
+          if (!e.state || !e.state.alpine || !e.state.alpine.props)
             return;
-          Object.entries(e.state.alpine).forEach(([iName, { value: newValue }]) => {
+          console.log("historyPOPDoItBefore", JSON.stringify(e.state.alpine.props));
+          Object.entries(e.state.alpine.props).forEach(([iName, { value: newValue }]) => {
+            console.log("historyPOPDoIt", name, iName, newValue);
             if (iName !== name)
               return;
             lock = true;
@@ -8188,27 +8210,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   }
+  var start2;
   function replace(url, key, object) {
-    let state = {};
-    if (!state.alpine)
-      state.alpine = {};
-    state.alpine[key] = unwrap(object);
+    if (!start2)
+      start2 = Date.now();
+    console.log("REPLACE", start2, Date.now(), Date.now() - start2);
+    let state = { alpine: {} };
+    console.log("historyReplace", JSON.stringify(state), key, JSON.stringify(object));
+    state.alpine.props = window.history.state?.alpine?.props || {};
+    console.log("replace REALLY", JSON.stringify(state.alpine.props));
+    state.alpine.props[key] = unwrap(object);
     try {
       window.history.replaceState(state, "", url.toString());
     } catch (e) {
       console.error(e);
     }
+    console.log("historyReplaceFinished", JSON.stringify(window.history.state));
   }
   function push(url, key, object) {
-    let state = {};
-    if (!state.alpine)
-      state.alpine = {};
-    state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
+    let state = { alpine: {} };
+    console.log("historyPush", key, JSON.stringify(object), JSON.stringify(state));
+    state.alpine.props = window.history.state?.alpine?.props || {};
+    console.log("replace REALLY", JSON.stringify(state.alpine.props));
+    state.alpine.props[key] = unwrap(object);
     try {
       window.history.pushState(state, "", url.toString());
     } catch (e) {
       console.error(e);
     }
+    console.log("historyPushFinished", JSON.stringify(window.history.state));
   }
   function unwrap(object) {
     if (object === void 0)
@@ -8578,8 +8608,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return el.nodeType === 3 || el.nodeType === 8;
   }
   var Block = class {
-    constructor(start3, end) {
-      this.startComment = start3;
+    constructor(start4, end) {
+      this.startComment = start4;
       this.endComment = end;
     }
     get children() {
@@ -8824,7 +8854,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var module_default9 = src_default9;
 
   // js/lifecycle.js
-  function start2() {
+  function start3() {
     setTimeout(() => ensureLivewireScriptIsntMisplaced());
     dispatch(document, "livewire:init");
     dispatch(document, "livewire:initializing");
@@ -9368,9 +9398,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!as)
         as = name;
       let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
+      console.log("supportQueryStringTrack", as, initialValue, alwaysShow, except, use);
       let { replace: replace2, push: push2, pop } = track2(as, initialValue, alwaysShow, except);
       if (use === "replace") {
         let effectReference = module_default.effect(() => {
+          console.log("initialEffectRunningReplace");
           replace2(dataGet(component.reactive, name));
         });
         cleanup2(() => module_default.release(effectReference));
@@ -9383,6 +9415,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let afterValue = dataGet(component.canonical, name);
             if (JSON.stringify(beforeValue) === JSON.stringify(afterValue))
               return;
+            console.log("pushing", afterValue);
             push2(afterValue);
           });
         });
@@ -10113,10 +10146,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-poll.js
   directive2("poll", ({ el, directive: directive3 }) => {
     let interval = extractDurationFrom(directive3.modifiers, 2e3);
-    let { start: start3, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+    let { start: start4, pauseWhile, throttleWhile, stopWhen } = poll(() => {
       triggerComponentRequest(el, directive3);
     }, interval);
-    start3();
+    start4();
     throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive3));
     pauseWhile(() => theDirectiveHasVisible(directive3) && theElementIsNotInTheViewport(el));
     pauseWhile(() => theDirectiveIsOffTheElement(el));
@@ -10248,7 +10281,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive: directive2,
     dispatchTo,
-    start: start2,
+    start: start3,
     first,
     find,
     getByName,

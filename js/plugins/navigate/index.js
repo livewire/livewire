@@ -91,8 +91,10 @@ export default function (Alpine) {
                 })
 
                 if (shouldPushToHistoryState) {
+                    console.log('navigateNewPagePush')
                     updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
                 } else {
+                    console.log('navigateNewPageReplace')
                     replaceUrl(finalDestination, html)
                 }
 
