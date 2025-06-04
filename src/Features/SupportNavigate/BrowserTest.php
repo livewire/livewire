@@ -555,7 +555,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         $this->browse(function ($browser) {
             $browser
                 ->visit('/first-scroll')
-                ->tinker()
                 ->assertVisible('@first-target')
                 ->assertNotInViewPort('@first-target')
                 ->scrollTo('@first-target')
