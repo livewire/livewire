@@ -57,6 +57,15 @@ let snapshotCache = {
     }
 }
 
+export function clearSnapshotCache() {
+    snapshotCache.keys = []
+    snapshotCache.lookup = {}
+
+    return true
+}
+
+window.clearSnapshotCache = clearSnapshotCache
+
 export function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
     // Create a history state entry for the initial page load.
     // (This is so later hitting back can restore this page).
@@ -80,6 +89,7 @@ export function whenTheBackOrForwardButtonIsClicked(
     registerFallback(i => (fallback = i))
 
     window.addEventListener('popstate', e => {
+        console.log('navigatePOP')
         let state = e.state || {}
 
         let alpine = state.alpine || {}
@@ -118,6 +128,8 @@ export function replaceUrl(url, html) {
 function updateUrl(method, url, html) {
     let key = url.toString() + '-' + Math.random()
 
+    console.log(url.toString(), key)
+
     method === 'pushState'
         ? snapshotCache.push(key, new Snapshot(url, html))
         : snapshotCache.replace(key = (snapshotCache.currentKey ?? key), new Snapshot(url, html))
@@ -129,9 +141,13 @@ function updateUrl(method, url, html) {
     state.alpine.snapshotIdx = key
     state.alpine.url = url.toString()
 
+    console.log('navigate'+method, url.toString(), JSON.stringify(history.state), JSON.stringify(state))
+
     try {
         // 640k character limit:
         history[method](state, JSON.stringify(document.title), url)
+
+        // debugger
 
         snapshotCache.currentKey = key
         snapshotCache.currentUrl = url
@@ -145,4 +161,7 @@ function updateUrl(method, url, html) {
 
         console.error(error)
     }
+
+
+    console.log('navgiate'+method, JSON.stringify(history.state))
 }
