@@ -209,3 +209,165 @@ But we should probably support both for backwards compatibility.
 * Do we instead force everyone into this new paradaigm?
 * Do we just punt on breaking things and instead compile these components into classes/views and have them fit neatly inside the current registry system but as a layer on top or something?
 * How does this change the system need to change to support all of this?
+
+## Current V4 Implementation Status
+
+### What's Been Implemented
+
+The first piece of the V4 registry system has been implemented: the **ComponentViewPathResolver**. This class handles the view-first component resolution aspect of the new system.
+
+### File Structure
+
+The V4 registry system is organized in:
+
+```
+src/v4/Registry/
+├── ComponentViewPathResolver.php
+├── ComponentViewPathResolverUnitTest.php
+└── Exceptions/
+    └── ViewNotFoundException.php
+```
+
+This structure keeps the registry system separate from future V4 features.
+
+### ComponentViewPathResolver Implementation
+
+**Location**: `src/v4/Registry/ComponentViewPathResolver.php`
+**Namespace**: `Livewire\v4\Registry`
+
+The `ComponentViewPathResolver` class extends `Livewire\Mechanisms\Mechanism` and provides the foundation for view-first component resolution. It has three main public methods:
+
+```php
+// Register a component name to a specific view file path
+$resolver->component('custom-component', '/path/to/custom-view.blade.php');
+
+// Register a namespace that maps to a directory of views
+$resolver->namespace('admin', resource_path('views/admin'));
+
+// Resolve a component name to its view file path
+$viewPath = $resolver->resolve('some-component');
+```
+
+### Key Features Implemented
+
+#### 1. **Alias Registration**
+Components can be explicitly registered with custom view paths:
+```php
+$resolver->component('custom-button', '/path/to/button-view.blade.php');
+```
+
+#### 2. **Namespace Support**
+Supports Vue-style namespacing:
+```php
+$resolver->namespace('admin', resource_path('views/admin'));
+// Now 'admin::user-list' resolves to resources/views/admin/user-list.blade.php
+```
+
+#### 3. **Three File Resolution Conventions**
+When resolving a component name, the system tries these conventions in order:
+
+1. **Direct file**: `foo.blade.php`
+2. **Folder with same name**: `foo/foo.blade.php`
+3. **Index file**: `foo/index.blade.php`
+
+#### 4. **Nested Component Support**
+Supports dot notation for nested components:
+```php
+// 'forms.input' resolves to forms/input.blade.php
+$resolver->resolve('forms.input');
+```
+
+#### 5. **Multiple Directory Fallback**
+Tries multiple default directories:
+- `resources/views/components` (first priority)
+- `resources/views/livewire` (fallback)
+
+#### 6. **Priority System**
+Aliases take priority over default resolution, so explicit registrations override auto-discovery.
+
+### Resolution Algorithm
+
+The resolution process works as follows:
+
+1. **Check aliases first** - If the component name is explicitly registered, use that path
+2. **Handle namespaced components** - Parse `namespace::component` syntax and resolve within the namespace directory
+3. **Try default directories** - Look in `resources/views/components` then `resources/views/livewire`
+4. **Apply file conventions** - For each directory, try the three file naming conventions
+5. **Throw exception** - If no view file is found, throw `ViewNotFoundException`
+
+### Testing
+
+Comprehensive unit tests cover:
+- ✅ Alias registration and resolution
+- ✅ Namespace registration and resolution
+- ✅ All three file resolution conventions
+- ✅ Nested components with dot notation
+- ✅ Directory fallback behavior
+- ✅ Exception handling for missing files/namespaces
+- ✅ Path normalization
+- ✅ Priority system (aliases override defaults)
+
+**Test Command**: `phpunit src/v4/Registry/ComponentViewPathResolverUnitTest.php`
+
+### Example Usage
+
+```php
+use Livewire\v4\Registry\ComponentViewPathResolver;
+
+$resolver = new ComponentViewPathResolver();
+
+// Register a custom component
+$resolver->component('special-button', resource_path('views/custom/button.blade.php'));
+
+// Register an admin namespace
+$resolver->namespace('admin', resource_path('views/admin'));
+
+// Resolve various component types
+$path1 = $resolver->resolve('some-component');        // → resources/views/components/some-component.blade.php
+$path2 = $resolver->resolve('admin::user-list');     // → resources/views/admin/user-list.blade.php
+$path3 = $resolver->resolve('forms.input');          // → resources/views/components/forms/input.blade.php
+$path4 = $resolver->resolve('special-button');       // → resources/views/custom/button.blade.php
+```
+
+### What Still Needs to Be Done
+
+This implementation addresses the **view resolution** portion of the V4 registry system. However, several pieces are still needed to complete the V4 vision:
+
+#### 1. **View Parser**
+Need a system to parse the view files and extract the component class definition from the front-matter (`@php` blocks).
+
+#### 2. **Component Class Extraction**
+Handle both inline anonymous classes and external class references:
+```php
+// Inline class extraction
+@php
+new class extends Livewire\Component {
+    // ... component logic
+}
+@endphp
+
+// External class reference extraction
+@php(new App\Livewire\SomeComponent::class)
+```
+
+#### 3. **Integration with V3 Registry**
+The `ComponentViewPathResolver` needs to be integrated with the existing `ComponentRegistry` to create a unified system that supports both V3 class-first and V4 view-first components.
+
+#### 4. **Component Instantiation**
+Bridge the gap between resolved view paths and actual component instances that can be mounted and rendered.
+
+#### 5. **Backwards Compatibility Layer**
+Determine how V3 class-first components will coexist with V4 view-first components.
+
+#### 6. **Configuration System**
+Allow users to configure default view directories and other registry settings.
+
+### Next Steps
+
+The immediate next step would be to create a **ViewParser** class that can:
+1. Read a resolved view file path
+2. Extract the component class definition from the front-matter
+3. Return either an anonymous class definition or a reference to an external class
+4. Provide the view content separate from the PHP logic
+
+This would complete the view-to-class resolution pipeline needed for the V4 view-first system.

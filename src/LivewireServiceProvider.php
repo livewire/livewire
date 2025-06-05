@@ -18,6 +18,8 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         $this->bootMechanisms();
         $this->bootFeatures();
+
+        (new \Livewire\V4\IntegrateV4)();
     }
 
     protected function registerLivewireSingleton()
