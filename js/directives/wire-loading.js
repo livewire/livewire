@@ -69,11 +69,28 @@ function applyDelay(directive) {
     ]
 }
 
-function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoading, endLoading ]) {
-    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
-        if (iComponent !== component) return
+function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+    const componentTargets = []
+    const parentTargets = []
+    targets.forEach(t => {
+        if (t.target.startsWith('$parent.')) {
+            t.target = t.target.replace('$parent.', '')
+            parentTargets.push(t)
+        } else {
+            componentTargets.push(t)
+        }
+    })
 
-        if (targets.length > 0 && containsTargets(payload, targets) === inverted) return
+    return on('commit', ({ component: iComponent, commit: payload, respond }) => {
+        if (componentTargets.length > 0 || parentTargets.length > 0) {
+            if (iComponent === component) {
+                if (containsTargets(payload, componentTargets) === inverted) return
+            } else if (iComponent === component.parent) {
+                if (containsTargets(payload, parentTargets) === inverted) return
+            }
+        } else if (iComponent !== component) {
+            return
+        }
 
         startLoading()
 
@@ -83,12 +100,30 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
     })
 }
 
-function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endLoading ]) {
+function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
+    const componentTargets = []
+    const parentTargets = []
+    targets.forEach(t => {
+        if (t.target.startsWith('$parent.')) {
+            t.target = t.target.replace('$parent.', '')
+            parentTargets.push(t)
+        } else {
+            componentTargets.push(t)
+        }
+    })
+
     let eventMismatch = e => {
         let { id, property } = e.detail
 
-        if (id !== component.id) return true
-        if (targets.length > 0 && ! targets.map(i => i.target).includes(property)) return true
+        if (componentTargets.length > 0 || parentTargets.length > 0) {
+            if (id === component.id) {
+                if (! componentTargets.map(i => i.target).includes(property)) return true
+            } else if (id === component.parent?.id) {
+                if (! parentTargets.map(i => i.target).includes(property)) return true
+            }
+        } else if (id !== component.id) {
+            return true
+        }
 
         return false
     }
