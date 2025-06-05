@@ -26,6 +26,8 @@ class IntegrateV4
 
     protected function supportSingleFileComponents()
     {
+        app('view')->addNamespace('livewire-compiled', storage_path('framework/livewire/views'));
+
         // Register a missing component resolver with Livewire's component registry
         app('livewire')->resolveMissingComponent(function ($componentName) {
             $viewPath = $this->finder->resolve($componentName);
@@ -34,11 +36,17 @@ class IntegrateV4
 
             $className = $result->className;
 
+            // Load the generated class file since it won't be autoloaded
             if (! class_exists($className)) {
-                throw new \Exception("Class {$className} does not exist");
+                require_once $result->classPath;
             }
 
-            return new $className;
+            // Double-check that the class now exists after loading
+            if (! class_exists($className)) {
+                throw new \Exception("Class {$className} does not exist after loading from {$result->classPath}");
+            }
+
+            return $className;
         });
     }
 
