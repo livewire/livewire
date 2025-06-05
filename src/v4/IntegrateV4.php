@@ -4,9 +4,6 @@ namespace Livewire\V4;
 
 use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
-use Livewire\V4\Compiler\Exceptions\CompilationException;
-use Livewire\V4\Compiler\Exceptions\ParseException;
-use Livewire\V4\Compiler\Exceptions\InvalidComponentException;
 
 class IntegrateV4
 {
