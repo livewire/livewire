@@ -13,14 +13,21 @@ class SingleFileComponentCompiler extends Mechanism
     protected string $cacheDirectory;
     protected string $classesDirectory;
     protected string $viewsDirectory;
+    protected array $supportedExtensions;
 
-    public function __construct(?string $cacheDirectory = null)
+    public function __construct(?string $cacheDirectory = null, ?array $supportedExtensions = null)
     {
         $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/livewire');
         $this->classesDirectory = $this->cacheDirectory . '/classes';
         $this->viewsDirectory = $this->cacheDirectory . '/views';
+        $this->supportedExtensions = $supportedExtensions ?: ['.blade.php', '.wire.php'];
 
         $this->ensureDirectoriesExist();
+    }
+
+    public function setSupportedExtensions(array $extensions): void
+    {
+        $this->supportedExtensions = $extensions;
     }
 
     public function compile(string $viewPath): CompilationResult
@@ -204,7 +211,17 @@ class {$className} extends \\Livewire\\Component
 
     protected function getComponentNameFromPath(string $viewPath): string
     {
-        $basename = basename($viewPath, '.blade.php');
+        // Handle multiple extensions
+        $basename = basename($viewPath);
+
+        // Remove the appropriate extension
+        foreach ($this->supportedExtensions as $extension) {
+            if (str_ends_with($basename, $extension)) {
+                $basename = substr($basename, 0, -strlen($extension));
+                break;
+            }
+        }
+
         return str_replace([' ', '_'], '-', $basename);
     }
 

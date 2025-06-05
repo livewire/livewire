@@ -15,8 +15,10 @@ class IntegrateV4
 
     public function __construct()
     {
-        $this->finder = new ComponentViewPathResolver();
-        $this->compiler = new SingleFileComponentCompiler();
+        $supportedExtensions = ['.blade.php', '.wire.php'];
+
+        $this->finder = new ComponentViewPathResolver(null, $supportedExtensions);
+        $this->compiler = new SingleFileComponentCompiler(null, $supportedExtensions);
     }
 
     public function __invoke()
@@ -49,5 +51,4 @@ class IntegrateV4
             return $className;
         });
     }
-
 }

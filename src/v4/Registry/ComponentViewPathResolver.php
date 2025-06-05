@@ -10,13 +10,24 @@ class ComponentViewPathResolver extends Mechanism
     protected $aliases = [];
     protected $namespaces = [];
     protected $defaultViewPaths = [];
+    protected $supportedExtensions = [];
 
-    function __construct($defaultViewPaths = null)
+    function __construct($defaultViewPaths = null, $supportedExtensions = null)
     {
         $this->defaultViewPaths = $defaultViewPaths ?: [
             resource_path('views/components'),
             resource_path('views/livewire'),
         ];
+
+        $this->supportedExtensions = $supportedExtensions ?: [
+            '.blade.php',
+            '.wire.php',
+        ];
+    }
+
+    function setSupportedExtensions(array $extensions)
+    {
+        $this->supportedExtensions = $extensions;
     }
 
     function component($componentName, $componentViewPath)
@@ -83,22 +94,25 @@ class ComponentViewPathResolver extends Mechanism
         // Convert dots to directory separators (e.g., "foo.bar" becomes "foo/bar")...
         $path = str_replace('.', '/', $name);
 
-        // Convention 1: foo.blade.php
-        $candidate = $basePath . '/' . $path . '.blade.php';
-        if (file_exists($candidate)) {
-            return $candidate;
-        }
+        // Try each supported extension with each convention
+        foreach ($this->supportedExtensions as $extension) {
+            // Convention 1: foo.blade.php or foo.wire.php
+            $candidate = $basePath . '/' . $path . $extension;
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
 
-        // Convention 2: foo/foo.blade.php
-        $candidate = $basePath . '/' . $path . '/' . basename($path) . '.blade.php';
-        if (file_exists($candidate)) {
-            return $candidate;
-        }
+            // Convention 2: foo/foo.blade.php or foo/foo.wire.php
+            $candidate = $basePath . '/' . $path . '/' . basename($path) . $extension;
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
 
-        // Convention 3: foo/index.blade.php
-        $candidate = $basePath . '/' . $path . '/index.blade.php';
-        if (file_exists($candidate)) {
-            return $candidate;
+            // Convention 3: foo/index.blade.php or foo/index.wire.php
+            $candidate = $basePath . '/' . $path . '/index' . $extension;
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
         }
 
         throw new ViewNotFoundException("No view file found for component: [{$name}] in [{$basePath}]");
