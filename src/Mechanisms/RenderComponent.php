@@ -23,7 +23,7 @@ class RenderComponent extends Mechanism
         }, $expression);
 
         if (is_null($key)) {
-            $key = 'null';    
+            $key = 'null';
         }
 
         $deterministicBladeKey = app(\Livewire\Mechanisms\ExtendBlade\DeterministicBladeKeys::class)->generate();
