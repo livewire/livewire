@@ -45,7 +45,9 @@ Note: Components will be resolved similar to anonymous Blade components. Instead
 
 Here is the single file version of the above counter component. Would likely be a file called:
 
-- resources/views/components/counter.blade.php
+- resources/views/components/counter.wire.php
+
+(notice the new file extension for these single file components (wire.php))
 
 ```php
 @php
