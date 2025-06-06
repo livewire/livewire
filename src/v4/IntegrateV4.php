@@ -21,6 +21,7 @@ class IntegrateV4
     public function __invoke()
     {
         $this->supportSingleFileComponents();
+        $this->supportWireTagSyntax();
     }
 
     protected function supportSingleFileComponents()
@@ -46,6 +47,13 @@ class IntegrateV4
             }
 
             return $className;
+        });
+    }
+
+    protected function supportWireTagSyntax()
+    {
+        app('blade.compiler')->precompiler(function ($string) {
+            return app(WireTagPrecompiler::class)($string);
         });
     }
 }
