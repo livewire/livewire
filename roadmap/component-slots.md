@@ -362,3 +362,243 @@ new class extends Livewire\Component {
 ```
 
 As you can see, I introduced a new `$slots` variable that would be capable of rendering the slot holes.
+
+## Recommended Path Forward: Solution B (Template Holes) - Default Slot Only
+
+After analyzing both approaches, **Solution B is the only viable path** that solves the fundamental reactivity and scoping problems. However, we should start with just the **default slot** to minimize complexity.
+
+### Proposed API for V4.1
+
+**Passing a default slot to a component:**
+
+```php
+<wire:modal>
+    <form>
+        <input wire:model="title">
+        @if ($saved) Form saved successfully! @endif
+    </form>
+</wire:modal>
+```
+
+**Referencing the default slot in child component:**
+
+```php
+// modal.wire.php
+
+@php
+new class extends Livewire\Component {
+    public $isOpen = false;
+
+    public function toggle()
+    {
+        $this->isOpen = ! $this->isOpen;
+    }
+}
+@endphp
+
+<div wire:show="isOpen">
+    <button wire:click="toggle">Close</button>
+
+    {{ $slot() }}
+</div>
+```
+
+### How It Works
+
+#### Initial Render (Server-Side)
+1. Parent component renders and encounters `<wire:modal>`
+2. Livewire extracts the slot content: `<form>...</form>`
+3. Child component renders normally, `{{ $slot() }}` outputs the actual slot content
+4. Browser receives complete HTML with slot content in place
+
+#### Child Re-renders (Islands Stay Islands)
+1. User clicks "Close" button → child component re-renders independently
+2. Child renders `{{ $slot() }}` as a **template hole**: `<template data-livewire-slot="default"></template>`
+3. Livewire morphs the child's new HTML but **skips the slot holes**
+4. Slot content remains unchanged in the DOM
+
+#### Parent Re-renders (Slot Content Updates)
+1. Parent state changes (e.g., `$saved = true`)
+2. Parent re-renders and updates slot content
+3. Livewire sends **slot content updates** to browser
+4. Browser updates content inside the slot holes: `<template data-livewire-slot="default">`
+
+### Key Benefits
+
+✅ **Reactive**: Parent changes automatically reflect in child slots
+✅ **Correct Scoping**: `wire:model="title"` binds to parent component
+✅ **Performance**: No heavy state transfer between parent/child
+✅ **Island Architecture**: Each component remains independent
+✅ **Familiar API**: Feels like Blade components
+
+## Implementation Guide
+
+### 1. Slot Extraction During Component Rendering
+
+When Livewire encounters a component tag with content:
+
+```php
+// In component rendering logic
+if ($componentTag->hasSlotContent()) {
+    $slotContent = $componentTag->extractSlotContent();
+
+    // Store slot content associated with child component instance
+    $childComponent->setSlotContent('default', $slotContent);
+}
+```
+
+### 2. Slot Function in Child Components
+
+Create a global `$slot()` helper available in all Livewire component templates:
+
+```php
+// Available in all Livewire component templates
+function slot($name = 'default') {
+    $component = app('livewire.current-component');
+
+    if ($component->isInitialRender()) {
+        // First render: output actual slot content
+        return $component->getSlotContent($name);
+    } else {
+        // Subsequent renders: output template hole
+        return "<template data-livewire-slot=\"{$name}\"></template>";
+    }
+}
+```
+
+### 3. DOM Morphing Logic
+
+Extend Livewire's frontend morphing to handle slot holes:
+
+```javascript
+// In Livewire's morphing logic
+function shouldSkipElement(element) {
+    // Skip slot template holes during morphing
+    if (element.tagName === 'TEMPLATE' && element.hasAttribute('data-livewire-slot')) {
+        return true;
+    }
+
+    return false; // Normal morphing behavior
+}
+```
+
+### 4. Parent Re-render Slot Updates
+
+When a parent component re-renders:
+
+```php
+// In parent component render logic
+class ParentComponent {
+    public function render() {
+        // Normal component rendering...
+
+        // Check if any child components have slots that need updating
+        $this->updateChildSlots();
+
+        return view('parent-template');
+    }
+
+    private function updateChildSlots() {
+        foreach ($this->childComponents as $child) {
+            if ($child->hasSlots()) {
+                // Extract fresh slot content from parent template
+                $freshSlotContent = $this->extractSlotContentForChild($child);
+
+                // Send slot update to browser
+                Livewire::sendSlotUpdate($child->id, 'default', $freshSlotContent);
+            }
+        }
+    }
+}
+```
+
+### 5. Browser-Side Slot Updates
+
+Handle slot content updates on the frontend:
+
+```javascript
+// In Livewire's frontend
+Livewire.on('slot-update', (componentId, slotName, newContent) => {
+    const component = document.querySelector(`[wire\\:id="${componentId}"]`);
+    const slotHole = component.querySelector(`template[data-livewire-slot="${slotName}"]`);
+
+    if (slotHole) {
+        // Replace template hole content
+        slotHole.innerHTML = newContent;
+    }
+});
+```
+
+### 6. Component Tracking
+
+Track parent-child relationships for slot updates:
+
+```php
+class ComponentSlotTracker {
+    private static $parentChildMap = [];
+
+    public static function registerSlotRelationship($parentId, $childId, $slotName) {
+        self::$parentChildMap[$parentId][$childId][] = $slotName;
+    }
+
+    public static function getChildrenWithSlots($parentId) {
+        return self::$parentChildMap[$parentId] ?? [];
+    }
+}
+```
+
+## Technical Considerations
+
+### Template Hole Format
+Use `<template>` elements as slot holes because:
+- They're invisible by default
+- Don't affect layout
+- Can hold content without rendering it
+- Easy to target with CSS selectors
+
+### Initial Render Strategy
+On first render, `{{ $slot() }}` outputs actual content so:
+- SEO works correctly
+- No flash of empty content
+- Server-side rendering works normally
+
+### Performance Optimization
+- Only track slot relationships when slots are actually used
+- Batch slot updates when multiple children need updates
+- Use efficient DOM querying for slot holes
+
+### Error Handling
+- Graceful degradation if slot content is malformed
+- Clear error messages when `{{ $slot() }}` is used outside Livewire components
+- Validation that slot names are valid
+
+## Next Steps for Implementation
+
+1. **Phase 1**: Implement basic slot extraction and `$slot()` function
+2. **Phase 2**: Add DOM morphing logic to skip template holes
+3. **Phase 3**: Implement parent-to-child slot update mechanism
+4. **Phase 4**: Add component relationship tracking
+5. **Phase 5**: Frontend slot update handling
+6. **Phase 6**: Testing and edge case handling
+
+## Future: Named Slots (V4.2)
+
+Once default slots are working, named slots can be added:
+
+```php
+<wire:modal>
+    <wire:slot name="header">
+        <h1>{{ $title }}</h1>
+    </wire:slot>
+
+    <form>...</form>
+</wire:modal>
+```
+
+```php
+// In child component
+{{ $slot('header') }}
+{{ $slot() }}  // default slot
+```
+
+This approach gives us a solid foundation with default slots while leaving room for named slot complexity later.
