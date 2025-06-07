@@ -1,6 +1,7 @@
 import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
+import { skipSlotContents } from "./features/supportSlots"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -57,10 +58,12 @@ export function morph(component, el, html) {
     })
 
     Alpine.morph(el, to, {
-        updating: (el, toEl, childrenOnly, skip, skipChildren) => {
+        updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+            skipSlotContents(el, toEl, skipUntil)
+
             if (isntElement(el)) return
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
             if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;

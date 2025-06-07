@@ -5,27 +5,62 @@ namespace Livewire\V4\Slots;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
 
+use function Livewire\on;
+
 class SupportSlots extends ComponentHook
 {
     public static function provide()
     {
-        // Register the hook in IntegrateV4.php
+        on('mount.stub', function ($tag, $id, $params, $parent, $key, $slots) {
+            $parent->withChildSlots($slots, $id);
+        });
     }
 
     public function render($view, $properties)
     {
-        // Ensure slots are initialized
-        $this->component->initializeSlots();
+        $slots = $this->component->getSlots();
 
-        // Get the slot object for the view
-        $slotObject = $this->component->getSlotObjectForView();
+        $view->with(['slot' => new SlotProxy($slots)]);
+    }
 
-        // Share the slot variables with views using the same pattern as validation errors
-        $revert = Utils::shareWithViews('slot', $slotObject);
+    function hydrate($memo)
+    {
+        if ($slots = $memo['slots']) {
+            $this->component->withPlaceholderSlots($slots);
+        }
+    }
 
-        return function () use ($revert) {
-            // After the component has rendered, revert our global sharing
-            $revert();
-        };
+    public function dehydrate($context)
+    {
+        $this->dehydrateSlotsThatWerePassedToTheComponentForSubsequentRenders($context);
+
+        $this->dehydrateSlotsThatWereRenderedIntoMorphEffects($context);
+    }
+
+    protected function dehydrateSlotsThatWereRenderedIntoMorphEffects($context)
+    {
+        $slots = $this->component->getSlotsForSkippedChildRenders();
+
+        if (! empty($slots)) {
+            $context->addEffect('slots', $slots);
+        }
+    }
+
+    protected function dehydrateSlotsThatWerePassedToTheComponentForSubsequentRenders($context)
+    {
+        $slots = $this->component->getSlots();
+
+        $slotMemo = [];
+
+        foreach ($slots as $name => $slot) {
+            $slotMemo[$name] = [
+                'name' => $slot->getName(),
+                'parentId' => $slot->getParentId(),
+            ];
+        }
+
+        if (! empty($slotMemo)) {
+            $context->addMemo('slots', $slotMemo);
+        }
     }
 }

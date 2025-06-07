@@ -22,3 +22,4 @@ import './supportIsolating';
 import './supportRedirects';
 import './supportNavigate';
 import './supportEntangle';
+import './supportSlots';

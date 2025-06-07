@@ -38,15 +38,11 @@ class HandleComponents extends Mechanism
     {
         $parent = app('livewire')->current();
 
-        if ($html = $this->shortCircuitMount($name, $params, $key, $parent)) return $html;
+        if ($html = $this->shortCircuitMount($name, $params, $key, $parent, $slots)) return $html;
 
         $component = app('livewire')->new($name);
 
-        // Initialize slots on the component before mounting
-        $component->initializeSlots();
-
-        // Set slots if provided
-        if (!empty($slots)) {
+        if (! empty($slots)) {
             $component->withSlots($slots, $parent);
         }
 
@@ -80,13 +76,13 @@ class HandleComponents extends Mechanism
         return $finish($html, $snapshot);
     }
 
-    protected function shortCircuitMount($name, $params, $key, $parent)
+    protected function shortCircuitMount($name, $params, $key, $parent, $slots)
     {
         $newHtml = null;
 
         trigger('pre-mount', $name, $params, $key, $parent, function ($html) use (&$newHtml) {
             $newHtml = $html;
-        });
+        }, $slots);
 
         return $newHtml;
     }

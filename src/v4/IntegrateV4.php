@@ -82,11 +82,6 @@ class IntegrateV4
                 \$__slots = \$__slots ?? [];
                 \$__slots[\$__slotName] = \$__slotContent;
 
-                // Store on parent component for subsequent render tracking
-                if (isset(\$_instance) && \$_instance instanceof \Livewire\Component) {
-                    \$_instance->trackSlotForSubsequentRenders(\$__slotName, \$__slotContent);
-                }
-
                 // Restore previous slot name from stack for nesting
                 \$__slotName = array_pop(\$__slotStack);
             ?>";
