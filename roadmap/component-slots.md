@@ -450,7 +450,6 @@ Based on analysis of the partials feature and Livewire's existing patterns, here
 src/v4/Slots/
 ├── HandlesSlots.php          // Trait for component
 ├── SupportSlots.php          // Feature class with provide() render() dehydrate() type hooks
-├── SlotsCompiler.php         // Handles wire:slot compilation
 ├── Slot.php                  // An individual, HTMLable slot
 └── BrowserTest.php           // Browser tests
 
@@ -460,8 +459,8 @@ src/v4/Slots/
 
 **Modify WireTagPrecompiler** to detect and extract slot content:
 - Hook into existing tag compilation to capture `<wire:slot name="header">` syntax
-- Extract slot content using output buffers (similar to Laravel's ComponentTagCompiler)
 - Compile down to `@wireSlot` / `@endWireSlot` directives
+- Register Blade directives to extract slot content using output buffers (similar to Laravel, but instead of calling $env->startSlot() and such, store them directly in a variable to be passed into @liveire(...))
 - Store extracted slots in `$slots` variable for passing to `@livewire` directive
 
 **Example compilation:**
