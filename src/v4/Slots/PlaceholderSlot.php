@@ -31,11 +31,11 @@ class PlaceholderSlot implements Htmlable
         if ($this->parentComponentId) {
             return "<!--[if SLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->"
                 . ''
-                . "<!--[if ENDSLOT]><![endif]-->";
+                . "<!--[if ENDSLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->";
         }
 
         return "<!--[if SLOT:{$this->name}]><![endif]-->"
             . ''
-            . "<!--[if ENDSLOT]><![endif]-->";
+            . "<!--[if ENDSLOT:{$this->name}]><![endif]-->";
     }
 }

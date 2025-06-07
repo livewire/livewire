@@ -32,11 +32,11 @@ class Slot implements Htmlable
         if ($this->parentComponentId) {
             return "<!--[if SLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->"
                 . $content
-                . "<!--[if ENDSLOT]><![endif]-->";
+                . "<!--[if ENDSLOT:{$this->name}:{$this->parentComponentId}]><![endif]-->";
         }
 
         return "<!--[if SLOT:{$this->name}]><![endif]-->"
             . $content
-            . "<!--[if ENDSLOT]><![endif]-->";
+            . "<!--[if ENDSLOT:{$this->name}]><![endif]-->";
     }
 }

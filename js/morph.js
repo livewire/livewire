@@ -73,7 +73,9 @@ export function morphPartial(component, startNode, endNode, toHTML) {
 
 function getMorphConfig(component) {
     return {
-        updating: (el, toEl, childrenOnly, skip, skipChildren) => {
+        updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+            skipSlotContents(el, toEl, skipUntil)
+
             if (isntElement(el)) return
 
             trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
