@@ -17,6 +17,7 @@ use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use BadMethodCallException;
 use Livewire\Features\SupportFormObjects\HandlesFormObjects;
+use Livewire\V4\Slots\HandlesSlots;
 
 abstract class Component
 {
@@ -34,6 +35,7 @@ abstract class Component
     use HandlesReleaseTokens;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
+    use HandlesSlots;
 
     protected $__id;
     protected $__name;

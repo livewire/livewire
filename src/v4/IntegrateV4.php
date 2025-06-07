@@ -5,6 +5,7 @@ namespace Livewire\V4;
 use Illuminate\Support\Facades\Blade;
 use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
+use Livewire\V4\Slots\SupportSlots;
 
 class IntegrateV4
 {
@@ -24,6 +25,7 @@ class IntegrateV4
         $this->supportSingleFileComponents();
         $this->supportWireTagSyntax();
         $this->registerSlotDirectives();
+        $this->registerSlotsSupport();
     }
 
     protected function supportSingleFileComponents()
@@ -65,7 +67,7 @@ class IntegrateV4
             return "<?php
                 ob_start();
                 \$__slotName = {$expression};
-                \$__slotAttributes = func_num_args() > 1 ? func_get_arg(1) : [];
+                // \$__slotAttributes = func_num_args() > 1 ? func_get_arg(1) : [];
                 \$__previousSlotName = \$__slotName ?? null;
 
                 // Track slot stack for nesting support
@@ -89,5 +91,10 @@ class IntegrateV4
                 \$__slotName = array_pop(\$__slotStack);
             ?>";
         });
+    }
+
+    protected function registerSlotsSupport()
+    {
+        // app('livewire')->componentHook(SupportSlots::class);
     }
 }

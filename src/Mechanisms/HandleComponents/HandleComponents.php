@@ -34,13 +34,21 @@ class HandleComponents extends Mechanism
         }
     }
 
-    public function mount($name, $params = [], $key = null)
+    public function mount($name, $params = [], $key = null, $slots = [])
     {
         $parent = app('livewire')->current();
 
         if ($html = $this->shortCircuitMount($name, $params, $key, $parent)) return $html;
 
         $component = app('livewire')->new($name);
+
+        // Initialize slots on the component before mounting
+        $component->initializeSlots();
+
+        // Set slots if provided
+        if (!empty($slots)) {
+            $component->withSlots($slots, $parent);
+        }
 
         $this->pushOntoComponentStack($component);
 
