@@ -135,7 +135,7 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringStartsWith('<script src="'.$url, FrontendAssets::js(['url' => $url]));
     }
 
-    public function js_prepends_slash_for_non_url()
+    public function test_js_prepends_slash_for_non_url()
     {
         $url = 'livewire/livewire.js';
         $this->assertStringStartsWith('<script src="/'.$url, FrontendAssets::js(['url' => $url]));
