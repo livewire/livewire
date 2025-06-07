@@ -1,6 +1,7 @@
 import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
+import { skipSlotContents } from "./features/supportSlots"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -20,6 +21,15 @@ export function morph(component, el, html) {
     parentComponent && (wrapper.__livewire = parentComponent)
 
     let to = wrapper.firstElementChild
+
+    // Set the snapshot and effects on the `to` element that way if there's a
+    // mismatch or problem the component will able to be re-initialized...
+    to.setAttribute('wire:snapshot', component.snapshotEncoded)
+
+    // Remove the 'html' key from the effects as the html will be morphed...
+    let effects = { ...component.effects }
+    delete effects.html
+    to.setAttribute('wire:effects', JSON.stringify(effects))
 
     to.__livewire = component
 
@@ -66,7 +76,7 @@ function getMorphConfig(component) {
         updating: (el, toEl, childrenOnly, skip, skipChildren) => {
             if (isntElement(el)) return
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
             if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;

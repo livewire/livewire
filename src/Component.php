@@ -4,6 +4,7 @@ namespace Livewire;
 
 use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
 use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportReleaseTokens\HandlesReleaseTokens;
 use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
 use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportValidation\HandlesValidation;
@@ -16,6 +17,7 @@ use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
+use Livewire\V4\Slots\HandlesSlots;
 use BadMethodCallException;
 
 abstract class Component
@@ -32,8 +34,10 @@ abstract class Component
     use HandlesValidation;
     use HandlesFormObjects;
     use HandlesJsEvaluation;
+    use HandlesReleaseTokens;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
+    use HandlesSlots;
 
     protected $__id;
     protected $__name;

@@ -23,3 +23,4 @@ import './supportRedirects';
 import './supportPartials';
 import './supportNavigate';
 import './supportEntangle';
+import './supportSlots';
