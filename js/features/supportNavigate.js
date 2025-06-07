@@ -1,5 +1,8 @@
+import Alpine from 'alpinejs'
 
-shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
+Alpine.nextTick(() => {
+    shouldHideProgressBar() && Alpine.navigate.disableProgressBar()
+})
 
 document.addEventListener('alpine:navigate', e => forwardEvent('livewire:navigate', e))
 document.addEventListener('alpine:navigating', e => forwardEvent('livewire:navigating', e))
@@ -26,9 +29,9 @@ export function shouldRedirectUsingNavigateOr(effects, url, or) {
 }
 
 function shouldHideProgressBar() {
-    if (!! document.querySelector('[data-no-progress-bar]')) return true
+    if (!!document.querySelector('[data-no-progress-bar]')) return true
 
-    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false) return true
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === 'data-no-progress-bar') return true
 
     return false
 }

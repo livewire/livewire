@@ -1185,6 +1185,50 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_progress_bar_is_visible_when_show_progress_bar_is_true()
+    {
+        config(['livewire.navigate.show_progress_bar' => true]);
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->click('@link.to.third')
+                ->waitFor('#nprogress')
+                ->waitForText('Done loading...');
+        });
+    }
+
+    public function test_progress_bar_appears_on_slow_network()
+    {
+        config(['livewire.navigate.show_progress_bar' => true]);
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->click('@link.to.third')
+                ->waitFor('#nprogress')
+                ->waitForText('Done loading...');
+        });
+    }
+
+    public function test_progress_bar_does_not_appear_on_fast_navigation()
+    {
+        config(['livewire.navigate.show_progress_bar' => true]);
+
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->click('@link.to.second')
+                ->pause(200)
+                ->assertMissing('#nprogress')
+                ->waitFor('@link.to.first')
+                ->assertSee('On second');
+        });
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;
