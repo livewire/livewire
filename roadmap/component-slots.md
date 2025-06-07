@@ -476,7 +476,7 @@ do that in livewire's morph file probably - but maybe just add the skipUntil met
 
 The only thing here we haven't detailed is how scoping is handled.
 
-We need to update $wire to detect look up the dom siblings to detect if it is inside a slot and if that slot has a parent-component-id and then maybe use that element for scope? that would probably do it yeah. so basically making it invisibly the $parent deal insetead $wire under the hood at the $wire level.
+We need to update $wire to detect look up the dom siblings to detect if it is inside a slot and if that slot has a parent-component-id and then maybe use that element for scope? that would probably do it yeah. so basically making it invisibly the $parent deal insetead $wire under the hood at the $wire level. (but im talking about the alpine $wire magic alpine variable to be clear.)
 
 ### Key Benefits
 
