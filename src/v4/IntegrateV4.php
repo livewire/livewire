@@ -95,6 +95,6 @@ class IntegrateV4
 
     protected function registerSlotsSupport()
     {
-        app('livewire')->componentHook(SupportSlots::class);
+        // app('livewire')->componentHook(SupportSlots::class);
     }
 }
