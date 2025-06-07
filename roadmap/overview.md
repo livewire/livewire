@@ -3,8 +3,6 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 
 ## Pre-beta
 - [ ] [Add single file components](single-file-components.md)
-    - [ ] [New folder structure]
-    - [ ] [New ⚡ emoji file names]
 - [ ] [Add tailwind merge](tailwind-merge.md)
 - [ ] [Support for slots](component-slots.md)
 - [ ] [Add streaming improvements](streaming.md)

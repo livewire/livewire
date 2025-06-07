@@ -68,9 +68,9 @@ class LivewireManager
         return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
     }
 
-    function mount($name, $params = [], $key = null)
+    function mount($name, $params = [], $key = null, $slots = [])
     {
-        return app(HandleComponents::class)->mount($name, $params, $key);
+        return app(HandleComponents::class)->mount($name, $params, $key, $slots);
     }
 
     function snapshot($component, $context = null)

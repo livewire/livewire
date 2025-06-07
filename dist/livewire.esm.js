@@ -6763,113 +6763,141 @@ var require_module_cjs8 = __commonJS({
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
       monkeyPatchDomSetAttributeToAllowAtSymbols();
-      let fromEl;
-      let toEl;
-      let key, lookahead, updating, updated, removing, removed, adding, added;
-      function assignOptions(options2 = {}) {
-        let defaultGetKey = (el) => el.getAttribute("key");
-        let noop = () => {
-        };
-        updating = options2.updating || noop;
-        updated = options2.updated || noop;
-        removing = options2.removing || noop;
-        removed = options2.removed || noop;
-        adding = options2.adding || noop;
-        added = options2.added || noop;
-        key = options2.key || defaultGetKey;
-        lookahead = options2.lookahead || false;
+      let context = createMorphContext(options);
+      let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+        toEl._x_dataStack = window.Alpine.closestDataStack(from);
+        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
       }
-      function patch(from2, to) {
-        if (differentElementNamesTypesOrKeys(from2, to)) {
-          return swapElements(from2, to);
+      context.patch(from, toEl);
+      return from;
+    }
+    function morphBetween(startMarker, endMarker, toHtml, options = {}) {
+      monkeyPatchDomSetAttributeToAllowAtSymbols();
+      let context = createMorphContext(options);
+      let fromContainer = startMarker.parentNode;
+      let fromBlock = new Block(startMarker, endMarker);
+      let toContainer = typeof toHtml === "string" ? (() => {
+        let container = document.createElement("div");
+        container.insertAdjacentHTML("beforeend", toHtml);
+        return container;
+      })() : toHtml;
+      let toStartMarker = document.createComment("[morph-start]");
+      let toEndMarker = document.createComment("[morph-end]");
+      toContainer.insertBefore(toStartMarker, toContainer.firstChild);
+      toContainer.appendChild(toEndMarker);
+      let toBlock = new Block(toStartMarker, toEndMarker);
+      if (window.Alpine && window.Alpine.closestDataStack) {
+        toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
+        toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
+      }
+      context.patchChildren(fromBlock, toBlock);
+    }
+    function createMorphContext(options = {}) {
+      let defaultGetKey = (el) => el.getAttribute("key");
+      let noop = () => {
+      };
+      let context = {
+        key: options.key || defaultGetKey,
+        lookahead: options.lookahead || false,
+        updating: options.updating || noop,
+        updated: options.updated || noop,
+        removing: options.removing || noop,
+        removed: options.removed || noop,
+        adding: options.adding || noop,
+        added: options.added || noop
+      };
+      context.patch = function(from, to) {
+        if (context.differentElementNamesTypesOrKeys(from, to)) {
+          return context.swapElements(from, to);
         }
         let updateChildrenOnly = false;
         let skipChildren = false;
-        if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
+        if (shouldSkipChildren(context.updating, () => skipChildren = true, from, to, () => updateChildrenOnly = true))
           return;
-        if (from2.nodeType === 1 && window.Alpine) {
-          window.Alpine.cloneNode(from2, to);
-          if (from2._x_teleport && to._x_teleport) {
-            patch(from2._x_teleport, to._x_teleport);
+        if (from.nodeType === 1 && window.Alpine) {
+          window.Alpine.cloneNode(from, to);
+          if (from._x_teleport && to._x_teleport) {
+            context.patch(from._x_teleport, to._x_teleport);
           }
         }
         if (textOrComment(to)) {
-          patchNodeValue(from2, to);
-          updated(from2, to);
+          context.patchNodeValue(from, to);
+          context.updated(from, to);
           return;
         }
         if (!updateChildrenOnly) {
-          patchAttributes(from2, to);
+          context.patchAttributes(from, to);
         }
-        updated(from2, to);
+        context.updated(from, to);
         if (!skipChildren) {
-          patchChildren(from2, to);
+          context.patchChildren(from, to);
         }
-      }
-      function differentElementNamesTypesOrKeys(from2, to) {
-        return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
-      }
-      function swapElements(from2, to) {
-        if (shouldSkip(removing, from2))
+      };
+      context.differentElementNamesTypesOrKeys = function(from, to) {
+        return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
+      };
+      context.swapElements = function(from, to) {
+        if (shouldSkip(context.removing, from))
           return;
         let toCloned = to.cloneNode(true);
-        if (shouldSkip(adding, toCloned))
+        if (shouldSkip(context.adding, toCloned))
           return;
-        from2.replaceWith(toCloned);
-        removed(from2);
-        added(toCloned);
-      }
-      function patchNodeValue(from2, to) {
+        from.replaceWith(toCloned);
+        context.removed(from);
+        context.added(toCloned);
+      };
+      context.patchNodeValue = function(from, to) {
         let value = to.nodeValue;
-        if (from2.nodeValue !== value) {
-          from2.nodeValue = value;
+        if (from.nodeValue !== value) {
+          from.nodeValue = value;
         }
-      }
-      function patchAttributes(from2, to) {
-        if (from2._x_transitioning)
+      };
+      context.patchAttributes = function(from, to) {
+        if (from._x_transitioning)
           return;
-        if (from2._x_isShown && !to._x_isShown) {
-          return;
-        }
-        if (!from2._x_isShown && to._x_isShown) {
+        if (from._x_isShown && !to._x_isShown) {
           return;
         }
-        let domAttributes = Array.from(from2.attributes);
+        if (!from._x_isShown && to._x_isShown) {
+          return;
+        }
+        let domAttributes = Array.from(from.attributes);
         let toAttributes = Array.from(to.attributes);
         for (let i = domAttributes.length - 1; i >= 0; i--) {
           let name = domAttributes[i].name;
           if (!to.hasAttribute(name)) {
-            from2.removeAttribute(name);
+            from.removeAttribute(name);
           }
         }
         for (let i = toAttributes.length - 1; i >= 0; i--) {
           let name = toAttributes[i].name;
           let value = toAttributes[i].value;
-          if (from2.getAttribute(name) !== value) {
-            from2.setAttribute(name, value);
+          if (from.getAttribute(name) !== value) {
+            from.setAttribute(name, value);
           }
         }
-      }
-      function patchChildren(from2, to) {
-        let fromKeys = keyToMap(from2.children);
+      };
+      context.patchChildren = function(from, to) {
+        let fromKeys = context.keyToMap(from.children);
         let fromKeyHoldovers = {};
         let currentTo = getFirstNode(to);
-        let currentFrom = getFirstNode(from2);
+        let currentFrom = getFirstNode(from);
         while (currentTo) {
           seedingMatchingId(currentTo, currentFrom);
-          let toKey = getKey(currentTo);
-          let fromKey = getKey(currentFrom);
+          let toKey = context.getKey(currentTo);
+          let fromKey = context.getKey(currentFrom);
           if (!currentFrom) {
             if (toKey && fromKeyHoldovers[toKey]) {
               let holdover = fromKeyHoldovers[toKey];
-              from2.appendChild(holdover);
+              from.appendChild(holdover);
               currentFrom = holdover;
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             } else {
-              if (!shouldSkip(adding, currentTo)) {
+              if (!shouldSkip(context.adding, currentTo)) {
                 let clone = currentTo.cloneNode(true);
-                from2.appendChild(clone);
-                added(clone);
+                from.appendChild(clone);
+                context.added(clone);
               }
               currentTo = getNextSibling(to, currentTo);
               continue;
@@ -6881,7 +6909,7 @@ var require_module_cjs8 = __commonJS({
             let nestedIfCount = 0;
             let fromBlockStart = currentFrom;
             while (currentFrom) {
-              let next = getNextSibling(from2, currentFrom);
+              let next = getNextSibling(from, currentFrom);
               if (isIf(next)) {
                 nestedIfCount++;
               } else if (isEnd(next) && nestedIfCount > 0) {
@@ -6910,17 +6938,17 @@ var require_module_cjs8 = __commonJS({
             let toBlockEnd = currentTo;
             let fromBlock = new Block(fromBlockStart, fromBlockEnd);
             let toBlock = new Block(toBlockStart, toBlockEnd);
-            patchChildren(fromBlock, toBlock);
+            context.patchChildren(fromBlock, toBlock);
             continue;
           }
-          if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
+          if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
             let nextToElementSibling = getNextSibling(to, currentTo);
             let found = false;
             while (!found && nextToElementSibling) {
               if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
                 found = true;
-                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
-                fromKey = getKey(currentFrom);
+                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+                fromKey = context.getKey(currentFrom);
               }
               nextToElementSibling = getNextSibling(to, nextToElementSibling);
             }
@@ -6928,9 +6956,9 @@ var require_module_cjs8 = __commonJS({
           if (toKey !== fromKey) {
             if (!toKey && fromKey) {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from2, currentFrom);
+              currentFrom = getNextSibling(from, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
@@ -6938,7 +6966,7 @@ var require_module_cjs8 = __commonJS({
               if (fromKeys[toKey]) {
                 currentFrom.replaceWith(fromKeys[toKey]);
                 currentFrom = fromKeys[toKey];
-                fromKey = getKey(currentFrom);
+                fromKey = context.getKey(currentFrom);
               }
             }
             if (toKey && fromKey) {
@@ -6947,67 +6975,57 @@ var require_module_cjs8 = __commonJS({
                 fromKeyHoldovers[fromKey] = currentFrom;
                 currentFrom.replaceWith(fromKeyNode);
                 currentFrom = fromKeyNode;
-                fromKey = getKey(currentFrom);
+                fromKey = context.getKey(currentFrom);
               } else {
                 fromKeyHoldovers[fromKey] = currentFrom;
-                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
                 fromKeyHoldovers[fromKey].remove();
-                currentFrom = getNextSibling(from2, currentFrom);
+                currentFrom = getNextSibling(from, currentFrom);
                 currentTo = getNextSibling(to, currentTo);
                 continue;
               }
             }
           }
-          let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
-          patch(currentFrom, currentTo);
+          let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
+          context.patch(currentFrom, currentTo);
           currentTo = currentTo && getNextSibling(to, currentTo);
           currentFrom = currentFromNext;
         }
         let removals = [];
         while (currentFrom) {
-          if (!shouldSkip(removing, currentFrom))
+          if (!shouldSkip(context.removing, currentFrom))
             removals.push(currentFrom);
-          currentFrom = getNextSibling(from2, currentFrom);
+          currentFrom = getNextSibling(from, currentFrom);
         }
         while (removals.length) {
           let domForRemoval = removals.shift();
           domForRemoval.remove();
-          removed(domForRemoval);
+          context.removed(domForRemoval);
         }
-      }
-      function getKey(el) {
-        return el && el.nodeType === 1 && key(el);
-      }
-      function keyToMap(els2) {
+      };
+      context.getKey = function(el) {
+        return el && el.nodeType === 1 && context.key(el);
+      };
+      context.keyToMap = function(els2) {
         let map = {};
         for (let el of els2) {
-          let theKey = getKey(el);
+          let theKey = context.getKey(el);
           if (theKey) {
             map[theKey] = el;
           }
         }
         return map;
-      }
-      function addNodeBefore(parent, node, beforeMe) {
-        if (!shouldSkip(adding, node)) {
+      };
+      context.addNodeBefore = function(parent, node, beforeMe) {
+        if (!shouldSkip(context.adding, node)) {
           let clone = node.cloneNode(true);
           parent.insertBefore(clone, beforeMe);
-          added(clone);
+          context.added(clone);
           return clone;
         }
         return node;
-      }
-      assignOptions(options);
-      fromEl = from;
-      toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-        toEl._x_dataStack = window.Alpine.closestDataStack(from);
-        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
-      }
-      patch(from, toEl);
-      fromEl = void 0;
-      toEl = void 0;
-      return from;
+      };
+      return context;
     }
     morph3.step = () => {
     };
@@ -7105,6 +7123,7 @@ var require_module_cjs8 = __commonJS({
     }
     function src_default(Alpine23) {
       Alpine23.morph = morph3;
+      Alpine23.morphBetween = morphBetween;
     }
     var module_default = src_default;
   }
@@ -7935,18 +7954,11 @@ var Commit = class {
   prepare() {
     trigger("commit.prepare", { component: this.component });
   }
-  getEncodedSnapshotWithLatestChildrenMergedIn() {
-    let { snapshotEncoded, children, snapshot } = this.component;
-    let childIds = children.map((child) => child.id);
-    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
-    return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
-  }
   toRequestPayload() {
     let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
     let updates = this.component.mergeQueuedUpdates(propertiesDiff);
-    let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn();
     let payload = {
-      snapshot: snapshotEncoded,
+      snapshot: this.component.snapshotEncoded,
       updates,
       calls: this.calls.map((i) => ({
         path: i.path,
@@ -8035,6 +8047,7 @@ var CommitBus = class {
   createAndSendNewPool() {
     trigger("commit.pooling", { commits: this.commits });
     let pools = this.corraleCommitsIntoPools();
+    this.commits.clear();
     trigger("commit.pooled", { pools });
     pools.forEach((pool) => {
       if (pool.empty())
@@ -8042,17 +8055,13 @@ var CommitBus = class {
       this.pools.add(pool);
       pool.send().then(() => {
         this.pools.delete(pool);
-        queueMicrotask(() => {
-          this.sendAnyQueuedCommits();
-        });
+        this.sendAnyQueuedCommits();
       });
     });
   }
   corraleCommitsIntoPools() {
     let pools = /* @__PURE__ */ new Set();
     for (let [idx, commit] of this.commits.entries()) {
-      if (this.findPoolWithComponent(commit.component))
-        continue;
       let hasFoundPool = false;
       pools.forEach((pool) => {
         if (pool.shouldHoldCommit(commit)) {
@@ -8065,7 +8074,6 @@ var CommitBus = class {
         newPool.add(commit);
         pools.add(newPool);
       }
-      this.commits.delete(commit);
     }
     return pools;
   }
@@ -8441,7 +8449,7 @@ var Component = class {
   get children() {
     let meta = this.snapshot.memo;
     let childIds = Object.values(meta.children).map((i) => i[1]);
-    return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
+    return childIds.map((id) => findComponent(id));
   }
   get parent() {
     return closestComponent(this.el.parentElement);
@@ -8498,9 +8506,6 @@ function destroyComponent(id) {
     return;
   component.cleanup();
   delete components[id];
-}
-function hasComponent(id) {
-  return !!components[id];
 }
 function findComponent(id) {
   let component = components[id];
@@ -8569,9 +8574,6 @@ function on2(eventName, callback) {
   };
 }
 function dispatchEvent(target, name, params, bubbles = true) {
-  if (typeof params === "string") {
-    params = [params];
-  }
   let e = new CustomEvent(name, { bubbles, detail: params });
   e.__livewire = { name, params, receivedBy: [] };
   target.dispatchEvent(e);
@@ -8649,24 +8651,18 @@ var Directive = class {
     this.expression = this.el.getAttribute(this.rawName);
   }
   get method() {
-    const methods = this.parseOutMethodsAndParams(this.expression);
-    return methods[0].method;
-  }
-  get methods() {
-    return this.parseOutMethodsAndParams(this.expression);
+    const { method } = this.parseOutMethodAndParams(this.expression);
+    return method;
   }
   get params() {
-    const methods = this.parseOutMethodsAndParams(this.expression);
-    return methods[0].params;
+    const { params } = this.parseOutMethodAndParams(this.expression);
+    return params;
   }
-  parseOutMethodsAndParams(rawMethod) {
-    let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
+  parseOutMethodAndParams(rawMethod) {
     let method = rawMethod;
     let params = [];
-    let methodAndParamString = method.match(methodRegex);
-    let methods = [];
-    let slicedLength = 0;
-    while (methodAndParamString) {
+    const methodAndParamString = method.match(/(.*?)\((.*)\)/s);
+    if (methodAndParamString) {
       method = methodAndParamString[1];
       let func = new Function("$event", `return (function () {
                 for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
@@ -8675,14 +8671,8 @@ var Directive = class {
                 return [].concat(p);
             })(${methodAndParamString[2]})`);
       params = func(this.eventContext);
-      methods.push({ method, params });
-      slicedLength += methodAndParamString[0].length;
-      methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
     }
-    if (methods.length === 0) {
-      methods.push({ method, params });
-    }
-    return methods;
+    return { method, params };
   }
 };
 
@@ -8881,12 +8871,12 @@ function performFetch(uri, callback) {
 
 // js/plugins/navigate/prefetch.js
 var prefetches = {};
-var cacheDuration = 3e4;
 function prefetchHtml(destination, callback) {
   let uri = getUriStringFromUrlObject(destination);
   if (prefetches[uri])
     return;
-  prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
+  prefetches[uri] = { finished: false, html: null, whenFinished: () => {
+  } };
   performFetch(uri, (html, routedUri) => {
     callback(html, routedUri);
   });
@@ -9166,7 +9156,6 @@ function isPopoverSupported() {
 var oldBodyScriptTagHashes = [];
 var attributesExemptFromScriptTagHashing = [
   "data-csrf",
-  "nonce",
   "aria-hidden"
 ];
 function swapCurrentPageWithNewHtml(html, andThen) {
@@ -9318,8 +9307,7 @@ var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
 function navigate_default(Alpine23) {
-  Alpine23.navigate = (url, options = {}) => {
-    let { preserveScroll = false } = options;
+  Alpine23.navigate = (url) => {
     let destination = createUrlObjectFromString(url);
     let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
       url: destination,
@@ -9328,7 +9316,7 @@ function navigate_default(Alpine23) {
     });
     if (prevented)
       return;
-    navigateTo(destination, { preserveScroll });
+    navigateTo(destination);
   };
   Alpine23.navigate.disableProgressBar = () => {
     showProgressBar = false;
@@ -9336,7 +9324,6 @@ function navigate_default(Alpine23) {
   Alpine23.addInitSelector(() => `[${Alpine23.prefixed("navigate")}]`);
   Alpine23.directive("navigate", (el, { modifiers }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
-    let preserveScroll = modifiers.includes("preserve-scroll");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
       let destination = extractDestinationFromLink(el);
       if (!destination)
@@ -9360,15 +9347,16 @@ function navigate_default(Alpine23) {
         });
         if (prevented)
           return;
-        navigateTo(destination, { preserveScroll });
+        navigateTo(destination);
       });
     });
   });
-  function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
+  function navigateTo(destination, shouldPushToHistoryState = true) {
     showProgressBar && showAndStartProgressBar();
     fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
       fireEventForOtherLibrariesToHookInto("alpine:navigating");
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
+      showProgressBar && finishAndHideProgressBar();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
       preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
@@ -9387,7 +9375,7 @@ function navigate_default(Alpine23) {
             unPackPersistedTeleports(persistedEl);
             unPackPersistedPopovers(persistedEl);
           });
-          !preserveScroll && restoreScrollPositionOrScrollToTop();
+          restoreScrollPositionOrScrollToTop();
           afterNewScriptsAreDoneLoading(() => {
             andAfterAllThis(() => {
               setTimeout(() => {
@@ -9395,7 +9383,6 @@ function navigate_default(Alpine23) {
               });
               nowInitializeAlpineOnTheNewPage(Alpine23);
               fireEventForOtherLibrariesToHookInto("alpine:navigated");
-              showProgressBar && finishAndHideProgressBar();
             });
           });
         });
@@ -9412,7 +9399,8 @@ function navigate_default(Alpine23) {
       });
       if (prevented)
         return;
-      navigateTo(destination, { shouldPushToHistoryState: false });
+      let shouldPushToHistoryState = false;
+      navigateTo(destination, shouldPushToHistoryState);
     });
   }, (html, url, currentPageUrl, currentPageKey) => {
     let destination = createUrlObjectFromString(url);
@@ -9746,7 +9734,7 @@ function start() {
   import_alpinejs5.default.interceptInit(import_alpinejs5.default.skipDuringClone((el) => {
     if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
-    if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
+    if (el.hasAttribute("wire:id")) {
       let component2 = initComponent(el);
       import_alpinejs5.default.onAttributeRemoved(el, "wire:id", () => {
         destroyComponent(component2.id);
@@ -9948,79 +9936,87 @@ function morph2(component, el, html) {
   }
   parentComponent && (wrapper.__livewire = parentComponent);
   let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
   to.__livewire = component;
   trigger("morph", { el, toEl: to, component });
-  let existingComponentsMap = {};
-  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-  });
-  to.querySelectorAll("[wire\\:id]").forEach((child) => {
-    if (child.hasAttribute("wire:snapshot"))
-      return;
-    let wireId = child.getAttribute("wire:id");
-    let existingComponent = existingComponentsMap[wireId];
-    if (existingComponent) {
-      child.replaceWith(existingComponent.cloneNode(true));
-    }
-  });
-  import_alpinejs8.default.morph(el, to, {
-    updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
-      if (isntElement(el2))
+  import_alpinejs8.default.morph(el, to, getMorphConfig(component));
+  trigger("morphed", { el, component });
+}
+function morphPartial(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? closestComponent(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("partial.morph", { startNode, endNode, component });
+  import_alpinejs8.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("partial.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren) => {
+      if (isntElement(el))
         return;
-      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
-      if (el2.__livewire_replace === true)
-        el2.innerHTML = toEl.innerHTML;
-      if (el2.__livewire_replace_self === true) {
-        el2.outerHTML = toEl.outerHTML;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
         return skip();
       }
-      if (el2.__livewire_ignore === true)
+      if (el.__livewire_ignore === true)
         return skip();
-      if (el2.__livewire_ignore_self === true)
+      if (el.__livewire_ignore_self === true)
         childrenOnly();
-      if (el2.__livewire_ignore_children === true)
+      if (el.__livewire_ignore_children === true)
         return skipChildren();
-      if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
         return skip();
-      if (isComponentRootEl(el2))
+      if (isComponentRootEl(el))
         toEl.__livewire = component;
     },
-    updated: (el2) => {
-      if (isntElement(el2))
+    updated: (el) => {
+      if (isntElement(el))
         return;
-      trigger("morph.updated", { el: el2, component });
+      trigger("morph.updated", { el, component });
     },
-    removing: (el2, skip) => {
-      if (isntElement(el2))
+    removing: (el, skip) => {
+      if (isntElement(el))
         return;
-      trigger("morph.removing", { el: el2, component, skip });
+      trigger("morph.removing", { el, component, skip });
     },
-    removed: (el2) => {
-      if (isntElement(el2))
+    removed: (el) => {
+      if (isntElement(el))
         return;
-      trigger("morph.removed", { el: el2, component });
+      trigger("morph.removed", { el, component });
     },
-    adding: (el2) => {
-      trigger("morph.adding", { el: el2, component });
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
     },
-    added: (el2) => {
-      if (isntElement(el2))
+    added: (el) => {
+      if (isntElement(el))
         return;
-      const closestComponentId = closestComponent(el2).id;
-      trigger("morph.added", { el: el2 });
+      const closestComponentId = closestComponent(el).id;
+      trigger("morph.added", { el });
     },
-    key: (el2) => {
-      if (isntElement(el2))
+    key: (el) => {
+      if (isntElement(el))
         return;
-      return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
+      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
     },
     lookahead: false
-  });
-  trigger("morphed", { el, component });
+  };
 }
 function isntElement(el) {
   return typeof el.hasAttribute !== "function";
@@ -10043,13 +10039,7 @@ on("effect", ({ component, effects }) => {
 
 // js/features/supportDispatches.js
 on("effect", ({ component, effects }) => {
-  queueMicrotask(() => {
-    queueMicrotask(() => {
-      queueMicrotask(() => {
-        dispatchEvents(component, effects.dispatches || []);
-      });
-    });
-  });
+  dispatchEvents(component, effects.dispatches || []);
 });
 function dispatchEvents(component, dispatches) {
   dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
@@ -10419,6 +10409,76 @@ on("effect", ({ effects }) => {
   });
 });
 
+// js/features/supportPartials.js
+on("effect", ({ component, effects }) => {
+  let partials = effects.partials;
+  if (!partials)
+    return;
+  partials.forEach((partial) => {
+    let { name, mode, content } = partial;
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        let { startNode, endNode } = findPartialComments(component.el, name);
+        if (!startNode || !endNode)
+          return;
+        let strippedContent = stripPartialComments(content, name);
+        let parentElement = startNode.parentElement;
+        let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+        if (mode === "append") {
+          let container = document.createElement(parentElementTag);
+          container.innerHTML = strippedContent;
+          Array.from(container.childNodes).forEach((node) => {
+            endNode.parentNode.insertBefore(node, endNode);
+          });
+        } else if (mode === "prepend") {
+          let container = document.createElement(parentElementTag);
+          container.innerHTML = strippedContent;
+          Array.from(container.childNodes).reverse().forEach((node) => {
+            startNode.parentNode.insertBefore(node, startNode.nextSibling);
+          });
+        } else {
+          morphPartial(component, startNode, endNode, strippedContent);
+        }
+      });
+    });
+  });
+});
+function stripPartialComments(content, partialName) {
+  let startComment = `<!--[if PARTIAL:${partialName}]><![endif]-->`;
+  let endComment = `<!--[if ENDPARTIAL:${partialName}]><![endif]-->`;
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findPartialComments(rootEl, partialName) {
+  let startNode = null;
+  let endNode = null;
+  walkElements(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent === `[if PARTIAL:${partialName}]><![endif]`) {
+          startNode = node;
+        }
+        if (node.textContent === `[if ENDPARTIAL:${partialName}]><![endif]`) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements(child, callback);
+  });
+}
+
 // js/directives/wire-transition.js
 var import_alpinejs11 = __toESM(require_module_cjs());
 on("morph.added", ({ el }) => {
@@ -10505,20 +10565,11 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
 var import_alpinejs13 = __toESM(require_module_cjs());
 import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
 import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
 import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
     import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
     import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
-  } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
-  } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
-  } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
   }
 }));
 document.addEventListener("alpine:navigating", () => {
@@ -10775,7 +10826,7 @@ function getTargets(el) {
     if (directive2.modifiers.includes("except"))
       inverted = true;
     if (raw.includes("(") && raw.includes(")")) {
-      targets = targets.concat(directive2.methods.map((method) => ({ target: method.method, params: quickHash(JSON.stringify(method.params)) })));
+      targets.push({ target: directive2.method, params: quickHash(JSON.stringify(directive2.params)) });
     } else if (raw.includes(",")) {
       raw.split(",").map((i) => i.trim()).forEach((target) => {
         targets.push({ target });
@@ -10802,7 +10853,7 @@ directive("stream", ({ el, directive: directive2, cleanup }) => {
     if (modifiers.includes("replace") || replace2) {
       el.innerHTML = content;
     } else {
-      el.insertAdjacentHTML("beforeend", content);
+      el.innerHTML = el.innerHTML + content;
     }
   });
   cleanup(off);

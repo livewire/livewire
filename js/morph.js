@@ -1,6 +1,7 @@
 import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
+import { skipSlotContents } from "./features/supportSlots"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -34,33 +35,48 @@ export function morph(component, el, html) {
 
     trigger('morph', { el, toEl: to, component })
 
-    // Let's first do a lookup of all the child components to see if the component already
-    // exists and if so we'll clone it and replace the child component with the clone.
-    // This is to ensure that components don't loose state even if there might be a
-    // `wire:key` missing from elements within a loop around the component...
-    let existingComponentsMap = {}
+    Alpine.morph(el, to, getMorphConfig(component))
 
-    el.querySelectorAll('[wire\\:id]').forEach(component => {
-        existingComponentsMap[component.getAttribute('wire:id')] = component
-    })
+    trigger('morphed', { el, component })
+}
 
-    to.querySelectorAll('[wire\\:id]').forEach(child => {
-        // If the child has a `wire:snapshot` it means it's new, so we don't need to find it...
-        if (child.hasAttribute('wire:snapshot')) return
+export function morphPartial(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
-        let wireId = child.getAttribute('wire:id')
-        let existingComponent = existingComponentsMap[wireId]
+    let toContainer = document.createElement(fromContainerTag)
+    toContainer.innerHTML = toHTML
+    toContainer.__livewire = component
 
-        if (existingComponent) {
-            child.replaceWith(existingComponent.cloneNode(true))
-        }
-    })
+    // Add the parent component reference to an outer wrapper if it exists...
+    let parentElement = component.el.parentElement
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
-    Alpine.morph(el, to, {
+    let parentComponent
+
+    try {
+        parentComponent = parentElement ? closestComponent(parentElement) : null
+    } catch (e) {}
+
+    if (parentComponent) {
+        let parentProviderWrapper = document.createElement(parentElementTag)
+        parentProviderWrapper.appendChild(toContainer)
+        parentProviderWrapper.__livewire = parentComponent
+    }
+
+    trigger('partial.morph', { startNode, endNode, component })
+
+    Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+
+    trigger('partial.morphed', { startNode, endNode, component })
+}
+
+function getMorphConfig(component) {
+    return {
         updating: (el, toEl, childrenOnly, skip, skipChildren) => {
             if (isntElement(el)) return
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
             if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
@@ -122,9 +138,7 @@ export function morph(component, el, html) {
         },
 
         lookahead: false,
-    })
-
-    trigger('morphed', { el, component })
+    }
 }
 
 function isntElement(el) {

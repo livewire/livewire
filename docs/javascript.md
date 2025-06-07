@@ -577,11 +577,31 @@ In addition to the events fired per element, a `morph` and `morphed` event is fi
 
 ```js
 Livewire.hook('morph',  ({ el, component }) => {
-	// Runs just before the child elements in `component` are morphed
+	// Runs just before the child elements in `component` are morphed (exluding partial morphing)
 })
 
 Livewire.hook('morphed',  ({ el, component }) => {
-    // Runs after all child elements in `component` are morphed
+    // Runs after all child elements in `component` are morphed (excluding partial morphing)
+})
+```
+
+**Partial morph hooks**
+
+Partials are morphed differently than standard Livewire requests. Here are the additional Livewire events triggered by partial DOM updates:
+
+```js
+Livewire.hook('partial.morph',  ({ startNode, endNode, component }) => {
+	// Runs just before partials in `component` are morphed
+    //
+    // startNode: the comment node marking the beginning of a partial in the DOM.
+    // endNode: the comment node marking the end of a partial in the DOM.
+})
+
+Livewire.hook('partial.morphed',  ({ startNode, endNode, component }) => {
+    // Runs after partials in `component` are morphed
+    //
+    // startNode: the comment node marking the beginning of a partial in the DOM.
+    // endNode: the comment node marking the end of a partial in the DOM.
 })
 ```
 

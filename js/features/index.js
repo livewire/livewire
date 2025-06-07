@@ -20,5 +20,7 @@ import './supportQueryString';
 import './supportLaravelEcho';
 import './supportIsolating';
 import './supportRedirects';
+import './supportPartials';
 import './supportNavigate';
 import './supportEntangle';
+import './supportSlots';

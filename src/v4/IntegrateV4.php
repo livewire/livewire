@@ -2,8 +2,10 @@
 
 namespace Livewire\V4;
 
+use Illuminate\Support\Facades\Blade;
 use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
+use Livewire\V4\Slots\SupportSlots;
 
 class IntegrateV4
 {
@@ -21,6 +23,9 @@ class IntegrateV4
     public function __invoke()
     {
         $this->supportSingleFileComponents();
+        $this->supportWireTagSyntax();
+        $this->registerSlotDirectives();
+        $this->registerSlotsSupport();
     }
 
     protected function supportSingleFileComponents()
@@ -47,5 +52,44 @@ class IntegrateV4
 
             return $className;
         });
+    }
+
+    protected function supportWireTagSyntax()
+    {
+        app('blade.compiler')->precompiler(function ($string) {
+            return app(WireTagCompiler::class)($string);
+        });
+    }
+
+    protected function registerSlotDirectives()
+    {
+        Blade::directive('wireSlot', function ($expression) {
+            return "<?php
+                ob_start();
+                \$__slotName = {$expression};
+                // \$__slotAttributes = func_num_args() > 1 ? func_get_arg(1) : [];
+                \$__previousSlotName = \$__slotName ?? null;
+
+                // Track slot stack for nesting support
+                \$__slotStack = \$__slotStack ?? [];
+                array_push(\$__slotStack, \$__previousSlotName);
+            ?>";
+        });
+
+        Blade::directive('endWireSlot', function () {
+            return "<?php
+                \$__slotContent = ob_get_clean();
+                \$__slots = \$__slots ?? [];
+                \$__slots[\$__slotName] = \$__slotContent;
+
+                // Restore previous slot name from stack for nesting
+                \$__slotName = array_pop(\$__slotStack);
+            ?>";
+        });
+    }
+
+    protected function registerSlotsSupport()
+    {
+        // app('livewire')->componentHook(SupportSlots::class);
     }
 }
