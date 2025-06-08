@@ -5,7 +5,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] [Add single file components](single-file-components.md)
 - [x] [Add tailwind merge](tailwind-merge.md)
 - [x] [Support for slots](component-slots.md)
-* [ ] [Support for attributes](component-attributes.md)
+* [x] [Support for attributes](component-attributes.md)
 - [ ] [Add streaming improvements](streaming.md)
 - [ ] [Livewire::route() for pages](livewire-route.md)
 - [ ] [Add partials](partials.md)
