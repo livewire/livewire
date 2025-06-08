@@ -27,6 +27,7 @@ let aliases = {
     'js': '$js',
     'get': '$get',
     'set': '$set',
+    'ref': '$ref',
     'call': '$call',
     'hook': '$hook',
     'commit': '$commit',
@@ -140,6 +141,14 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     }
 
     return Promise.resolve()
+})
+
+wireProperty('$ref', (component) => (name) => {
+    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`)
+
+    if (! refEl) throw `Ref "${name}" not found`
+
+    return refEl.__livewire?.$wire
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {

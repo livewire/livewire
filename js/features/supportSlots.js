@@ -101,3 +101,28 @@ function isStartMarker(el) {
 function isEndMarker(el) {
     return el.nodeType === 8 && el.textContent.startsWith('[if ENDSLOT')
 }
+
+export function extractSlotData(el) {
+    let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/
+    let match = el.textContent.match(regex)
+
+    if (! match) return
+
+    return {
+        name: match[1],
+        parentId: match[2] || null
+    }
+}
+
+export function checkPreviousSiblingForSlotStartMarker(el) {
+    let node = el.previousSibling
+
+    while (node) {
+        if (isStartMarker(node)) {
+            return node
+        }
+        node = node.previousSibling
+    }
+
+    return null
+}

@@ -25,6 +25,11 @@ class SlotProxy implements Htmlable
 
     public function toHtml(): string
     {
+        return $this->__toString();
+    }
+
+    public function __toString(): string
+    {
         return $this->get('default')->toHtml();
     }
 }

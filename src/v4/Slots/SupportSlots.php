@@ -25,7 +25,9 @@ class SupportSlots extends ComponentHook
 
     function hydrate($memo)
     {
-        if ($slots = $memo['slots']) {
+        $slots = $memo['slots'] ?? [];
+
+        if (! empty($slots)) {
             $this->component->withPlaceholderSlots($slots);
         }
     }

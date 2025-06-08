@@ -8243,6 +8243,7 @@ var aliases = {
   "js": "$js",
   "get": "$get",
   "set": "$set",
+  "ref": "$ref",
   "call": "$call",
   "hook": "$hook",
   "commit": "$commit",
@@ -8327,6 +8328,13 @@ wireProperty("$set", (component) => async (property, value, live = true) => {
     return await requestCommit(component);
   }
   return Promise.resolve();
+});
+wireProperty("$ref", (component) => (name) => {
+  let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
+  console.log(component.el, refEl);
+  if (!refEl)
+    throw `Ref "${name}" not found`;
+  return refEl.__livewire?.$wire;
 });
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
@@ -8514,6 +8522,206 @@ var Component = class {
   }
 };
 
+// js/morph.js
+var import_alpinejs3 = __toESM(require_module_cjs());
+function morph(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = closestComponent(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.setAttribute("wire:snapshot", component.snapshotEncoded);
+  let effects = { ...component.effects };
+  delete effects.html;
+  to.setAttribute("wire:effects", JSON.stringify(effects));
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  import_alpinejs3.default.morph(el, to, getMorphConfig(component));
+  trigger("morphed", { el, component });
+}
+function morphPartial(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? closestComponent(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("partial.morph", { startNode, endNode, component });
+  import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("partial.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+      skipSlotContents(el, toEl, skipUntil);
+      if (isntElement(el))
+        return;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
+        return skip();
+      }
+      if (el.__livewire_ignore === true)
+        return skip();
+      if (el.__livewire_ignore_self === true)
+        childrenOnly();
+      if (el.__livewire_ignore_children === true)
+        return skipChildren();
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el))
+        toEl.__livewire = component;
+    },
+    updated: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.updated", { el, component });
+    },
+    removing: (el, skip) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removing", { el, component, skip });
+    },
+    removed: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removed", { el, component });
+    },
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
+    },
+    added: (el) => {
+      if (isntElement(el))
+        return;
+      const closestComponentId = closestComponent(el).id;
+      trigger("morph.added", { el });
+    },
+    key: (el) => {
+      if (isntElement(el))
+        return;
+      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+    },
+    lookahead: false
+  };
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+
+// js/features/supportSlots.js
+on("effect", ({ component, effects }) => {
+  let slots = effects.slots;
+  if (!slots)
+    return;
+  let parentId = component.el.getAttribute("wire:id");
+  Object.entries(slots).forEach(([childId, childSlots]) => {
+    let childComponent = findComponent(childId);
+    if (!childComponent)
+      return;
+    Object.entries(childSlots).forEach(([name, content]) => {
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            let fullName = parentId ? `${name}:${parentId}` : name;
+            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+            if (!startNode || !endNode)
+              return;
+            let strippedContent = stripSlotComments(content, fullName);
+            morphPartial(childComponent, startNode, endNode, strippedContent);
+          });
+        });
+      });
+    });
+  });
+});
+function stripSlotComments(content, slotName) {
+  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findSlotComments(rootEl, slotName) {
+  let startNode = null;
+  let endNode = null;
+  walkElements(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+          startNode = node;
+        }
+        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements(child, callback);
+  });
+}
+function skipSlotContents(el, toEl, skipUntil) {
+  if (isStartMarker(el) && isStartMarker(toEl)) {
+    skipUntil((node) => isEndMarker(node));
+  }
+}
+function isStartMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+}
+function isEndMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+}
+function extractSlotData(el) {
+  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+  let match = el.textContent.match(regex);
+  if (!match)
+    return;
+  return {
+    name: match[1],
+    parentId: match[2] || null
+  };
+}
+function checkPreviousSiblingForSlotStartMarker(el) {
+  let node = el.previousSibling;
+  while (node) {
+    if (isStartMarker(node)) {
+      return node;
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
 // js/store.js
 var components = {};
 function initComponent(el) {
@@ -8542,6 +8750,13 @@ function findComponent(id) {
   return component;
 }
 function closestComponent(el, strict = true) {
+  let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
+  if (slotStartMarker) {
+    let { name, parentId } = extractSlotData(slotStartMarker);
+    if (parentId) {
+      return findComponent(parentId);
+    }
+  }
   let closestRoot = Alpine.findClosest(el, (i) => i.__livewire);
   if (!closestRoot) {
     if (strict)
@@ -8951,19 +9166,19 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 }
 
 // js/plugins/navigate/teleport.js
-var import_alpinejs3 = __toESM(require_module_cjs());
+var import_alpinejs4 = __toESM(require_module_cjs());
 function packUpPersistedTeleports(persistedEl) {
-  import_alpinejs3.default.mutateDom(() => {
+  import_alpinejs4.default.mutateDom(() => {
     persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
   });
 }
 function removeAnyLeftOverStaleTeleportTargets(body) {
-  import_alpinejs3.default.mutateDom(() => {
+  import_alpinejs4.default.mutateDom(() => {
     body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
   });
 }
 function unPackPersistedTeleports(persistedEl) {
-  import_alpinejs3.default.walk(persistedEl, (el, skip) => {
+  import_alpinejs4.default.walk(persistedEl, (el, skip) => {
     if (!el._x_teleport)
       return;
     el._x_teleportPutBack();
@@ -9006,14 +9221,14 @@ function restoreScrollPositionOrScrollToTop() {
 }
 
 // js/plugins/navigate/persist.js
-var import_alpinejs4 = __toESM(require_module_cjs());
+var import_alpinejs5 = __toESM(require_module_cjs());
 var els = {};
 function storePersistantElementsForLater(callback) {
   els = {};
   document.querySelectorAll("[x-persist]").forEach((i) => {
     els[i.getAttribute("x-persist")] = i;
     callback(i);
-    import_alpinejs4.default.mutateDom(() => {
+    import_alpinejs5.default.mutateDom(() => {
       i.remove();
     });
   });
@@ -9027,14 +9242,14 @@ function putPersistantElementsBack(callback) {
     usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
     callback(old, i);
-    import_alpinejs4.default.mutateDom(() => {
+    import_alpinejs5.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
   Object.entries(els).forEach(([key, el]) => {
     if (usedPersists.includes(key))
       return;
-    import_alpinejs4.default.destroyTree(el);
+    import_alpinejs5.default.destroyTree(el);
   });
   els = {};
 }
@@ -9743,25 +9958,25 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph = __toESM(require_module_cjs8());
+var import_morph2 = __toESM(require_module_cjs8());
 var import_mask = __toESM(require_module_cjs9());
-var import_alpinejs5 = __toESM(require_module_cjs());
+var import_alpinejs6 = __toESM(require_module_cjs());
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs5.default.plugin(import_morph.default);
-  import_alpinejs5.default.plugin(history2);
-  import_alpinejs5.default.plugin(import_intersect.default);
-  import_alpinejs5.default.plugin(import_resize.default);
-  import_alpinejs5.default.plugin(import_collapse.default);
-  import_alpinejs5.default.plugin(import_anchor.default);
-  import_alpinejs5.default.plugin(import_focus.default);
-  import_alpinejs5.default.plugin(import_persist2.default);
-  import_alpinejs5.default.plugin(navigate_default);
-  import_alpinejs5.default.plugin(import_mask.default);
-  import_alpinejs5.default.addRootSelector(() => "[wire\\:id]");
-  import_alpinejs5.default.onAttributesAdded((el, attributes) => {
+  import_alpinejs6.default.plugin(import_morph2.default);
+  import_alpinejs6.default.plugin(history2);
+  import_alpinejs6.default.plugin(import_intersect.default);
+  import_alpinejs6.default.plugin(import_resize.default);
+  import_alpinejs6.default.plugin(import_collapse.default);
+  import_alpinejs6.default.plugin(import_anchor.default);
+  import_alpinejs6.default.plugin(import_focus.default);
+  import_alpinejs6.default.plugin(import_persist2.default);
+  import_alpinejs6.default.plugin(navigate_default);
+  import_alpinejs6.default.plugin(import_mask.default);
+  import_alpinejs6.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs6.default.onAttributesAdded((el, attributes) => {
     if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
     let component = closestComponent(el, false);
@@ -9772,23 +9987,23 @@ function start() {
         return;
       let directive2 = extractDirective(el, attribute.name);
       trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
   });
-  import_alpinejs5.default.interceptInit(import_alpinejs5.default.skipDuringClone((el) => {
+  import_alpinejs6.default.interceptInit(import_alpinejs6.default.skipDuringClone((el) => {
     if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
     if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
       let component2 = initComponent(el);
-      import_alpinejs5.default.onAttributeRemoved(el, "wire:id", () => {
+      import_alpinejs6.default.onAttributeRemoved(el, "wire:id", () => {
         destroyComponent(component2.id);
       });
     }
     let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
     directives.forEach((directive2) => {
       trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
-        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
     let component = closestComponent(el, false);
@@ -9796,12 +10011,12 @@ function start() {
       trigger("element.init", { el, component });
       directives.forEach((directive2) => {
         trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-          import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+          import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
     }
   }));
-  import_alpinejs5.default.start();
+  import_alpinejs6.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
@@ -9844,7 +10059,7 @@ function registerListeners(component, listeners2) {
 }
 
 // js/features/supportScriptsAndAssets.js
-var import_alpinejs6 = __toESM(require_module_cjs());
+var import_alpinejs7 = __toESM(require_module_cjs());
 var executedScripts = /* @__PURE__ */ new WeakMap();
 var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
@@ -9872,8 +10087,8 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs6.default.dontAutoEvaluateFunctions(() => {
-          import_alpinejs6.default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
+        import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
+          import_alpinejs7.default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
         });
       });
     });
@@ -9945,8 +10160,8 @@ function cloneScriptTag2(el) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs7 = __toESM(require_module_cjs());
-import_alpinejs7.default.magic("js", (el) => {
+var import_alpinejs8 = __toESM(require_module_cjs());
+import_alpinejs8.default.magic("js", (el) => {
   let component = closestComponent(el);
   return component.$wire.js;
 });
@@ -9956,199 +10171,17 @@ on("effect", ({ component, effects }) => {
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs7.default.evaluate(component.el, body);
+        import_alpinejs8.default.evaluate(component.el, body);
       });
     });
   }
   if (xjs) {
     xjs.forEach(({ expression, params }) => {
       params = Object.values(params);
-      import_alpinejs7.default.evaluate(component.el, expression, { scope: component.jsActions, params });
+      import_alpinejs8.default.evaluate(component.el, expression, { scope: component.jsActions, params });
     });
   }
 });
-
-// js/morph.js
-var import_alpinejs8 = __toESM(require_module_cjs());
-
-// js/features/supportSlots.js
-on("effect", ({ component, effects }) => {
-  let slots = effects.slots;
-  if (!slots)
-    return;
-  let parentId = component.el.getAttribute("wire:id");
-  Object.entries(slots).forEach(([childId, childSlots]) => {
-    let childComponent = findComponent(childId);
-    if (!childComponent)
-      return;
-    Object.entries(childSlots).forEach(([name, content]) => {
-      queueMicrotask(() => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            let fullName = parentId ? `${name}:${parentId}` : name;
-            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-            if (!startNode || !endNode)
-              return;
-            let strippedContent = stripSlotComments(content, fullName);
-            morphPartial(childComponent, startNode, endNode, strippedContent);
-          });
-        });
-      });
-    });
-  });
-});
-function stripSlotComments(content, slotName) {
-  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return stripped.trim();
-}
-function findSlotComments(rootEl, slotName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-          startNode = node;
-        }
-        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements(child, callback);
-  });
-}
-function skipSlotContents(el, toEl, skipUntil) {
-  if (isStartMarker(el) && isStartMarker(toEl)) {
-    skipUntil((node) => isEndMarker(node));
-  }
-}
-function isStartMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-}
-function isEndMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-}
-
-// js/morph.js
-function morph2(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
-  }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  import_alpinejs8.default.morph(el, to, getMorphConfig(component));
-  trigger("morphed", { el, component });
-}
-function morphPartial(component, startNode, endNode, toHTML) {
-  let fromContainer = startNode.parentElement;
-  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-  let toContainer = document.createElement(fromContainerTag);
-  toContainer.innerHTML = toHTML;
-  toContainer.__livewire = component;
-  let parentElement = component.el.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  let parentComponent;
-  try {
-    parentComponent = parentElement ? closestComponent(parentElement) : null;
-  } catch (e) {
-  }
-  if (parentComponent) {
-    let parentProviderWrapper = document.createElement(parentElementTag);
-    parentProviderWrapper.appendChild(toContainer);
-    parentProviderWrapper.__livewire = parentComponent;
-  }
-  trigger("partial.morph", { startNode, endNode, component });
-  import_alpinejs8.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-  trigger("partial.morphed", { startNode, endNode, component });
-}
-function getMorphConfig(component) {
-  return {
-    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-      skipSlotContents(el, toEl, skipUntil);
-      if (isntElement(el))
-        return;
-      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-      if (el.__livewire_replace === true)
-        el.innerHTML = toEl.innerHTML;
-      if (el.__livewire_replace_self === true) {
-        el.outerHTML = toEl.outerHTML;
-        return skip();
-      }
-      if (el.__livewire_ignore === true)
-        return skip();
-      if (el.__livewire_ignore_self === true)
-        childrenOnly();
-      if (el.__livewire_ignore_children === true)
-        return skipChildren();
-      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el))
-        toEl.__livewire = component;
-    },
-    updated: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.updated", { el, component });
-    },
-    removing: (el, skip) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removing", { el, component, skip });
-    },
-    removed: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removed", { el, component });
-    },
-    adding: (el) => {
-      trigger("morph.adding", { el, component });
-    },
-    added: (el) => {
-      if (isntElement(el))
-        return;
-      const closestComponentId = closestComponent(el).id;
-      trigger("morph.added", { el });
-    },
-    key: (el) => {
-      if (isntElement(el))
-        return;
-      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-    },
-    lookahead: false
-  };
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
 
 // js/features/supportMorphDom.js
 on("effect", ({ component, effects }) => {
@@ -10157,7 +10190,7 @@ on("effect", ({ component, effects }) => {
     return;
   queueMicrotask(() => {
     queueMicrotask(() => {
-      morph2(component, component.el, html);
+      morph(component, component.el, html);
     });
   });
 });

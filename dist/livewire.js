@@ -4377,6 +4377,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "js": "$js",
     "get": "$get",
     "set": "$set",
+    "ref": "$ref",
     "call": "$call",
     "hook": "$hook",
     "commit": "$commit",
@@ -4461,6 +4462,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return await requestCommit(component);
     }
     return Promise.resolve();
+  });
+  wireProperty("$ref", (component) => (name) => {
+    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
+    console.log(component.el, refEl);
+    if (!refEl)
+      throw `Ref "${name}" not found`;
+    return refEl.__livewire?.$wire;
   });
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
@@ -4648,6 +4656,205 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
+  // js/morph.js
+  function morph(component, el, html) {
+    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let wrapper = document.createElement(wrapperTag);
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.setAttribute("wire:snapshot", component.snapshotEncoded);
+    let effects = { ...component.effects };
+    delete effects.html;
+    to.setAttribute("wire:effects", JSON.stringify(effects));
+    to.__livewire = component;
+    trigger2("morph", { el, toEl: to, component });
+    module_default.morph(el, to, getMorphConfig(component));
+    trigger2("morphed", { el, component });
+  }
+  function morphPartial(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement;
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+    let toContainer = document.createElement(fromContainerTag);
+    toContainer.innerHTML = toHTML;
+    toContainer.__livewire = component;
+    let parentElement = component.el.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    let parentComponent;
+    try {
+      parentComponent = parentElement ? closestComponent(parentElement) : null;
+    } catch (e) {
+    }
+    if (parentComponent) {
+      let parentProviderWrapper = document.createElement(parentElementTag);
+      parentProviderWrapper.appendChild(toContainer);
+      parentProviderWrapper.__livewire = parentComponent;
+    }
+    trigger2("partial.morph", { startNode, endNode, component });
+    module_default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+    trigger2("partial.morphed", { startNode, endNode, component });
+  }
+  function getMorphConfig(component) {
+    return {
+      updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+        skipSlotContents(el, toEl, skipUntil);
+        if (isntElement(el))
+          return;
+        trigger2("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+        if (el.__livewire_replace === true)
+          el.innerHTML = toEl.innerHTML;
+        if (el.__livewire_replace_self === true) {
+          el.outerHTML = toEl.outerHTML;
+          return skip();
+        }
+        if (el.__livewire_ignore === true)
+          return skip();
+        if (el.__livewire_ignore_self === true)
+          childrenOnly();
+        if (el.__livewire_ignore_children === true)
+          return skipChildren();
+        if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el))
+          toEl.__livewire = component;
+      },
+      updated: (el) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.updated", { el, component });
+      },
+      removing: (el, skip) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.removing", { el, component, skip });
+      },
+      removed: (el) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.removed", { el, component });
+      },
+      adding: (el) => {
+        trigger2("morph.adding", { el, component });
+      },
+      added: (el) => {
+        if (isntElement(el))
+          return;
+        const closestComponentId = closestComponent(el).id;
+        trigger2("morph.added", { el });
+      },
+      key: (el) => {
+        if (isntElement(el))
+          return;
+        return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+      },
+      lookahead: false
+    };
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
+  }
+
+  // js/features/supportSlots.js
+  on2("effect", ({ component, effects }) => {
+    let slots = effects.slots;
+    if (!slots)
+      return;
+    let parentId = component.el.getAttribute("wire:id");
+    Object.entries(slots).forEach(([childId, childSlots]) => {
+      let childComponent = findComponent(childId);
+      if (!childComponent)
+        return;
+      Object.entries(childSlots).forEach(([name, content]) => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            queueMicrotask(() => {
+              let fullName = parentId ? `${name}:${parentId}` : name;
+              let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+              if (!startNode || !endNode)
+                return;
+              let strippedContent = stripSlotComments(content, fullName);
+              morphPartial(childComponent, startNode, endNode, strippedContent);
+            });
+          });
+        });
+      });
+    });
+  });
+  function stripSlotComments(content, slotName) {
+    let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+    let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+    let stripped = content.replace(startComment, "").replace(endComment, "");
+    return stripped.trim();
+  }
+  function findSlotComments(rootEl, slotName) {
+    let startNode = null;
+    let endNode = null;
+    walkElements(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+            startNode = node;
+          }
+          if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements(child, callback);
+    });
+  }
+  function skipSlotContents(el, toEl, skipUntil) {
+    if (isStartMarker(el) && isStartMarker(toEl)) {
+      skipUntil((node) => isEndMarker(node));
+    }
+  }
+  function isStartMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+  }
+  function isEndMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+  }
+  function extractSlotData(el) {
+    let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+    let match = el.textContent.match(regex);
+    if (!match)
+      return;
+    return {
+      name: match[1],
+      parentId: match[2] || null
+    };
+  }
+  function checkPreviousSiblingForSlotStartMarker(el) {
+    let node = el.previousSibling;
+    while (node) {
+      if (isStartMarker(node)) {
+        return node;
+      }
+      node = node.previousSibling;
+    }
+    return null;
+  }
+
   // js/store.js
   var components = {};
   function initComponent(el) {
@@ -4676,6 +4883,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return component;
   }
   function closestComponent(el, strict = true) {
+    let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
+    if (slotStartMarker) {
+      let { name, parentId } = extractSlotData(slotStartMarker);
+      if (parentId) {
+        return findComponent(parentId);
+      }
+    }
     let closestRoot2 = Alpine.findClosest(el, (i) => i.__livewire);
     if (!closestRoot2) {
       if (strict)
@@ -8306,7 +8520,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // ../alpine/packages/morph/dist/module.esm.js
-  function morph(from, toHtml, options) {
+  function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let context = createMorphContext(options);
     let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
@@ -8586,9 +8800,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     return context;
   }
-  morph.step = () => {
+  morph2.step = () => {
   };
-  morph.log = () => {
+  morph2.log = () => {
   };
   function shouldSkip(hook, ...args) {
     let skip = false;
@@ -8681,7 +8895,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.id = fromId;
   }
   function src_default8(Alpine3) {
-    Alpine3.morph = morph;
+    Alpine3.morph = morph2;
     Alpine3.morphBetween = morphBetween;
   }
   var module_default8 = src_default8;
@@ -9074,185 +9288,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/features/supportSlots.js
-  on2("effect", ({ component, effects }) => {
-    let slots = effects.slots;
-    if (!slots)
-      return;
-    let parentId = component.el.getAttribute("wire:id");
-    Object.entries(slots).forEach(([childId, childSlots]) => {
-      let childComponent = findComponent(childId);
-      if (!childComponent)
-        return;
-      Object.entries(childSlots).forEach(([name, content]) => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            queueMicrotask(() => {
-              let fullName = parentId ? `${name}:${parentId}` : name;
-              let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-              if (!startNode || !endNode)
-                return;
-              let strippedContent = stripSlotComments(content, fullName);
-              morphPartial(childComponent, startNode, endNode, strippedContent);
-            });
-          });
-        });
-      });
-    });
-  });
-  function stripSlotComments(content, slotName) {
-    let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-    let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-    let stripped = content.replace(startComment, "").replace(endComment, "");
-    return stripped.trim();
-  }
-  function findSlotComments(rootEl, slotName) {
-    let startNode = null;
-    let endNode = null;
-    walkElements(rootEl, (el, skip) => {
-      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-        return skip();
-      }
-      Array.from(el.childNodes).forEach((node) => {
-        if (node.nodeType === Node.COMMENT_NODE) {
-          if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-            startNode = node;
-          }
-          if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-            endNode = node;
-          }
-        }
-      });
-    });
-    return { startNode, endNode };
-  }
-  function walkElements(el, callback) {
-    let skip = false;
-    callback(el, () => skip = true);
-    if (skip)
-      return;
-    Array.from(el.children).forEach((child) => {
-      walkElements(child, callback);
-    });
-  }
-  function skipSlotContents(el, toEl, skipUntil) {
-    if (isStartMarker(el) && isStartMarker(toEl)) {
-      skipUntil((node) => isEndMarker(node));
-    }
-  }
-  function isStartMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-  }
-  function isEndMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-  }
-
-  // js/morph.js
-  function morph2(component, el, html) {
-    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-    let wrapper = document.createElement(wrapperTag);
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.setAttribute("wire:snapshot", component.snapshotEncoded);
-    let effects = { ...component.effects };
-    delete effects.html;
-    to.setAttribute("wire:effects", JSON.stringify(effects));
-    to.__livewire = component;
-    trigger2("morph", { el, toEl: to, component });
-    module_default.morph(el, to, getMorphConfig(component));
-    trigger2("morphed", { el, component });
-  }
-  function morphPartial(component, startNode, endNode, toHTML) {
-    let fromContainer = startNode.parentElement;
-    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-    let toContainer = document.createElement(fromContainerTag);
-    toContainer.innerHTML = toHTML;
-    toContainer.__livewire = component;
-    let parentElement = component.el.parentElement;
-    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-    let parentComponent;
-    try {
-      parentComponent = parentElement ? closestComponent(parentElement) : null;
-    } catch (e) {
-    }
-    if (parentComponent) {
-      let parentProviderWrapper = document.createElement(parentElementTag);
-      parentProviderWrapper.appendChild(toContainer);
-      parentProviderWrapper.__livewire = parentComponent;
-    }
-    trigger2("partial.morph", { startNode, endNode, component });
-    module_default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-    trigger2("partial.morphed", { startNode, endNode, component });
-  }
-  function getMorphConfig(component) {
-    return {
-      updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-        skipSlotContents(el, toEl, skipUntil);
-        if (isntElement(el))
-          return;
-        trigger2("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-        if (el.__livewire_replace === true)
-          el.innerHTML = toEl.innerHTML;
-        if (el.__livewire_replace_self === true) {
-          el.outerHTML = toEl.outerHTML;
-          return skip();
-        }
-        if (el.__livewire_ignore === true)
-          return skip();
-        if (el.__livewire_ignore_self === true)
-          childrenOnly();
-        if (el.__livewire_ignore_children === true)
-          return skipChildren();
-        if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el))
-          toEl.__livewire = component;
-      },
-      updated: (el) => {
-        if (isntElement(el))
-          return;
-        trigger2("morph.updated", { el, component });
-      },
-      removing: (el, skip) => {
-        if (isntElement(el))
-          return;
-        trigger2("morph.removing", { el, component, skip });
-      },
-      removed: (el) => {
-        if (isntElement(el))
-          return;
-        trigger2("morph.removed", { el, component });
-      },
-      adding: (el) => {
-        trigger2("morph.adding", { el, component });
-      },
-      added: (el) => {
-        if (isntElement(el))
-          return;
-        const closestComponentId = closestComponent(el).id;
-        trigger2("morph.added", { el });
-      },
-      key: (el) => {
-        if (isntElement(el))
-          return;
-        return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-      },
-      lookahead: false
-    };
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
-  }
-
   // js/features/supportMorphDom.js
   on2("effect", ({ component, effects }) => {
     let html = effects.html;
@@ -9260,7 +9295,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     queueMicrotask(() => {
       queueMicrotask(() => {
-        morph2(component, component.el, html);
+        morph(component, component.el, html);
       });
     });
   });
