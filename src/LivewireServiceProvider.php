@@ -119,6 +119,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
             \Livewire\V4\Slots\SupportSlots::class,
+            \Livewire\V4\HtmlAttributes\SupportsHtmlAttributes::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,

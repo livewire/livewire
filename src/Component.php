@@ -18,6 +18,7 @@ use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\V4\Slots\HandlesSlots;
+use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
 use BadMethodCallException;
 
 abstract class Component
@@ -38,6 +39,7 @@ abstract class Component
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
     use HandlesSlots;
+    use HandlesHtmlAttributes;
 
     protected $__id;
     protected $__name;

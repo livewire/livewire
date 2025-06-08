@@ -125,7 +125,7 @@ class WireTagCompiler extends ComponentTagCompiler
     protected function compileSimpleComponent(string $componentName, array $attributes): string
     {
         // Process attributes like the original implementation
-        $attributes = $this->processAttributes($attributes);
+        // $attributes = $this->processAttributes($attributes);
 
         if (isset($attributes['key']) || isset($attributes['wire:key'])) {
             $key = $attributes['key'] ?? $attributes['wire:key'];
@@ -146,7 +146,7 @@ class WireTagCompiler extends ComponentTagCompiler
         $slots = $this->extractSlots($content);
 
         // Process attributes
-        $attributes = $this->processAttributes($attributes);
+        // $attributes = $this->processAttributes($attributes);
 
         // Build the compiled output
         $compiled = '';

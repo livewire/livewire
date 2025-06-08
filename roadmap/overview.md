@@ -2,23 +2,24 @@
 Livewire 4 is a new version of Livewire focused on making livewire faster, more stable, and more intuitive.
 
 ## Pre-beta
-- [ ] [Add single file components](single-file-components.md)
-- [ ] [Add tailwind merge](tailwind-merge.md)
-- [ ] [Support for slots](component-slots.md)
+- [x] [Add single file components](single-file-components.md)
+- [x] [Add tailwind merge](tailwind-merge.md)
+- [x] [Support for slots](component-slots.md)
+* [ ] [Support for attributes](component-attributes.md)
 - [ ] [Add streaming improvements](streaming.md)
 - [ ] [Livewire::route() for pages](livewire-route.md)
 - [ ] [Add partials](partials.md)
 - [ ] [Naked @script tags](naked-scripts.md)
 - [ ] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
 - [ ] [Blade component code folding](code-folding.md)
-- [ ] [Add `wire:ref`](wire-ref.md)
+- [x] [Add `wire:ref`](wire-ref.md)
 - [ ] [Add `bootstrap/livewire.php` configuration file](configuration.md)
 - [ ] [Add `artisan livewire:install` command](install-command.md)
 - [ ] [Fix component not found error](no-component-not-found.md)
-- [ ] [Smart `wire:key`s](smart-keys.md)
+- [x] [Smart `wire:key`s](smart-keys.md)
 - [ ] [Support multiple file uploads in S3](multiple-file-uploads-s3.md)
 - [ ] [Convert commands to laravel prompts](use-prompts.md)
-- [ ] [Release tokens](release-tokens.md)
+- [x] [Release tokens](release-tokens.md)
 
 ## Post-beta
 - [ ] [wire:navigate fixes](fix-wire-navigate.md)
@@ -43,7 +44,6 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 * (laracon) [wire:loading / data-loading stuff?]
 * (laracon) [bailable/async/parralel requests]
 * (laracon) [static methods]
-* (laracon) [Support for attributes](component-attributes.md)
 * (laracon) [Sunset Volt](sunset-volt.md)
 * [scoped polling]
 * [access to original request]

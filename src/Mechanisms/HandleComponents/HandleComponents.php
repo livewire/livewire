@@ -46,6 +46,8 @@ class HandleComponents extends Mechanism
             $component->withSlots($slots, $parent);
         }
 
+        $component->withHtmlAttributes($params);
+
         $this->pushOntoComponentStack($component);
 
         $context = new ComponentContext($component, mounting: true);
