@@ -42,18 +42,23 @@ class HandleComponents extends Mechanism
 
         $component = app('livewire')->new($name);
 
+        // Separate params into component properties and HTML attributes
+        [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
+
         if (! empty($slots)) {
             $component->withSlots($slots, $parent);
         }
 
-        $component->withHtmlAttributes($params);
+        if (! empty($htmlAttributes)) {
+            $component->withAttributes($htmlAttributes);
+        }
 
         $this->pushOntoComponentStack($component);
 
         $context = new ComponentContext($component, mounting: true);
 
         if (config('app.debug')) $start = microtime(true);
-        $finish = trigger('mount', $component, $params, $key, $parent);
+        $finish = trigger('mount', $component, $componentParams, $key, $parent);
         if (config('app.debug')) trigger('profile', 'mount', $component->getId(), [$start, microtime(true)]);
 
         if (config('app.debug')) $start = microtime(true);
@@ -76,6 +81,46 @@ class HandleComponents extends Mechanism
         $this->popOffComponentStack();
 
         return $finish($html, $snapshot);
+    }
+
+    protected function separateParamsAndAttributes($component, $params)
+    {
+        $componentParams = [];
+        $htmlAttributes = [];
+
+        // Get component's properties and mount method parameters
+        $componentProperties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $mountParams = $this->getMountMethodParameters($component);
+
+        foreach ($params as $key => $value) {
+            $camelKey = str($key)->camel()->toString();
+
+            // Check if this maps to a component property or mount param
+            if (array_key_exists($camelKey, $componentProperties) || in_array($camelKey, $mountParams)) {
+                $componentParams[$camelKey] = $value;
+            } else {
+                // Keep as HTML attribute (preserve kebab-case)
+                $htmlAttributes[$key] = $value;
+            }
+        }
+
+        return [$componentParams, $htmlAttributes];
+    }
+
+    protected function getMountMethodParameters($component)
+    {
+        if (! method_exists($component, 'mount')) {
+            return [];
+        }
+
+        $reflection = new \ReflectionMethod($component, 'mount');
+        $parameters = [];
+
+        foreach ($reflection->getParameters() as $parameter) {
+            $parameters[] = $parameter->getName();
+        }
+
+        return $parameters;
     }
 
     protected function shortCircuitMount($name, $params, $key, $parent, $slots)
