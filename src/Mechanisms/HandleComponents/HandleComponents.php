@@ -50,7 +50,7 @@ class HandleComponents extends Mechanism
         }
 
         if (! empty($htmlAttributes)) {
-            $component->withAttributes($htmlAttributes);
+            $component->withHtmlAttributes($htmlAttributes);
         }
 
         $this->pushOntoComponentStack($component);
