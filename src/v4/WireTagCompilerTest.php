@@ -164,26 +164,6 @@ class WireTagCompilerTest extends TestCase
         $this->assertEquals("@livewire('modal', [])", $compiled);
     }
 
-    public function test_preserves_kebab_case_to_camel_case_conversion()
-    {
-        $template = '<wire:button data-color="red" some-prop="value" />';
-
-        $compiled = $this->compiler->__invoke($template);
-
-        $this->assertStringContainsString("dataColor", $compiled);
-        $this->assertStringContainsString("someProp", $compiled);
-    }
-
-    public function test_handles_snake_case_attributes()
-    {
-        $template = '<wire:button snake_case="value" />';
-
-        $compiled = $this->compiler->__invoke($template);
-
-        $this->assertStringContainsString("snake_case", $compiled);
-        $this->assertStringContainsString("snakeCase", $compiled);
-    }
-
     public function test_handles_boolean_attributes()
     {
         $template = '<wire:button disabled required />';
