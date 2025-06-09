@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\v4\Compiler;
+namespace Livewire\V4\Compiler;
 
 class ParsedComponent
 {

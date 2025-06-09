@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\v4\Registry\Exceptions;
+namespace Livewire\V4\Registry\Exceptions;
 
 use Livewire\Exceptions\BypassViewHandler;
 

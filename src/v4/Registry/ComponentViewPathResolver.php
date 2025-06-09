@@ -1,9 +1,9 @@
 <?php
 
-namespace Livewire\v4\Registry;
+namespace Livewire\V4\Registry;
 
 use Livewire\Mechanisms\Mechanism;
-use Livewire\v4\Registry\Exceptions\ViewNotFoundException;
+use Livewire\V4\Registry\Exceptions\ViewNotFoundException;
 
 class ComponentViewPathResolver extends Mechanism
 {

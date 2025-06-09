@@ -221,7 +221,7 @@ The first piece of the V4 registry system has been implemented: the **ComponentV
 The V4 registry system is organized in:
 
 ```
-src/v4/Registry/
+src/V4/Registry/
 ├── ComponentViewPathResolver.php
 ├── ComponentViewPathResolverUnitTest.php
 └── Exceptions/
@@ -232,8 +232,8 @@ This structure keeps the registry system separate from future V4 features.
 
 ### ComponentViewPathResolver Implementation
 
-**Location**: `src/v4/Registry/ComponentViewPathResolver.php`
-**Namespace**: `Livewire\v4\Registry`
+**Location**: `src/V4/Registry/ComponentViewPathResolver.php`
+**Namespace**: `Livewire\V4\Registry`
 
 The `ComponentViewPathResolver` class extends `Livewire\Mechanisms\Mechanism` and provides the foundation for view-first component resolution. It has three main public methods:
 
@@ -307,12 +307,12 @@ Comprehensive unit tests cover:
 - ✅ Path normalization
 - ✅ Priority system (aliases override defaults)
 
-**Test Command**: `phpunit src/v4/Registry/ComponentViewPathResolverUnitTest.php`
+**Test Command**: `phpunit src/V4/Registry/ComponentViewPathResolverUnitTest.php`
 
 ### Example Usage
 
 ```php
-use Livewire\v4\Registry\ComponentViewPathResolver;
+use Livewire\V4\Registry\ComponentViewPathResolver;
 
 $resolver = new ComponentViewPathResolver();
 

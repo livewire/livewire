@@ -106,7 +106,7 @@ Our behavior should match It's behavior exactly.
 
 Because this is basically a PHP port of a JS tool, I propose the following workflow.
 
-Create a new fold called src/v4/Tailwind
+Create a new fold called src/V4/Tailwind
 
 In it create an entrypoint class caleed Merge.php
 

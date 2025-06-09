@@ -21,7 +21,7 @@ The complete V4 single-file component compiler system has been implemented with 
 The V4 compiler system is organized in:
 
 ```
-src/v4/Compiler/
+src/V4/Compiler/
 ├── SingleFileComponentCompiler.php
 ├── CompilationResult.php
 ├── ParsedComponent.php
@@ -37,8 +37,8 @@ src/v4/Compiler/
 ### Core Classes
 
 #### 1. **SingleFileComponentCompiler**
-**Location**: `src/v4/Compiler/SingleFileComponentCompiler.php`
-**Namespace**: `Livewire\v4\Compiler`
+**Location**: `src/V4/Compiler/SingleFileComponentCompiler.php`
+**Namespace**: `Livewire\V4\Compiler`
 
 The main compiler class that handles parsing, compilation, and caching of single-file components.
 
@@ -55,7 +55,7 @@ public function getCompiledPath(string $viewPath): string
 ```
 
 #### 2. **CompilationResult**
-**Location**: `src/v4/Compiler/CompilationResult.php`
+**Location**: `src/V4/Compiler/CompilationResult.php`
 
 Represents the result of compiling a single-file component, containing all generated paths and metadata.
 
@@ -71,7 +71,7 @@ public string $hash;           // Cache invalidation hash
 ```
 
 #### 3. **ParsedComponent**
-**Location**: `src/v4/Compiler/ParsedComponent.php`
+**Location**: `src/V4/Compiler/ParsedComponent.php`
 
 Represents the parsed result of a single-file component with frontmatter and view content separated.
 
@@ -175,7 +175,7 @@ The compiler implements a sophisticated caching system:
 
 #### Basic Usage
 ```php
-use Livewire\v4\Compiler\SingleFileComponentCompiler;
+use Livewire\V4\Compiler\SingleFileComponentCompiler;
 
 $compiler = new SingleFileComponentCompiler();
 
@@ -254,7 +254,7 @@ The compiler provides specific exceptions for different error scenarios:
 
 ### Test Coverage
 
-**Test Command**: `phpunit src/v4/Compiler/ --testdox`
+**Test Command**: `phpunit src/V4/Compiler/ --testdox`
 
 #### ParsedComponent Tests (10 tests)
 - Component creation (inline/external)
@@ -280,8 +280,8 @@ The compiler provides specific exceptions for different error scenarios:
 
 #### With Registry System
 ```php
-use Livewire\v4\Registry\ComponentViewPathResolver;
-use Livewire\v4\Compiler\SingleFileComponentCompiler;
+use Livewire\V4\Registry\ComponentViewPathResolver;
+use Livewire\V4\Compiler\SingleFileComponentCompiler;
 
 // Resolve component name to view path
 $resolver = new ComponentViewPathResolver();

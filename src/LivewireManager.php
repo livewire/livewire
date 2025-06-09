@@ -2,7 +2,7 @@
 
 namespace Livewire;
 
-use Livewire\v4\Registry\ComponentViewPathResolver;
+use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;

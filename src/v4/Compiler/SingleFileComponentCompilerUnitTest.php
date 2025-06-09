@@ -1,10 +1,10 @@
 <?php
 
-namespace Livewire\v4\Compiler;
+namespace Livewire\V4\Compiler;
 
-use Livewire\v4\Compiler\Exceptions\CompilationException;
-use Livewire\v4\Compiler\Exceptions\ParseException;
-use Livewire\v4\Compiler\Exceptions\InvalidComponentException;
+use Livewire\V4\Compiler\Exceptions\CompilationException;
+use Livewire\V4\Compiler\Exceptions\ParseException;
+use Livewire\V4\Compiler\Exceptions\InvalidComponentException;
 use Illuminate\Support\Facades\File;
 
 class SingleFileComponentCompilerUnitTest extends \Tests\TestCase

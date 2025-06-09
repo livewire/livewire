@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\v4\Tailwind;
+namespace Livewire\V4\Tailwind;
 
 use TailwindMerge\TailwindMerge;
 

@@ -128,7 +128,7 @@ Becomes:
 
 ### Implementation Details
 
-#### **Location**: `src/v4/Compiler/SingleFileComponentCompiler.php`
+#### **Location**: `src/V4/Compiler/SingleFileComponentCompiler.php`
 
 The transformation is handled by the `transformNakedScripts()` method, called during view compilation:
 
@@ -173,7 +173,7 @@ protected function transformNakedScripts(string $viewContent): string
 
 Comprehensive test coverage with 6 dedicated tests:
 
-**Test Command**: `phpunit src/v4/Compiler/SingleFileComponentCompilerUnitTest.php --filter script`
+**Test Command**: `phpunit src/V4/Compiler/SingleFileComponentCompilerUnitTest.php --filter script`
 
 #### Naked Script Tests (6 tests)
 - ✅ **Basic transformation** - Wraps naked scripts with @script directives

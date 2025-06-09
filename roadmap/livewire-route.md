@@ -269,7 +269,7 @@ The V4 page routing system has been successfully implemented with comprehensive 
 The page routing system integrates with existing V4 components:
 
 ```
-src/v4/
+src/V4/
 ├── Registry/
 │   ├── ComponentViewPathResolver.php    # View path resolution
 │   └── ComponentViewPathResolverUnitTest.php
@@ -300,7 +300,7 @@ function route($uri, $component)
 ```
 
 #### 2. **Layout Directive Compilation**
-**Location**: `src/v4/Compiler/SingleFileComponentCompiler.php`
+**Location**: `src/V4/Compiler/SingleFileComponentCompiler.php`
 
 Parses `@layout()` directives and compiles them to `#[Layout]` attributes:
 
@@ -313,7 +313,7 @@ Parses `@layout()` directives and compiles them to `#[Layout]` attributes:
 ```
 
 #### 3. **Component Resolution**
-**Location**: `src/v4/IntegrateV4.php`
+**Location**: `src/V4/IntegrateV4.php`
 
 Integrates with the missing component resolver for automatic compilation:
 
@@ -362,7 +362,7 @@ app('livewire')->resolveMissingComponent(function ($componentName) {
 
 Comprehensive testing covers the complete page routing flow:
 
-**Test Command**: `phpunit src/v4/Page/`
+**Test Command**: `phpunit src/V4/Page/`
 
 #### Page Routing Tests (1 test)
 - Full page route registration and rendering
