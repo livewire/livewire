@@ -16,8 +16,11 @@ class IntegrateV4
     {
         $supportedExtensions = ['.blade.php', '.wire.php'];
 
-        $this->finder = new ComponentViewPathResolver(null, $supportedExtensions);
-        $this->compiler = new SingleFileComponentCompiler(null, $supportedExtensions);
+        app()->alias(ComponentViewPathResolver::class, 'livewire.resolver');
+        app()->singleton(ComponentViewPathResolver::class);
+        $this->finder = app('livewire.resolver');
+
+        $this->compiler = app(SingleFileComponentCompiler::class);
     }
 
     public function __invoke()
