@@ -81,6 +81,20 @@ class SingleFileComponentCompiler extends Mechanism
 
     protected function parseComponent(string $content): ParsedComponent
     {
+        // Extract layout directive first if present
+        $layoutTemplate = null;
+        $layoutData = null;
+
+        if (preg_match('/@layout\s*\(\s*[\'"]([^\'"]+)[\'"]\s*(?:,\s*(\[.*?\]))?\s*\)/s', $content, $layoutMatches)) {
+            $layoutTemplate = $layoutMatches[1];
+            if (isset($layoutMatches[2])) {
+                // Parse the array string - this is a simple implementation
+                $layoutData = $this->parseLayoutData($layoutMatches[2]);
+            }
+            // Remove the layout directive from content for further processing
+            $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content);
+        }
+
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
             $externalClass = $matches[1];
@@ -90,13 +104,16 @@ class SingleFileComponentCompiler extends Mechanism
                 frontmatter: '',
                 viewContent: trim($viewContent),
                 isExternal: true,
-                externalClass: $externalClass
+                externalClass: $externalClass,
+                layoutTemplate: $layoutTemplate,
+                layoutData: $layoutData
             );
         }
 
         // Handle inline class: @php ... @endphp
         if (preg_match('/@php\s*(.*?)\s*@endphp/s', $content, $matches)) {
             $frontmatter = trim($matches[1]);
+            // Use the modified $content (after layout removal) for the view content
             $viewContent = preg_replace('/@php\s*.*?\s*@endphp/s', '', $content);
 
             // Validate that frontmatter contains a class definition...
@@ -108,11 +125,25 @@ class SingleFileComponentCompiler extends Mechanism
                 frontmatter: $frontmatter,
                 viewContent: trim($viewContent),
                 isExternal: false,
-                externalClass: null
+                externalClass: null,
+                layoutTemplate: $layoutTemplate,
+                layoutData: $layoutData
             );
         }
 
         throw new InvalidComponentException("Component must contain either @php(new ClassName) or @php...@endphp block");
+    }
+
+    protected function parseLayoutData(string $arrayString): ?array
+    {
+        // Simple array parsing - handles basic key-value pairs
+        // This could be enhanced for more complex array structures
+        try {
+            return eval("return $arrayString;");
+        } catch (\ParseError $e) {
+            // If eval fails, return null and let the layout work without data
+            return null;
+        }
     }
 
     protected function generateCompilationResult(string $viewPath, ParsedComponent $parsed, string $hash): CompilationResult
@@ -153,11 +184,17 @@ class SingleFileComponentCompiler extends Mechanism
         // Extract class definition from frontmatter...
         $classBody = $this->extractClassBody($parsed->frontmatter);
 
+        // Generate layout attribute if present
+        $layoutAttribute = '';
+        if ($parsed->hasLayout()) {
+            $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
+        }
+
         $classContent = "<?php
 
 namespace {$namespace};
 
-class {$className} extends \\Livewire\\Component
+{$layoutAttribute}class {$className} extends \\Livewire\\Component
 {
 {$classBody}
 
@@ -169,6 +206,38 @@ class {$className} extends \\Livewire\\Component
 ";
 
         File::put($result->classPath, $classContent);
+    }
+
+    protected function generateLayoutAttribute(?string $template, ?array $data): string
+    {
+        if (empty($template)) {
+            return '';
+        }
+
+        $dataString = '';
+        if (!empty($data)) {
+            $dataString = ', ' . $this->arrayToString($data);
+        }
+
+        return "#[\\Livewire\\Attributes\\Layout('{$template}'{$dataString})]\n";
+    }
+
+    protected function arrayToString(array $data): string
+    {
+        $parts = [];
+        foreach ($data as $key => $value) {
+            if (is_string($value)) {
+                $parts[] = "'{$key}' => '{$value}'";
+            } elseif (is_numeric($value)) {
+                $parts[] = "'{$key}' => {$value}";
+            } elseif (is_bool($value)) {
+                $parts[] = "'{$key}' => " . ($value ? 'true' : 'false');
+            } else {
+                // For complex values, convert to string representation
+                $parts[] = "'{$key}' => " . var_export($value, true);
+            }
+        }
+        return '[' . implode(', ', $parts) . ']';
     }
 
     protected function generateView(CompilationResult $result, ParsedComponent $parsed): void

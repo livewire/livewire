@@ -8,17 +8,23 @@ class ParsedComponent
     public string $viewContent;
     public bool $isExternal;
     public ?string $externalClass;
+    public ?string $layoutTemplate;
+    public ?array $layoutData;
 
     public function __construct(
         string $frontmatter,
         string $viewContent,
         bool $isExternal = false,
-        ?string $externalClass = null
+        ?string $externalClass = null,
+        ?string $layoutTemplate = null,
+        ?array $layoutData = null
     ) {
         $this->frontmatter = $frontmatter;
         $this->viewContent = $viewContent;
         $this->isExternal = $isExternal;
         $this->externalClass = $externalClass;
+        $this->layoutTemplate = $layoutTemplate;
+        $this->layoutData = $layoutData;
     }
 
     public function hasInlineClass(): bool
@@ -38,5 +44,10 @@ class ParsedComponent
         }
 
         return $this->frontmatter;
+    }
+
+    public function hasLayout(): bool
+    {
+        return !empty($this->layoutTemplate);
     }
 }

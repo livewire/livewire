@@ -87,4 +87,48 @@ class ParsedComponentUnitTest extends \Tests\TestCase
 
         $this->assertEquals($externalClass, $parsed->getClassDefinition());
     }
+
+    public function test_can_create_component_with_layout()
+    {
+        $frontmatter = 'new class extends Livewire\Component { public $count = 0; }';
+        $viewContent = '<div>{{ $count }}</div>';
+        $layoutTemplate = 'layouts.app';
+        $layoutData = ['title' => 'Counter'];
+
+        $parsed = new ParsedComponent($frontmatter, $viewContent, false, null, $layoutTemplate, $layoutData);
+
+        $this->assertEquals($layoutTemplate, $parsed->layoutTemplate);
+        $this->assertEquals($layoutData, $parsed->layoutData);
+        $this->assertTrue($parsed->hasLayout());
+    }
+
+    public function test_has_layout_returns_false_when_no_layout_template()
+    {
+        $parsed = new ParsedComponent('new class {}', '<div></div>');
+
+        $this->assertFalse($parsed->hasLayout());
+    }
+
+    public function test_has_layout_returns_false_when_layout_template_is_empty()
+    {
+        $parsed = new ParsedComponent('new class {}', '<div></div>', false, null, '');
+
+        $this->assertFalse($parsed->hasLayout());
+    }
+
+    public function test_has_layout_returns_true_when_layout_template_is_set()
+    {
+        $parsed = new ParsedComponent('new class {}', '<div></div>', false, null, 'layouts.app');
+
+        $this->assertTrue($parsed->hasLayout());
+    }
+
+    public function test_layout_data_can_be_null()
+    {
+        $parsed = new ParsedComponent('new class {}', '<div></div>', false, null, 'layouts.app', null);
+
+        $this->assertEquals('layouts.app', $parsed->layoutTemplate);
+        $this->assertNull($parsed->layoutData);
+        $this->assertTrue($parsed->hasLayout());
+    }
 }

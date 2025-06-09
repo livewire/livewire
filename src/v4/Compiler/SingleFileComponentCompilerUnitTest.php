@@ -364,4 +364,115 @@ $notAClass = "invalid";
         $this->assertTrue(file_exists($newCacheDir . '/classes'));
         $this->assertTrue(file_exists($newCacheDir . '/views'));
     }
+
+    public function test_can_compile_component_with_layout_directive()
+    {
+        $componentContent = '@layout(\'layouts.app\')
+
+@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+        $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.app\')]', $classContent);
+    }
+
+    public function test_can_compile_component_with_layout_and_data()
+    {
+        $componentContent = '@layout(\'layouts.app\', [\'title\' => \'Dashboard\', \'active\' => true])
+
+@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+        $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.app\', [\'title\' => \'Dashboard\', \'active\' => true])]', $classContent);
+    }
+
+    public function test_layout_directive_is_removed_from_view_content()
+    {
+        $componentContent = '@layout(\'layouts.app\')
+
+@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertEquals('<div>Count: {{ $count }}</div>', $viewContent);
+        $this->assertStringNotContainsString('@layout', $viewContent);
+    }
+
+    public function test_external_component_with_layout_directive()
+    {
+        $componentContent = '@layout(\'layouts.admin\')
+
+@php(new App\Livewire\AdminCounter)
+
+<div>Admin Counter</div>';
+
+        $viewPath = $this->tempPath . '/admin-counter.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertTrue($result->isExternal);
+        $this->assertEquals('App\Livewire\AdminCounter', $result->externalClass);
+
+        // External components don't generate class files, so layout is stored but not compiled
+        $this->assertFalse(file_exists($result->classPath));
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringNotContainsString('@layout', $viewContent);
+    }
+
+    public function test_component_without_layout_works_as_before()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+        $this->assertStringNotContainsString('#[\\Livewire\\Attributes\\Layout', $classContent);
+        $this->assertStringContainsString('class', $classContent);
+        $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
+    }
 }

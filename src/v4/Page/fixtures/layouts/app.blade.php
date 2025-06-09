@@ -1,1 +1,3 @@
 Layout [{{ $foo }}]
+
+{{ $slot }}
