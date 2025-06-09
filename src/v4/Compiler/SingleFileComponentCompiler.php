@@ -242,7 +242,46 @@ namespace {$namespace};
 
     protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
     {
-        File::put($result->viewPath, $parsed->viewContent);
+        $processedViewContent = $this->transformNakedScripts($parsed->viewContent);
+        File::put($result->viewPath, $processedViewContent);
+    }
+
+    /**
+     * Transform naked <script> tags into @script wrapped scripts.
+     *
+     * This detects script tags that are not already wrapped in @script directives
+     * and automatically wraps them for proper Livewire integration.
+     */
+    protected function transformNakedScripts(string $viewContent): string
+    {
+        // Don't process if there are no script tags
+        if (!str_contains($viewContent, '<script')) {
+            return $viewContent;
+        }
+
+        // Don't process if there are already @script directives present
+        if (str_contains($viewContent, '@script')) {
+            return $viewContent;
+        }
+
+        // Match script tags that are not already wrapped in @script directives
+        // This pattern matches <script> tags with their content and closing </script>
+        $pattern = '/<script\b[^>]*>(.*?)<\/script>/s';
+
+        $transformedContent = preg_replace_callback($pattern, function ($matches) {
+            $fullScriptTag = $matches[0];
+            $scriptContent = $matches[1];
+
+            // Skip empty scripts
+            if (empty(trim($scriptContent))) {
+                return $fullScriptTag;
+            }
+
+            // Wrap the script tag with @script directives
+            return "\n@script\n" . $fullScriptTag . "\n@endscript\n";
+        }, $viewContent);
+
+        return $transformedContent;
     }
 
     protected function extractClassBody(string $frontmatter): string

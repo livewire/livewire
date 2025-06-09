@@ -236,9 +236,21 @@ The compiler provides specific exceptions for different error scenarios:
 - Creates descriptive view names
 
 #### ✅ **Comprehensive Testing**
-- **34 unit tests** covering all functionality
-- **77 assertions** ensuring correctness
-- Tests for parsing, compilation, caching, and error scenarios
+- **50 unit tests** covering all functionality
+- **118 assertions** ensuring correctness
+- Tests for parsing, compilation, caching, layout, naked scripts, and error scenarios
+
+#### ✅ **Layout Directive Support**
+- Parses `@layout()` directives from component frontmatter
+- Compiles to `#[Layout]` attributes on generated classes
+- Supports both simple layouts and layouts with data arrays
+- Works with both inline and external components
+
+#### ✅ **Naked Script Transformation**
+- Automatically detects naked `<script>` tags in component views
+- Wraps them with `@script`/`@endscript` directives during compilation
+- Preserves all script attributes and handles multiple scripts
+- Skips components that already have `@script` directives
 
 ### Test Coverage
 
@@ -254,13 +266,15 @@ The compiler provides specific exceptions for different error scenarios:
 - Class generation flags
 - Namespace/class name extraction
 
-#### SingleFileComponentCompiler Tests (16 tests)
+#### SingleFileComponentCompiler Tests (27 tests)
 - Inline and external component compilation
 - Error handling and validation
 - Generated file content verification
 - Caching and invalidation
 - Name normalization
 - Directory management
+- Layout directive processing
+- Naked script transformation
 
 ### Integration Points
 

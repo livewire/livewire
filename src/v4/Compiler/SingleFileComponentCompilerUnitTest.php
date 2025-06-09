@@ -475,4 +475,174 @@ new class extends Livewire\Component {
         $this->assertStringContainsString('class', $classContent);
         $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
     }
+
+    public function test_transforms_naked_script_tags_to_script_directives()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+</div>
+
+<script>
+    console.log("Hello from naked script");
+</script>';
+
+        $viewPath = $this->tempPath . '/component-with-script.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@script', $viewContent);
+        $this->assertStringContainsString('@endscript', $viewContent);
+        $this->assertStringContainsString('console.log("Hello from naked script");', $viewContent);
+    }
+
+    public function test_does_not_transform_already_wrapped_script_directives()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+</div>
+
+@script
+<script>
+    console.log("Already wrapped script");
+</script>
+@endscript';
+
+        $viewPath = $this->tempPath . '/component-with-wrapped-script.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $viewContent = File::get($result->viewPath);
+        // Should contain the original @script directives exactly once each
+        $this->assertEquals(1, substr_count($viewContent, '@script'));
+        $this->assertEquals(1, substr_count($viewContent, '@endscript'));
+        $this->assertStringContainsString('console.log("Already wrapped script");', $viewContent);
+    }
+
+    public function test_transforms_multiple_naked_scripts()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+</div>
+
+<script>
+    console.log("First script");
+</script>
+
+<script type="module">
+    console.log("Second script");
+</script>';
+
+        $viewPath = $this->tempPath . '/component-with-multiple-scripts.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertEquals(2, substr_count($viewContent, '@script'));
+        $this->assertEquals(2, substr_count($viewContent, '@endscript'));
+        $this->assertStringContainsString('console.log("First script");', $viewContent);
+        $this->assertStringContainsString('console.log("Second script");', $viewContent);
+    }
+
+    public function test_skips_empty_script_tags()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+</div>
+
+<script></script>
+<script>   </script>
+<script>
+    console.log("Non-empty script");
+</script>';
+
+        $viewPath = $this->tempPath . '/component-with-empty-scripts.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $viewContent = File::get($result->viewPath);
+        // Should only wrap the non-empty script
+        $this->assertEquals(1, substr_count($viewContent, '@script'));
+        $this->assertEquals(1, substr_count($viewContent, '@endscript'));
+        $this->assertStringContainsString('console.log("Non-empty script");', $viewContent);
+    }
+
+    public function test_preserves_script_attributes()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+</div>
+
+<script type="module" defer async>
+    console.log("Script with attributes");
+</script>';
+
+        $viewPath = $this->tempPath . '/component-with-script-attributes.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@script', $viewContent);
+        $this->assertStringContainsString('type="module"', $viewContent);
+        $this->assertStringContainsString('defer', $viewContent);
+        $this->assertStringContainsString('async', $viewContent);
+    }
+
+    public function test_does_not_transform_when_no_scripts_present()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+    <p>No scripts here</p>
+</div>';
+
+        $viewPath = $this->tempPath . '/component-without-scripts.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringNotContainsString('@script', $viewContent);
+        $this->assertStringNotContainsString('@endscript', $viewContent);
+    }
 }
