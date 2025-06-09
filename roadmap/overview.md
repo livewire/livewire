@@ -9,7 +9,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] [Add streaming improvements](streaming.md)
 - [x] [Livewire::route() for pages](livewire-route.md)
 - [x] [Add partials](partials.md)
-- [ ] [Naked @script tags](naked-scripts.md)
+- [x] [Naked @script tags](naked-scripts.md)
 - [ ] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
 - [ ] [Blade component code folding](code-folding.md)
 - [x] [Add `wire:ref`](wire-ref.md)

@@ -9,3 +9,7 @@ new class extends \Livewire\Component {
 <div>
     Dashboard
 </div>
+
+<script>
+    console.log(this);
+</script>

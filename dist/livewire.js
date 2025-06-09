@@ -1156,7 +1156,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [] } = {}) => {
+    }, { scope: scope2 = {}, params = [], context } = {}) => {
       let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
       runIfTypeOfFunction(receiver, result);
     };
@@ -1188,12 +1188,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function generateEvaluatorFromString(dataStack, expression, el) {
     let func = generateFunctionFromString(expression, el);
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [] } = {}) => {
+    }, { scope: scope2 = {}, params = [], context } = {}) => {
       func.result = void 0;
       func.finished = false;
       let completeScope = mergeProxies([scope2, ...dataStack]);
       if (typeof func === "function") {
-        let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
+        let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
         if (func.finished) {
           runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
           func.result = void 0;
@@ -9203,7 +9203,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
+            module_default.evaluate(component.el, scriptContent, {
+              context: component.$wire,
+              scope: {
+                "$wire": component.$wire,
+                "$js": component.$wire.$js
+              }
+            });
           });
         });
       });

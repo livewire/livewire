@@ -35,6 +35,11 @@ class IntegrateV4
     {
         app('view')->addNamespace('livewire-compiled', storage_path('framework/livewire/views'));
 
+        app('view')->addNamespace('pages', resource_path('views/pages'));
+        app('view')->addNamespace('layouts', resource_path('views/layouts'));
+
+        app('livewire')->namespace('pages', resource_path('views/pages'));
+
         // Register a missing component resolver with Livewire's component registry
         app('livewire')->resolveMissingComponent(function ($componentName) {
             $viewPath = $this->finder->resolve($componentName);
