@@ -38,7 +38,7 @@ trait HandlesSlots
         $this->slotsForSkippedChildRenders[$childId] = [];
 
         foreach ($slots as $name => $content) {
-            $this->slotsForSkippedChildRenders[$childId][$name] = new Slot($name, $content, $this->getId())->toHtml();
+            $this->slotsForSkippedChildRenders[$childId][$name] = (new Slot($name, $content, $this->getId()))->toHtml();
         }
     }
 
