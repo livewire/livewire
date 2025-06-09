@@ -35,7 +35,7 @@ directive('stream', ({el, directive, cleanup }) => {
         if (modifiers.includes('replace') || replace) {
             el.innerHTML = content
         } else {
-            el.innerHTML = el.innerHTML + content
+            el.insertAdjacentHTML('beforeend', content)
         }
     })
 
