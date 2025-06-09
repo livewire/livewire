@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportPartials;
+namespace Livewire\V4\Partials;
 
 use Livewire\Drawer\Utils;
 

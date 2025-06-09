@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportPartials;
+namespace Livewire\V4\Partials;
 
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;

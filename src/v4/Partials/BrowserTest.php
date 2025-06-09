@@ -1,6 +1,6 @@
 <?php
 
-namespace Livewire\Features\SupportPartials;
+namespace Livewire\V4\Partials;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
@@ -16,7 +16,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public $counter = 0;
 
                 public function boot() {
-                    View::addNamespace('partials', __DIR__ . '/stubs');
+                    View::addNamespace('partials', __DIR__ . '/fixtures');
                 }
 
                 public function changeItems()
@@ -67,7 +67,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public $items = ['foo', 'bar'];
 
                 public function boot() {
-                    View::addNamespace('partials', __DIR__ . '/stubs');
+                    View::addNamespace('partials', __DIR__ . '/fixtures');
                 }
 
                 public function changeItems()
