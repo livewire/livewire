@@ -4323,25 +4323,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     respond(mutableObject);
     response = mutableObject.response;
     let content = await response.text();
-    if (response.aborted) {
+    if (!response.ok) {
+      finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
       handleFailure();
       fail({
         status: response.status,
         content,
         preventDefault: () => preventDefault = true
       });
-      return;
-    }
-    if (!response.ok) {
-      finishProfile({ content: "{}", failed: true });
-      let preventDefault2 = false;
-      handleFailure();
-      fail({
-        status: response.status,
-        content,
-        preventDefault: () => preventDefault2 = true
-      });
-      if (preventDefault2)
+      if (preventDefault)
         return;
       if (response.status === 419) {
         handlePageExpiry();
@@ -4481,7 +4472,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$ref", (component) => (name) => {
     let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
-    console.log(component.el, refEl);
     if (!refEl)
       throw `Ref "${name}" not found`;
     return refEl.__livewire?.$wire;
