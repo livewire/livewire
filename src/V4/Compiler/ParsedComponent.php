@@ -10,6 +10,7 @@ class ParsedComponent
     public ?string $externalClass;
     public ?string $layoutTemplate;
     public ?array $layoutData;
+    public array $inlinePartials;
 
     public function __construct(
         string $frontmatter,
@@ -17,7 +18,8 @@ class ParsedComponent
         bool $isExternal = false,
         ?string $externalClass = null,
         ?string $layoutTemplate = null,
-        ?array $layoutData = null
+        ?array $layoutData = null,
+        array $inlinePartials = []
     ) {
         $this->frontmatter = $frontmatter;
         $this->viewContent = $viewContent;
@@ -25,6 +27,7 @@ class ParsedComponent
         $this->externalClass = $externalClass;
         $this->layoutTemplate = $layoutTemplate;
         $this->layoutData = $layoutData;
+        $this->inlinePartials = $inlinePartials;
     }
 
     public function hasInlineClass(): bool
@@ -49,5 +52,10 @@ class ParsedComponent
     public function hasLayout(): bool
     {
         return !empty($this->layoutTemplate);
+    }
+
+    public function hasInlinePartials(): bool
+    {
+        return !empty($this->inlinePartials);
     }
 }

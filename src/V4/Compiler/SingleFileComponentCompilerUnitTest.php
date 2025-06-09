@@ -633,16 +633,306 @@ new class extends Livewire\Component {
 
 <div>
     Count: {{ $count }}
-    <p>No scripts here</p>
 </div>';
 
-        $viewPath = $this->tempPath . '/component-without-scripts.blade.php';
+        $viewPath = $this->tempPath . '/component-without-script.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
         $viewContent = File::get($result->viewPath);
+
+        $this->assertEquals("<div>\n    Count: {{ \$count }}\n</div>", $viewContent);
         $this->assertStringNotContainsString('@script', $viewContent);
-        $this->assertStringNotContainsString('@endscript', $viewContent);
+    }
+
+    public function test_can_compile_component_with_inline_partials()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $items = ["foo", "bar"];
+}
+@endphp
+
+<div>
+    <h1>Items:</h1>
+
+    @partial("item-list")
+    <ul>
+        @foreach($items as $item)
+            <li>{{ $item }}</li>
+        @endforeach
+    </ul>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/component-with-partials.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertTrue(file_exists($result->viewPath));
+
+        // Check that the main view content has been transformed
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@partial(\'item-list\', \'livewire-compiled::partial_item-list_', $viewContent);
+        $this->assertStringNotContainsString('@endpartial', $viewContent);
+
+        // Check that partial view file was created
+        $partialFiles = glob($this->cacheDir . '/views/partial_item-list_*.blade.php');
+        $this->assertCount(1, $partialFiles);
+
+        // Check partial content
+        $partialContent = File::get($partialFiles[0]);
+        $this->assertStringContainsString('<ul>', $partialContent);
+        $this->assertStringContainsString('@foreach($items as $item)', $partialContent);
+        $this->assertStringContainsString('<li>{{ $item }}</li>', $partialContent);
+    }
+
+    public function test_can_compile_component_with_inline_partials_with_data()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $title = "My List";
+}
+@endphp
+
+<div>
+    @partial("header", ["subtitle" => "Welcome"])
+    <h1>{{ $title }}</h1>
+    <p>{{ $subtitle }}</p>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/component-with-partial-data.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that the main view content includes the data parameter
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@partial(\'header\', \'livewire-compiled::partial_header_', $viewContent);
+        $this->assertStringContainsString('["subtitle" => "Welcome"]', $viewContent);
+    }
+
+    public function test_can_compile_component_with_multiple_inline_partials()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $users = ["Alice", "Bob"];
+}
+@endphp
+
+<div>
+    @partial("header")
+    <h1>Users</h1>
+    @endpartial
+
+    @partial("user-list")
+    <ul>
+        @foreach($users as $user)
+            <li>{{ $user }}</li>
+        @endforeach
+    </ul>
+    @endpartial
+
+    @partial("footer")
+    <p>© 2024</p>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/component-with-multiple-partials.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that all partials were processed
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@partial(\'header\', \'livewire-compiled::partial_header_', $viewContent);
+        $this->assertStringContainsString('@partial(\'user-list\', \'livewire-compiled::partial_user-list_', $viewContent);
+        $this->assertStringContainsString('@partial(\'footer\', \'livewire-compiled::partial_footer_', $viewContent);
+
+        // Check that all partial files were created
+        $headerFiles = glob($this->cacheDir . '/views/partial_header_*.blade.php');
+        $userListFiles = glob($this->cacheDir . '/views/partial_user-list_*.blade.php');
+        $footerFiles = glob($this->cacheDir . '/views/partial_footer_*.blade.php');
+
+        $this->assertCount(1, $headerFiles);
+        $this->assertCount(1, $userListFiles);
+        $this->assertCount(1, $footerFiles);
+    }
+
+    public function test_inline_partials_work_with_external_components()
+    {
+        $componentContent = '@php(new App\Livewire\ExternalComponent)
+
+<div>
+    @partial("content")
+    <h1>External Component</h1>
+    <p>This is from an external component</p>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/external-with-partials.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertTrue($result->isExternal);
+        $this->assertEquals('App\Livewire\ExternalComponent', $result->externalClass);
+
+        // Check that partial was processed
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@partial(\'content\', \'livewire-compiled::partial_content_', $viewContent);
+
+        // Check that partial file was created
+        $partialFiles = glob($this->cacheDir . '/views/partial_content_*.blade.php');
+        $this->assertCount(1, $partialFiles);
+    }
+
+    public function test_inline_partials_work_with_layout_directive()
+    {
+        $componentContent = '@layout(\'layouts.app\')
+
+@php
+new class extends Livewire\Component {
+    public $message = "Hello";
+}
+@endphp
+
+<div>
+    @partial("greeting")
+    <h1>{{ $message }}</h1>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/component-with-layout-and-partials.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that layout attribute was added to class
+        $classContent = File::get($result->classPath);
+        $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.app\')]', $classContent);
+
+        // Check that partial was processed
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@partial(\'greeting\', \'livewire-compiled::partial_greeting_', $viewContent);
+        $this->assertStringNotContainsString('@layout', $viewContent);
+
+        // Check that partial file was created
+        $partialFiles = glob($this->cacheDir . '/views/partial_greeting_*.blade.php');
+        $this->assertCount(1, $partialFiles);
+    }
+
+    public function test_parsed_component_has_inline_partials_method()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>
+    @partial("counter")
+    <span>{{ $count }}</span>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/test-parsed-partials.blade.php';
+        File::put($viewPath, $componentContent);
+
+        // We need to access the parseComponent method through reflection or by using compile
+        $result = $this->compiler->compile($viewPath);
+
+        // Verify files were created which indicates partials were parsed
+        $partialFiles = glob($this->cacheDir . '/views/partial_counter_*.blade.php');
+        $this->assertCount(1, $partialFiles);
+
+        // Verify the partial content
+        $partialContent = File::get($partialFiles[0]);
+        $this->assertStringContainsString('<span>{{ $count }}</span>', $partialContent);
+    }
+
+    public function test_component_without_inline_partials_works_as_before()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/no-partials.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+
+        // Check that no partial files were created
+        $partialFiles = glob($this->cacheDir . '/views/partial_*.blade.php');
+        $this->assertCount(0, $partialFiles);
+
+        // Check view content is unchanged
+        $viewContent = File::get($result->viewPath);
+        $this->assertEquals('<div>Count: {{ $count }}</div>', $viewContent);
+    }
+
+    public function test_generated_class_contains_partial_lookup_property()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $items = ["foo", "bar"];
+}
+@endphp
+
+<div>
+    @partial("item-list")
+    <ul>
+        @foreach($items as $item)
+            <li>{{ $item }}</li>
+        @endforeach
+    </ul>
+    @endpartial
+
+    @partial("header")
+    <h1>Items</h1>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/component-with-lookup.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that class file contains partialLookup property
+        $classContent = File::get($result->classPath);
+
+        $this->assertStringContainsString('protected $partialLookup = [', $classContent);
+        $this->assertStringContainsString("'item-list' => 'livewire-compiled::partial_item-list_", $classContent);
+        $this->assertStringContainsString("'header' => 'livewire-compiled::partial_header_", $classContent);
+    }
+
+    public function test_class_without_partials_does_not_have_lookup_property()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/no-partials-class.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that class file does NOT contain partialLookup property
+        $classContent = File::get($result->classPath);
+        $this->assertStringNotContainsString('partialLookup', $classContent);
     }
 }

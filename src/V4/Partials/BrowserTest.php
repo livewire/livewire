@@ -113,4 +113,63 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSourceHas("<li>bar</li><li>baz</li>\n<li>bob</li><li>lob</li>")
         ;
     }
+
+    public function test_can_use_inline_partials()
+    {
+        $this->markTestSkipped('This feature only works in single file components and we don\'t have a way to test those yet');
+
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $items = ['foo', 'bar'];
+
+                public $counter = 0;
+
+                public function changeItems()
+                {
+                    $this->counter = 1;
+
+                    $this->items = ['baz', 'bob'];
+
+                    $this->partial('basic', ['otherCounter' => $this->counter + 5]);
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="changeItems" dusk="button">Change Items</button>
+
+                    <span dusk="counter">{{ $counter }}</span>
+
+                    @if ($counter > 0)
+                        <?php throw new \Exception('This should not be triggered'); ?>
+                    @endif
+
+                    <div>
+                        @partial('basic', ['otherCounter' => $this->counter + 5])
+                            <div>
+                                <span dusk="other-counter">{{ $otherCounter }}</span>
+
+                                @foreach ($items as $item)
+                                    <div>{{ $item }}</div>
+                                @endforeach
+                            </div>
+                        @endpartial
+                    </div>
+                </div>
+                HTML; }
+        })
+        ->waitForText('foo')
+        ->assertSee('foo')
+        ->assertSee('bar')
+        ->assertSeeIn('@counter', '0')
+        ->assertSeeIn('@other-counter', '5')
+        ->waitForLivewire()->click('@button')
+        ->waitForText('baz')
+        ->assertSee('baz')
+        ->assertSee('bob')
+        ->assertDontSee('foo')
+        ->assertDontSee('bar')
+        ->assertSeeIn('@counter', '0')
+        ->assertSeeIn('@other-counter', '6')
+        ;
+    }
 }

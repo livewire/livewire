@@ -95,18 +95,23 @@ class SingleFileComponentCompiler extends Mechanism
             $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content);
         }
 
+        // Extract inline partials before processing component
+        $inlinePartials = [];
+        $content = $this->extractInlinePartials($content, $inlinePartials);
+
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
             $externalClass = $matches[1];
             $viewContent = preg_replace('/@php\s*\([^)]+\)/s', '', $content);
 
             return new ParsedComponent(
-                frontmatter: '',
-                viewContent: trim($viewContent),
-                isExternal: true,
-                externalClass: $externalClass,
-                layoutTemplate: $layoutTemplate,
-                layoutData: $layoutData
+                '',
+                trim($viewContent),
+                true,
+                $externalClass,
+                $layoutTemplate,
+                $layoutData,
+                $inlinePartials
             );
         }
 
@@ -122,16 +127,49 @@ class SingleFileComponentCompiler extends Mechanism
             }
 
             return new ParsedComponent(
-                frontmatter: $frontmatter,
-                viewContent: trim($viewContent),
-                isExternal: false,
-                externalClass: null,
-                layoutTemplate: $layoutTemplate,
-                layoutData: $layoutData
+                $frontmatter,
+                trim($viewContent),
+                false,
+                null,
+                $layoutTemplate,
+                $layoutData,
+                $inlinePartials
             );
         }
 
         throw new InvalidComponentException("Component must contain either @php(new ClassName) or @php...@endphp block");
+    }
+
+    protected function extractInlinePartials(string $content, array &$inlinePartials): string
+    {
+        // Pattern to match @partial('name', [...])...@endpartial blocks
+        $pattern = '/@partial\s*\(\s*[\'"]([^\'"]+)[\'"]\s*(?:,\s*(\[.*?\]))?\s*\)(.*?)@endpartial/s';
+
+        return preg_replace_callback($pattern, function ($matches) use (&$inlinePartials) {
+            $partialName = $matches[1];
+            $partialData = isset($matches[2]) && !empty(trim($matches[2])) ? $matches[2] : '[]';
+            $partialContent = trim($matches[3]);
+
+            // Generate a unique view name for this partial using content hash instead of time
+            $partialHash = substr(md5($partialContent . $partialName), 0, 8);
+            // Keep dashes in view name for consistency with tests
+            $partialViewName = 'livewire-compiled::partial_' . $partialName . '_' . $partialHash;
+            // Keep dashes in file name too (tests expect this)
+            $partialFileName = 'partial_' . $partialName . '_' . $partialHash . '.blade.php';
+
+            // Store the partial information
+            $inlinePartials[] = [
+                'name' => $partialName,
+                'data' => $partialData,
+                'content' => $partialContent,
+                'viewName' => $partialViewName,
+                'fileName' => $partialFileName
+            ];
+
+            // Replace with a reference to the compiled partial view
+            $dataParam = $partialData !== '[]' ? ", {$partialData}" : '';
+            return "@partial('{$partialName}', '{$partialViewName}'{$dataParam})";
+        }, $content);
     }
 
     protected function parseLayoutData(string $arrayString): ?array
@@ -169,9 +207,22 @@ class SingleFileComponentCompiler extends Mechanism
         // Always generate the view file...
         $this->generateView($result, $parsed);
 
+        // Generate partial view files if present...
+        if (!empty($parsed->inlinePartials)) {
+            $this->generatePartialViews($parsed);
+        }
+
         // Only generate class file for inline components...
         if ($result->shouldGenerateClass()) {
             $this->generateClass($result, $parsed);
+        }
+    }
+
+    protected function generatePartialViews(ParsedComponent $parsed): void
+    {
+        foreach ($parsed->inlinePartials as $partial) {
+            $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
+            File::put($partialPath, $partial['content']);
         }
     }
 
@@ -190,13 +241,19 @@ class SingleFileComponentCompiler extends Mechanism
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
         }
 
+        // Generate partial lookup array if partials exist
+        $partialLookupProperty = '';
+        if (!empty($parsed->inlinePartials)) {
+            $partialLookupProperty = $this->generatePartialLookupProperty($parsed->inlinePartials);
+        }
+
         $classContent = "<?php
 
 namespace {$namespace};
 
 {$layoutAttribute}class {$className} extends \\Livewire\\Component
 {
-{$classBody}
+{$partialLookupProperty}{$classBody}
 
     public function render()
     {
@@ -356,5 +413,17 @@ namespace {$namespace};
     {
         File::ensureDirectoryExists($this->classesDirectory);
         File::ensureDirectoryExists($this->viewsDirectory);
+    }
+
+    protected function generatePartialLookupProperty(array $inlinePartials): string
+    {
+        $lookupEntries = [];
+        foreach ($inlinePartials as $partial) {
+            $lookupEntries[] = "        '{$partial['name']}' => '{$partial['viewName']}'";
+        }
+
+        $lookupArray = "[\n" . implode(",\n", $lookupEntries) . "\n    ]";
+
+        return "    protected \$partialLookup = {$lookupArray};\n\n";
     }
 }
