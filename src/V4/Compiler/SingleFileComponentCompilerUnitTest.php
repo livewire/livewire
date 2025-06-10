@@ -935,4 +935,147 @@ new class extends Livewire\Component {
         $classContent = File::get($result->classPath);
         $this->assertStringNotContainsString('partialLookup', $classContent);
     }
+
+    public function test_preserves_use_statements_in_compiled_class()
+    {
+        $componentContent = '@php
+
+use App\Models\Conversation;
+use Illuminate\Support\Collection;
+
+new class extends Livewire\Component {
+    public Conversation $conversation;
+    public Collection $messages;
+
+    public function loadMessages()
+    {
+        $this->messages = collect([]);
+    }
+}
+@endphp
+
+<div>
+    <h1>Chat</h1>
+</div>';
+
+        $viewPath = $this->tempPath . '/chat.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that use statements are preserved in the compiled class
+        $this->assertStringContainsString('use App\Models\Conversation;', $classContent);
+        $this->assertStringContainsString('use Illuminate\Support\Collection;', $classContent);
+
+        // Check that the class properties use the imported types
+        $this->assertStringContainsString('public Conversation $conversation;', $classContent);
+        $this->assertStringContainsString('public Collection $messages;', $classContent);
+
+        // Check that the class method is preserved
+        $this->assertStringContainsString('public function loadMessages()', $classContent);
+    }
+
+    public function test_preserves_use_statements_with_aliases_in_compiled_class()
+    {
+        $componentContent = '@php
+
+use App\Models\User as AppUser;
+use Illuminate\Support\Collection as LaravelCollection;
+use App\Events\MessageSent;
+
+new class extends Livewire\Component {
+    public AppUser $user;
+    public LaravelCollection $items;
+
+    public function sendMessage()
+    {
+        event(new MessageSent());
+    }
+}
+@endphp
+
+<div>
+    <h1>User Profile</h1>
+</div>';
+
+        $viewPath = $this->tempPath . '/user-profile.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that use statements with aliases are preserved
+        $this->assertStringContainsString('use App\Models\User as AppUser;', $classContent);
+        $this->assertStringContainsString('use Illuminate\Support\Collection as LaravelCollection;', $classContent);
+        $this->assertStringContainsString('use App\Events\MessageSent;', $classContent);
+
+        // Check that the class properties use the aliased types
+        $this->assertStringContainsString('public AppUser $user;', $classContent);
+        $this->assertStringContainsString('public LaravelCollection $items;', $classContent);
+
+        // Check that the method uses the imported class
+        $this->assertStringContainsString('event(new MessageSent());', $classContent);
+    }
+
+    public function test_works_without_use_statements()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/simple-counter.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Should work fine without use statements
+        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+
+        // Should not have any use statements
+        $this->assertStringNotContainsString('use ', $classContent);
+    }
+
+    public function test_preserves_use_statements_in_external_components()
+    {
+        // External components don't generate class files, and they shouldn't have use statements
+        // in the view file since they reference external classes
+        $componentContent = '@php(new App\Livewire\PostComponent)
+
+<div>
+    <h1>Post Component</h1>
+</div>';
+
+        $viewPath = $this->tempPath . '/post-component.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        // External components don't generate class files
+        $this->assertTrue($result->isExternal);
+        $this->assertFalse(file_exists($result->classPath));
+
+        // But the view should be generated properly
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertEquals('<div>
+    <h1>Post Component</h1>
+</div>', $viewContent);
+    }
 }

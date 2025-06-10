@@ -232,7 +232,8 @@ class SingleFileComponentCompiler extends Mechanism
         $className = $result->getShortClassName();
         $viewName = $result->viewName;
 
-        // Extract class definition from frontmatter...
+        // Extract use statements and class definition from frontmatter...
+        $useStatements = $this->extractUseStatements($parsed->frontmatter);
         $classBody = $this->extractClassBody($parsed->frontmatter);
 
         // Generate layout attribute if present
@@ -247,11 +248,17 @@ class SingleFileComponentCompiler extends Mechanism
             $partialLookupProperty = $this->generatePartialLookupProperty($parsed->inlinePartials);
         }
 
+        // Build the use statements section
+        $useStatementsSection = '';
+        if (!empty($useStatements)) {
+            $useStatementsSection = implode("\n", $useStatements) . "\n\n";
+        }
+
         $classContent = "<?php
 
 namespace {$namespace};
 
-{$layoutAttribute}class {$className} extends \\Livewire\\Component
+{$useStatementsSection}{$layoutAttribute}class {$className} extends \\Livewire\\Component
 {
 {$partialLookupProperty}{$classBody}
 
@@ -339,6 +346,18 @@ namespace {$namespace};
         }, $viewContent);
 
         return $transformedContent;
+    }
+
+    protected function extractUseStatements(string $frontmatter): array
+    {
+        $useStatements = [];
+
+        // Match all use statements in the frontmatter
+        if (preg_match_all('/use\s+[A-Za-z0-9\\\\]+(?:\s+as\s+[A-Za-z0-9_]+)?;/m', $frontmatter, $matches)) {
+            $useStatements = $matches[0];
+        }
+
+        return $useStatements;
     }
 
     protected function extractClassBody(string $frontmatter): string
