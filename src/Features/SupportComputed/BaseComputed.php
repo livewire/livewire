@@ -20,6 +20,7 @@ class BaseComputed extends Attribute
         public $cache = false,
         public $key = null,
         public $tags = null,
+        public $forever = false,
     ) {}
 
     function boot()
@@ -98,6 +99,20 @@ class BaseComputed extends Attribute
         $key = $this->generateCachedKey();
 
         $closure = fn () => $this->evaluateComputed();
+
+        if ($this->forever) {
+            return match(Cache::supportsTags() && !empty($this->tags)) {
+                true => Cache::tags($this->tags)->rememberForever($key, $closure),
+                default => Cache::rememberForever($key, $closure)
+            };
+        }
+
+        if (is_array($this->seconds)) {
+            return match(Cache::supportsTags() && !empty($this->tags)) {
+                true => Cache::tags($this->tags)->flexible($key, $this->seconds, $closure),
+                default => Cache::flexible($key, $this->seconds, $closure)
+            };
+        }
 
         return match(Cache::supportsTags() && !empty($this->tags)) {
             true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),

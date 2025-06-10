@@ -331,7 +331,7 @@ class UnitTest extends TestCase
                 'snake_case_in_component_class_foo_bar',
                 'camelCaseInBladeView_snake_case_method_foo_bar',
                 'camel_case_in_component_class_foo_bar',
-                'camelCaseInBladeView_camel_case_method_foo_bar'
+                'camelCaseInBladeView_camel_case_method_foo_bar',
             ]);
     }
 
@@ -428,6 +428,64 @@ class UnitTest extends TestCase
             ->assertSetStrict('foo', 'bar')
             ->dispatch('bar', 'baz')
             ->assertSetStrict('foo', 'baz');
+    }
+
+    public function test_it_supports_flexible_cached_computed_properties()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(seconds: [1, 2], cache: true, key: 'baz')]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSetStrict('count', 1);
+
+        $this->assertTrue(Cache::has('baz'));
+    }
+
+    public function test_it_supports_forever_cached_computed_properties()
+    {
+        Cache::setDefaultDriver('array');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(cache: true, key: 'baz', forever: true)]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->call('$refresh')
+            ->assertSetStrict('count', 1);
+
+        $this->assertTrue(Cache::has('baz'));
     }
 }
 
