@@ -109,7 +109,16 @@ class BaseComputed extends Attribute
 
         if (is_array($this->seconds)) {
             if (count($this->seconds) !== 2) {
-                throw new \Exception('Invalid cache duration array. Must be an array with two elements.');
+                throw new CountArrayElementsFlexibleCacheException(
+                    $this->component->getName(),
+                    $this->getName(),
+                );
+            }
+            if (! method_exists(Cache::driver(), 'flexible')) {
+                throw new FlexibleNotSupportedException(
+                    $this->component->getName(),
+                    $this->getName(),
+                );
             }
 
             return match(Cache::supportsTags() && !empty($this->tags)) {

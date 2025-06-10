@@ -2,7 +2,6 @@
 
 namespace Livewire\Features\SupportComputed;
 
-use Exception;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestComponent;
 use Tests\TestCase;
@@ -464,13 +463,49 @@ class UnitTest extends TestCase
     {
         Cache::setDefaultDriver('array');
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Invalid cache duration array. Must be an array with two elements.');
+        $this->expectException(CountArrayElementsFlexibleCacheException::class);
+        $this->expectExceptionMessage("Cannot add more than two array elements to a flexible computed property method [foo()] on component: flexibleArrayElementsCountFail");
 
         Livewire::test(new class extends TestComponent {
             public $count = 0;
 
+            function mount() {
+                $this->setName('flexibleArrayElementsCountFail');
+            }
+
             #[Computed(seconds: [1, 2, 3], cache: true, key: 'baz')]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        });
+    }
+
+    public function test_it_throws_an_exception_if_flexible_cache_is_not_available_on_the_cache_driver()
+    {
+        $this->markTestSkipped('This test is not working. I need to figure out how to set flexible not supported on the cache driver.');
+        Cache::setDefaultDriver('array');
+
+        $this->expectException(FlexibleNotSupportedException::class);
+        $this->expectExceptionMessage("Your Laravel version or cache driver does not support flexible cache. Seen on computed property method [foo()] on component: flexibleNotSupported");
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            function mount() {
+                $this->setName('flexibleNotSupported');
+            }
+
+            #[Computed(seconds: [1, 2], cache: true, key: 'baz')]
             function foo() {
                 $this->count++;
 
