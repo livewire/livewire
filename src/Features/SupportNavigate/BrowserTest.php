@@ -39,6 +39,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('parent-component', ParentComponent::class);
             Livewire::component('child-component', ChildComponent::class);
             Livewire::component('script-component', ScriptComponent::class);
+            Livewire::component('persisted-child', PersistedChild::class);
 
             Livewire::component('nav-bar-component', NavBarComponent::class);
 
@@ -94,6 +95,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             HTML));
 
             Route::get('/page-with-alpine-for-loop', PageWithAlpineForLoop::class);
+            Route::get('/page-with-alpine-on-html-element', PageWithAlpineOnHtmlElement::class);
+            Route::get('/persisted-child-page', PageWithPersistedChild::class)->middleware('web');
+            Route::get('/persisted-animation-page', PageWithPersistedAnimation::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
 
             Route::get('/first-noscript', FirstNoscriptPage::class)->middleware('web');
@@ -783,6 +787,51 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->assertSeeIn('@text', 'a,b,c')
                 ->assertScript('document.getElementById(\'alpine-for-loop\').querySelectorAll(\'p\').length', 3)
                 ->assertConsoleLogMissingWarning('value is not defined')
+                ->tinker()
+            ;
+        });
+    }
+
+    public function test_alpine_on_html_element_still_functions_after_navigation()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/page-with-alpine-on-html-element')
+                ->waitForLivewireToLoad()
+                ->assertScript('return document.querySelector(\'html\').classList.contains(\'dark\')')
+                ->waitForNavigate()->click('@link.to.self')
+                ->tinker()
+                ->assertScript('return document.querySelector(\'html\').classList.contains(\'dark\')')
+            ;
+        });
+    }
+
+    public function test_persisted_child_does_not_mount_again_after_navigation()
+    {
+        $this->markTestSkipped('@todo Not sure how to count how many mounts get called...');
+
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/persisted-child-page')
+                ->tap(fn ($b) => $b->script('window.childMounted = []'))
+                ->tinker()
+                ->assertSee('Child')
+                ->assertScript('window.childMounted.length', 1)
+                ->waitForNavigate()->click('@link.to.self')
+                ->assertSee('Child')
+                ->assertScript('window.childMounted.length', 1)
+            ;
+        });
+    }
+
+    public function test_persisted_element_with_animation_does_not_get_reset_after_navigation()
+    {
+        $this->markTestSkipped('@todo Not sure how to track whether the css animation has been reset...');
+
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/persisted-animation-page')
+                ->tinker()
             ;
         });
     }
@@ -1581,6 +1630,71 @@ class PageWithAlpineForLoop extends Component
                     <p x-text="value"></p>
                 </template>
             </div>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithAlpineOnHtmlElement extends Component
+{
+    #[Layout('test-views::layout-with-alpine')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-alpine-on-html-element">
+            <a href="/page-with-alpine-on-html-element" wire:navigate dusk="link.to.self">Go to self</a>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithPersistedChild extends Component
+{
+    #[Layout('test-views::layout-persist')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-persisted-child">
+            <a href="/persisted-child-page" wire:navigate dusk="link.to.self">Go to self</a>
+            @persist('child')
+            <livewire:persisted-child />
+            @endpersist
+        </div>
+        HTML;
+    }
+}
+
+class PersistedChild extends Component
+{
+    public function mount()
+    {
+        ray('mounted');
+    }
+
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="child">
+            Child
+        </div>
+        HTML;
+    }
+}
+
+class PageWithPersistedAnimation extends Component
+{
+    #[Layout('test-views::layout-persist')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-persisted-child">
+            <a href="/persisted-child-page" wire:navigate dusk="link.to.self">Go to self</a>
+            @persist('child')
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 [--animate-spin:spin_4s_linear_infinite] animate-spin">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+            </svg>
+            @endpersist
         </div>
         HTML;
     }
