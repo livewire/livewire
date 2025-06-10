@@ -108,6 +108,10 @@ class BaseComputed extends Attribute
         }
 
         if (is_array($this->seconds)) {
+            if (count($this->seconds) !== 2) {
+                throw new \Exception('Invalid cache duration array. Must be an array with two elements.');
+            }
+
             return match(Cache::supportsTags() && !empty($this->tags)) {
                 true => Cache::tags($this->tags)->flexible($key, $this->seconds, $closure),
                 default => Cache::flexible($key, $this->seconds, $closure)

@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestComponent;
 use Tests\TestCase;
@@ -457,6 +458,33 @@ class UnitTest extends TestCase
             ->assertSetStrict('count', 1);
 
         $this->assertTrue(Cache::has('baz'));
+    }
+
+    public function test_it_throws_an_exception_if_more_than_two_elements_are_provided_to_the_second_parameter()
+    {
+        Cache::setDefaultDriver('array');
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Invalid cache duration array. Must be an array with two elements.');
+
+        Livewire::test(new class extends TestComponent {
+            public $count = 0;
+
+            #[Computed(seconds: [1, 2, 3], cache: true, key: 'baz')]
+            function foo() {
+                $this->count++;
+
+                return 'bar';
+            }
+
+            function render() {
+                $noop = $this->foo;
+
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                HTML;
+            }
+        });
     }
 
     public function test_it_supports_forever_cached_computed_properties()
