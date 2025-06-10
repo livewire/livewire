@@ -1078,4 +1078,144 @@ new class extends Livewire\Component {
     <h1>Post Component</h1>
 </div>', $viewContent);
     }
+
+    public function test_can_compile_component_with_traditional_php_tags()
+    {
+        $componentContent = '<?php
+
+use App\Models\Product;
+
+new class extends Livewire\Component {
+    public Product $product;
+    public $quantity = 1;
+
+    public function addToCart()
+    {
+        // Add to cart logic
+    }
+}
+?>
+
+<div>
+    <h1>{{ $product->name }}</h1>
+    <p>Quantity: {{ $quantity }}</p>
+    <button wire:click="addToCart">Add to Cart</button>
+</div>';
+
+        $viewPath = $this->tempPath . '/product.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that use statements are preserved
+        $this->assertStringContainsString('use App\Models\Product;', $classContent);
+
+        // Check that class properties and methods are preserved
+        $this->assertStringContainsString('public Product $product;', $classContent);
+        $this->assertStringContainsString('public $quantity = 1;', $classContent);
+        $this->assertStringContainsString('public function addToCart()', $classContent);
+
+        // Check that view content doesn't contain PHP tags
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringNotContainsString('<?php', $viewContent);
+        $this->assertStringNotContainsString('?>', $viewContent);
+        $this->assertStringContainsString('<h1>{{ $product->name }}</h1>', $viewContent);
+    }
+
+    public function test_can_compile_external_component_with_traditional_php_tags()
+    {
+        $componentContent = '<?php(new App\Livewire\ProductComponent) ?>
+
+<div>
+    <h1>External Product Component</h1>
+</div>';
+
+        $viewPath = $this->tempPath . '/external-product.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertTrue($result->isExternal);
+        $this->assertEquals('App\Livewire\ProductComponent', $result->externalClass);
+        $this->assertFalse(file_exists($result->classPath)); // No class file for external
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringNotContainsString('<?php', $viewContent);
+        $this->assertStringNotContainsString('?>', $viewContent);
+    }
+
+    public function test_traditional_php_tags_work_with_layout_directive()
+    {
+        $componentContent = '@layout(\'layouts.shop\')
+
+<?php
+new class extends Livewire\Component {
+    public $total = 0;
+}
+?>
+
+<div>
+    <h1>Shopping Cart</h1>
+    <p>Total: ${{ $total }}</p>
+</div>';
+
+        $viewPath = $this->tempPath . '/cart.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+        $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.shop\')]', $classContent);
+        $this->assertStringContainsString('public $total = 0;', $classContent);
+
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringNotContainsString('@layout', $viewContent);
+        $this->assertStringNotContainsString('<?php', $viewContent);
+        $this->assertStringNotContainsString('?>', $viewContent);
+    }
+
+    public function test_traditional_php_tags_work_with_inline_partials()
+    {
+        $componentContent = '<?php
+new class extends Livewire\Component {
+    public $items = ["apple", "banana"];
+}
+?>
+
+<div>
+    @partial("fruit-list")
+    <ul>
+        @foreach($items as $item)
+            <li>{{ $item }}</li>
+        @endforeach
+    </ul>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/fruit-component.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that partial was processed
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('@partial(\'fruit-list\', \'livewire-compiled::partial_fruit-list_', $viewContent);
+
+        // Check that partial file was created
+        $partialFiles = glob($this->cacheDir . '/views/partial_fruit-list_*.blade.php');
+        $this->assertCount(1, $partialFiles);
+
+        // Check that class contains partial lookup
+        $classContent = File::get($result->classPath);
+        $this->assertStringContainsString('protected $partialLookup = [', $classContent);
+    }
 }

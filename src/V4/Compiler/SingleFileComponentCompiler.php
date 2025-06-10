@@ -2,11 +2,11 @@
 
 namespace Livewire\V4\Compiler;
 
-use Livewire\Mechanisms\Mechanism;
+use Livewire\V4\Compiler\Exceptions\InvalidComponentException;
 use Livewire\V4\Compiler\Exceptions\CompilationException;
 use Livewire\V4\Compiler\Exceptions\ParseException;
-use Livewire\V4\Compiler\Exceptions\InvalidComponentException;
 use Illuminate\Support\Facades\File;
+use Livewire\Mechanisms\Mechanism;
 
 class SingleFileComponentCompiler extends Mechanism
 {
@@ -124,6 +124,44 @@ class SingleFileComponentCompiler extends Mechanism
             // Validate that frontmatter contains a class definition...
             if (!str_contains($frontmatter, 'new class') && !str_contains($frontmatter, 'class ')) {
                 throw new ParseException("Invalid component: @php block must contain a class definition");
+            }
+
+            return new ParsedComponent(
+                $frontmatter,
+                trim($viewContent),
+                false,
+                null,
+                $layoutTemplate,
+                $layoutData,
+                $inlinePartials
+            );
+        }
+
+        // Handle external class reference with traditional PHP tags: < ?php(new App\Livewire\SomeClass) ? >
+        if (preg_match('/<\?php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)\s*\?>/s', $content, $matches)) {
+            $externalClass = $matches[1];
+            $viewContent = preg_replace('/<\?php\s*\([^)]+\)\s*\?>/s', '', $content);
+
+            return new ParsedComponent(
+                '',
+                trim($viewContent),
+                true,
+                $externalClass,
+                $layoutTemplate,
+                $layoutData,
+                $inlinePartials
+            );
+        }
+
+        // Handle inline class with traditional PHP tags: < ?php ... ? >
+        if (preg_match('/<\?php\s*(.*?)\s*\?>/s', $content, $matches)) {
+            $frontmatter = trim($matches[1]);
+            // Use the modified $content (after layout removal) for the view content
+            $viewContent = preg_replace('/<\?php\s*.*?\s*\?>/s', '', $content);
+
+            // Validate that frontmatter contains a class definition...
+            if (!str_contains($frontmatter, 'new class') && !str_contains($frontmatter, 'class ')) {
+                throw new ParseException("Invalid component: <"."?php block must contain a class definition");
             }
 
             return new ParsedComponent(
