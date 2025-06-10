@@ -13,6 +13,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
 - [x] [Add `wire:ref`](wire-ref.md)
 - [ ] [Add js interceptors](interceptors.md)
+- [ ] [Add with() method](add-with-method.md)
 - [ ] [Blade component code folding](code-folding.md)
 - [ ] [Add `bootstrap/livewire.php` configuration file](configuration.md)
 - [ ] [Add `artisan livewire:install` command](install-command.md)
@@ -24,6 +25,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 
 ## Post-beta
 - [ ] [wire:navigate fixes](fix-wire-navigate.md)
+- [ ] [Remove $this-> demand for computed properties](remove-this-arrow-for-computeds.md)
 - [ ] [Dispatch from mount()](dispatch-from-mount.md)
 - [ ] [Fill empty X-Livewire request headers](fill-request-headers.md)
 - [ ] [Use navigation for pagination](navigate-pagination.md)

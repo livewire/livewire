@@ -44,4 +44,9 @@ trait HandlesPartials
     {
         return $this->partials;
     }
+
+    public function popLastPartial()
+    {
+        return array_pop($this->partials);
+    }
 }

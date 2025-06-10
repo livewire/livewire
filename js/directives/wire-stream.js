@@ -2,17 +2,30 @@ import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/hooks'
 import { findComponent, hasComponent } from '@/store'
+import { streamPartial } from '@/features/supportPartials'
 
 on('stream', (payload) => {
+    if (payload.type === 'partial') {
+        let { id, name, content, mode } = payload
+
+        if (! hasComponent(id)) return
+
+        let component = findComponent(id)
+
+        streamPartial(component, name, content, mode)
+
+        return
+    }
+
     if (payload.type !== 'update') return
 
-    let { id, key, value, replace } = payload
+    let { id, key, value, mode } = payload
 
     if (! hasComponent(id)) return
 
     let component = findComponent(id)
 
-    if (replace === false) {
+    if (mode === 'append') {
         component.$wire.set(key, component.$wire.get(key) + value, false)
     } else {
         component.$wire.set(key, value, false)
@@ -28,11 +41,11 @@ directive('stream', ({el, directive, cleanup }) => {
 
         if (payload.type !== 'html') return
 
-        let { name, content, replace } = payload
+        let { name, content, mode } = payload
 
         if (name !== expression) return
 
-        if (modifiers.includes('replace') || replace) {
+        if (modifiers.includes('replace') || mode === 'replace') {
             el.innerHTML = content
         } else {
             el.insertAdjacentHTML('beforeend', content)

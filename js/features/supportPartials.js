@@ -13,44 +13,48 @@ on('effect', ({ component, effects }) => {
         // Alpine effects (that are processed via flushJobs in scheduler).
         queueMicrotask(() => {
             queueMicrotask(() => {
-                let { startNode, endNode } = findPartialComments(component.el, name)
-
-                if (!startNode || !endNode) return
-
-                let strippedContent = stripPartialComments(content, name)
-
-                let parentElement = startNode.parentElement
-                let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
-
-                if (mode === 'append') {
-                    let container = document.createElement(parentElementTag)
-
-                    container.innerHTML = strippedContent
-
-                    // Insert each child node before the end node
-                    Array.from(container.childNodes).forEach(node => {
-                        endNode.parentNode.insertBefore(node, endNode)
-                    })
-
-                } else if (mode === 'prepend') {
-                    let container = document.createElement(parentElementTag)
-
-                    container.innerHTML = strippedContent
-
-                    // Insert each child node after the start node in reverse order
-                    // to maintain correct ordering
-                    Array.from(container.childNodes)
-                        .reverse()
-                        .forEach(node => {
-                            startNode.parentNode.insertBefore(node, startNode.nextSibling)
-                        })
-                } else {
-                    morphPartial(component, startNode, endNode, strippedContent)
-                }
+                streamPartial(component, name, content, mode)
             })
         })
     })
 })
+
+export function streamPartial(component, name, content, mode) {
+    let { startNode, endNode } = findPartialComments(component.el, name)
+
+    if (!startNode || !endNode) return
+
+    let strippedContent = stripPartialComments(content, name)
+
+    let parentElement = startNode.parentElement
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+
+    if (mode === 'append') {
+        let container = document.createElement(parentElementTag)
+
+        container.innerHTML = strippedContent
+
+        // Insert each child node before the end node
+        Array.from(container.childNodes).forEach(node => {
+            endNode.parentNode.insertBefore(node, endNode)
+        })
+
+    } else if (mode === 'prepend') {
+        let container = document.createElement(parentElementTag)
+
+        container.innerHTML = strippedContent
+
+        // Insert each child node after the start node in reverse order
+        // to maintain correct ordering
+        Array.from(container.childNodes)
+            .reverse()
+            .forEach(node => {
+                startNode.parentNode.insertBefore(node, startNode.nextSibling)
+            })
+    } else {
+        morphPartial(component, startNode, endNode, strippedContent)
+    }
+}
 
 function stripPartialComments(content, partialName) {
     // Remove the start and end comment markers

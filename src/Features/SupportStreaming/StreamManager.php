@@ -8,7 +8,7 @@ class StreamManager
 {
     public function __construct(public Component $component) {}
 
-    public function update($dataKey, $value = null, $replace = true)
+    public function update($dataKey, $value = null, $mode = 'replace')
     {
         SupportStreaming::ensureStreamResponseStarted();
 
@@ -21,11 +21,11 @@ class StreamManager
             'id' => $id,
             'key' => $dataKey,
             'value' => $value,
-            'replace' => $replace,
+            'mode' => $mode,
         ]);
     }
 
-    public function html($name, $content, $replace = false)
+    public function html($name, $content, $mode = 'replace')
     {
         SupportStreaming::ensureStreamResponseStarted();
 
@@ -36,7 +36,27 @@ class StreamManager
             'id' => $id,
             'name' => $name,
             'content' => $content,
-            'replace' => $replace,
+            'mode' => $mode,
+        ]);
+    }
+
+    public function partial($name, $view, $data = [], $mode = 'replace')
+    {
+        SupportStreaming::ensureStreamResponseStarted();
+
+        $id = $this->component->id();
+
+        $partial = $this->component->partial($name, $view, $data);
+
+        // @todo: This is a hack to pop the partial off the component's partials array...
+        $this->component->popLastPartial();
+
+        SupportStreaming::streamContent([
+            'type' => 'partial',
+            'id' => $id,
+            'name' => $name,
+            'content' => $partial->render(),
+            'mode' => $mode,
         ]);
     }
 }

@@ -9700,31 +9700,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let { name, mode, content } = partial;
       queueMicrotask(() => {
         queueMicrotask(() => {
-          let { startNode, endNode } = findPartialComments(component.el, name);
-          if (!startNode || !endNode)
-            return;
-          let strippedContent = stripPartialComments(content, name);
-          let parentElement = startNode.parentElement;
-          let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-          if (mode === "append") {
-            let container = document.createElement(parentElementTag);
-            container.innerHTML = strippedContent;
-            Array.from(container.childNodes).forEach((node) => {
-              endNode.parentNode.insertBefore(node, endNode);
-            });
-          } else if (mode === "prepend") {
-            let container = document.createElement(parentElementTag);
-            container.innerHTML = strippedContent;
-            Array.from(container.childNodes).reverse().forEach((node) => {
-              startNode.parentNode.insertBefore(node, startNode.nextSibling);
-            });
-          } else {
-            morphPartial(component, startNode, endNode, strippedContent);
-          }
+          streamPartial(component, name, content, mode);
         });
       });
     });
   });
+  function streamPartial(component, name, content, mode) {
+    let { startNode, endNode } = findPartialComments(component.el, name);
+    if (!startNode || !endNode)
+      return;
+    let strippedContent = stripPartialComments(content, name);
+    let parentElement = startNode.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    if (mode === "append") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).forEach((node) => {
+        endNode.parentNode.insertBefore(node, endNode);
+      });
+    } else if (mode === "prepend") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).reverse().forEach((node) => {
+        startNode.parentNode.insertBefore(node, startNode.nextSibling);
+      });
+    } else {
+      morphPartial(component, startNode, endNode, strippedContent);
+    }
+  }
   function stripPartialComments(content, partialName) {
     let startComment = `<!--[if PARTIAL:${partialName}]><![endif]-->`;
     let endComment = `<!--[if ENDPARTIAL:${partialName}]><![endif]-->`;
@@ -10135,13 +10138,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-stream.js
   on2("stream", (payload) => {
+    if (payload.type === "partial") {
+      let { id: id2, name, content, mode: mode2 } = payload;
+      if (!hasComponent(id2))
+        return;
+      let component2 = findComponent(id2);
+      streamPartial(component2, name, content, mode2);
+      return;
+    }
     if (payload.type !== "update")
       return;
-    let { id, key, value, replace: replace2 } = payload;
+    let { id, key, value, mode } = payload;
     if (!hasComponent(id))
       return;
     let component = findComponent(id);
-    if (replace2 === false) {
+    if (mode === "append") {
       component.$wire.set(key, component.$wire.get(key) + value, false);
     } else {
       component.$wire.set(key, value, false);
@@ -10153,10 +10164,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       payload.type = payload.type || "html";
       if (payload.type !== "html")
         return;
-      let { name, content, replace: replace2 } = payload;
+      let { name, content, mode } = payload;
       if (name !== expression)
         return;
-      if (modifiers.includes("replace") || replace2) {
+      if (modifiers.includes("replace") || mode === "replace") {
         el.innerHTML = content;
       } else {
         el.insertAdjacentHTML("beforeend", content);
