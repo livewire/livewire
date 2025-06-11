@@ -1,15 +1,15 @@
 import { trigger } from "@/hooks"
 import { createUrlObjectFromString, getUriStringFromUrlObject } from "./links"
 
-export function fetchHtml(destination, callback) {
+export function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination)
 
     performFetch(uri, (html, finalDestination) => {
         callback(html, finalDestination)
-    })
+    }, errorCallback)
 }
 
-export function performFetch(uri, callback) {
+export function performFetch(uri, callback, errorCallback) {
     let options = {
         headers: {
             'X-Livewire-Navigate': ''
@@ -38,5 +38,9 @@ export function performFetch(uri, callback) {
         return response.text()
     }).then(html => {
         callback(html, finalDestination)
-    });
+    }).catch(error => {
+        errorCallback()
+
+        throw error
+    })
 }
