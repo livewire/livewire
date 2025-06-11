@@ -345,6 +345,12 @@ namespace {$namespace};
     protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
     {
         $processedViewContent = $this->transformNakedScripts($parsed->viewContent);
+
+        // Transform computed property references if this is an inline component
+        if ($parsed->hasInlineClass()) {
+            $processedViewContent = $this->transformComputedPropertyReferences($processedViewContent, $parsed->frontmatter);
+        }
+
         File::put($result->viewPath, $processedViewContent);
     }
 
@@ -384,6 +390,81 @@ namespace {$namespace};
         }, $viewContent);
 
         return $transformedContent;
+    }
+
+    /**
+     * Transform computed property references from $propertyName to $this->propertyName.
+     *
+     * Scans the frontmatter for computed properties and transforms their references
+     * in the view content to maintain clean syntax while preserving JIT evaluation.
+     */
+    protected function transformComputedPropertyReferences(string $viewContent, string $frontmatter): string
+    {
+        $computedProperties = $this->extractComputedPropertyNames($frontmatter);
+
+        if (empty($computedProperties)) {
+            return $viewContent;
+        }
+
+        // Check for variable reassignments that would conflict
+        $this->validateNoComputedVariableReassignments($viewContent, $computedProperties);
+
+        // Transform each computed property reference
+        foreach ($computedProperties as $propertyName) {
+            $viewContent = $this->transformPropertyReferences($viewContent, $propertyName);
+        }
+
+        return $viewContent;
+    }
+
+    /**
+     * Extract computed property method names from the frontmatter.
+     */
+    protected function extractComputedPropertyNames(string $frontmatter): array
+    {
+        $computedProperties = [];
+
+        // Pattern to match computed attribute and the method name that follows
+        // Handles: #[Computed], #[\Livewire\Attributes\Computed], #[Computed(options)]
+        $pattern = '/#\[\s*(?:\\\\?Livewire\\\\Attributes\\\\)?Computed[^\]]*\]\s*(?:public|protected|private)?\s*function\s+([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*\(/';
+
+        if (preg_match_all($pattern, $frontmatter, $matches)) {
+            $computedProperties = $matches[1];
+        }
+
+        return array_unique($computedProperties);
+    }
+
+    /**
+     * Validate that no computed properties are being reassigned in the view.
+     */
+    protected function validateNoComputedVariableReassignments(string $viewContent, array $computedProperties): void
+    {
+        foreach ($computedProperties as $propertyName) {
+            // Pattern to match variable assignments like $propertyName =
+            $assignmentPattern = '/\$' . preg_quote($propertyName, '/') . '\s*=(?!=)/';
+
+            if (preg_match($assignmentPattern, $viewContent)) {
+                throw new CompilationException(
+                    "Cannot reassign variable \${$propertyName} as it's reserved for the computed property '{$propertyName}'. " .
+                    "Use a different variable name in your view."
+                );
+            }
+        }
+    }
+
+    /**
+     * Transform references to a specific property from $propertyName to $this->propertyName.
+     */
+    protected function transformPropertyReferences(string $viewContent, string $propertyName): string
+    {
+        // Pattern to match $propertyName but not in contexts where it shouldn't be transformed:
+        // - Not when it's part of a longer variable name (e.g., $propertyNameOther)
+        // - Not when it's being assigned to (handled by validation above)
+        // - Not when it's in comments
+        $pattern = '/\$' . preg_quote($propertyName, '/') . '(?![a-zA-Z0-9_])/';
+
+        return preg_replace($pattern, '$this->' . $propertyName, $viewContent);
     }
 
     protected function extractUseStatements(string $frontmatter): array

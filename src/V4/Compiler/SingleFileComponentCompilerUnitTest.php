@@ -1218,4 +1218,279 @@ new class extends Livewire\Component {
         $classContent = File::get($result->classPath);
         $this->assertStringContainsString('protected $partialLookup = [', $classContent);
     }
+
+    /** @test */
+    public function it_transforms_computed_property_references_in_view_content()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    public $regularProperty = "regular";
+
+    #[Computed]
+    public function computedProperty()
+    {
+        return "computed value";
+    }
+
+    #[\Livewire\Attributes\Computed]
+    public function anotherComputed()
+    {
+        return "another value";
+    }
+}
+@endphp
+
+<div>
+    Regular: {{ $regularProperty }}
+    Computed: {{ $computedProperty }}
+    Another: {{ $anotherComputed }}
+    Combined: {{ $computedProperty . $anotherComputed }}
+</div>';
+
+        $viewPath = $this->tempPath . '/computed-component.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledViewContent = File::get($result->viewPath);
+
+        // Regular properties should remain unchanged
+        $this->assertStringContainsString('{{ $regularProperty }}', $compiledViewContent);
+
+        // Computed properties should be transformed to $this->
+        $this->assertStringContainsString('{{ $this->computedProperty }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->anotherComputed }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->computedProperty . $this->anotherComputed }}', $compiledViewContent);
+
+        // Original computed property references should not exist
+        $this->assertStringNotContainsString('{{ $computedProperty }}', $compiledViewContent);
+        $this->assertStringNotContainsString('{{ $anotherComputed }}', $compiledViewContent);
+    }
+
+    /** @test */
+    public function it_handles_computed_properties_with_various_attribute_syntaxes()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    #[Computed]
+    public function basic() { return "basic"; }
+
+    #[Computed(cache: true)]
+    public function withOptions() { return "cached"; }
+
+    #[\Livewire\Attributes\Computed(persist: true)]
+    public function fullyQualified() { return "persistent"; }
+
+    #[ Computed ]
+    public function withSpaces() { return "spaced"; }
+}
+@endphp
+
+<div>
+    {{ $basic }}
+    {{ $withOptions }}
+    {{ $fullyQualified }}
+    {{ $withSpaces }}
+</div>';
+
+        $viewPath = $this->tempPath . '/computed-syntaxes.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledViewContent = File::get($result->viewPath);
+
+        $this->assertStringContainsString('{{ $this->basic }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->withOptions }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->fullyQualified }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->withSpaces }}', $compiledViewContent);
+    }
+
+    /** @test */
+    public function it_does_not_transform_computed_properties_in_external_components()
+    {
+        $viewContent = '@php(new App\Livewire\ExternalComponent)
+
+<div>
+    {{ $computedProperty }}
+</div>';
+
+        $viewPath = $this->tempPath . '/external-computed.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledViewContent = File::get($result->viewPath);
+
+        // Should not transform since this is an external component
+        $this->assertStringContainsString('{{ $computedProperty }}', $compiledViewContent);
+        $this->assertStringNotContainsString('{{ $this->computedProperty }}', $compiledViewContent);
+    }
+
+    /** @test */
+    public function it_preserves_word_boundaries_when_transforming_computed_properties()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    #[Computed]
+    public function foo() { return "foo"; }
+}
+@endphp
+
+<div>
+    {{ $foo }}
+    {{ $foobar }}
+    {{ $foo_bar }}
+</div>';
+
+        $viewPath = $this->tempPath . '/word-boundaries.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledViewContent = File::get($result->viewPath);
+
+        // Only exact matches should be transformed
+        $this->assertStringContainsString('{{ $this->foo }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $foobar }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $foo_bar }}', $compiledViewContent);
+    }
+
+    /** @test */
+    public function it_throws_exception_when_computed_property_is_reassigned_in_view()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    #[Computed]
+    public function computedProperty()
+    {
+        return "computed value";
+    }
+}
+@endphp
+
+<div>
+    @php($computedProperty = "reassigned")
+    {{ $computedProperty }}
+</div>';
+
+        $viewPath = $this->tempPath . '/reassigned-computed.blade.php';
+        File::put($viewPath, $viewContent);
+
+        $this->expectException(\Livewire\V4\Compiler\Exceptions\CompilationException::class);
+        $this->expectExceptionMessage("Cannot reassign variable \$computedProperty as it's reserved for the computed property 'computedProperty'");
+
+        $this->compiler->compile($viewPath);
+    }
+
+    /** @test */
+    public function it_handles_computed_properties_with_different_visibility_modifiers()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    #[Computed]
+    public function publicComputed() { return "public"; }
+
+    #[Computed]
+    protected function protectedComputed() { return "protected"; }
+
+    #[Computed]
+    private function privateComputed() { return "private"; }
+
+    #[Computed]
+    function noVisibility() { return "none"; }
+}
+@endphp
+
+<div>
+    {{ $publicComputed }}
+    {{ $protectedComputed }}
+    {{ $privateComputed }}
+    {{ $noVisibility }}
+</div>';
+
+        $viewPath = $this->tempPath . '/visibility-modifiers.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledViewContent = File::get($result->viewPath);
+
+        $this->assertStringContainsString('{{ $this->publicComputed }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->protectedComputed }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->privateComputed }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->noVisibility }}', $compiledViewContent);
+    }
+
+    /** @test */
+    public function it_does_not_transform_non_computed_methods()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    public function regularMethod() { return "regular"; }
+
+    #[SomeOtherAttribute]
+    public function attributedMethod() { return "attributed"; }
+
+    #[Computed]
+    public function computedMethod() { return "computed"; }
+}
+@endphp
+
+<div>
+    {{ $regularMethod }}
+    {{ $attributedMethod }}
+    {{ $computedMethod }}
+</div>';
+
+        $viewPath = $this->tempPath . '/non-computed-methods.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledViewContent = File::get($result->viewPath);
+
+        // Only computed methods should be transformed
+        $this->assertStringContainsString('{{ $regularMethod }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $attributedMethod }}', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->computedMethod }}', $compiledViewContent);
+    }
+
+    /** @test */
+    public function it_handles_complex_view_scenarios_with_computed_properties()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    public $items = ["item1", "item2"];
+
+    #[Computed]
+    public function total() { return count($this->items); }
+
+    #[Computed]
+    public function isEmpty() { return empty($this->items); }
+}
+@endphp
+
+<div>
+    @if($isEmpty)
+        <p>No items found</p>
+    @else
+        <p>Total items: {{ $total }}</p>
+        @foreach($items as $item)
+            <span>{{ $item }}</span>
+        @endforeach
+    @endif
+
+    <button wire:click="addItem">Add Item ({{ $total }})</button>
+</div>';
+
+        $viewPath = $this->tempPath . '/complex-computed.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledViewContent = File::get($result->viewPath);
+
+        // Computed properties should be transformed
+        $this->assertStringContainsString('@if($this->isEmpty)', $compiledViewContent);
+        $this->assertStringContainsString('{{ $this->total }}', $compiledViewContent);
+        $this->assertStringContainsString('({{ $this->total }})', $compiledViewContent);
+
+        // Regular properties should remain unchanged
+        $this->assertStringContainsString('@foreach($items as $item)', $compiledViewContent);
+        $this->assertStringContainsString('{{ $item }}', $compiledViewContent);
+    }
 }
