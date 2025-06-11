@@ -471,8 +471,22 @@ namespace {$namespace};
     {
         $useStatements = [];
 
-        // Match all use statements in the frontmatter
-        if (preg_match_all('/use\s+[A-Za-z0-9\\\\]+(?:\s+as\s+[A-Za-z0-9_]+)?;/m', $frontmatter, $matches)) {
+        // First, extract the class definition part to exclude trait usage inside the class
+        $classBody = '';
+        if (preg_match('/new\s+class.*?\{(.*)\}/s', $frontmatter, $matches)) {
+            $classBody = $matches[1];
+        } elseif (preg_match('/class\s+\w+.*?\{(.*)\}/s', $frontmatter, $matches)) {
+            $classBody = $matches[1];
+        }
+
+        // Extract everything outside the class body (imports)
+        $frontmatterWithoutClassBody = $frontmatter;
+        if (!empty($classBody)) {
+            $frontmatterWithoutClassBody = str_replace($classBody, '', $frontmatter);
+        }
+
+        // Match use statements only in the non-class portion (imports, not trait usage)
+        if (preg_match_all('/use\s+[A-Za-z0-9\\\\]+(?:\s+as\s+[A-Za-z0-9_]+)?;/m', $frontmatterWithoutClassBody, $matches)) {
             $useStatements = $matches[0];
         }
 

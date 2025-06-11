@@ -1493,4 +1493,119 @@ new class extends Livewire\Component {
         $this->assertStringContainsString('@foreach($items as $item)', $compiledViewContent);
         $this->assertStringContainsString('{{ $item }}', $compiledViewContent);
     }
+
+    public function test_distinguishes_between_import_statements_and_trait_usage()
+    {
+        $componentContent = '@php
+
+use Livewire\WithPagination;
+
+new class extends Livewire\Component {
+    use WithPagination;
+
+    public $search = "";
+
+    public function render()
+    {
+        // This method will be overridden in the compiled class
+    }
+}
+@endphp
+
+<div>
+    <input wire:model="search" placeholder="Search...">
+    {{ $links }}
+</div>';
+
+        $viewPath = $this->tempPath . '/paginated-component.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that the import statement is preserved at the top
+        $this->assertStringContainsString('use Livewire\WithPagination;', $classContent);
+
+        // Check that trait usage is preserved inside the class
+        $this->assertStringContainsString('use WithPagination;', $classContent);
+
+        // Verify there's only one occurrence of "use Livewire\WithPagination;" (import)
+        $this->assertEquals(1, substr_count($classContent, 'use Livewire\WithPagination;'));
+
+        // Verify there's only one occurrence of "use WithPagination;" (trait)
+        $this->assertEquals(1, substr_count($classContent, 'use WithPagination;'));
+
+        // Check that the class structure is correct
+        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $search = "";', $classContent);
+    }
+
+    public function test_multiple_traits_and_imports_work_correctly()
+    {
+        $componentContent = '@php
+
+use App\Traits\CustomTrait;
+use Livewire\WithPagination;
+use Livewire\WithFileUploads;
+
+new class extends Livewire\Component {
+    use WithPagination;
+    use WithFileUploads;
+    use CustomTrait;
+
+    public $file;
+    public $data = [];
+}
+@endphp
+
+<div>
+    <input type="file" wire:model="file">
+    <div>{{ count($data) }} items</div>
+</div>';
+
+        $viewPath = $this->tempPath . '/multi-trait-component.blade.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that all import statements are preserved at the top
+        $this->assertStringContainsString('use App\Traits\CustomTrait;', $classContent);
+        $this->assertStringContainsString('use Livewire\WithPagination;', $classContent);
+        $this->assertStringContainsString('use Livewire\WithFileUploads;', $classContent);
+
+        // Check that all trait usage statements are preserved inside the class
+        $this->assertStringContainsString('use WithPagination;', $classContent);
+        $this->assertStringContainsString('use WithFileUploads;', $classContent);
+        $this->assertStringContainsString('use CustomTrait;', $classContent);
+
+        // Verify import counts (should appear only once each)
+        $this->assertEquals(1, substr_count($classContent, 'use App\Traits\CustomTrait;'));
+        $this->assertEquals(1, substr_count($classContent, 'use Livewire\WithPagination;'));
+        $this->assertEquals(1, substr_count($classContent, 'use Livewire\WithFileUploads;'));
+
+        // The trait usage should also appear once each (inside the class)
+        $lines = explode("\n", $classContent);
+        $insideClass = false;
+        $traitUsageCount = 0;
+
+        foreach ($lines as $line) {
+            if (strpos($line, 'class ') !== false) {
+                $insideClass = true;
+                continue;
+            }
+            if ($insideClass && (
+                strpos($line, 'use WithPagination;') !== false ||
+                strpos($line, 'use WithFileUploads;') !== false ||
+                strpos($line, 'use CustomTrait;') !== false
+            )) {
+                $traitUsageCount++;
+            }
+        }
+
+        $this->assertEquals(3, $traitUsageCount);
+    }
 }
