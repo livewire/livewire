@@ -236,9 +236,9 @@ The compiler provides specific exceptions for different error scenarios:
 - Creates descriptive view names
 
 #### ✅ **Comprehensive Testing**
-- **52 unit tests** covering all functionality
-- **183 assertions** ensuring correctness
-- Tests for parsing, compilation, caching, layout, naked scripts, computed properties, and error scenarios
+- **78 unit tests** covering all functionality
+- **250 assertions** ensuring correctness
+- Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in partials), and error scenarios
 
 #### ✅ **Layout Directive Support**
 - Parses `@layout()` directives from component frontmatter
@@ -253,16 +253,18 @@ The compiler provides specific exceptions for different error scenarios:
 - Skips components that already have `@script` directives
 
 #### ✅ **Computed Property Transformation**
-- Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in views
+- Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in views and inline partials
 - Preserves JIT evaluation while providing clean syntax
 - Validates against variable reassignment conflicts
 - Supports all computed attribute syntaxes and visibility modifiers
+- Works consistently across main view content and `@partial()...@endpartial` blocks
 
 #### ✅ **Inline Partials Support**
 - Processes `@partial()...@endpartial` blocks into separate view files
 - Generates unique partial view names with content-based hashing
 - Creates partial lookup properties in compiled classes
 - Supports partial data passing and complex nested scenarios
+- Applies all view transformations (computed properties, naked scripts) to partial content
 
 #### ✅ **Use Statement Preservation**
 - Extracts and preserves `use` statements from frontmatter
@@ -290,7 +292,7 @@ The compiler provides specific exceptions for different error scenarios:
 - Class generation flags
 - Namespace/class name extraction
 
-#### SingleFileComponentCompiler Tests (52 tests)
+#### SingleFileComponentCompiler Tests (55 tests)
 - Inline and external component compilation
 - Error handling and validation
 - Generated file content verification
@@ -299,7 +301,7 @@ The compiler provides specific exceptions for different error scenarios:
 - Directory management
 - Layout directive processing
 - Naked script transformation
-- Computed property transformation
+- Computed property transformation (including in inline partials)
 - Inline partials processing
 - Use statement preservation
 - Traditional PHP tag support
@@ -349,6 +351,53 @@ The compiler system is now feature-complete and ready for integration with the b
 ---
 
 # Implementation Guide for Future Development
+
+## 🤖 Instructions for AI/LLM Assistance
+
+**IMPORTANT**: When making changes to the V4 compiler system, follow these steps:
+
+### 1. Documentation Updates Required
+After implementing any compiler feature or fix, you MUST update this `roadmap/compiler.md` file to reflect:
+- New features added to the "Features Implemented" section
+- Updated test counts (see Test Coverage section)
+- Enhanced transformation pipeline descriptions
+- New patterns or examples in the Implementation Guide
+
+### 2. Testing Commands
+**DO NOT use `php artisan test`** - it doesn't work for this project.
+
+**Correct test commands:**
+```bash
+# Run all compiler tests
+vendor/bin/phpunit src/V4/Compiler/ --testdox
+
+# Run specific compiler class tests
+vendor/bin/phpunit src/V4/Compiler/SingleFileComponentCompilerUnitTest.php --testdox
+
+# Run specific test by name
+vendor/bin/phpunit src/V4/Compiler/SingleFileComponentCompilerUnitTest.php --filter="test_name" --testdox
+
+# Get test counts for documentation updates
+vendor/bin/phpunit src/V4/Compiler/ | tail -3
+vendor/bin/phpunit src/V4/Compiler/SingleFileComponentCompilerUnitTest.php | tail -3
+```
+
+### 3. Common Documentation Update Locations
+When adding new compiler features, update these sections:
+- **Features Implemented** (around line 230): Add ✅ **New Feature Name**
+- **Test Coverage** (around line 280): Update test counts and descriptions
+- **Transformation Pipeline** (around line 360): Update code examples if transformation chain changes
+- **Common Extension Scenarios** (around line 550): Add new patterns if applicable
+
+### 4. Validation Checklist
+Before completing any compiler work:
+- [ ] All tests pass: `vendor/bin/phpunit src/V4/Compiler/`
+- [ ] Documentation updated in this file
+- [ ] Test counts are accurate in documentation
+- [ ] New features described with examples
+- [ ] Code patterns documented for future reference
+
+---
 
 ## Architecture Overview
 
@@ -402,7 +451,7 @@ protected function generateHash(string $viewPath, string $content): string
 ```
 
 #### 4. **Transformation Chain**
-View processing uses a chain of transformations in `generateView()`:
+View processing uses a chain of transformations in `generateView()` and `generatePartialViews()`:
 ```php
 protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
 {
@@ -413,6 +462,21 @@ protected function generateView(CompilationResult $result, ParsedComponent $pars
     }
 
     File::put($result->viewPath, $processedViewContent);
+}
+
+protected function generatePartialViews(ParsedComponent $parsed): void
+{
+    foreach ($parsed->inlinePartials as $partial) {
+        $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
+
+        // Apply the same transformations to partial content
+        $processedPartialContent = $partial['content'];
+        if ($parsed->hasInlineClass()) {
+            $processedPartialContent = $this->transformComputedPropertyReferences($processedPartialContent, $parsed->frontmatter);
+        }
+
+        File::put($partialPath, $processedPartialContent);
+    }
 }
 ```
 

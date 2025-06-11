@@ -260,7 +260,14 @@ class SingleFileComponentCompiler extends Mechanism
     {
         foreach ($parsed->inlinePartials as $partial) {
             $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
-            File::put($partialPath, $partial['content']);
+
+            // Apply computed property transformation to partial content if this is an inline component
+            $processedPartialContent = $partial['content'];
+            if ($parsed->hasInlineClass()) {
+                $processedPartialContent = $this->transformComputedPropertyReferences($processedPartialContent, $parsed->frontmatter);
+            }
+
+            File::put($partialPath, $processedPartialContent);
         }
     }
 

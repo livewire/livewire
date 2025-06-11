@@ -1608,4 +1608,62 @@ new class extends Livewire\Component {
 
         $this->assertEquals(3, $traitUsageCount);
     }
+
+    /** @test */
+    public function it_transforms_computed_properties_inside_inline_partials()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+
+    #[Computed]
+    public function total() {
+        return $this->count * 10;
+    }
+
+    #[Computed]
+    public function isEmpty() {
+        return $this->count === 0;
+    }
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+
+    @partial("summary")
+        <p>Total: {{ $total }}</p>
+        @if($isEmpty)
+            <span>Empty state</span>
+        @endif
+        <span>Count again: {{ $count }}</span>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/computed-with-partials.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that the main view content has computed properties transformed
+        $compiledViewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('Count: {{ $count }}', $compiledViewContent);
+        $this->assertStringContainsString('@partial(\'summary\', \'livewire-compiled::partial_summary_', $compiledViewContent);
+
+        // Check that partial file was created and contains transformed computed properties
+        $partialFiles = glob($this->cacheDir . '/views/partial_summary_*.blade.php');
+        $this->assertCount(1, $partialFiles);
+
+        $partialContent = File::get($partialFiles[0]);
+
+        // Computed properties in the partial should be transformed to $this->
+        $this->assertStringContainsString('<p>Total: {{ $this->total }}</p>', $partialContent);
+        $this->assertStringContainsString('@if($this->isEmpty)', $partialContent);
+
+        // Regular properties should remain unchanged
+        $this->assertStringContainsString('<span>Count again: {{ $count }}</span>', $partialContent);
+
+        // Original computed property references should not exist in the partial
+        $this->assertStringNotContainsString('{{ $total }}', $partialContent);
+        $this->assertStringNotContainsString('@if($isEmpty)', $partialContent);
+    }
 }
