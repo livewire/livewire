@@ -236,9 +236,9 @@ The compiler provides specific exceptions for different error scenarios:
 - Creates descriptive view names
 
 #### ✅ **Comprehensive Testing**
-- **50 unit tests** covering all functionality
-- **118 assertions** ensuring correctness
-- Tests for parsing, compilation, caching, layout, naked scripts, and error scenarios
+- **52 unit tests** covering all functionality
+- **183 assertions** ensuring correctness
+- Tests for parsing, compilation, caching, layout, naked scripts, computed properties, and error scenarios
 
 #### ✅ **Layout Directive Support**
 - Parses `@layout()` directives from component frontmatter
@@ -251,6 +251,30 @@ The compiler provides specific exceptions for different error scenarios:
 - Wraps them with `@script`/`@endscript` directives during compilation
 - Preserves all script attributes and handles multiple scripts
 - Skips components that already have `@script` directives
+
+#### ✅ **Computed Property Transformation**
+- Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in views
+- Preserves JIT evaluation while providing clean syntax
+- Validates against variable reassignment conflicts
+- Supports all computed attribute syntaxes and visibility modifiers
+
+#### ✅ **Inline Partials Support**
+- Processes `@partial()...@endpartial` blocks into separate view files
+- Generates unique partial view names with content-based hashing
+- Creates partial lookup properties in compiled classes
+- Supports partial data passing and complex nested scenarios
+
+#### ✅ **Use Statement Preservation**
+- Extracts and preserves `use` statements from frontmatter
+- Maintains import aliases and fully qualified names
+- Properly places use statements in generated class files
+- Works with both simple imports and aliased imports
+
+#### ✅ **Traditional PHP Tag Support**
+- Supports `<?php ... ?>` syntax alongside `@php ... @endphp`
+- Handles both inline and external component references
+- Compatible with all other features (layouts, partials, etc.)
+- Maintains consistent behavior across syntax variations
 
 ### Test Coverage
 
@@ -266,7 +290,7 @@ The compiler provides specific exceptions for different error scenarios:
 - Class generation flags
 - Namespace/class name extraction
 
-#### SingleFileComponentCompiler Tests (27 tests)
+#### SingleFileComponentCompiler Tests (52 tests)
 - Inline and external component compilation
 - Error handling and validation
 - Generated file content verification
@@ -275,6 +299,10 @@ The compiler provides specific exceptions for different error scenarios:
 - Directory management
 - Layout directive processing
 - Naked script transformation
+- Computed property transformation
+- Inline partials processing
+- Use statement preservation
+- Traditional PHP tag support
 
 ### Integration Points
 
@@ -317,3 +345,452 @@ $component = new $result->className();
 5. **Development Experience** - Add Artisan commands and better error reporting
 
 The compiler system is now feature-complete and ready for integration with the broader V4 system. It provides a solid foundation for the view-first component architecture while maintaining excellent performance through intelligent caching.
+
+---
+
+# Implementation Guide for Future Development
+
+## Architecture Overview
+
+### Transformation Pipeline
+
+The compiler uses a multi-stage transformation pipeline in the `compile()` method:
+
+```php
+public function compile(string $viewPath): CompilationResult
+{
+    // 1. File validation and content loading
+    $content = File::get($viewPath);
+    $hash = $this->generateHash($viewPath, $content);
+
+    // 2. Cache check (early return if up-to-date)
+    if ($this->isCompiled($viewPath, $hash)) {
+        return $this->getExistingCompilationResult($viewPath, $hash);
+    }
+
+    // 3. Parsing stage
+    $parsed = $this->parseComponent($content);
+
+    // 4. Result generation
+    $result = $this->generateCompilationResult($viewPath, $parsed, $hash);
+
+    // 5. File generation
+    $this->generateFiles($result, $parsed);
+
+    return $result;
+}
+```
+
+### Core Design Patterns
+
+#### 1. **Immutable Result Objects**
+`CompilationResult` and `ParsedComponent` are immutable data containers. This ensures thread safety and prevents accidental mutations during compilation.
+
+#### 2. **Regex-Based Parsing**
+The compiler uses carefully crafted regex patterns for parsing. This approach is:
+- **Fast**: No AST parsing overhead
+- **Flexible**: Easy to extend for new syntax
+- **Maintainable**: Clear patterns for specific features
+
+#### 3. **Hash-Based Caching**
+Cache invalidation uses content + timestamp + path hashing:
+```php
+protected function generateHash(string $viewPath, string $content): string
+{
+    return substr(md5($viewPath . $content . filemtime($viewPath)), 0, 8);
+}
+```
+
+#### 4. **Transformation Chain**
+View processing uses a chain of transformations in `generateView()`:
+```php
+protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
+{
+    $processedViewContent = $this->transformNakedScripts($parsed->viewContent);
+
+    if ($parsed->hasInlineClass()) {
+        $processedViewContent = $this->transformComputedPropertyReferences($processedViewContent, $parsed->frontmatter);
+    }
+
+    File::put($result->viewPath, $processedViewContent);
+}
+```
+
+## Adding New Features
+
+### Pattern: View Content Transformation
+
+When adding a new view transformation feature, follow this pattern:
+
+**1. Add the transformation method:**
+```php
+protected function transformMyFeature(string $viewContent, string $frontmatter): string
+{
+    // Your transformation logic here
+    return $transformedContent;
+}
+```
+
+**2. Integrate into the pipeline in `generateView()`:**
+```php
+protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
+{
+    $processedViewContent = $this->transformNakedScripts($parsed->viewContent);
+
+    if ($parsed->hasInlineClass()) {
+        $processedViewContent = $this->transformComputedPropertyReferences($processedViewContent, $parsed->frontmatter);
+        $processedViewContent = $this->transformMyFeature($processedViewContent, $parsed->frontmatter);
+    }
+
+    File::put($result->viewPath, $processedViewContent);
+}
+```
+
+**3. Add comprehensive tests:**
+```php
+/** @test */
+public function it_transforms_my_feature()
+{
+    $viewContent = '@php
+new class extends Livewire\Component {
+    // Test component
+}
+@endphp
+
+<div>
+    <!-- Test view content -->
+</div>';
+
+    $viewPath = $this->tempPath . '/my-feature.blade.php';
+    File::put($viewPath, $viewContent);
+    $result = $this->compiler->compile($viewPath);
+
+    $compiledViewContent = File::get($result->viewPath);
+
+    // Assertions here
+}
+```
+
+### Pattern: Parsing Extension
+
+To extend parsing capabilities:
+
+**1. Modify `parseComponent()` to extract new information:**
+```php
+// Add new parsing logic before component detection
+$myFeatureData = $this->extractMyFeatureData($content);
+
+// Pass to ParsedComponent constructor (you may need to extend it)
+return new ParsedComponent(
+    $frontmatter,
+    trim($viewContent),
+    false,
+    null,
+    $layoutTemplate,
+    $layoutData,
+    $inlinePartials,
+    $myFeatureData  // New parameter
+);
+```
+
+**2. Extend `ParsedComponent` if needed:**
+```php
+public function __construct(
+    // ... existing parameters
+    public readonly mixed $myFeatureData = null
+) {
+    // Constructor logic
+}
+```
+
+### Pattern: Class Generation Enhancement
+
+To modify generated class files:
+
+**1. Add generation method:**
+```php
+protected function generateMyClassFeature($myData): string
+{
+    // Generate class code snippet
+    return "// Generated feature code\n";
+}
+```
+
+**2. Integrate in `generateClass()`:**
+```php
+protected function generateClass(CompilationResult $result, ParsedComponent $parsed): void
+{
+    // ... existing logic
+
+    $myFeatureCode = '';
+    if ($parsed->hasMyFeature()) {
+        $myFeatureCode = $this->generateMyClassFeature($parsed->myFeatureData);
+    }
+
+    $classContent = "<?php
+
+namespace {$namespace};
+
+{$useStatementsSection}{$layoutAttribute}class {$className} extends \\Livewire\\Component
+{
+{$partialLookupProperty}{$myFeatureCode}{$classBody}
+
+    public function render()
+    {
+        return view('{$viewName}');
+    }
+}
+";
+}
+```
+
+## Common Extension Scenarios
+
+### Scenario 1: Adding a New Directive
+
+**Example**: Adding `@asset()` directive support
+
+```php
+// 1. Add parsing in parseComponent()
+$assetDirectives = $this->extractAssetDirectives($content);
+
+// 2. Add transformation method
+protected function transformAssetDirectives(string $viewContent): string
+{
+    return preg_replace_callback(
+        '/@asset\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/',
+        function ($matches) {
+            return "{{ asset('{$matches[1]}') }}";
+        },
+        $viewContent
+    );
+}
+
+// 3. Add to transformation chain
+if ($parsed->hasAssetDirectives()) {
+    $processedViewContent = $this->transformAssetDirectives($processedViewContent);
+}
+```
+
+### Scenario 2: Adding Attribute Processing
+
+**Example**: Processing `#[Livewire\Attributes\Js]` attributes
+
+```php
+// 1. Extract in frontmatter processing
+protected function extractJsAttributes(string $frontmatter): array
+{
+    $pattern = '/#\[\s*(?:\\\\?Livewire\\\\Attributes\\\\)?Js[^\]]*\]\s*(?:public|protected|private)?\s*function\s+([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/';
+    // ... extraction logic
+}
+
+// 2. Generate corresponding class modifications
+protected function generateJsAttributeCode(array $jsMethods): string
+{
+    // Generate JavaScript method handling code
+}
+```
+
+### Scenario 3: Adding New Component Type
+
+**Example**: Supporting `@livewire()` component embedding
+
+```php
+// 1. Add detection in parseComponent()
+if (preg_match('/@livewire\s*\(\s*[\'"]([^\'"]+)[\'"]/', $content, $matches)) {
+    // Handle livewire component embedding
+}
+
+// 2. Add new properties to ParsedComponent
+public readonly array $embeddedComponents = []
+
+// 3. Process in file generation
+foreach ($parsed->embeddedComponents as $embedded) {
+    // Generate embedding code
+}
+```
+
+## Testing Patterns
+
+### Test File Structure
+
+```php
+/** @test */
+public function feature_description_in_snake_case()
+{
+    // 1. Arrange: Set up component content
+    $viewContent = '@php ... @endphp <div>...</div>';
+
+    // 2. Act: Compile the component
+    $viewPath = $this->tempPath . '/test-component.blade.php';
+    File::put($viewPath, $viewContent);
+    $result = $this->compiler->compile($viewPath);
+
+    // 3. Assert: Verify expected transformations
+    $compiledViewContent = File::get($result->viewPath);
+    $this->assertStringContainsString('expected output', $compiledViewContent);
+
+    // For class generation tests
+    $classContent = File::get($result->classPath);
+    $this->assertStringContainsString('expected class content', $classContent);
+}
+```
+
+### Test Categories to Cover
+
+1. **Happy Path Tests**: Normal usage scenarios
+2. **Edge Case Tests**: Empty content, malformed syntax, etc.
+3. **Error Handling Tests**: Invalid input, file system errors
+4. **Performance Tests**: Large files, many components
+5. **Integration Tests**: Multiple features working together
+
+### Regex Testing
+
+When adding regex patterns, test thoroughly:
+
+```php
+/** @test */
+public function regex_pattern_handles_various_syntaxes()
+{
+    $testCases = [
+        '#[Computed]' => true,
+        '#[Computed(cache: true)]' => true,
+        '#[\Livewire\Attributes\Computed]' => true,
+        '#[ Computed ]' => true,
+        '#[NotComputed]' => false,
+    ];
+
+    foreach ($testCases as $input => $shouldMatch) {
+        $matches = preg_match($this->pattern, $input);
+        $this->assertEquals($shouldMatch, (bool) $matches, "Failed for: $input");
+    }
+}
+```
+
+## Performance Considerations
+
+### Compilation Performance
+
+1. **Regex Optimization**: Use atomic groups `(?>...)` and possessive quantifiers when possible
+2. **Early Returns**: Check cache before expensive operations
+3. **Minimal File I/O**: Batch file operations where possible
+
+### Runtime Performance
+
+1. **No Runtime Overhead**: Transformations happen at compile time only
+2. **Standard PHP/Blade**: Generated files use standard Laravel patterns
+3. **Efficient Caching**: Hash-based cache invalidation is O(1)
+
+### Memory Usage
+
+1. **Stream Processing**: Process large files in chunks if needed
+2. **Immutable Objects**: Prevent memory leaks from circular references
+3. **Cleanup**: Unset large variables after processing
+
+## Debugging Guide
+
+### Common Issues and Solutions
+
+#### Issue: Regex Not Matching
+**Symptoms**: Feature not being transformed
+**Debug Steps**:
+1. Test regex in isolation with `preg_match_all()`
+2. Use `PREG_OFFSET_CAPTURE` to see match positions
+3. Check for escaped characters in input
+
+#### Issue: Generated Class Invalid
+**Symptoms**: Parse errors when including generated class
+**Debug Steps**:
+1. Check generated class file manually
+2. Validate namespace and use statements
+3. Ensure proper PHP syntax in generated code
+
+#### Issue: Cache Not Invalidating
+**Symptoms**: Changes not reflected after compilation
+**Debug Steps**:
+1. Check file modification times
+2. Verify hash generation includes all relevant data
+3. Clear cache manually to test
+
+### Debug Helpers
+
+```php
+// Add temporary debugging to compiler methods
+protected function debug($label, $data)
+{
+    if (app()->environment('local')) {
+        logger()->info("COMPILER DEBUG: $label", ['data' => $data]);
+    }
+}
+
+// Use in methods
+$this->debug('Parsed frontmatter', $frontmatter);
+$this->debug('Computed properties found', $computedProperties);
+```
+
+## Maintenance Guidelines
+
+### Code Quality
+
+1. **Single Responsibility**: Each method should do one thing well
+2. **Clear Naming**: Method names should describe what they do
+3. **Documentation**: Document complex regex patterns and business logic
+4. **Error Messages**: Provide helpful error messages with context
+
+### Backward Compatibility
+
+1. **Additive Changes**: Add new features without breaking existing ones
+2. **Deprecation Path**: Deprecate old features before removing
+3. **Version Testing**: Test against existing V4 components
+
+### Future-Proofing
+
+1. **Extensible Design**: Use interfaces and abstractions where appropriate
+2. **Configuration**: Make behavior configurable where reasonable
+3. **Monitoring**: Add metrics for compilation performance and cache hit rates
+
+## Integration Examples
+
+### Service Provider Registration
+
+```php
+// In a service provider
+public function register()
+{
+    $this->app->singleton(SingleFileComponentCompiler::class, function ($app) {
+        return new SingleFileComponentCompiler(
+            storage_path('framework/livewire')
+        );
+    });
+}
+```
+
+### Artisan Command Integration
+
+```php
+// Cache clearing command
+class ClearLivewireCache extends Command
+{
+    public function handle(SingleFileComponentCompiler $compiler)
+    {
+        // Clear compiled files
+        File::deleteDirectory(storage_path('framework/livewire'));
+        $this->info('Livewire cache cleared!');
+    }
+}
+```
+
+### File Watcher Integration
+
+```php
+// Development file watcher
+$watcher = new FileWatcher();
+$watcher->watch('resources/views/components', function ($file) use ($compiler) {
+    if (str_ends_with($file, '.wire.php')) {
+        $compiler->compile($file);
+        $this->output->writeln("Recompiled: $file");
+    }
+});
+```
+
+This comprehensive guide should provide everything needed for future development on the compiler system. The patterns, examples, and debugging information should enable confident extension and maintenance of the codebase.
