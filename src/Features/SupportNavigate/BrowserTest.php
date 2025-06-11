@@ -83,7 +83,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/nonce2', fn () => self::renderNoncePage('Second Nonce Page', 'EFGH5678'));
             Route::get('/page-without-livewire-component', fn () => Blade::render(<<<'HTML'
                 <html>
-                    <head>
+                <head>
                         <meta name="empty-layout" content>
 
                         <script src="/test-navigate-asset.js" data-navigate-track></script>
@@ -99,6 +99,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/persisted-child-page', PageWithPersistedChild::class)->middleware('web');
             Route::get('/persisted-animation-page', PageWithPersistedAnimation::class)->middleware('web');
             Route::get('/page-with-autofocused-input', PageWithAutofocusedInput::class)->middleware('web');
+            Route::get('/page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class)->middleware('web');
+            Route::get('/page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
 
             Route::get('/first-noscript', FirstNoscriptPage::class)->middleware('web');
@@ -847,6 +849,20 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForNavigate()->click('@link.to.self')
                 ->waitForLivewireToLoad()
                 ->assertFocused('@input')
+            ;
+        });
+    }
+
+    public function test_internal_redirect_to_external_page_does_not_break_navigate()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/page-with-redirect-to-internal-which-has-external-link')
+                ->waitForLivewireToLoad()
+                ->tinker()
+                ->waitForNavigate()->click('@link')
+                ->assertConsoleLogHasNoErrors()
+                ->assertUrlIs('https://www.google.com')
             ;
         });
     }
@@ -1724,6 +1740,37 @@ class PageWithAutofocusedInput extends Component
         <div dusk="page-with-autofocused-input">
             <a href="/page-with-autofocused-input" wire:navigate dusk="link.to.self">Go to self</a>
             <input type="text" dusk="input" autofocus>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithRedirectToInternalWhichHasExternalLinkPage extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-redirect-to-internal-which-has-external-link">
+            <a href="/page-with-redirect-to-external-page" wire:navigate dusk="link">Go to other component</a>
+        </div>
+        HTML;
+    }
+}
+
+class PageWithRedirectToExternalPage extends Component
+{
+    public function mount()
+    {
+        $this->redirect('https://www.google.com');
+    }
+
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-redirect-to-external-page">
+            Test
         </div>
         HTML;
     }
