@@ -31,7 +31,7 @@ trait HandlesPartials
 
         $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this);
 
-        $partial = new Partial($name, $view, array_merge($componentData, $data));
+        $partial = new Partial($name, $view, array_merge($componentData, $data), $this);
 
         $this->partials[] = $partial;
 

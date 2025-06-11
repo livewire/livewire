@@ -2,6 +2,8 @@
 
 namespace Livewire\V4\Partials;
 
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
+use Livewire\Component;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -11,12 +13,17 @@ class Partial implements \Stringable, Htmlable, Jsonable
         public string $name,
         public string $view,
         public array $data = [],
+        public ?Component $component = null,
         public string $mode = 'replace',
     ) {}
 
     public function render()
     {
+        app(ExtendBlade::class)->startLivewireRendering($this->component);
+
         $output = view($this->view, $this->data)->render();
+
+        app(ExtendBlade::class)->endLivewireRendering();
 
         return "<!--[if PARTIAL:{$this->name}]><![endif]-->"
             . $output

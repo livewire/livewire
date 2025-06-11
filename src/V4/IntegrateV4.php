@@ -2,10 +2,11 @@
 
 namespace Livewire\V4;
 
-use Illuminate\Support\Facades\Blade;
+use Livewire\V4\Slots\SupportSlots;
 use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
-use Livewire\V4\Slots\SupportSlots;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Blade;
 
 class IntegrateV4
 {
@@ -25,10 +26,22 @@ class IntegrateV4
 
     public function __invoke()
     {
+        $this->supportRoutingMacro();
         $this->supportSingleFileComponents();
         $this->supportWireTagSyntax();
         $this->registerSlotDirectives();
         $this->registerSlotsSupport();
+    }
+
+    protected function supportRoutingMacro()
+    {
+        Route::macro('wire', function ($uri, $view) {
+            if (class_exists($view)) {
+                return Route::get($uri, $view);
+            }
+
+            return app('livewire')->route($uri, $view);
+        });
     }
 
     protected function supportSingleFileComponents()
