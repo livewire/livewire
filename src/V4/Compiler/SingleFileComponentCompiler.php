@@ -180,15 +180,25 @@ class SingleFileComponentCompiler extends Mechanism
 
     protected function extractInlinePartials(string $content, array &$inlinePartials): string
     {
-        // Pattern to match @partial('name', [...])...@endpartial blocks
-        $pattern = '/@partial\s*\(\s*[\'"]([^\'"]+)[\'"]\s*(?:,\s*(\[.*?\]))?\s*\)(.*?)@endpartial/s';
+        // More flexible pattern to handle both @partial('name', ...) and @partial(namedParam: 'value', ...)
+        $pattern = '/@partial\s*\((.*?)\)(.*?)@endpartial/s';
 
         return preg_replace_callback($pattern, function ($matches) use (&$inlinePartials) {
-            $partialName = $matches[1];
-            $partialData = isset($matches[2]) && !empty(trim($matches[2])) ? $matches[2] : '[]';
-            $partialContent = trim($matches[3]);
+            $parameters = trim($matches[1]);
+            $partialContent = trim($matches[2]);
 
-            // Generate a unique view name for this partial using content hash instead of time
+            // Try to extract explicit name first (old format)
+            if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
+                // Has explicit quoted name as first parameter
+                $partialName = $paramMatches[1];
+                $partialData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
+            } else {
+                // No explicit name, generate one (handles named parameters like mode: 'hey')
+                $partialName = uniqid('partial_');
+                $partialData = $parameters ?: '[]';
+            }
+
+            // Generate a unique view name for this partial using content hash
             $partialHash = substr(md5($partialContent . $partialName), 0, 8);
             // Keep dashes in view name for consistency with tests
             $partialViewName = 'livewire-compiled::partial_' . $partialName . '_' . $partialHash;

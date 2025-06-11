@@ -25,7 +25,7 @@ class Partial implements \Stringable, Htmlable, Jsonable
 
         app(ExtendBlade::class)->endLivewireRendering();
 
-        return "<!--[if PARTIAL:{$this->name}]><![endif]-->"
+        return "<!--[if PARTIAL:{$this->name}:{$this->mode}]><![endif]-->"
             . $output
             . "<!--[if ENDPARTIAL:{$this->name}]><![endif]-->";
     }

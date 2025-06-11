@@ -516,6 +516,7 @@ class HandleComponents extends Mechanism
 
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
+            $methods[] = '__partial';
 
             if (! in_array($method, $methods)) {
                 throw new MethodNotFoundException($method);

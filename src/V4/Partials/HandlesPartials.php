@@ -8,7 +8,10 @@ trait HandlesPartials
 {
     protected $partials = [];
 
-    public function partial($name, $view = null, $data = []): Partial
+    // @todo: hack...
+    public $isSubsequentRequest = false;
+
+    public function partial($name, $view = null, $data = [], $mode = null, $defer = false, $fromBladeDirective = false)
     {
         // If second parameter is an array, treat it as data and use lookup for view
         if (is_array($view)) {
@@ -29,15 +32,42 @@ trait HandlesPartials
             );
         }
 
+        if ($mode === null) {
+            $mode = ($this->isSubsequentRequest && $fromBladeDirective) ? 'skip' : 'replace';
+        }
+
+        if ($fromBladeDirective) {
+            if ($this->isSubsequentRequest) {
+                if ($mode === 'skip') {
+                    return new SkippedPartial($name);
+                }
+            } else {
+                if ($defer || $mode === 'defer') {
+                    return new DeferredPartial($name);
+                } elseif ($mode === 'lazy') {
+                    return new LazyPartial($name);
+                }
+            }
+        }
+
         $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this);
 
-        $partial = new Partial($name, $view, array_merge($componentData, $data), $this);
+        $partial = new Partial($name, $view, array_merge($componentData, $data), $this, $mode);
 
-        $this->partials[] = $partial;
+        if (! $fromBladeDirective) {
+            $this->skipRender();
 
-        $this->skipRender();
+            $this->partials[] = $partial;
+        }
 
         return $partial;
+    }
+
+    // This method is called from the frontend via: wire:click="$partial('name...')"
+    // This method has been whitelisted in HandleComponents.php
+    public function __partial($name)
+    {
+        $this->partial($name);
     }
 
     public function getPartials(): array

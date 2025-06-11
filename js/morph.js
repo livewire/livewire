@@ -2,6 +2,7 @@ import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 import { skipSlotContents } from "./features/supportSlots"
+import { skipPartialContents } from "./features/supportPartials"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -75,6 +76,7 @@ function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             skipSlotContents(el, toEl, skipUntil)
+            skipPartialContents(el, toEl, skipUntil)
 
             if (isntElement(el)) return
 

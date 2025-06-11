@@ -13,17 +13,18 @@ on('effect', ({ component, effects }) => {
         // Alpine effects (that are processed via flushJobs in scheduler).
         queueMicrotask(() => {
             queueMicrotask(() => {
-                streamPartial(component, name, content, mode)
+                streamPartial(component, name, content)
             })
         })
     })
 })
 
-export function streamPartial(component, name, content, mode) {
+export function streamPartial(component, name, content) {
     let { startNode, endNode } = findPartialComments(component.el, name)
 
     if (!startNode || !endNode) return
 
+    let mode = extractPartialMode(startNode)
     let strippedContent = stripPartialComments(content, name)
 
     let parentElement = startNode.parentElement
@@ -56,6 +57,66 @@ export function streamPartial(component, name, content, mode) {
     }
 }
 
+export function skipPartialContents(el, toEl, skipUntil) {
+    if (isStartMarker(el) && isStartMarker(toEl)) {
+        let mode = extractPartialMode(toEl)
+
+        if (mode === 'skip') {
+            skipUntil(node => isEndMarker(node))
+        } else if (mode === 'prepend') {
+            // Collect all siblings until end marker
+            let sibling = toEl.nextSibling
+            let siblings = []
+            while (sibling && !isEndMarker(sibling)) {
+                siblings.push(sibling)
+                sibling = sibling.nextSibling
+            }
+
+            // Insert collected siblings after the start marker
+            siblings.forEach(node => {
+                el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling)
+            })
+
+            skipUntil(node => isEndMarker(node))
+        } else if (mode === 'append') {
+            // Find end marker of fromEl
+            let endMarker = el.nextSibling
+            while (endMarker && !isEndMarker(endMarker)) {
+                endMarker = endMarker.nextSibling
+            }
+
+            // Collect all siblings until end marker
+            let sibling = toEl.nextSibling
+            let siblings = []
+            while (sibling && !isEndMarker(sibling)) {
+                siblings.push(sibling)
+                sibling = sibling.nextSibling
+            }
+
+            // Insert collected siblings before the end marker
+            siblings.forEach(node => {
+                endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker)
+            })
+
+            skipUntil(node => isEndMarker(node))
+        }
+    }
+}
+
+function isStartMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith('[if PARTIAL')
+}
+
+function isEndMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith('[if ENDPARTIAL')
+}
+
+function extractPartialMode(el) {
+    let mode = el.textContent.match(/\[if PARTIAL:.*:(\w+)\]/)?.[1]
+
+    return mode || 'replace'
+}
+
 function stripPartialComments(content, partialName) {
     // Remove the start and end comment markers
     let startComment = `<!--[if PARTIAL:${partialName}]><![endif]-->`
@@ -82,11 +143,11 @@ function findPartialComments(rootEl, partialName) {
         // Check all child nodes (including text and comment nodes)
         Array.from(el.childNodes).forEach(node => {
             if (node.nodeType === Node.COMMENT_NODE) {
-                if (node.textContent === `[if PARTIAL:${partialName}]><![endif]`) {
+                if (node.textContent.match(new RegExp(`\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
                     startNode = node
                 }
 
-                if (node.textContent === `[if ENDPARTIAL:${partialName}]><![endif]`) {
+                if (node.textContent.match(new RegExp(`\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
                     endNode = node
                 }
             }

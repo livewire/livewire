@@ -4479,6 +4479,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
+  wireProperty("$partial", (component) => async (name) => {
+    return await component.$wire.call("__partial", name);
+  });
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
   });
@@ -4665,6 +4668,124 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
+  // js/features/supportPartials.js
+  on2("effect", ({ component, effects }) => {
+    let partials = effects.partials;
+    if (!partials)
+      return;
+    partials.forEach((partial) => {
+      let { name, mode, content } = partial;
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          streamPartial(component, name, content);
+        });
+      });
+    });
+  });
+  function streamPartial(component, name, content) {
+    let { startNode, endNode } = findPartialComments(component.el, name);
+    if (!startNode || !endNode)
+      return;
+    let mode = extractPartialMode(startNode);
+    let strippedContent = stripPartialComments(content, name);
+    let parentElement = startNode.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    if (mode === "append") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).forEach((node) => {
+        endNode.parentNode.insertBefore(node, endNode);
+      });
+    } else if (mode === "prepend") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).reverse().forEach((node) => {
+        startNode.parentNode.insertBefore(node, startNode.nextSibling);
+      });
+    } else {
+      morphPartial(component, startNode, endNode, strippedContent);
+    }
+  }
+  function skipPartialContents(el, toEl, skipUntil) {
+    if (isStartMarker(el) && isStartMarker(toEl)) {
+      let mode = extractPartialMode(toEl);
+      if (mode === "skip") {
+        skipUntil((node) => isEndMarker(node));
+      } else if (mode === "prepend") {
+        let sibling = toEl.nextSibling;
+        let siblings = [];
+        while (sibling && !isEndMarker(sibling)) {
+          siblings.push(sibling);
+          sibling = sibling.nextSibling;
+        }
+        siblings.forEach((node) => {
+          el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+        });
+        skipUntil((node) => isEndMarker(node));
+      } else if (mode === "append") {
+        let endMarker = el.nextSibling;
+        while (endMarker && !isEndMarker(endMarker)) {
+          endMarker = endMarker.nextSibling;
+        }
+        let sibling = toEl.nextSibling;
+        let siblings = [];
+        while (sibling && !isEndMarker(sibling)) {
+          siblings.push(sibling);
+          sibling = sibling.nextSibling;
+        }
+        siblings.forEach((node) => {
+          endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+        });
+        skipUntil((node) => isEndMarker(node));
+      }
+    }
+  }
+  function isStartMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if PARTIAL");
+  }
+  function isEndMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDPARTIAL");
+  }
+  function extractPartialMode(el) {
+    let mode = el.textContent.match(/\[if PARTIAL:.*:(\w+)\]/)?.[1];
+    return mode || "replace";
+  }
+  function stripPartialComments(content, partialName) {
+    let startComment = `<!--[if PARTIAL:${partialName}]><![endif]-->`;
+    let endComment = `<!--[if ENDPARTIAL:${partialName}]><![endif]-->`;
+    let stripped = content.replace(startComment, "").replace(endComment, "");
+    return stripped.trim();
+  }
+  function findPartialComments(rootEl, partialName) {
+    let startNode = null;
+    let endNode = null;
+    walkElements(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent.match(new RegExp(`\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+            startNode = node;
+          }
+          if (node.textContent.match(new RegExp(`\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements(child, callback);
+    });
+  }
+
   // js/morph.js
   function morph(component, el, html) {
     let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
@@ -4712,6 +4833,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return {
       updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
         skipSlotContents(el, toEl, skipUntil);
+        skipPartialContents(el, toEl, skipUntil);
         if (isntElement(el))
           return;
         trigger2("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
@@ -4806,7 +4928,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function findSlotComments(rootEl, slotName) {
     let startNode = null;
     let endNode = null;
-    walkElements(rootEl, (el, skip) => {
+    walkElements2(rootEl, (el, skip) => {
       if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
         return skip();
       }
@@ -4823,24 +4945,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
     return { startNode, endNode };
   }
-  function walkElements(el, callback) {
+  function walkElements2(el, callback) {
     let skip = false;
     callback(el, () => skip = true);
     if (skip)
       return;
     Array.from(el.children).forEach((child) => {
-      walkElements(child, callback);
+      walkElements2(child, callback);
     });
   }
   function skipSlotContents(el, toEl, skipUntil) {
-    if (isStartMarker(el) && isStartMarker(toEl)) {
-      skipUntil((node) => isEndMarker(node));
+    if (isStartMarker2(el) && isStartMarker2(toEl)) {
+      skipUntil((node) => isEndMarker2(node));
     }
   }
-  function isStartMarker(el) {
+  function isStartMarker2(el) {
     return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
   }
-  function isEndMarker(el) {
+  function isEndMarker2(el) {
     return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
   }
   function extractSlotData(el) {
@@ -4856,7 +4978,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function checkPreviousSiblingForSlotStartMarker(el) {
     let node = el.previousSibling;
     while (node) {
-      if (isStartMarker(node)) {
+      if (isStartMarker2(node)) {
         return node;
       }
       node = node.previousSibling;
@@ -9690,79 +9812,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       window.location.href = url;
     });
   });
-
-  // js/features/supportPartials.js
-  on2("effect", ({ component, effects }) => {
-    let partials = effects.partials;
-    if (!partials)
-      return;
-    partials.forEach((partial) => {
-      let { name, mode, content } = partial;
-      queueMicrotask(() => {
-        queueMicrotask(() => {
-          streamPartial(component, name, content, mode);
-        });
-      });
-    });
-  });
-  function streamPartial(component, name, content, mode) {
-    let { startNode, endNode } = findPartialComments(component.el, name);
-    if (!startNode || !endNode)
-      return;
-    let strippedContent = stripPartialComments(content, name);
-    let parentElement = startNode.parentElement;
-    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-    if (mode === "append") {
-      let container = document.createElement(parentElementTag);
-      container.innerHTML = strippedContent;
-      Array.from(container.childNodes).forEach((node) => {
-        endNode.parentNode.insertBefore(node, endNode);
-      });
-    } else if (mode === "prepend") {
-      let container = document.createElement(parentElementTag);
-      container.innerHTML = strippedContent;
-      Array.from(container.childNodes).reverse().forEach((node) => {
-        startNode.parentNode.insertBefore(node, startNode.nextSibling);
-      });
-    } else {
-      morphPartial(component, startNode, endNode, strippedContent);
-    }
-  }
-  function stripPartialComments(content, partialName) {
-    let startComment = `<!--[if PARTIAL:${partialName}]><![endif]-->`;
-    let endComment = `<!--[if ENDPARTIAL:${partialName}]><![endif]-->`;
-    let stripped = content.replace(startComment, "").replace(endComment, "");
-    return stripped.trim();
-  }
-  function findPartialComments(rootEl, partialName) {
-    let startNode = null;
-    let endNode = null;
-    walkElements2(rootEl, (el, skip) => {
-      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-        return skip();
-      }
-      Array.from(el.childNodes).forEach((node) => {
-        if (node.nodeType === Node.COMMENT_NODE) {
-          if (node.textContent === `[if PARTIAL:${partialName}]><![endif]`) {
-            startNode = node;
-          }
-          if (node.textContent === `[if ENDPARTIAL:${partialName}]><![endif]`) {
-            endNode = node;
-          }
-        }
-      });
-    });
-    return { startNode, endNode };
-  }
-  function walkElements2(el, callback) {
-    let skip = false;
-    callback(el, () => skip = true);
-    if (skip)
-      return;
-    Array.from(el.children).forEach((child) => {
-      walkElements2(child, callback);
-    });
-  }
 
   // js/directives/wire-transition.js
   on2("morph.added", ({ el }) => {

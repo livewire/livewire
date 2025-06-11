@@ -10,8 +10,25 @@ class SupportPartials extends ComponentHook
     static function provide()
     {
         Blade::directive('partial', function ($expression) {
-            return "<?php if (isset(\$_instance)) echo \$_instance->partial({$expression}); ?>";
+            // If expression doesn't start with a named parameter, prepend a random name
+            if (static::expressionStartsWithNamedParameter($expression)) {
+                $randomName = "'" . uniqid('partial_') . "'";
+                $expression = $randomName . ($expression ? ', ' . $expression : '');
+            }
+
+            return "<?php if (isset(\$_instance)) echo \$_instance->partial({$expression}, fromBladeDirective: true); ?>";
         });
+    }
+
+    static function expressionStartsWithNamedParameter($expression)
+    {
+        // Check if expression starts with a named parameter (word followed by colon)
+        return !! preg_match('/^\s*\w+\s*:/', trim($expression));
+    }
+
+    function hydrate()
+    {
+        $this->component->isSubsequentRequest = true;
     }
 
     function dehydrate($context)

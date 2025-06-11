@@ -172,4 +172,44 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@other-counter', '6')
         ;
     }
+
+    public function test_can_use_partials_with_optional_names()
+    {
+        $this->markTestSkipped('This demonstrates the auto-name generation concept, but requires inline partial support to test properly');
+
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $items = ['foo', 'bar'];
+
+                public function boot() {
+                    View::addNamespace('partials', __DIR__ . '/fixtures');
+                }
+
+                public function changeItems()
+                {
+                    $this->items = ['baz', 'bob'];
+
+                    // This would work with auto-generated name:
+                    // @partial('partials::items') -> gets auto-generated name
+                    // vs the old way: @partial('items', 'partials::items')
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="changeItems" dusk="button">Change Items</button>
+
+                    <ul dusk="items">
+                        <!-- This syntax would now work with auto-generated name -->
+                        <!-- @partial('partials::items') -->
+
+                        <!-- Instead of requiring: -->
+                        @partial('items', 'partials::items')
+                    </ul>
+                </div>
+                HTML; }
+        })
+        ->waitForText('foo')
+        ->assertSourceHas("<li>foo</li>\n<li>bar</li>")
+        ;
+    }
 }
