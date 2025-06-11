@@ -10382,7 +10382,9 @@ on("commit.pooling", ({ commits }) => {
 });
 
 // js/features/supportNavigate.js
-shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+document.addEventListener("livewire:initialized", () => {
+  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+});
 document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
 document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
 document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
