@@ -98,6 +98,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/page-with-alpine-on-html-element', PageWithAlpineOnHtmlElement::class);
             Route::get('/persisted-child-page', PageWithPersistedChild::class)->middleware('web');
             Route::get('/persisted-animation-page', PageWithPersistedAnimation::class)->middleware('web');
+            Route::get('/page-with-autofocused-input', PageWithAutofocusedInput::class)->middleware('web');
             Route::get('/script-component', ScriptComponent::class);
 
             Route::get('/first-noscript', FirstNoscriptPage::class)->middleware('web');
@@ -832,6 +833,20 @@ class BrowserTest extends \Tests\BrowserTestCase
             $browser
                 ->visit('/persisted-animation-page')
                 ->tinker()
+            ;
+        });
+    }
+
+    public function test_input_with_autofocus_is_focused_after_navigation()
+    {
+        $this->browse(function (Browser $browser) {
+            $browser
+                ->visit('/page-with-autofocused-input')
+                ->waitForLivewireToLoad()
+                ->assertFocused('@input')
+                ->waitForNavigate()->click('@link.to.self')
+                ->waitForLivewireToLoad()
+                ->assertFocused('@input')
             ;
         });
     }
@@ -1695,6 +1710,20 @@ class PageWithPersistedAnimation extends Component
               <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
             </svg>
             @endpersist
+        </div>
+        HTML;
+    }
+}
+
+class PageWithAutofocusedInput extends Component
+{
+    #[Layout('test-views::layout-persist')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div dusk="page-with-autofocused-input">
+            <a href="/page-with-autofocused-input" wire:navigate dusk="link.to.self">Go to self</a>
+            <input type="text" dusk="input" autofocus>
         </div>
         HTML;
     }
