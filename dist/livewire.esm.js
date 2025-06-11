@@ -8850,13 +8850,13 @@ function getUriStringFromUrlObject(urlObject) {
 }
 
 // js/plugins/navigate/fetch.js
-function fetchHtml(destination, callback) {
+function fetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
   performFetch(uri, (html, finalDestination) => {
     callback(html, finalDestination);
-  });
+  }, errorCallback);
 }
-function performFetch(uri, callback) {
+function performFetch(uri, callback, errorCallback) {
   let options = {
     headers: {
       "X-Livewire-Navigate": ""
@@ -8876,19 +8876,25 @@ function performFetch(uri, callback) {
     return response.text();
   }).then((html) => {
     callback(html, finalDestination);
+  }).catch((error2) => {
+    errorCallback();
+    throw error2;
   });
 }
 
 // js/plugins/navigate/prefetch.js
 var prefetches = {};
 var cacheDuration = 3e4;
-function prefetchHtml(destination, callback) {
+function prefetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
   if (prefetches[uri])
     return;
   prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
   performFetch(uri, (html, routedUri) => {
     callback(html, routedUri);
+  }, () => {
+    delete prefetches[uri];
+    errorCallback();
   });
 }
 function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
@@ -9343,6 +9349,8 @@ function navigate_default(Alpine23) {
         return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
     });
     whenThisLinkIsPressed(el, (whenItIsReleased) => {
@@ -9351,6 +9359,8 @@ function navigate_default(Alpine23) {
         return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
       whenItIsReleased(() => {
         let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -9400,6 +9410,8 @@ function navigate_default(Alpine23) {
           });
         });
       });
+    }, () => {
+      showProgressBar && finishAndHideProgressBar();
     });
   }
   whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
@@ -9451,9 +9463,9 @@ function navigate_default(Alpine23) {
     fireEventForOtherLibrariesToHookInto("alpine:navigated");
   });
 }
-function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
+function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) {
   getPretchedHtmlOr(fromDestination, callback, () => {
-    fetchHtml(fromDestination, callback);
+    fetchHtml(fromDestination, callback, errorCallback);
   });
 }
 function preventAlpineFromPickingUpDomChanges(Alpine23, callback) {

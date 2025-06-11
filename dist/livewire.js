@@ -7448,13 +7448,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/plugins/navigate/fetch.js
-  function fetchHtml(destination, callback) {
+  function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
     performFetch(uri, (html, finalDestination) => {
       callback(html, finalDestination);
-    });
+    }, errorCallback);
   }
-  function performFetch(uri, callback) {
+  function performFetch(uri, callback, errorCallback) {
     let options = {
       headers: {
         "X-Livewire-Navigate": ""
@@ -7474,19 +7474,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return response.text();
     }).then((html) => {
       callback(html, finalDestination);
+    }).catch((error2) => {
+      errorCallback();
+      throw error2;
     });
   }
 
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
   var cacheDuration = 3e4;
-  function prefetchHtml(destination, callback) {
+  function prefetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
     if (prefetches[uri])
       return;
     prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
     performFetch(uri, (html, routedUri) => {
       callback(html, routedUri);
+    }, () => {
+      delete prefetches[uri];
+      errorCallback();
     });
   }
   function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
@@ -7939,6 +7945,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         prefetchHtml(destination, (html, finalDestination) => {
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+        }, () => {
+          showProgressBar && finishAndHideProgressBar();
         });
       });
       whenThisLinkIsPressed(el, (whenItIsReleased) => {
@@ -7947,6 +7955,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         prefetchHtml(destination, (html, finalDestination) => {
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+        }, () => {
+          showProgressBar && finishAndHideProgressBar();
         });
         whenItIsReleased(() => {
           let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -7996,6 +8006,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             });
           });
         });
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
     }
     whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
@@ -8047,9 +8059,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       fireEventForOtherLibrariesToHookInto("alpine:navigated");
     });
   }
-  function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
+  function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) {
     getPretchedHtmlOr(fromDestination, callback, () => {
-      fetchHtml(fromDestination, callback);
+      fetchHtml(fromDestination, callback, errorCallback);
     });
   }
   function preventAlpineFromPickingUpDomChanges(Alpine3, callback) {
