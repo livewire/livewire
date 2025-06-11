@@ -4686,8 +4686,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let { startNode, endNode } = findPartialComments(component.el, name);
     if (!startNode || !endNode)
       return;
-    let mode = extractPartialMode(startNode);
-    let strippedContent = stripPartialComments(content, name);
+    let { content: strippedContent, mode } = stripPartialCommentsAndExtractMode(content, name);
     let parentElement = startNode.parentElement;
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
     if (mode === "append") {
@@ -4750,11 +4749,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let mode = el.textContent.match(/\[if PARTIAL:.*:(\w+)\]/)?.[1];
     return mode || "replace";
   }
-  function stripPartialComments(content, partialName) {
-    let startComment = `<!--[if PARTIAL:${partialName}]><![endif]-->`;
-    let endComment = `<!--[if ENDPARTIAL:${partialName}]><![endif]-->`;
+  function stripPartialCommentsAndExtractMode(content, partialName) {
+    let mode = "replace";
+    const modeMatch = content.match(new RegExp(`\\[if PARTIAL:${partialName}:(\\w+)\\]><\\!\\[endif\\]`));
+    if (modeMatch) {
+      mode = modeMatch[1];
+    }
+    let startComment = new RegExp(`<!--\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+    let endComment = new RegExp(`<!--\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
     let stripped = content.replace(startComment, "").replace(endComment, "");
-    return stripped.trim();
+    return {
+      content: stripped.trim(),
+      mode
+    };
   }
   function findPartialComments(rootEl, partialName) {
     let startNode = null;
@@ -10192,7 +10199,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!hasComponent(id2))
         return;
       let component2 = findComponent(id2);
-      streamPartial(component2, name, content, mode2);
+      streamPartial(component2, name, content);
       return;
     }
     if (payload.type !== "update")

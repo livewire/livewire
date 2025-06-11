@@ -12,7 +12,7 @@ on('stream', (payload) => {
 
         let component = findComponent(id)
 
-        streamPartial(component, name, content, mode)
+        streamPartial(component, name, content)
 
         return
     }

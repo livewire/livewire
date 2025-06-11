@@ -1649,21 +1649,80 @@ new class extends Livewire\Component {
         $this->assertStringContainsString('Count: {{ $count }}', $compiledViewContent);
         $this->assertStringContainsString('@partial(\'summary\', \'livewire-compiled::partial_summary_', $compiledViewContent);
 
-        // Check that partial file was created and contains transformed computed properties
+        // Check that partial file was created and contains guard statements instead of transformed properties
         $partialFiles = glob($this->cacheDir . '/views/partial_summary_*.blade.php');
         $this->assertCount(1, $partialFiles);
 
         $partialContent = File::get($partialFiles[0]);
 
-        // Computed properties in the partial should be transformed to $this->
-        $this->assertStringContainsString('<p>Total: {{ $this->total }}</p>', $partialContent);
-        $this->assertStringContainsString('@if($this->isEmpty)', $partialContent);
+        // Guard statements should be present at the top
+        $this->assertStringContainsString('<?php if (! isset($total)) $total = $this->total;', $partialContent);
+        $this->assertStringContainsString('if (! isset($isEmpty)) $isEmpty = $this->isEmpty;', $partialContent);
 
-        // Regular properties should remain unchanged
+        // Original computed property references should remain unchanged in partial content
+        $this->assertStringContainsString('<p>Total: {{ $total }}</p>', $partialContent);
+        $this->assertStringContainsString('@if($isEmpty)', $partialContent);
+
+        // Regular properties should remain unchanged as before
         $this->assertStringContainsString('<span>Count again: {{ $count }}</span>', $partialContent);
 
-        // Original computed property references should not exist in the partial
-        $this->assertStringNotContainsString('{{ $total }}', $partialContent);
-        $this->assertStringNotContainsString('@if($isEmpty)', $partialContent);
+        // Computed properties should NOT be transformed to $this-> in partials anymore
+        $this->assertStringNotContainsString('{{ $this->total }}', $partialContent);
+        $this->assertStringNotContainsString('@if($this->isEmpty)', $partialContent);
+    }
+
+    /** @test */
+    public function it_allows_custom_data_to_override_computed_properties_in_partials()
+    {
+        $viewContent = '@php
+new class extends Livewire\Component {
+    public $count = 5;
+
+    #[Computed]
+    public function total() {
+        return $this->count * 10; // Would be 50
+    }
+
+    #[Computed]
+    public function status() {
+        return "computed";
+    }
+}
+@endphp
+
+<div>
+    @partial("summary", ["total" => 999, "status" => "custom"])
+        <p>Total: {{ $total }}</p>
+        <p>Status: {{ $status }}</p>
+        <p>Count: {{ $count }}</p>
+    @endpartial
+</div>';
+
+        $viewPath = $this->tempPath . '/custom-data-partial.blade.php';
+        File::put($viewPath, $viewContent);
+        $result = $this->compiler->compile($viewPath);
+
+        // Check that partial file was created
+        $partialFiles = glob($this->cacheDir . '/views/partial_summary_*.blade.php');
+        $this->assertCount(1, $partialFiles);
+
+        $partialContent = File::get($partialFiles[0]);
+
+        // Guard statements should be present for computed properties
+        $this->assertStringContainsString('if (! isset($total)) $total = $this->total;', $partialContent);
+        $this->assertStringContainsString('if (! isset($status)) $status = $this->status;', $partialContent);
+
+        // Computed property references should remain as-is (not transformed)
+        $this->assertStringContainsString('{{ $total }}', $partialContent);
+        $this->assertStringContainsString('{{ $status }}', $partialContent);
+        $this->assertStringContainsString('{{ $count }}', $partialContent);
+
+        // Should NOT have transformed references
+        $this->assertStringNotContainsString('{{ $this->total }}', $partialContent);
+        $this->assertStringNotContainsString('{{ $this->status }}', $partialContent);
+
+        // Verify the main view includes the custom data
+        $compiledViewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('["total" => 999, "status" => "custom"]', $compiledViewContent);
     }
 }

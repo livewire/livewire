@@ -271,14 +271,59 @@ class SingleFileComponentCompiler extends Mechanism
         foreach ($parsed->inlinePartials as $partial) {
             $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
 
-            // Apply computed property transformation to partial content if this is an inline component
             $processedPartialContent = $partial['content'];
+
+            // For inline components, add computed property guards instead of transforming
             if ($parsed->hasInlineClass()) {
-                $processedPartialContent = $this->transformComputedPropertyReferences($processedPartialContent, $parsed->frontmatter);
+                $computedProperties = $this->extractComputedPropertyNames($parsed->frontmatter);
+                $usedComputedProperties = $this->extractUsedComputedProperties($processedPartialContent, $computedProperties);
+
+                if (!empty($usedComputedProperties)) {
+                    $guards = $this->generateComputedPropertyGuards($usedComputedProperties);
+                    $processedPartialContent = $guards . $processedPartialContent;
+                }
             }
 
             File::put($partialPath, $processedPartialContent);
         }
+    }
+
+    /**
+     * Extract which computed properties are actually used in the given content.
+     */
+    protected function extractUsedComputedProperties(string $content, array $computedProperties): array
+    {
+        $usedProperties = [];
+
+        foreach ($computedProperties as $propertyName) {
+            // Pattern to match $propertyName references (same as transformPropertyReferences)
+            $pattern = '/\$' . preg_quote($propertyName, '/') . '(?![a-zA-Z0-9_])/';
+
+            if (preg_match($pattern, $content)) {
+                $usedProperties[] = $propertyName;
+            }
+        }
+
+        return $usedProperties;
+    }
+
+    /**
+     * Generate guard statements for computed properties.
+     *
+     * Creates: <?php if (! isset($propertyName)) $propertyName = $this->propertyName; ?>
+     */
+    protected function generateComputedPropertyGuards(array $computedProperties): string
+    {
+        if (empty($computedProperties)) {
+            return '';
+        }
+
+        $guards = [];
+        foreach ($computedProperties as $propertyName) {
+            $guards[] = "if (! isset(\${$propertyName})) \${$propertyName} = \$this->{$propertyName};";
+        }
+
+        return "<?php " . implode(' ', $guards) . " ?>\n";
     }
 
     protected function generateClass(CompilationResult $result, ParsedComponent $parsed): void

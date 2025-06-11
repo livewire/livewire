@@ -236,8 +236,8 @@ The compiler provides specific exceptions for different error scenarios:
 - Creates descriptive view names
 
 #### ✅ **Comprehensive Testing**
-- **78 unit tests** covering all functionality
-- **250 assertions** ensuring correctness
+- **79 unit tests** covering all functionality
+- **261 assertions** ensuring correctness
 - Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in partials), and error scenarios
 
 #### ✅ **Layout Directive Support**
@@ -253,18 +253,21 @@ The compiler provides specific exceptions for different error scenarios:
 - Skips components that already have `@script` directives
 
 #### ✅ **Computed Property Transformation**
-- Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in views and inline partials
+- Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in main view content
+- Uses guard statements in inline partials: `<?php if (! isset($computedProperty)) $computedProperty = $this->computedProperty; ?>`
 - Preserves JIT evaluation while providing clean syntax
-- Validates against variable reassignment conflicts
+- Validates against variable reassignment conflicts in main views
 - Supports all computed attribute syntaxes and visibility modifiers
 - Works consistently across main view content and `@partial()...@endpartial` blocks
+- **Guard approach allows custom data to override computed properties in partials**
 
 #### ✅ **Inline Partials Support**
 - Processes `@partial()...@endpartial` blocks into separate view files
 - Generates unique partial view names with content-based hashing
 - Creates partial lookup properties in compiled classes
 - Supports partial data passing and complex nested scenarios
-- Applies all view transformations (computed properties, naked scripts) to partial content
+- Applies view transformations (naked scripts) and computed property guards to partial content
+- **Intelligent computed property handling**: Uses guard statements instead of transformation for better data flexibility
 
 #### ✅ **Use Statement Preservation**
 - Extracts and preserves `use` statements from frontmatter
@@ -292,7 +295,7 @@ The compiler provides specific exceptions for different error scenarios:
 - Class generation flags
 - Namespace/class name extraction
 
-#### SingleFileComponentCompiler Tests (55 tests)
+#### SingleFileComponentCompiler Tests (56 tests)
 - Inline and external component compilation
 - Error handling and validation
 - Generated file content verification
@@ -301,7 +304,8 @@ The compiler provides specific exceptions for different error scenarios:
 - Directory management
 - Layout directive processing
 - Naked script transformation
-- Computed property transformation (including in inline partials)
+- Computed property transformation (with guard statements in partials)
+- Custom data override support in partials
 - Inline partials processing
 - Use statement preservation
 - Traditional PHP tag support
@@ -469,16 +473,25 @@ protected function generatePartialViews(ParsedComponent $parsed): void
     foreach ($parsed->inlinePartials as $partial) {
         $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
 
-        // Apply the same transformations to partial content
         $processedPartialContent = $partial['content'];
+
+        // For inline components, add computed property guards instead of transforming
         if ($parsed->hasInlineClass()) {
-            $processedPartialContent = $this->transformComputedPropertyReferences($processedPartialContent, $parsed->frontmatter);
+            $computedProperties = $this->extractComputedPropertyNames($parsed->frontmatter);
+            $usedComputedProperties = $this->extractUsedComputedProperties($processedPartialContent, $computedProperties);
+
+            if (!empty($usedComputedProperties)) {
+                $guards = $this->generateComputedPropertyGuards($usedComputedProperties);
+                $processedPartialContent = $guards . $processedPartialContent;
+            }
         }
 
         File::put($partialPath, $processedPartialContent);
     }
 }
 ```
+
+**Key Difference**: Main views transform computed properties (`$prop` → `$this->prop`), while partials use guard statements (`<?php if (! isset($prop)) $prop = $this->prop; ?>`) to allow custom data to take precedence.
 
 ## Adding New Features
 

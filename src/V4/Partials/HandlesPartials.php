@@ -11,6 +11,11 @@ trait HandlesPartials
     // @todo: hack...
     public $isSubsequentRequest = false;
 
+    public function renderPartial($name, $view = null, $data = [], $mode = null, $defer = false, $fromBladeDirective = false)
+    {
+        return $this->partial($name, $view, $data, $mode, $defer, $fromBladeDirective);
+    }
+
     public function partial($name, $view = null, $data = [], $mode = null, $defer = false, $fromBladeDirective = false)
     {
         // If second parameter is an array, treat it as data and use lookup for view

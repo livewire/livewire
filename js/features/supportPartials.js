@@ -24,8 +24,7 @@ export function streamPartial(component, name, content) {
 
     if (!startNode || !endNode) return
 
-    let mode = extractPartialMode(startNode)
-    let strippedContent = stripPartialComments(content, name)
+    let { content: strippedContent, mode } = stripPartialCommentsAndExtractMode(content, name)
 
     let parentElement = startNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
@@ -117,17 +116,27 @@ function extractPartialMode(el) {
     return mode || 'replace'
 }
 
-function stripPartialComments(content, partialName) {
+function stripPartialCommentsAndExtractMode(content, partialName) {
+    // Extract mode from start comment if present
+    let mode = 'replace'
+    const modeMatch = content.match(new RegExp(`\\[if PARTIAL:${partialName}:(\\w+)\\]><\\!\\[endif\\]`))
+    if (modeMatch) {
+        mode = modeMatch[1]
+    }
+
     // Remove the start and end comment markers
-    let startComment = `<!--[if PARTIAL:${partialName}]><![endif]-->`
-    let endComment = `<!--[if ENDPARTIAL:${partialName}]><![endif]-->`
+    let startComment = new RegExp(`<!--\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
+    let endComment = new RegExp(`<!--\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
 
     // Strip out the comments from the content
     let stripped = content
         .replace(startComment, '')
         .replace(endComment, '')
 
-    return stripped.trim()
+    return {
+        content: stripped.trim(),
+        mode
+    }
 }
 
 function findPartialComments(rootEl, partialName) {
