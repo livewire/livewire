@@ -29,7 +29,7 @@ export function shouldRedirectUsingNavigateOr(effects, url, or) {
 function shouldHideProgressBar() {
     if (!! document.querySelector('[data-no-progress-bar]')) return true
 
-    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false) return true
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === 'data-no-progress-bar') return true
 
     return false
 }
