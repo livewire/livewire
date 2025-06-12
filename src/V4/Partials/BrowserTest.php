@@ -108,9 +108,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->click('@change-button')
         ->assertSourceHas("<li>baz</li>\n<li>bob</li>")
         ->waitForLivewire()->click('@prepend-button')
-        ->assertSourceHas("<li>bar</li><li>baz</li>\n<li>bob</li>")
+        ->assertSourceHas("<li>bar</li>\n<!--[if ENDBLOCK]><![endif]--><!--[if BLOCK]><![endif]--><li>baz</li>\n<li>bob</li>")
         ->waitForLivewire()->click('@append-button')
-        ->assertSourceHas("<li>bar</li><li>baz</li>\n<li>bob</li><li>lob</li>")
+        ->assertSourceHas("<li>bar</li>\n<!--[if ENDBLOCK]><![endif]--><!--[if BLOCK]><![endif]--><li>baz</li>\n<li>bob</li>\n<!--[if ENDBLOCK]><![endif]--><!--[if BLOCK]><![endif]--><li>lob</li>")
         ;
     }
 
