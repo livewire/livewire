@@ -5002,6 +5002,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function checkPreviousSiblingForSlotStartMarker(el) {
     let node = el.previousSibling;
     while (node) {
+      if (isEndMarker2(node)) {
+        return null;
+      }
       if (isStartMarker2(node)) {
         return node;
       }
