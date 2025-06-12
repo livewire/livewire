@@ -87,6 +87,7 @@ class HandleComponents extends Mechanism
     {
         $componentParams = [];
         $htmlAttributes = [];
+        $reservedParams = ['lazy'];
 
         // Get component's properties and mount method parameters
         $componentProperties = Utils::getPublicPropertiesDefinedOnSubclass($component);
@@ -95,8 +96,12 @@ class HandleComponents extends Mechanism
         foreach ($params as $key => $value) {
             $camelKey = str($key)->camel()->toString();
 
+            // Check if this is a reserved param
+            if (in_array($key, $reservedParams)) {
+                $componentParams[$key] = $value;
+            }
             // Check if this maps to a component property or mount param
-            if (array_key_exists($camelKey, $componentProperties) || in_array($camelKey, $mountParams)) {
+            elseif (array_key_exists($camelKey, $componentProperties) || in_array($camelKey, $mountParams)) {
                 $componentParams[$camelKey] = $value;
             } else {
                 // Keep as HTML attribute (preserve kebab-case)
