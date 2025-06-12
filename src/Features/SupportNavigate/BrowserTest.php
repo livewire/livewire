@@ -1200,9 +1200,9 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->tap(fn ($b) => $b->script('window._lw_dusk_navigated_started = false; document.addEventListener("livewire:navigate", () => { window._lw_dusk_navigated_started = true })'))
                 ->click('@link')
                 ->assertScript('return window._lw_dusk_navigated_started')
-                ->waitFor('#nprogress', 10)
-                
-                // We can't listen for a navigate request, as it will fail, so just make sure the progress bar is removed...
+
+                // We can't listen for a navigate request, as it will fail, so just pause for a bit and make sure the progress bar is removed...
+                ->pause(300)
                 ->waitUntilMissing('#nprogress')
                 ->assertPathIs('/page-with-redirect-to-internal-which-has-external-link')
                 ->waitForLivewire()->click('@refresh')
