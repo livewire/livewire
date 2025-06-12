@@ -1196,10 +1196,11 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->visit('/page-with-redirect-to-internal-which-has-external-link')
                 ->waitForLivewireToLoad()
                 ->click('@link')
-                ->waitFor('#nprogress')
-                 // We can't listen for a navigate request, as it will fail, so just pause instead...
+                // We can't listen for a navigate request, as it will fail, so just pause instead...
+                ->pause(200)
+                ->assertVisible('#nprogress')
+                 
                 ->pause(600)
-
                 ->assertMissing('#nprogress')
                 ->assertPathIs('/page-with-redirect-to-internal-which-has-external-link')
                 ->waitForLivewire()->click('@refresh')
