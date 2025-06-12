@@ -181,22 +181,29 @@ class SingleFileComponentCompiler extends Mechanism
 
     protected function extractInlinePartials(string $content, array &$inlinePartials): string
     {
-        // More flexible pattern to handle both @partial('name', ...) and @partial(namedParam: 'value', ...)
-        $pattern = '/@partial\s*\((.*?)\)(.*?)@endpartial/s';
+        // Pattern to handle @partial('name', ...), @partial(namedParam: 'value', ...), and bare @partial
+        $pattern = '/@partial\s*(?:\((.*?)\))?(.*?)@endpartial/s';
 
         return preg_replace_callback($pattern, function ($matches) use (&$inlinePartials) {
-            $parameters = trim($matches[1]);
+            $parameters = isset($matches[1]) ? trim($matches[1]) : '';
             $partialContent = trim($matches[2]);
 
-            // Try to extract explicit name first (old format)
-            if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
-                // Has explicit quoted name as first parameter
-                $partialName = $paramMatches[1];
-                $partialData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
+            // Handle different parameter formats
+            if (!empty($parameters)) {
+                // Try to extract explicit name first (old format)
+                if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
+                    // Has explicit quoted name as first parameter
+                    $partialName = $paramMatches[1];
+                    $partialData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
+                } else {
+                    // No explicit name, generate one (handles named parameters like mode: 'hey')
+                    $partialName = uniqid('partial_');
+                    $partialData = $parameters;
+                }
             } else {
-                // No explicit name, generate one (handles named parameters like mode: 'hey')
+                // Bare @partial with no parameters at all
                 $partialName = uniqid('partial_');
-                $partialData = $parameters ?: '[]';
+                $partialData = '[]';
             }
 
             // Generate a unique view name for this partial using content hash
