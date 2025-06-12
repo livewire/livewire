@@ -461,6 +461,31 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Foo')
         ;
     }
+
+    function test_wire_loading_targets_exclude_wire_navigate()
+    {
+        Livewire::visit(new class extends Component {
+            public function hydrate()
+            {
+                sleep(1);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <a href="/otherpage" wire:navigate dusk="link" class="text-blue-500" wire:loading.class="text-red-500">Link</a>
+                        <button type="button" wire:click="$refresh" dusk="refresh-button">Refresh</button>
+                    </div>
+                HTML;
+            }
+        })
+        ->assertHasClass('@link', 'text-blue-500')
+        ->click('@refresh-button')
+        ->pause(5)
+        ->assertHasClass('@link', 'text-red-500')
+        ;
+    }
 }
 
 class PostFormStub extends Form
