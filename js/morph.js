@@ -36,6 +36,28 @@ export function morph(component, el, html) {
 
     trigger('morph', { el, toEl: to, component })
 
+    // Let's first do a lookup of all the child components to see if the component already
+    // exists and if so we'll clone it and replace the child component with the clone.
+    // This is to ensure that components don't loose state even if there might be a
+    // `wire:key` missing from elements within a loop around the component...
+    let existingComponentsMap = {}
+
+    el.querySelectorAll('[wire\\:id]').forEach(component => {
+        existingComponentsMap[component.getAttribute('wire:id')] = component
+    })
+
+    to.querySelectorAll('[wire\\:id]').forEach(child => {
+        // If the child has a `wire:snapshot` it means it's new, so we don't need to find it...
+        if (child.hasAttribute('wire:snapshot')) return
+
+        let wireId = child.getAttribute('wire:id')
+        let existingComponent = existingComponentsMap[wireId]
+
+        if (existingComponent) {
+            child.replaceWith(existingComponent.cloneNode(true))
+        }
+    })
+
     Alpine.morph(el, to, getMorphConfig(component))
 
     trigger('morphed', { el, component })
