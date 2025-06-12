@@ -23,6 +23,7 @@ class SingleFileComponentCompiler extends Mechanism
         $this->supportedExtensions = $supportedExtensions ?: ['.blade.php', '.wire.php'];
 
         $this->ensureDirectoriesExist();
+        $this->ensureCacheDirectoryIsGitIgnored();
     }
 
     public function setSupportedExtensions(array $extensions): void
@@ -627,6 +628,15 @@ namespace {$namespace};
     {
         File::ensureDirectoryExists($this->classesDirectory);
         File::ensureDirectoryExists($this->viewsDirectory);
+    }
+
+    protected function ensureCacheDirectoryIsGitIgnored(): void
+    {
+        $gitignorePath = $this->cacheDirectory . '/.gitignore';
+
+        if (! File::exists($gitignorePath)) {
+            File::put($gitignorePath, "*\n!.gitignore");
+        }
     }
 
     protected function generatePartialLookupProperty(array $inlinePartials): string
