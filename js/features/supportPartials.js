@@ -1,25 +1,37 @@
+import { findComponent, hasComponent } from '@/store'
 import { morphPartial } from '@/morph'
 import { on } from '@/hooks'
 
+on('stream', (payload) => {
+    if (payload.type !== 'partial') return
+
+    let { id, name, content } = payload
+
+    if (! hasComponent(id)) return
+
+    let component = findComponent(id)
+
+    streamPartial(component, name, content)
+})
+
 on('effect', ({ component, effects }) => {
-    let partials = effects.partials
-    if (! partials) return
+    let partials = effects.partials || []
 
     partials.forEach(partial => {
-        let { name, mode, content } = partial
+        let { name, content } = partial
 
         // Wrapping this in a double queueMicrotask. The first one puts it after all
         // other "effect" hooks, and the second one puts it after all reactive
         // Alpine effects (that are processed via flushJobs in scheduler).
         queueMicrotask(() => {
             queueMicrotask(() => {
-                streamPartial(component, name, content)
+                renderPartial(component, name, content)
             })
         })
     })
 })
 
-export function streamPartial(component, name, content) {
+export function renderPartial(component, name, content) {
     let { startNode, endNode } = findPartialComments(component.el, name)
 
     if (!startNode || !endNode) return
@@ -58,7 +70,10 @@ export function streamPartial(component, name, content) {
 
 export function skipPartialContents(el, toEl, skipUntil) {
     if (isStartMarker(el) && isStartMarker(toEl)) {
+
         let mode = extractPartialMode(toEl)
+
+        skipUntil(node => isEndMarker(node))
 
         if (mode === 'skip') {
             skipUntil(node => isEndMarker(node))

@@ -77,10 +77,7 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
 
         startLoading()
 
-        console.log('startLoading')
-
         respond(() => {
-            console.log('endLoading')
             endLoading()
         })
     })
