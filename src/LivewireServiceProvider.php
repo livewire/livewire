@@ -18,6 +18,8 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
     {
         $this->bootMechanisms();
         $this->bootFeatures();
+
+        (new \Livewire\V4\IntegrateV4)();
     }
 
     protected function registerLivewireSingleton()
@@ -115,6 +117,10 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportTesting\SupportTesting::class,
             Features\SupportModels\SupportModels::class,
             Features\SupportEvents\SupportEvents::class,
+            \Livewire\V4\Partials\SupportPartials::class,
+            \Livewire\V4\Slots\SupportSlots::class,
+            \Livewire\V4\HtmlAttributes\SupportsHtmlAttributes::class,
+            \Livewire\V4\WithMethod\SupportWithMethod::class,
 
             // Some features we want to have priority over others...
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
