@@ -24,6 +24,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] [Fix component not found error](no-component-not-found.md)
 - [x] [Smart `wire:key`s](smart-keys.md)
 - [x] [Release tokens](release-tokens.md)
+- [ ] [Fix broken features](broken-features.md)
 
 ## Post-beta
 - [ ] [wire:navigate fixes](fix-wire-navigate.md)

@@ -1,0 +1,5 @@
+- [ ] [Lazy](/src/Features/SupportLazyLoading/BrowserTest.php)
+- [ ] [Nested Component Listeners](/src/Features/SupportNestedComponentListeners/BrowserTest.php)
+- [ ] [Persistent Middleware](/src/Mechanisms/PersistentMiddleware/BrowserTest.php)
+- [ ] [Compiled Wire Keys](/src/Features/SupportCompiledWireKeys/BrowserTest.php)
+- [ ] [Wire Modeling Nested Components](/src/Features/SupportWireModelingNestedComponents/BrowserTest.php)

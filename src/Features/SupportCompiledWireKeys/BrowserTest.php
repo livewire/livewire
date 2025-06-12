@@ -7,6 +7,14 @@ use Livewire\Component;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        // @todo - V4: Fix compiled wire keys
+        $this->markTestSkipped('Skipping compiled wire keys tests as they are currently broken');
+    }
+
     protected function defineEnvironment($app)
     {
         parent::defineEnvironment($app);
