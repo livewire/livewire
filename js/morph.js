@@ -1,6 +1,8 @@
 import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
+import { skipSlotContents } from "./features/supportSlots"
+import { skipPartialContents } from "./features/supportPartials"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -56,11 +58,51 @@ export function morph(component, el, html) {
         }
     })
 
-    Alpine.morph(el, to, {
-        updating: (el, toEl, childrenOnly, skip, skipChildren) => {
+    Alpine.morph(el, to, getMorphConfig(component))
+
+    trigger('morphed', { el, component })
+}
+
+export function morphPartial(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
+
+    let toContainer = document.createElement(fromContainerTag)
+    toContainer.innerHTML = toHTML
+    toContainer.__livewire = component
+
+    // Add the parent component reference to an outer wrapper if it exists...
+    let parentElement = component.el.parentElement
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
+
+    let parentComponent
+
+    try {
+        parentComponent = parentElement ? closestComponent(parentElement) : null
+    } catch (e) {}
+
+    if (parentComponent) {
+        let parentProviderWrapper = document.createElement(parentElementTag)
+        parentProviderWrapper.appendChild(toContainer)
+        parentProviderWrapper.__livewire = parentComponent
+    }
+
+    trigger('partial.morph', { startNode, endNode, component })
+
+    Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+
+    trigger('partial.morphed', { startNode, endNode, component })
+}
+
+function getMorphConfig(component) {
+    return {
+        updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+            skipSlotContents(el, toEl, skipUntil)
+            skipPartialContents(el, toEl, skipUntil)
+
             if (isntElement(el)) return
 
-            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren })
+            trigger('morph.updating', { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil })
 
             // bypass DOM diffing for children by overwriting the content
             if (el.__livewire_replace === true) el.innerHTML = toEl.innerHTML;
@@ -122,9 +164,7 @@ export function morph(component, el, html) {
         },
 
         lookahead: false,
-    })
-
-    trigger('morphed', { el, component })
+    }
 }
 
 function isntElement(el) {
