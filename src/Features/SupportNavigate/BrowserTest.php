@@ -258,10 +258,12 @@ class BrowserTest extends \Tests\BrowserTestCase
             $browser
                 ->visit('/first-hide-progress')
                 ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertConsoleLogHasNoErrors()
                 ->assertScript('return window._lw_dusk_test')
                 ->assertSee('On first')
                 ->click('@link.to.third')
                 ->pause(500)
+                ->assertScript('return window._lw_dusk_test')
                 ->assertMissing('#nprogress')
                 ->waitForText('Done loading...');
         });
