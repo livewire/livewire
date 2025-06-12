@@ -11,7 +11,6 @@ document.addEventListener('livewire:navigated', () => {
 })
 
 on('morphed', () => {
-    console.log('morphed', onPageChanges)
     onPageChanges.forEach(i => i(new URL(window.location.href)))
 })
 
