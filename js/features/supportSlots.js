@@ -1,6 +1,6 @@
-import { on } from '@/hooks'
-import { morphPartial } from '@/morph'
 import { findComponent } from '@/store'
+import { morphPartial } from '@/morph'
+import { on } from '@/hooks'
 
 on('effect', ({ component, effects }) => {
     let slots = effects.slots
@@ -118,6 +118,10 @@ export function checkPreviousSiblingForSlotStartMarker(el) {
     let node = el.previousSibling
 
     while (node) {
+        if (isEndMarker(node)) {
+            return null
+        }
+
         if (isStartMarker(node)) {
             return node
         }

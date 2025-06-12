@@ -8252,7 +8252,6 @@ var aliases = {
   "ref": "$ref",
   "call": "$call",
   "hook": "$hook",
-  "stop": "$stop",
   "watch": "$watch",
   "commit": "$commit",
   "upload": "$upload",
@@ -8363,9 +8362,6 @@ wireProperty("$watch", (component) => (path, callback) => {
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => await requestCommit(component));
-wireProperty("$stop", (component) => () => {
-  window.controller.abort();
-});
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
   let unhook = on(name, ({ component: hookComponent, ...params }) => {
@@ -8538,20 +8534,27 @@ var Component = class {
 var import_alpinejs3 = __toESM(require_module_cjs());
 
 // js/features/supportPartials.js
-on("effect", ({ component, effects }) => {
-  let partials = effects.partials;
-  if (!partials)
+on("stream", (payload) => {
+  if (payload.type !== "partial")
     return;
+  let { id, name, content } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  streamPartial(component, name, content);
+});
+on("effect", ({ component, effects }) => {
+  let partials = effects.partials || [];
   partials.forEach((partial) => {
-    let { name, mode, content } = partial;
+    let { name, content } = partial;
     queueMicrotask(() => {
       queueMicrotask(() => {
-        streamPartial(component, name, content);
+        renderPartial(component, name, content);
       });
     });
   });
 });
-function streamPartial(component, name, content) {
+function renderPartial(component, name, content) {
   let { startNode, endNode } = findPartialComments(component.el, name);
   if (!startNode || !endNode)
     return;
@@ -8577,6 +8580,7 @@ function streamPartial(component, name, content) {
 function skipPartialContents(el, toEl, skipUntil) {
   if (isStartMarker(el) && isStartMarker(toEl)) {
     let mode = extractPartialMode(toEl);
+    skipUntil((node) => isEndMarker(node));
     if (mode === "skip") {
       skipUntil((node) => isEndMarker(node));
     } else if (mode === "prepend") {
@@ -8867,6 +8871,9 @@ function extractSlotData(el) {
 function checkPreviousSiblingForSlotStartMarker(el) {
   let node = el.previousSibling;
   while (node) {
+    if (isEndMarker2(node)) {
+      return null;
+    }
     if (isStartMarker2(node)) {
       return node;
     }
@@ -10694,6 +10701,93 @@ on("commit.pooling", ({ commits }) => {
   });
 });
 
+// js/features/supportStreaming.js
+on("stream", (payload) => {
+  if (payload.type !== "update")
+    return;
+  let { id, key, value, mode } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  if (mode === "append") {
+    component.$wire.set(key, component.$wire.get(key) + value, false);
+  } else {
+    component.$wire.set(key, value, false);
+  }
+});
+directive("stream", ({ el, directive: directive2, cleanup }) => {
+  let { expression, modifiers } = directive2;
+  let off = on("stream", (payload) => {
+    payload.type = payload.type || "html";
+    if (payload.type !== "html")
+      return;
+    let { name, content, mode } = payload;
+    if (name !== expression)
+      return;
+    if (modifiers.includes("replace") || mode === "replace") {
+      el.innerHTML = content;
+    } else {
+      el.insertAdjacentHTML("beforeend", content);
+    }
+  });
+  cleanup(off);
+});
+on("request", ({ respond }) => {
+  respond((mutableObject) => {
+    let response = mutableObject.response;
+    if (!response.headers.has("X-Livewire-Stream"))
+      return;
+    mutableObject.response = {
+      ok: true,
+      redirected: false,
+      status: 200,
+      async text() {
+        let finalResponse = "";
+        try {
+          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+            trigger("stream", streamed);
+          });
+        } catch (e) {
+          this.aborted = true;
+          this.ok = false;
+        }
+        if (contentIsFromDump(finalResponse)) {
+          this.ok = false;
+        }
+        return finalResponse;
+      }
+    };
+  });
+});
+async function interceptStreamAndReturnFinalResponse(response, callback) {
+  let reader = response.body.getReader();
+  let remainingResponse = "";
+  while (true) {
+    let { done, value: chunk } = await reader.read();
+    let decoder = new TextDecoder();
+    let output = decoder.decode(chunk);
+    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
+    streams.forEach((stream) => {
+      callback(stream);
+    });
+    remainingResponse = remaining;
+    if (done)
+      return remainingResponse;
+  }
+}
+function extractStreamObjects(raw) {
+  let regex = /({"stream":true.*?"endStream":true})/g;
+  let matches = raw.match(regex);
+  let parsed = [];
+  if (matches) {
+    for (let i = 0; i < matches.length; i++) {
+      parsed.push(JSON.parse(matches[i]).body);
+    }
+  }
+  let remaining = raw.replace(regex, "");
+  return [parsed, remaining];
+}
+
 // js/features/supportNavigate.js
 document.addEventListener("livewire:initialized", () => {
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
@@ -11023,9 +11117,7 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading
     if (targets.length > 0 && containsTargets(payload, targets) === inverted)
       return;
     startLoading();
-    console.log("startLoading");
     respond(() => {
-      console.log("endLoading");
       endLoading();
     });
   });
@@ -11101,108 +11193,13 @@ function getTargets(el) {
       targets.push({ target: raw });
     }
   } else {
-    let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
+    let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
   }
   return { targets, inverted };
 }
 function quickHash(subject) {
   return btoa(encodeURIComponent(subject));
-}
-
-// js/directives/wire-stream.js
-on("stream", (payload) => {
-  if (payload.type === "partial") {
-    let { id: id2, name, content, mode: mode2 } = payload;
-    if (!hasComponent(id2))
-      return;
-    let component2 = findComponent(id2);
-    streamPartial(component2, name, content);
-    return;
-  }
-  if (payload.type !== "update")
-    return;
-  let { id, key, value, mode } = payload;
-  if (!hasComponent(id))
-    return;
-  let component = findComponent(id);
-  if (mode === "append") {
-    component.$wire.set(key, component.$wire.get(key) + value, false);
-  } else {
-    component.$wire.set(key, value, false);
-  }
-});
-directive("stream", ({ el, directive: directive2, cleanup }) => {
-  let { expression, modifiers } = directive2;
-  let off = on("stream", (payload) => {
-    payload.type = payload.type || "html";
-    if (payload.type !== "html")
-      return;
-    let { name, content, mode } = payload;
-    if (name !== expression)
-      return;
-    if (modifiers.includes("replace") || mode === "replace") {
-      el.innerHTML = content;
-    } else {
-      el.insertAdjacentHTML("beforeend", content);
-    }
-  });
-  cleanup(off);
-});
-on("request", ({ respond }) => {
-  respond((mutableObject) => {
-    let response = mutableObject.response;
-    if (!response.headers.has("X-Livewire-Stream"))
-      return;
-    mutableObject.response = {
-      ok: true,
-      redirected: false,
-      status: 200,
-      async text() {
-        let finalResponse = "";
-        try {
-          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger("stream", streamed);
-          });
-        } catch (e) {
-          this.aborted = true;
-          this.ok = false;
-        }
-        if (contentIsFromDump(finalResponse)) {
-          this.ok = false;
-        }
-        return finalResponse;
-      }
-    };
-  });
-});
-async function interceptStreamAndReturnFinalResponse(response, callback) {
-  let reader = response.body.getReader();
-  let remainingResponse = "";
-  while (true) {
-    let { done, value: chunk } = await reader.read();
-    let decoder = new TextDecoder();
-    let output = decoder.decode(chunk);
-    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
-    streams.forEach((stream) => {
-      callback(stream);
-    });
-    remainingResponse = remaining;
-    if (done)
-      return remainingResponse;
-  }
-}
-function extractStreamObjects(raw) {
-  let regex = /({"stream":true.*?"endStream":true})/g;
-  let matches = raw.match(regex);
-  let parsed = [];
-  if (matches) {
-    for (let i = 0; i < matches.length; i++) {
-      parsed.push(JSON.parse(matches[i]).body);
-    }
-  }
-  let remaining = raw.replace(regex, "");
-  return [parsed, remaining];
 }
 
 // js/directives/wire-replace.js

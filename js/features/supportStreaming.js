@@ -1,22 +1,9 @@
+import { findComponent, hasComponent } from '@/store'
 import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/hooks'
-import { findComponent, hasComponent } from '@/store'
-import { streamPartial } from '@/features/supportPartials'
 
 on('stream', (payload) => {
-    if (payload.type === 'partial') {
-        let { id, name, content, mode } = payload
-
-        if (! hasComponent(id)) return
-
-        let component = findComponent(id)
-
-        streamPartial(component, name, content)
-
-        return
-    }
-
     if (payload.type !== 'update') return
 
     let { id, key, value, mode } = payload
@@ -54,10 +41,6 @@ directive('stream', ({el, directive, cleanup }) => {
 
     cleanup(off)
 })
-
-// Aborting a streamed request...
-// Handling a dd response
-// Handling an error response
 
 on('request', ({ respond }) => {
     respond(mutableObject => {
