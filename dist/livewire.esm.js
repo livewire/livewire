@@ -10789,7 +10789,9 @@ function extractStreamObjects(raw) {
 }
 
 // js/features/supportNavigate.js
-shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+document.addEventListener("livewire:initialized", () => {
+  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+});
 document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
 document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
 document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
@@ -10811,7 +10813,7 @@ function shouldRedirectUsingNavigateOr(effects, url, or) {
 function shouldHideProgressBar() {
   if (!!document.querySelector("[data-no-progress-bar]"))
     return true;
-  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === "data-no-progress-bar")
     return true;
   return false;
 }
