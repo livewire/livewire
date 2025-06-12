@@ -100,6 +100,14 @@ class HandleComponents extends Mechanism
             if (in_array($key, $reservedParams)) {
                 $componentParams[$key] = $value;
             }
+            // Check if this is an event listener (@foo)
+            elseif (str_starts_with($key, '@')) {
+                $componentParams[$key] = $value;
+            }
+            // Check if this is a wire:model directive
+            elseif (str_starts_with($key, 'wire:model')) {
+                $componentParams[$key] = $value;
+            }
             // Check if this maps to a component property or mount param
             elseif (array_key_exists($camelKey, $componentProperties) || in_array($camelKey, $mountParams)) {
                 $componentParams[$camelKey] = $value;
