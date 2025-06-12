@@ -87,7 +87,6 @@ class HandleComponents extends Mechanism
     {
         $componentParams = [];
         $htmlAttributes = [];
-        $reservedParams = ['lazy'];
 
         // Get component's properties and mount method parameters
         $componentProperties = Utils::getPublicPropertiesDefinedOnSubclass($component);
@@ -97,15 +96,7 @@ class HandleComponents extends Mechanism
             $camelKey = str($key)->camel()->toString();
 
             // Check if this is a reserved param
-            if (in_array($key, $reservedParams)) {
-                $componentParams[$key] = $value;
-            }
-            // Check if this is an event listener (@foo)
-            elseif (str_starts_with($key, '@')) {
-                $componentParams[$key] = $value;
-            }
-            // Check if this is a wire:model directive
-            elseif (str_starts_with($key, 'wire:model')) {
+            if ($this->isReservedParam($key)) {
                 $componentParams[$key] = $value;
             }
             // Check if this maps to a component property or mount param
@@ -122,6 +113,26 @@ class HandleComponents extends Mechanism
         }
 
         return [$componentParams, $htmlAttributes];
+    }
+
+    protected function isReservedParam($key)
+    {
+        $exact = ['lazy'];
+        $startsWith = ['@', 'wire:model'];
+
+        // Check exact matches
+        if (in_array($key, $exact)) {
+            return true;
+        }
+
+        // Check starts_with patterns
+        foreach ($startsWith as $prefix) {
+            if (str_starts_with($key, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function getMountMethodParameters($component)
