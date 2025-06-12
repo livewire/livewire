@@ -1,4 +1,5 @@
 import { globalDirective } from "@/directives"
+import { on } from "@/hooks"
 import Alpine from 'alpinejs'
 
 Alpine.addInitSelector(() => `[wire\\:current]`)
@@ -6,6 +7,11 @@ Alpine.addInitSelector(() => `[wire\\:current]`)
 let onPageChanges = new Map
 
 document.addEventListener('livewire:navigated', () => {
+    onPageChanges.forEach(i => i(new URL(window.location.href)))
+})
+
+on('morphed', () => {
+    console.log('morphed', onPageChanges)
     onPageChanges.forEach(i => i(new URL(window.location.href)))
 })
 
