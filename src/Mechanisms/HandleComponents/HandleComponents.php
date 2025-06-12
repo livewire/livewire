@@ -109,7 +109,11 @@ class HandleComponents extends Mechanism
                 $componentParams[$key] = $value;
             }
             // Check if this maps to a component property or mount param
-            elseif (array_key_exists($camelKey, $componentProperties) || in_array($camelKey, $mountParams)) {
+            elseif (
+                array_key_exists($camelKey, $componentProperties)
+                || in_array($camelKey, $mountParams)
+                || is_numeric($key) // if the key is numeric, it's likely a mount parameter...
+            ) {
                 $componentParams[$camelKey] = $value;
             } else {
                 // Keep as HTML attribute (preserve kebab-case)
