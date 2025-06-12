@@ -78,7 +78,7 @@ class LivewireManager
     {
         $instance = $this->new($component);
 
-        \Illuminate\Support\Facades\Route::get($uri, $instance::class);
+        return \Illuminate\Support\Facades\Route::get($uri, $instance::class);
     }
 
     function mount($name, $params = [], $key = null, $slots = [])
