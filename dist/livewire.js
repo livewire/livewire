@@ -1156,7 +1156,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [] } = {}) => {
+    }, { scope: scope2 = {}, params = [], context } = {}) => {
       let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
       runIfTypeOfFunction(receiver, result);
     };
@@ -1188,12 +1188,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function generateEvaluatorFromString(dataStack, expression, el) {
     let func = generateFunctionFromString(expression, el);
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [] } = {}) => {
+    }, { scope: scope2 = {}, params = [], context } = {}) => {
       func.result = void 0;
       func.finished = false;
       let completeScope = mergeProxies([scope2, ...dataStack]);
       if (typeof func === "function") {
-        let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
+        let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
         if (func.finished) {
           runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
           func.result = void 0;
@@ -4273,6 +4273,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload();
+    window.controller = new AbortController();
     let options = {
       method: "POST",
       body: JSON.stringify({
@@ -4282,7 +4283,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       headers: {
         "Content-type": "application/json",
         "X-Livewire": ""
-      }
+      },
+      signal: window.controller.signal
     };
     let succeedCallbacks = [];
     let failCallbacks = [];
@@ -4335,7 +4337,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (response.status === 419) {
         handlePageExpiry();
       }
-      return showFailureModal(content);
+      if (response.aborted) {
+        return;
+      } else {
+        return showFailureModal(content);
+      }
     }
     if (response.redirected) {
       window.location.href = response.url;
@@ -4377,18 +4383,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "js": "$js",
     "get": "$get",
     "set": "$set",
+    "ref": "$ref",
     "call": "$call",
     "hook": "$hook",
-    "commit": "$commit",
+    "stop": "$stop",
     "watch": "$watch",
+    "commit": "$commit",
+    "upload": "$upload",
     "entangle": "$entangle",
     "dispatch": "$dispatch",
     "dispatchTo": "$dispatchTo",
     "dispatchSelf": "$dispatchSelf",
-    "upload": "$upload",
-    "uploadMultiple": "$uploadMultiple",
     "removeUpload": "$removeUpload",
-    "cancelUpload": "$cancelUpload"
+    "cancelUpload": "$cancelUpload",
+    "uploadMultiple": "$uploadMultiple"
   };
   function generateWireObject(component, state) {
     return new Proxy({}, {
@@ -4462,8 +4470,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return Promise.resolve();
   });
+  wireProperty("$ref", (component) => (name) => {
+    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
+    if (!refEl)
+      throw `Ref "${name}" not found`;
+    return refEl.__livewire?.$wire;
+  });
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
+  });
+  wireProperty("$partial", (component) => async (name) => {
+    return await component.$wire.call("__partial", name);
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
@@ -4480,6 +4497,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => await requestCommit(component));
+  wireProperty("$stop", (component) => () => {
+    window.controller.abort();
+  });
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
     let unhook = on2(name, ({ component: hookComponent, ...params }) => {
@@ -4648,6 +4668,344 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
+  // js/features/supportPartials.js
+  on2("effect", ({ component, effects }) => {
+    let partials = effects.partials;
+    if (!partials)
+      return;
+    partials.forEach((partial) => {
+      let { name, mode, content } = partial;
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          streamPartial(component, name, content);
+        });
+      });
+    });
+  });
+  function streamPartial(component, name, content) {
+    let { startNode, endNode } = findPartialComments(component.el, name);
+    if (!startNode || !endNode)
+      return;
+    let { content: strippedContent, mode } = stripPartialCommentsAndExtractMode(content, name);
+    let parentElement = startNode.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    if (mode === "append") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).forEach((node) => {
+        endNode.parentNode.insertBefore(node, endNode);
+      });
+    } else if (mode === "prepend") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).reverse().forEach((node) => {
+        startNode.parentNode.insertBefore(node, startNode.nextSibling);
+      });
+    } else {
+      morphPartial(component, startNode, endNode, strippedContent);
+    }
+  }
+  function skipPartialContents(el, toEl, skipUntil) {
+    if (isStartMarker(el) && isStartMarker(toEl)) {
+      let mode = extractPartialMode(toEl);
+      if (mode === "skip") {
+        skipUntil((node) => isEndMarker(node));
+      } else if (mode === "prepend") {
+        let sibling = toEl.nextSibling;
+        let siblings = [];
+        while (sibling && !isEndMarker(sibling)) {
+          siblings.push(sibling);
+          sibling = sibling.nextSibling;
+        }
+        siblings.forEach((node) => {
+          el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+        });
+        skipUntil((node) => isEndMarker(node));
+      } else if (mode === "append") {
+        let endMarker = el.nextSibling;
+        while (endMarker && !isEndMarker(endMarker)) {
+          endMarker = endMarker.nextSibling;
+        }
+        let sibling = toEl.nextSibling;
+        let siblings = [];
+        while (sibling && !isEndMarker(sibling)) {
+          siblings.push(sibling);
+          sibling = sibling.nextSibling;
+        }
+        siblings.forEach((node) => {
+          endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+        });
+        skipUntil((node) => isEndMarker(node));
+      }
+    }
+  }
+  function isStartMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if PARTIAL");
+  }
+  function isEndMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDPARTIAL");
+  }
+  function extractPartialMode(el) {
+    let mode = el.textContent.match(/\[if PARTIAL:.*:(\w+)\]/)?.[1];
+    return mode || "replace";
+  }
+  function stripPartialCommentsAndExtractMode(content, partialName) {
+    let mode = "replace";
+    const modeMatch = content.match(new RegExp(`\\[if PARTIAL:${partialName}:(\\w+)\\]><\\!\\[endif\\]`));
+    if (modeMatch) {
+      mode = modeMatch[1];
+    }
+    let startComment = new RegExp(`<!--\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+    let endComment = new RegExp(`<!--\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+    let stripped = content.replace(startComment, "").replace(endComment, "");
+    return {
+      content: stripped.trim(),
+      mode
+    };
+  }
+  function findPartialComments(rootEl, partialName) {
+    let startNode = null;
+    let endNode = null;
+    walkElements(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent.match(new RegExp(`\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+            startNode = node;
+          }
+          if (node.textContent.match(new RegExp(`\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements(child, callback);
+    });
+  }
+
+  // js/morph.js
+  function morph(component, el, html) {
+    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let wrapper = document.createElement(wrapperTag);
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.setAttribute("wire:snapshot", component.snapshotEncoded);
+    let effects = { ...component.effects };
+    delete effects.html;
+    to.setAttribute("wire:effects", JSON.stringify(effects));
+    to.__livewire = component;
+    trigger2("morph", { el, toEl: to, component });
+    let existingComponentsMap = {};
+    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+    });
+    to.querySelectorAll("[wire\\:id]").forEach((child) => {
+      if (child.hasAttribute("wire:snapshot"))
+        return;
+      let wireId = child.getAttribute("wire:id");
+      let existingComponent = existingComponentsMap[wireId];
+      if (existingComponent) {
+        child.replaceWith(existingComponent.cloneNode(true));
+      }
+    });
+    module_default.morph(el, to, getMorphConfig(component));
+    trigger2("morphed", { el, component });
+  }
+  function morphPartial(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement;
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+    let toContainer = document.createElement(fromContainerTag);
+    toContainer.innerHTML = toHTML;
+    toContainer.__livewire = component;
+    let parentElement = component.el.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    let parentComponent;
+    try {
+      parentComponent = parentElement ? closestComponent(parentElement) : null;
+    } catch (e) {
+    }
+    if (parentComponent) {
+      let parentProviderWrapper = document.createElement(parentElementTag);
+      parentProviderWrapper.appendChild(toContainer);
+      parentProviderWrapper.__livewire = parentComponent;
+    }
+    trigger2("partial.morph", { startNode, endNode, component });
+    module_default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+    trigger2("partial.morphed", { startNode, endNode, component });
+  }
+  function getMorphConfig(component) {
+    return {
+      updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+        skipSlotContents(el, toEl, skipUntil);
+        skipPartialContents(el, toEl, skipUntil);
+        if (isntElement(el))
+          return;
+        trigger2("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+        if (el.__livewire_replace === true)
+          el.innerHTML = toEl.innerHTML;
+        if (el.__livewire_replace_self === true) {
+          el.outerHTML = toEl.outerHTML;
+          return skip();
+        }
+        if (el.__livewire_ignore === true)
+          return skip();
+        if (el.__livewire_ignore_self === true)
+          childrenOnly();
+        if (el.__livewire_ignore_children === true)
+          return skipChildren();
+        if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el))
+          toEl.__livewire = component;
+      },
+      updated: (el) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.updated", { el, component });
+      },
+      removing: (el, skip) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.removing", { el, component, skip });
+      },
+      removed: (el) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.removed", { el, component });
+      },
+      adding: (el) => {
+        trigger2("morph.adding", { el, component });
+      },
+      added: (el) => {
+        if (isntElement(el))
+          return;
+        const closestComponentId = closestComponent(el).id;
+        trigger2("morph.added", { el });
+      },
+      key: (el) => {
+        if (isntElement(el))
+          return;
+        return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+      },
+      lookahead: false
+    };
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
+  }
+
+  // js/features/supportSlots.js
+  on2("effect", ({ component, effects }) => {
+    let slots = effects.slots;
+    if (!slots)
+      return;
+    let parentId = component.el.getAttribute("wire:id");
+    Object.entries(slots).forEach(([childId, childSlots]) => {
+      let childComponent = findComponent(childId);
+      if (!childComponent)
+        return;
+      Object.entries(childSlots).forEach(([name, content]) => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            queueMicrotask(() => {
+              let fullName = parentId ? `${name}:${parentId}` : name;
+              let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+              if (!startNode || !endNode)
+                return;
+              let strippedContent = stripSlotComments(content, fullName);
+              morphPartial(childComponent, startNode, endNode, strippedContent);
+            });
+          });
+        });
+      });
+    });
+  });
+  function stripSlotComments(content, slotName) {
+    let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+    let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+    let stripped = content.replace(startComment, "").replace(endComment, "");
+    return stripped.trim();
+  }
+  function findSlotComments(rootEl, slotName) {
+    let startNode = null;
+    let endNode = null;
+    walkElements2(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+            startNode = node;
+          }
+          if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements2(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements2(child, callback);
+    });
+  }
+  function skipSlotContents(el, toEl, skipUntil) {
+    if (isStartMarker2(el) && isStartMarker2(toEl)) {
+      skipUntil((node) => isEndMarker2(node));
+    }
+  }
+  function isStartMarker2(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+  }
+  function isEndMarker2(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+  }
+  function extractSlotData(el) {
+    let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+    let match = el.textContent.match(regex);
+    if (!match)
+      return;
+    return {
+      name: match[1],
+      parentId: match[2] || null
+    };
+  }
+  function checkPreviousSiblingForSlotStartMarker(el) {
+    let node = el.previousSibling;
+    while (node) {
+      if (isStartMarker2(node)) {
+        return node;
+      }
+      node = node.previousSibling;
+    }
+    return null;
+  }
+
   // js/store.js
   var components = {};
   function initComponent(el) {
@@ -4676,6 +5034,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return component;
   }
   function closestComponent(el, strict = true) {
+    let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
+    if (slotStartMarker) {
+      let { name, parentId } = extractSlotData(slotStartMarker);
+      if (parentId) {
+        return findComponent(parentId);
+      }
+    }
     let closestRoot2 = Alpine.findClosest(el, (i) => i.__livewire);
     if (!closestRoot2) {
       if (strict)
@@ -8318,115 +8683,157 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // ../alpine/packages/morph/dist/module.esm.js
-  function morph(from, toHtml, options) {
+  function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let fromEl;
-    let toEl;
-    let key, lookahead, updating, updated, removing, removed, adding, added;
-    function assignOptions(options2 = {}) {
-      let defaultGetKey = (el) => el.getAttribute("key");
-      let noop = () => {
-      };
-      updating = options2.updating || noop;
-      updated = options2.updated || noop;
-      removing = options2.removing || noop;
-      removed = options2.removed || noop;
-      adding = options2.adding || noop;
-      added = options2.added || noop;
-      key = options2.key || defaultGetKey;
-      lookahead = options2.lookahead || false;
+    let context = createMorphContext(options);
+    let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+      toEl._x_dataStack = window.Alpine.closestDataStack(from);
+      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
     }
-    function patch(from2, to) {
-      if (differentElementNamesTypesOrKeys(from2, to)) {
-        return swapElements(from2, to);
+    context.patch(from, toEl);
+    return from;
+  }
+  function morphBetween(startMarker, endMarker, toHtml, options = {}) {
+    monkeyPatchDomSetAttributeToAllowAtSymbols();
+    let context = createMorphContext(options);
+    let fromContainer = startMarker.parentNode;
+    let fromBlock = new Block(startMarker, endMarker);
+    let toContainer = typeof toHtml === "string" ? (() => {
+      let container = document.createElement("div");
+      container.insertAdjacentHTML("beforeend", toHtml);
+      return container;
+    })() : toHtml;
+    let toStartMarker = document.createComment("[morph-start]");
+    let toEndMarker = document.createComment("[morph-end]");
+    toContainer.insertBefore(toStartMarker, toContainer.firstChild);
+    toContainer.appendChild(toEndMarker);
+    let toBlock = new Block(toStartMarker, toEndMarker);
+    if (window.Alpine && window.Alpine.closestDataStack) {
+      toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
+      toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
+    }
+    context.patchChildren(fromBlock, toBlock);
+  }
+  function createMorphContext(options = {}) {
+    let defaultGetKey = (el) => el.getAttribute("key");
+    let noop = () => {
+    };
+    let context = {
+      key: options.key || defaultGetKey,
+      lookahead: options.lookahead || false,
+      updating: options.updating || noop,
+      updated: options.updated || noop,
+      removing: options.removing || noop,
+      removed: options.removed || noop,
+      adding: options.adding || noop,
+      added: options.added || noop
+    };
+    context.patch = function(from, to) {
+      if (context.differentElementNamesTypesOrKeys(from, to)) {
+        return context.swapElements(from, to);
       }
       let updateChildrenOnly = false;
       let skipChildren = false;
-      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
+      let skipUntil = (predicate) => context.skipUntilCondition = predicate;
+      if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
         return;
-      if (from2.nodeType === 1 && window.Alpine) {
-        window.Alpine.cloneNode(from2, to);
-        if (from2._x_teleport && to._x_teleport) {
-          patch(from2._x_teleport, to._x_teleport);
+      if (from.nodeType === 1 && window.Alpine) {
+        window.Alpine.cloneNode(from, to);
+        if (from._x_teleport && to._x_teleport) {
+          context.patch(from._x_teleport, to._x_teleport);
         }
       }
       if (textOrComment(to)) {
-        patchNodeValue(from2, to);
-        updated(from2, to);
+        context.patchNodeValue(from, to);
+        context.updated(from, to);
         return;
       }
       if (!updateChildrenOnly) {
-        patchAttributes(from2, to);
+        context.patchAttributes(from, to);
       }
-      updated(from2, to);
+      context.updated(from, to);
       if (!skipChildren) {
-        patchChildren(from2, to);
+        context.patchChildren(from, to);
       }
-    }
-    function differentElementNamesTypesOrKeys(from2, to) {
-      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
-    }
-    function swapElements(from2, to) {
-      if (shouldSkip(removing, from2))
+    };
+    context.differentElementNamesTypesOrKeys = function(from, to) {
+      return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
+    };
+    context.swapElements = function(from, to) {
+      if (shouldSkip(context.removing, from))
         return;
       let toCloned = to.cloneNode(true);
-      if (shouldSkip(adding, toCloned))
+      if (shouldSkip(context.adding, toCloned))
         return;
-      from2.replaceWith(toCloned);
-      removed(from2);
-      added(toCloned);
-    }
-    function patchNodeValue(from2, to) {
+      from.replaceWith(toCloned);
+      context.removed(from);
+      context.added(toCloned);
+    };
+    context.patchNodeValue = function(from, to) {
       let value = to.nodeValue;
-      if (from2.nodeValue !== value) {
-        from2.nodeValue = value;
+      if (from.nodeValue !== value) {
+        from.nodeValue = value;
       }
-    }
-    function patchAttributes(from2, to) {
-      if (from2._x_transitioning)
+    };
+    context.patchAttributes = function(from, to) {
+      if (from._x_transitioning)
         return;
-      if (from2._x_isShown && !to._x_isShown) {
-        return;
-      }
-      if (!from2._x_isShown && to._x_isShown) {
+      if (from._x_isShown && !to._x_isShown) {
         return;
       }
-      let domAttributes = Array.from(from2.attributes);
+      if (!from._x_isShown && to._x_isShown) {
+        return;
+      }
+      let domAttributes = Array.from(from.attributes);
       let toAttributes = Array.from(to.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          from2.removeAttribute(name);
+          from.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
         let name = toAttributes[i].name;
         let value = toAttributes[i].value;
-        if (from2.getAttribute(name) !== value) {
-          from2.setAttribute(name, value);
+        if (from.getAttribute(name) !== value) {
+          from.setAttribute(name, value);
         }
       }
-    }
-    function patchChildren(from2, to) {
-      let fromKeys = keyToMap(from2.children);
+    };
+    context.patchChildren = function(from, to) {
+      let fromKeys = context.keyToMap(from.children);
       let fromKeyHoldovers = {};
       let currentTo = getFirstNode(to);
-      let currentFrom = getFirstNode(from2);
+      let currentFrom = getFirstNode(from);
       while (currentTo) {
         seedingMatchingId(currentTo, currentFrom);
-        let toKey = getKey(currentTo);
-        let fromKey = getKey(currentFrom);
+        let toKey = context.getKey(currentTo);
+        let fromKey = context.getKey(currentFrom);
+        if (context.skipUntilCondition) {
+          let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
+          let toDone = !currentTo || context.skipUntilCondition(currentTo);
+          if (fromDone && toDone) {
+            context.skipUntilCondition = null;
+          } else {
+            if (!fromDone)
+              currentFrom = currentFrom && getNextSibling(from, currentFrom);
+            if (!toDone)
+              currentTo = currentTo && getNextSibling(to, currentTo);
+            continue;
+          }
+        }
         if (!currentFrom) {
           if (toKey && fromKeyHoldovers[toKey]) {
             let holdover = fromKeyHoldovers[toKey];
-            from2.appendChild(holdover);
+            from.appendChild(holdover);
             currentFrom = holdover;
-            fromKey = getKey(currentFrom);
+            fromKey = context.getKey(currentFrom);
           } else {
-            if (!shouldSkip(adding, currentTo)) {
+            if (!shouldSkip(context.adding, currentTo)) {
               let clone2 = currentTo.cloneNode(true);
-              from2.appendChild(clone2);
-              added(clone2);
+              from.appendChild(clone2);
+              context.added(clone2);
             }
             currentTo = getNextSibling(to, currentTo);
             continue;
@@ -8438,7 +8845,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
           while (currentFrom) {
-            let next = getNextSibling(from2, currentFrom);
+            let next = getNextSibling(from, currentFrom);
             if (isIf(next)) {
               nestedIfCount++;
             } else if (isEnd(next) && nestedIfCount > 0) {
@@ -8467,17 +8874,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let toBlockEnd = currentTo;
           let fromBlock = new Block(fromBlockStart, fromBlockEnd);
           let toBlock = new Block(toBlockStart, toBlockEnd);
-          patchChildren(fromBlock, toBlock);
+          context.patchChildren(fromBlock, toBlock);
           continue;
         }
-        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
+        if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = getNextSibling(to, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
             if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
-              fromKey = getKey(currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+              fromKey = context.getKey(currentFrom);
             }
             nextToElementSibling = getNextSibling(to, nextToElementSibling);
           }
@@ -8485,9 +8892,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
             fromKeyHoldovers[fromKey] = currentFrom;
-            currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+            currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
             fromKeyHoldovers[fromKey].remove();
-            currentFrom = getNextSibling(from2, currentFrom);
+            currentFrom = getNextSibling(from, currentFrom);
             currentTo = getNextSibling(to, currentTo);
             continue;
           }
@@ -8495,7 +8902,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -8504,80 +8911,70 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from2, currentFrom);
+              currentFrom = getNextSibling(from, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
           }
         }
-        let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
-        patch(currentFrom, currentTo);
+        let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
+        context.patch(currentFrom, currentTo);
         currentTo = currentTo && getNextSibling(to, currentTo);
         currentFrom = currentFromNext;
       }
       let removals = [];
       while (currentFrom) {
-        if (!shouldSkip(removing, currentFrom))
+        if (!shouldSkip(context.removing, currentFrom))
           removals.push(currentFrom);
-        currentFrom = getNextSibling(from2, currentFrom);
+        currentFrom = getNextSibling(from, currentFrom);
       }
       while (removals.length) {
         let domForRemoval = removals.shift();
         domForRemoval.remove();
-        removed(domForRemoval);
+        context.removed(domForRemoval);
       }
-    }
-    function getKey(el) {
-      return el && el.nodeType === 1 && key(el);
-    }
-    function keyToMap(els2) {
+    };
+    context.getKey = function(el) {
+      return el && el.nodeType === 1 && context.key(el);
+    };
+    context.keyToMap = function(els2) {
       let map = {};
       for (let el of els2) {
-        let theKey = getKey(el);
+        let theKey = context.getKey(el);
         if (theKey) {
           map[theKey] = el;
         }
       }
       return map;
-    }
-    function addNodeBefore(parent, node, beforeMe) {
-      if (!shouldSkip(adding, node)) {
+    };
+    context.addNodeBefore = function(parent, node, beforeMe) {
+      if (!shouldSkip(context.adding, node)) {
         let clone2 = node.cloneNode(true);
         parent.insertBefore(clone2, beforeMe);
-        added(clone2);
+        context.added(clone2);
         return clone2;
       }
       return node;
-    }
-    assignOptions(options);
-    fromEl = from;
-    toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-      toEl._x_dataStack = window.Alpine.closestDataStack(from);
-      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
-    }
-    patch(from, toEl);
-    fromEl = void 0;
-    toEl = void 0;
-    return from;
+    };
+    return context;
   }
-  morph.step = () => {
+  morph2.step = () => {
   };
-  morph.log = () => {
+  morph2.log = () => {
   };
   function shouldSkip(hook, ...args) {
     let skip = false;
     hook(...args, () => skip = true);
     return skip;
   }
-  function shouldSkipChildren(hook, skipChildren, ...args) {
+  function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
     let skip = false;
-    hook(...args, () => skip = true, skipChildren);
+    hook(...args, () => skip = true, skipChildren, skipUntil);
     return skip;
   }
   var patched = false;
@@ -8661,7 +9058,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.id = fromId;
   }
   function src_default8(Alpine3) {
-    Alpine3.morph = morph;
+    Alpine3.morph = morph2;
+    Alpine3.morphBetween = morphBetween;
   }
   var module_default8 = src_default8;
 
@@ -8959,7 +9357,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
+            module_default.evaluate(component.el, scriptContent, {
+              context: component.$wire,
+              scope: {
+                "$wire": component.$wire,
+                "$js": component.$wire.$js
+              }
+            });
           });
         });
       });
@@ -9053,99 +9457,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/morph.js
-  function morph2(component, el, html) {
-    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-    let wrapper = document.createElement(wrapperTag);
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.setAttribute("wire:snapshot", component.snapshotEncoded);
-    let effects = { ...component.effects };
-    delete effects.html;
-    to.setAttribute("wire:effects", JSON.stringify(effects));
-    to.__livewire = component;
-    trigger2("morph", { el, toEl: to, component });
-    let existingComponentsMap = {};
-    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-    });
-    to.querySelectorAll("[wire\\:id]").forEach((child) => {
-      if (child.hasAttribute("wire:snapshot"))
-        return;
-      let wireId = child.getAttribute("wire:id");
-      let existingComponent = existingComponentsMap[wireId];
-      if (existingComponent) {
-        child.replaceWith(existingComponent.cloneNode(true));
-      }
-    });
-    module_default.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
-        if (el2.__livewire_replace === true)
-          el2.innerHTML = toEl.innerHTML;
-        if (el2.__livewire_replace_self === true) {
-          el2.outerHTML = toEl.outerHTML;
-          return skip();
-        }
-        if (el2.__livewire_ignore === true)
-          return skip();
-        if (el2.__livewire_ignore_self === true)
-          childrenOnly();
-        if (el2.__livewire_ignore_children === true)
-          return skipChildren();
-        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el2))
-          toEl.__livewire = component;
-      },
-      updated: (el2) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.updated", { el: el2, component });
-      },
-      removing: (el2, skip) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.removing", { el: el2, component, skip });
-      },
-      removed: (el2) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.removed", { el: el2, component });
-      },
-      adding: (el2) => {
-        trigger2("morph.adding", { el: el2, component });
-      },
-      added: (el2) => {
-        if (isntElement(el2))
-          return;
-        const closestComponentId = closestComponent(el2).id;
-        trigger2("morph.added", { el: el2 });
-      },
-      key: (el2) => {
-        if (isntElement(el2))
-          return;
-        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-      },
-      lookahead: false
-    });
-    trigger2("morphed", { el, component });
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
-  }
-
   // js/features/supportMorphDom.js
   on2("effect", ({ component, effects }) => {
     let html = effects.html;
@@ -9153,7 +9464,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return;
     queueMicrotask(() => {
       queueMicrotask(() => {
-        morph2(component, component.el, html);
+        morph(component, component.el, html);
       });
     });
   });
@@ -9735,7 +10046,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     } else {
       let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
-      let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
+      let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
       display = directive3.modifiers.includes("remove") && !isTruthy ? cache : display;
       el.style.display = isTruthy ? display : "none";
     }
@@ -9819,7 +10130,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (targets.length > 0 && containsTargets(payload, targets) === inverted)
         return;
       startLoading();
+      console.log("startLoading");
       respond(() => {
+        console.log("endLoading");
         endLoading();
       });
     });
@@ -9905,12 +10218,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/directives/wire-stream.js
+  on2("stream", (payload) => {
+    if (payload.type === "partial") {
+      let { id: id2, name, content, mode: mode2 } = payload;
+      if (!hasComponent(id2))
+        return;
+      let component2 = findComponent(id2);
+      streamPartial(component2, name, content);
+      return;
+    }
+    if (payload.type !== "update")
+      return;
+    let { id, key, value, mode } = payload;
+    if (!hasComponent(id))
+      return;
+    let component = findComponent(id);
+    if (mode === "append") {
+      component.$wire.set(key, component.$wire.get(key) + value, false);
+    } else {
+      component.$wire.set(key, value, false);
+    }
+  });
   directive2("stream", ({ el, directive: directive3, cleanup: cleanup2 }) => {
     let { expression, modifiers } = directive3;
-    let off = on2("stream", ({ name, content, replace: replace2 }) => {
+    let off = on2("stream", (payload) => {
+      payload.type = payload.type || "html";
+      if (payload.type !== "html")
+        return;
+      let { name, content, mode } = payload;
       if (name !== expression)
         return;
-      if (modifiers.includes("replace") || replace2) {
+      if (modifiers.includes("replace") || mode === "replace") {
         el.innerHTML = content;
       } else {
         el.insertAdjacentHTML("beforeend", content);
@@ -9928,9 +10266,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         redirected: false,
         status: 200,
         async text() {
-          let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger2("stream", streamed);
-          });
+          let finalResponse = "";
+          try {
+            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+              trigger2("stream", streamed);
+            });
+          } catch (e) {
+            this.aborted = true;
+            this.ok = false;
+          }
           if (contentIsFromDump(finalResponse)) {
             this.ok = false;
           }

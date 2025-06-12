@@ -1,14 +1,51 @@
 import { contentIsFromDump } from '@/utils'
 import { directive } from '@/directives'
 import { on, trigger } from '@/hooks'
+import { findComponent, hasComponent } from '@/store'
+import { streamPartial } from '@/features/supportPartials'
+
+on('stream', (payload) => {
+    if (payload.type === 'partial') {
+        let { id, name, content, mode } = payload
+
+        if (! hasComponent(id)) return
+
+        let component = findComponent(id)
+
+        streamPartial(component, name, content)
+
+        return
+    }
+
+    if (payload.type !== 'update') return
+
+    let { id, key, value, mode } = payload
+
+    if (! hasComponent(id)) return
+
+    let component = findComponent(id)
+
+    if (mode === 'append') {
+        component.$wire.set(key, component.$wire.get(key) + value, false)
+    } else {
+        component.$wire.set(key, value, false)
+    }
+})
 
 directive('stream', ({el, directive, cleanup }) => {
     let { expression, modifiers } = directive
 
-    let off = on('stream', ({ name, content, replace }) => {
+    let off = on('stream', (payload) => {
+        // Default type is "html" becasue that was the original stream feature...
+        payload.type = payload.type || 'html'
+
+        if (payload.type !== 'html') return
+
+        let { name, content, mode } = payload
+
         if (name !== expression) return
 
-        if (modifiers.includes('replace') || replace) {
+        if (modifiers.includes('replace') || mode === 'replace') {
             el.innerHTML = content
         } else {
             el.insertAdjacentHTML('beforeend', content)
@@ -17,6 +54,10 @@ directive('stream', ({el, directive, cleanup }) => {
 
     cleanup(off)
 })
+
+// Aborting a streamed request...
+// Handling a dd response
+// Handling an error response
 
 on('request', ({ respond }) => {
     respond(mutableObject => {
@@ -30,9 +71,16 @@ on('request', ({ respond }) => {
             status: 200,
 
             async text() {
-                let finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
-                    trigger('stream', streamed)
-                })
+                let finalResponse = ''
+
+                try {
+                    finalResponse = await interceptStreamAndReturnFinalResponse(response, streamed => {
+                        trigger('stream', streamed)
+                    })
+                } catch (e) {
+                    this.aborted = true
+                    this.ok = false
+                }
 
                 if (contentIsFromDump(finalResponse)) {
                     this.ok = false

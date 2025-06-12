@@ -45,6 +45,8 @@ export async function requestCall(component, method, params) {
 export async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload()
 
+    window.controller = new AbortController()
+
     let options = {
         method: 'POST',
         body: JSON.stringify({
@@ -55,6 +57,7 @@ export async function sendRequest(pool) {
             'Content-type': 'application/json',
             'X-Livewire': '',
         },
+        signal: window.controller.signal,
     }
 
     let succeedCallbacks = []
@@ -131,7 +134,11 @@ export async function sendRequest(pool) {
             handlePageExpiry()
         }
 
-        return showFailureModal(content)
+        if (response.aborted) {
+            return
+        } else {
+            return showFailureModal(content)
+        }
     }
 
     /**
@@ -168,6 +175,9 @@ export async function sendRequest(pool) {
 
     succeed({ status: response.status, json: JSON.parse(content) })
 }
+
+// Spoof a response payload...
+// Trigger a failure
 
 function handlePageExpiry() {
     confirm(

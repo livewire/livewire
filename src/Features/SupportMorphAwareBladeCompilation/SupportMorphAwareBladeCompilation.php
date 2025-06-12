@@ -144,9 +144,9 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $livewireCheckClosingTag = '<?php endif; ?>';
 
         $prefix = '';
-        
+
         $suffix = '';
-        
+
         if (static::$shouldInjectConditionalMarkers) {
             $prefix = '<!--[if BLOCK]><![endif]-->';
         }
@@ -299,7 +299,8 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
         $loopDirectives = [
             'foreach',
             'forelse',
-            'for',
+            // temp disabling because of "missing $loop" error
+            // 'for',
             'while',
         ];
 
@@ -314,7 +315,7 @@ class SupportMorphAwareBladeCompilation extends ComponentHook
             'endforeach',
             // This `endforelse` should NOT be included here, but it is left here for documentation purposes. The close of a `@forelse` loop is handled by the `@empty` directive...
             // 'endforelse',
-            'endfor',
+            // 'endfor',
             'endwhile',
         ];
 
