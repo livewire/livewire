@@ -201,19 +201,24 @@ wireProperty('$isLoading', (component) => (...params) => {
                 target = { target: target }
             }
 
+            let context = component
+            if (target.parent) {
+                context = component.parent()
+            }
+
             if (target.params) {
                 const hashedParams = quickHash(target.params)
-                if (Object.keys(component.pendingCalls).some(key => {
-                    const call = component.pendingCalls[key]
+                if (Object.keys(context.pendingCalls).some(key => {
+                    const call = context.pendingCalls[key]
                     return call.method === target.target && quickHash(call.params) === hashedParams
                 })) {
                     return true
                 }
             } else {
-                if (Object.keys(component.pendingUpdates).some(update => {
+                if (Object.keys(context.pendingUpdates).some(update => {
                     return update === target.target
-                }) || Object.keys(component.pendingCalls).some(key => {
-                    const call = component.pendingCalls[key]
+                }) || Object.keys(context.pendingCalls).some(key => {
+                    const call = context.pendingCalls[key]
                     return call.method === target.target
                 })) {
                     return true
