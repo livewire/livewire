@@ -1,4 +1,5 @@
 import { globalDirective } from "@/directives"
+import { on } from "@/hooks"
 import Alpine from 'alpinejs'
 
 Alpine.addInitSelector(() => `[wire\\:current]`)
