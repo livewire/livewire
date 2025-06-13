@@ -15,6 +15,14 @@ class SupportEvents extends ComponentHook
     function call($method, $params, $returnEarly)
     {
         if ($method === '__dispatch') {
+            // It's a lazy component that has just being hydrated 
+            //          if (store($this->component)->get('isLazyLoadHydrating')) {
+            //              $hook = new SupportLazyLoading;
+            //
+            //              $hook->setComponent($this->component);
+            //
+            //              $hook->call('__lazyLoad', $params, $returnEarly);
+            //          }
             [$name, $params] = $params;
 
             $names = static::getListenerEventNames($this->component);
@@ -45,6 +53,30 @@ class SupportEvents extends ComponentHook
     function dehydrate($context)
     {
         if ($context->mounting) {
+            $listeners = static::getListenerEventNames($this->component);
+            $isLazyLoadMounting = store($this->component)->get('isLazyLoadMounting') === true;
+
+            if ($isLazyLoadMounting) {
+                $lazyListening = store($this->component)->get('lazyListening') === true;
+
+                $listeners && $lazyListening && $context->addEffect('listeners', $listeners);
+            } else {
+                $listeners && $context->addEffect('listeners', $listeners);
+            }
+        } else {
+            $isLazyLoadHydrating = store($this->component)->get('isLazyLoadHydrating') === true;
+            $lazyListening = store($this->component)->get('lazyListening') === true;
+
+            // Add listener effects when lazy-loaded components are mounting
+            if ($isLazyLoadHydrating && ! $lazyListening) {
+                $listeners = static::getListenerEventNames($this->component);
+
+                $listeners && $context->addEffect('listeners', $listeners);
+            }
+        }
+
+        // Add listener effects when lazy-loaded components are mounting
+        if (store($this->component)->get('isLazyLoadHydrating') === true) {
             $listeners = static::getListenerEventNames($this->component);
 
             $listeners && $context->addEffect('listeners', $listeners);
