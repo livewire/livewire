@@ -75,6 +75,69 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_can_wire_target_to_a_form_object_property_JS()
+    {
+        Livewire::visit(new class extends Component {
+            public PostFormStub $form;
+
+            public $localText = '';
+
+            public function updating() {
+                // Need to delay the update so that Dusk can catch the loading state change in the DOM.
+                usleep(500000);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                    <div>
+                        <section>
+                            <span
+                                x-show="!$wire.$isLoading('localText')">
+                                Loaded localText...
+                            </span>
+                            <span
+                                x-show="$wire.$isLoading('localText')"
+                            >
+                                Loading localText...
+                            </span>
+                            <input type="text" dusk="localInput" wire:model.live.debounce.100ms="localText">
+                            {{ $localText }}
+                        </section>
+                        <section>
+                            <span
+                                x-show="!$wire.$isLoading('form.text')">
+                                Loaded form.text...
+                            </span>
+                            <span
+                                x-show="$wire.$isLoading('form.text')"
+                            >
+                                Loading form.text...
+                            </span>
+                            <input type="text" dusk="formInput" wire:model.live.debounce.100ms="form.text">
+                            {{ $form->text }}
+                        </section>
+                    </div>
+                HTML;
+            }
+        })
+            ->waitForText('Loaded localText')
+            ->assertSee('Loaded localText')
+            ->type('@localInput', 'Text')
+            ->waitUntilMissingText('Loaded localText')
+            ->assertDontSee('Loaded localText')
+            ->waitForText('Loaded localText')
+            ->assertSee('Loaded localText')
+
+            ->waitForText('Loaded form.text')
+            ->assertSee('Loaded form.text')
+            ->type('@formInput', 'Text')
+            ->waitUntilMissingText('Loaded form.text')
+            ->assertDontSee('Loaded form.text')
+            ->waitForText('Loaded form.text')
+            ->assertSee('Loaded form.text')
+        ;
+    }
+
     function test_wire_loading_remove_works_with_renderless_methods()
     {
         Livewire::visit(new class extends Component {
@@ -292,6 +355,62 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_inverted_wire_target_hides_loading_for_specified_action_JS()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="process1Function" dusk="process1Button">Process 1</button>
+                        <button wire:click="process2Function" dusk="process2Button">Process 2</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div x-show="$wire.$isLoading() && !$wire.$isLoading('process1Function', 'process2Function')" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div x-show="$wire.$isLoading() && !$wire.$isLoading('resetFunction')" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function process1Function()
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function process2Function()
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ->assertDontSee('Processing...')
+        ->waitUntilMissingText('Waiting to process...')
+        ->press('@process1Button')
+        ->pause(250)
+        ->assertDontSee('Waiting to process...')
+        ->assertSee('Processing...')
+        ->press('@resetButton')
+        ->waitForText('Waiting to process...')
+        ->assertSee('Waiting to process...')
+        ->waitUntilMissingText('Waiting to process...')
+        ->press('@process2Button')
+        ->pause(250)
+        ->assertDontSee('Waiting to process...')
+        ->assertSee('Processing...')
+        ;
+    }
+
     function test_wire_target_works_with_multiple_function_including_multiple_params()
     {
         Livewire::visit(new class extends Component {
@@ -343,6 +462,57 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    function test_wire_target_works_with_multiple_function_including_multiple_params_JS()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction('1', 2)" dusk="process1Button">Process 1 and 2</button>
+                        <button wire:click="processFunction('3', 4)" dusk="process2Button">Process 3 adn 4</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div x-show="$wire.$isLoading('resetFunction')" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div x-show="$wire.$isLoading({target: 'processFunction', params: ['1', 2]}, {target: 'processFunction', params: ['3', 4]})" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction(string $value)
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+            ->press('@resetButton')
+            ->pause(250)
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process1Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+            ->press('@resetButton')
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@process2Button')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+        ;
+    }
+
     function test_wire_target_works_with_function_JSONparse_params()
     {
         Livewire::visit(new class extends Component {
@@ -357,6 +527,48 @@ class BrowserTest extends \Tests\BrowserTestCase
                             Waiting to process...
                         </div>
                         <div wire:loading wire:target="processFunction" dusk="loadingIndicator2">
+                            Processing...
+                        </div>
+                    </div>
+                HTML;
+            }
+
+            public function processFunction(mixed $value)
+            {
+                usleep(500000); // Simulate some processing time.
+            }
+            public function resetFunction()
+            {
+                usleep(500000); // Simulate reset time.
+            }
+        })
+            ->press('@resetButton')
+            ->pause(250)
+            ->waitForText('Waiting to process...')
+            ->assertSee('Waiting to process...')
+            ->assertDontSee('Processing...')
+            ->waitUntilMissingText('Waiting to process...')
+            ->press('@processButton')
+            ->pause(250)
+            ->assertDontSee('Waiting to process...')
+            ->assertSee('Processing...')
+        ;
+    }
+
+    function test_wire_target_works_with_function_JSONparse_params_JS()
+    {
+        Livewire::visit(new class extends Component {
+
+            public function render()
+            {
+                return <<<'HTML'
+                    <div>
+                        <button wire:click="processFunction(@js(['bar' => 'baz']))" dusk="processButton">Process</button>
+                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
+                        <div x-show="$wire.$isLoading('resetFunction')" dusk="loadingIndicator">
+                            Waiting to process...
+                        </div>
+                        <div x-show="$wire.$isLoading('processFunction')" dusk="loadingIndicator2">
                             Processing...
                         </div>
                     </div>
@@ -486,9 +698,98 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertHasClass('@link', 'text-red-500')
         ;
     }
+
+    function test_wire_loading_targets_parent_component_JS()
+    {
+        Livewire::visit([\Livewire\Features\SupportWireLoading\ParentCounterJS::class, 'child-counter' => \Livewire\Features\SupportWireLoading\ChildCounterJS::class])
+            ->assertSeeIn('@output', '1')
+            ->waitUntilMissingText('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertDontSee('Parent and child loading...')
+            ->click('@buttonIncrement')
+            ->pause(200)
+            ->assertDontSee('Loading...')
+            ->assertSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertSee('Parent and child loading...')
+            ->waitForTextIn('@output', '2')
+            ->assertSeeIn('@output', '2')
+            ->assertDontSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertDontSee('Parent and child loading...')
+            ->click('@buttonTest')
+            ->pause(200)
+            ->assertSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertSee('Child loading...')
+            ->assertSee('Parent and child loading...')
+            ->waitForTextIn('@testOutput', 'Test completed')
+            ->assertDontSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertDontSee('Parent and child loading...');
+    }
 }
 
 class PostFormStub extends Form
 {
     public $text = '';
 }
+
+class ParentCounterJS extends Component
+{
+    public $count = 1;
+
+    function increment()
+    {
+        sleep(1);
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+           <span dusk="output">{{ $count }}</span>
+
+            <livewire:child-counter />
+        </div>
+        HTML;
+    }
+}
+
+class ChildCounterJS extends Component
+{
+    public $testResult = '';
+
+    function test()
+    {
+        sleep(1.5);
+        $this->testResult = 'Test completed';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <button wire:click="$parent.increment()" dusk="buttonIncrement"></button>
+            <button wire:click="test()" dusk="buttonTest"></button>
+            <span dusk="testOutput">{{ $testResult }}</span>
+            <span x-show="$wire.$isLoading()">Loading...</span>
+            <span x-show="$wire.$isLoading('test')">Child loading...</span>
+            <span x-show="$wire.$isLoading({target: 'increment', parent: true})">Parent loading...</span>
+            <span x-show="$wire.$isLoading('increment')">Same method in child loading...</span>
+            <span x-show="$wire.$isLoading('test', {target: 'increment', parent: true})">Parent and child loading...</span>
+        </div>
+        HTML;
+    }
+}
+
+

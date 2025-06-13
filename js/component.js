@@ -39,6 +39,9 @@ export class Component {
 
         this.jsActions = {}
 
+        this.pendingUpdates = Alpine.reactive({})
+        this.pendingCalls = Alpine.reactive({})
+
         // this.$wire = this.reactive
         this.$wire = generateWireObject(this, this.reactive)
 

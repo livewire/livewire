@@ -3,7 +3,7 @@ import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent } from '@/store'
 import { requestCommit, requestCall } from '@/request'
-import { dataGet, dataSet } from '@/utils'
+import { dataGet, dataSet, quickHash } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
 
@@ -40,6 +40,7 @@ let aliases = {
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
     'uploadMultiple': '$uploadMultiple',
+    'isLoading': '$isLoading',
 }
 
 export function generateWireObject(component, state) {
@@ -204,6 +205,46 @@ wireProperty('$upload', (component) => (...params) => upload(component, ...param
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
 wireProperty('$cancelUpload', (component) => (...params) => cancelUpload(component, ...params))
+
+wireProperty('$isLoading', (component) => (...params) => {
+    if (params.length) {
+        for (let i = 0; i < params.length; i++) {
+            let target = params[i]
+            if (typeof target === 'string') {
+                target = { target: target }
+            }
+
+            let context = component
+            if (target.parent) {
+                context = component.parent
+            }
+
+            if (target.params) {
+                const hashedParams = quickHash(target.params)
+                if (Object.keys(context.pendingCalls).some(key => {
+                    const call = context.pendingCalls[key]
+                    return call.method === target.target && quickHash(call.params) === hashedParams
+                })) {
+                    return true
+                }
+            } else {
+                if (Object.keys(context.pendingUpdates).some(update => {
+                    return update === target.target
+                }) || Object.keys(context.pendingCalls).some(key => {
+                    const call = context.pendingCalls[key]
+                    return call.method === target.target
+                })) {
+                    return true
+                }
+            }
+        }
+
+        return false
+
+    } else {
+        return Object.keys(component.pendingUpdates).length > 0 || Object.keys(component.pendingCalls).length > 0
+    }
+})
 
 let parentMemo = new WeakMap
 
