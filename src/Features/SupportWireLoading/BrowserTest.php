@@ -474,7 +474,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertDontSee('Child loading...')
             ->assertDontSee('Parent and child loading...')
             ->click('@buttonIncrement')
-            ->pause(100)
+            ->pause(200)
             ->assertDontSee('Loading...')
             ->assertSee('Parent loading...')
             ->assertDontSee('Same method in child loading...')
@@ -488,7 +488,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertDontSee('Child loading...')
             ->assertDontSee('Parent and child loading...')
             ->click('@buttonTest')
-            ->pause(100)
+            ->pause(200)
             ->assertSee('Loading...')
             ->assertDontSee('Parent loading...')
             ->assertDontSee('Same method in child loading...')
@@ -514,7 +514,7 @@ class ParentCounter extends Component
 
     function increment()
     {
-        sleep(0.5);
+        sleep(1);
         $this->count++;
     }
 
@@ -536,7 +536,7 @@ class ChildCounter extends Component
 
     function test()
     {
-        sleep(1);
+        sleep(1.5);
         $this->testResult = 'Test completed';
     }
 
