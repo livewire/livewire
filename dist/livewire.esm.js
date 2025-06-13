@@ -7469,6 +7469,9 @@ function splitDumpFromContent(content) {
   let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
   return [dump, content.replace(dump, "")];
 }
+function quickHash(subject) {
+  return btoa(encodeURIComponent(subject));
+}
 
 // js/features/supportFileUploads.js
 var uploadManagers = /* @__PURE__ */ new WeakMap();
@@ -7954,6 +7957,12 @@ var Commit = class {
         params: i.params
       }))
     };
+    Object.keys(payload.updates).forEach((key) => {
+      this.component.pendingUpdates[key] = payload.updates[key];
+    });
+    Object.keys(payload.calls).forEach((key) => {
+      this.component.pendingCalls[key] = payload.calls[key];
+    });
     let succeedCallbacks = [];
     let failCallbacks = [];
     let respondCallbacks = [];
@@ -7975,6 +7984,12 @@ var Commit = class {
     });
     let handleResponse = (response) => {
       let { snapshot, effects } = response;
+      Object.keys(this.component.pendingUpdates).forEach((key) => {
+        delete this.component.pendingUpdates[key];
+      });
+      Object.keys(this.component.pendingCalls).forEach((key) => {
+        delete this.component.pendingCalls[key];
+      });
       respond();
       this.component.mergeNewSnapshot(snapshot, effects, updates);
       this.component.processEffects(this.component.effects);
@@ -8221,7 +8236,8 @@ var aliases = {
   "upload": "$upload",
   "uploadMultiple": "$uploadMultiple",
   "removeUpload": "$removeUpload",
-  "cancelUpload": "$cancelUpload"
+  "cancelUpload": "$cancelUpload",
+  "isLoading": "$isLoading"
 };
 function generateWireObject(component, state) {
   return new Proxy({}, {
@@ -8331,6 +8347,37 @@ wireProperty("$upload", (component) => (...params) => upload(component, ...param
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
 wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
+wireProperty("$isLoading", (component) => (...params) => {
+  if (params.length) {
+    for (let i = 0; i < params.length; i++) {
+      let target = params[i];
+      if (typeof target === "string") {
+        target = { target };
+      }
+      if (target.params) {
+        const hashedParams = quickHash(target.params);
+        if (Object.keys(component.pendingCalls).some((key) => {
+          const call = component.pendingCalls[key];
+          return call.method === target.target && quickHash(call.params) === hashedParams;
+        })) {
+          return true;
+        }
+      } else {
+        if (Object.keys(component.pendingUpdates).some((update) => {
+          return update === target.target;
+        }) || Object.keys(component.pendingCalls).some((key) => {
+          const call = component.pendingCalls[key];
+          return call.method === target.target;
+        })) {
+          return true;
+        }
+      }
+    }
+    return false;
+  } else {
+    return Object.keys(component.pendingUpdates).length > 0 || Object.keys(component.pendingCalls).length > 0;
+  }
+});
 var parentMemo = /* @__PURE__ */ new WeakMap();
 wireProperty("$parent", (component) => {
   if (parentMemo.has(component))
@@ -8383,6 +8430,8 @@ var Component = class {
     this.reactive = Alpine.reactive(this.ephemeral);
     this.queuedUpdates = {};
     this.jsActions = {};
+    this.pendingUpdates = Alpine.reactive({});
+    this.pendingCalls = Alpine.reactive({});
     this.$wire = generateWireObject(this, this.reactive);
     this.cleanups = [];
     this.processEffects(this.effects);
@@ -10788,9 +10837,6 @@ function getTargets(el) {
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
   }
   return { targets, inverted };
-}
-function quickHash(subject) {
-  return btoa(encodeURIComponent(subject));
 }
 
 // js/directives/wire-stream.js

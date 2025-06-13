@@ -235,3 +235,7 @@ export function splitDumpFromContent(content) {
 
     return [dump, content.replace(dump, '')]
 }
+
+export function quickHash(subject) {
+    return btoa(encodeURIComponent(subject))
+}
