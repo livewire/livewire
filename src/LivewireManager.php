@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\Mechanisms\PersistentMiddleware\PersistentMiddleware;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 use Livewire\Mechanisms\HandleComponents\HandleComponents;
@@ -11,8 +12,8 @@ use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Mechanisms\ComponentRegistry;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Features\SupportTesting\DuskTestable;
-use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
 use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
+use Livewire\Features\SupportAutoInjectedAssets\SupportAutoInjectedAssets;
 
 class LivewireManager
 {
@@ -68,9 +69,21 @@ class LivewireManager
         return app(ComponentRegistry::class)->resolveMissingComponent($resolver);
     }
 
-    function mount($name, $params = [], $key = null)
+    function namespace($namespace, $path)
     {
-        return app(HandleComponents::class)->mount($name, $params, $key);
+        return app('livewire.resolver')->namespace($namespace, $path);
+    }
+
+    function route($uri, $component)
+    {
+        $instance = $this->new($component);
+
+        return \Illuminate\Support\Facades\Route::get($uri, $instance::class);
+    }
+
+    function mount($name, $params = [], $key = null, $slots = [])
+    {
+        return app(HandleComponents::class)->mount($name, $params, $key, $slots);
     }
 
     function snapshot($component, $context = null)
