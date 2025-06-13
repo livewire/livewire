@@ -9926,21 +9926,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function toggleLoading(el, directive3, state) {
     const [delay3, abortDelay] = applyDelay(directive3);
+    const directiveIdentifier = JSON.stringify(directive3);
     if (el.__livewire_loading_count === void 0) {
-      el.__livewire_loading_count = 0;
+      el.__livewire_loading_count = {};
+    }
+    if (el.__livewire_loading_count[directiveIdentifier] === void 0) {
+      el.__livewire_loading_count[directiveIdentifier] = 0;
     }
     if (state) {
       delay3(() => {
-        el.__livewire_loading_count++;
-        if (el.__livewire_loading_count === 1) {
+        el.__livewire_loading_count[directiveIdentifier]++;
+        if (el.__livewire_loading_count[directiveIdentifier] === 1) {
           toggleBooleanStateDirective(el, directive3, true);
         }
       });
     } else {
       abortDelay(() => {
-        el.__livewire_loading_count--;
-        if (el.__livewire_loading_count <= 0) {
-          el.__livewire_loading_count = 0;
+        el.__livewire_loading_count[directiveIdentifier]--;
+        if (el.__livewire_loading_count[directiveIdentifier] <= 0) {
+          el.__livewire_loading_count[directiveIdentifier] = 0;
           toggleBooleanStateDirective(el, directive3, false);
         }
       });

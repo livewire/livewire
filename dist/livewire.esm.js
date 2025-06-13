@@ -10827,21 +10827,25 @@ function quickHash(subject) {
 }
 function toggleLoading(el, directive2, state) {
   const [delay, abortDelay] = applyDelay(directive2);
+  const directiveIdentifier = JSON.stringify(directive2);
   if (el.__livewire_loading_count === void 0) {
-    el.__livewire_loading_count = 0;
+    el.__livewire_loading_count = {};
+  }
+  if (el.__livewire_loading_count[directiveIdentifier] === void 0) {
+    el.__livewire_loading_count[directiveIdentifier] = 0;
   }
   if (state) {
     delay(() => {
-      el.__livewire_loading_count++;
-      if (el.__livewire_loading_count === 1) {
+      el.__livewire_loading_count[directiveIdentifier]++;
+      if (el.__livewire_loading_count[directiveIdentifier] === 1) {
         toggleBooleanStateDirective(el, directive2, true);
       }
     });
   } else {
     abortDelay(() => {
-      el.__livewire_loading_count--;
-      if (el.__livewire_loading_count <= 0) {
-        el.__livewire_loading_count = 0;
+      el.__livewire_loading_count[directiveIdentifier]--;
+      if (el.__livewire_loading_count[directiveIdentifier] <= 0) {
+        el.__livewire_loading_count[directiveIdentifier] = 0;
         toggleBooleanStateDirective(el, directive2, false);
       }
     });

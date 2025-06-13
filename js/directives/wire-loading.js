@@ -227,22 +227,28 @@ function quickHash(subject) {
 function toggleLoading(el, directive, state){
     const [delay, abortDelay] = applyDelay(directive)
 
+    const directiveIdentifier = JSON.stringify(directive)
+
     if (el.__livewire_loading_count === undefined) {
-        el.__livewire_loading_count = 0
+        el.__livewire_loading_count = {}
+    }
+
+    if (el.__livewire_loading_count[directiveIdentifier] === undefined) {
+        el.__livewire_loading_count[directiveIdentifier] = 0
     }
 
     if (state) {
         delay(() => {
-            el.__livewire_loading_count++
-            if (el.__livewire_loading_count === 1) {
+            el.__livewire_loading_count[directiveIdentifier]++
+            if (el.__livewire_loading_count[directiveIdentifier] === 1) {
                 toggleBooleanStateDirective(el, directive, true)
             }
         })
     } else {
         abortDelay(() => {
-            el.__livewire_loading_count--
-            if (el.__livewire_loading_count <= 0) {
-                el.__livewire_loading_count = 0
+            el.__livewire_loading_count[directiveIdentifier]--
+            if (el.__livewire_loading_count[directiveIdentifier] <= 0) {
+                el.__livewire_loading_count[directiveIdentifier] = 0
                 toggleBooleanStateDirective(el, directive, false)
             }
         })
