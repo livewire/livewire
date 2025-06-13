@@ -10649,13 +10649,38 @@ directive("offline", ({ el, directive: directive2, cleanup }) => {
 // js/directives/wire-loading.js
 directive("loading", ({ el, directive: directive2, component, cleanup }) => {
   let { targets, inverted } = getTargets(el);
+  let [delay, abortDelay] = applyDelay(directive2);
+  if (el.__livewire_loading === void 0) {
+    el.__livewire_loading = {};
+  }
+  el.__livewire_loading[directive2.rawName] = 0;
   let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
-    () => toggleLoading(el, directive2, true),
-    () => toggleLoading(el, directive2, false)
+    () => delay(() => {
+      el.__livewire_loading[directive2.rawName]++;
+      toggleBooleanStateDirective(el, directive2, true);
+    }),
+    () => abortDelay(() => {
+      if (el.__livewire_loading[directive2.rawName] > 0) {
+        el.__livewire_loading[directive2.rawName]--;
+      }
+      if (el.__livewire_loading[directive2.rawName] === 0) {
+        toggleBooleanStateDirective(el, directive2, false);
+      }
+    })
   ]);
   let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-    () => toggleLoading(el, directive2, true),
-    () => toggleLoading(el, directive2, false)
+    () => delay(() => {
+      el.__livewire_loading[directive2.rawName]++;
+      toggleBooleanStateDirective(el, directive2, true);
+    }),
+    () => abortDelay(() => {
+      if (el.__livewire_loading[directive2.rawName] > 0) {
+        el.__livewire_loading[directive2.rawName]--;
+      }
+      if (el.__livewire_loading[directive2.rawName] === 0) {
+        toggleBooleanStateDirective(el, directive2, false);
+      }
+    })
   ]);
   cleanup(() => {
     cleanupA();
@@ -10824,32 +10849,6 @@ function getTargets(el) {
 }
 function quickHash(subject) {
   return btoa(encodeURIComponent(subject));
-}
-function toggleLoading(el, directive2, state) {
-  const [delay, abortDelay] = applyDelay(directive2);
-  const directiveIdentifier = JSON.stringify(directive2);
-  if (el.__livewire_loading_count === void 0) {
-    el.__livewire_loading_count = {};
-  }
-  if (el.__livewire_loading_count[directiveIdentifier] === void 0) {
-    el.__livewire_loading_count[directiveIdentifier] = 0;
-  }
-  if (state) {
-    delay(() => {
-      el.__livewire_loading_count[directiveIdentifier]++;
-      if (el.__livewire_loading_count[directiveIdentifier] === 1) {
-        toggleBooleanStateDirective(el, directive2, true);
-      }
-    });
-  } else {
-    abortDelay(() => {
-      el.__livewire_loading_count[directiveIdentifier]--;
-      if (el.__livewire_loading_count[directiveIdentifier] <= 0) {
-        el.__livewire_loading_count[directiveIdentifier] = 0;
-        toggleBooleanStateDirective(el, directive2, false);
-      }
-    });
-  }
 }
 
 // js/directives/wire-stream.js

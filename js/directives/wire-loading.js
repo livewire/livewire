@@ -6,14 +6,42 @@ import { listen } from '@/utils'
 directive('loading', ({ el, directive, component, cleanup }) => {
     let { targets, inverted } = getTargets(el)
 
+    let [delay, abortDelay] = applyDelay(directive)
+
+    if (el.__livewire_loading === undefined) {
+        el.__livewire_loading = {}
+    }
+
+    el.__livewire_loading[directive.rawName] = 0
+
     let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
-        () => toggleLoading(el, directive, true),
-        () => toggleLoading(el, directive, false),
+        () => delay(() => {
+            el.__livewire_loading[directive.rawName]++
+            toggleBooleanStateDirective(el, directive, true)
+        }),
+        () => abortDelay(() => {
+            if (el.__livewire_loading[directive.rawName] > 0) {
+                el.__livewire_loading[directive.rawName]--
+            }
+            if (el.__livewire_loading[directive.rawName] === 0) {
+                toggleBooleanStateDirective(el, directive, false)
+            }
+        }),
     ])
 
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-        () => toggleLoading(el, directive, true),
-        () => toggleLoading(el, directive, false),
+        () => delay(() => {
+            el.__livewire_loading[directive.rawName]++
+            toggleBooleanStateDirective(el, directive, true)
+        }),
+        () => abortDelay(() => {
+            if (el.__livewire_loading[directive.rawName] > 0) {
+                el.__livewire_loading[directive.rawName]--
+            }
+            if (el.__livewire_loading[directive.rawName] === 0) {
+                toggleBooleanStateDirective(el, directive, false)
+            }
+        }),
     ])
 
     cleanup(() => {
@@ -222,35 +250,4 @@ function getTargets(el) {
 
 function quickHash(subject) {
     return btoa(encodeURIComponent(subject))
-}
-
-function toggleLoading(el, directive, state){
-    const [delay, abortDelay] = applyDelay(directive)
-
-    const directiveIdentifier = JSON.stringify(directive)
-
-    if (el.__livewire_loading_count === undefined) {
-        el.__livewire_loading_count = {}
-    }
-
-    if (el.__livewire_loading_count[directiveIdentifier] === undefined) {
-        el.__livewire_loading_count[directiveIdentifier] = 0
-    }
-
-    if (state) {
-        delay(() => {
-            el.__livewire_loading_count[directiveIdentifier]++
-            if (el.__livewire_loading_count[directiveIdentifier] === 1) {
-                toggleBooleanStateDirective(el, directive, true)
-            }
-        })
-    } else {
-        abortDelay(() => {
-            el.__livewire_loading_count[directiveIdentifier]--
-            if (el.__livewire_loading_count[directiveIdentifier] <= 0) {
-                el.__livewire_loading_count[directiveIdentifier] = 0
-                toggleBooleanStateDirective(el, directive, false)
-            }
-        })
-    }
 }
