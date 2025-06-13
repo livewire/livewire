@@ -713,7 +713,7 @@
     uploadManager.cancelUpload(name, cancelledCallback);
   }
 
-  // node_modules/alpinejs/dist/module.esm.js
+  // ../alpine/packages/alpinejs/dist/module.esm.js
   var flushPending = false;
   var flushing = false;
   var queue = [];
@@ -4853,7 +4853,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // node_modules/@alpinejs/collapse/dist/module.esm.js
+  // ../alpine/packages/collapse/dist/module.esm.js
   function src_default2(Alpine3) {
     Alpine3.directive("collapse", collapse);
     collapse.inline = (el, { modifiers }) => {
@@ -4947,7 +4947,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default2 = src_default2;
 
-  // node_modules/@alpinejs/focus/dist/module.esm.js
+  // ../alpine/packages/focus/dist/module.esm.js
   var candidateSelectors = ["input", "select", "textarea", "a[href]", "button", "[tabindex]:not(slot)", "audio[controls]", "video[controls]", '[contenteditable]:not([contenteditable="false"])', "details>summary:first-of-type", "details"];
   var candidateSelector = /* @__PURE__ */ candidateSelectors.join(",");
   var NoElement = typeof Element === "undefined";
@@ -5896,7 +5896,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default3 = src_default3;
 
-  // node_modules/@alpinejs/persist/dist/module.esm.js
+  // ../alpine/packages/persist/dist/module.esm.js
   function src_default4(Alpine3) {
     let persist = () => {
       let alias;
@@ -5958,7 +5958,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default4 = src_default4;
 
-  // node_modules/@alpinejs/intersect/dist/module.esm.js
+  // ../alpine/packages/intersect/dist/module.esm.js
   function src_default5(Alpine3) {
     Alpine3.directive("intersect", Alpine3.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let evaluate3 = evaluateLater2(expression);
@@ -6058,7 +6058,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default6 = src_default6;
 
-  // node_modules/@alpinejs/anchor/dist/module.esm.js
+  // ../alpine/packages/anchor/dist/module.esm.js
   var min = Math.min;
   var max = Math.max;
   var round = Math.round;
@@ -8305,7 +8305,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return data2;
   }
 
-  // node_modules/@alpinejs/morph/dist/module.esm.js
+  // ../alpine/packages/morph/dist/module.esm.js
   function morph(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
     let fromEl;
@@ -8653,7 +8653,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var module_default8 = src_default8;
 
-  // node_modules/@alpinejs/mask/dist/module.esm.js
+  // ../alpine/packages/mask/dist/module.esm.js
   function src_default9(Alpine3) {
     Alpine3.directive("mask", (el, { value, expression }, { effect: effect3, evaluateLater: evaluateLater2, cleanup: cleanup2 }) => {
       let templateFn = () => expression;
@@ -9748,14 +9748,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/directives/wire-loading.js
   directive2("loading", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
     let { targets, inverted } = getTargets(el);
-    let [delay3, abortDelay] = applyDelay(directive3);
     let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
-      () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
-      () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
+      () => toggleLoading(el, directive3, true),
+      () => toggleLoading(el, directive3, false)
     ]);
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-      () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
-      () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
+      () => toggleLoading(el, directive3, true),
+      () => toggleLoading(el, directive3, false)
     ]);
     cleanup2(() => {
       cleanupA();
@@ -9924,6 +9923,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function quickHash(subject) {
     return btoa(encodeURIComponent(subject));
+  }
+  function toggleLoading(el, directive3, state) {
+    const [delay3, abortDelay] = applyDelay(directive3);
+    if (el.__livewire_loading_count === void 0) {
+      el.__livewire_loading_count = 0;
+    }
+    if (state) {
+      el.__livewire_loading_count++;
+      if (el.__livewire_loading_count === 1) {
+        delay3(() => toggleBooleanStateDirective(el, directive3, true));
+      }
+    } else {
+      el.__livewire_loading_count--;
+      if (el.__livewire_loading_count <= 0) {
+        el.__livewire_loading_count = 0;
+        abortDelay(() => toggleBooleanStateDirective(el, directive3, false));
+      }
+    }
   }
 
   // js/directives/wire-stream.js

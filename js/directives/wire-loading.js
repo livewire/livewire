@@ -6,16 +6,14 @@ import { listen } from '@/utils'
 directive('loading', ({ el, directive, component, cleanup }) => {
     let { targets, inverted } = getTargets(el)
 
-    let [delay, abortDelay] = applyDelay(directive)
-
     let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        () => toggleLoading(el, directive, true),
+        () => toggleLoading(el, directive, false),
     ])
 
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-        () => delay(() => toggleBooleanStateDirective(el, directive, true)),
-        () => abortDelay(() => toggleBooleanStateDirective(el, directive, false)),
+        () => toggleLoading(el, directive, true),
+        () => toggleLoading(el, directive, false),
     ])
 
     cleanup(() => {
@@ -224,4 +222,25 @@ function getTargets(el) {
 
 function quickHash(subject) {
     return btoa(encodeURIComponent(subject))
+}
+
+function toggleLoading(el, directive, state){
+    const [delay, abortDelay] = applyDelay(directive)
+
+    if (el.__livewire_loading_count === undefined) {
+        el.__livewire_loading_count = 0
+    }
+
+    if (state) {
+        el.__livewire_loading_count++
+        if (el.__livewire_loading_count === 1) {
+            delay(() => toggleBooleanStateDirective(el, directive, true))
+        }
+    } else {
+        el.__livewire_loading_count--
+        if (el.__livewire_loading_count <= 0) {
+            el.__livewire_loading_count = 0
+            abortDelay(() => toggleBooleanStateDirective(el, directive, false))
+        }
+    }
 }
