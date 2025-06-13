@@ -10831,16 +10831,20 @@ function toggleLoading(el, directive2, state) {
     el.__livewire_loading_count = 0;
   }
   if (state) {
-    el.__livewire_loading_count++;
-    if (el.__livewire_loading_count === 1) {
-      delay(() => toggleBooleanStateDirective(el, directive2, true));
-    }
+    delay(() => {
+      el.__livewire_loading_count++;
+      if (el.__livewire_loading_count === 1) {
+        toggleBooleanStateDirective(el, directive2, true);
+      }
+    });
   } else {
-    el.__livewire_loading_count--;
-    if (el.__livewire_loading_count <= 0) {
-      el.__livewire_loading_count = 0;
-      abortDelay(() => toggleBooleanStateDirective(el, directive2, false));
-    }
+    abortDelay(() => {
+      el.__livewire_loading_count--;
+      if (el.__livewire_loading_count <= 0) {
+        el.__livewire_loading_count = 0;
+        toggleBooleanStateDirective(el, directive2, false);
+      }
+    });
   }
 }
 

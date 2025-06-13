@@ -232,15 +232,19 @@ function toggleLoading(el, directive, state){
     }
 
     if (state) {
-        el.__livewire_loading_count++
-        if (el.__livewire_loading_count === 1) {
-            delay(() => toggleBooleanStateDirective(el, directive, true))
-        }
+        delay(() => {
+            el.__livewire_loading_count++
+            if (el.__livewire_loading_count === 1) {
+                toggleBooleanStateDirective(el, directive, true)
+            }
+        })
     } else {
-        el.__livewire_loading_count--
-        if (el.__livewire_loading_count <= 0) {
-            el.__livewire_loading_count = 0
-            abortDelay(() => toggleBooleanStateDirective(el, directive, false))
-        }
+        abortDelay(() => {
+            el.__livewire_loading_count--
+            if (el.__livewire_loading_count <= 0) {
+                el.__livewire_loading_count = 0
+                toggleBooleanStateDirective(el, directive, false)
+            }
+        })
     }
 }
