@@ -30,16 +30,6 @@ class ComponentRegistry extends Mechanism
 
         $component->setName($name);
 
-        // // Parameters passed in automatically set public properties by the same name...
-        // foreach ($params as $key => $value) {
-        //     if (! property_exists($component, $key)) continue;
-
-        //     // Typed properties shouldn't be set back to "null". It will throw an error...
-        //     if ((new \ReflectionProperty($component, $key))->getType() && is_null($value)) continue;
-
-        //     $component->$key = $value;
-        // }
-
         return $component;
     }
 

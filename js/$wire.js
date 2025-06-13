@@ -27,18 +27,19 @@ let aliases = {
     'js': '$js',
     'get': '$get',
     'set': '$set',
+    'ref': '$ref',
     'call': '$call',
     'hook': '$hook',
-    'commit': '$commit',
     'watch': '$watch',
+    'commit': '$commit',
+    'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
-    'upload': '$upload',
-    'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
+    'uploadMultiple': '$uploadMultiple',
 }
 
 export function generateWireObject(component, state) {
@@ -142,8 +143,20 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     return Promise.resolve()
 })
 
+wireProperty('$ref', (component) => (name) => {
+    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`)
+
+    if (! refEl) throw `Ref "${name}" not found`
+
+    return refEl.__livewire?.$wire
+})
+
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
+})
+
+wireProperty('$partial', (component) => async (name) => {
+    return await component.$wire.call('__partial', name)
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
