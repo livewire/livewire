@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportComputed;
 
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestComponent;
 use Tests\TestCase;
@@ -429,6 +430,38 @@ class UnitTest extends TestCase
             ->dispatch('bar', 'baz')
             ->assertSetStrict('foo', 'baz');
     }
+
+    public function test_it_supports_injected_parameters()
+    {
+        App::bind(ComputedPropertyInjectedStub::class);
+
+        Livewire::test(new class extends TestComponent {
+            #[Computed()]
+            function foo(ComputedPropertyInjectedStub $stub) {
+                return $stub->foo;
+            }
+
+            #[Computed()]
+            protected function baz(ComputedPropertyInjectedStub $stub) {
+                return $stub->baz;
+            }
+
+            function render() {
+                return <<<'HTML'
+                    <div>foo{{ $this->foo }}</div>
+                    <div>baz{{ $this->baz }}</div>
+                HTML;
+            }
+        })
+            ->assertSee('foobar')
+            ->assertSee('bazqux');
+    }
+}
+
+class ComputedPropertyInjectedStub
+{
+    public $foo = 'bar';
+    public $baz = 'qux';
 }
 
 class ComputedPropertyStub extends Component
