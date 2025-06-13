@@ -19,6 +19,7 @@ import './supportFileUploads';
 import './supportQueryString';
 import './supportLaravelEcho';
 import './supportIsolating';
+import './supportStreaming';
 import './supportRedirects';
 import './supportPartials';
 import './supportNavigate';

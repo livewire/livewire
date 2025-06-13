@@ -77,10 +77,7 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [ startLoadin
 
         startLoading()
 
-        console.log('startLoading')
-
         respond(() => {
-            console.log('endLoading')
             endLoading()
         })
     })
@@ -178,7 +175,7 @@ function getTargets(el) {
     } else {
         // If there is no wire:target, let's check for the existance of a wire:click="foo" or something,
         // and automatically scope this loading directive to that action.
-        let nonActionOrModelLivewireDirectives = [ 'init', 'dirty', 'offline', 'target', 'loading', 'poll', 'ignore', 'key', 'id' ]
+        let nonActionOrModelLivewireDirectives = [ 'init', 'dirty', 'offline', 'navigate', 'target', 'loading', 'poll', 'ignore', 'key', 'id' ]
 
         directives
             .all()

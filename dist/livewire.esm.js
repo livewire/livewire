@@ -1737,7 +1737,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function generateEvaluatorFromFunction(dataStack, func) {
       return (receiver = () => {
-      }, { scope: scope2 = {}, params = [] } = {}) => {
+      }, { scope: scope2 = {}, params = [], context } = {}) => {
         let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
         runIfTypeOfFunction(receiver, result);
       };
@@ -1769,12 +1769,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function generateEvaluatorFromString(dataStack, expression, el) {
       let func = generateFunctionFromString(expression, el);
       return (receiver = () => {
-      }, { scope: scope2 = {}, params = [] } = {}) => {
+      }, { scope: scope2 = {}, params = [], context } = {}) => {
         func.result = void 0;
         func.finished = false;
         let completeScope = mergeProxies([scope2, ...dataStack]);
         if (typeof func === "function") {
-          let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
+          let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
           if (func.finished) {
             runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
             func.result = void 0;
@@ -6763,113 +6763,155 @@ var require_module_cjs8 = __commonJS({
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
       monkeyPatchDomSetAttributeToAllowAtSymbols();
-      let fromEl;
-      let toEl;
-      let key, lookahead, updating, updated, removing, removed, adding, added;
-      function assignOptions(options2 = {}) {
-        let defaultGetKey = (el) => el.getAttribute("key");
-        let noop = () => {
-        };
-        updating = options2.updating || noop;
-        updated = options2.updated || noop;
-        removing = options2.removing || noop;
-        removed = options2.removed || noop;
-        adding = options2.adding || noop;
-        added = options2.added || noop;
-        key = options2.key || defaultGetKey;
-        lookahead = options2.lookahead || false;
+      let context = createMorphContext(options);
+      let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+        toEl._x_dataStack = window.Alpine.closestDataStack(from);
+        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
       }
-      function patch(from2, to) {
-        if (differentElementNamesTypesOrKeys(from2, to)) {
-          return swapElements(from2, to);
+      context.patch(from, toEl);
+      return from;
+    }
+    function morphBetween(startMarker, endMarker, toHtml, options = {}) {
+      monkeyPatchDomSetAttributeToAllowAtSymbols();
+      let context = createMorphContext(options);
+      let fromContainer = startMarker.parentNode;
+      let fromBlock = new Block(startMarker, endMarker);
+      let toContainer = typeof toHtml === "string" ? (() => {
+        let container = document.createElement("div");
+        container.insertAdjacentHTML("beforeend", toHtml);
+        return container;
+      })() : toHtml;
+      let toStartMarker = document.createComment("[morph-start]");
+      let toEndMarker = document.createComment("[morph-end]");
+      toContainer.insertBefore(toStartMarker, toContainer.firstChild);
+      toContainer.appendChild(toEndMarker);
+      let toBlock = new Block(toStartMarker, toEndMarker);
+      if (window.Alpine && window.Alpine.closestDataStack) {
+        toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
+        toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
+      }
+      context.patchChildren(fromBlock, toBlock);
+    }
+    function createMorphContext(options = {}) {
+      let defaultGetKey = (el) => el.getAttribute("key");
+      let noop = () => {
+      };
+      let context = {
+        key: options.key || defaultGetKey,
+        lookahead: options.lookahead || false,
+        updating: options.updating || noop,
+        updated: options.updated || noop,
+        removing: options.removing || noop,
+        removed: options.removed || noop,
+        adding: options.adding || noop,
+        added: options.added || noop
+      };
+      context.patch = function(from, to) {
+        if (context.differentElementNamesTypesOrKeys(from, to)) {
+          return context.swapElements(from, to);
         }
         let updateChildrenOnly = false;
         let skipChildren = false;
-        if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
+        let skipUntil = (predicate) => context.skipUntilCondition = predicate;
+        if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
           return;
-        if (from2.nodeType === 1 && window.Alpine) {
-          window.Alpine.cloneNode(from2, to);
-          if (from2._x_teleport && to._x_teleport) {
-            patch(from2._x_teleport, to._x_teleport);
+        if (from.nodeType === 1 && window.Alpine) {
+          window.Alpine.cloneNode(from, to);
+          if (from._x_teleport && to._x_teleport) {
+            context.patch(from._x_teleport, to._x_teleport);
           }
         }
         if (textOrComment(to)) {
-          patchNodeValue(from2, to);
-          updated(from2, to);
+          context.patchNodeValue(from, to);
+          context.updated(from, to);
           return;
         }
         if (!updateChildrenOnly) {
-          patchAttributes(from2, to);
+          context.patchAttributes(from, to);
         }
-        updated(from2, to);
+        context.updated(from, to);
         if (!skipChildren) {
-          patchChildren(from2, to);
+          context.patchChildren(from, to);
         }
-      }
-      function differentElementNamesTypesOrKeys(from2, to) {
-        return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
-      }
-      function swapElements(from2, to) {
-        if (shouldSkip(removing, from2))
+      };
+      context.differentElementNamesTypesOrKeys = function(from, to) {
+        return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
+      };
+      context.swapElements = function(from, to) {
+        if (shouldSkip(context.removing, from))
           return;
         let toCloned = to.cloneNode(true);
-        if (shouldSkip(adding, toCloned))
+        if (shouldSkip(context.adding, toCloned))
           return;
-        from2.replaceWith(toCloned);
-        removed(from2);
-        added(toCloned);
-      }
-      function patchNodeValue(from2, to) {
+        from.replaceWith(toCloned);
+        context.removed(from);
+        context.added(toCloned);
+      };
+      context.patchNodeValue = function(from, to) {
         let value = to.nodeValue;
-        if (from2.nodeValue !== value) {
-          from2.nodeValue = value;
+        if (from.nodeValue !== value) {
+          from.nodeValue = value;
         }
-      }
-      function patchAttributes(from2, to) {
-        if (from2._x_transitioning)
+      };
+      context.patchAttributes = function(from, to) {
+        if (from._x_transitioning)
           return;
-        if (from2._x_isShown && !to._x_isShown) {
-          return;
-        }
-        if (!from2._x_isShown && to._x_isShown) {
+        if (from._x_isShown && !to._x_isShown) {
           return;
         }
-        let domAttributes = Array.from(from2.attributes);
+        if (!from._x_isShown && to._x_isShown) {
+          return;
+        }
+        let domAttributes = Array.from(from.attributes);
         let toAttributes = Array.from(to.attributes);
         for (let i = domAttributes.length - 1; i >= 0; i--) {
           let name = domAttributes[i].name;
           if (!to.hasAttribute(name)) {
-            from2.removeAttribute(name);
+            from.removeAttribute(name);
           }
         }
         for (let i = toAttributes.length - 1; i >= 0; i--) {
           let name = toAttributes[i].name;
           let value = toAttributes[i].value;
-          if (from2.getAttribute(name) !== value) {
-            from2.setAttribute(name, value);
+          if (from.getAttribute(name) !== value) {
+            from.setAttribute(name, value);
           }
         }
-      }
-      function patchChildren(from2, to) {
-        let fromKeys = keyToMap(from2.children);
+      };
+      context.patchChildren = function(from, to) {
+        let fromKeys = context.keyToMap(from.children);
         let fromKeyHoldovers = {};
         let currentTo = getFirstNode(to);
-        let currentFrom = getFirstNode(from2);
+        let currentFrom = getFirstNode(from);
         while (currentTo) {
           seedingMatchingId(currentTo, currentFrom);
-          let toKey = getKey(currentTo);
-          let fromKey = getKey(currentFrom);
+          let toKey = context.getKey(currentTo);
+          let fromKey = context.getKey(currentFrom);
+          if (context.skipUntilCondition) {
+            let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
+            let toDone = !currentTo || context.skipUntilCondition(currentTo);
+            if (fromDone && toDone) {
+              context.skipUntilCondition = null;
+            } else {
+              if (!fromDone)
+                currentFrom = currentFrom && getNextSibling(from, currentFrom);
+              if (!toDone)
+                currentTo = currentTo && getNextSibling(to, currentTo);
+              continue;
+            }
+          }
           if (!currentFrom) {
             if (toKey && fromKeyHoldovers[toKey]) {
               let holdover = fromKeyHoldovers[toKey];
-              from2.appendChild(holdover);
+              from.appendChild(holdover);
               currentFrom = holdover;
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             } else {
-              if (!shouldSkip(adding, currentTo)) {
+              if (!shouldSkip(context.adding, currentTo)) {
                 let clone = currentTo.cloneNode(true);
-                from2.appendChild(clone);
-                added(clone);
+                from.appendChild(clone);
+                context.added(clone);
               }
               currentTo = getNextSibling(to, currentTo);
               continue;
@@ -6881,7 +6923,7 @@ var require_module_cjs8 = __commonJS({
             let nestedIfCount = 0;
             let fromBlockStart = currentFrom;
             while (currentFrom) {
-              let next = getNextSibling(from2, currentFrom);
+              let next = getNextSibling(from, currentFrom);
               if (isIf(next)) {
                 nestedIfCount++;
               } else if (isEnd(next) && nestedIfCount > 0) {
@@ -6910,17 +6952,17 @@ var require_module_cjs8 = __commonJS({
             let toBlockEnd = currentTo;
             let fromBlock = new Block(fromBlockStart, fromBlockEnd);
             let toBlock = new Block(toBlockStart, toBlockEnd);
-            patchChildren(fromBlock, toBlock);
+            context.patchChildren(fromBlock, toBlock);
             continue;
           }
-          if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
+          if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
             let nextToElementSibling = getNextSibling(to, currentTo);
             let found = false;
             while (!found && nextToElementSibling) {
               if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
                 found = true;
-                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
-                fromKey = getKey(currentFrom);
+                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+                fromKey = context.getKey(currentFrom);
               }
               nextToElementSibling = getNextSibling(to, nextToElementSibling);
             }
@@ -6928,9 +6970,9 @@ var require_module_cjs8 = __commonJS({
           if (toKey !== fromKey) {
             if (!toKey && fromKey) {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from2, currentFrom);
+              currentFrom = getNextSibling(from, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
@@ -6938,7 +6980,7 @@ var require_module_cjs8 = __commonJS({
               if (fromKeys[toKey]) {
                 currentFrom.replaceWith(fromKeys[toKey]);
                 currentFrom = fromKeys[toKey];
-                fromKey = getKey(currentFrom);
+                fromKey = context.getKey(currentFrom);
               }
             }
             if (toKey && fromKey) {
@@ -6947,67 +6989,57 @@ var require_module_cjs8 = __commonJS({
                 fromKeyHoldovers[fromKey] = currentFrom;
                 currentFrom.replaceWith(fromKeyNode);
                 currentFrom = fromKeyNode;
-                fromKey = getKey(currentFrom);
+                fromKey = context.getKey(currentFrom);
               } else {
                 fromKeyHoldovers[fromKey] = currentFrom;
-                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
                 fromKeyHoldovers[fromKey].remove();
-                currentFrom = getNextSibling(from2, currentFrom);
+                currentFrom = getNextSibling(from, currentFrom);
                 currentTo = getNextSibling(to, currentTo);
                 continue;
               }
             }
           }
-          let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
-          patch(currentFrom, currentTo);
+          let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
+          context.patch(currentFrom, currentTo);
           currentTo = currentTo && getNextSibling(to, currentTo);
           currentFrom = currentFromNext;
         }
         let removals = [];
         while (currentFrom) {
-          if (!shouldSkip(removing, currentFrom))
+          if (!shouldSkip(context.removing, currentFrom))
             removals.push(currentFrom);
-          currentFrom = getNextSibling(from2, currentFrom);
+          currentFrom = getNextSibling(from, currentFrom);
         }
         while (removals.length) {
           let domForRemoval = removals.shift();
           domForRemoval.remove();
-          removed(domForRemoval);
+          context.removed(domForRemoval);
         }
-      }
-      function getKey(el) {
-        return el && el.nodeType === 1 && key(el);
-      }
-      function keyToMap(els2) {
+      };
+      context.getKey = function(el) {
+        return el && el.nodeType === 1 && context.key(el);
+      };
+      context.keyToMap = function(els2) {
         let map = {};
         for (let el of els2) {
-          let theKey = getKey(el);
+          let theKey = context.getKey(el);
           if (theKey) {
             map[theKey] = el;
           }
         }
         return map;
-      }
-      function addNodeBefore(parent, node, beforeMe) {
-        if (!shouldSkip(adding, node)) {
+      };
+      context.addNodeBefore = function(parent, node, beforeMe) {
+        if (!shouldSkip(context.adding, node)) {
           let clone = node.cloneNode(true);
           parent.insertBefore(clone, beforeMe);
-          added(clone);
+          context.added(clone);
           return clone;
         }
         return node;
-      }
-      assignOptions(options);
-      fromEl = from;
-      toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-        toEl._x_dataStack = window.Alpine.closestDataStack(from);
-        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
-      }
-      patch(from, toEl);
-      fromEl = void 0;
-      toEl = void 0;
-      return from;
+      };
+      return context;
     }
     morph3.step = () => {
     };
@@ -7018,9 +7050,9 @@ var require_module_cjs8 = __commonJS({
       hook(...args, () => skip = true);
       return skip;
     }
-    function shouldSkipChildren(hook, skipChildren, ...args) {
+    function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
       let skip = false;
-      hook(...args, () => skip = true, skipChildren);
+      hook(...args, () => skip = true, skipChildren, skipUntil);
       return skip;
     }
     var patched = false;
@@ -7105,6 +7137,7 @@ var require_module_cjs8 = __commonJS({
     }
     function src_default(Alpine23) {
       Alpine23.morph = morph3;
+      Alpine23.morphBetween = morphBetween;
     }
     var module_default = src_default;
   }
@@ -8219,7 +8252,6 @@ var aliases = {
   "ref": "$ref",
   "call": "$call",
   "hook": "$hook",
-  "stop": "$stop",
   "watch": "$watch",
   "commit": "$commit",
   "upload": "$upload",
@@ -8330,9 +8362,6 @@ wireProperty("$watch", (component) => (path, callback) => {
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => await requestCommit(component));
-wireProperty("$stop", (component) => () => {
-  window.controller.abort();
-});
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
   let unhook = on(name, ({ component: hookComponent, ...params }) => {
@@ -8505,20 +8534,27 @@ var Component = class {
 var import_alpinejs3 = __toESM(require_module_cjs());
 
 // js/features/supportPartials.js
-on("effect", ({ component, effects }) => {
-  let partials = effects.partials;
-  if (!partials)
+on("stream", (payload) => {
+  if (payload.type !== "partial")
     return;
+  let { id, name, content } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  streamPartial(component, name, content);
+});
+on("effect", ({ component, effects }) => {
+  let partials = effects.partials || [];
   partials.forEach((partial) => {
-    let { name, mode, content } = partial;
+    let { name, content } = partial;
     queueMicrotask(() => {
       queueMicrotask(() => {
-        streamPartial(component, name, content);
+        renderPartial(component, name, content);
       });
     });
   });
 });
-function streamPartial(component, name, content) {
+function renderPartial(component, name, content) {
   let { startNode, endNode } = findPartialComments(component.el, name);
   if (!startNode || !endNode)
     return;
@@ -8544,6 +8580,7 @@ function streamPartial(component, name, content) {
 function skipPartialContents(el, toEl, skipUntil) {
   if (isStartMarker(el) && isStartMarker(toEl)) {
     let mode = extractPartialMode(toEl);
+    skipUntil((node) => isEndMarker(node));
     if (mode === "skip") {
       skipUntil((node) => isEndMarker(node));
     } else if (mode === "prepend") {
@@ -8834,6 +8871,9 @@ function extractSlotData(el) {
 function checkPreviousSiblingForSlotStartMarker(el) {
   let node = el.previousSibling;
   while (node) {
+    if (isEndMarker2(node)) {
+      return null;
+    }
     if (isStartMarker2(node)) {
       return node;
     }
@@ -9218,13 +9258,13 @@ function getUriStringFromUrlObject(urlObject) {
 }
 
 // js/plugins/navigate/fetch.js
-function fetchHtml(destination, callback) {
+function fetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
   performFetch(uri, (html, finalDestination) => {
     callback(html, finalDestination);
-  });
+  }, errorCallback);
 }
-function performFetch(uri, callback) {
+function performFetch(uri, callback, errorCallback) {
   let options = {
     headers: {
       "X-Livewire-Navigate": ""
@@ -9244,19 +9284,25 @@ function performFetch(uri, callback) {
     return response.text();
   }).then((html) => {
     callback(html, finalDestination);
+  }).catch((error2) => {
+    errorCallback();
+    throw error2;
   });
 }
 
 // js/plugins/navigate/prefetch.js
 var prefetches = {};
 var cacheDuration = 3e4;
-function prefetchHtml(destination, callback) {
+function prefetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
   if (prefetches[uri])
     return;
   prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
   performFetch(uri, (html, routedUri) => {
     callback(html, routedUri);
+  }, () => {
+    delete prefetches[uri];
+    errorCallback();
   });
 }
 function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
@@ -9711,6 +9757,8 @@ function navigate_default(Alpine23) {
         return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
     });
     whenThisLinkIsPressed(el, (whenItIsReleased) => {
@@ -9719,6 +9767,8 @@ function navigate_default(Alpine23) {
         return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
       whenItIsReleased(() => {
         let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -9768,6 +9818,8 @@ function navigate_default(Alpine23) {
           });
         });
       });
+    }, () => {
+      showProgressBar && finishAndHideProgressBar();
     });
   }
   whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
@@ -9819,9 +9871,9 @@ function navigate_default(Alpine23) {
     fireEventForOtherLibrariesToHookInto("alpine:navigated");
   });
 }
-function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
+function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) {
   getPretchedHtmlOr(fromDestination, callback, () => {
-    fetchHtml(fromDestination, callback);
+    fetchHtml(fromDestination, callback, errorCallback);
   });
 }
 function preventAlpineFromPickingUpDomChanges(Alpine23, callback) {
@@ -10661,8 +10713,97 @@ on("commit.pooling", ({ commits }) => {
   });
 });
 
+// js/features/supportStreaming.js
+on("stream", (payload) => {
+  if (payload.type !== "update")
+    return;
+  let { id, key, value, mode } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  if (mode === "append") {
+    component.$wire.set(key, component.$wire.get(key) + value, false);
+  } else {
+    component.$wire.set(key, value, false);
+  }
+});
+directive("stream", ({ el, directive: directive2, cleanup }) => {
+  let { expression, modifiers } = directive2;
+  let off = on("stream", (payload) => {
+    payload.type = payload.type || "html";
+    if (payload.type !== "html")
+      return;
+    let { name, content, mode } = payload;
+    if (name !== expression)
+      return;
+    if (modifiers.includes("replace") || mode === "replace") {
+      el.innerHTML = content;
+    } else {
+      el.insertAdjacentHTML("beforeend", content);
+    }
+  });
+  cleanup(off);
+});
+on("request", ({ respond }) => {
+  respond((mutableObject) => {
+    let response = mutableObject.response;
+    if (!response.headers.has("X-Livewire-Stream"))
+      return;
+    mutableObject.response = {
+      ok: true,
+      redirected: false,
+      status: 200,
+      async text() {
+        let finalResponse = "";
+        try {
+          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+            trigger("stream", streamed);
+          });
+        } catch (e) {
+          this.aborted = true;
+          this.ok = false;
+        }
+        if (contentIsFromDump(finalResponse)) {
+          this.ok = false;
+        }
+        return finalResponse;
+      }
+    };
+  });
+});
+async function interceptStreamAndReturnFinalResponse(response, callback) {
+  let reader = response.body.getReader();
+  let remainingResponse = "";
+  while (true) {
+    let { done, value: chunk } = await reader.read();
+    let decoder = new TextDecoder();
+    let output = decoder.decode(chunk);
+    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
+    streams.forEach((stream) => {
+      callback(stream);
+    });
+    remainingResponse = remaining;
+    if (done)
+      return remainingResponse;
+  }
+}
+function extractStreamObjects(raw) {
+  let regex = /({"stream":true.*?"endStream":true})/g;
+  let matches = raw.match(regex);
+  let parsed = [];
+  if (matches) {
+    for (let i = 0; i < matches.length; i++) {
+      parsed.push(JSON.parse(matches[i]).body);
+    }
+  }
+  let remaining = raw.replace(regex, "");
+  return [parsed, remaining];
+}
+
 // js/features/supportNavigate.js
-shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+document.addEventListener("livewire:initialized", () => {
+  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+});
 document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
 document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
 document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
@@ -10684,7 +10825,7 @@ function shouldRedirectUsingNavigateOr(effects, url, or) {
 function shouldHideProgressBar() {
   if (!!document.querySelector("[data-no-progress-bar]"))
     return true;
-  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === "data-no-progress-bar")
     return true;
   return false;
 }
@@ -10988,9 +11129,7 @@ function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading
     if (targets.length > 0 && containsTargets(payload, targets) === inverted)
       return;
     startLoading();
-    console.log("startLoading");
     respond(() => {
-      console.log("endLoading");
       endLoading();
     });
   });
@@ -11066,108 +11205,13 @@ function getTargets(el) {
       targets.push({ target: raw });
     }
   } else {
-    let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
+    let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
   }
   return { targets, inverted };
 }
 function quickHash(subject) {
   return btoa(encodeURIComponent(subject));
-}
-
-// js/directives/wire-stream.js
-on("stream", (payload) => {
-  if (payload.type === "partial") {
-    let { id: id2, name, content, mode: mode2 } = payload;
-    if (!hasComponent(id2))
-      return;
-    let component2 = findComponent(id2);
-    streamPartial(component2, name, content);
-    return;
-  }
-  if (payload.type !== "update")
-    return;
-  let { id, key, value, mode } = payload;
-  if (!hasComponent(id))
-    return;
-  let component = findComponent(id);
-  if (mode === "append") {
-    component.$wire.set(key, component.$wire.get(key) + value, false);
-  } else {
-    component.$wire.set(key, value, false);
-  }
-});
-directive("stream", ({ el, directive: directive2, cleanup }) => {
-  let { expression, modifiers } = directive2;
-  let off = on("stream", (payload) => {
-    payload.type = payload.type || "html";
-    if (payload.type !== "html")
-      return;
-    let { name, content, mode } = payload;
-    if (name !== expression)
-      return;
-    if (modifiers.includes("replace") || mode === "replace") {
-      el.innerHTML = content;
-    } else {
-      el.insertAdjacentHTML("beforeend", content);
-    }
-  });
-  cleanup(off);
-});
-on("request", ({ respond }) => {
-  respond((mutableObject) => {
-    let response = mutableObject.response;
-    if (!response.headers.has("X-Livewire-Stream"))
-      return;
-    mutableObject.response = {
-      ok: true,
-      redirected: false,
-      status: 200,
-      async text() {
-        let finalResponse = "";
-        try {
-          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger("stream", streamed);
-          });
-        } catch (e) {
-          this.aborted = true;
-          this.ok = false;
-        }
-        if (contentIsFromDump(finalResponse)) {
-          this.ok = false;
-        }
-        return finalResponse;
-      }
-    };
-  });
-});
-async function interceptStreamAndReturnFinalResponse(response, callback) {
-  let reader = response.body.getReader();
-  let remainingResponse = "";
-  while (true) {
-    let { done, value: chunk } = await reader.read();
-    let decoder = new TextDecoder();
-    let output = decoder.decode(chunk);
-    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
-    streams.forEach((stream) => {
-      callback(stream);
-    });
-    remainingResponse = remaining;
-    if (done)
-      return remainingResponse;
-  }
-}
-function extractStreamObjects(raw) {
-  let regex = /({"stream":true.*?"endStream":true})/g;
-  let matches = raw.match(regex);
-  let parsed = [];
-  if (matches) {
-    for (let i = 0; i < matches.length; i++) {
-      parsed.push(JSON.parse(matches[i]).body);
-    }
-  }
-  let remaining = raw.replace(regex, "");
-  return [parsed, remaining];
 }
 
 // js/directives/wire-replace.js

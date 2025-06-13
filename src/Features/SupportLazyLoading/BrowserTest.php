@@ -265,7 +265,7 @@ class BrowserTest extends BrowserTestCase
             </div>
             HTML; }
         }, 'child' => new class extends Component {
-            public function mount() {
+            public function mount($myParameter) {
                 sleep(1);
             }
             public function placeholder(array $params = []) {
