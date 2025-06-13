@@ -4523,7 +4523,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
         let context = component;
         if (target.parent) {
-          context = component.parent();
+          context = component.parent;
         }
         if (target.params) {
           const hashedParams = quickHash(target.params);

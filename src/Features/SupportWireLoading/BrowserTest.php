@@ -673,9 +673,98 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Foo')
         ;
     }
+
+    function test_wire_loading_targets_parent_component_JS()
+    {
+        Livewire::visit([\Livewire\Features\SupportWireLoading\ParentCounterJS::class, 'child-counter' => \Livewire\Features\SupportWireLoading\ChildCounterJS::class])
+            ->assertSeeIn('@output', '1')
+            ->waitUntilMissingText('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertDontSee('Parent and child loading...')
+            ->click('@buttonIncrement')
+            ->pause(200)
+            ->assertDontSee('Loading...')
+            ->assertSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertSee('Parent and child loading...')
+            ->waitForTextIn('@output', '2')
+            ->assertSeeIn('@output', '2')
+            ->assertDontSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertDontSee('Parent and child loading...')
+            ->click('@buttonTest')
+            ->pause(200)
+            ->assertSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertSee('Child loading...')
+            ->assertSee('Parent and child loading...')
+            ->waitForTextIn('@testOutput', 'Test completed')
+            ->assertDontSee('Loading...')
+            ->assertDontSee('Parent loading...')
+            ->assertDontSee('Same method in child loading...')
+            ->assertDontSee('Child loading...')
+            ->assertDontSee('Parent and child loading...');
+    }
 }
 
 class PostFormStub extends Form
 {
     public $text = '';
 }
+
+class ParentCounterJS extends Component
+{
+    public $count = 1;
+
+    function increment()
+    {
+        sleep(1);
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+           <span dusk="output">{{ $count }}</span>
+
+            <livewire:child-counter />
+        </div>
+        HTML;
+    }
+}
+
+class ChildCounterJS extends Component
+{
+    public $testResult = '';
+
+    function test()
+    {
+        sleep(1.5);
+        $this->testResult = 'Test completed';
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <button wire:click="$parent.increment()" dusk="buttonIncrement"></button>
+            <button wire:click="test()" dusk="buttonTest"></button>
+            <span dusk="testOutput">{{ $testResult }}</span>
+            <span x-show="$wire.$isLoading()">Loading...</span>
+            <span x-show="$wire.$isLoading('test')">Child loading...</span>
+            <span x-show="$wire.$isLoading({target: 'increment', parent: true})">Parent loading...</span>
+            <span x-show="$wire.$isLoading('increment')">Same method in child loading...</span>
+            <span x-show="$wire.$isLoading('test', {target: 'increment', parent: true})">Parent and child loading...</span>
+        </div>
+        HTML;
+    }
+}
+
+
