@@ -10,10 +10,6 @@ document.addEventListener('livewire:navigated', () => {
     onPageChanges.forEach(i => i(new URL(window.location.href)))
 })
 
-on('morphed', () => {
-    onPageChanges.forEach(i => i(new URL(window.location.href)))
-})
-
 globalDirective('current', ({ el, directive, cleanup }) => {
     let expression = directive.expression
 
