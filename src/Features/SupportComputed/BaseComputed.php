@@ -83,46 +83,46 @@ class BaseComputed extends Attribute
 
     protected function handlePersistedGet()
     {
-        if($this->persist === true) {
-            return (new DefaultPersistHandler($this))->handleGet();
+        $handlerClass = DefaultPersistHandler::class;
+
+        if (is_string($this->persist) && class_exists($this->persist)) {
+            $handlerClass = $this->persist;
         }
 
-        if(is_string($this->persist) && class_exists($this->persist)) {
-            return (new $this->persist($this))->handleGet();
-        }
+        return (new $handlerClass($this))->handleGet();
     }
 
     protected function handleCachedGet()
     {
-        if($this->cache === true) {
-            return (new DefaultCacheHandler($this))->handleGet();
+        $handlerClass = DefaultCacheHandler::class;
+
+        if (is_string($this->cache) && class_exists($this->cache)) {
+            $handlerClass = $this->cache;
         }
 
-        if(is_string($this->cache) && class_exists($this->cache)) {
-            return (new $this->cache($this))->handleGet();
-        }
+        return (new $handlerClass($this))->handleGet();
     }
 
     protected function handlePersistedUnset()
     {
-        if($this->persist === true) {
-            (new DefaultPersistHandler($this))->handleUnset();
+        $handlerClass = DefaultPersistHandler::class;
+
+        if (is_string($this->persist) && class_exists($this->persist)) {
+            $handlerClass = $this->persist;
         }
 
-        if(is_string($this->persist) && class_exists($this->persist)) {
-            (new $this->persist($this))->handleUnset();
-        }
+        (new $handlerClass($this))->handleUnset();
     }
 
     protected function handleCachedUnset()
     {
-        if($this->cache === true) {
-            (new DefaultCacheHandler($this))->handleUnset();
+        $handlerClass = DefaultCacheHandler::class;
+
+        if (is_string($this->cache) && class_exists($this->cache)) {
+            $handlerClass = $this->cache;
         }
 
-        if(is_string($this->cache) && class_exists($this->cache)) {
-            (new $this->cache($this))->handleUnset();
-        }
+        (new $handlerClass($this))->handleUnset();
     }
 
 
