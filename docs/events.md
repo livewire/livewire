@@ -350,12 +350,16 @@ If you want to dispatch an event directly to another component you can use the `
 </button>
 ```
 
-In this example, when the button is clicked, the `show-post-modal` event will be dispatched directly to the `Posts` component. But If your component name consists of multiple words or is placed inside a nested folder (e.g., `Livewire/Pages`), you can specify the target like this:
+In this example, when the button is clicked, the `show-post-modal` event will be dispatched directly to the `Posts` component. 
+
+But If your component name consists of multiple words or is placed inside a nested folder (e.g., `Livewire/Pages`), you can specify the target like this:
 ```blade
 <button wire:click="$dispatchTo('pages.show-posts', 'show-post-modal', { id: {{ $post->id }} })">
     EditPost
 </button>
 ```
+
+This will dispatch `show-post-modal` event to `Livewire/ShowPosts` component.
 
 ## Testing dispatched events
 
