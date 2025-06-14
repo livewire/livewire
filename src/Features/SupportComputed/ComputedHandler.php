@@ -34,12 +34,16 @@ abstract class ComputedHandler
     {
         $key = $this->computed->key ?: $this->generateKey();
 
-        Cache::forget($key);
+        if (Cache::supportsTags() && !empty($this->tags)) {
+            Cache::tags($this->tags)->forget($key);
+        } else {
+            Cache::forget($key);
+        }
     }
 
     public function replaceDynamicPlaceholders($key)
     {
-        return preg_replace_callback('/\{(.*)\}/U', function ($matches) {
+        return preg_replace_callback('/\{([^}]+)\}/', function ($matches) {
             return data_get($this->computed->getComponent(), $matches[1], function () use ($matches) {
                 throw new \Exception('Unable to evaluate dynamic cache key placeholder: '.$matches[0]);
             });
