@@ -20,7 +20,7 @@ abstract class ComputedHandler
 
     public function handleGet()
     {
-        $key = $this->generateKey();
+        $key = $this->computed->key ?: $this->generateKey();
 
         $closure = fn () => $this->computed->evaluateComputed();
 
@@ -32,7 +32,7 @@ abstract class ComputedHandler
 
     public function handleUnset()
     {
-        $key = $this->generateKey();
+        $key = $this->computed->key ?: $this->generateKey();
 
         Cache::forget($key);
     }
