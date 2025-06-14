@@ -83,57 +83,50 @@ class BaseComputed extends Attribute
 
     protected function handlePersistedGet()
     {
-        $key = $this->generatePersistedKey();
+        if($this->persist === true) {
+            return (new DefaultPersistHandler($this))->handleGet();
+        }
 
-        $closure = fn () => $this->evaluateComputed();
-
-        return match(Cache::supportsTags() && !empty($this->tags)) {
-            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
-            default => Cache::remember($key, $this->seconds, $closure)
-        };
+        if(is_string($this->persist) && class_exists($this->persist)) {
+            return (new $this->persist($this))->handleGet();
+        }
     }
 
     protected function handleCachedGet()
     {
-        $key = $this->generateCachedKey();
+        if($this->cache === true) {
+            return (new DefaultCacheHandler($this))->handleGet();
+        }
 
-        $closure = fn () => $this->evaluateComputed();
-
-        return match(Cache::supportsTags() && !empty($this->tags)) {
-            true => Cache::tags($this->tags)->remember($key, $this->seconds, $closure),
-            default => Cache::remember($key, $this->seconds, $closure)
-        };
+        if(is_string($this->cache) && class_exists($this->cache)) {
+            return (new $this->cache($this))->handleGet();
+        }
     }
 
     protected function handlePersistedUnset()
     {
-        $key = $this->generatePersistedKey();
+        if($this->persist === true) {
+            (new DefaultPersistHandler($this))->handleUnset();
+        }
 
-        Cache::forget($key);
+        if(is_string($this->persist) && class_exists($this->persist)) {
+            (new $this->persist($this))->handleUnset();
+        }
     }
 
     protected function handleCachedUnset()
     {
-        $key = $this->generateCachedKey();
+        if($this->cache === true) {
+            (new DefaultCacheHandler($this))->handleUnset();
+        }
 
-        Cache::forget($key);
+        if(is_string($this->cache) && class_exists($this->cache)) {
+            (new $this->cache($this))->handleUnset();
+        }
     }
 
-    protected function generatePersistedKey()
-    {
-        if ($this->key) return $this->key;
 
-        return 'lw_computed.'.$this->component->getId().'.'.$this->getName();
-    }
-
-    protected function generateCachedKey()
-    {
-        if ($this->key) return $this->key;
-
-        return 'lw_computed.'.$this->component->getName().'.'.$this->getName();
-    }
-
-    protected function evaluateComputed()
+    public function evaluateComputed()
     {
         return invade($this->component)->{parent::getName()}();
     }
@@ -147,6 +140,4 @@ class BaseComputed extends Attribute
     {
         return str($value)->camel()->toString();
     }
-
-
 }
