@@ -20,7 +20,7 @@ abstract class ComputedHandler
 
     public function handleGet()
     {
-        $key = $this->computed->key ?: $this->generateKey();
+        $key = $this->getKey();
 
         $closure = fn () => $this->computed->evaluateComputed();
 
@@ -32,7 +32,7 @@ abstract class ComputedHandler
 
     public function handleUnset()
     {
-        $key = $this->computed->key ?: $this->generateKey();
+        $key = $this->getKey();
 
         if (Cache::supportsTags() && !empty($this->tags)) {
             Cache::tags($this->tags)->forget($key);
@@ -41,7 +41,12 @@ abstract class ComputedHandler
         }
     }
 
-    public function replaceDynamicPlaceholders($key)
+    private function getKey()
+    {
+        return $this->computed->key ? $this->replaceDynamicPlaceholders($this->computed->key) : $this->generateKey();
+    }
+
+    private function replaceDynamicPlaceholders($key)
     {
         return preg_replace_callback('/\{([^}]+)\}/', function ($matches) {
             return data_get($this->computed->getComponent(), $matches[1], function () use ($matches) {

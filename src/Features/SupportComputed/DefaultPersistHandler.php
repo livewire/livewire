@@ -6,6 +6,6 @@ class DefaultPersistHandler extends ComputedHandler
 {
     protected function generateKey()
     {
-        return $this->replaceDynamicPlaceholders('lw_computed.'.$this->computed->getComponent()->getId().'.'.$this->computed->getName());
+        return 'lw_computed.'.$this->computed->getComponent()->getId().'.'.$this->computed->getName();
     }
 }
