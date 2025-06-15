@@ -359,7 +359,7 @@ But If your component name consists of multiple words or is placed inside a nest
 </button>
 ```
 
-This will dispatch `show-post-modal` event to `Livewire/ShowPosts` component.
+This will dispatch `show-post-modal` event to `Livewire/Pages/ShowPosts` component.
 
 ## Testing dispatched events
 
