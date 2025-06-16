@@ -10168,13 +10168,37 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   directive2("loading", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
     let { targets, inverted } = getTargets(el);
     let [delay3, abortDelay] = applyDelay(directive3);
+    if (el.__livewire_loading === void 0) {
+      el.__livewire_loading = {};
+    }
+    el.__livewire_loading[directive3.rawName] = 0;
     let cleanupA = whenTargetsArePartOfRequest(component, targets, inverted, [
-      () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
-      () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
+      () => delay3(() => {
+        el.__livewire_loading[directive3.rawName]++;
+        toggleBooleanStateDirective(el, directive3, true);
+      }),
+      () => abortDelay(() => {
+        if (el.__livewire_loading[directive3.rawName] > 0) {
+          el.__livewire_loading[directive3.rawName]--;
+        }
+        if (el.__livewire_loading[directive3.rawName] === 0) {
+          toggleBooleanStateDirective(el, directive3, false);
+        }
+      })
     ]);
     let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
-      () => delay3(() => toggleBooleanStateDirective(el, directive3, true)),
-      () => abortDelay(() => toggleBooleanStateDirective(el, directive3, false))
+      () => delay3(() => {
+        el.__livewire_loading[directive3.rawName]++;
+        toggleBooleanStateDirective(el, directive3, true);
+      }),
+      () => abortDelay(() => {
+        if (el.__livewire_loading[directive3.rawName] > 0) {
+          el.__livewire_loading[directive3.rawName]--;
+        }
+        if (el.__livewire_loading[directive3.rawName] === 0) {
+          toggleBooleanStateDirective(el, directive3, false);
+        }
+      })
     ]);
     cleanup2(() => {
       cleanupA();
@@ -10220,11 +10244,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     ];
   }
   function whenTargetsArePartOfRequest(component, targets, inverted, [startLoading, endLoading]) {
+    const componentTargets = [];
+    const parentTargets = [];
+    targets.forEach((t) => {
+      if (t.target.startsWith("$parent.")) {
+        t.target = t.target.replace("$parent.", "");
+        parentTargets.push(t);
+      } else {
+        componentTargets.push(t);
+      }
+    });
     return on2("commit", ({ component: iComponent, commit: payload, respond }) => {
-      if (iComponent !== component)
+      if (componentTargets.length > 0 || parentTargets.length > 0) {
+        if (iComponent === component) {
+          if (containsTargets(payload, componentTargets) === inverted)
+            return;
+        } else if (iComponent === component.parent) {
+          if (containsTargets(payload, parentTargets) === inverted)
+            return;
+        }
+      } else if (iComponent !== component) {
         return;
-      if (targets.length > 0 && containsTargets(payload, targets) === inverted)
-        return;
+      }
       startLoading();
       respond(() => {
         endLoading();
@@ -10232,12 +10273,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
   function whenTargetsArePartOfFileUpload(component, targets, [startLoading, endLoading]) {
+    const componentTargets = [];
+    const parentTargets = [];
+    targets.forEach((t) => {
+      if (t.target.startsWith("$parent.")) {
+        t.target = t.target.replace("$parent.", "");
+        parentTargets.push(t);
+      } else {
+        componentTargets.push(t);
+      }
+    });
     let eventMismatch = (e) => {
       let { id, property } = e.detail;
-      if (id !== component.id)
+      if (componentTargets.length > 0 || parentTargets.length > 0) {
+        if (id === component.id) {
+          if (!componentTargets.map((i) => i.target).includes(property))
+            return true;
+        } else if (id === component.parent?.id) {
+          if (!parentTargets.map((i) => i.target).includes(property))
+            return true;
+        }
+      } else if (id !== component.id) {
         return true;
-      if (targets.length > 0 && !targets.map((i) => i.target).includes(property))
-        return true;
+      }
       return false;
     };
     let cleanupA = listen(window, "livewire-upload-start", (e) => {
