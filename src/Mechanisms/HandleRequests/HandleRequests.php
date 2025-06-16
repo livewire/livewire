@@ -105,6 +105,8 @@ class HandleRequests extends Mechanism
             'assets' => SupportScriptsAndAssets::getAssets(),
         ];
 
+        $finish = trigger('response', $responsePayload);
+
         $response = $finish($responsePayload);
 
         /**
