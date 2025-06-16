@@ -585,23 +585,23 @@ Livewire.hook('morphed',  ({ el, component }) => {
 })
 ```
 
-**Partial morph hooks**
+**Island morph hooks**
 
-Partials are morphed differently than standard Livewire requests. Here are the additional Livewire events triggered by partial DOM updates:
+Islands are morphed differently than standard Livewire requests. Here are the additional Livewire events triggered by island DOM updates:
 
 ```js
-Livewire.hook('partial.morph',  ({ startNode, endNode, component }) => {
-	// Runs just before partials in `component` are morphed
-    //
-    // startNode: the comment node marking the beginning of a partial in the DOM.
-    // endNode: the comment node marking the end of a partial in the DOM.
+Livewire.hook('island.morph',  ({ startNode, endNode, component }) => {
+// Runs just before islands in `component` are morphed
+
+// startNode: the comment node marking the beginning of an island in the DOM.
+// endNode: the comment node marking the end of an island in the DOM.
 })
 
-Livewire.hook('partial.morphed',  ({ startNode, endNode, component }) => {
-    // Runs after partials in `component` are morphed
-    //
-    // startNode: the comment node marking the beginning of a partial in the DOM.
-    // endNode: the comment node marking the end of a partial in the DOM.
+Livewire.hook('island.morphed',  ({ startNode, endNode, component }) => {
+// Runs after islands in `component` are morphed
+
+// startNode: the comment node marking the beginning of an island in the DOM.
+// endNode: the comment node marking the end of an island in the DOM.
 })
 ```
 

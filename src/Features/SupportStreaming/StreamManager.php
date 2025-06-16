@@ -40,22 +40,22 @@ class StreamManager
         ]);
     }
 
-    public function partial($name, $view, $data = [], $mode = 'replace')
+    public function island($name, $view, $data = [], $mode = 'replace')
     {
         SupportStreaming::ensureStreamResponseStarted();
 
         $id = $this->component->id();
 
-        $partial = $this->component->partial($name, $view, $data);
+        $island = $this->component->island($name, $view, $data);
 
-        // @todo: This is a hack to pop the partial off the component's partials array...
-        $this->component->popLastPartial();
+        // @todo: This is a hack to pop the island off the component's islands array...
+        $this->component->popLastIsland();
 
         SupportStreaming::streamContent([
-            'type' => 'partial',
+            'type' => 'island',
             'id' => $id,
             'name' => $name,
-            'content' => $partial->render(),
+            'content' => $island->toHtml(),
             'mode' => $mode,
         ]);
     }

@@ -1,4 +1,3 @@
-
 Livewire 4 is a new version of Livewire focused on making livewire faster, more stable, and more intuitive.
 
 ## Pre-beta
@@ -9,7 +8,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] [Add streaming improvements](streaming.md)
 - [x] [Livewire::route() for pages](livewire-route.md)
 - [ ] [Change Livewire::route() to Route::wire(...)](livewire-route.md)
-- [x] [Add partials](partials.md)
+- [x] [Add islands](islands.md)
 - [x] [Naked @script tags](naked-scripts.md)
 - [x] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
 - [x] [Add `wire:ref`](wire-ref.md)

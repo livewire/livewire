@@ -1,3 +1,2 @@
-
-* Add $this->stream()->update/html/partial
+* Add $this->stream()->update/html/island
 * Make canellable

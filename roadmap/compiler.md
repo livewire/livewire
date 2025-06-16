@@ -238,7 +238,7 @@ The compiler provides specific exceptions for different error scenarios:
 #### ✅ **Comprehensive Testing**
 - **79 unit tests** covering all functionality
 - **261 assertions** ensuring correctness
-- Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in partials), and error scenarios
+- Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in islands), and error scenarios
 
 #### ✅ **Layout Directive Support**
 - Parses `@layout()` directives from component frontmatter
@@ -258,15 +258,15 @@ The compiler provides specific exceptions for different error scenarios:
 - Preserves JIT evaluation while providing clean syntax
 - Validates against variable reassignment conflicts in main views
 - Supports all computed attribute syntaxes and visibility modifiers
-- Works consistently across main view content and `@partial()...@endpartial` blocks
-- **Guard approach allows custom data to override computed properties in partials**
+- Works consistently across main view content and `@island()...@endisland` blocks
+- **Guard approach allows custom data to override computed properties in islands**
 
-#### ✅ **Inline Partials Support**
-- Processes `@partial()...@endpartial` blocks into separate view files
-- Generates unique partial view names with content-based hashing
-- Creates partial lookup properties in compiled classes
-- Supports partial data passing and complex nested scenarios
-- Applies view transformations (naked scripts) and computed property guards to partial content
+#### ✅ **Inline Islands Support**
+- Processes `@island()...@endisland` blocks into separate view files
+- Generates unique island view names with content-based hashing
+- Creates island lookup properties in compiled classes
+- Supports island data passing and complex nested scenarios
+- Applies view transformations (naked scripts) and computed property guards to island content
 - **Intelligent computed property handling**: Uses guard statements instead of transformation for better data flexibility
 
 #### ✅ **Use Statement Preservation**
