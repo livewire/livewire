@@ -1,4 +1,4 @@
-import { diff } from '@/utils'
+import { deepClone, diff } from '@/utils'
 import { on, trigger } from '@/hooks'
 
 /**
@@ -73,6 +73,13 @@ export class Commit {
             }))
         }
 
+        Object.keys(payload.updates).forEach(key => {
+            this.component.pendingUpdates[key] = payload.updates[key]
+        })
+        Object.keys(payload.calls).forEach(key => {
+            this.component.pendingCalls[key] = payload.calls[key]
+        })
+
         // Store success and failure hooks from commit listeners
         // so they can be aggregated into a singular callback later...
         let succeedCallbacks = []
@@ -102,6 +109,13 @@ export class Commit {
         // Handle the response payload for a commit...
         let handleResponse = (response) => {
             let { snapshot, effects } = response
+
+            Object.keys(this.component.pendingUpdates).forEach(key => {
+                delete this.component.pendingUpdates[key]
+            })
+            Object.keys(this.component.pendingCalls).forEach(key => {
+                delete this.component.pendingCalls[key]
+            })
 
             respond()
 
