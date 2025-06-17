@@ -1,67 +1,13 @@
 ## Concrete things we want
+- `wire:poll` to be non-blocking and cancellable by default
+- `wire:model.live` should cancel any existing component requests
+- Triggering an action `wire:click` should cancel any existing component requests
+- Streamed responses can be intentionally stopped
+- `wire:navigate` should cancel all existing requests - component or navigate requests
+- `wire:navigate` should be able to be halted if there is a dirty form or a form is submitting
+- static action calls should not cancel other static action calls
 
-### Bailable `wire:poll`
-
-Poll requests in a Livewire component currently hold up the component and block other requests until they return. This is surprising to users and problematic when the poll requests are lengthy.
-
-```html
-<div wire:poll>
-    <!-- ... -->
-</div>
-```
-
-Question: should wire:poll be "bailable" by default?
-Answer: Yes. lol.
-
-Question: should a wire:poll have an opt-in to be NOT bailable?
-Answer: Maybe? probably not initially
-
-Question: if we DID have it opt-out, what would that API be?
-
-```html
-<div wire:poll.uninteruptible>
-    <!-- ... -->
-</div>
-```
-
-Essentially, the current V3 system does this:
-
-```js
-setInterval(() => {
-    $wire.$commit()
-})
-```
-
-We need an API to make $wire calls marked as interuptible?
-Could be a callback?
-Or maybe any .$commit() requests are interruptible?
-
-Two paths forward:
-* Prioritization system within request bus
-    * Numeric priority levels? (1-5)
-    * Taxonomic priority levels?
-        * Action (user-triggered request: via click or something like that)
-        * Passive (background requests like wire:poll)
-
-
-Concepts:
-* Levels of request granularity:
-    * least granular: has multiple components
-    * next: has single component but multiple "actions"
-    * next: has single component and one "action"
-    * next: has single componet but multiple "updates"
-    * next: has single componet but one "updates"
-    * more granular: is a $refresh
-
-Naming:
-- Request
-    - Pool
-        - Commit
-            [Commit types]:
-            - Action
-            - Commit
-
-Ways to trigger an action:
+## Ways to trigger an action:
 * Event listener like `wire:click` & `wire:submit`
 * Dispatching events via `$dispatch`
 * Uploading a file
@@ -69,215 +15,111 @@ Ways to trigger an action:
 * JS manually calling `$wire.someAction(...)`
 * lazy loading `__lazyLoad`
 
-Ways to trigger a commit:
+## Ways to trigger a commit:
 * `wire:click="$refresh|$set|$toggle"`
 * Empty `wire:poll`
 * `wire:model.live`
 * JS `$wire.$commit` or `$wire.$set(...)`
 
-Scenarios where we want a request to be interrupted:
-* Typing into `wire:model.live` with a debounce (real-time searching)
-* Clicking an action while a `wire:poll` is out
-* Streamed response should be cancelled by force (with something like `$stop`) or by another action
-* `wire:navigate` is pressed
-* A button is pressed
+## Proposal
 
-Scenarios where we want a request to NOT be interrupted:
-* Not navigating away (via `wire:navigate`) while a form is submitting...
+The proposal is to split the system into two distinct pieces:
+- request types
+- component updates
 
+Currently the component update handling is tied heavily into the request system, but they are two distinct pieces that should communicate.
 
-* Parrallel (static) action
+### Request types
 
-Levels of request:
+The proposal is to have different request types:
+- PageRequest - when changing pages via `wire:navigate`
+- UpdateRequest - component update request
+- StaticRequest - component static method call request
+- FileUploadRequest - the request that actually uploads the file
 
-Rule: each level interrupts all the levels below itself unless meeting specific conditions
+It would be nice if the different request types (PageRequest, StaticRequest, etc.) could live in their own feature folders.
 
-* Page Navigation
-* Submission
-    * Interrupts page navigation with prompt from `wire:submit wire:navigate.confirm="Are you sure you want to navigate away while this form is submitting?"`...
-* User-triggerd action
-* System-triggered Action
-* Update
-* Refresh
-
-* Page Navigation: Blocking
-* Blocking: Submission
-    * Interrupts page navigation with prompt from `wire:submit wire:navigate.confirm="Are you sure you want to navigate away while this form is submitting?"`...
-* User-triggerd action
-* System-triggered Action
-* Non-blocking: Update
-* Non-blocking: Refresh
-
-Request qualities:
-* blocking vs non-blocking
-
-Prioritization rules:
-* Page navigate
-* Commits interrupt other commits?
-* Stops interrupt everything
-
-Concepts:
-* Request priorities
-* Blocking vs non-blocking
-* Response resolution strategies
-
-
-
-# Request flow
-
-Component gets property updates.
-
-When ready, component can trigger a request.
-
-A request can also be triggered from an action like `wire:click`.
-
-But if there are any updates, they are added to the request first and then the action is added.
-
-`$wire` -> RequestBus -> prepare/trigger/send/sendAction
-
-What orchestrates the pooling/ request handling? Does the requestBus/ requestManager do everything?
-
-Do we have:
-- PageRequest - for page level changes, like `wire:navigate`
-- PoolRequest - for pooled `ComponentRequests`
-- ComponentRequest - for component updates and action calls
-- StaticRequest - for static calls to a specific component
-
-Then we can have a RequestDispatcher/RequestCoordinator which keeps track of requests to be sent, inflight requests, resolving requests, error handling.
-
-So how do we distinguish between submissions, user triggered actions, and system actions?
-
-What about an empty ComponentRequest?
-
-A ComponentRequest can have:
-- updates
-- calls
-- priority?
-- isBlocking?
-
-```js
-let requestManager = new RequestManager()
-
-requestManager.stageUpdate(component)
-requestManager.stageCall(component, method, params)
-```
-
-Staging an update/call starts the 5ms buffer.
-
-Once the buffer is complete, the `RequestManager` takes any pending ComponentRequests and creates a PoolRequest from them.
-
-The `RequestManager` can then instruct the pool to send, and it keeps track of it in:
-```js
-let inflightRequests = [] // Will contain Page/Pool/Static requests. Not `ComponentRequests`
-```
-
-But how does the request manager know if any `ComponentRequests` are currently in flight? Do we also add the `ComponentRequests` to the `inflightRequests`?
-
-The benefit of this is that we can easily mark a `ComponentRequest` as stale, so it doesn't resolve when the `PoolRequest` is finished. We can also cancel a `PoolRequest`.
-
-Maybe a `ComponentRequest` should know if it is part of a `PoolRequest` and if it is and it's marked as stale, and it's the only `ComponentRequest` in the Pool, the Pool gets cancelled too. Or maybe it just instructs the pool that it is stale/cancelled. The pool can deal with itself.
-
-
-So if a `requestManager.pageRequest(url, options)` is fired:
-- if there is an existing `PageRequest` cancel it
-- if there are any existing `PoolRequests` cancel them
-- if there are any existing `ComponentRequests` cancel them
-- if there are any existing `StaticRequests` cancel them
-
-If `requestManager.stageUpdate/stageCall` is fired:
-- if there is an existing `PageRequest` then cancel the stage update/call
-- if there are any existing `PoolRequests` then do nothing as this will be handled by the component requests
-- if there are any existing `ComponentRequests` then search them to find if the current component is in one of them and if it is, then cancel the one it is already in. This should also cancel the pool if the pool only has this commit in it
-- if there are any existing `StaticRequests` then let them continue
-
-If `requestManager.staticRequest(component, method, params)` is fired:
-- if there is an existing `PageRequest` then cancel the static request call
-- if there are any existing `PoolRequests` then do nothing, these can continue
-- if there are any existing `ComponentRequests` then do nothing, these can continue
-- if there are any existing `StaticRequests` then search them to find if the current component is in one of them and the static method is being called, and if it is, then cancel the one it is already in. **Do we want this** Yes I think so. But multiple static component calls can be made and they are not pooled, they are isolated by default
-
-What do we do if a `ComponentRequest` returns with a navigate redirect?
-
-
-A Request class should define a `cancels()` method:
-
-```js
-// PageRequest cancels method
-function cancels()
-{
-    return [
-        'PageRequest',
-        'PoolRequest',
-        'StaticRequest',
-    ]
-}
-```
-
-The above example is for a `PageRequest`.
-
-The reason we want to do it that way, is so that a PageRequest is the top most request, but if we removed it from the system, then the other request types shouldn't care that it is missing.
-
-It would be cool if `PageRequest` lived in the navigate feature folder and `StaticRequest` lives in the static feature folder.
-
-But `ComponentRequest` and `PoolRequest` I think need to be treated a little differently.
-
-Maybe a `ComponentRequest` can also be standalone or also in a pool?
-
-I wonder if the type of request depends on which endpoint it hits? Like:
+The different requests will hit different URLs/ endpoints based on their own definition:
 - PageRequest - hits `/the-page-url`
 - UpdateRequest - hits `/livewire/update`
 - StaticRequest - hits `/livewire/static`
+- FileUploadRequest - hits `/livewire/upload`
 
-Then an update request can contain one or more component updates.
+Each request "type" can control what endpoint it hits, what data it needs, the request type, even the request methodology (like `XMLHttpRequest()` for files and `fetch()` for pages or updates).
+This is all contained within the specific request type class.
 
-This would also work for a `FileRequest`.
+All the requests will be controlled using a `RequestManager`.
 
-Each request "type" can control what endpoint it hits, what data it needs, the request type, even the request methodology (like `XMLHttpRequest()` for files).
+The request manager will be responsible for keeping track of any outstanding requests.
 
-Would there be a benefit to having like `S3FileRequest`??? Or `SideLoadFileRequest`??
+This will allow us strategically cancel requests based on the types of outstandig requests in the request manager.
 
-These request types would all inherit from a base `Request` class that defines some methods. But each of these can live in their feature folders.
+### Component update
 
-How does navigate interact with this, with Alpine controlling the navigate request at the moment?
+A component update can consist of multiple pieces:
+- Property updates
+- Action calls
+- `$refresh`/ `wire:poll`/ empty calls
 
-Maybe it should build up it's own `NavigateRequest` or `PageRequest` and then pass it to `Alpine.request.send(pageRequest)`?
+But a call to the `update` endpoint can also contain updates for multiple components at the same time.
 
-What if we have:
-- PageRequest
-- UpdateRequest/ComponentRequest
-- StaticRequest
+In v3 we used the term `commit` to define the collection of property updates/ action calls per component. So each commit should only have one component associated with it.
 
-File upload requests:
-- FileUploadStartRequest
-- FileUploadRequest
-- FileUploadFinishRequest
-- FileUploadErrorRequest
-- FileUploadRemoveRequest
+Then commits for different components could be added to the same request to be sent to the server.
 
-And an UpdateRequest contains one or many `ComponentMessage`
+The proposal is to have an `UpdateManager` who's job it is to track any component updates/ calls.
 
-PageRequest params:
-- url
-- options
+It acts as a buffer between the component and the request system.
 
-UpdateRequest params:
-- components - array of component updates/ messages
-    ComponentMessage params:
-    - component
-    - snapshot - JSON encoded snapshot
-    - updates - any property updates
-    - calls - any method calls
-- _token - CSRF token
+A component update "collection" is now to be called a `ComponentMessage` which consists of the property updates, action calls, and empty calls.
 
-StaticRequest
-- component
-- method
-- params
+The `UpdateManager`'s responsibility is to take any component messages and massage them into a `UpdateRequest`. An `UpdateRequest` can contain multiple `ComponentMessages`.
 
-Now we can have an `UpdateManager` for component level updates and a `RequestManager` for request level control.
+**Flow**
 
-`UpdateManager` and `RequestManager` should be singletons on the page.
+`$wire.call(method, params)`
+    ⬇
+`updateManager.addCall(method, parms)`
+    ⬇
+`updateManager.prepareRequests()`
+    ⬇
+`message.prepare()`
+    ⬇
+`new UpdateRequest()`
+    ⬇
+`request.addMessage(message)`
+    ⬇
+`requestManager.add(request)`
+    ⬇
+`request.send()`
+    ⬇
+`request.succeed()`
+    ⬇
+`message.succeed()`
 
-Ok so how does a component message check with the existing UpdateRequests, to see if an UpdateRequest has a component message in it, and if it does, cancels it if required?
 
-Well the UpdateRequest can call the request manager and instruct it which Requests to cancel.
+### Navigate request
+
+Currently the navigate feature has been designed as an Alpine plugin. So the goal would be to try and keep it as distinct as possible.
+
+The ideal solution is we can swap out the contents of the `js/plugins/navigate/fetch.js` with an implementation that makes use of the `requestManager` and a custom `PageRequest` class to perform any navigate requests.
+
+Looking at the navigate package, the only place where Livewire specific javascript code (external to navigate feature) has been included as a dependency is in `fetch.js` and `bar.js`.
+
+Based on that I believe it is acceptable to include a reference to the `RequestManager` inside `fetch.js`. It would be the only external reference.
+
+**The question is:** should the `PageRequest` class define which other requests it can cancel or should we instead have a numeric priority level system within the `RequestManager` so the `PageRequest` inside the navigate feature doesn't need to know anything about the other types of requests?
+
+**Flow**
+
+`fetchHtml(destination)`
+    ⬇
+`performFetch(uri)`
+    ⬇
+`new PageRequest(uri)`
+    ⬇
+`requestManager.add(request)`
+    ⬇
+`request.send()`
+    ⬇
+`request.succeed()`
