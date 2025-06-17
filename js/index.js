@@ -28,6 +28,9 @@ let warnAboutMultipleInstancesOf = entity => console.warn(`Detected multiple ins
 if (window.Livewire) warnAboutMultipleInstancesOf('Livewire')
 if (window.Alpine) warnAboutMultipleInstancesOf('Alpine')
 
+// Register v4 changes...
+import './v4'
+
 // Register features...
 import './features/index'
 

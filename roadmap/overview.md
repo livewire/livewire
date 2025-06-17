@@ -46,6 +46,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [ ] [wire:submit with sending form data](wire-submit-form-data.md)
 
 ## Ill-defined
+* (laracon) [requests](requests.md)
 * (laracon) [wire:loading / data-loading stuff?]
 * (laracon) [bailable/async/parralel requests]
 * (laracon) [static methods]

@@ -6,6 +6,7 @@ import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
+import updateManager from './v4/requests/updateManager'
 
 let properties = {}
 let fallback
@@ -135,6 +136,10 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
+        if (updateManager.booted) {
+            return updateManager.addUpdate(component)
+        }
+
         component.queueUpdate(property, value)
 
         return await requestCommit(component)
@@ -178,7 +183,13 @@ wireProperty('$watch', (component) => (path, callback) => {
 })
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async () => await requestCommit(component))
+wireProperty('$commit', (component) => async () => {
+    if (updateManager.booted) {
+        return updateManager.addUpdate(component)
+    }
+
+    return await requestCommit(component)
+})
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
@@ -245,6 +256,10 @@ wireFallback((component) => (property) => async (...params) => {
         if (typeof overrides[property] === 'function') {
             return overrides[property](params)
         }
+    }
+
+    if (updateManager.booted) {
+        return updateManager.addCall(component, property, params)
     }
 
     return await requestCall(component, property, params)
