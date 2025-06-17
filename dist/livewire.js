@@ -4367,6 +4367,244 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     showHtmlModal(html);
   }
 
+  // js/v4/requests/componentMessage.js
+  var ComponentMessage = class {
+    calls = [];
+    payload = {};
+    status = "waiting";
+    resolvers = [];
+    succeedCallbacks = [];
+    failCallbacks = [];
+    respondCallbacks = [];
+    finishTarget = null;
+    request = null;
+    constructor(component) {
+      this.component = component;
+    }
+    addCall(method, params) {
+      this.calls.push({
+        method,
+        params
+      });
+    }
+    addResolver(resolver) {
+      this.resolvers.push(resolver);
+    }
+    cancelIfItShouldBeCancelled() {
+      if (this.isSucceeded())
+        return;
+      this.cancel();
+    }
+    buffer() {
+      this.status = "buffering";
+    }
+    prepare() {
+      this.status = "preparing";
+      let updates = this.component.getUpdates();
+      let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+      this.payload = {
+        snapshot,
+        updates,
+        calls: this.calls.map((i) => ({
+          method: i.method,
+          params: i.params
+        }))
+      };
+      this.finishTarget = trigger2("commit", {
+        component: this.component,
+        commit: this.payload,
+        succeed: (callback) => {
+          this.succeedCallbacks.push(callback);
+        },
+        fail: (callback) => {
+          this.failCallbacks.push(callback);
+        },
+        respond: (callback) => {
+          this.respondCallbacks.push(callback);
+        }
+      });
+    }
+    succeed(response) {
+      if (this.isCancelled())
+        return;
+      this.status = "succeeded";
+      let { snapshot, effects } = response;
+      this.component.mergeNewSnapshot(snapshot, effects, this.updates);
+      this.component.processEffects(this.component.effects);
+      let parsedSnapshot = JSON.parse(snapshot);
+      this.finishTarget({ snapshot: parsedSnapshot, effects });
+      this.resolvers.forEach((i) => i());
+      this.succeedCallbacks.forEach((i) => i(response));
+    }
+    cancel() {
+      this.status = "cancelled";
+      this.request?.cancelIfItShouldBeCancelled();
+    }
+    isBuffering() {
+      return this.status === "buffering";
+    }
+    isPreparing() {
+      return this.status === "preparing";
+    }
+    isSucceeded() {
+      return this.status === "succeeded";
+    }
+    isCancelled() {
+      return this.status === "cancelled";
+    }
+    isFinished() {
+      return this.isSucceeded() || this.isCancelled();
+    }
+  };
+
+  // js/v4/requests/requestManager.js
+  var RequestManager = class {
+    requests = /* @__PURE__ */ new Set();
+    add(request) {
+      this.requests.add(request);
+      request.send();
+    }
+    remove(request) {
+      this.requests.delete(request);
+    }
+  };
+  var instance = new RequestManager();
+  var requestManager_default = instance;
+
+  // js/v4/requests/updateRequest.js
+  var UpdateRequest = class {
+    messages = /* @__PURE__ */ new Set();
+    controller = new AbortController();
+    addMessage(message) {
+      this.messages.add(message);
+      message.request = this;
+    }
+    cancelIfItShouldBeCancelled() {
+      if (this.allMessagesAreCancelled()) {
+        this.cancel();
+      }
+    }
+    allMessagesAreCancelled() {
+      return Array.from(this.messages).every((message) => message.isCancelled());
+    }
+    async send() {
+      let payload = {
+        _token: getCsrfToken(),
+        components: Array.from(this.messages, (i) => i.payload)
+      };
+      let options = {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-type": "application/json",
+          "X-Livewire": "1"
+        },
+        signal: this.controller.signal
+      };
+      let updateUri = getUpdateUri();
+      let response;
+      try {
+        response = await fetch(updateUri, options);
+      } catch (e) {
+        console.log("error", e);
+        return;
+      }
+      let content = await response.text();
+      let { components: components2, assets } = JSON.parse(content);
+      this.succeed(components2);
+    }
+    succeed(components2) {
+      this.messages.forEach((message) => {
+        components2.forEach((component) => {
+          let snapshot = JSON.parse(component.snapshot);
+          if (snapshot.memo.id === message.component.id) {
+            message.succeed(component);
+          }
+        });
+      });
+    }
+    cancel() {
+      this.controller.abort("cancelled");
+      requestManager_default.remove(this);
+    }
+  };
+
+  // js/v4/requests/updateManager.js
+  var UpdateManager = class {
+    booted = false;
+    messages = /* @__PURE__ */ new Map();
+    boot() {
+      this.booted = true;
+      console.log("v4 requests enabled");
+    }
+    getMessage(component) {
+      let message = this.messages.get(component.id);
+      if (!message) {
+        message = new ComponentMessage(component);
+        this.messages.set(component.id, message);
+      }
+      return message;
+    }
+    addUpdate(component) {
+      let message = this.getMessage(component);
+      return this.send(message);
+    }
+    addCall(component, method, params) {
+      let message = this.getMessage(component);
+      message.addCall(method, params);
+      return this.send(message);
+    }
+    send(message) {
+      let promise = new Promise((resolve, reject) => {
+        message.addResolver(resolve);
+      });
+      this.bufferMessageForFiveMs(message);
+      return promise;
+    }
+    bufferMessageForFiveMs(message) {
+      if (message.isBuffering())
+        return;
+      message.buffer();
+      setTimeout(() => {
+        this.prepareRequests();
+      }, 5);
+    }
+    prepareRequests() {
+      let messages = new Set(this.messages.values());
+      this.messages.clear();
+      if (messages.size === 0)
+        return;
+      messages.forEach((message) => {
+        message.prepare();
+      });
+      this.corraleMessagesIntoRequests(messages);
+    }
+    corraleMessagesIntoRequests(messages) {
+      let request = new UpdateRequest();
+      for (let message of messages) {
+        let existingMessage = this.findMessageForComponentAlreadyInARequest(message.component);
+        if (existingMessage) {
+          existingMessage.cancelIfItShouldBeCancelled();
+        }
+        request.addMessage(message);
+      }
+      requestManager_default.add(request);
+    }
+    findMessageForComponentAlreadyInARequest(component) {
+      for (let request of requestManager_default.requests) {
+        if (!(request instanceof UpdateRequest))
+          continue;
+        for (let message of request.messages) {
+          if (message.component.id === component.id)
+            return message;
+        }
+      }
+      return null;
+    }
+  };
+  var instance2 = new UpdateManager();
+  var updateManager_default = instance2;
+
   // js/$wire.js
   var properties = {};
   var fallback;
@@ -4464,6 +4702,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     if (live) {
+      if (updateManager_default.booted) {
+        return updateManager_default.addUpdate(component);
+      }
       component.queueUpdate(property, value);
       return await requestCommit(component);
     }
@@ -4495,7 +4736,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     component.addCleanup(unwatch);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
-  wireProperty("$commit", (component) => async () => await requestCommit(component));
+  wireProperty("$commit", (component) => async () => {
+    if (updateManager_default.booted) {
+      return updateManager_default.addUpdate(component);
+    }
+    return await requestCommit(component);
+  });
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
     let unhook = on2(name, ({ component: hookComponent, ...params }) => {
@@ -4540,6 +4786,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (typeof overrides[property] === "function") {
         return overrides[property](params);
       }
+    }
+    if (updateManager_default.booted) {
+      return updateManager_default.addCall(component, property, params);
     }
     return await requestCall(component, property, params);
   });
@@ -4602,6 +4851,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.queuedUpdates = [];
       return diff2;
     }
+    getUpdates() {
+      let propertiesDiff = diff(this.canonical, this.ephemeral);
+      return this.mergeQueuedUpdates(propertiesDiff);
+    }
     applyUpdates(object, updates) {
       for (let key in updates) {
         dataSet(object, key, updates[key]);
@@ -4628,6 +4881,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     get parent() {
       return closestComponent(this.el.parentElement);
+    }
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+      let { snapshotEncoded, children, snapshot } = this;
+      let childIds = children.map((child) => child.id);
+      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+      return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
     }
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
@@ -9309,6 +9568,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       console.warn("Livewire: missing closing tags found. Ensure your template elements contain matching closing tags.", livewireEl);
     }
   }
+
+  // js/v4/requests/index.js
+  updateManager_default.boot();
 
   // js/features/supportListeners.js
   on2("effect", ({ component, effects }) => {
