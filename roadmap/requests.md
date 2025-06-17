@@ -2,9 +2,11 @@
 - `wire:poll` to be non-blocking and cancellable by default
 - `wire:model.live` should cancel any existing component requests
 - Triggering an action `wire:click` should cancel any existing component requests
+- different components can make parallel requests
 - Streamed responses can be intentionally stopped
 - `wire:navigate` should cancel all existing requests - component or navigate requests
 - `wire:navigate` should be able to be halted if there is a dirty form or a form is submitting
+- we can make static calls to a component
 - static action calls should not cancel other static action calls
 
 ## Ways to trigger an action:
