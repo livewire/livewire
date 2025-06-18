@@ -78,16 +78,27 @@ class UpdateManager {
     }
 
     corraleMessagesIntoRequests(messages) {
-        // @todo: Add isolation support...        
         let requests = new Set()
 
-        let request = new UpdateRequest()
-
         for (let message of messages) {
-            request.addMessage(message)
-        }
+            let hasFoundRequest = false
 
-        requests.add(request)
+            requests.forEach(request => {
+                if (! hasFoundRequest && ! message.isolate) {
+                    request.addMessage(message)
+
+                    hasFoundRequest = true
+                }
+            })
+
+            if (! hasFoundRequest) {
+                let request = new UpdateRequest()
+
+                request.addMessage(message)
+
+                requests.add(request)
+            }
+        }
 
         return requests
     }

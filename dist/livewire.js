@@ -4406,6 +4406,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     respondCallbacks = [];
     finishTarget = null;
     request = null;
+    isolate = false;
     constructor(component) {
       this.component = component;
     }
@@ -4737,11 +4738,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     corraleMessagesIntoRequests(messages) {
       let requests = /* @__PURE__ */ new Set();
-      let request = new UpdateRequest();
       for (let message of messages) {
-        request.addMessage(message);
+        let hasFoundRequest = false;
+        requests.forEach((request) => {
+          if (!hasFoundRequest && !message.isolate) {
+            request.addMessage(message);
+            hasFoundRequest = true;
+          }
+        });
+        if (!hasFoundRequest) {
+          let request = new UpdateRequest();
+          request.addMessage(message);
+          requests.add(request);
+        }
       }
-      requests.add(request);
       return requests;
     }
     sendRequests(requests) {
@@ -9837,6 +9847,48 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   }
 
+  // js/v4/features/supportIsolatingV4.js
+  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  on2("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.isolate !== true)
+      return;
+    componentsThatAreIsolated.add(component);
+  });
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      if (!componentsThatAreIsolated.has(message.component))
+        return;
+      message.isolate = true;
+    });
+  });
+
+  // js/v4/features/supportLazyLoadingV4.js
+  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  on2("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.lazyLoaded === void 0)
+      return;
+    componentsThatAreLazy.add(component);
+    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+      componentsThatWantToBeBundled.add(component);
+    }
+  });
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      if (!componentsThatAreLazy.has(message.component))
+        return;
+      if (componentsThatWantToBeBundled.has(message.component)) {
+        message.isolate = false;
+        componentsThatWantToBeBundled.delete(message.component);
+      } else {
+        message.isolate = true;
+      }
+      componentsThatAreLazy.delete(message.component);
+    });
+  });
+
   // js/v4/requests/index.js
   requestManager_default.boot();
 
@@ -10193,28 +10245,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportLazyLoading.js
-  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  var componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
   on2("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.lazyLoaded === void 0)
       return;
-    componentsThatAreLazy.add(component);
+    componentsThatAreLazy2.add(component);
     if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-      componentsThatWantToBeBundled.add(component);
+      componentsThatWantToBeBundled2.add(component);
     }
   });
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
-      if (!componentsThatAreLazy.has(commit.component))
+      if (!componentsThatAreLazy2.has(commit.component))
         return;
-      if (componentsThatWantToBeBundled.has(commit.component)) {
+      if (componentsThatWantToBeBundled2.has(commit.component)) {
         commit.isolate = false;
-        componentsThatWantToBeBundled.delete(commit.component);
+        componentsThatWantToBeBundled2.delete(commit.component);
       } else {
         commit.isolate = true;
       }
-      componentsThatAreLazy.delete(commit.component);
+      componentsThatAreLazy2.delete(commit.component);
     });
   });
 
@@ -10329,16 +10381,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportIsolating.js
-  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
   on2("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.isolate !== true)
       return;
-    componentsThatAreIsolated.add(component);
+    componentsThatAreIsolated2.add(component);
   });
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
-      if (!componentsThatAreIsolated.has(commit.component))
+      if (!componentsThatAreIsolated2.has(commit.component))
         return;
       commit.isolate = true;
     });

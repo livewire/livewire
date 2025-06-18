@@ -11,6 +11,7 @@ export default class ComponentMessage {
     respondCallbacks = []
     finishTarget = null
     request = null
+    isolate = false
 
     constructor(component) {
         this.component = component
