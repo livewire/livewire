@@ -8265,7 +8265,7 @@ var requestBus_default = instance;
 // js/v4/requests/message.js
 var Message = class {
   updates = {};
-  calls = [];
+  actions = [];
   payload = {};
   status = "waiting";
   succeedCallbacks = [];
@@ -8277,8 +8277,8 @@ var Message = class {
   constructor(component) {
     this.component = component;
   }
-  addCall(method, params, handleReturn) {
-    this.calls.push({
+  addAction(method, params, handleReturn) {
+    this.actions.push({
       method,
       params,
       handleReturn
@@ -8299,7 +8299,7 @@ var Message = class {
     this.payload = {
       snapshot,
       updates: this.updates,
-      calls: this.calls.map((i) => ({
+      calls: this.actions.map((i) => ({
         method: i.method,
         params: i.params
       }))
@@ -8331,7 +8331,7 @@ var Message = class {
     this.component.processEffects(this.component.effects);
     if (effects["returns"]) {
       let returns = effects["returns"];
-      let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
+      let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
       returnHandlerStack.forEach((handleReturn, index) => {
         handleReturn(returns[index]);
       });
@@ -8559,10 +8559,10 @@ var MessageBroker = class {
     }
     return message;
   }
-  addCall(component, method, params = []) {
+  addAction(component, method, params = []) {
     let message = this.getMessage(component);
     let promise = new Promise((resolve) => {
-      message.addCall(method, params, resolve);
+      message.addAction(method, params, resolve);
     });
     this.send(message);
     return promise;
@@ -8717,7 +8717,7 @@ wireProperty("$set", (component) => async (property, value, live = true) => {
   if (live) {
     if (requestBus_default.booted) {
       component.queueUpdate(property, value);
-      return messageBroker_default.addCall(component, "$set");
+      return messageBroker_default.addAction(component, "$set");
     }
     component.queueUpdate(property, value);
     return await requestCommit(component);
@@ -8752,7 +8752,7 @@ wireProperty("$watch", (component) => (path, callback) => {
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => {
   if (requestBus_default.booted) {
-    return messageBroker_default.addCall(component, "$refresh");
+    return messageBroker_default.addAction(component, "$refresh");
   }
   return await requestCommit(component);
 });
@@ -8802,7 +8802,7 @@ wireFallback((component) => (property) => async (...params) => {
     }
   }
   if (requestBus_default.booted) {
-    return messageBroker_default.addCall(component, property, params);
+    return messageBroker_default.addAction(component, property, params);
   }
   return await requestCall(component, property, params);
 });

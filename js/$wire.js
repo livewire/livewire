@@ -140,7 +140,7 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
         if (requestBus.booted) {
             component.queueUpdate(property, value)
 
-            return messsageBroker.addCall(component, '$set')
+            return messsageBroker.addAction(component, '$set')
         }
 
         component.queueUpdate(property, value)
@@ -188,7 +188,7 @@ wireProperty('$watch', (component) => (path, callback) => {
 wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => {
     if (requestBus.booted) {
-        return messsageBroker.addCall(component, '$refresh')
+        return messsageBroker.addAction(component, '$refresh')
     }
 
     return await requestCommit(component)
@@ -262,7 +262,7 @@ wireFallback((component) => (property) => async (...params) => {
     }
 
     if (requestBus.booted) {
-        return messsageBroker.addCall(component, property, params)
+        return messsageBroker.addAction(component, property, params)
     }
 
     return await requestCall(component, property, params)

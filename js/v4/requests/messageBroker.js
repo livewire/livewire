@@ -17,11 +17,11 @@ class MessageBroker {
         return message
     }
 
-    addCall(component, method, params = []) {
+    addAction(component, method, params = []) {
         let message = this.getMessage(component)
 
         let promise = new Promise((resolve) => {
-            message.addCall(method, params, resolve)
+            message.addAction(method, params, resolve)
         })
 
         this.send(message)

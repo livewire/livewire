@@ -2,7 +2,7 @@ import { trigger } from '@/hooks'
 
 export default class Message {
     updates = {}
-    calls = []
+    actions = []
     payload = {}
     status = 'waiting'
     succeedCallbacks = []
@@ -16,8 +16,8 @@ export default class Message {
         this.component = component
     }
 
-    addCall(method, params, handleReturn) {
-        this.calls.push({
+    addAction(method, params, handleReturn) {
+        this.actions.push({
             method: method,
             params: params,
             handleReturn,
@@ -44,7 +44,8 @@ export default class Message {
         this.payload = {
             snapshot: snapshot,
             updates: this.updates,
-            calls: this.calls.map(i => ({
+            // @todo: Rename to "actions"...
+            calls: this.actions.map(i => ({
                 method: i.method,
                 params: i.params,
             }))
@@ -90,7 +91,7 @@ export default class Message {
 
             // Here we'll match up returned values with their method call handlers. We need to build up
             // two "stacks" of the same length and walk through them together to handle them properly...
-            let returnHandlerStack = this.calls.map(({ handleReturn }) => (handleReturn))
+            let returnHandlerStack = this.actions.map(({ handleReturn }) => (handleReturn))
 
             returnHandlerStack.forEach((handleReturn, index) => {
                 handleReturn(returns[index])
