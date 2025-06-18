@@ -4695,7 +4695,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return message;
     }
     addUpdate(component) {
-      console.log("addUpdate", component);
       let message = this.getMessage(component);
       let promise = new Promise((resolve) => {
         message.addResolver(resolve);
@@ -4737,7 +4736,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     corraleMessagesIntoRequests(messages) {
       let requests = /* @__PURE__ */ new Set();
-      console.log("corraleMessagesIntoRequests", messages);
       let request = new UpdateRequest();
       for (let message of messages) {
         request.addMessage(message);
@@ -8256,7 +8254,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let response = await fetch(this.uri, options);
         let destination = this.getDestination(response);
         let html = await response.text();
-        this.successCallbacks.forEach((callback) => callback(html, destination));
+        this.succeedCallbacks.forEach((callback) => callback(html, destination));
       } catch (error2) {
         this.errorCallbacks.forEach((callback) => callback(error2));
         throw error2;
@@ -8309,7 +8307,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function performFetchV4(uri, callback, errorCallback) {
     let request = new PageRequest(uri);
-    request.addSuccessCallback(callback);
+    request.addSucceedCallback(callback);
     request.addErrorCallback(errorCallback);
     requestManager_default.add(request);
   }
@@ -9772,6 +9770,71 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
+  // js/v4/features/supportPropsAndModelablesV4.js
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        child.$wire.$commit();
+      });
+    });
+  });
+  on2("message.pooled", ({ requests }) => {
+    let messages = getRequestsMessages(requests);
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        colocateRequestsByComponent(requests, component, child);
+      });
+    });
+  });
+  function getRequestsMessages(requests) {
+    let messages = [];
+    requests.forEach((request) => {
+      request.messages.forEach((message) => {
+        messages.push(message);
+      });
+    });
+    return messages;
+  }
+  function colocateRequestsByComponent(requests, component, foreignComponent) {
+    let request = findRequestWithComponent(requests, component);
+    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+    let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
+    foreignRequest.deleteMessage(foreignMessage);
+    request.addMessage(foreignMessage);
+    requests.forEach((request2) => {
+      if (request2.isEmpty())
+        requests.delete(request2);
+    });
+  }
+  function findRequestWithComponent(requests, component) {
+    return Array.from(requests).find((request) => request.hasMessageFor(component));
+  }
+  function getDeepChildrenWithBindings(component, callback) {
+    getDeepChildren(component, (child) => {
+      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+        callback(child);
+      }
+    });
+  }
+  function hasReactiveProps(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function hasWireModelableBindings(component) {
+    let meta = component.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  function getDeepChildren(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      getDeepChildren(child, callback);
+    });
+  }
+
   // js/v4/requests/index.js
   requestManager_default.boot();
 
@@ -10021,71 +10084,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     } : () => el.readOnly = false;
     el.readOnly = true;
     return undo;
-  }
-
-  // js/features/supportPropsAndModelablesV4.js
-  on2("message.pooling", ({ messages }) => {
-    messages.forEach((message) => {
-      let component = message.component;
-      getDeepChildrenWithBindings(component, (child) => {
-        child.$wire.$commit();
-      });
-    });
-  });
-  on2("message.pooled", ({ requests }) => {
-    let messages = getRequestsMessages(requests);
-    messages.forEach((message) => {
-      let component = message.component;
-      getDeepChildrenWithBindings(component, (child) => {
-        colocateRequestsByComponent(requests, component, child);
-      });
-    });
-  });
-  function getRequestsMessages(requests) {
-    let messages = [];
-    requests.forEach((request) => {
-      request.messages.forEach((message) => {
-        messages.push(message);
-      });
-    });
-    return messages;
-  }
-  function colocateRequestsByComponent(requests, component, foreignComponent) {
-    let request = findRequestWithComponent(requests, component);
-    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
-    let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
-    foreignRequest.deleteMessage(foreignMessage);
-    request.addMessage(foreignMessage);
-    requests.forEach((request2) => {
-      if (request2.isEmpty())
-        requests.delete(request2);
-    });
-  }
-  function findRequestWithComponent(requests, component) {
-    return Array.from(requests).find((request) => request.hasMessageFor(component));
-  }
-  function getDeepChildrenWithBindings(component, callback) {
-    getDeepChildren(component, (child) => {
-      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
-        callback(child);
-      }
-    });
-  }
-  function hasReactiveProps(component) {
-    let meta = component.snapshot.memo;
-    let props = meta.props;
-    return !!props;
-  }
-  function hasWireModelableBindings(component) {
-    let meta = component.snapshot.memo;
-    let bindings = meta.bindings;
-    return !!bindings;
-  }
-  function getDeepChildren(component, callback) {
-    component.children.forEach((child) => {
-      callback(child);
-      getDeepChildren(child, callback);
-    });
   }
 
   // js/features/supportPropsAndModelables.js
