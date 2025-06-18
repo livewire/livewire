@@ -228,6 +228,8 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSee('Loading "myModel"...')
         ->assertDontSee('Loading "prop2"...')
 
+        ->waitUntilMissingText('Loading "prop"...')
+
         ->type('@input2', 'Hello Caleb')
 		->waitForText('Loading "prop2"...')
         ->assertSee('Loading "prop2"...')
