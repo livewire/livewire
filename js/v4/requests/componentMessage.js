@@ -1,6 +1,7 @@
 import { trigger } from '@/hooks'
 
 export default class ComponentMessage {
+    updates = {}
     calls = []
     payload = {}
     status = 'waiting'
@@ -40,13 +41,13 @@ export default class ComponentMessage {
     prepare() {
         this.status = 'preparing'
 
-        let updates = this.component.getUpdates()
+        this.updates = this.component.getUpdates()
 
         let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn()
 
         this.payload = {
             snapshot: snapshot,
-            updates: updates,
+            updates: this.updates,
             calls: this.calls.map(i => ({
                 method: i.method,
                 params: i.params,

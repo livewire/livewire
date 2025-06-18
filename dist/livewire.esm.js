@@ -8264,6 +8264,7 @@ var requestManager_default = instance;
 
 // js/v4/requests/componentMessage.js
 var ComponentMessage = class {
+  updates = {};
   calls = [];
   payload = {};
   status = "waiting";
@@ -8296,11 +8297,11 @@ var ComponentMessage = class {
   }
   prepare() {
     this.status = "preparing";
-    let updates = this.component.getUpdates();
+    this.updates = this.component.getUpdates();
     let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
     this.payload = {
       snapshot,
-      updates,
+      updates: this.updates,
       calls: this.calls.map((i) => ({
         method: i.method,
         params: i.params
