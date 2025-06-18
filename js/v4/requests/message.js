@@ -17,11 +17,43 @@ export default class Message {
     }
 
     addAction(method, params, handleReturn) {
+        // If the action isn't a magic action then it supersedes any magic actions.
+        // Remove them so there aren't any unnecessary actions in the request...
+        if (! this.isMagicAction(method)) {
+            this.removeAllMagicActions()
+        }
+
+        // If the action is a magic action and it already exists then remove the 
+        // old action so there aren't any duplicate actions in the request...
+        if (this.isMagicAction(method)) {
+            this.findAndRemoveAction(method)
+        }
+
         this.actions.push({
             method: method,
             params: params,
             handleReturn,
         })
+    }
+
+    magicActions () {
+        return [
+            '$refresh',
+            '$set',
+            '$sync',
+        ]
+    }
+
+    isMagicAction(method) {
+        return this.magicActions().includes(method)
+    }
+
+    removeAllMagicActions() {
+        this.actions = this.actions.filter(i => !this.isMagicAction(i.method))
+    }
+
+    findAndRemoveAction(method) {
+        this.actions = this.actions.filter(i => i.method !== method)
     }
 
     cancelIfItShouldBeCancelled() {

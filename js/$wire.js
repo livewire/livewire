@@ -185,10 +185,16 @@ wireProperty('$watch', (component) => (path, callback) => {
     component.addCleanup(unwatch)
 })
 
-wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async () => {
+wireProperty('$refresh', (component) => async () => {
     if (requestBus.booted) {
         return messsageBroker.addAction(component, '$refresh')
+    }
+
+    return component.$wire.$commit()
+})
+wireProperty('$commit', (component) => async () => {
+    if (requestBus.booted) {
+        return messsageBroker.addAction(component, '$sync')
     }
 
     return await requestCommit(component)

@@ -8278,11 +8278,33 @@ var Message = class {
     this.component = component;
   }
   addAction(method, params, handleReturn) {
+    if (!this.isMagicAction(method)) {
+      this.removeAllMagicActions();
+    }
+    if (this.isMagicAction(method)) {
+      this.findAndRemoveAction(method);
+    }
     this.actions.push({
       method,
       params,
       handleReturn
     });
+  }
+  magicActions() {
+    return [
+      "$refresh",
+      "$set",
+      "$sync"
+    ];
+  }
+  isMagicAction(method) {
+    return this.magicActions().includes(method);
+  }
+  removeAllMagicActions() {
+    this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
+  }
+  findAndRemoveAction(method) {
+    this.actions = this.actions.filter((i) => i.method !== method);
   }
   cancelIfItShouldBeCancelled() {
     if (this.isSucceeded())
@@ -8749,10 +8771,15 @@ wireProperty("$watch", (component) => (path, callback) => {
   let unwatch = import_alpinejs2.default.watch(getter, callback);
   component.addCleanup(unwatch);
 });
-wireProperty("$refresh", (component) => component.$wire.$commit);
-wireProperty("$commit", (component) => async () => {
+wireProperty("$refresh", (component) => async () => {
   if (requestBus_default.booted) {
     return messageBroker_default.addAction(component, "$refresh");
+  }
+  return component.$wire.$commit();
+});
+wireProperty("$commit", (component) => async () => {
+  if (requestBus_default.booted) {
+    return messageBroker_default.addAction(component, "$sync");
   }
   return await requestCommit(component);
 });
