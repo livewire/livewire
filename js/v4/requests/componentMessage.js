@@ -15,10 +15,11 @@ export default class ComponentMessage {
         this.component = component
     }
 
-    addCall(method, params) {
+    addCall(method, params, handleReturn) {
         this.calls.push({
             method: method,
             params: params,
+            handleReturn,
         })
     }
 
@@ -28,7 +29,7 @@ export default class ComponentMessage {
 
     cancelIfItShouldBeCancelled() {
         if (this.isSucceeded()) return
-        
+
         this.cancel()
     }
 
@@ -69,16 +70,35 @@ export default class ComponentMessage {
         })
     }
 
+    respond() {
+        this.respondCallbacks.forEach(i => i())
+    }
+
     succeed(response) {
         if (this.isCancelled()) return
-        
+
         this.status = 'succeeded'
-        
+
+        this.respond()
+
         let { snapshot, effects } = response
 
         this.component.mergeNewSnapshot(snapshot, effects, this.updates)
 
+        // Trigger any side effects from the payload like "morph" and "dispatch event"...
         this.component.processEffects(this.component.effects)
+
+        if (effects['returns']) {
+            let returns = effects['returns']
+
+            // Here we'll match up returned values with their method call handlers. We need to build up
+            // two "stacks" of the same length and walk through them together to handle them properly...
+            let returnHandlerStack = this.calls.map(({ handleReturn }) => (handleReturn))
+
+            returnHandlerStack.forEach((handleReturn, index) => {
+                handleReturn(returns[index])
+            })
+        }
 
         let parsedSnapshot = JSON.parse(snapshot)
 
@@ -87,6 +107,14 @@ export default class ComponentMessage {
         this.resolvers.forEach(i => i())
 
         this.succeedCallbacks.forEach(i => i(response))
+    }
+
+    fail() {
+        this.status = 'failed'
+
+        this.respond()
+
+        this.failCallbacks.forEach(i => i())
     }
 
     cancel() {
@@ -109,7 +137,11 @@ export default class ComponentMessage {
         return this.status === 'cancelled'
     }
 
+    isFailed() {
+        return this.status === 'failed'
+    }
+
     isFinished() {
-        return this.isSucceeded() || this.isCancelled()
+        return this.isSucceeded() || this.isCancelled() || this.isFailed()
     }
 }

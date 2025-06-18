@@ -1,8 +1,11 @@
-import { getCsrfToken, getUpdateUri } from '@/utils'
+import { getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
+import { showHtmlModal } from '@/request/modal'
 import Request from './request.js'
+import { trigger, triggerAsync } from '@/hooks'
 
 export default class UpdateRequest extends Request {
     messages = new Set()
+    finishProfile = null
 
     addMessage(message) {
         this.messages.add(message)
@@ -11,9 +14,6 @@ export default class UpdateRequest extends Request {
 
     shouldCancel() {
         return request => {
-            // console.log('shouldCancel', request.constructor.name, request.constructor.name === 'UpdateRequest', Array.from(request.messages).some(message =>
-            //     Array.from(this.messages).some(thisMessage => thisMessage.component.id === message.component.id)
-            // ))
             return request.constructor.name === 'UpdateRequest'
                 && Array.from(request.messages).some(message =>
                     Array.from(this.messages).some(thisMessage => thisMessage.component.id === message.component.id)
@@ -27,10 +27,6 @@ export default class UpdateRequest extends Request {
         })
 
         super.cancel()
-    }
-
-    allMessagesAreCancelled() {
-        return Array.from(this.messages).every(message => message.isCancelled())
     }
 
     async send() {
@@ -49,25 +45,82 @@ export default class UpdateRequest extends Request {
             signal: this.controller.signal,
         }
 
+        this.finishProfile = trigger('request.profile', options)
+
         let updateUri = getUpdateUri()
+
+        trigger('request', {
+            url: updateUri,
+            options,
+            payload: options.body,
+            respond: i => this.respondCallbacks.push(i),
+            succeed: i => this.succeedCallbacks.push(i),
+            fail: i => this.errorCallbacks.push(i),
+        })
 
         let response
 
         try {
             response = await fetch(updateUri, options)
         } catch (e) {
-            console.log('error', e)
+            this.error()
+
             return
         }
 
+        let mutableObject = {
+            status: response.status,
+            response,
+        }
+
+        this.respond(mutableObject)
+
+        response = mutableObject.response
+
         let content = await response.text()
 
-        let { components, assets } = JSON.parse(content)
+        // Handle error response...
+        if (! response.ok) {
+            this.fail(response, content)
+        }
 
-        this.succeed(components)
+        this.redirectIfNeeded(response)
+
+        await this.succeed(response, content)
     }
 
-    succeed(components) {
+    redirectIfNeeded(response) {
+        if (response.redirected) {
+            window.location.href = response.url
+        }
+    }
+
+    respond(mutableObject) {
+        this.respondCallbacks.forEach(i => i(mutableObject))
+    }
+
+    async succeed(response, content) {
+        /**
+         * Sometimes a response will be prepended with html to render a dump, so we
+         * will seperate the dump html from Livewire's JSON response content and
+         * render the dump in a modal and allow Livewire to continue with the
+         * request.
+         */
+        if (contentIsFromDump(content)) {
+            let dump
+            [dump, content] = splitDumpFromContent(content)
+
+            showHtmlModal(dump)
+
+            this.finishProfile({ content: '{}', failed: true })
+        } else {
+            this.finishProfile({ content, failed: false })
+        }
+        
+        let { components, assets } = JSON.parse(content)
+
+        await triggerAsync('payload.intercept', { components, assets })
+
         this.messages.forEach(message => {
             components.forEach(component => {
                 let snapshot = JSON.parse(component.snapshot)
@@ -76,5 +129,66 @@ export default class UpdateRequest extends Request {
                 }
             })
         })
+
+        this.succeedCallbacks.forEach(i => i({ status: response.status, json: JSON.parse(content) }))
+    }
+
+    // If something went wrong with the fetch (particularly
+    // this would happen if the connection went offline)
+    // fail with a 503 and allow Livewire to clean up
+    error() {
+        this.finishProfile({ content: '{}', failed: true })
+
+        let preventDefault = false
+
+        this.messages.forEach(message => {
+            message.fail()
+        })
+
+        this.errorCallbacks.forEach(i => i({
+            status: 503,
+            content: null,
+            preventDefault: () => preventDefault = true,
+        }))
+    }
+
+    fail(response, content) {
+        this.finishProfile({ content: '{}', failed: true })
+
+        let preventDefault = false
+
+        this.messages.forEach(message => {
+            message.fail()
+        })
+
+        this.errorCallbacks.forEach(i => i({
+            status: response.status,
+            content,
+            preventDefault: () => preventDefault = true,
+        }))
+
+        if (preventDefault) return
+
+        if (response.status === 419) {
+            this.handlePageExpiry()
+        }
+
+        if (response.aborted) {
+            return
+        } else {
+            return this.showFailureModal(content)
+        }
+    }
+
+    handlePageExpiry() {
+        confirm(
+            'This page has expired.\nWould you like to refresh the page?'
+        ) && window.location.reload()
+    }
+
+    showFailureModal(content) {
+        let html = content
+
+        showHtmlModal(html)
     }
 }

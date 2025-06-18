@@ -19,27 +19,29 @@ class UpdateManager {
     addUpdate(component) {
         let message = this.getMessage(component)
 
-        // No-op as the updates will be added later when preparing the request...
+        let promise = new Promise((resolve) => {
+            message.addResolver(resolve)
+        })
 
-        return this.send(message)
+        this.send(message)
+
+        return promise
     }
 
     addCall(component, method, params) {
         let message = this.getMessage(component)
 
-        message.addCall(method, params)
+        let promise = new Promise((resolve) => {
+            message.addCall(method, params, resolve)
+        })
 
-        return this.send(message)
+        this.send(message)
+
+        return promise
     }
 
     send(message) {
-        let promise = new Promise((resolve, reject) => {
-            message.addResolver(resolve)
-        })
-
         this.bufferMessageForFiveMs(message)
-
-        return promise
     }
 
     bufferMessageForFiveMs(message) {
@@ -54,7 +56,7 @@ class UpdateManager {
 
     prepareRequests() {
         let messages = new Set(this.messages.values())
-        
+
         this.messages.clear()
 
         if (messages.size === 0) return

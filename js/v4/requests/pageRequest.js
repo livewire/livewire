@@ -3,21 +3,10 @@ import { createUrlObjectFromString } from "@/plugins/navigate/links.js"
 import { trigger } from "@/hooks"
 
 export default class PageRequest extends Request {
-    successCallbacks = []
-    errorCallbacks = []
-
     constructor(uri) {
         super()
 
         this.uri = uri
-    }
-
-    addSuccessCallback(callback) {
-        this.successCallbacks.push(callback)
-    }
-
-    addErrorCallback(callback) {
-        this.errorCallbacks.push(callback)
     }
 
     shouldCancel() {
