@@ -138,6 +138,8 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // on the server, then trickle back down to the client and get merged...
     if (live) {
         if (requestManager.booted) {
+            component.queueUpdate(property, value)
+
             return updateManager.addUpdate(component)
         }
 

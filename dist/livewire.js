@@ -4851,6 +4851,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     dataSet(component.reactive, property, value);
     if (live) {
       if (requestManager_default.booted) {
+        component.queueUpdate(property, value);
         return updateManager_default.addUpdate(component);
       }
       component.queueUpdate(property, value);
