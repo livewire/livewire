@@ -1,6 +1,7 @@
 import ComponentMessage from './componentMessage.js'
 import UpdateRequest from './updateRequest.js'
 import requestManager from './requestManager.js'
+import { trigger } from '@/hooks'
 
 class UpdateManager {
     messages = new Map()
@@ -55,6 +56,10 @@ class UpdateManager {
     }
 
     prepareRequests() {
+        // Allow features like "reactive properties" to initiate associated
+        // commits before those commits are pooled for a network request...
+        trigger('message.pooling', { messages: this.messages })
+
         let messages = new Set(this.messages.values())
 
         this.messages.clear()
@@ -65,12 +70,16 @@ class UpdateManager {
             message.prepare()
         })
 
-        this.corraleMessagesIntoRequests(messages)
+        let requests = this.corraleMessagesIntoRequests(messages)
+
+        trigger('message.pooled', { requests })
+
+        this.sendRequests(requests)
     }
 
     corraleMessagesIntoRequests(messages) {
-        // @todo: Add isolation support...
-        // let requests = new Set()
+        // @todo: Add isolation support...        
+        let requests = new Set()
 
         let request = new UpdateRequest()
 
@@ -78,19 +87,15 @@ class UpdateManager {
             request.addMessage(message)
         }
 
-        requestManager.add(request)
+        requests.add(request)
+
+        return requests
     }
 
-    findMessageForComponentAlreadyInARequest(component) {
-        for (let request of requestManager.requests) {
-            if (! (request instanceof UpdateRequest)) continue
-
-            for (let message of request.messages) {
-                if (message.component.id === component.id) return message
-            }
-        }
-
-        return null
+    sendRequests(requests) {
+        requests.forEach(request => {
+            requestManager.add(request)
+        })
     }
 }
 

@@ -12,12 +12,26 @@ export default class UpdateRequest extends Request {
         message.request = this
     }
 
+    deleteMessage(message) {
+        this.messages.delete(message)
+    }
+
+    hasMessageFor(component) {
+        return !! this.findMessageByComponent(component)
+    }
+
+    findMessageByComponent(component) {
+        return Array.from(this.messages).find(message => message.component.id === component.id)
+    }
+
+    isEmpty() {
+        return this.messages.size === 0
+    }
+
     shouldCancel() {
         return request => {
             return request.constructor.name === 'UpdateRequest'
-                && Array.from(request.messages).some(message =>
-                    Array.from(this.messages).some(thisMessage => thisMessage.component.id === message.component.id)
-                )
+                && Array.from(request.messages).some(message => this.hasMessageFor(message.component))
         }
     }
 
