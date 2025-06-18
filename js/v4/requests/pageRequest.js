@@ -42,7 +42,7 @@ export default class PageRequest extends Request {
 
             // console.log('page request success', destination)
 
-            this.successCallbacks.forEach(callback => callback(html, destination))
+            this.succeedCallbacks.forEach(callback => callback(html, destination))
 
             // console.log('page request morphed')
 

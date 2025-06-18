@@ -54,7 +54,7 @@ export function performFetch(uri, callback, errorCallback) {
 function performFetchV4(uri, callback, errorCallback) {
     let request = new PageRequest(uri)
 
-    request.addSuccessCallback(callback)
+    request.addSucceedCallback(callback)
 
     request.addErrorCallback(errorCallback)
 

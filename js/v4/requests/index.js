@@ -1,4 +1,4 @@
 import requestManager from './requestManager.js'
-import './supportPropsAndModelablesV4.js'
+import '../features/supportPropsAndModelablesV4.js'
 
 requestManager.boot()
