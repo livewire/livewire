@@ -2,7 +2,7 @@ import { trigger } from "@/hooks"
 import { closestComponent } from "@/store"
 import Alpine from 'alpinejs'
 import { skipSlotContents } from "./features/supportSlots"
-import { skipPartialContents } from "./features/supportPartials"
+import { skipIslandContents } from "./features/supportIslands"
 
 export function morph(component, el, html) {
     let wrapperTag = el.parentElement
@@ -63,7 +63,7 @@ export function morph(component, el, html) {
     trigger('morphed', { el, component })
 }
 
-export function morphPartial(component, startNode, endNode, toHTML) {
+export function morphIsland(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : 'div'
 
@@ -87,18 +87,18 @@ export function morphPartial(component, startNode, endNode, toHTML) {
         parentProviderWrapper.__livewire = parentComponent
     }
 
-    trigger('partial.morph', { startNode, endNode, component })
+    trigger('island.morph', { startNode, endNode, component })
 
     Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
 
-    trigger('partial.morphed', { startNode, endNode, component })
+    trigger('island.morphed', { startNode, endNode, component })
 }
 
 function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             skipSlotContents(el, toEl, skipUntil)
-            skipPartialContents(el, toEl, skipUntil)
+            skipIslandContents(el, toEl, skipUntil)
 
             if (isntElement(el)) return
 

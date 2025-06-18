@@ -1,22 +1,22 @@
 <?php
 
-namespace Livewire\V4\Partials;
+namespace Livewire\V4\Islands;
 
 use Illuminate\Support\Facades\Blade;
 use Livewire\ComponentHook;
 
-class SupportPartials extends ComponentHook
+class SupportIslands extends ComponentHook
 {
     static function provide()
     {
-        Blade::directive('partial', function ($expression) {
+        Blade::directive('island', function ($expression) {
             // If expression doesn't start with a named parameter, prepend a random name
             if (static::expressionStartsWithNamedParameter($expression)) {
-                $randomName = "'" . uniqid('partial_') . "'";
+                $randomName = "'" . uniqid('island_') . "'";
                 $expression = $randomName . ($expression ? ', ' . $expression : '');
             }
 
-            return "<?php if (isset(\$_instance)) echo \$_instance->partial({$expression}, fromBladeDirective: true); ?>";
+            return "<?php if (isset(\$_instance)) echo \$_instance->island({$expression}, fromBladeDirective: true); ?>";
         });
     }
 
@@ -33,14 +33,14 @@ class SupportPartials extends ComponentHook
 
     function dehydrate($context)
     {
-        // Only add partials as an effect if it's a subsequent request.
+        // Only add islands as an effect if it's a subsequent request.
         // Otherwise, they are rendered in-place in the view...
         if ($context->isMounting()) return;
 
-        if (! $partials = $this->component->getPartials()) return;
+        if (! $islands = $this->component->getIslands()) return;
 
-        $partials = collect($partials)->map(fn($partial) => $partial->toJson())->toArray();
+        $islands = collect($islands)->map(fn($island) => $island->toJson())->toArray();
 
-        $context->addEffect('partials', $partials);
+        $context->addEffect('islands', $islands);
     }
 }

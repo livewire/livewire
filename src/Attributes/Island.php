@@ -3,10 +3,10 @@
 namespace Livewire\Attributes;
 
 use Attribute;
-use Livewire\V4\Partials\BasePartial;
+use Livewire\V4\Islands\BaseIsland;
 
 #[Attribute]
-class Partial extends BasePartial
+class Island extends BaseIsland
 {
     //
 }

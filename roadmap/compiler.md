@@ -238,7 +238,7 @@ The compiler provides specific exceptions for different error scenarios:
 #### ✅ **Comprehensive Testing**
 - **79 unit tests** covering all functionality
 - **261 assertions** ensuring correctness
-- Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in partials), and error scenarios
+- Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in islands), and error scenarios
 
 #### ✅ **Layout Directive Support**
 - Parses `@layout()` directives from component frontmatter
@@ -254,19 +254,19 @@ The compiler provides specific exceptions for different error scenarios:
 
 #### ✅ **Computed Property Transformation**
 - Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in main view content
-- Uses guard statements in inline partials: `<?php if (! isset($computedProperty)) $computedProperty = $this->computedProperty; ?>`
+- Uses guard statements in inline islands: `<?php if (! isset($computedProperty)) $computedProperty = $this->computedProperty; ?>`
 - Preserves JIT evaluation while providing clean syntax
 - Validates against variable reassignment conflicts in main views
 - Supports all computed attribute syntaxes and visibility modifiers
-- Works consistently across main view content and `@partial()...@endpartial` blocks
-- **Guard approach allows custom data to override computed properties in partials**
+- Works consistently across main view content and `@island()...@endisland` blocks
+- **Guard approach allows custom data to override computed properties in islands**
 
-#### ✅ **Inline Partials Support**
-- Processes `@partial()...@endpartial` blocks into separate view files
-- Generates unique partial view names with content-based hashing
-- Creates partial lookup properties in compiled classes
-- Supports partial data passing and complex nested scenarios
-- Applies view transformations (naked scripts) and computed property guards to partial content
+#### ✅ **Inline InlineIslands Support**
+- Processes `@island()...@endisland` blocks into separate view files
+- Generates unique island view names with content-based hashing
+- Creates island lookup properties in compiled classes
+- Supports island data passing and complex nested scenarios
+- Applies view transformations (naked scripts) and computed property guards to island content
 - **Intelligent computed property handling**: Uses guard statements instead of transformation for better data flexibility
 
 #### ✅ **Use Statement Preservation**
@@ -278,7 +278,7 @@ The compiler provides specific exceptions for different error scenarios:
 #### ✅ **Traditional PHP Tag Support**
 - Supports `<?php ... ?>` syntax alongside `@php ... @endphp`
 - Handles both inline and external component references
-- Compatible with all other features (layouts, partials, etc.)
+- Compatible with all other features (layouts, islands, etc.)
 - Maintains consistent behavior across syntax variations
 
 ### Test Coverage
@@ -304,9 +304,9 @@ The compiler provides specific exceptions for different error scenarios:
 - Directory management
 - Layout directive processing
 - Naked script transformation
-- Computed property transformation (with guard statements in partials)
-- Custom data override support in partials
-- Inline partials processing
+- Computed property transformation (with guard statements in islands)
+- Custom data override support in islands
+- Inline islands processing
 - Use statement preservation
 - Traditional PHP tag support
 
@@ -455,7 +455,7 @@ protected function generateHash(string $viewPath, string $content): string
 ```
 
 #### 4. **Transformation Chain**
-View processing uses a chain of transformations in `generateView()` and `generatePartialViews()`:
+View processing uses a chain of transformations in `generateView()` and `generateIslandViews()`:
 ```php
 protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
 {
@@ -468,30 +468,30 @@ protected function generateView(CompilationResult $result, ParsedComponent $pars
     File::put($result->viewPath, $processedViewContent);
 }
 
-protected function generatePartialViews(ParsedComponent $parsed): void
+protected function generateIslandViews(ParsedComponent $parsed): void
 {
-    foreach ($parsed->inlinePartials as $partial) {
-        $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
+    foreach ($parsed->inlineIslands as $island) {
+        $islandPath = $this->viewsDirectory . '/' . $island['fileName'];
 
-        $processedPartialContent = $partial['content'];
+        $processedIslandContent = $island['content'];
 
         // For inline components, add computed property guards instead of transforming
         if ($parsed->hasInlineClass()) {
             $computedProperties = $this->extractComputedPropertyNames($parsed->frontmatter);
-            $usedComputedProperties = $this->extractUsedComputedProperties($processedPartialContent, $computedProperties);
+            $usedComputedProperties = $this->extractUsedComputedProperties($processedIslandContent, $computedProperties);
 
             if (!empty($usedComputedProperties)) {
                 $guards = $this->generateComputedPropertyGuards($usedComputedProperties);
-                $processedPartialContent = $guards . $processedPartialContent;
+                $processedIslandContent = $guards . $processedIslandContent;
             }
         }
 
-        File::put($partialPath, $processedPartialContent);
+        File::put($islandPath, $processedIslandContent);
     }
 }
 ```
 
-**Key Difference**: Main views transform computed properties (`$prop` → `$this->prop`), while partials use guard statements (`<?php if (! isset($prop)) $prop = $this->prop; ?>`) to allow custom data to take precedence.
+**Key Difference**: Main views transform computed properties (`$prop` → `$this->prop`), while islands use guard statements (`<?php if (! isset($prop)) $prop = $this->prop; ?>`) to allow custom data to take precedence.
 
 ## Adding New Features
 
@@ -565,7 +565,7 @@ return new ParsedComponent(
     null,
     $layoutTemplate,
     $layoutData,
-    $inlinePartials,
+    $inlineIslands,
     $myFeatureData  // New parameter
 );
 ```
@@ -610,7 +610,7 @@ namespace {$namespace};
 
 {$useStatementsSection}{$layoutAttribute}class {$className} extends \\Livewire\\Component
 {
-{$partialLookupProperty}{$myFeatureCode}{$classBody}
+{$islandLookupProperty}{$myFeatureCode}{$classBody}
 
     public function render()
     {

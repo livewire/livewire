@@ -4478,8 +4478,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
-  wireProperty("$partial", (component) => async (name) => {
-    return await component.$wire.call("__partial", name);
+  wireProperty("$island", (component) => async (name) => {
+    return await component.$wire.call("__island", name);
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
@@ -4664,32 +4664,35 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // js/features/supportPartials.js
+  // js/features/supportIslands.js
   on2("stream", (payload) => {
-    if (payload.type !== "partial")
+    if (payload.type !== "island")
       return;
     let { id, name, content } = payload;
     if (!hasComponent(id))
       return;
     let component = findComponent(id);
-    streamPartial(component, name, content);
+    streamIsland(component, name, content);
   });
+  function streamIsland(component, name, content) {
+    renderIsland(component, name, content);
+  }
   on2("effect", ({ component, effects }) => {
-    let partials = effects.partials || [];
-    partials.forEach((partial) => {
-      let { name, content } = partial;
+    let islands = effects.islands || [];
+    islands.forEach((island) => {
+      let { name, content } = island;
       queueMicrotask(() => {
         queueMicrotask(() => {
-          renderPartial(component, name, content);
+          renderIsland(component, name, content);
         });
       });
     });
   });
-  function renderPartial(component, name, content) {
-    let { startNode, endNode } = findPartialComments(component.el, name);
+  function renderIsland(component, name, content) {
+    let { startNode, endNode } = findIslandComments(component.el, name);
     if (!startNode || !endNode)
       return;
-    let { content: strippedContent, mode } = stripPartialCommentsAndExtractMode(content, name);
+    let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name);
     let parentElement = startNode.parentElement;
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
     if (mode === "append") {
@@ -4705,12 +4708,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         startNode.parentNode.insertBefore(node, startNode.nextSibling);
       });
     } else {
-      morphPartial(component, startNode, endNode, strippedContent);
+      morphIsland(component, startNode, endNode, strippedContent);
     }
   }
-  function skipPartialContents(el, toEl, skipUntil) {
+  function skipIslandContents(el, toEl, skipUntil) {
     if (isStartMarker(el) && isStartMarker(toEl)) {
-      let mode = extractPartialMode(toEl);
+      let mode = extractIslandMode(toEl);
       skipUntil((node) => isEndMarker(node));
       if (mode === "skip") {
         skipUntil((node) => isEndMarker(node));
@@ -4744,30 +4747,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
   function isStartMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if PARTIAL");
+    return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
   }
   function isEndMarker(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if ENDPARTIAL");
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
   }
-  function extractPartialMode(el) {
-    let mode = el.textContent.match(/\[if PARTIAL:.*:(\w+)\]/)?.[1];
+  function extractIslandMode(el) {
+    let mode = el.textContent.match(/\[if ISLAND:.*:(\w+)\]/)?.[1];
     return mode || "replace";
   }
-  function stripPartialCommentsAndExtractMode(content, partialName) {
+  function stripIslandCommentsAndExtractMode(content, islandName) {
     let mode = "replace";
-    const modeMatch = content.match(new RegExp(`\\[if PARTIAL:${partialName}:(\\w+)\\]><\\!\\[endif\\]`));
+    const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:(\\w+)\\]><\\!\\[endif\\]`));
     if (modeMatch) {
       mode = modeMatch[1];
     }
-    let startComment = new RegExp(`<!--\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-    let endComment = new RegExp(`<!--\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+    let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+    let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
     let stripped = content.replace(startComment, "").replace(endComment, "");
     return {
       content: stripped.trim(),
       mode
     };
   }
-  function findPartialComments(rootEl, partialName) {
+  function findIslandComments(rootEl, islandName) {
     let startNode = null;
     let endNode = null;
     walkElements(rootEl, (el, skip) => {
@@ -4776,10 +4779,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       Array.from(el.childNodes).forEach((node) => {
         if (node.nodeType === Node.COMMENT_NODE) {
-          if (node.textContent.match(new RegExp(`\\[if PARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
             startNode = node;
           }
-          if (node.textContent.match(new RegExp(`\\[if ENDPARTIAL:${partialName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
             endNode = node;
           }
         }
@@ -4831,7 +4834,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     module_default.morph(el, to, getMorphConfig(component));
     trigger2("morphed", { el, component });
   }
-  function morphPartial(component, startNode, endNode, toHTML) {
+  function morphIsland(component, startNode, endNode, toHTML) {
     let fromContainer = startNode.parentElement;
     let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
     let toContainer = document.createElement(fromContainerTag);
@@ -4849,15 +4852,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       parentProviderWrapper.appendChild(toContainer);
       parentProviderWrapper.__livewire = parentComponent;
     }
-    trigger2("partial.morph", { startNode, endNode, component });
+    trigger2("island.morph", { startNode, endNode, component });
     module_default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-    trigger2("partial.morphed", { startNode, endNode, component });
+    trigger2("island.morphed", { startNode, endNode, component });
   }
   function getMorphConfig(component) {
     return {
       updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
         skipSlotContents(el, toEl, skipUntil);
-        skipPartialContents(el, toEl, skipUntil);
+        skipIslandContents(el, toEl, skipUntil);
         if (isntElement(el))
           return;
         trigger2("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
@@ -4936,7 +4939,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               if (!startNode || !endNode)
                 return;
               let strippedContent = stripSlotComments(content, fullName);
-              morphPartial(childComponent, startNode, endNode, strippedContent);
+              morphIsland(childComponent, startNode, endNode, strippedContent);
             });
           });
         });

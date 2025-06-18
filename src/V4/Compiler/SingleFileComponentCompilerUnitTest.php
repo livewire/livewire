@@ -646,7 +646,7 @@ new class extends Livewire\Component {
         $this->assertStringNotContainsString('@script', $viewContent);
     }
 
-    public function test_can_compile_component_with_inline_partials()
+    public function test_can_compile_component_with_inline_islands()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -657,16 +657,16 @@ new class extends Livewire\Component {
 <div>
     <h1>Items:</h1>
 
-    @partial("item-list")
+    @island("item-list")
     <ul>
         @foreach($items as $item)
             <li>{{ $item }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-partials.blade.php';
+        $viewPath = $this->tempPath . '/component-with-islands.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -676,21 +676,21 @@ new class extends Livewire\Component {
 
         // Check that the main view content has been transformed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'item-list\', \'livewire-compiled::partial_item-list_', $viewContent);
-        $this->assertStringNotContainsString('@endpartial', $viewContent);
+        $this->assertStringContainsString('@island(\'item-list\', \'livewire-compiled::island_item-list_', $viewContent);
+        $this->assertStringNotContainsString('@endisland', $viewContent);
 
-        // Check that partial view file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_item-list_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island view file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_item-list_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        // Check partial content
-        $partialContent = File::get($partialFiles[0]);
-        $this->assertStringContainsString('<ul>', $partialContent);
-        $this->assertStringContainsString('@foreach($items as $item)', $partialContent);
-        $this->assertStringContainsString('<li>{{ $item }}</li>', $partialContent);
+        // Check island content
+        $islandContent = File::get($islandFiles[0]);
+        $this->assertStringContainsString('<ul>', $islandContent);
+        $this->assertStringContainsString('@foreach($items as $item)', $islandContent);
+        $this->assertStringContainsString('<li>{{ $item }}</li>', $islandContent);
     }
 
-    public function test_can_compile_component_with_inline_partials_with_data()
+    public function test_can_compile_component_with_inline_islands_with_data()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -699,24 +699,24 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("header", ["subtitle" => "Welcome"])
+    @island("header", ["subtitle" => "Welcome"])
     <h1>{{ $title }}</h1>
     <p>{{ $subtitle }}</p>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-partial-data.blade.php';
+        $viewPath = $this->tempPath . '/component-with-island-data.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
         // Check that the main view content includes the data parameter
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'header\', \'livewire-compiled::partial_header_', $viewContent);
+        $this->assertStringContainsString('@island(\'header\', \'livewire-compiled::island_header_', $viewContent);
         $this->assertStringContainsString('["subtitle" => "Welcome"]', $viewContent);
     }
 
-    public function test_can_compile_component_with_multiple_inline_partials()
+    public function test_can_compile_component_with_multiple_inline_islands()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -725,56 +725,56 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("header")
+    @island("header")
     <h1>Users</h1>
-    @endpartial
+    @endisland
 
-    @partial("user-list")
+    @island("user-list")
     <ul>
         @foreach($users as $user)
             <li>{{ $user }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 
-    @partial("footer")
+    @island("footer")
     <p>© 2024</p>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-multiple-partials.blade.php';
+        $viewPath = $this->tempPath . '/component-with-multiple-islands.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that all partials were processed
+        // Check that all islands were processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'header\', \'livewire-compiled::partial_header_', $viewContent);
-        $this->assertStringContainsString('@partial(\'user-list\', \'livewire-compiled::partial_user-list_', $viewContent);
-        $this->assertStringContainsString('@partial(\'footer\', \'livewire-compiled::partial_footer_', $viewContent);
+        $this->assertStringContainsString('@island(\'header\', \'livewire-compiled::island_header_', $viewContent);
+        $this->assertStringContainsString('@island(\'user-list\', \'livewire-compiled::island_user-list_', $viewContent);
+        $this->assertStringContainsString('@island(\'footer\', \'livewire-compiled::island_footer_', $viewContent);
 
-        // Check that all partial files were created
-        $headerFiles = glob($this->cacheDir . '/views/partial_header_*.blade.php');
-        $userListFiles = glob($this->cacheDir . '/views/partial_user-list_*.blade.php');
-        $footerFiles = glob($this->cacheDir . '/views/partial_footer_*.blade.php');
+        // Check that all island files were created
+        $headerFiles = glob($this->cacheDir . '/views/island_header_*.blade.php');
+        $userListFiles = glob($this->cacheDir . '/views/island_user-list_*.blade.php');
+        $footerFiles = glob($this->cacheDir . '/views/island_footer_*.blade.php');
 
         $this->assertCount(1, $headerFiles);
         $this->assertCount(1, $userListFiles);
         $this->assertCount(1, $footerFiles);
     }
 
-    public function test_inline_partials_work_with_external_components()
+    public function test_inline_islands_work_with_external_components()
     {
         $componentContent = '@php(new App\Livewire\ExternalComponent)
 
 <div>
-    @partial("content")
+    @island("content")
     <h1>External Component</h1>
     <p>This is from an external component</p>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/external-with-partials.blade.php';
+        $viewPath = $this->tempPath . '/external-with-islands.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -782,16 +782,16 @@ new class extends Livewire\Component {
         $this->assertTrue($result->isExternal);
         $this->assertEquals('App\Livewire\ExternalComponent', $result->externalClass);
 
-        // Check that partial was processed
+        // Check that island was processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'content\', \'livewire-compiled::partial_content_', $viewContent);
+        $this->assertStringContainsString('@island(\'content\', \'livewire-compiled::island_content_', $viewContent);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_content_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_content_*.blade.php');
+        $this->assertCount(1, $islandFiles);
     }
 
-    public function test_inline_partials_work_with_layout_directive()
+    public function test_inline_islands_work_with_layout_directive()
     {
         $componentContent = '@layout(\'layouts.app\')
 
@@ -802,12 +802,12 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("greeting")
+    @island("greeting")
     <h1>{{ $message }}</h1>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-layout-and-partials.blade.php';
+        $viewPath = $this->tempPath . '/component-with-layout-and-islands.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -816,17 +816,17 @@ new class extends Livewire\Component {
         $classContent = File::get($result->classPath);
         $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.app\')]', $classContent);
 
-        // Check that partial was processed
+        // Check that island was processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'greeting\', \'livewire-compiled::partial_greeting_', $viewContent);
+        $this->assertStringContainsString('@island(\'greeting\', \'livewire-compiled::island_greeting_', $viewContent);
         $this->assertStringNotContainsString('@layout', $viewContent);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_greeting_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_greeting_*.blade.php');
+        $this->assertCount(1, $islandFiles);
     }
 
-    public function test_parsed_component_has_inline_partials_method()
+    public function test_parsed_component_has_inline_islands_method()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -835,27 +835,27 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("counter")
+    @island("counter")
     <span>{{ $count }}</span>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/test-parsed-partials.blade.php';
+        $viewPath = $this->tempPath . '/test-parsed-islands.blade.php';
         File::put($viewPath, $componentContent);
 
         // We need to access the parseComponent method through reflection or by using compile
         $result = $this->compiler->compile($viewPath);
 
-        // Verify files were created which indicates partials were parsed
-        $partialFiles = glob($this->cacheDir . '/views/partial_counter_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Verify files were created which indicates islands were parsed
+        $islandFiles = glob($this->cacheDir . '/views/island_counter_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        // Verify the partial content
-        $partialContent = File::get($partialFiles[0]);
-        $this->assertStringContainsString('<span>{{ $count }}</span>', $partialContent);
+        // Verify the island content
+        $islandContent = File::get($islandFiles[0]);
+        $this->assertStringContainsString('<span>{{ $count }}</span>', $islandContent);
     }
 
-    public function test_component_without_inline_partials_works_as_before()
+    public function test_component_without_inline_islands_works_as_before()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -865,23 +865,23 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/no-partials.blade.php';
+        $viewPath = $this->tempPath . '/no-islands.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
         $this->assertInstanceOf(CompilationResult::class, $result);
 
-        // Check that no partial files were created
-        $partialFiles = glob($this->cacheDir . '/views/partial_*.blade.php');
-        $this->assertCount(0, $partialFiles);
+        // Check that no island files were created
+        $islandFiles = glob($this->cacheDir . '/views/island_*.blade.php');
+        $this->assertCount(0, $islandFiles);
 
         // Check view content is unchanged
         $viewContent = File::get($result->viewPath);
         $this->assertEquals('<div>Count: {{ $count }}</div>', $viewContent);
     }
 
-    public function test_generated_class_contains_partial_lookup_property()
+    public function test_generated_class_contains_island_lookup_property()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -890,17 +890,17 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("item-list")
+    @island("item-list")
     <ul>
         @foreach($items as $item)
             <li>{{ $item }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 
-    @partial("header")
+    @island("header")
     <h1>Items</h1>
-    @endpartial
+    @endisland
 </div>';
 
         $viewPath = $this->tempPath . '/component-with-lookup.blade.php';
@@ -908,15 +908,15 @@ new class extends Livewire\Component {
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that class file contains partialLookup property
+        // Check that class file contains islandLookup property
         $classContent = File::get($result->classPath);
 
-        $this->assertStringContainsString('protected $partialLookup = [', $classContent);
-        $this->assertStringContainsString("'item-list' => 'livewire-compiled::partial_item-list_", $classContent);
-        $this->assertStringContainsString("'header' => 'livewire-compiled::partial_header_", $classContent);
+        $this->assertStringContainsString('protected $islandLookup = [', $classContent);
+        $this->assertStringContainsString("'item-list' => 'livewire-compiled::island_item-list_", $classContent);
+        $this->assertStringContainsString("'header' => 'livewire-compiled::island_header_", $classContent);
     }
 
-    public function test_class_without_partials_does_not_have_lookup_property()
+    public function test_class_without_islands_does_not_have_lookup_property()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -926,14 +926,14 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/no-partials-class.blade.php';
+        $viewPath = $this->tempPath . '/no-islands-class.blade.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that class file does NOT contain partialLookup property
+        // Check that class file does NOT contain islandLookup property
         $classContent = File::get($result->classPath);
-        $this->assertStringNotContainsString('partialLookup', $classContent);
+        $this->assertStringNotContainsString('islandLookup', $classContent);
     }
 
     public function test_preserves_use_statements_in_compiled_class()
@@ -1183,7 +1183,7 @@ new class extends Livewire\Component {
         $this->assertStringNotContainsString('?>', $viewContent);
     }
 
-    public function test_traditional_php_tags_work_with_inline_partials()
+    public function test_traditional_php_tags_work_with_inline_islands()
     {
         $componentContent = '<?php
 new class extends Livewire\Component {
@@ -1192,13 +1192,13 @@ new class extends Livewire\Component {
 ?>
 
 <div>
-    @partial("fruit-list")
+    @island("fruit-list")
     <ul>
         @foreach($items as $item)
             <li>{{ $item }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 </div>';
 
         $viewPath = $this->tempPath . '/fruit-component.blade.php';
@@ -1206,17 +1206,17 @@ new class extends Livewire\Component {
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that partial was processed
+        // Check that island was processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'fruit-list\', \'livewire-compiled::partial_fruit-list_', $viewContent);
+        $this->assertStringContainsString('@island(\'fruit-list\', \'livewire-compiled::island_fruit-list_', $viewContent);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_fruit-list_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_fruit-list_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        // Check that class contains partial lookup
+        // Check that class contains island lookup
         $classContent = File::get($result->classPath);
-        $this->assertStringContainsString('protected $partialLookup = [', $classContent);
+        $this->assertStringContainsString('protected $islandLookup = [', $classContent);
     }
 
     /** @test */
@@ -1610,7 +1610,7 @@ new class extends Livewire\Component {
     }
 
     /** @test */
-    public function it_transforms_computed_properties_inside_inline_partials()
+    public function it_transforms_computed_properties_inside_inline_islands()
     {
         $viewContent = '@php
 new class extends Livewire\Component {
@@ -1631,48 +1631,48 @@ new class extends Livewire\Component {
 <div>
     Count: {{ $count }}
 
-    @partial("summary")
+    @island("summary")
         <p>Total: {{ $total }}</p>
         @if($isEmpty)
             <span>Empty state</span>
         @endif
         <span>Count again: {{ $count }}</span>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/computed-with-partials.blade.php';
+        $viewPath = $this->tempPath . '/computed-with-islands.blade.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
         // Check that the main view content has computed properties transformed
         $compiledViewContent = File::get($result->viewPath);
         $this->assertStringContainsString('Count: {{ $count }}', $compiledViewContent);
-        $this->assertStringContainsString('@partial(\'summary\', \'livewire-compiled::partial_summary_', $compiledViewContent);
+        $this->assertStringContainsString('@island(\'summary\', \'livewire-compiled::island_summary_', $compiledViewContent);
 
-        // Check that partial file was created and contains guard statements instead of transformed properties
-        $partialFiles = glob($this->cacheDir . '/views/partial_summary_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created and contains guard statements instead of transformed properties
+        $islandFiles = glob($this->cacheDir . '/views/island_summary_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        $partialContent = File::get($partialFiles[0]);
+        $islandContent = File::get($islandFiles[0]);
 
         // Guard statements should be present at the top
-        $this->assertStringContainsString('<?php if (! isset($total)) $total = $this->total;', $partialContent);
-        $this->assertStringContainsString('if (! isset($isEmpty)) $isEmpty = $this->isEmpty;', $partialContent);
+        $this->assertStringContainsString('<?php if (! isset($total)) $total = $this->total;', $islandContent);
+        $this->assertStringContainsString('if (! isset($isEmpty)) $isEmpty = $this->isEmpty;', $islandContent);
 
-        // Original computed property references should remain unchanged in partial content
-        $this->assertStringContainsString('<p>Total: {{ $total }}</p>', $partialContent);
-        $this->assertStringContainsString('@if($isEmpty)', $partialContent);
+        // Original computed property references should remain unchanged in island content
+        $this->assertStringContainsString('<p>Total: {{ $total }}</p>', $islandContent);
+        $this->assertStringContainsString('@if($isEmpty)', $islandContent);
 
         // Regular properties should remain unchanged as before
-        $this->assertStringContainsString('<span>Count again: {{ $count }}</span>', $partialContent);
+        $this->assertStringContainsString('<span>Count again: {{ $count }}</span>', $islandContent);
 
-        // Computed properties should NOT be transformed to $this-> in partials anymore
-        $this->assertStringNotContainsString('{{ $this->total }}', $partialContent);
-        $this->assertStringNotContainsString('@if($this->isEmpty)', $partialContent);
+        // Computed properties should NOT be transformed to $this-> in islands anymore
+        $this->assertStringNotContainsString('{{ $this->total }}', $islandContent);
+        $this->assertStringNotContainsString('@if($this->isEmpty)', $islandContent);
     }
 
     /** @test */
-    public function it_allows_custom_data_to_override_computed_properties_in_partials()
+    public function it_allows_custom_data_to_override_computed_properties_in_islands()
     {
         $viewContent = '@php
 new class extends Livewire\Component {
@@ -1691,35 +1691,35 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("summary", ["total" => 999, "status" => "custom"])
+    @island("summary", ["total" => 999, "status" => "custom"])
         <p>Total: {{ $total }}</p>
         <p>Status: {{ $status }}</p>
         <p>Count: {{ $count }}</p>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/custom-data-partial.blade.php';
+        $viewPath = $this->tempPath . '/custom-data-island.blade.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_summary_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_summary_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        $partialContent = File::get($partialFiles[0]);
+        $islandContent = File::get($islandFiles[0]);
 
         // Guard statements should be present for computed properties
-        $this->assertStringContainsString('if (! isset($total)) $total = $this->total;', $partialContent);
-        $this->assertStringContainsString('if (! isset($status)) $status = $this->status;', $partialContent);
+        $this->assertStringContainsString('if (! isset($total)) $total = $this->total;', $islandContent);
+        $this->assertStringContainsString('if (! isset($status)) $status = $this->status;', $islandContent);
 
         // Computed property references should remain as-is (not transformed)
-        $this->assertStringContainsString('{{ $total }}', $partialContent);
-        $this->assertStringContainsString('{{ $status }}', $partialContent);
-        $this->assertStringContainsString('{{ $count }}', $partialContent);
+        $this->assertStringContainsString('{{ $total }}', $islandContent);
+        $this->assertStringContainsString('{{ $status }}', $islandContent);
+        $this->assertStringContainsString('{{ $count }}', $islandContent);
 
         // Should NOT have transformed references
-        $this->assertStringNotContainsString('{{ $this->total }}', $partialContent);
-        $this->assertStringNotContainsString('{{ $this->status }}', $partialContent);
+        $this->assertStringNotContainsString('{{ $this->total }}', $islandContent);
+        $this->assertStringNotContainsString('{{ $this->status }}', $islandContent);
 
         // Verify the main view includes the custom data
         $compiledViewContent = File::get($result->viewPath);

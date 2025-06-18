@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\V4\Partials;
+namespace Livewire\V4\Islands;
 
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;
 
-class DeferredPartial implements \Stringable, Htmlable, Jsonable
+class LazyIsland implements \Stringable, Htmlable, Jsonable
 {
     public function __construct(
         public string $name,
@@ -13,16 +13,16 @@ class DeferredPartial implements \Stringable, Htmlable, Jsonable
 
     public function render()
     {
-        return "<!--[if PARTIAL:{$this->name}:defer]><![endif]-->"
-            . "<div wire:init=\"\$partial('{$this->name}')\">Loading...</div>"
-            . "<!--[if ENDPARTIAL:{$this->name}]><![endif]-->";
+        return "<!--[if ISLAND:{$this->name}:lazy]><![endif]-->"
+            . "<div x-intersect=\"\$wire.\$island('{$this->name}')\">Loading...</div>"
+            . "<!--[if ENDISLAND:{$this->name}]><![endif]-->";
     }
 
     public function toJson($options = 0)
     {
         return [
             'name' => $this->name,
-            'mode' => 'defer',
+            'mode' => 'lazy',
             'content' => $this->render(),
         ];
     }

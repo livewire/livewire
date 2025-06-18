@@ -96,9 +96,9 @@ class SingleFileComponentCompiler extends Mechanism
             $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content);
         }
 
-        // Extract inline partials before processing component
-        $inlinePartials = [];
-        $content = $this->extractInlinePartials($content, $inlinePartials);
+        // Extract inline islands before processing component
+        $inlineIslands = [];
+        $content = $this->extractInlineIslands($content, $inlineIslands);
 
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
@@ -112,7 +112,7 @@ class SingleFileComponentCompiler extends Mechanism
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
@@ -134,7 +134,7 @@ class SingleFileComponentCompiler extends Mechanism
                 null,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
@@ -150,7 +150,7 @@ class SingleFileComponentCompiler extends Mechanism
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
@@ -172,59 +172,59 @@ class SingleFileComponentCompiler extends Mechanism
                 null,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
         throw new InvalidComponentException("Component must contain either @php(new ClassName) or @php...@endphp block");
     }
 
-    protected function extractInlinePartials(string $content, array &$inlinePartials): string
+    protected function extractInlineIslands(string $content, array &$inlineIslands): string
     {
-        // Pattern to handle @partial('name', ...), @partial(namedParam: 'value', ...), and bare @partial
-        $pattern = '/@partial\s*(?:\((.*?)\))?(.*?)@endpartial/s';
+        // Pattern to handle @island('name', ...), @island(namedParam: 'value', ...), and bare @island
+        $pattern = '/@island\s*(?:\((.*?)\))?(.*?)@endisland/s';
 
-        return preg_replace_callback($pattern, function ($matches) use (&$inlinePartials) {
+        return preg_replace_callback($pattern, function ($matches) use (&$inlineIslands) {
             $parameters = isset($matches[1]) ? trim($matches[1]) : '';
-            $partialContent = trim($matches[2]);
+            $islandContent = trim($matches[2]);
 
             // Handle different parameter formats
             if (!empty($parameters)) {
                 // Try to extract explicit name first (old format)
                 if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
                     // Has explicit quoted name as first parameter
-                    $partialName = $paramMatches[1];
-                    $partialData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
+                    $islandName = $paramMatches[1];
+                    $islandData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
                 } else {
                     // No explicit name, generate one (handles named parameters like mode: 'hey')
-                    $partialName = uniqid('partial_');
-                    $partialData = $parameters;
+                    $islandName = uniqid('island_');
+                    $islandData = $parameters;
                 }
             } else {
-                // Bare @partial with no parameters at all
-                $partialName = uniqid('partial_');
-                $partialData = '[]';
+                // Bare @island with no parameters at all
+                $islandName = uniqid('island_');
+                $islandData = '[]';
             }
 
-            // Generate a unique view name for this partial using content hash
-            $partialHash = substr(md5($partialContent . $partialName), 0, 8);
+            // Generate a unique view name for this island using content hash
+            $islandHash = substr(md5($islandContent . $islandName), 0, 8);
             // Keep dashes in view name for consistency with tests
-            $partialViewName = 'livewire-compiled::partial_' . $partialName . '_' . $partialHash;
+            $islandViewName = 'livewire-compiled::island_' . $islandName . '_' . $islandHash;
             // Keep dashes in file name too (tests expect this)
-            $partialFileName = 'partial_' . $partialName . '_' . $partialHash . '.blade.php';
+            $islandFileName = 'island_' . $islandName . '_' . $islandHash . '.blade.php';
 
-            // Store the partial information
-            $inlinePartials[] = [
-                'name' => $partialName,
-                'data' => $partialData,
-                'content' => $partialContent,
-                'viewName' => $partialViewName,
-                'fileName' => $partialFileName
+            // Store the island information
+            $inlineIslands[] = [
+                'name' => $islandName,
+                'data' => $islandData,
+                'content' => $islandContent,
+                'viewName' => $islandViewName,
+                'fileName' => $islandFileName
             ];
 
-            // Replace with a reference to the compiled partial view
-            $dataParam = $partialData !== '[]' ? ", {$partialData}" : '';
-            return "@partial('{$partialName}', '{$partialViewName}'{$dataParam})";
+            // Replace with a reference to the compiled island view
+            $dataParam = $islandData !== '[]' ? ", {$islandData}" : '';
+            return "@island('{$islandName}', '{$islandViewName}'{$dataParam})";
         }, $content);
     }
 
@@ -263,9 +263,9 @@ class SingleFileComponentCompiler extends Mechanism
         // Always generate the view file...
         $this->generateView($result, $parsed);
 
-        // Generate partial view files if present...
-        if (!empty($parsed->inlinePartials)) {
-            $this->generatePartialViews($parsed);
+        // Generate island view files if present...
+        if (!empty($parsed->inlineIslands)) {
+            $this->generateIslandViews($parsed);
         }
 
         // Only generate class file for inline components...
@@ -274,25 +274,25 @@ class SingleFileComponentCompiler extends Mechanism
         }
     }
 
-    protected function generatePartialViews(ParsedComponent $parsed): void
+    protected function generateIslandViews(ParsedComponent $parsed): void
     {
-        foreach ($parsed->inlinePartials as $partial) {
-            $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
+        foreach ($parsed->inlineIslands as $island) {
+            $islandPath = $this->viewsDirectory . '/' . $island['fileName'];
 
-            $processedPartialContent = $partial['content'];
+            $processedIslandContent = $island['content'];
 
             // For inline components, add computed property guards instead of transforming
             if ($parsed->hasInlineClass()) {
                 $computedProperties = $this->extractComputedPropertyNames($parsed->frontmatter);
-                $usedComputedProperties = $this->extractUsedComputedProperties($processedPartialContent, $computedProperties);
+                $usedComputedProperties = $this->extractUsedComputedProperties($processedIslandContent, $computedProperties);
 
                 if (!empty($usedComputedProperties)) {
                     $guards = $this->generateComputedPropertyGuards($usedComputedProperties);
-                    $processedPartialContent = $guards . $processedPartialContent;
+                    $processedIslandContent = $guards . $processedIslandContent;
                 }
             }
 
-            File::put($partialPath, $processedPartialContent);
+            File::put($islandPath, $processedIslandContent);
         }
     }
 
@@ -350,10 +350,10 @@ class SingleFileComponentCompiler extends Mechanism
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
         }
 
-        // Generate partial lookup array if partials exist
-        $partialLookupProperty = '';
-        if (!empty($parsed->inlinePartials)) {
-            $partialLookupProperty = $this->generatePartialLookupProperty($parsed->inlinePartials);
+        // Generate island lookup array if islands exist
+        $islandLookupProperty = '';
+        if (!empty($parsed->inlineIslands)) {
+            $islandLookupProperty = $this->generateIslandLookupProperty($parsed->inlineIslands);
         }
 
         // Build the use statements section
@@ -368,7 +368,7 @@ namespace {$namespace};
 
 {$useStatementsSection}{$layoutAttribute}class {$className} extends \\Livewire\\Component
 {
-{$partialLookupProperty}{$classBody}
+{$islandLookupProperty}{$classBody}
 
     public function render()
     {
@@ -646,15 +646,15 @@ namespace {$namespace};
         }
     }
 
-    protected function generatePartialLookupProperty(array $inlinePartials): string
+    protected function generateIslandLookupProperty(array $inlineIslands): string
     {
         $lookupEntries = [];
-        foreach ($inlinePartials as $partial) {
-            $lookupEntries[] = "        '{$partial['name']}' => '{$partial['viewName']}'";
+        foreach ($inlineIslands as $island) {
+            $lookupEntries[] = "        '{$island['name']}' => '{$island['viewName']}'";
         }
 
         $lookupArray = "[\n" . implode(",\n", $lookupEntries) . "\n    ]";
 
-        return "    protected \$partialLookup = {$lookupArray};\n\n";
+        return "    protected \$islandLookup = {$lookupArray};\n\n";
     }
 }

@@ -15,7 +15,7 @@ use Livewire\Features\SupportRedirects\HandlesRedirects;
 use Livewire\Features\SupportEvents\HandlesEvents;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
-use Livewire\V4\Partials\HandlesPartials;
+use Livewire\V4\Islands\HandlesIslands;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\V4\Slots\HandlesSlots;
 use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
@@ -28,7 +28,7 @@ abstract class Component
     use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
-    use HandlesPartials;
+    use HandlesIslands;
     use HandlesRedirects;
     use HandlesStreaming;
     use HandlesAttributes;

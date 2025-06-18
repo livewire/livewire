@@ -1,5 +1,5 @@
 import { findComponent } from '@/store'
-import { morphPartial } from '@/morph'
+import { morphIsland } from '@/morph'
 import { on } from '@/hooks'
 
 on('effect', ({ component, effects }) => {
@@ -28,8 +28,8 @@ on('effect', ({ component, effects }) => {
 
                         let strippedContent = stripSlotComments(content, fullName)
 
-                        // Use morphPartial to replace the content between slot markers
-                        morphPartial(childComponent, startNode, endNode, strippedContent)
+                        // Use morphIsland to replace the content between slot markers
+                        morphIsland(childComponent, startNode, endNode, strippedContent)
                     })
                 })
             })
