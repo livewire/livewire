@@ -1,3 +1,3 @@
-import updateManager from './updateManager.js'
+import requestManager from './requestManager.js'
 
-updateManager.boot()
+requestManager.boot()

@@ -91,8 +91,6 @@ export default class ComponentMessage {
 
     cancel() {
         this.status = 'cancelled'
-
-        this.request?.cancelIfItShouldBeCancelled()
     }
 
     isBuffering() {

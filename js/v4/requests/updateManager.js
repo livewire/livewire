@@ -3,14 +3,7 @@ import UpdateRequest from './updateRequest.js'
 import requestManager from './requestManager.js'
 
 class UpdateManager {
-    booted = false
     messages = new Map()
-
-    boot() {
-        this.booted = true
-
-        console.log('v4 requests enabled')
-    }
 
     getMessage(component) {
         let message = this.messages.get(component.id)
@@ -80,12 +73,6 @@ class UpdateManager {
         let request = new UpdateRequest()
 
         for (let message of messages) {
-            let existingMessage = this.findMessageForComponentAlreadyInARequest(message.component)
-
-            if (existingMessage) {
-                existingMessage.cancelIfItShouldBeCancelled()
-            }
-
             request.addMessage(message)
         }
 

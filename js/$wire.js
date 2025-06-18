@@ -6,6 +6,7 @@ import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
+import requestManager from './v4/requests/requestManager'
 import updateManager from './v4/requests/updateManager'
 
 let properties = {}
@@ -136,7 +137,7 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
-        if (updateManager.booted) {
+        if (requestManager.booted) {
             return updateManager.addUpdate(component)
         }
 
@@ -184,7 +185,7 @@ wireProperty('$watch', (component) => (path, callback) => {
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => {
-    if (updateManager.booted) {
+    if (requestManager.booted) {
         return updateManager.addUpdate(component)
     }
 
@@ -258,7 +259,7 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    if (updateManager.booted) {
+    if (requestManager.booted) {
         return updateManager.addCall(component, property, params)
     }
 

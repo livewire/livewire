@@ -1,19 +1,32 @@
 import { getCsrfToken, getUpdateUri } from '@/utils'
-import requestManager from './requestManager.js'
+import Request from './request.js'
 
-export default class UpdateRequest {
+export default class UpdateRequest extends Request {
     messages = new Set()
-    controller = new AbortController()
 
     addMessage(message) {
         this.messages.add(message)
         message.request = this
     }
 
-    cancelIfItShouldBeCancelled() {
-        if (this.allMessagesAreCancelled()) {
-            this.cancel()
+    shouldCancel() {
+        return request => {
+            // console.log('shouldCancel', request.constructor.name, request.constructor.name === 'UpdateRequest', Array.from(request.messages).some(message =>
+            //     Array.from(this.messages).some(thisMessage => thisMessage.component.id === message.component.id)
+            // ))
+            return request.constructor.name === 'UpdateRequest'
+                && Array.from(request.messages).some(message =>
+                    Array.from(this.messages).some(thisMessage => thisMessage.component.id === message.component.id)
+                )
         }
+    }
+
+    cancel() {
+        this.messages.forEach(message => {
+            message.cancelIfItShouldBeCancelled()
+        })
+
+        super.cancel()
     }
 
     allMessagesAreCancelled() {
@@ -39,7 +52,7 @@ export default class UpdateRequest {
         let updateUri = getUpdateUri()
 
         let response
-        
+
         try {
             response = await fetch(updateUri, options)
         } catch (e) {
@@ -63,11 +76,5 @@ export default class UpdateRequest {
                 }
             })
         })
-    }
-
-    cancel() {
-        this.controller.abort('cancelled')
-
-        requestManager.remove(this)
     }
 }

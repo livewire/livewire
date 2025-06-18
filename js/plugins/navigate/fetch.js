@@ -1,5 +1,7 @@
 import { trigger } from "@/hooks"
 import { createUrlObjectFromString, getUriStringFromUrlObject } from "./links"
+import requestManager from "@/v4/requests/requestManager"
+import PageRequest from "@/v4/requests/pageRequest"
 
 export function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination)
@@ -10,6 +12,10 @@ export function fetchHtml(destination, callback, errorCallback) {
 }
 
 export function performFetch(uri, callback, errorCallback) {
+    if (requestManager.booted) {
+        return performFetchV4(uri, callback, errorCallback)
+    }
+
     let options = {
         headers: {
             'X-Livewire-Navigate': ''
@@ -43,4 +49,14 @@ export function performFetch(uri, callback, errorCallback) {
 
         throw error
     })
+}
+
+function performFetchV4(uri, callback, errorCallback) {
+    let request = new PageRequest(uri)
+
+    request.addSuccessCallback(callback)
+
+    request.addErrorCallback(errorCallback)
+
+    requestManager.add(request)
 }

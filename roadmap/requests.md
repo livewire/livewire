@@ -1,13 +1,13 @@
 ## Concrete things we want
-- `wire:poll` to be non-blocking and cancellable by default
-- `wire:model.live` should cancel any existing component requests
-- Triggering an action `wire:click` should cancel any existing component requests
-- different components can make parallel requests
-- Streamed responses can be intentionally stopped
-- `wire:navigate` should cancel all existing requests - component or navigate requests
-- `wire:navigate` should be able to be halted if there is a dirty form or a form is submitting
-- we can make static calls to a component
-- static action calls should not cancel other static action calls
+- [x] `wire:poll` to be non-blocking and cancellable by default
+- [x] `wire:model.live` should cancel any existing component requests
+- [x] Triggering an action `wire:click` should cancel any existing component requests
+- [x] different components can make parallel requests
+- [ ] Streamed responses can be intentionally stopped
+- [x] `wire:navigate` should cancel all existing requests - component or navigate requests
+- [ ] `wire:navigate` should be able to be halted if there is a dirty form or a form is submitting
+- [ ] we can make static calls to a component
+- [ ] static action calls should not cancel other static action calls
 
 ## Ways to trigger an action:
 * Event listener like `wire:click` & `wire:submit`
@@ -125,3 +125,9 @@ Based on that I believe it is acceptable to include a reference to the `RequestM
 `request.send()`
     ⬇
 `request.succeed()`
+
+
+## Tasks
+- [ ] Ensure that if a component message is cancelled, that `wire:loading` is stopped
+- [ ] If a component message is cancelled because a new component message is sent, re-process `wire:loading`
+- [ ] If a component message responds with a navigate redirect, then don't stop `wire:loading` instead, continue with the navigate request
