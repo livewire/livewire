@@ -1,11 +1,10 @@
 import { trigger } from '@/hooks'
 
-export default class ComponentMessage {
+export default class Message {
     updates = {}
     calls = []
     payload = {}
     status = 'waiting'
-    resolvers = []
     succeedCallbacks = []
     failCallbacks = []
     respondCallbacks = []
@@ -23,10 +22,6 @@ export default class ComponentMessage {
             params: params,
             handleReturn,
         })
-    }
-
-    addResolver(resolver) {
-        this.resolvers.push(resolver)
     }
 
     cancelIfItShouldBeCancelled() {
@@ -105,8 +100,6 @@ export default class ComponentMessage {
         let parsedSnapshot = JSON.parse(snapshot)
 
         this.finishTarget({ snapshot: parsedSnapshot, effects })
-
-        this.resolvers.forEach(i => i())
 
         this.succeedCallbacks.forEach(i => i(response))
     }

@@ -6,8 +6,8 @@ import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import requestManager from './v4/requests/requestManager'
-import updateManager from './v4/requests/updateManager'
+import requestBus from './v4/requests/requestBus'
+import messsageBroker from './v4/requests/messageBroker'
 
 let properties = {}
 let fallback
@@ -137,10 +137,10 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
-        if (requestManager.booted) {
+        if (requestBus.booted) {
             component.queueUpdate(property, value)
 
-            return updateManager.addUpdate(component)
+            return messsageBroker.addCall(component, '$set')
         }
 
         component.queueUpdate(property, value)
@@ -187,8 +187,8 @@ wireProperty('$watch', (component) => (path, callback) => {
 
 wireProperty('$refresh', (component) => component.$wire.$commit)
 wireProperty('$commit', (component) => async () => {
-    if (requestManager.booted) {
-        return updateManager.addUpdate(component)
+    if (requestBus.booted) {
+        return messsageBroker.addCall(component, '$refresh')
     }
 
     return await requestCommit(component)
@@ -261,8 +261,8 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    if (requestManager.booted) {
-        return updateManager.addCall(component, property, params)
+    if (requestBus.booted) {
+        return messsageBroker.addCall(component, property, params)
     }
 
     return await requestCall(component, property, params)

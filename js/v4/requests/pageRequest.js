@@ -1,4 +1,5 @@
 import Request from './request.js'
+import MessageRequest from './messageRequest.js'
 import { createUrlObjectFromString } from "@/plugins/navigate/links.js"
 import { trigger } from "@/hooks"
 
@@ -12,8 +13,8 @@ export default class PageRequest extends Request {
     shouldCancel() {
         return request => {
             return [
-                'PageRequest',
-                'UpdateRequest',
+                PageRequest.name,
+                MessageRequest.name,
             ].includes(request.constructor.name)
         }
     }

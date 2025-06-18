@@ -3,7 +3,7 @@ import { showHtmlModal } from '@/request/modal'
 import Request from './request.js'
 import { trigger, triggerAsync } from '@/hooks'
 
-export default class UpdateRequest extends Request {
+export default class MessageRequest extends Request {
     messages = new Set()
     finishProfile = null
 
@@ -30,7 +30,7 @@ export default class UpdateRequest extends Request {
 
     shouldCancel() {
         return request => {
-            return request.constructor.name === 'UpdateRequest'
+            return request.constructor.name === MessageRequest.name
                 && Array.from(request.messages).some(message => this.hasMessageFor(message.component))
         }
     }
@@ -130,7 +130,7 @@ export default class UpdateRequest extends Request {
         } else {
             this.finishProfile({ content, failed: false })
         }
-        
+
         let { components, assets } = JSON.parse(content)
 
         await triggerAsync('payload.intercept', { components, assets })

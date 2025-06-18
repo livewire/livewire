@@ -1,4 +1,4 @@
-import requestManager from './requestManager.js'
+import requestBus from './requestBus.js'
 
 export default class Request {
     controller = new AbortController()
@@ -10,7 +10,7 @@ export default class Request {
     cancel() {
         this.controller.abort('cancelled')
 
-        requestManager.remove(this)
+        requestBus.remove(this)
     }
 
     isCancelled() {

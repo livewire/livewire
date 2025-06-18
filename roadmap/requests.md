@@ -9,6 +9,15 @@
 - [ ] we can make static calls to a component
 - [ ] static action calls should not cancel other static action calls
 
+## Tasks
+- [ ] Ensure that if a component message is cancelled, that `wire:loading` is stopped
+- [ ] If a component message is cancelled because a new component message is sent, re-process `wire:loading`
+- [ ] If a component message responds with a navigate redirect, then don't stop `wire:loading` instead, continue with the navigate request
+
+1. Rename all of the things
+2. Merge it
+3. Deep dive on `wire:loading`
+
 ## Ways to trigger an action:
 * Event listener like `wire:click` & `wire:submit`
 * Dispatching events via `$dispatch`
@@ -126,8 +135,3 @@ Based on that I believe it is acceptable to include a reference to the `RequestM
     ⬇
 `request.succeed()`
 
-
-## Tasks
-- [ ] Ensure that if a component message is cancelled, that `wire:loading` is stopped
-- [ ] If a component message is cancelled because a new component message is sent, re-process `wire:loading`
-- [ ] If a component message responds with a navigate redirect, then don't stop `wire:loading` instead, continue with the navigate request

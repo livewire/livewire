@@ -1,6 +1,6 @@
 import { trigger } from "@/hooks"
 import { createUrlObjectFromString, getUriStringFromUrlObject } from "./links"
-import requestManager from "@/v4/requests/requestManager"
+import requestBus from "@/v4/requests/requestBus"
 import PageRequest from "@/v4/requests/pageRequest"
 
 export function fetchHtml(destination, callback, errorCallback) {
@@ -12,7 +12,7 @@ export function fetchHtml(destination, callback, errorCallback) {
 }
 
 export function performFetch(uri, callback, errorCallback) {
-    if (requestManager.booted) {
+    if (requestBus.booted) {
         return performFetchV4(uri, callback, errorCallback)
     }
 
@@ -58,5 +58,5 @@ function performFetchV4(uri, callback, errorCallback) {
 
     request.addErrorCallback(errorCallback)
 
-    requestManager.add(request)
+    requestBus.add(request)
 }

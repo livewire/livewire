@@ -1,35 +1,23 @@
-import ComponentMessage from './componentMessage.js'
-import UpdateRequest from './updateRequest.js'
-import requestManager from './requestManager.js'
+import Message from './message.js'
+import MessageRequest from './messageRequest.js'
+import requestBus from './requestBus.js'
 import { trigger } from '@/hooks'
 
-class UpdateManager {
+class MessageBroker {
     messages = new Map()
 
     getMessage(component) {
         let message = this.messages.get(component.id)
 
         if (! message) {
-            message = new ComponentMessage(component)
+            message = new Message(component)
             this.messages.set(component.id, message)
         }
 
         return message
     }
 
-    addUpdate(component) {
-        let message = this.getMessage(component)
-
-        let promise = new Promise((resolve) => {
-            message.addResolver(resolve)
-        })
-
-        this.send(message)
-
-        return promise
-    }
-
-    addCall(component, method, params) {
+    addCall(component, method, params = []) {
         let message = this.getMessage(component)
 
         let promise = new Promise((resolve) => {
@@ -92,7 +80,7 @@ class UpdateManager {
             })
 
             if (! hasFoundRequest) {
-                let request = new UpdateRequest()
+                let request = new MessageRequest()
 
                 request.addMessage(message)
 
@@ -105,11 +93,11 @@ class UpdateManager {
 
     sendRequests(requests) {
         requests.forEach(request => {
-            requestManager.add(request)
+            requestBus.add(request)
         })
     }
 }
 
-let instance = new UpdateManager()
+let instance = new MessageBroker()
 
 export default instance

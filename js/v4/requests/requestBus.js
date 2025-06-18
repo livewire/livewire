@@ -1,4 +1,4 @@
-class RequestManager {
+class RequestBus {
     booted = false
     requests = new Set()
 
@@ -29,6 +29,6 @@ class RequestManager {
     }
 }
 
-let instance = new RequestManager()
+let instance = new RequestBus()
 
 export default instance

@@ -8235,8 +8235,8 @@ function showFailureModal(content) {
 // js/$wire.js
 var import_alpinejs2 = __toESM(require_module_cjs());
 
-// js/v4/requests/requestManager.js
-var RequestManager = class {
+// js/v4/requests/requestBus.js
+var RequestBus = class {
   booted = false;
   requests = /* @__PURE__ */ new Set();
   boot() {
@@ -8259,16 +8259,15 @@ var RequestManager = class {
     });
   }
 };
-var instance = new RequestManager();
-var requestManager_default = instance;
+var instance = new RequestBus();
+var requestBus_default = instance;
 
-// js/v4/requests/componentMessage.js
-var ComponentMessage = class {
+// js/v4/requests/message.js
+var Message = class {
   updates = {};
   calls = [];
   payload = {};
   status = "waiting";
-  resolvers = [];
   succeedCallbacks = [];
   failCallbacks = [];
   respondCallbacks = [];
@@ -8284,9 +8283,6 @@ var ComponentMessage = class {
       params,
       handleReturn
     });
-  }
-  addResolver(resolver) {
-    this.resolvers.push(resolver);
   }
   cancelIfItShouldBeCancelled() {
     if (this.isSucceeded())
@@ -8342,7 +8338,6 @@ var ComponentMessage = class {
     }
     let parsedSnapshot = JSON.parse(snapshot);
     this.finishTarget({ snapshot: parsedSnapshot, effects });
-    this.resolvers.forEach((i) => i());
     this.succeedCallbacks.forEach((i) => i(response));
   }
   fail() {
@@ -8381,7 +8376,7 @@ var Request = class {
   errorCallbacks = [];
   cancel() {
     this.controller.abort("cancelled");
-    requestManager_default.remove(this);
+    requestBus_default.remove(this);
   }
   isCancelled() {
     return this.controller.signal.aborted;
@@ -8406,8 +8401,8 @@ var Request = class {
   }
 };
 
-// js/v4/requests/updateRequest.js
-var UpdateRequest = class extends Request {
+// js/v4/requests/messageRequest.js
+var MessageRequest = class extends Request {
   messages = /* @__PURE__ */ new Set();
   finishProfile = null;
   addMessage(message) {
@@ -8428,7 +8423,7 @@ var UpdateRequest = class extends Request {
   }
   shouldCancel() {
     return (request) => {
-      return request.constructor.name === "UpdateRequest" && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
+      return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
     };
   }
   cancel() {
@@ -8553,26 +8548,18 @@ var UpdateRequest = class extends Request {
   }
 };
 
-// js/v4/requests/updateManager.js
-var UpdateManager = class {
+// js/v4/requests/messageBroker.js
+var MessageBroker = class {
   messages = /* @__PURE__ */ new Map();
   getMessage(component) {
     let message = this.messages.get(component.id);
     if (!message) {
-      message = new ComponentMessage(component);
+      message = new Message(component);
       this.messages.set(component.id, message);
     }
     return message;
   }
-  addUpdate(component) {
-    let message = this.getMessage(component);
-    let promise = new Promise((resolve) => {
-      message.addResolver(resolve);
-    });
-    this.send(message);
-    return promise;
-  }
-  addCall(component, method, params) {
+  addCall(component, method, params = []) {
     let message = this.getMessage(component);
     let promise = new Promise((resolve) => {
       message.addCall(method, params, resolve);
@@ -8615,7 +8602,7 @@ var UpdateManager = class {
         }
       });
       if (!hasFoundRequest) {
-        let request = new UpdateRequest();
+        let request = new MessageRequest();
         request.addMessage(message);
         requests.add(request);
       }
@@ -8624,12 +8611,12 @@ var UpdateManager = class {
   }
   sendRequests(requests) {
     requests.forEach((request) => {
-      requestManager_default.add(request);
+      requestBus_default.add(request);
     });
   }
 };
-var instance2 = new UpdateManager();
-var updateManager_default = instance2;
+var instance2 = new MessageBroker();
+var messageBroker_default = instance2;
 
 // js/$wire.js
 var properties = {};
@@ -8728,9 +8715,9 @@ wireProperty("$js", (component) => {
 wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
   if (live) {
-    if (requestManager_default.booted) {
+    if (requestBus_default.booted) {
       component.queueUpdate(property, value);
-      return updateManager_default.addUpdate(component);
+      return messageBroker_default.addCall(component, "$set");
     }
     component.queueUpdate(property, value);
     return await requestCommit(component);
@@ -8764,8 +8751,8 @@ wireProperty("$watch", (component) => (path, callback) => {
 });
 wireProperty("$refresh", (component) => component.$wire.$commit);
 wireProperty("$commit", (component) => async () => {
-  if (requestManager_default.booted) {
-    return updateManager_default.addUpdate(component);
+  if (requestBus_default.booted) {
+    return messageBroker_default.addCall(component, "$refresh");
   }
   return await requestCommit(component);
 });
@@ -8814,8 +8801,8 @@ wireFallback((component) => (property) => async (...params) => {
       return overrides[property](params);
     }
   }
-  if (requestManager_default.booted) {
-    return updateManager_default.addCall(component, property, params);
+  if (requestBus_default.booted) {
+    return messageBroker_default.addCall(component, property, params);
   }
   return await requestCall(component, property, params);
 });
@@ -9686,8 +9673,8 @@ var PageRequest = class extends Request {
   shouldCancel() {
     return (request) => {
       return [
-        "PageRequest",
-        "UpdateRequest"
+        PageRequest.name,
+        MessageRequest.name
       ].includes(request.constructor.name);
     };
   }
@@ -9730,7 +9717,7 @@ function fetchHtml(destination, callback, errorCallback) {
   }, errorCallback);
 }
 function performFetch(uri, callback, errorCallback) {
-  if (requestManager_default.booted) {
+  if (requestBus_default.booted) {
     return performFetchV4(uri, callback, errorCallback);
   }
   let options = {
@@ -9761,7 +9748,7 @@ function performFetchV4(uri, callback, errorCallback) {
   let request = new PageRequest(uri);
   request.addSucceedCallback(callback);
   request.addErrorCallback(errorCallback);
-  requestManager_default.add(request);
+  requestBus_default.add(request);
 }
 
 // js/plugins/navigate/prefetch.js
@@ -10787,7 +10774,7 @@ on("message.pooling", ({ messages }) => {
 });
 
 // js/v4/requests/index.js
-requestManager_default.boot();
+requestBus_default.boot();
 
 // js/features/supportListeners.js
 on("effect", ({ component, effects }) => {
