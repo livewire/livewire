@@ -4408,10 +4408,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     constructor(component) {
       this.component = component;
     }
-    addCall(method, params) {
+    addCall(method, params, handleReturn) {
       this.calls.push({
         method,
-        params
+        params,
+        handleReturn
       });
     }
     addResolver(resolver) {
@@ -4451,17 +4452,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
     }
+    respond() {
+      this.respondCallbacks.forEach((i) => i());
+    }
     succeed(response) {
       if (this.isCancelled())
         return;
       this.status = "succeeded";
+      this.respond();
       let { snapshot, effects } = response;
       this.component.mergeNewSnapshot(snapshot, effects, this.updates);
       this.component.processEffects(this.component.effects);
+      if (effects["returns"]) {
+        let returns = effects["returns"];
+        let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
+        returnHandlerStack.forEach((handleReturn, index) => {
+          handleReturn(returns[index]);
+        });
+      }
       let parsedSnapshot = JSON.parse(snapshot);
       this.finishTarget({ snapshot: parsedSnapshot, effects });
       this.resolvers.forEach((i) => i());
       this.succeedCallbacks.forEach((i) => i(response));
+    }
+    fail() {
+      this.status = "failed";
+      this.respond();
+      this.failCallbacks.forEach((i) => i());
     }
     cancel() {
       this.status = "cancelled";
@@ -4478,14 +4495,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isCancelled() {
       return this.status === "cancelled";
     }
+    isFailed() {
+      return this.status === "failed";
+    }
     isFinished() {
-      return this.isSucceeded() || this.isCancelled();
+      return this.isSucceeded() || this.isCancelled() || this.isFailed();
     }
   };
 
   // js/v4/requests/request.js
   var Request = class {
     controller = new AbortController();
+    respondCallbacks = [];
+    succeedCallbacks = [];
+    errorCallbacks = [];
     cancel() {
       this.controller.abort("cancelled");
       requestManager_default.remove(this);
@@ -4502,11 +4525,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     async send() {
       console.error("send must be implemented");
     }
+    addRespondCallback(callback) {
+      this.respondCallbacks.push(callback);
+    }
+    addSucceedCallback(callback) {
+      this.succeedCallbacks.push(callback);
+    }
+    addErrorCallback(callback) {
+      this.errorCallbacks.push(callback);
+    }
   };
 
   // js/v4/requests/updateRequest.js
   var UpdateRequest = class extends Request {
     messages = /* @__PURE__ */ new Set();
+    finishProfile = null;
     addMessage(message) {
       this.messages.add(message);
       message.request = this;
@@ -4522,9 +4555,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       super.cancel();
     }
-    allMessagesAreCancelled() {
-      return Array.from(this.messages).every((message) => message.isCancelled());
-    }
     async send() {
       let payload = {
         _token: getCsrfToken(),
@@ -4539,19 +4569,55 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         },
         signal: this.controller.signal
       };
+      this.finishProfile = trigger2("request.profile", options);
       let updateUri = getUpdateUri();
+      trigger2("request", {
+        url: updateUri,
+        options,
+        payload: options.body,
+        respond: (i) => this.respondCallbacks.push(i),
+        succeed: (i) => this.succeedCallbacks.push(i),
+        fail: (i) => this.errorCallbacks.push(i)
+      });
       let response;
       try {
         response = await fetch(updateUri, options);
       } catch (e) {
-        console.log("error", e);
+        this.error();
         return;
       }
+      let mutableObject = {
+        status: response.status,
+        response
+      };
+      this.respond(mutableObject);
+      response = mutableObject.response;
       let content = await response.text();
-      let { components: components2, assets } = JSON.parse(content);
-      this.succeed(components2);
+      if (!response.ok) {
+        this.fail(response, content);
+      }
+      this.redirectIfNeeded(response);
+      await this.succeed(response, content);
     }
-    succeed(components2) {
+    redirectIfNeeded(response) {
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+    }
+    respond(mutableObject) {
+      this.respondCallbacks.forEach((i) => i(mutableObject));
+    }
+    async succeed(response, content) {
+      if (contentIsFromDump(content)) {
+        let dump;
+        [dump, content] = splitDumpFromContent(content);
+        showHtmlModal(dump);
+        this.finishProfile({ content: "{}", failed: true });
+      } else {
+        this.finishProfile({ content, failed: false });
+      }
+      let { components: components2, assets } = JSON.parse(content);
+      await triggerAsync("payload.intercept", { components: components2, assets });
       this.messages.forEach((message) => {
         components2.forEach((component) => {
           let snapshot = JSON.parse(component.snapshot);
@@ -4560,6 +4626,48 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           }
         });
       });
+      this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
+    }
+    error() {
+      this.finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.fail();
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: 503,
+        content: null,
+        preventDefault: () => preventDefault = true
+      }));
+    }
+    fail(response, content) {
+      this.finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.fail();
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: response.status,
+        content,
+        preventDefault: () => preventDefault = true
+      }));
+      if (preventDefault)
+        return;
+      if (response.status === 419) {
+        this.handlePageExpiry();
+      }
+      if (response.aborted) {
+        return;
+      } else {
+        return this.showFailureModal(content);
+      }
+    }
+    handlePageExpiry() {
+      confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+    }
+    showFailureModal(content) {
+      let html = content;
+      showHtmlModal(html);
     }
   };
 
@@ -4576,19 +4684,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     addUpdate(component) {
       let message = this.getMessage(component);
-      return this.send(message);
+      let promise = new Promise((resolve) => {
+        message.addResolver(resolve);
+      });
+      this.send(message);
+      return promise;
     }
     addCall(component, method, params) {
       let message = this.getMessage(component);
-      message.addCall(method, params);
-      return this.send(message);
+      let promise = new Promise((resolve) => {
+        message.addCall(method, params, resolve);
+      });
+      this.send(message);
+      return promise;
     }
     send(message) {
-      let promise = new Promise((resolve, reject) => {
-        message.addResolver(resolve);
-      });
       this.bufferMessageForFiveMs(message);
-      return promise;
     }
     bufferMessageForFiveMs(message) {
       if (message.isBuffering())
@@ -8105,17 +8216,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/v4/requests/pageRequest.js
   var PageRequest = class extends Request {
-    successCallbacks = [];
-    errorCallbacks = [];
     constructor(uri) {
       super();
       this.uri = uri;
-    }
-    addSuccessCallback(callback) {
-      this.successCallbacks.push(callback);
-    }
-    addErrorCallback(callback) {
-      this.errorCallbacks.push(callback);
     }
     shouldCancel() {
       return (request) => {
