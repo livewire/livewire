@@ -4544,9 +4544,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.messages.add(message);
       message.request = this;
     }
+    deleteMessage(message) {
+      this.messages.delete(message);
+    }
+    hasMessageFor(component) {
+      return !!this.findMessageByComponent(component);
+    }
+    findMessageByComponent(component) {
+      return Array.from(this.messages).find((message) => message.component.id === component.id);
+    }
+    isEmpty() {
+      return this.messages.size === 0;
+    }
     shouldCancel() {
       return (request) => {
-        return request.constructor.name === "UpdateRequest" && Array.from(request.messages).some((message) => Array.from(this.messages).some((thisMessage) => thisMessage.component.id === message.component.id));
+        return request.constructor.name === "UpdateRequest" && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
       };
     }
     cancel() {
@@ -4683,6 +4695,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return message;
     }
     addUpdate(component) {
+      console.log("addUpdate", component);
       let message = this.getMessage(component);
       let promise = new Promise((resolve) => {
         message.addResolver(resolve);
@@ -4710,6 +4723,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }, 5);
     }
     prepareRequests() {
+      trigger2("message.pooling", { messages: this.messages });
       let messages = new Set(this.messages.values());
       this.messages.clear();
       if (messages.size === 0)
@@ -4717,25 +4731,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       messages.forEach((message) => {
         message.prepare();
       });
-      this.corraleMessagesIntoRequests(messages);
+      let requests = this.corraleMessagesIntoRequests(messages);
+      trigger2("message.pooled", { requests });
+      this.sendRequests(requests);
     }
     corraleMessagesIntoRequests(messages) {
+      let requests = /* @__PURE__ */ new Set();
+      console.log("corraleMessagesIntoRequests", messages);
       let request = new UpdateRequest();
       for (let message of messages) {
         request.addMessage(message);
       }
-      requestManager_default.add(request);
+      requests.add(request);
+      return requests;
     }
-    findMessageForComponentAlreadyInARequest(component) {
-      for (let request of requestManager_default.requests) {
-        if (!(request instanceof UpdateRequest))
-          continue;
-        for (let message of request.messages) {
-          if (message.component.id === component.id)
-            return message;
-        }
-      }
-      return null;
+    sendRequests(requests) {
+      requests.forEach((request) => {
+        requestManager_default.add(request);
+      });
     }
   };
   var instance2 = new UpdateManager();
@@ -10010,11 +10023,76 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return undo;
   }
 
+  // js/features/supportPropsAndModelablesV4.js
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        child.$wire.$commit();
+      });
+    });
+  });
+  on2("message.pooled", ({ requests }) => {
+    let messages = getRequestsMessages(requests);
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        colocateRequestsByComponent(requests, component, child);
+      });
+    });
+  });
+  function getRequestsMessages(requests) {
+    let messages = [];
+    requests.forEach((request) => {
+      request.messages.forEach((message) => {
+        messages.push(message);
+      });
+    });
+    return messages;
+  }
+  function colocateRequestsByComponent(requests, component, foreignComponent) {
+    let request = findRequestWithComponent(requests, component);
+    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+    let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
+    foreignRequest.deleteMessage(foreignMessage);
+    request.addMessage(foreignMessage);
+    requests.forEach((request2) => {
+      if (request2.isEmpty())
+        requests.delete(request2);
+    });
+  }
+  function findRequestWithComponent(requests, component) {
+    return Array.from(requests).find((request) => request.hasMessageFor(component));
+  }
+  function getDeepChildrenWithBindings(component, callback) {
+    getDeepChildren(component, (child) => {
+      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+        callback(child);
+      }
+    });
+  }
+  function hasReactiveProps(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function hasWireModelableBindings(component) {
+    let meta = component.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  function getDeepChildren(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      getDeepChildren(child, callback);
+    });
+  }
+
   // js/features/supportPropsAndModelables.js
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
       let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
+      getDeepChildrenWithBindings2(component, (child) => {
         child.$wire.$commit();
       });
     });
@@ -10023,7 +10101,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let commits = getPooledCommits(pools);
     commits.forEach((commit) => {
       let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
+      getDeepChildrenWithBindings2(component, (child) => {
         colocateCommitsByComponent(pools, component, child);
       });
     });
@@ -10054,27 +10132,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return pool;
     }
   }
-  function getDeepChildrenWithBindings(component, callback) {
-    getDeepChildren(component, (child) => {
-      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+  function getDeepChildrenWithBindings2(component, callback) {
+    getDeepChildren2(component, (child) => {
+      if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
         callback(child);
       }
     });
   }
-  function hasReactiveProps(component) {
+  function hasReactiveProps2(component) {
     let meta = component.snapshot.memo;
     let props = meta.props;
     return !!props;
   }
-  function hasWireModelableBindings(component) {
+  function hasWireModelableBindings2(component) {
     let meta = component.snapshot.memo;
     let bindings = meta.bindings;
     return !!bindings;
   }
-  function getDeepChildren(component, callback) {
+  function getDeepChildren2(component, callback) {
     component.children.forEach((child) => {
       callback(child);
-      getDeepChildren(child, callback);
+      getDeepChildren2(child, callback);
     });
   }
 
