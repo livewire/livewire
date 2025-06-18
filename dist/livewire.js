@@ -4367,6 +4367,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     showHtmlModal(html);
   }
 
+  // js/v4/requests/requestManager.js
+  var RequestManager = class {
+    booted = false;
+    requests = /* @__PURE__ */ new Set();
+    boot() {
+      this.booted = true;
+      console.log("v4 requests enabled");
+    }
+    add(request) {
+      this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
+      this.requests.add(request);
+      request.send();
+    }
+    remove(request) {
+      this.requests.delete(request);
+    }
+    cancelRequestsThatShouldBeCancelled(shouldCancel) {
+      this.requests.forEach((request) => {
+        if (shouldCancel(request)) {
+          request.cancel();
+        }
+      });
+    }
+  };
+  var instance = new RequestManager();
+  var requestManager_default = instance;
+
   // js/v4/requests/componentMessage.js
   var ComponentMessage = class {
     calls = [];
@@ -4438,7 +4465,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     cancel() {
       this.status = "cancelled";
-      this.request?.cancelIfItShouldBeCancelled();
     }
     isBuffering() {
       return this.status === "buffering";
@@ -4457,32 +4483,44 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   };
 
-  // js/v4/requests/requestManager.js
-  var RequestManager = class {
-    requests = /* @__PURE__ */ new Set();
-    add(request) {
-      this.requests.add(request);
-      request.send();
+  // js/v4/requests/request.js
+  var Request = class {
+    controller = new AbortController();
+    cancel() {
+      this.controller.abort("cancelled");
+      requestManager_default.remove(this);
     }
-    remove(request) {
-      this.requests.delete(request);
+    isCancelled() {
+      return this.controller.signal.aborted;
+    }
+    cancelIfItShouldBeCancelled() {
+      console.error("cancelIfItShouldBeCancelled must be implemented");
+    }
+    shouldCancel() {
+      console.error("shouldCancel must be implemented");
+    }
+    async send() {
+      console.error("send must be implemented");
     }
   };
-  var instance = new RequestManager();
-  var requestManager_default = instance;
 
   // js/v4/requests/updateRequest.js
-  var UpdateRequest = class {
+  var UpdateRequest = class extends Request {
     messages = /* @__PURE__ */ new Set();
-    controller = new AbortController();
     addMessage(message) {
       this.messages.add(message);
       message.request = this;
     }
-    cancelIfItShouldBeCancelled() {
-      if (this.allMessagesAreCancelled()) {
-        this.cancel();
-      }
+    shouldCancel() {
+      return (request) => {
+        return request.constructor.name === "UpdateRequest" && Array.from(request.messages).some((message) => Array.from(this.messages).some((thisMessage) => thisMessage.component.id === message.component.id));
+      };
+    }
+    cancel() {
+      this.messages.forEach((message) => {
+        message.cancelIfItShouldBeCancelled();
+      });
+      super.cancel();
     }
     allMessagesAreCancelled() {
       return Array.from(this.messages).every((message) => message.isCancelled());
@@ -4523,20 +4561,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
     }
-    cancel() {
-      this.controller.abort("cancelled");
-      requestManager_default.remove(this);
-    }
   };
 
   // js/v4/requests/updateManager.js
   var UpdateManager = class {
-    booted = false;
     messages = /* @__PURE__ */ new Map();
-    boot() {
-      this.booted = true;
-      console.log("v4 requests enabled");
-    }
     getMessage(component) {
       let message = this.messages.get(component.id);
       if (!message) {
@@ -4582,10 +4611,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     corraleMessagesIntoRequests(messages) {
       let request = new UpdateRequest();
       for (let message of messages) {
-        let existingMessage = this.findMessageForComponentAlreadyInARequest(message.component);
-        if (existingMessage) {
-          existingMessage.cancelIfItShouldBeCancelled();
-        }
         request.addMessage(message);
       }
       requestManager_default.add(request);
@@ -4702,7 +4727,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     if (live) {
-      if (updateManager_default.booted) {
+      if (requestManager_default.booted) {
         return updateManager_default.addUpdate(component);
       }
       component.queueUpdate(property, value);
@@ -4737,7 +4762,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
   wireProperty("$refresh", (component) => component.$wire.$commit);
   wireProperty("$commit", (component) => async () => {
-    if (updateManager_default.booted) {
+    if (requestManager_default.booted) {
       return updateManager_default.addUpdate(component);
     }
     return await requestCommit(component);
@@ -4787,7 +4812,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return overrides[property](params);
       }
     }
-    if (updateManager_default.booted) {
+    if (requestManager_default.booted) {
       return updateManager_default.addCall(component, property, params);
     }
     return await requestCall(component, property, params);
@@ -8078,6 +8103,59 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return urlObject.pathname + urlObject.search + urlObject.hash;
   }
 
+  // js/v4/requests/pageRequest.js
+  var PageRequest = class extends Request {
+    successCallbacks = [];
+    errorCallbacks = [];
+    constructor(uri) {
+      super();
+      this.uri = uri;
+    }
+    addSuccessCallback(callback) {
+      this.successCallbacks.push(callback);
+    }
+    addErrorCallback(callback) {
+      this.errorCallbacks.push(callback);
+    }
+    shouldCancel() {
+      return (request) => {
+        return [
+          "PageRequest",
+          "UpdateRequest"
+        ].includes(request.constructor.name);
+      };
+    }
+    async send() {
+      let options = {
+        headers: {
+          "X-Livewire-Navigate": "1"
+        },
+        signal: this.controller.signal
+      };
+      trigger2("navigate.request", {
+        url: this.uri,
+        options
+      });
+      try {
+        let response = await fetch(this.uri, options);
+        let destination = this.getDestination(response);
+        let html = await response.text();
+        this.successCallbacks.forEach((callback) => callback(html, destination));
+      } catch (error2) {
+        this.errorCallbacks.forEach((callback) => callback(error2));
+        throw error2;
+      }
+    }
+    getDestination(response) {
+      let destination = createUrlObjectFromString(this.uri);
+      let finalDestination = createUrlObjectFromString(response.url);
+      if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+        finalDestination.hash = destination.hash;
+      }
+      return finalDestination;
+    }
+  };
+
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
@@ -8086,6 +8164,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }, errorCallback);
   }
   function performFetch(uri, callback, errorCallback) {
+    if (requestManager_default.booted) {
+      return performFetchV4(uri, callback, errorCallback);
+    }
     let options = {
       headers: {
         "X-Livewire-Navigate": ""
@@ -8109,6 +8190,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       errorCallback();
       throw error2;
     });
+  }
+  function performFetchV4(uri, callback, errorCallback) {
+    let request = new PageRequest(uri);
+    request.addSuccessCallback(callback);
+    request.addErrorCallback(errorCallback);
+    requestManager_default.add(request);
   }
 
   // js/plugins/navigate/prefetch.js
@@ -9570,7 +9657,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/v4/requests/index.js
-  updateManager_default.boot();
+  requestManager_default.boot();
 
   // js/features/supportListeners.js
   on2("effect", ({ component, effects }) => {
