@@ -47,7 +47,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 
 ## Ill-defined
 * (laracon) [requests](requests.md)
-* (laracon) [wire:loading / data-loading stuff?]
+* (laracon) [wire:loading / data-loading stuff?](loading.md)
 * (laracon) [bailable/async/parralel requests]
 * (laracon) [static methods]
 * (laracon) [Sunset Volt](sunset-volt.md)
