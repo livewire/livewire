@@ -35,14 +35,6 @@ export default class MessageRequest extends Request {
         }
     }
 
-    cancel() {
-        this.messages.forEach(message => {
-            message.cancelIfItShouldBeCancelled()
-        })
-
-        super.cancel()
-    }
-
     async send() {
         let payload = {
             _token: getCsrfToken(),
@@ -77,10 +69,14 @@ export default class MessageRequest extends Request {
         try {
             response = await fetch(updateUri, options)
         } catch (e) {
+            this.finish()
+
             this.error()
 
             return
         }
+
+        this.finish()
 
         let mutableObject = {
             status: response.status,
@@ -96,6 +92,8 @@ export default class MessageRequest extends Request {
         // Handle error response...
         if (! response.ok) {
             this.fail(response, content)
+
+            return
         }
 
         this.redirectIfNeeded(response)
@@ -145,6 +143,14 @@ export default class MessageRequest extends Request {
         })
 
         this.succeedCallbacks.forEach(i => i({ status: response.status, json: JSON.parse(content) }))
+    }
+
+    cancel() {
+        this.messages.forEach(message => {
+            message.cancelIfItShouldBeCancelled()
+        })
+
+        super.cancel()
     }
 
     // If something went wrong with the fetch (particularly

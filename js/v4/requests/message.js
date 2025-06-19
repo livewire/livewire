@@ -80,6 +80,8 @@ export default class Message {
     }
 
     prepare() {
+        trigger('message.prepare', { component: this.component })
+
         this.status = 'preparing'
 
         this.updates = this.component.getUpdates()
@@ -162,6 +164,9 @@ export default class Message {
 
     cancel() {
         this.status = 'cancelled'
+
+        // @todo: Get this working with `wire:loading`...
+        // this.respond()
     }
 
     isBuffering() {

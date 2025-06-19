@@ -9,7 +9,9 @@ export default class Request {
 
     cancel() {
         this.controller.abort('cancelled')
+    }
 
+    finish() {
         requestBus.remove(this)
     }
 

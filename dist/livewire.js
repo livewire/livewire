@@ -4456,6 +4456,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.status = "buffering";
     }
     prepare() {
+      trigger2("message.prepare", { component: this.component });
       this.status = "preparing";
       this.updates = this.component.getUpdates();
       let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
@@ -4540,6 +4541,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     errorCallbacks = [];
     cancel() {
       this.controller.abort("cancelled");
+    }
+    finish() {
       requestBus_default.remove(this);
     }
     isCancelled() {
@@ -4590,12 +4593,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
       };
     }
-    cancel() {
-      this.messages.forEach((message) => {
-        message.cancelIfItShouldBeCancelled();
-      });
-      super.cancel();
-    }
     async send() {
       let payload = {
         _token: getCsrfToken(),
@@ -4624,9 +4621,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       try {
         response = await fetch(updateUri, options);
       } catch (e) {
+        this.finish();
         this.error();
         return;
       }
+      this.finish();
       let mutableObject = {
         status: response.status,
         response
@@ -4636,6 +4635,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let content = await response.text();
       if (!response.ok) {
         this.fail(response, content);
+        return;
       }
       this.redirectIfNeeded(response);
       await this.succeed(response, content);
@@ -4668,6 +4668,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
       this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
+    }
+    cancel() {
+      this.messages.forEach((message) => {
+        message.cancelIfItShouldBeCancelled();
+      });
+      super.cancel();
     }
     error() {
       this.finishProfile({ content: "{}", failed: true });
