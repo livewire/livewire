@@ -46,7 +46,7 @@ class IntegrateV4
 
     protected function supportSingleFileComponents()
     {
-        app('view')->addNamespace('livewire-compiled', storage_path('framework/livewire/views'));
+        app('view')->addNamespace('livewire-compiled', storage_path('framework/views/livewire/views'));
 
         app('view')->addNamespace('pages', resource_path('views/pages'));
         app('view')->addNamespace('layouts', resource_path('views/layouts'));

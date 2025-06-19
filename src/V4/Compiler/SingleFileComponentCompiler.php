@@ -17,7 +17,7 @@ class SingleFileComponentCompiler extends Mechanism
 
     public function __construct(?string $cacheDirectory = null, ?array $supportedExtensions = null)
     {
-        $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/livewire');
+        $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/views/livewire');
         $this->classesDirectory = $this->cacheDirectory . '/classes';
         $this->viewsDirectory = $this->cacheDirectory . '/views';
         $this->supportedExtensions = $supportedExtensions ?: ['.blade.php', '.wire.php'];
