@@ -1,3 +1,17 @@
+## Ideas
+- data-loading attribute on an element that originates a request (ie `wire:model` input)
+- if there is a component level action, shouldn't add to the root element
+- data-global-loading for component or page level
+- easy to target an outter or sibling element to see if it has loading attribute on it
+- submit - should it have `data-loading`? That will trigger all within it
+- all elements that trigger events get annotated rather than element that is listening for it
+- e.target - add `data-loading` - `wire:change` on a div, should it be on a div
+- does a submit button in a form show up in the event? Just add it to the submit button
+- make it `data-wire-loading`
+- `wire:target="$dispatch('foo')"` any magics should work somehow
+- the triggering element and it's directive expression
+- make an action for `$dispatch()` and then it can be `wire:target`
+
 ## Summary of problems (and # of discussions and ranked by #)
 - [ ] 9 - target event dispatches/ method calls to the backend
 - [ ] 5 - add an option for detecting/ watching loading states in javascript
