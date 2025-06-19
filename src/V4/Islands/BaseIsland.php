@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\V4\Partials;
+namespace Livewire\V4\Islands;
 
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 #[\Attribute]
-class BasePartial extends LivewireAttribute
+class BaseIsland extends LivewireAttribute
 {
     public function __construct(
         public string $name,
@@ -16,6 +16,6 @@ class BasePartial extends LivewireAttribute
 
     public function call()
     {
-        $this->component->partial($this->name, $this->view, $this->data, $this->mode);
+        $this->component->island($this->name, $this->view, $this->data, $this->mode);
     }
 }

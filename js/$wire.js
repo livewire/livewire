@@ -163,8 +163,8 @@ wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
-wireProperty('$partial', (component) => async (name) => {
-    return await component.$wire.call('__partial', name)
+wireProperty('$island', (component) => async (name) => {
+    return await component.$wire.call('__island', name)
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {

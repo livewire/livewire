@@ -1,4 +1,3 @@
-
 /**
  * Features where order matters:
  */
@@ -21,7 +20,7 @@ import './supportLaravelEcho';
 import './supportIsolating';
 import './supportStreaming';
 import './supportRedirects';
-import './supportPartials';
+import './supportIslands';
 import './supportNavigate';
 import './supportEntangle';
 import './supportSlots';
