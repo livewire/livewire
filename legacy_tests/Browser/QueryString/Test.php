@@ -65,8 +65,8 @@ class Test extends TestCase
                 ->waitForLivewire()->type('@baz-input', 'ploop')
                 ->assertQueryStringHas('foo', 'plop')
                 ->assertQueryStringHas('baz', 'ploop')
-                ->back()
-                ->back()
+                ->waitForLivewire()->back()
+                ->waitForLivewire()->back()
                 ->assertQueryStringHas('baz', 'lop')
 
                 /**

@@ -6,6 +6,8 @@ import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
+import requestBus from './v4/requests/requestBus'
+import messsageBroker from './v4/requests/messageBroker'
 
 let properties = {}
 let fallback
@@ -135,6 +137,12 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
+        if (requestBus.booted) {
+            component.queueUpdate(property, value)
+
+            return messsageBroker.addAction(component, '$set')
+        }
+
         component.queueUpdate(property, value)
 
         return await requestCommit(component)
@@ -177,8 +185,20 @@ wireProperty('$watch', (component) => (path, callback) => {
     component.addCleanup(unwatch)
 })
 
-wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async () => await requestCommit(component))
+wireProperty('$refresh', (component) => async () => {
+    if (requestBus.booted) {
+        return messsageBroker.addAction(component, '$refresh')
+    }
+
+    return component.$wire.$commit()
+})
+wireProperty('$commit', (component) => async () => {
+    if (requestBus.booted) {
+        return messsageBroker.addAction(component, '$sync')
+    }
+
+    return await requestCommit(component)
+})
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
@@ -245,6 +265,10 @@ wireFallback((component) => (property) => async (...params) => {
         if (typeof overrides[property] === 'function') {
             return overrides[property](params)
         }
+    }
+
+    if (requestBus.booted) {
+        return messsageBroker.addAction(component, property, params)
     }
 
     return await requestCall(component, property, params)

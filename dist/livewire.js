@@ -4367,6 +4367,427 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     showHtmlModal(html);
   }
 
+  // js/v4/requests/requestBus.js
+  var RequestBus = class {
+    booted = false;
+    requests = /* @__PURE__ */ new Set();
+    boot() {
+      this.booted = true;
+      console.log("v4 requests enabled");
+    }
+    add(request) {
+      this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
+      this.requests.add(request);
+      request.send();
+    }
+    remove(request) {
+      this.requests.delete(request);
+    }
+    cancelRequestsThatShouldBeCancelled(shouldCancel) {
+      this.requests.forEach((request) => {
+        if (shouldCancel(request)) {
+          request.cancel();
+        }
+      });
+    }
+  };
+  var instance = new RequestBus();
+  var requestBus_default = instance;
+
+  // js/v4/requests/message.js
+  var Message = class {
+    updates = {};
+    actions = [];
+    payload = {};
+    resolvers = [];
+    status = "waiting";
+    succeedCallbacks = [];
+    failCallbacks = [];
+    respondCallbacks = [];
+    finishTarget = null;
+    request = null;
+    isolate = false;
+    constructor(component) {
+      this.component = component;
+    }
+    addAction(method, params, resolve) {
+      if (!this.isMagicAction(method)) {
+        this.removeAllMagicActions();
+      }
+      if (this.isMagicAction(method)) {
+        this.findAndRemoveAction(method);
+        this.actions.push({
+          method,
+          params,
+          handleReturn: () => {
+          }
+        });
+        this.resolvers.push(resolve);
+        return;
+      }
+      this.actions.push({
+        method,
+        params,
+        handleReturn: resolve
+      });
+    }
+    magicActions() {
+      return [
+        "$refresh",
+        "$set",
+        "$sync"
+      ];
+    }
+    isMagicAction(method) {
+      return this.magicActions().includes(method);
+    }
+    removeAllMagicActions() {
+      this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
+    }
+    findAndRemoveAction(method) {
+      this.actions = this.actions.filter((i) => i.method !== method);
+    }
+    cancelIfItShouldBeCancelled() {
+      if (this.isSucceeded())
+        return;
+      this.cancel();
+    }
+    buffer() {
+      this.status = "buffering";
+    }
+    prepare() {
+      trigger2("message.prepare", { component: this.component });
+      this.status = "preparing";
+      this.updates = this.component.getUpdates();
+      let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+      this.payload = {
+        snapshot,
+        updates: this.updates,
+        calls: this.actions.map((i) => ({
+          method: i.method,
+          params: i.params
+        }))
+      };
+      this.finishTarget = trigger2("commit", {
+        component: this.component,
+        commit: this.payload,
+        succeed: (callback) => {
+          this.succeedCallbacks.push(callback);
+        },
+        fail: (callback) => {
+          this.failCallbacks.push(callback);
+        },
+        respond: (callback) => {
+          this.respondCallbacks.push(callback);
+        }
+      });
+    }
+    respond() {
+      this.respondCallbacks.forEach((i) => i());
+    }
+    succeed(response) {
+      if (this.isCancelled())
+        return;
+      this.status = "succeeded";
+      this.respond();
+      let { snapshot, effects } = response;
+      this.component.mergeNewSnapshot(snapshot, effects, this.updates);
+      this.component.processEffects(this.component.effects);
+      this.resolvers.forEach((i) => i());
+      if (effects["returns"]) {
+        let returns = effects["returns"];
+        let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
+        returnHandlerStack.forEach((handleReturn, index) => {
+          handleReturn(returns[index]);
+        });
+      }
+      let parsedSnapshot = JSON.parse(snapshot);
+      this.finishTarget({ snapshot: parsedSnapshot, effects });
+      this.succeedCallbacks.forEach((i) => i(response));
+    }
+    fail() {
+      this.status = "failed";
+      this.respond();
+      this.failCallbacks.forEach((i) => i());
+    }
+    cancel() {
+      this.status = "cancelled";
+    }
+    isBuffering() {
+      return this.status === "buffering";
+    }
+    isPreparing() {
+      return this.status === "preparing";
+    }
+    isSucceeded() {
+      return this.status === "succeeded";
+    }
+    isCancelled() {
+      return this.status === "cancelled";
+    }
+    isFailed() {
+      return this.status === "failed";
+    }
+    isFinished() {
+      return this.isSucceeded() || this.isCancelled() || this.isFailed();
+    }
+  };
+
+  // js/v4/requests/request.js
+  var Request = class {
+    controller = new AbortController();
+    respondCallbacks = [];
+    succeedCallbacks = [];
+    errorCallbacks = [];
+    cancel() {
+      this.controller.abort("cancelled");
+    }
+    finish() {
+      requestBus_default.remove(this);
+    }
+    isCancelled() {
+      return this.controller.signal.aborted;
+    }
+    cancelIfItShouldBeCancelled() {
+      console.error("cancelIfItShouldBeCancelled must be implemented");
+    }
+    shouldCancel() {
+      console.error("shouldCancel must be implemented");
+    }
+    async send() {
+      console.error("send must be implemented");
+    }
+    addRespondCallback(callback) {
+      this.respondCallbacks.push(callback);
+    }
+    addSucceedCallback(callback) {
+      this.succeedCallbacks.push(callback);
+    }
+    addErrorCallback(callback) {
+      this.errorCallbacks.push(callback);
+    }
+  };
+
+  // js/v4/requests/messageRequest.js
+  var MessageRequest = class extends Request {
+    messages = /* @__PURE__ */ new Set();
+    finishProfile = null;
+    addMessage(message) {
+      this.messages.add(message);
+      message.request = this;
+    }
+    deleteMessage(message) {
+      this.messages.delete(message);
+    }
+    hasMessageFor(component) {
+      return !!this.findMessageByComponent(component);
+    }
+    findMessageByComponent(component) {
+      return Array.from(this.messages).find((message) => message.component.id === component.id);
+    }
+    isEmpty() {
+      return this.messages.size === 0;
+    }
+    shouldCancel() {
+      return (request) => {
+        return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
+      };
+    }
+    async send() {
+      let payload = {
+        _token: getCsrfToken(),
+        components: Array.from(this.messages, (i) => i.payload)
+      };
+      let options = {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-type": "application/json",
+          "X-Livewire": "1"
+        },
+        signal: this.controller.signal
+      };
+      this.finishProfile = trigger2("request.profile", options);
+      let updateUri = getUpdateUri();
+      trigger2("request", {
+        url: updateUri,
+        options,
+        payload: options.body,
+        respond: (i) => this.respondCallbacks.push(i),
+        succeed: (i) => this.succeedCallbacks.push(i),
+        fail: (i) => this.errorCallbacks.push(i)
+      });
+      let response;
+      try {
+        response = await fetch(updateUri, options);
+      } catch (e) {
+        this.finish();
+        this.error();
+        return;
+      }
+      this.finish();
+      let mutableObject = {
+        status: response.status,
+        response
+      };
+      this.respond(mutableObject);
+      response = mutableObject.response;
+      let content = await response.text();
+      if (!response.ok) {
+        this.fail(response, content);
+        return;
+      }
+      this.redirectIfNeeded(response);
+      await this.succeed(response, content);
+    }
+    redirectIfNeeded(response) {
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+    }
+    respond(mutableObject) {
+      this.respondCallbacks.forEach((i) => i(mutableObject));
+    }
+    async succeed(response, content) {
+      if (contentIsFromDump(content)) {
+        let dump;
+        [dump, content] = splitDumpFromContent(content);
+        showHtmlModal(dump);
+        this.finishProfile({ content: "{}", failed: true });
+      } else {
+        this.finishProfile({ content, failed: false });
+      }
+      let { components: components2, assets } = JSON.parse(content);
+      await triggerAsync("payload.intercept", { components: components2, assets });
+      this.messages.forEach((message) => {
+        components2.forEach((component) => {
+          let snapshot = JSON.parse(component.snapshot);
+          if (snapshot.memo.id === message.component.id) {
+            message.succeed(component);
+          }
+        });
+      });
+      this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
+    }
+    cancel() {
+      this.messages.forEach((message) => {
+        message.cancelIfItShouldBeCancelled();
+      });
+      super.cancel();
+    }
+    error() {
+      this.finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.fail();
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: 503,
+        content: null,
+        preventDefault: () => preventDefault = true
+      }));
+    }
+    fail(response, content) {
+      this.finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.fail();
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: response.status,
+        content,
+        preventDefault: () => preventDefault = true
+      }));
+      if (preventDefault)
+        return;
+      if (response.status === 419) {
+        this.handlePageExpiry();
+      }
+      if (response.aborted) {
+        return;
+      } else {
+        return this.showFailureModal(content);
+      }
+    }
+    handlePageExpiry() {
+      confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+    }
+    showFailureModal(content) {
+      let html = content;
+      showHtmlModal(html);
+    }
+  };
+
+  // js/v4/requests/messageBroker.js
+  var MessageBroker = class {
+    messages = /* @__PURE__ */ new Map();
+    getMessage(component) {
+      let message = this.messages.get(component.id);
+      if (!message) {
+        message = new Message(component);
+        this.messages.set(component.id, message);
+      }
+      return message;
+    }
+    addAction(component, method, params = []) {
+      let message = this.getMessage(component);
+      let promise = new Promise((resolve) => {
+        message.addAction(method, params, resolve);
+      });
+      this.send(message);
+      return promise;
+    }
+    send(message) {
+      this.bufferMessageForFiveMs(message);
+    }
+    bufferMessageForFiveMs(message) {
+      if (message.isBuffering())
+        return;
+      message.buffer();
+      setTimeout(() => {
+        this.prepareRequests();
+      }, 5);
+    }
+    prepareRequests() {
+      trigger2("message.pooling", { messages: this.messages });
+      let messages = new Set(this.messages.values());
+      this.messages.clear();
+      if (messages.size === 0)
+        return;
+      messages.forEach((message) => {
+        message.prepare();
+      });
+      let requests = this.corraleMessagesIntoRequests(messages);
+      trigger2("message.pooled", { requests });
+      this.sendRequests(requests);
+    }
+    corraleMessagesIntoRequests(messages) {
+      let requests = /* @__PURE__ */ new Set();
+      for (let message of messages) {
+        let hasFoundRequest = false;
+        requests.forEach((request) => {
+          if (!hasFoundRequest && !message.isolate) {
+            request.addMessage(message);
+            hasFoundRequest = true;
+          }
+        });
+        if (!hasFoundRequest) {
+          let request = new MessageRequest();
+          request.addMessage(message);
+          requests.add(request);
+        }
+      }
+      return requests;
+    }
+    sendRequests(requests) {
+      requests.forEach((request) => {
+        requestBus_default.add(request);
+      });
+    }
+  };
+  var instance2 = new MessageBroker();
+  var messageBroker_default = instance2;
+
   // js/$wire.js
   var properties = {};
   var fallback;
@@ -4464,6 +4885,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     if (live) {
+      if (requestBus_default.booted) {
+        component.queueUpdate(property, value);
+        return messageBroker_default.addAction(component, "$set");
+      }
       component.queueUpdate(property, value);
       return await requestCommit(component);
     }
@@ -4494,8 +4919,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let unwatch = module_default.watch(getter, callback);
     component.addCleanup(unwatch);
   });
-  wireProperty("$refresh", (component) => component.$wire.$commit);
-  wireProperty("$commit", (component) => async () => await requestCommit(component));
+  wireProperty("$refresh", (component) => async () => {
+    if (requestBus_default.booted) {
+      return messageBroker_default.addAction(component, "$refresh");
+    }
+    return component.$wire.$commit();
+  });
+  wireProperty("$commit", (component) => async () => {
+    if (requestBus_default.booted) {
+      return messageBroker_default.addAction(component, "$sync");
+    }
+    return await requestCommit(component);
+  });
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
     let unhook = on2(name, ({ component: hookComponent, ...params }) => {
@@ -4540,6 +4975,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (typeof overrides[property] === "function") {
         return overrides[property](params);
       }
+    }
+    if (requestBus_default.booted) {
+      return messageBroker_default.addAction(component, property, params);
     }
     return await requestCall(component, property, params);
   });
@@ -4602,6 +5040,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.queuedUpdates = [];
       return diff2;
     }
+    getUpdates() {
+      let propertiesDiff = diff(this.canonical, this.ephemeral);
+      return this.mergeQueuedUpdates(propertiesDiff);
+    }
     applyUpdates(object, updates) {
       for (let key in updates) {
         dataSet(object, key, updates[key]);
@@ -4628,6 +5070,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     get parent() {
       return closestComponent(this.el.parentElement);
+    }
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+      let { snapshotEncoded, children, snapshot } = this;
+      let childIds = children.map((child) => child.id);
+      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+      return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
     }
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
@@ -7822,6 +8270,51 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return urlObject.pathname + urlObject.search + urlObject.hash;
   }
 
+  // js/v4/requests/pageRequest.js
+  var PageRequest = class extends Request {
+    constructor(uri) {
+      super();
+      this.uri = uri;
+    }
+    shouldCancel() {
+      return (request) => {
+        return [
+          PageRequest.name,
+          MessageRequest.name
+        ].includes(request.constructor.name);
+      };
+    }
+    async send() {
+      let options = {
+        headers: {
+          "X-Livewire-Navigate": "1"
+        },
+        signal: this.controller.signal
+      };
+      trigger2("navigate.request", {
+        url: this.uri,
+        options
+      });
+      try {
+        let response = await fetch(this.uri, options);
+        let destination = this.getDestination(response);
+        let html = await response.text();
+        this.succeedCallbacks.forEach((callback) => callback(html, destination));
+      } catch (error2) {
+        this.errorCallbacks.forEach((callback) => callback(error2));
+        throw error2;
+      }
+    }
+    getDestination(response) {
+      let destination = createUrlObjectFromString(this.uri);
+      let finalDestination = createUrlObjectFromString(response.url);
+      if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+        finalDestination.hash = destination.hash;
+      }
+      return finalDestination;
+    }
+  };
+
   // js/plugins/navigate/fetch.js
   function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
@@ -7830,6 +8323,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }, errorCallback);
   }
   function performFetch(uri, callback, errorCallback) {
+    if (requestBus_default.booted) {
+      return performFetchV4(uri, callback, errorCallback);
+    }
     let options = {
       headers: {
         "X-Livewire-Navigate": ""
@@ -7853,6 +8349,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       errorCallback();
       throw error2;
     });
+  }
+  function performFetchV4(uri, callback, errorCallback) {
+    let request = new PageRequest(uri);
+    request.addSucceedCallback(callback);
+    request.addErrorCallback(errorCallback);
+    requestBus_default.add(request);
   }
 
   // js/plugins/navigate/prefetch.js
@@ -9313,6 +9815,116 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
+  // js/v4/features/supportPropsAndModelablesV4.js
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        child.$wire.$commit();
+      });
+    });
+  });
+  on2("message.pooled", ({ requests }) => {
+    let messages = getRequestsMessages(requests);
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        colocateRequestsByComponent(requests, component, child);
+      });
+    });
+  });
+  function getRequestsMessages(requests) {
+    let messages = [];
+    requests.forEach((request) => {
+      request.messages.forEach((message) => {
+        messages.push(message);
+      });
+    });
+    return messages;
+  }
+  function colocateRequestsByComponent(requests, component, foreignComponent) {
+    let request = findRequestWithComponent(requests, component);
+    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+    let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
+    foreignRequest.deleteMessage(foreignMessage);
+    request.addMessage(foreignMessage);
+    requests.forEach((request2) => {
+      if (request2.isEmpty())
+        requests.delete(request2);
+    });
+  }
+  function findRequestWithComponent(requests, component) {
+    return Array.from(requests).find((request) => request.hasMessageFor(component));
+  }
+  function getDeepChildrenWithBindings(component, callback) {
+    getDeepChildren(component, (child) => {
+      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+        callback(child);
+      }
+    });
+  }
+  function hasReactiveProps(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function hasWireModelableBindings(component) {
+    let meta = component.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  function getDeepChildren(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      getDeepChildren(child, callback);
+    });
+  }
+
+  // js/v4/features/supportIsolatingV4.js
+  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  on2("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.isolate !== true)
+      return;
+    componentsThatAreIsolated.add(component);
+  });
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      if (!componentsThatAreIsolated.has(message.component))
+        return;
+      message.isolate = true;
+    });
+  });
+
+  // js/v4/features/supportLazyLoadingV4.js
+  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  on2("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.lazyLoaded === void 0)
+      return;
+    componentsThatAreLazy.add(component);
+    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+      componentsThatWantToBeBundled.add(component);
+    }
+  });
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      if (!componentsThatAreLazy.has(message.component))
+        return;
+      if (componentsThatWantToBeBundled.has(message.component)) {
+        message.isolate = false;
+        componentsThatWantToBeBundled.delete(message.component);
+      } else {
+        message.isolate = true;
+      }
+      componentsThatAreLazy.delete(message.component);
+    });
+  });
+
+  // js/v4/requests/index.js
+  requestBus_default.boot();
+
   // js/features/supportListeners.js
   on2("effect", ({ component, effects }) => {
     registerListeners(component, effects.listeners || []);
@@ -9565,7 +10177,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
       let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
+      getDeepChildrenWithBindings2(component, (child) => {
         child.$wire.$commit();
       });
     });
@@ -9574,7 +10186,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let commits = getPooledCommits(pools);
     commits.forEach((commit) => {
       let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
+      getDeepChildrenWithBindings2(component, (child) => {
         colocateCommitsByComponent(pools, component, child);
       });
     });
@@ -9605,27 +10217,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return pool;
     }
   }
-  function getDeepChildrenWithBindings(component, callback) {
-    getDeepChildren(component, (child) => {
-      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+  function getDeepChildrenWithBindings2(component, callback) {
+    getDeepChildren2(component, (child) => {
+      if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
         callback(child);
       }
     });
   }
-  function hasReactiveProps(component) {
+  function hasReactiveProps2(component) {
     let meta = component.snapshot.memo;
     let props = meta.props;
     return !!props;
   }
-  function hasWireModelableBindings(component) {
+  function hasWireModelableBindings2(component) {
     let meta = component.snapshot.memo;
     let bindings = meta.bindings;
     return !!bindings;
   }
-  function getDeepChildren(component, callback) {
+  function getDeepChildren2(component, callback) {
     component.children.forEach((child) => {
       callback(child);
-      getDeepChildren(child, callback);
+      getDeepChildren2(child, callback);
     });
   }
 
@@ -9666,28 +10278,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportLazyLoading.js
-  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  var componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
   on2("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.lazyLoaded === void 0)
       return;
-    componentsThatAreLazy.add(component);
+    componentsThatAreLazy2.add(component);
     if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-      componentsThatWantToBeBundled.add(component);
+      componentsThatWantToBeBundled2.add(component);
     }
   });
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
-      if (!componentsThatAreLazy.has(commit.component))
+      if (!componentsThatAreLazy2.has(commit.component))
         return;
-      if (componentsThatWantToBeBundled.has(commit.component)) {
+      if (componentsThatWantToBeBundled2.has(commit.component)) {
         commit.isolate = false;
-        componentsThatWantToBeBundled.delete(commit.component);
+        componentsThatWantToBeBundled2.delete(commit.component);
       } else {
         commit.isolate = true;
       }
-      componentsThatAreLazy.delete(commit.component);
+      componentsThatAreLazy2.delete(commit.component);
     });
   });
 
@@ -9802,16 +10414,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportIsolating.js
-  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
   on2("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.isolate !== true)
       return;
-    componentsThatAreIsolated.add(component);
+    componentsThatAreIsolated2.add(component);
   });
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
-      if (!componentsThatAreIsolated.has(commit.component))
+      if (!componentsThatAreIsolated2.has(commit.component))
         return;
       commit.isolate = true;
     });
