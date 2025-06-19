@@ -1,4 +1,32 @@
-# Discussions
+## Summary of problems (and # of discussions and ranked by #)
+- [ ] 9 - target event dispatches/ method calls to the backend
+- [ ] 5 - add an option for detecting/ watching loading states in javascript
+- [ ] 5 - loading can target navigate requests
+- [ ] 5 - access target parent loading states `wire:target="$parent.test()"`
+- [ ] 4 - More robust multiple method with params targeting
+- [ ] 4 - If `wire:loading` is on a button with `wire:click` allow other targets (so button can be disabled say during a form submission)
+- [ ] 4 - File loading states should remain until completely finished
+- [ ] 3 - `$refresh`/ magic actions can be targeted for loading states
+- [ ] 3 - Target multiple attributes with `wire:loading.attr
+- [ ] 2 - form submit without disabled/ readonly form loading states
+- [ ] 1 - navigate progress bar should be in the top layer
+- [ ] 1 - lazy component loading indicator/ placeholder
+- [ ] 1 - Loading state while a stream is initiating, but not while running
+- [ ] 1 - Loading on a nested component
+- [ ] 1 - Better loading element display types
+- [ ] 1 - Fix resetting loading states after validation failure
+- [ ] 1 - Chain multiple loading directive modifiers
+- [ ] 1 - Make sure loading cleans up when using renderless
+- [ ] 1 - Show progress bar for file uploads
+- [ ] 1 - Should be able to target form properties
+- [ ] 1 - `wire:target.group`
+- [ ] 1 - Trim target whitespace to fix error
+- [ ] 1 - Loading styles not loaded when using `@livewireScriptConfig`
+- [ ] 1 - Disable `wire:click` buttons when loading
+- [ ] 0 - multiple file uploads to s3 can have individual loading states
+- [ ] 0 - `wire:loading.global` to show an indicator for any loading
+
+## Discussions
 - `$refresh`/ magic actions can be targeted for loading states
 	- [Wire $refresh doesn't trigger loading states](https://github.com/livewire/livewire/discussions/9303#top)
     - [[V3] Wire $refresh doesn't trigger loading states](https://github.com/livewire/livewire/discussions/6555#top)
