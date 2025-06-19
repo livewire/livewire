@@ -8267,6 +8267,7 @@ var Message = class {
   updates = {};
   actions = [];
   payload = {};
+  resolvers = [];
   status = "waiting";
   succeedCallbacks = [];
   failCallbacks = [];
@@ -8277,17 +8278,25 @@ var Message = class {
   constructor(component) {
     this.component = component;
   }
-  addAction(method, params, handleReturn) {
+  addAction(method, params, resolve) {
     if (!this.isMagicAction(method)) {
       this.removeAllMagicActions();
     }
     if (this.isMagicAction(method)) {
       this.findAndRemoveAction(method);
+      this.actions.push({
+        method,
+        params,
+        handleReturn: () => {
+        }
+      });
+      this.resolvers.push(resolve);
+      return;
     }
     this.actions.push({
       method,
       params,
-      handleReturn
+      handleReturn: resolve
     });
   }
   magicActions() {
@@ -8351,6 +8360,7 @@ var Message = class {
     let { snapshot, effects } = response;
     this.component.mergeNewSnapshot(snapshot, effects, this.updates);
     this.component.processEffects(this.component.effects);
+    this.resolvers.forEach((i) => i());
     if (effects["returns"]) {
       let returns = effects["returns"];
       let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);

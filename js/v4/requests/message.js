@@ -4,6 +4,7 @@ export default class Message {
     updates = {}
     actions = []
     payload = {}
+    resolvers = []
     status = 'waiting'
     succeedCallbacks = []
     failCallbacks = []
@@ -16,23 +17,35 @@ export default class Message {
         this.component = component
     }
 
-    addAction(method, params, handleReturn) {
+    addAction(method, params, resolve) {
         // If the action isn't a magic action then it supersedes any magic actions.
         // Remove them so there aren't any unnecessary actions in the request...
         if (! this.isMagicAction(method)) {
             this.removeAllMagicActions()
         }
 
-        // If the action is a magic action and it already exists then remove the 
-        // old action so there aren't any duplicate actions in the request...
         if (this.isMagicAction(method)) {
+            // If the action is a magic action and it already exists then remove the 
+            // old action so there aren't any duplicate actions in the request...
             this.findAndRemoveAction(method)
+
+            this.actions.push({
+                method: method,
+                params: params,
+                handleReturn: () => {},
+            })
+
+            // We need to store the resolver, so we can call all of the 
+            // magic action resolvers when the message is finished...
+            this.resolvers.push(resolve)
+
+            return
         }
 
         this.actions.push({
             method: method,
             params: params,
-            handleReturn,
+            handleReturn: resolve,
         })
     }
 
@@ -117,6 +130,8 @@ export default class Message {
 
         // Trigger any side effects from the payload like "morph" and "dispatch event"...
         this.component.processEffects(this.component.effects)
+
+        this.resolvers.forEach(i => i())
 
         if (effects['returns']) {
             let returns = effects['returns']
