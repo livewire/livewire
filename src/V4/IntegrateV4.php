@@ -2,9 +2,11 @@
 
 namespace Livewire\V4;
 
+use Livewire\V4\Tailwind\Merge;
 use Livewire\V4\Slots\SupportSlots;
 use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
+use Illuminate\View\ComponentAttributeBag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 
@@ -29,6 +31,7 @@ class IntegrateV4
         $this->supportRoutingMacro();
         $this->supportSingleFileComponents();
         $this->supportWireTagSyntax();
+        $this->supportTailwindMacro();
         $this->registerSlotDirectives();
         $this->registerSlotsSupport();
     }
@@ -79,6 +82,19 @@ class IntegrateV4
     {
         app('blade.compiler')->precompiler(function ($string) {
             return app(WireTagCompiler::class)($string);
+        });
+    }
+
+    protected function supportTailwindMacro()
+    {
+        ComponentAttributeBag::macro('tailwind', function ($weakClasses) {
+            $strongClasses = $this->attributes['class'] ?? '';
+
+            $weakClasses = is_array($weakClasses) ? implode(' ', $weakClasses) : $weakClasses;
+
+            $this->attributes['class'] = app(Merge::class)->merge($weakClasses, $strongClasses);
+
+            return $this;
         });
     }
 
