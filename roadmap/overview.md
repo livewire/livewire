@@ -13,6 +13,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] [Naked @script tags](naked-scripts.md)
 - [x] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
 - [x] [Add `wire:ref`](wire-ref.md)
+- [ ] [Add `wire:submit.clear`](wire-submit-dot-clear.md)
 - [ ] [Add js interceptors](interceptors.md)
 - [x] [Add with() method](add-with-method.md)
 - [ ] [Remove with() method](remove-with-method.md)
