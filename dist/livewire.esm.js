@@ -8680,6 +8680,7 @@ var aliases = {
   "upload": "$upload",
   "entangle": "$entangle",
   "dispatch": "$dispatch",
+  "paginator": "$paginator",
   "dispatchTo": "$dispatchTo",
   "dispatchSelf": "$dispatchSelf",
   "removeUpload": "$removeUpload",
@@ -8767,6 +8768,20 @@ wireProperty("$ref", (component) => (name) => {
   if (!refEl)
     throw `Ref "${name}" not found`;
   return refEl.__livewire?.$wire;
+});
+wireProperty("$paginator", (component) => {
+  let paginator = component.snapshot.memo?.paginators?.default;
+  if (!paginator)
+    return null;
+  return {
+    hasNextPage: paginator?.hasNextPage,
+    hasPreviousPage: paginator?.hasPreviousPage,
+    nextPage: () => component.$wire.nextPage(),
+    previousPage: () => component.$wire.previousPage(),
+    gotoPage: (page) => component.$wire.gotoPage(page),
+    resetPage: () => component.$wire.resetPage(),
+    setPage: (page) => component.$wire.setPage(page)
+  };
 });
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
