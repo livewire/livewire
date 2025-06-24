@@ -19,10 +19,7 @@ class ComponentViewPathResolver extends Mechanism
             resource_path('views/livewire'),
         ];
 
-        $this->supportedExtensions = $supportedExtensions ?: [
-            '.blade.php',
-            '.wire.php',
-        ];
+        $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php'];
     }
 
     function setSupportedExtensions(array $extensions)
@@ -96,19 +93,19 @@ class ComponentViewPathResolver extends Mechanism
 
         // Try each supported extension with each convention
         foreach ($this->supportedExtensions as $extension) {
-            // Convention 1: foo.blade.php or foo.wire.php
+            // Convention 1: foo.blade.php or foo.livewire.php
             $candidate = $basePath . '/' . $path . $extension;
             if (file_exists($candidate)) {
                 return $candidate;
             }
 
-            // Convention 2: foo/foo.blade.php or foo/foo.wire.php
+            // Convention 2: foo/foo.blade.php or foo/foo.livewire.php
             $candidate = $basePath . '/' . $path . '/' . basename($path) . $extension;
             if (file_exists($candidate)) {
                 return $candidate;
             }
 
-            // Convention 3: foo/index.blade.php or foo/index.wire.php
+            // Convention 3: foo/index.blade.php or foo/index.livewire.php
             $candidate = $basePath . '/' . $path . '/index' . $extension;
             if (file_exists($candidate)) {
                 return $candidate;

@@ -20,7 +20,7 @@ class SingleFileComponentCompiler extends Mechanism
         $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/views/livewire');
         $this->classesDirectory = $this->cacheDirectory . '/classes';
         $this->viewsDirectory = $this->cacheDirectory . '/views';
-        $this->supportedExtensions = $supportedExtensions ?: ['.blade.php', '.wire.php'];
+        $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php'];
 
         $this->ensureDirectoriesExist();
         $this->ensureCacheDirectoryIsGitIgnored();
@@ -47,6 +47,7 @@ class SingleFileComponentCompiler extends Mechanism
 
         // Parse the component...
         $parsed = $this->parseComponent($content);
+        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
 
         // Generate compilation result...
         $result = $this->generateCompilationResult($viewPath, $parsed, $hash);
@@ -190,6 +191,37 @@ class SingleFileComponentCompiler extends Mechanism
         }
 
         throw new InvalidComponentException("Component must contain either @php(new ClassName) or @php...@endphp block");
+    }
+
+    protected function loadExternalViewAndScriptIfRequired(string $viewPath, ParsedComponent $parsed): ParsedComponent
+    {
+        if ($parsed->viewContent !== '') {
+            return $parsed;
+        }
+
+        $viewFilePath = str_replace('.livewire.php', '.blade.php', $viewPath);
+        $scriptFilePath = str_replace('.livewire.php', '.js', $viewPath);
+
+        if (! file_exists($viewFilePath)) {
+            return $parsed;
+        }
+
+        $parsed->viewContent = trim(File::get($viewFilePath));
+
+        if (! file_exists($scriptFilePath)) {
+            return $parsed;
+        }
+
+        $scriptFileContents = trim(File::get($scriptFilePath));
+
+        $parsed->viewContent .= <<< HTML
+        \n
+        <script>
+            {$scriptFileContents}
+        </script>
+        HTML;
+
+        return $parsed;
     }
 
     protected function extractInlineIslands(string $content, array &$inlineIslands): string
@@ -642,6 +674,8 @@ namespace {$namespace};
     {
         $content = File::get($viewPath);
         $parsed = $this->parseComponent($content);
+        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
+
         return $this->generateCompilationResult($viewPath, $parsed, $hash);
     }
 

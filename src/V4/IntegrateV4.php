@@ -17,8 +17,6 @@ class IntegrateV4
 
     public function __construct()
     {
-        $supportedExtensions = ['.blade.php', '.wire.php'];
-
         app()->alias(ComponentViewPathResolver::class, 'livewire.resolver');
         app()->singleton(ComponentViewPathResolver::class);
         $this->finder = app('livewire.resolver');
