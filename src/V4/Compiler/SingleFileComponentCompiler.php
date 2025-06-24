@@ -75,7 +75,7 @@ class SingleFileComponentCompiler extends Mechanism
             $classLastModified = File::lastModified($classPath);
             $viewLastModified = File::lastModified($viewPath);
 
-            return $originalViewLastModified < $classLastModified && $originalViewLastModified < $viewLastModified;
+            return $originalViewLastModified <= $classLastModified && $originalViewLastModified <= $viewLastModified;
         } catch (\ErrorException $exception) {
             if (! File::exists($classPath) || ! File::exists($viewPath)) {
                 return false;
