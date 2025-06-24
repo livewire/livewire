@@ -372,7 +372,8 @@ $notAClass = "invalid";
 
     public function test_can_compile_separate_view_and_script_files()
     {
-        $componentClassContent = '<?php
+        $componentClassContent = <<<'PHP'
+        <?php
         new class extends Livewire\Component {
             public $count = 0;
 
@@ -381,7 +382,8 @@ $notAClass = "invalid";
                 $this->count++;
             }
         }
-        ?>';
+        ?>
+        PHP;
 
         $componentViewContent = <<<'HTML'
         <div>
@@ -426,6 +428,57 @@ $notAClass = "invalid";
             </script>
             @endscript
 
+            HTML,
+            $viewContent
+        );
+    }
+
+    public function test_if_the_component_already_contains_html_then_dont_include_the_view()
+    {
+        $componentClassContent = <<<'PHP'
+        <?php
+        new class extends Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+        }
+        ?>
+        
+        <div>
+            Inline content
+        </div>
+        PHP;
+
+        $componentViewContent = <<<'HTML'
+        <div>
+            External content
+        </div>
+        HTML;
+
+        $classPath = $this->tempPath . '/counter.livewire.php';
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        File::put($classPath, $componentClassContent);
+        File::put($viewPath, $componentViewContent);
+
+        $result = $this->compiler->compile($classPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertStringContainsString('Livewire\\Compiled\\Counter_', $result->className);
+        $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $viewContent = File::get($result->viewPath);
+        
+        $this->assertStringContainsString(
+            <<<'HTML'
+            <div>
+                Inline content
+            </div>
             HTML,
             $viewContent
         );
