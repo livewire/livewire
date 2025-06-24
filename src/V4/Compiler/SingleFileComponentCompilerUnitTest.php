@@ -370,6 +370,67 @@ $notAClass = "invalid";
         $this->assertTrue(file_exists($newCacheDir . '/views'));
     }
 
+    public function test_can_compile_separate_view_and_script_files()
+    {
+        $componentClassContent = '<?php
+        new class extends Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+        }
+        ?>';
+
+        $componentViewContent = <<<'HTML'
+        <div>
+            Count: {{ $count }}
+            <button wire:click="increment">Increment</button>
+        </div>
+        HTML;
+
+        $componentScriptContent = <<<'JS'
+        console.log("Hello from script");
+        JS;
+
+        $classPath = $this->tempPath . '/counter.livewire.php';
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        $scriptPath = $this->tempPath . '/counter.js';
+        File::put($classPath, $componentClassContent);
+        File::put($viewPath, $componentViewContent);
+        File::put($scriptPath, $componentScriptContent);
+
+        $result = $this->compiler->compile($classPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertStringContainsString('Livewire\\Compiled\\Counter_', $result->className);
+        $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $viewContent = File::get($result->viewPath);
+        
+        $this->assertStringContainsString(
+            <<<'HTML'
+            <div>
+                Count: {{ $count }}
+                <button wire:click="increment">Increment</button>
+            </div>
+
+
+            @script
+            <script>
+                console.log("Hello from script");
+            </script>
+            @endscript
+
+            HTML,
+            $viewContent
+        );
+    }
+
     public function test_can_compile_component_with_layout_directive()
     {
         $componentContent = '@layout(\'layouts.app\')
