@@ -448,6 +448,28 @@ class UnitTest extends TestCase
             ->assertSetStrict('foo', 'bar');
     }
 
+    function test_can_use_computed_property_with_injected_dependencies_in_protected_method()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Computed]
+            protected function protectedFoo(FooDependency $dependency) {
+                return $dependency->baz;
+            }
+        })
+            ->assertSetStrict('protectedFoo', 'bar');
+    }
+
+    function test_can_use_computed_property_with_injected_dependencies_in_private_method()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Computed]
+            private function privateFoo(FooDependency $dependency) {
+                return $dependency->baz;
+            }
+        })
+            ->assertSetStrict('privateFoo', 'bar');
+    }
+
     function test_can_unset_computed_property_with_injected_dependencies()
     {
         Livewire::test(new class extends TestComponent {
