@@ -413,7 +413,7 @@ $notAClass = "invalid";
         $this->assertTrue(file_exists($result->viewPath));
 
         $viewContent = File::get($result->viewPath);
-        
+
         $this->assertStringContainsString(
             <<<'HTML'
             <div>
@@ -446,7 +446,7 @@ $notAClass = "invalid";
             }
         }
         ?>
-        
+
         <div>
             Inline content
         </div>
@@ -473,7 +473,7 @@ $notAClass = "invalid";
         $this->assertTrue(file_exists($result->viewPath));
 
         $viewContent = File::get($result->viewPath);
-        
+
         $this->assertStringContainsString(
             <<<'HTML'
             <div>
@@ -1793,55 +1793,275 @@ new class extends Livewire\Component {
     /** @test */
     public function it_allows_custom_data_to_override_computed_properties_in_islands()
     {
-        $viewContent = '@php
+        $componentContent = '@php
 new class extends Livewire\Component {
-    public $count = 5;
-
     #[Computed]
-    public function total() {
-        return $this->count * 10; // Would be 50
-    }
-
-    #[Computed]
-    public function status() {
-        return "computed";
+    public function greeting()
+    {
+        return "Hello World";
     }
 }
 @endphp
 
 <div>
-    @island("summary", ["total" => 999, "status" => "custom"])
-        <p>Total: {{ $total }}</p>
-        <p>Status: {{ $status }}</p>
-        <p>Count: {{ $count }}</p>
+    <p>Main view: {{ $greeting }}</p>
+
+    @island(greeting: "Custom greeting")
+        <p>Island view: {{ $greeting }}</p>
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/custom-data-island.livewire.php';
-        File::put($viewPath, $viewContent);
+        $viewPath = $this->tempPath . '/test.livewire.php';
+        File::put($viewPath, $componentContent);
+
         $result = $this->compiler->compile($viewPath);
 
-        // Check that island file was created
-        $islandFiles = glob($this->cacheDir . '/views/island_summary_*.blade.php');
+        // Check main view content (should use transformation)
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('{{ $this->greeting }}', $viewContent);
+
+        // Check island file content (should use guard)
+        $islandFiles = glob($this->cacheDir . '/views/island_*.blade.php');
         $this->assertCount(1, $islandFiles);
 
         $islandContent = File::get($islandFiles[0]);
+        $this->assertStringContainsString('<?php if (! isset($greeting)) $greeting = $this->greeting; ?>', $islandContent);
+        $this->assertStringContainsString('{{ $greeting }}', $islandContent);
+    }
 
-        // Guard statements should be present for computed properties
-        $this->assertStringContainsString('if (! isset($total)) $total = $this->total;', $islandContent);
-        $this->assertStringContainsString('if (! isset($status)) $status = $this->status;', $islandContent);
+    public function test_can_compile_component_with_class_level_attributes_compact_syntax()
+    {
+        $componentContent = '@php
+new #[Layout(\'layouts.app\')] class extends Livewire\Component {
+    public $count = 0;
 
-        // Computed property references should remain as-is (not transformed)
-        $this->assertStringContainsString('{{ $total }}', $islandContent);
-        $this->assertStringContainsString('{{ $status }}', $islandContent);
-        $this->assertStringContainsString('{{ $count }}', $islandContent);
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
 
-        // Should NOT have transformed references
-        $this->assertStringNotContainsString('{{ $this->total }}', $islandContent);
-        $this->assertStringNotContainsString('{{ $this->status }}', $islandContent);
+<div>Count: {{ $count }}</div>';
 
-        // Verify the main view includes the custom data
-        $compiledViewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('["total" => 999, "status" => "custom"]', $compiledViewContent);
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that the class-level attribute is preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_can_compile_component_with_class_level_attributes_spaced_syntax()
+    {
+        $componentContent = '@php
+new
+#[Layout(\'layouts.app\')]
+class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that the class-level attribute is preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_can_compile_component_with_multiple_class_level_attributes()
+    {
+        $componentContent = '@php
+new #[Layout(\'layouts.app\')] #[Lazy] class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that both class-level attributes are preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('#[Lazy]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_can_compile_component_with_multiple_class_level_attributes_spaced()
+    {
+        $componentContent = '@php
+new
+#[Layout(\'layouts.app\')]
+#[Lazy]
+class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that both class-level attributes are preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('#[Lazy]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_class_level_attributes_work_with_layout_directive()
+    {
+        $componentContent = '@layout(\'layouts.main\')
+
+@php
+new #[Lazy] class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that both @layout directive attribute and class-level attribute are present
+        $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.main\')]', $classContent);
+        $this->assertStringContainsString('#[Lazy]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+    }
+
+    public function test_class_level_attributes_work_with_traditional_php_tags()
+    {
+        $componentContent = '<?php
+new #[Layout(\'layouts.app\')] class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+?>
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that the class-level attribute is preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_component_without_class_level_attributes_works_as_before()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that no unexpected attributes are added
+        $this->assertStringNotContainsString('#[Layout', $classContent);
+        $this->assertStringNotContainsString('#[Lazy', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
     }
 }

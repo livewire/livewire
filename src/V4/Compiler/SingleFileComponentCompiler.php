@@ -71,7 +71,7 @@ class SingleFileComponentCompiler extends Mechanism
         $classPath = $this->getClassPath($className);
         $viewName = $this->generateViewName($viewPath, $hash);
         $viewPath = $this->getViewPath($viewName);
-        
+
         try {
             $classLastModified = File::lastModified($classPath);
             $viewLastModified = File::lastModified($viewPath);
@@ -388,6 +388,7 @@ class SingleFileComponentCompiler extends Mechanism
         // Extract use statements and class definition from frontmatter...
         $useStatements = $this->extractUseStatements($parsed->frontmatter);
         $classBody = $this->extractClassBody($parsed->frontmatter);
+        $classLevelAttributes = $this->extractClassLevelAttributes($parsed->frontmatter);
 
         // Generate layout attribute if present
         $layoutAttribute = '';
@@ -395,7 +396,7 @@ class SingleFileComponentCompiler extends Mechanism
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
         }
 
-        // Generate island lookup array if islands exist
+        // Generate island lookup property if islands exist
         $islandLookupProperty = '';
         if (!empty($parsed->inlineIslands)) {
             $islandLookupProperty = $this->generateIslandLookupProperty($parsed->inlineIslands);
@@ -407,11 +408,17 @@ class SingleFileComponentCompiler extends Mechanism
             $useStatementsSection = implode("\n", $useStatements) . "\n\n";
         }
 
+        // Build class-level attributes section
+        $classAttributesSection = '';
+        if (!empty($classLevelAttributes)) {
+            $classAttributesSection = implode("\n", $classLevelAttributes) . "\n";
+        }
+
         $classContent = "<?php
 
 namespace {$namespace};
 
-{$useStatementsSection}{$layoutAttribute}class {$className} extends \\Livewire\\Component
+{$useStatementsSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
 {
 {$islandLookupProperty}{$classBody}
 
@@ -704,5 +711,28 @@ namespace {$namespace};
         $lookupArray = "[\n" . implode(",\n", $lookupEntries) . "\n    ]";
 
         return "    protected \$islandLookup = {$lookupArray};\n\n";
+    }
+
+    protected function extractClassLevelAttributes(string $frontmatter): array
+    {
+        $attributes = [];
+
+        // Match attributes before the class keyword, handling both compact and spaced syntax
+        // Pattern explanation:
+        // - Match 'new' followed by optional whitespace and newlines
+        // - Capture any attributes (#[...]) that come after 'new' but before 'class'
+        // - Handle multiple attributes and various spacing/newline combinations
+        if (preg_match('/new\s*\n?\s*((?:#\[[^\]]*\]\s*\n?\s*)*)\s*class/s', $frontmatter, $matches)) {
+            $attributesBlock = trim($matches[1]);
+
+            if (!empty($attributesBlock)) {
+                // Extract individual attributes from the block
+                if (preg_match_all('/#\[[^\]]*\]/', $attributesBlock, $attributeMatches)) {
+                    $attributes = $attributeMatches[0];
+                }
+            }
+        }
+
+        return $attributes;
     }
 }
