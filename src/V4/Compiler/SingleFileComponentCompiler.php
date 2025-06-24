@@ -59,6 +59,8 @@ class SingleFileComponentCompiler extends Mechanism
 
     public function isCompiled(string $viewPath, ?string $hash = null): bool
     {
+        $originalViewLastModified = File::lastModified($viewPath);
+
         if ($hash === null) {
             $content = File::get($viewPath);
             $hash = $this->generateHash($viewPath, $content);
@@ -68,8 +70,19 @@ class SingleFileComponentCompiler extends Mechanism
         $classPath = $this->getClassPath($className);
         $viewName = $this->generateViewName($viewPath, $hash);
         $viewPath = $this->getViewPath($viewName);
+        
+        try {
+            $classLastModified = File::lastModified($classPath);
+            $viewLastModified = File::lastModified($viewPath);
 
-        return file_exists($classPath) && file_exists($viewPath);
+            return $originalViewLastModified <= $classLastModified && $originalViewLastModified <= $viewLastModified;
+        } catch (\ErrorException $exception) {
+            if (! File::exists($classPath) || ! File::exists($viewPath)) {
+                return false;
+            }
+
+            throw $exception;
+        }
     }
 
     public function getCompiledPath(string $viewPath): string
@@ -580,7 +593,8 @@ namespace {$namespace};
 
     protected function generateHash(string $viewPath, string $content): string
     {
-        return substr(md5($viewPath . $content . filemtime($viewPath)), 0, 8);
+        // The v1 is a cache version number, the same as how Laravel handles it...
+        return hash('xxh128', 'v1'.$viewPath);
     }
 
     protected function generateClassName(string $viewPath, string $hash): string

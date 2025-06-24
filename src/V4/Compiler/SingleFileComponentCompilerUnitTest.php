@@ -234,6 +234,8 @@ new class extends Livewire\Component {
 
         $result1 = $this->compiler->compile($viewPath);
 
+        $firstModified = filemtime($result1->classPath);
+
         // Change the content
         $componentContent2 = '@php
 new class extends Livewire\Component {
@@ -248,8 +250,11 @@ new class extends Livewire\Component {
 
         $result2 = $this->compiler->compile($viewPath);
 
-        $this->assertNotEquals($result1->hash, $result2->hash);
-        $this->assertNotEquals($result1->className, $result2->className);
+        $secondModified = filemtime($result2->classPath);
+
+        $this->assertEquals($result1->hash, $result2->hash);
+        $this->assertEquals($result1->className, $result2->className);
+        $this->assertNotEquals($firstModified, $secondModified); // File was regenerated
     }
 
     public function test_is_compiled_returns_true_for_compiled_component()
