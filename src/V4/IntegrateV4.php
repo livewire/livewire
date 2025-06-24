@@ -38,7 +38,7 @@ class IntegrateV4
 
     protected function supportRoutingMacro()
     {
-        Route::macro('wire', function ($uri, $view) {
+        Route::macro('livewire', function ($uri, $view) {
             if (class_exists($view)) {
                 return Route::get($uri, $view);
             }
