@@ -8,7 +8,7 @@ use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 class BaseIsland extends LivewireAttribute
 {
     public function __construct(
-        public string $name,
+        public ?string $name = null,
         public ?string $view = null,
         public array $data = [],
         public string $mode = 'replace',
@@ -16,6 +16,10 @@ class BaseIsland extends LivewireAttribute
 
     public function call()
     {
+        if (! $this->name) {
+            $this->name = $this->component->getNamelessIslandName();
+        }
+
         $this->component->island($this->name, $this->view, $this->data, $this->mode);
     }
 }

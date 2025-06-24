@@ -43,11 +43,15 @@ trait HandlesIslands
 
         if ($fromBladeDirective) {
             if ($this->isSubsequentRequest) {
-                if ($mode === 'skip') {
+                if ($mode === 'once') {
                     return new SkippedIsland($name);
                 }
             } else {
-                if ($defer || $mode === 'defer') {
+                if ($mode === 'once') {
+                    // ...
+                } if ($mode === 'skip') {
+                    return new SkippedIsland($name);
+                } elseif ($defer || $mode === 'defer') {
                     return new DeferredIsland($name);
                 } elseif ($mode === 'lazy') {
                     return new LazyIsland($name);
@@ -83,5 +87,18 @@ trait HandlesIslands
     public function popLastIsland()
     {
         return array_pop($this->islands);
+    }
+
+    public function getNamelessIslandName(): ?string
+    {
+        if (! property_exists($this, 'islandLookup')) return null;
+
+        $name = array_key_first($this->islandLookup);
+
+        if (! str_starts_with($name, 'island_')) {
+            return null;
+        }
+
+        return $name;
     }
 }
