@@ -121,7 +121,7 @@ class BladeStyleCompiler extends Mechanism
     protected function getComponentNameFromPath(string $viewPath): string
     {
         $basename = basename($viewPath);
-        $supportedExtensions = ['.blade.php', '.wire.php'];
+        $supportedExtensions = ['.livewire.php'];
 
         foreach ($supportedExtensions as $extension) {
             if (str_ends_with($basename, $extension)) {
