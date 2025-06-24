@@ -386,7 +386,7 @@ class SingleFileComponentCompiler extends Mechanism
         $viewName = $result->viewName;
 
         // Extract use statements and class definition from frontmatter...
-        $useStatements = $this->extractUseStatements($parsed->frontmatter);
+        $preClassCode = $this->extractPreClassCode($parsed->frontmatter);
         $classBody = $this->extractClassBody($parsed->frontmatter);
         $classLevelAttributes = $this->extractClassLevelAttributes($parsed->frontmatter);
 
@@ -402,10 +402,10 @@ class SingleFileComponentCompiler extends Mechanism
             $islandLookupProperty = $this->generateIslandLookupProperty($parsed->inlineIslands);
         }
 
-        // Build the use statements section
-        $useStatementsSection = '';
-        if (!empty($useStatements)) {
-            $useStatementsSection = implode("\n", $useStatements) . "\n\n";
+        // Build the pre-class code section (imports, constants, etc.)
+        $preClassSection = '';
+        if (!empty($preClassCode)) {
+            $preClassSection = $preClassCode . "\n\n";
         }
 
         // Build class-level attributes section
@@ -418,7 +418,7 @@ class SingleFileComponentCompiler extends Mechanism
 
 namespace {$namespace};
 
-{$useStatementsSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
+{$preClassSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
 {
 {$islandLookupProperty}{$classBody}
 
@@ -589,27 +589,60 @@ namespace {$namespace};
         return preg_replace($pattern, '$this->' . $propertyName, $viewContent);
     }
 
+    protected function extractPreClassCode(string $frontmatter): string
+    {
+        // Extract everything before the class definition (new class or class keyword)
+        // This includes use statements, constants, functions, etc.
+
+        // For anonymous classes, look for "new" keyword (which might be followed by attributes then "class")
+        // For named classes, look for the class keyword directly
+
+        $classPos = false;
+
+        // First try to find "new" keyword for anonymous classes
+        if (preg_match('/\bnew\s+/', $frontmatter, $matches, PREG_OFFSET_CAPTURE)) {
+            $classPos = $matches[0][1];
+        }
+        // If no "new" found, look for named class definition
+        elseif (preg_match('/\bclass\s+\w+/', $frontmatter, $matches, PREG_OFFSET_CAPTURE)) {
+            $classPos = $matches[0][1];
+        }
+
+        if ($classPos === false) {
+            return '';
+        }
+
+        // Extract everything before the class/new statement
+        $preClassCode = substr($frontmatter, 0, $classPos);
+
+        // Clean up the pre-class code
+        $preClassCode = trim($preClassCode);
+
+        // Remove any PHP opening tags that might be present
+        $preClassCode = preg_replace('/^<\?php\s*/', '', $preClassCode);
+
+        return trim($preClassCode);
+    }
+
     protected function extractUseStatements(string $frontmatter): array
     {
+        // This method is now deprecated in favor of extractPreClassCode
+        // Keeping it for backwards compatibility in case it's used elsewhere
+        $preClassCode = $this->extractPreClassCode($frontmatter);
+
+        if (empty($preClassCode)) {
+            return [];
+        }
+
+        // Extract individual use statements from the pre-class code for backwards compatibility
+        $lines = explode("\n", $preClassCode);
         $useStatements = [];
 
-        // First, extract the class definition part to exclude trait usage inside the class
-        $classBody = '';
-        if (preg_match('/new\s+class.*?\{(.*)\}/s', $frontmatter, $matches)) {
-            $classBody = $matches[1];
-        } elseif (preg_match('/class\s+\w+.*?\{(.*)\}/s', $frontmatter, $matches)) {
-            $classBody = $matches[1];
-        }
-
-        // Extract everything outside the class body (imports)
-        $frontmatterWithoutClassBody = $frontmatter;
-        if (!empty($classBody)) {
-            $frontmatterWithoutClassBody = str_replace($classBody, '', $frontmatter);
-        }
-
-        // Match use statements only in the non-class portion (imports, not trait usage)
-        if (preg_match_all('/use\s+[A-Za-z0-9\\\\]+(?:\s+as\s+[A-Za-z0-9_]+)?;/m', $frontmatterWithoutClassBody, $matches)) {
-            $useStatements = $matches[0];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (preg_match('/^use\s+/', $line)) {
+                $useStatements[] = $line;
+            }
         }
 
         return $useStatements;

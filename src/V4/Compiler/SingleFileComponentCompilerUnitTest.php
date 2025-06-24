@@ -2064,4 +2064,108 @@ new class extends Livewire\Component {
         $this->assertStringContainsString('public $count = 0;', $classContent);
         $this->assertStringContainsString('public function increment()', $classContent);
     }
+
+    public function test_preserves_grouped_import_statements()
+    {
+        $componentContent = '@php
+
+use App\Models\Post;
+use Livewire\Attributes\{Computed, Locked, Validate, Url, Session};
+use Illuminate\Support\{Str, Collection, Carbon};
+
+new class extends Livewire\Component {
+    public Post $post;
+    public Collection $items;
+
+    #[Computed]
+    #[Locked]
+    public function title()
+    {
+        return Str::title($this->post->title);
+    }
+
+    #[Validate(\'required\')]
+    #[Session]
+    public $sessionData = [];
+}
+@endphp
+
+<div>
+    <h1>{{ $title }}</h1>
+</div>';
+
+        $viewPath = $this->tempPath . '/grouped-imports.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that all import statements are preserved exactly as written
+        $this->assertStringContainsString('use App\Models\Post;', $classContent);
+        $this->assertStringContainsString('use Livewire\Attributes\{Computed, Locked, Validate, Url, Session};', $classContent);
+        $this->assertStringContainsString('use Illuminate\Support\{Str, Collection, Carbon};', $classContent);
+
+        // Check that class properties and methods are preserved
+        $this->assertStringContainsString('public Post $post;', $classContent);
+        $this->assertStringContainsString('public Collection $items;', $classContent);
+        $this->assertStringContainsString('#[Computed]', $classContent);
+        $this->assertStringContainsString('#[Locked]', $classContent);
+        $this->assertStringContainsString('public function title()', $classContent);
+        $this->assertStringContainsString('#[Validate(\'required\')]', $classContent);
+        $this->assertStringContainsString('#[Session]', $classContent);
+        $this->assertStringContainsString('public $sessionData = [];', $classContent);
+
+        // Verify structure is correct
+        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
+    }
+
+    public function test_preserves_grouped_imports_with_class_level_attributes()
+    {
+        $componentContent = '@php
+
+use App\Models\{User, Post, Comment};
+use Livewire\Attributes\{Computed, Layout};
+
+new #[Layout(\'layouts.blog\')] class extends Livewire\Component {
+    public User $author;
+    public Post $post;
+
+    #[Computed]
+    public function commentCount()
+    {
+        return Comment::where(\'post_id\', $this->post->id)->count();
+    }
+}
+@endphp
+
+<div>
+    <h1>{{ $post->title }}</h1>
+    <p>By {{ $author->name }}</p>
+    <p>Comments: {{ $commentCount }}</p>
+</div>';
+
+        $viewPath = $this->tempPath . '/grouped-imports-with-attributes.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that grouped imports are preserved
+        $this->assertStringContainsString('use App\Models\{User, Post, Comment};', $classContent);
+        $this->assertStringContainsString('use Livewire\Attributes\{Computed, Layout};', $classContent);
+
+        // Check that class-level attributes are preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.blog\')]', $classContent);
+
+        // Check that method attributes are preserved
+        $this->assertStringContainsString('#[Computed]', $classContent);
+        $this->assertStringContainsString('public function commentCount()', $classContent);
+
+        // Check that properties are preserved
+        $this->assertStringContainsString('public User $author;', $classContent);
+        $this->assertStringContainsString('public Post $post;', $classContent);
+    }
 }

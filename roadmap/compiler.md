@@ -172,6 +172,36 @@ new #[Lazy] class extends Livewire\Component {
 <div>Count: {{ $count }}</div>
 ```
 
+#### 4. **Components with Grouped Imports**
+```php
+@php
+
+use App\Models\Post;
+use Livewire\Attributes\{Computed, Locked, Validate, Url, Session};
+use Illuminate\Support\{Str, Collection, Carbon};
+
+new class extends Livewire\Component {
+    public Post $post;
+    public Collection $items;
+
+    #[Computed]
+    #[Locked]
+    public function title()
+    {
+        return Str::title($this->post->title);
+    }
+
+    #[Validate('required')]
+    #[Session]
+    public $sessionData = [];
+}
+@endphp
+
+<div>
+    <h1>{{ $title }}</h1>
+</div>
+```
+
 ### Compilation Process
 
 The compilation process works as follows:
@@ -249,6 +279,40 @@ class Counter_ghi789 extends \Livewire\Component
     public function render()
     {
         return view('livewire-compiled::counter_ghi789');
+    }
+}
+```
+
+#### Generated Class File with Grouped Imports
+```php
+// storage/framework/views/livewire/classes/BlogPost_jkl012.php
+<?php
+
+namespace Livewire\Compiled;
+
+use App\Models\Post;
+use Livewire\Attributes\{Computed, Locked, Validate, Url, Session};
+use Illuminate\Support\{Str, Collection, Carbon};
+
+class BlogPost_jkl012 extends \Livewire\Component
+{
+    public Post $post;
+    public Collection $items;
+
+    #[Computed]
+    #[Locked]
+    public function title()
+    {
+        return Str::title($this->post->title);
+    }
+
+    #[Validate('required')]
+    #[Session]
+    public $sessionData = [];
+
+    public function render()
+    {
+        return view('livewire-compiled::blog-post_jkl012');
     }
 }
 ```
@@ -337,8 +401,8 @@ The compiler provides specific exceptions for different error scenarios:
 - Creates descriptive view names
 
 #### ✅ **Comprehensive Testing**
-- **79 unit tests** covering all functionality
-- **261 assertions** ensuring correctness
+- **90 unit tests** covering all functionality
+- **343 assertions** ensuring correctness
 - Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in islands), and error scenarios
 
 #### ✅ **Layout Directive Support**
@@ -376,11 +440,14 @@ The compiler provides specific exceptions for different error scenarios:
 - Properly places use statements in generated class files
 - Works with both simple imports and aliased imports
 
-#### ✅ **Traditional PHP Tag Support**
-- Supports `<?php ... ?>` syntax alongside `@php ... @endphp`
-- Handles both inline and external component references
-- Compatible with all other features (layouts, islands, etc.)
-- Maintains consistent behavior across syntax variations
+#### ✅ **Enhanced Pre-Class Code Preservation**
+- Preserves all PHP code before the class definition verbatim
+- Supports grouped imports: `use Livewire\Attributes\{Computed, Locked, Validate};`
+- Handles simple imports: `use App\Models\Post;`
+- Supports aliased imports: `use App\Models\Post as PostModel;`
+- Preserves constants, functions, and any other valid PHP code
+- Robust parsing that avoids edge cases with complex PHP syntax
+- Works with both `@php ... @endphp` and `<?php ... ?>` syntax
 
 #### ✅ **Class-Level Attributes Support**
 - Preserves PHP attributes defined before the `class` keyword in inline components
@@ -405,7 +472,7 @@ The compiler provides specific exceptions for different error scenarios:
 - Class generation flags
 - Namespace/class name extraction
 
-#### SingleFileComponentCompiler Tests (70 tests)
+#### SingleFileComponentCompiler Tests (72 tests)
 - Inline and external component compilation
 - Error handling and validation
 - Generated file content verification
@@ -417,7 +484,7 @@ The compiler provides specific exceptions for different error scenarios:
 - Computed property transformation (with guard statements in islands)
 - Custom data override support in islands
 - Inline islands processing
-- Use statement preservation
+- Enhanced pre-class code preservation (grouped imports, constants, etc.)
 - Traditional PHP tag support
 - Class-level attributes support (compact and spaced syntax)
 - Class-level attributes integration with layout directives
