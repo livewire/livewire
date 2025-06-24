@@ -18,6 +18,7 @@ use Livewire\Concerns\InteractsWithProperties;
 use Livewire\V4\Islands\HandlesIslands;
 use Illuminate\Support\Traits\Macroable;
 use Livewire\V4\Slots\HandlesSlots;
+use Livewire\V4\Refs\HandlesRefs;
 use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
 use BadMethodCallException;
 
@@ -40,6 +41,7 @@ abstract class Component
     use HandlesDisablingBackButtonCache;
     use HandlesSlots;
     use HandlesHtmlAttributes;
+    use HandlesRefs;
 
     protected $__id;
     protected $__name;

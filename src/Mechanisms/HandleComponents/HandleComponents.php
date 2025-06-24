@@ -117,7 +117,7 @@ class HandleComponents extends Mechanism
 
     protected function isReservedParam($key)
     {
-        $exact = ['lazy'];
+        $exact = ['lazy', 'wire:ref'];
         $startsWith = ['@', 'wire:model'];
 
         // Check exact matches
