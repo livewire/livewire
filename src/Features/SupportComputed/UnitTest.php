@@ -429,6 +429,49 @@ class UnitTest extends TestCase
             ->dispatch('bar', 'baz')
             ->assertSetStrict('foo', 'baz');
     }
+
+    /** @test */
+    public function call_computed_property_attribute_non_public_method()
+    {
+        Livewire::test(CallComputedPropertyAttributeNonPublicMethod::class)
+            ->assertSee('bar');
+    }
+
+    function test_can_use_computed_properties_with_injected_dependencies()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Computed]
+            public function foo(FooDependency $dependency) {
+                return $dependency->baz;
+            }
+        })
+            ->assertSetStrict('foo', 'bar');
+    }
+
+    function test_can_unset_computed_property_with_injected_dependencies()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $changeFoo = false;
+
+            #[Computed]
+            function foo(FooDependency $dependency) {
+                return $this->changeFoo ? 'baz' : $dependency->baz;
+            }
+
+            public function save()
+            {
+                // Access foo to ensure it is memoized.
+                $this->foo;
+
+                $this->changeFoo = true;
+
+                unset($this->foo);
+            }
+        })
+            ->assertSetStrict('foo', 'bar')
+            ->call('save')
+            ->assertSetStrict('foo', 'baz');
+    }
 }
 
 class ComputedPropertyStub extends Component
@@ -542,6 +585,33 @@ class NullIssetComputedPropertyStub extends Component{
         return <<<'HTML'
         <div>
             {{ var_dump(isset($this->foo)) }}
+        </div>
+        HTML;
+    }
+}
+
+class CallComputedPropertyAttributeNonPublicMethod extends Component
+{
+    public $upperCasedFoo = 'FOO_BAR';
+
+    #[Computed]
+    protected function protectedFooBar()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    #[Computed]
+    private function privateFooBar()
+    {
+        return strtolower($this->upperCasedFoo);
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {{ var_dump($this->protected_foo_bar) }}
+            {{ var_dump($this->private_foo_bar) }}
         </div>
         HTML;
     }
