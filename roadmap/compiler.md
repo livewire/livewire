@@ -116,6 +116,62 @@ new class extends Livewire\Component {
 </div>
 ```
 
+#### 3. **Components with Class-Level Attributes**
+
+##### Compact Syntax
+```php
+@php
+new #[Layout('layouts.app')] class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+    <button wire:click="increment">Increment</button>
+</div>
+```
+
+##### Spaced Syntax
+```php
+@php
+new
+#[Layout('layouts.app')]
+#[Lazy]
+class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>
+    Count: {{ $count }}
+    <button wire:click="increment">Increment</button>
+</div>
+```
+
+##### Combined with @layout Directive
+```php
+@layout('layouts.main')
+
+@php
+new #[Lazy] class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>
+```
+
 ### Compilation Process
 
 The compilation process works as follows:
@@ -148,6 +204,51 @@ class Counter_abc123 extends \Livewire\Component
     public function render()
     {
         return view('livewire-compiled::counter_abc123');
+    }
+}
+```
+
+#### Generated Class File with Class-Level Attributes Example
+```php
+// storage/framework/views/livewire/classes/Counter_def456.php
+<?php
+
+namespace Livewire\Compiled;
+
+#[Layout('layouts.app')]
+#[Lazy]
+class Counter_def456 extends \Livewire\Component
+{
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+
+    public function render()
+    {
+        return view('livewire-compiled::counter_def456');
+    }
+}
+```
+
+#### Generated Class File with Both @layout Directive and Class-Level Attributes
+```php
+// storage/framework/views/livewire/classes/Counter_ghi789.php
+<?php
+
+namespace Livewire\Compiled;
+
+#[\Livewire\Attributes\Layout('layouts.main')]
+#[Lazy]
+class Counter_ghi789 extends \Livewire\Component
+{
+    public $count = 0;
+
+    public function render()
+    {
+        return view('livewire-compiled::counter_ghi789');
     }
 }
 ```
@@ -281,6 +382,15 @@ The compiler provides specific exceptions for different error scenarios:
 - Compatible with all other features (layouts, islands, etc.)
 - Maintains consistent behavior across syntax variations
 
+#### ✅ **Class-Level Attributes Support**
+- Preserves PHP attributes defined before the `class` keyword in inline components
+- Supports both compact syntax: `new #[Layout('layouts.app')] class extends...`
+- Supports spaced/newlined syntax: `new\n#[Layout('layouts.app')]\nclass extends...`
+- Handles multiple attributes: `new #[Layout('layouts.app')] #[Lazy] class extends...`
+- Works with both `@php ... @endphp` and `<?php ... ?>` syntax
+- Integrates seamlessly with `@layout()` directives (both can be used together)
+- Maintains backwards compatibility - components without class-level attributes work unchanged
+
 ### Test Coverage
 
 **Test Command**: `phpunit src/V4/Compiler/ --testdox`
@@ -295,7 +405,7 @@ The compiler provides specific exceptions for different error scenarios:
 - Class generation flags
 - Namespace/class name extraction
 
-#### SingleFileComponentCompiler Tests (56 tests)
+#### SingleFileComponentCompiler Tests (70 tests)
 - Inline and external component compilation
 - Error handling and validation
 - Generated file content verification
@@ -309,6 +419,9 @@ The compiler provides specific exceptions for different error scenarios:
 - Inline islands processing
 - Use statement preservation
 - Traditional PHP tag support
+- Class-level attributes support (compact and spaced syntax)
+- Class-level attributes integration with layout directives
+- Backwards compatibility verification
 
 ### Integration Points
 
