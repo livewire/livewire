@@ -53,7 +53,7 @@ new class extends Livewire\Component {
     <button wire:click="increment">Increment</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -75,7 +75,7 @@ new class extends Livewire\Component {
     <button wire:click="increment">Increment</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -92,14 +92,14 @@ new class extends Livewire\Component {
         $this->expectException(CompilationException::class);
         $this->expectExceptionMessage('View file not found');
 
-        $this->compiler->compile('/non/existent/file.blade.php');
+        $this->compiler->compile('/non/existent/file.livewire.php');
     }
 
     public function test_throws_exception_for_invalid_component_without_php_block()
     {
         $componentContent = '<div>No PHP block</div>';
 
-        $viewPath = $this->tempPath . '/invalid.blade.php';
+        $viewPath = $this->tempPath . '/invalid.livewire.php';
         File::put($viewPath, $componentContent);
 
         $this->expectException(InvalidComponentException::class);
@@ -116,7 +116,7 @@ echo "This is not a class";
 
 <div>Invalid content</div>';
 
-        $viewPath = $this->tempPath . '/invalid.blade.php';
+        $viewPath = $this->tempPath . '/invalid.livewire.php';
         File::put($viewPath, $componentContent);
 
         $this->expectException(ParseException::class);
@@ -131,7 +131,7 @@ echo "This is not a class";
 
 <div>External with ::class</div>';
 
-        $viewPath = $this->tempPath . '/external.blade.php';
+        $viewPath = $this->tempPath . '/external.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -155,7 +155,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -180,7 +180,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -202,7 +202,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         // First compilation
@@ -229,7 +229,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent1);
 
         $result1 = $this->compiler->compile($viewPath);
@@ -267,7 +267,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $this->assertFalse($this->compiler->isCompiled($viewPath));
@@ -287,7 +287,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -306,7 +306,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/my-special_component.blade.php';
+        $viewPath = $this->tempPath . '/my-special_component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -330,7 +330,7 @@ class Counter extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -349,7 +349,7 @@ $notAClass = "invalid";
 
 <div>Invalid</div>';
 
-        $viewPath = $this->tempPath . '/invalid.blade.php';
+        $viewPath = $this->tempPath . '/invalid.livewire.php';
         File::put($viewPath, $componentContent);
 
         // We need to manually trigger the parseComponent since the validation happens there
@@ -496,7 +496,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -520,7 +520,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -541,7 +541,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -559,7 +559,7 @@ new class extends Livewire\Component {
 
 <div>Admin Counter</div>';
 
-        $viewPath = $this->tempPath . '/admin-counter.blade.php';
+        $viewPath = $this->tempPath . '/admin-counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -584,7 +584,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -611,7 +611,7 @@ new class extends Livewire\Component {
     console.log("Hello from naked script");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-script.blade.php';
+        $viewPath = $this->tempPath . '/component-with-script.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -640,7 +640,7 @@ new class extends Livewire\Component {
 </script>
 @endscript';
 
-        $viewPath = $this->tempPath . '/component-with-wrapped-script.blade.php';
+        $viewPath = $this->tempPath . '/component-with-wrapped-script.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -672,7 +672,7 @@ new class extends Livewire\Component {
     console.log("Second script");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-multiple-scripts.blade.php';
+        $viewPath = $this->tempPath . '/component-with-multiple-scripts.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -702,7 +702,7 @@ new class extends Livewire\Component {
     console.log("Non-empty script");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-empty-scripts.blade.php';
+        $viewPath = $this->tempPath . '/component-with-empty-scripts.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -730,7 +730,7 @@ new class extends Livewire\Component {
     console.log("Script with attributes");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-script-attributes.blade.php';
+        $viewPath = $this->tempPath . '/component-with-script-attributes.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -754,7 +754,7 @@ new class extends Livewire\Component {
     Count: {{ $count }}
 </div>';
 
-        $viewPath = $this->tempPath . '/component-without-script.blade.php';
+        $viewPath = $this->tempPath . '/component-without-script.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -785,7 +785,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-islands.blade.php';
+        $viewPath = $this->tempPath . '/component-with-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -824,7 +824,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-island-data.blade.php';
+        $viewPath = $this->tempPath . '/component-with-island-data.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -861,7 +861,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-multiple-islands.blade.php';
+        $viewPath = $this->tempPath . '/component-with-multiple-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -893,7 +893,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/external-with-islands.blade.php';
+        $viewPath = $this->tempPath . '/external-with-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -926,7 +926,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-layout-and-islands.blade.php';
+        $viewPath = $this->tempPath . '/component-with-layout-and-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -959,7 +959,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/test-parsed-islands.blade.php';
+        $viewPath = $this->tempPath . '/test-parsed-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         // We need to access the parseComponent method through reflection or by using compile
@@ -984,7 +984,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/no-islands.blade.php';
+        $viewPath = $this->tempPath . '/no-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1022,7 +1022,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-lookup.blade.php';
+        $viewPath = $this->tempPath . '/component-with-lookup.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1045,7 +1045,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/no-islands-class.blade.php';
+        $viewPath = $this->tempPath . '/no-islands-class.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1077,7 +1077,7 @@ new class extends Livewire\Component {
     <h1>Chat</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/chat.blade.php';
+        $viewPath = $this->tempPath . '/chat.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1119,7 +1119,7 @@ new class extends Livewire\Component {
     <h1>User Profile</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/user-profile.blade.php';
+        $viewPath = $this->tempPath . '/user-profile.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1154,7 +1154,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/simple-counter.blade.php';
+        $viewPath = $this->tempPath . '/simple-counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1180,7 +1180,7 @@ new class extends Livewire\Component {
     <h1>Post Component</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/post-component.blade.php';
+        $viewPath = $this->tempPath . '/post-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1221,7 +1221,7 @@ new class extends Livewire\Component {
     <button wire:click="addToCart">Add to Cart</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/product.blade.php';
+        $viewPath = $this->tempPath . '/product.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1256,7 +1256,7 @@ new class extends Livewire\Component {
     <h1>External Product Component</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/external-product.blade.php';
+        $viewPath = $this->tempPath . '/external-product.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1287,7 +1287,7 @@ new class extends Livewire\Component {
     <p>Total: ${{ $total }}</p>
 </div>';
 
-        $viewPath = $this->tempPath . '/cart.blade.php';
+        $viewPath = $this->tempPath . '/cart.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1320,7 +1320,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/fruit-component.blade.php';
+        $viewPath = $this->tempPath . '/fruit-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1366,7 +1366,7 @@ new class extends Livewire\Component {
     Combined: {{ $computedProperty . $anotherComputed }}
 </div>';
 
-        $viewPath = $this->tempPath . '/computed-component.blade.php';
+        $viewPath = $this->tempPath . '/computed-component.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1411,7 +1411,7 @@ new class extends Livewire\Component {
     {{ $withSpaces }}
 </div>';
 
-        $viewPath = $this->tempPath . '/computed-syntaxes.blade.php';
+        $viewPath = $this->tempPath . '/computed-syntaxes.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1432,7 +1432,7 @@ new class extends Livewire\Component {
     {{ $computedProperty }}
 </div>';
 
-        $viewPath = $this->tempPath . '/external-computed.blade.php';
+        $viewPath = $this->tempPath . '/external-computed.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1459,7 +1459,7 @@ new class extends Livewire\Component {
     {{ $foo_bar }}
 </div>';
 
-        $viewPath = $this->tempPath . '/word-boundaries.blade.php';
+        $viewPath = $this->tempPath . '/word-boundaries.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1489,7 +1489,7 @@ new class extends Livewire\Component {
     {{ $computedProperty }}
 </div>';
 
-        $viewPath = $this->tempPath . '/reassigned-computed.blade.php';
+        $viewPath = $this->tempPath . '/reassigned-computed.livewire.php';
         File::put($viewPath, $viewContent);
 
         $this->expectException(\Livewire\V4\Compiler\Exceptions\CompilationException::class);
@@ -1524,7 +1524,7 @@ new class extends Livewire\Component {
     {{ $noVisibility }}
 </div>';
 
-        $viewPath = $this->tempPath . '/visibility-modifiers.blade.php';
+        $viewPath = $this->tempPath . '/visibility-modifiers.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1557,7 +1557,7 @@ new class extends Livewire\Component {
     {{ $computedMethod }}
 </div>';
 
-        $viewPath = $this->tempPath . '/non-computed-methods.blade.php';
+        $viewPath = $this->tempPath . '/non-computed-methods.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1597,7 +1597,7 @@ new class extends Livewire\Component {
     <button wire:click="addItem">Add Item ({{ $total }})</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/complex-computed.blade.php';
+        $viewPath = $this->tempPath . '/complex-computed.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1636,7 +1636,7 @@ new class extends Livewire\Component {
     {{ $links }}
 </div>';
 
-        $viewPath = $this->tempPath . '/paginated-component.blade.php';
+        $viewPath = $this->tempPath . '/paginated-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1684,7 +1684,7 @@ new class extends Livewire\Component {
     <div>{{ count($data) }} items</div>
 </div>';
 
-        $viewPath = $this->tempPath . '/multi-trait-component.blade.php';
+        $viewPath = $this->tempPath . '/multi-trait-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1759,7 +1759,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/computed-with-islands.blade.php';
+        $viewPath = $this->tempPath . '/computed-with-islands.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1817,7 +1817,7 @@ new class extends Livewire\Component {
     @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/custom-data-island.blade.php';
+        $viewPath = $this->tempPath . '/custom-data-island.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 

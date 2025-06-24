@@ -42,7 +42,7 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
 
     public function test_can_register_and_resolve_aliased_component()
     {
-        $viewPath = $this->tempPath . '/custom-view.blade.php';
+        $viewPath = $this->tempPath . '/custom-view.livewire.php';
         File::put($viewPath, '<div>Custom View</div>');
 
         $this->resolver->component('custom-component', $viewPath);
@@ -55,15 +55,15 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
     public function test_throws_exception_when_aliased_component_file_does_not_exist()
     {
         $this->expectException(ViewNotFoundException::class);
-        $this->expectExceptionMessage('Component view file not found: [/non-existent-path.blade.php]');
+        $this->expectExceptionMessage('Component view file not found: [/non-existent-path.livewire.php]');
 
-        $this->resolver->component('custom-component', '/non-existent-path.blade.php');
+        $this->resolver->component('custom-component', '/non-existent-path.livewire.php');
         $this->resolver->resolve('custom-component');
     }
 
     public function test_can_register_and_resolve_namespaced_component()
     {
-        $viewPath = $this->tempPath . '/custom/some-component.blade.php';
+        $viewPath = $this->tempPath . '/custom/some-component.livewire.php';
         File::put($viewPath, '<div>Namespaced View</div>');
 
         $this->resolver->namespace('admin', $this->tempPath . '/custom');
@@ -83,7 +83,7 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
 
     public function test_resolves_component_using_first_convention_direct_file()
     {
-        $viewPath = $this->tempPath . '/components/some-component.blade.php';
+        $viewPath = $this->tempPath . '/components/some-component.livewire.php';
         File::put($viewPath, '<div>Direct File</div>');
 
         $resolved = $this->resolver->resolve('some-component');
@@ -94,7 +94,7 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
     public function test_resolves_component_using_second_convention_folder_with_same_name()
     {
         File::makeDirectory($this->tempPath . '/components/some-component', 0755, true);
-        $viewPath = $this->tempPath . '/components/some-component/some-component.blade.php';
+        $viewPath = $this->tempPath . '/components/some-component/some-component.livewire.php';
         File::put($viewPath, '<div>Folder Same Name</div>');
 
         $resolved = $this->resolver->resolve('some-component');
@@ -105,7 +105,7 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
     public function test_resolves_component_using_third_convention_index_file()
     {
         File::makeDirectory($this->tempPath . '/components/some-component', 0755, true);
-        $viewPath = $this->tempPath . '/components/some-component/index.blade.php';
+        $viewPath = $this->tempPath . '/components/some-component/index.livewire.php';
         File::put($viewPath, '<div>Index File</div>');
 
         $resolved = $this->resolver->resolve('some-component');
@@ -116,7 +116,7 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
     public function test_resolves_nested_component_with_dots()
     {
         File::makeDirectory($this->tempPath . '/components/foo', 0755, true);
-        $viewPath = $this->tempPath . '/components/foo/bar.blade.php';
+        $viewPath = $this->tempPath . '/components/foo/bar.livewire.php';
         File::put($viewPath, '<div>Nested Component</div>');
 
         $resolved = $this->resolver->resolve('foo.bar');
@@ -126,7 +126,7 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
 
     public function test_falls_back_to_livewire_directory_when_not_found_in_components()
     {
-        $viewPath = $this->tempPath . '/livewire/some-component.blade.php';
+        $viewPath = $this->tempPath . '/livewire/some-component.livewire.php';
         File::put($viewPath, '<div>Livewire Directory</div>');
 
         $resolved = $this->resolver->resolve('some-component');
@@ -144,7 +144,7 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
 
     public function test_namespace_directory_path_is_normalized()
     {
-        $viewPath = $this->tempPath . '/custom/some-component.blade.php';
+        $viewPath = $this->tempPath . '/custom/some-component.livewire.php';
         File::put($viewPath, '<div>Normalized Path</div>');
 
         // Register with trailing slash...
@@ -158,10 +158,10 @@ class ComponentViewPathResolverUnitTest extends \Tests\TestCase
     public function test_prioritizes_aliases_over_default_resolution()
     {
         // Create both a default file and an aliased file...
-        $defaultPath = $this->tempPath . '/components/some-component.blade.php';
+        $defaultPath = $this->tempPath . '/components/some-component.livewire.php';
         File::put($defaultPath, '<div>Default</div>');
 
-        $aliasedPath = $this->tempPath . '/aliased-component.blade.php';
+        $aliasedPath = $this->tempPath . '/aliased-component.livewire.php';
         File::put($aliasedPath, '<div>Aliased</div>');
 
         $this->resolver->component('some-component', $aliasedPath);
