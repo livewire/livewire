@@ -10,22 +10,22 @@ class WireTagCompiler extends ComponentTagCompiler
     /**
      * Regex for matching self-closing wire component tags
      */
-    protected $wireSelfClosingPattern = '/<\s*wire:([\w\-\:\.]*)([^>]*)\s*\/\s*>/';
+    protected $wireSelfClosingPattern = '/<\s*livewire:([\w\-\:\.]*)([^>]*)\s*\/\s*>/';
 
     /**
      * Regex for matching wire component tags with content
      */
-    protected $wireOpenClosePattern = '/<\s*wire:([\w\-\:\.]*)([^>]*)\s*>(.*?)<\/\s*wire:\1\s*>/s';
+    protected $wireOpenClosePattern = '/<\s*livewire:([\w\-\:\.]*)([^>]*)\s*>(.*?)<\/\s*livewire:\1\s*>/s';
 
     /**
-     * Regex for matching wire:slot tags
+     * Regex for matching livewire:slot tags
      */
     protected $wireSlotPattern = '/
-        <\s*wire:slot
+        <\s*livewire:slot
         (?:\s+name=["\']([^"\']+)["\']|\s+name=([^\s>]+))?
         ([^>]*)>
         (.*?)
-        <\/\s*wire:slot\s*>
+        <\/\s*livewire:slot\s*>
     /xs';
 
     public function __invoke($value)
@@ -235,11 +235,11 @@ class WireTagCompiler extends ComponentTagCompiler
      */
     protected function compileComponentCall(string $componentName, array $attributes): string
     {
-        // Handle wire:key specially
+        // Handle livewire:key specially
         $key = null;
-        if (isset($attributes['key']) || isset($attributes['wire:key'])) {
-            $key = $attributes['key'] ?? $attributes['wire:key'];
-            unset($attributes['key'], $attributes['wire:key']);
+        if (isset($attributes['key']) || isset($attributes['livewire:key'])) {
+            $key = $attributes['key'] ?? $attributes['livewire:key'];
+            unset($attributes['key'], $attributes['livewire:key']);
         }
 
         // Convert attributes to array format

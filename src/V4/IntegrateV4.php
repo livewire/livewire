@@ -78,7 +78,7 @@ class IntegrateV4
 
     protected function supportWireTagSyntax()
     {
-        app('blade.compiler')->precompiler(function ($string) {
+        app('blade.compiler')->prepareStringsForCompilationUsing(function ($string) {
             return app(WireTagCompiler::class)($string);
         });
     }
