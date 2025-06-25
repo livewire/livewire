@@ -8656,6 +8656,33 @@ var MessageBroker = class {
 var instance2 = new MessageBroker();
 var messageBroker_default = instance2;
 
+// js/v4/features/supportPaginators.js
+var paginatorObjects = /* @__PURE__ */ new WeakMap();
+function getPaginatorObject(component, paginator = { hasNextPage: false, hasPreviousPage: false }) {
+  let paginatorObject = paginatorObjects.get(component);
+  if (!paginatorObject) {
+    paginatorObject = Alpine.reactive({
+      hasNextPage: paginator.hasNextPage,
+      hasPreviousPage: paginator.hasPreviousPage,
+      nextPage: () => component.$wire.call("nextPage"),
+      previousPage: () => component.$wire.call("previousPage")
+    });
+  }
+  paginatorObjects.set(component, paginatorObject);
+  return paginatorObject;
+}
+on("effect", ({ component, effects, cleanup }) => {
+  let paginators = effects["paginators"];
+  if (!paginators)
+    return;
+  let paginator = paginators["page"];
+  if (!paginator)
+    return;
+  let paginatorObject = getPaginatorObject(component, paginator);
+  paginatorObject.hasNextPage = paginator.hasNextPage;
+  paginatorObject.hasPreviousPage = paginator.hasPreviousPage;
+});
+
 // js/$wire.js
 var properties = {};
 var fallback;
@@ -8770,18 +8797,7 @@ wireProperty("$ref", (component) => (name) => {
   return refEl.__livewire?.$wire;
 });
 wireProperty("$paginator", (component) => {
-  let paginator = component.snapshot.memo?.paginators?.default;
-  if (!paginator)
-    return null;
-  return {
-    hasNextPage: paginator?.hasNextPage,
-    hasPreviousPage: paginator?.hasPreviousPage,
-    nextPage: () => component.$wire.nextPage(),
-    previousPage: () => component.$wire.previousPage(),
-    gotoPage: (page) => component.$wire.gotoPage(page),
-    resetPage: () => component.$wire.resetPage(),
-    setPage: (page) => component.$wire.setPage(page)
-  };
+  return getPaginatorObject(component);
 });
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
@@ -11537,7 +11553,11 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     [attribute](e) {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs12.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+          let evaluator = import_alpinejs12.default.evaluateLater(el, "await $wire." + directive2.expression, { scope: { $event: e } });
+          el.setAttribute("data-loading", "true");
+          evaluator(() => {
+            el.removeAttribute("data-loading");
+          });
         });
       };
       if (el.__livewire_confirm) {

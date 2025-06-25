@@ -8,6 +8,7 @@ import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
 import requestBus from './v4/requests/requestBus'
 import messsageBroker from './v4/requests/messageBroker'
+import { getPaginatorObject } from './v4/features/supportPaginators'
 
 let properties = {}
 let fallback
@@ -161,19 +162,7 @@ wireProperty('$ref', (component) => (name) => {
 })
 
 wireProperty('$paginator', (component) => {
-    let paginator = component.snapshot.memo?.paginators?.default;
-
-    if (! paginator) return null
-
-    return {
-        hasNextPage: paginator?.hasNextPage,
-        hasPreviousPage: paginator?.hasPreviousPage,
-        nextPage: () => component.$wire.nextPage(),
-        previousPage: () => component.$wire.previousPage(),
-        gotoPage: (page) => component.$wire.gotoPage(page),
-        resetPage: () => component.$wire.resetPage(),
-        setPage: (page) => component.$wire.setPage(page),
-    }
+    return getPaginatorObject(component)
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {
