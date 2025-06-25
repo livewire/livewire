@@ -18,8 +18,18 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         [attribute](e) {
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
+                    // @todo: this is a V4 hack to get data-loading working...
                     // Forward these calls directly to $wire. Let them handle firing the request.
-                    Alpine.evaluate(el, '$wire.'+directive.expression, { scope: { $event: e }})
+                    let evaluator = Alpine.evaluateLater(
+                        el,
+                        'await $wire.'+directive.expression,
+                        { scope: { $event: e }},
+                    )
+
+                    el.setAttribute('data-loading', 'true')
+                    evaluator(result => {
+                        el.removeAttribute('data-loading')
+                    });
                 })
             }
 
