@@ -2,19 +2,30 @@ import { on } from '@/hooks'
 
 let paginatorObjects = new WeakMap
 
-export function getPaginatorObject(component, paginator = { hasNextPage: false, hasPreviousPage: false }) {
+export function getPaginatorObject(component) {
     let paginatorObject = paginatorObjects.get(component)
 
     if (! paginatorObject) {
         paginatorObject = Alpine.reactive({
-            hasNextPage: paginator.hasNextPage,
-            hasPreviousPage: paginator.hasPreviousPage,
-            nextPage: () => component.$wire.call('nextPage'),
-            previousPage: () => component.$wire.call('previousPage'),
-        })
-    }
+            renderedPages: [],
+            hasEarlier: false,
+            hasMore: false,
+            loadEarlier() {
+                let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b)
+                let leadingPage = sortedPages[0]
 
-    paginatorObjects.set(component, paginatorObject)
+                component.$wire.call('setPage', leadingPage - 1)
+            },
+            loadMore() {
+                let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b)
+                let trailingPage = sortedPages[sortedPages.length - 1]
+
+                component.$wire.call('setPage', trailingPage + 1)
+            }
+        })
+
+        paginatorObjects.set(component, paginatorObject)
+    }
 
     return paginatorObject
 }
@@ -29,8 +40,23 @@ on('effect', ({ component, effects, cleanup }) => {
 
     if (! paginator) return
 
-    let paginatorObject = getPaginatorObject(component, paginator)
+    let paginatorObject = getPaginatorObject(component)
 
-    paginatorObject.hasNextPage = paginator.hasNextPage
-    paginatorObject.hasPreviousPage = paginator.hasPreviousPage
+    applyPaginatorToReactiveObject(paginatorObject, paginator)
 })
+
+export function applyPaginatorToReactiveObject(paginatorObject, paginator) {
+    let currentPage = paginator.currentPage
+
+    paginatorObject.renderedPages.push(paginator.currentPage)
+
+    let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b)
+
+    if (sortedPages[sortedPages.length - 1] === currentPage) {
+        paginatorObject.hasMore = paginator.hasNextPage
+    }
+
+    if (sortedPages[0] === currentPage) {
+        paginatorObject.hasEarlier = paginator.hasPreviousPage
+    }
+}

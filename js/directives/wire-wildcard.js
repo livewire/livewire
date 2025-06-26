@@ -1,6 +1,7 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
+import { implicitIslandHook, wireIslandHook } from '@/v4/features/supportWireIsland'
 import Alpine from 'alpinejs'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
@@ -26,6 +27,11 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
                     )
 
                     el.setAttribute('data-loading', 'true')
+
+                    // @todo: this is a V4 hack to get wire:island working...
+                    wireIslandHook(el)
+
+                    implicitIslandHook(el)
 
                     evaluator(() => {
                         el.removeAttribute('data-loading')

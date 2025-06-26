@@ -38,7 +38,10 @@ trait HandlesIslands
         }
 
         if ($mode === null) {
-            $mode = ($this->isSubsequentRequest && $fromBladeDirective) ? 'skip' : 'replace';
+            $mode = 'replace';
+
+            // This is a potential default...
+            // $mode = ($this->isSubsequentRequest && $fromBladeDirective) ? 'skip' : 'replace';
         }
 
         if ($fromBladeDirective) {
@@ -74,9 +77,9 @@ trait HandlesIslands
 
     // This method is called from the frontend via: wire:click="$island('name...')"
     // This method has been whitelisted in HandleComponents.php
-    public function __island($name)
+    public function __island($name, $mode = null)
     {
-        $this->island($name);
+        $this->island($name, mode: $mode);
     }
 
     public function getIslands(): array

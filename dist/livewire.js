@@ -4790,17 +4790,26 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/v4/features/supportPaginators.js
   var paginatorObjects = /* @__PURE__ */ new WeakMap();
-  function getPaginatorObject(component, paginator = { hasNextPage: false, hasPreviousPage: false }) {
+  function getPaginatorObject(component) {
     let paginatorObject = paginatorObjects.get(component);
     if (!paginatorObject) {
       paginatorObject = Alpine.reactive({
-        hasNextPage: paginator.hasNextPage,
-        hasPreviousPage: paginator.hasPreviousPage,
-        nextPage: () => component.$wire.call("nextPage"),
-        previousPage: () => component.$wire.call("previousPage")
+        renderedPages: [],
+        hasEarlier: false,
+        hasMore: false,
+        loadEarlier() {
+          let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
+          let leadingPage = sortedPages[0];
+          component.$wire.call("setPage", leadingPage - 1);
+        },
+        loadMore() {
+          let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
+          let trailingPage = sortedPages[sortedPages.length - 1];
+          component.$wire.call("setPage", trailingPage + 1);
+        }
       });
+      paginatorObjects.set(component, paginatorObject);
     }
-    paginatorObjects.set(component, paginatorObject);
     return paginatorObject;
   }
   on2("effect", ({ component, effects, cleanup: cleanup2 }) => {
@@ -4810,10 +4819,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let paginator = paginators["page"];
     if (!paginator)
       return;
-    let paginatorObject = getPaginatorObject(component, paginator);
-    paginatorObject.hasNextPage = paginator.hasNextPage;
-    paginatorObject.hasPreviousPage = paginator.hasPreviousPage;
+    let paginatorObject = getPaginatorObject(component);
+    applyPaginatorToReactiveObject(paginatorObject, paginator);
   });
+  function applyPaginatorToReactiveObject(paginatorObject, paginator) {
+    let currentPage = paginator.currentPage;
+    paginatorObject.renderedPages.push(paginator.currentPage);
+    let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
+    if (sortedPages[sortedPages.length - 1] === currentPage) {
+      paginatorObject.hasMore = paginator.hasNextPage;
+    }
+    if (sortedPages[0] === currentPage) {
+      paginatorObject.hasEarlier = paginator.hasPreviousPage;
+    }
+  }
 
   // js/$wire.js
   var properties = {};
@@ -5193,8 +5212,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function skipIslandContents(el, toEl, skipUntil) {
     if (isStartMarker(el) && isStartMarker(toEl)) {
       let mode = extractIslandMode(toEl);
-      skipUntil((node) => isEndMarker(node));
-      if (mode === "skip") {
+      if (["skip", "once"].includes(mode)) {
         skipUntil((node) => isEndMarker(node));
       } else if (mode === "prepend") {
         let sibling = toEl.nextSibling;
@@ -9956,6 +9974,94 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/v4/requests/index.js
   requestBus_default.boot();
 
+  // js/v4/features/supportWireIsland.js
+  var wireIslands = /* @__PURE__ */ new WeakMap();
+  directive2("island", ({ el, directive: directive3 }) => {
+    let name = directive3.expression ?? "default";
+    let mode = directive3.modifiers.includes("append") ? "append" : directive3.modifiers.includes("prepend") ? "prepend" : "replace";
+    wireIslands.set(el, {
+      name,
+      mode
+    });
+  });
+  function wireIslandHook(el) {
+    if (!wireIslands.has(el))
+      return;
+    let { name, mode } = wireIslands.get(el);
+    Alpine.evaluate(el, `$wire.call('__island', '${name}', '${mode}')`);
+  }
+  function implicitIslandHook(el) {
+    let name = closestIslandName(el);
+    if (!name)
+      return;
+    Alpine.evaluate(el, `$wire.call('__island', '${name}')`);
+  }
+  function closestIslandName(el) {
+    let current = el;
+    while (current) {
+      let sibling = current.previousSibling;
+      while (sibling) {
+        if (isEndMarker3(sibling)) {
+          break;
+        }
+        if (isStartMarker3(sibling)) {
+          return extractIslandName(sibling);
+        }
+        sibling = sibling.previousSibling;
+      }
+      current = current.parentElement;
+      if (current && current.hasAttribute("wire:id")) {
+        break;
+      }
+    }
+    return null;
+  }
+  function isStartMarker3(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+  }
+  function isEndMarker3(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+  }
+  function extractIslandName(el) {
+    let name = el.textContent.match(/\[if ISLAND:(\w+):.*\]/)?.[1];
+    return name || "default";
+  }
+
+  // js/v4/features/supportWireIntersect.js
+  var shouldPreserveScroll = false;
+  on2("commit", ({ component, respond }) => {
+    respond(() => {
+      if (shouldPreserveScroll) {
+        let oldHeight = document.body.scrollHeight;
+        let oldScroll = window.scrollY;
+        setTimeout(() => {
+          let heightDiff = document.body.scrollHeight - oldHeight;
+          window.scrollTo(0, oldScroll + heightDiff);
+          shouldPreserveScroll = false;
+        });
+      }
+    });
+  });
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:intersect")) {
+        let { name, value } = el.attributes[i];
+        let modifierString = name.split("wire:intersect")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        let evaluator = module_default.evaluateLater(el, expression);
+        module_default.bind(el, {
+          ["x-intersect" + modifierString]() {
+            wireIslandHook(el);
+            if (modifierString.includes(".preserve-scroll")) {
+              shouldPreserveScroll = true;
+            }
+            evaluator();
+          }
+        });
+      }
+    }
+  });
+
   // js/features/supportListeners.js
   on2("effect", ({ component, effects }) => {
     registerListeners(component, effects.listeners || []);
@@ -10652,6 +10758,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           callAndClearComponentDebounces(component, () => {
             let evaluator = module_default.evaluateLater(el, "await $wire." + directive3.expression, { scope: { $event: e } });
             el.setAttribute("data-loading", "true");
+            wireIslandHook(el);
+            implicitIslandHook(el);
             evaluator(() => {
               el.removeAttribute("data-loading");
             });
