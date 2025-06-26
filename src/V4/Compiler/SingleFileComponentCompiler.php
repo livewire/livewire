@@ -226,51 +226,94 @@ class SingleFileComponentCompiler extends Mechanism
 
     protected function extractInlineIslands(string $content, array &$inlineIslands): string
     {
-        // Pattern to handle @island('name', ...), @island(namedParam: 'value', ...), and bare @island
-        $pattern = '/@island\s*(?:\((.*?)\))?(.*?)@endisland/s';
+        $pass = 0;
+        while (true) {
+            $pass++;
 
-        return preg_replace_callback($pattern, function ($matches) use (&$inlineIslands) {
-            $parameters = isset($matches[1]) ? trim($matches[1]) : '';
-            $islandContent = trim($matches[2]);
-
-            // Handle different parameter formats
-            if (!empty($parameters)) {
-                // Try to extract explicit name first (old format)
-                if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
-                    // Has explicit quoted name as first parameter
-                    $islandName = $paramMatches[1];
-                    $islandData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
-                } else {
-                    // No explicit name, generate one (handles named parameters like mode: 'hey')
-                    $islandName = uniqid('island_');
-                    $islandData = $parameters;
-                }
-            } else {
-                // Bare @island with no parameters at all
-                $islandName = uniqid('island_');
-                $islandData = '[]';
+            // Find all @island and @endisland positions
+            $positions = [];
+            $pattern = '/@island|@endisland/';
+            preg_match_all($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
+            foreach ($matches[0] as $match) {
+                $positions[] = [
+                    'type' => $match[0],
+                    'pos' => $match[1],
+                ];
             }
 
-            // Generate a unique view name for this island using content hash
-            $islandHash = substr(md5($islandContent . $islandName), 0, 8);
-            // Keep dashes in view name for consistency with tests
-            $islandViewName = 'livewire-compiled::island_' . $islandName . '_' . $islandHash;
-            // Keep dashes in file name too (tests expect this)
-            $islandFileName = 'island_' . $islandName . '_' . $islandHash . '.blade.php';
+            // Pair @island and @endisland tags using a stack
+            $stack = [];
+            $pairs = [];
+            foreach ($positions as $entry) {
+                if ($entry['type'] === '@island') {
+                    $stack[] = $entry['pos'];
+                } else {
+                    $start = array_pop($stack);
+                    if ($start !== null) {
+                        $pairs[] = [ 'start' => $start, 'end' => $entry['pos'] ];
+                    }
+                }
+            }
 
-            // Store the island information
-            $inlineIslands[] = [
-                'name' => $islandName,
-                'data' => $islandData,
-                'content' => $islandContent,
-                'viewName' => $islandViewName,
-                'fileName' => $islandFileName
-            ];
+            if (empty($pairs)) break;
 
-            // Replace with a reference to the compiled island view
-            $dataParam = $islandData !== '[]' ? ", {$islandData}" : '';
-            return "@island('{$islandName}', '{$islandViewName}'{$dataParam})";
-        }, $content);
+            // Sort pairs by start DESC so we replace innermost first
+            usort($pairs, function($a, $b) { return $b['start'] <=> $a['start']; });
+            foreach ($pairs as $pair) {
+                // First, extract the block from the original content using the pair positions
+                $islandBlock = substr($content, $pair['start'], $pair['end'] - $pair['start'] + 10); // 10 = strlen('@endisland')
+
+                // Find the @endisland directive within this block
+                $endDirectivePos = strpos($islandBlock, '@endisland');
+                if ($endDirectivePos === false) {
+                    continue; // Skip if we can't find the end directive
+                }
+
+                // Calculate the actual end position in the original content
+                $endPos = $pair['start'] + $endDirectivePos + 10; // 10 = strlen('@endisland')
+
+                // Re-extract the block with the correct end position
+                $islandBlock = substr($content, $pair['start'], $endPos - $pair['start']);
+
+                if (preg_match('/@island\s*(?:\((.*?)\))?(.*?)@endisland/s', $islandBlock, $matches)) {
+                    $parameters = isset($matches[1]) ? trim($matches[1]) : '';
+                    $islandContent = trim($matches[2]);
+
+                    // Handle different parameter formats
+                    if (!empty($parameters)) {
+                        if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
+                            $islandName = $paramMatches[1];
+                            $islandData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
+                        } else {
+                            $islandName = uniqid('island_');
+                            $islandData = $parameters;
+                        }
+                    } else {
+                        $islandName = uniqid('island_');
+                        $islandData = '[]';
+                    }
+
+                    $islandHash = substr(md5($islandContent . $islandName), 0, 8);
+                    $islandViewName = 'livewire-compiled::island_' . $islandName . '_' . $islandHash;
+                    $islandFileName = 'island_' . $islandName . '_' . $islandHash . '.blade.php';
+
+                    $inlineIslands[] = [
+                        'name' => $islandName,
+                        'data' => $islandData,
+                        'content' => $islandContent,
+                        'viewName' => $islandViewName,
+                        'fileName' => $islandFileName
+                    ];
+
+                    $dataParam = $islandData !== '[]' ? ", {$islandData}" : '';
+                    $replacement = "@placeholderisland('{$islandName}'{$dataParam})";
+
+                    $content = substr_replace($content, $replacement, $pair['start'], $endPos - $pair['start']);
+                }
+            }
+        }
+
+        return $content;
     }
 
     protected function parseLayoutData(string $arrayString): ?array
