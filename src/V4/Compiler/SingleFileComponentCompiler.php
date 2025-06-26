@@ -306,7 +306,7 @@ class SingleFileComponentCompiler extends Mechanism
                     ];
 
                     $dataParam = $islandData !== '[]' ? ", {$islandData}" : '';
-                    $replacement = "@placeholderisland('{$islandName}'{$dataParam})";
+                    $replacement = "@islandplaceholder('{$islandName}'{$dataParam})";
 
                     $content = substr_replace($content, $replacement, $pair['start'], $endPos - $pair['start']);
                 }

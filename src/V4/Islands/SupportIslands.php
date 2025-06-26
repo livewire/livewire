@@ -9,7 +9,7 @@ class SupportIslands extends ComponentHook
 {
     static function provide()
     {
-        Blade::directive('placeholderisland', function ($expression) {
+        Blade::directive('islandplaceholder', function ($expression) {
             // If expression doesn't start with a named parameter, prepend a random name
             if (static::expressionStartsWithNamedParameter($expression)) {
                 $randomName = "'" . uniqid('island_') . "'";
