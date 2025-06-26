@@ -7,7 +7,7 @@ use Livewire\Drawer\Utils as SyntheticUtils;
 
 use function Livewire\on;
 use function Livewire\store;
-use function Livewire\wrap;
+use function Livewire\invade;
 
 class SupportLegacyComputedPropertySyntax extends ComponentHook
 {
@@ -56,7 +56,7 @@ class SupportLegacyComputedPropertySyntax extends ComponentHook
 
         store($target)->push(
             'computedProperties',
-            $value = store($target)->find('computedProperties', $property, fn() => wrap($target)->$method()),
+            $value = store($target)->find('computedProperties', $property, fn() => invade($target)->withContainer()->$method()),
             $property,
         );
 
