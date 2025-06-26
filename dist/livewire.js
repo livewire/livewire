@@ -4797,6 +4797,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         renderedPages: [],
         hasEarlier: false,
         hasMore: false,
+        get hasNextPage() {
+          return paginatorObject.hasMore;
+        },
+        get hasPreviousPage() {
+          return paginatorObject.hasEarlier;
+        },
+        previousPage() {
+          paginatorObject.loadEarlier();
+        },
+        nextPage() {
+          paginatorObject.loadMore();
+        },
         loadEarlier() {
           let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
           let leadingPage = sortedPages[0];
