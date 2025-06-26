@@ -16,6 +16,7 @@ class SupportIslands extends ComponentHook
                 $expression = $randomName . ($expression ? ', ' . $expression : '');
             }
 
+            // @todo: Change this to `$__livewire` as `$_instance` is deprecated (see src/Mechanisms/HandleComponents/HandleComponents.php line 316)...
             return "<?php if (isset(\$_instance)) echo \$_instance->island({$expression}, fromBladeDirective: true); ?>";
         });
     }
