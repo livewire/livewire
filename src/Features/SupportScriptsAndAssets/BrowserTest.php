@@ -372,4 +372,50 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertDontSeeIn('@output', 'evaluated')
         ;
     }
+
+    public function test_why_alpine_data_automatically_syncing_with_form_variable()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public array $options = [];
+
+            public function render() {
+                return <<<'BLADE'
+                    <div x-data="testing">
+                        <div dusk="backendOption">@json($options)</div>
+
+                        <pre x-text="JSON.stringify($wire.options, null, 2)" dusk="livewireOptions"></pre>
+                        <pre x-text="JSON.stringify(options, null, 2)" dusk="options"></pre>
+                        <button x-on:click="addOption" dusk="addOption">Add</button>
+                        <button x-on:click="$wire.$refresh" dusk="refresh">Refresh</button>
+                    </div>
+
+                    @script
+                        <script>
+                            Alpine.data('testing', () => {
+                                return {
+                                    options: [],
+                                    init() {
+                                        this.options = this.$wire.options
+                                    },
+                                    addOption() {
+                                        this.options.push({
+                                            text: '',
+                                            explanation: '',
+                                            is_correct: false,
+                                        });
+                                    },
+                                };
+                            });
+                        </script>
+                    @endscript
+                BLADE;
+            }
+        })
+        ->click('@addOption')
+        ->pause(1000)
+        ->click('@refresh')
+        ->pause(1000)
+        ->assertSeeIn("@backendOption", '[{"text":"","explanation":"","is_correct":false}]')
+        ;
+    }
 }
