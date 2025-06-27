@@ -19,23 +19,39 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         [attribute](e) {
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    // @todo: this is a V4 hack to get data-loading working...
-                    let evaluator = Alpine.evaluateLater(
+                    console.log('fire', component, el, directive)
+                    // interceptors.track(component, el, directive)
+
+                    Alpine.evaluate(
                         el,
                         'await $wire.'+directive.expression,
-                        { scope: { $event: e }},
+                        { scope: { $event: e, directive: directive }},
                     )
 
-                    el.setAttribute('data-loading', 'true')
+                    // This issue is that this is resolving to `$wire.save()`
+                    // but that doesn't give us a chance to intercept the
+                    // call or add any of the other details like el or
+                    // directive.
+                    // What we really need to something like `$wire.action(el, directive, method, params)`
+                    // but how do we get the method and params from the expression?
 
-                    // @todo: this is a V4 hack to get wire:island working...
-                    wireIslandHook(el)
+                    // // @todo: this is a V4 hack to get data-loading working...
+                    // let evaluator = Alpine.evaluateLater(
+                    //     el,
+                    //     'await $wire.'+directive.expression,
+                    //     { scope: { $event: e }},
+                    // )
 
-                    implicitIslandHook(el)
+                    // el.setAttribute('data-loading', 'true')
 
-                    evaluator(() => {
-                        el.removeAttribute('data-loading')
-                    });
+                    // // @todo: this is a V4 hack to get wire:island working...
+                    // wireIslandHook(el)
+
+                    // implicitIslandHook(el)
+
+                    // evaluator(() => {
+                    //     el.removeAttribute('data-loading')
+                    // });
                 })
             }
 

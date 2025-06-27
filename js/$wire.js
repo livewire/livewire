@@ -9,6 +9,7 @@ import { on as hook } from './hooks'
 import requestBus from './v4/requests/requestBus'
 import messsageBroker from './v4/requests/messageBroker'
 import { getPaginatorObject } from './v4/features/supportPaginators'
+import interceptors from './v4/interceptors/interceptors'
 
 let properties = {}
 let fallback
@@ -38,6 +39,7 @@ let aliases = {
     'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
+    'intercept': '$intercept',
     'paginator': '$paginator',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
@@ -90,6 +92,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
     // we would want the entangle effect freed if the element was removed from the DOM...
     return new Proxy({}, {
         get(target, property) {
+            console.log('getting', property)
             if (! component) component = closestComponent(el)
 
             if (['$entangle', 'entangle'].includes(property)) {
@@ -163,6 +166,21 @@ wireProperty('$ref', (component) => (name) => {
 
 wireProperty('$paginator', (component) => {
     return getPaginatorObject(component)
+})
+
+wireProperty('$intercept', (component) => (method, callback) => {
+    console.log('intercept', method, callback)
+    interceptors.add(component, method, callback)
+})
+
+wireProperty('$action', (component) => (el, directive, e) => {
+    console.log('action', el, directive, e)
+
+    Alpine.evaluateLater(
+        el,
+        'await $wire.'+directive.expression,
+        { scope: { $event: e }}
+    )
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {
@@ -258,6 +276,7 @@ export function overrideMethod(component, method, callback) {
 }
 
 wireFallback((component) => (property) => async (...params) => {
+    console.log('fallback', property, params)
     // If this method is passed directly to a Vue or Alpine
     // event listener (@click="someMethod") without using
     // parens, strip out the automatically added event.
