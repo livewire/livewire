@@ -76,9 +76,12 @@ class LivewireManager
 
     function route($uri, $component)
     {
-        $instance = $this->new($component);
-
-        return \Illuminate\Support\Facades\Route::get($uri, $instance::class);
+        return \Illuminate\Support\Facades\Route::get($uri, function () use ($component) {
+            return app()->call([
+                app(LivewireManager::class)->new($component),
+                '__invoke',
+            ]);
+        });
     }
 
     function mount($name, $params = [], $key = null, $slots = [])

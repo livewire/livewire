@@ -2,9 +2,11 @@
 
 namespace Livewire\V4;
 
+use Livewire\V4\Tailwind\Merge;
 use Livewire\V4\Slots\SupportSlots;
 use Livewire\V4\Registry\ComponentViewPathResolver;
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
+use Illuminate\View\ComponentAttributeBag;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Blade;
 
@@ -15,8 +17,6 @@ class IntegrateV4
 
     public function __construct()
     {
-        $supportedExtensions = ['.blade.php', '.wire.php'];
-
         app()->alias(ComponentViewPathResolver::class, 'livewire.resolver');
         app()->singleton(ComponentViewPathResolver::class);
         $this->finder = app('livewire.resolver');
@@ -29,13 +29,14 @@ class IntegrateV4
         $this->supportRoutingMacro();
         $this->supportSingleFileComponents();
         $this->supportWireTagSyntax();
+        $this->supportTailwindMacro();
         $this->registerSlotDirectives();
         $this->registerSlotsSupport();
     }
 
     protected function supportRoutingMacro()
     {
-        Route::macro('wire', function ($uri, $view) {
+        Route::macro('livewire', function ($uri, $view) {
             if (class_exists($view)) {
                 return Route::get($uri, $view);
             }
@@ -46,7 +47,7 @@ class IntegrateV4
 
     protected function supportSingleFileComponents()
     {
-        app('view')->addNamespace('livewire-compiled', storage_path('framework/livewire/views'));
+        app('view')->addNamespace('livewire-compiled', storage_path('framework/views/livewire/views'));
 
         app('view')->addNamespace('pages', resource_path('views/pages'));
         app('view')->addNamespace('layouts', resource_path('views/layouts'));
@@ -77,8 +78,21 @@ class IntegrateV4
 
     protected function supportWireTagSyntax()
     {
-        app('blade.compiler')->precompiler(function ($string) {
+        app('blade.compiler')->prepareStringsForCompilationUsing(function ($string) {
             return app(WireTagCompiler::class)($string);
+        });
+    }
+
+    protected function supportTailwindMacro()
+    {
+        ComponentAttributeBag::macro('tailwind', function ($weakClasses) {
+            $strongClasses = $this->attributes['class'] ?? '';
+
+            $weakClasses = is_array($weakClasses) ? implode(' ', $weakClasses) : $weakClasses;
+
+            $this->attributes['class'] = app(Merge::class)->merge($weakClasses, $strongClasses);
+
+            return $this;
         });
     }
 

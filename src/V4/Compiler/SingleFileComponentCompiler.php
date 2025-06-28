@@ -17,10 +17,10 @@ class SingleFileComponentCompiler extends Mechanism
 
     public function __construct(?string $cacheDirectory = null, ?array $supportedExtensions = null)
     {
-        $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/livewire');
+        $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/views/livewire');
         $this->classesDirectory = $this->cacheDirectory . '/classes';
         $this->viewsDirectory = $this->cacheDirectory . '/views';
-        $this->supportedExtensions = $supportedExtensions ?: ['.blade.php', '.wire.php'];
+        $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php'];
 
         $this->ensureDirectoriesExist();
         $this->ensureCacheDirectoryIsGitIgnored();
@@ -47,6 +47,7 @@ class SingleFileComponentCompiler extends Mechanism
 
         // Parse the component...
         $parsed = $this->parseComponent($content);
+        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
 
         // Generate compilation result...
         $result = $this->generateCompilationResult($viewPath, $parsed, $hash);
@@ -59,6 +60,8 @@ class SingleFileComponentCompiler extends Mechanism
 
     public function isCompiled(string $viewPath, ?string $hash = null): bool
     {
+        $originalViewLastModified = File::lastModified($viewPath);
+
         if ($hash === null) {
             $content = File::get($viewPath);
             $hash = $this->generateHash($viewPath, $content);
@@ -69,7 +72,18 @@ class SingleFileComponentCompiler extends Mechanism
         $viewName = $this->generateViewName($viewPath, $hash);
         $viewPath = $this->getViewPath($viewName);
 
-        return file_exists($classPath) && file_exists($viewPath);
+        try {
+            $classLastModified = File::lastModified($classPath);
+            $viewLastModified = File::lastModified($viewPath);
+
+            return $originalViewLastModified <= $classLastModified && $originalViewLastModified <= $viewLastModified;
+        } catch (\ErrorException $exception) {
+            if (! File::exists($classPath) || ! File::exists($viewPath)) {
+                return false;
+            }
+
+            throw $exception;
+        }
     }
 
     public function getCompiledPath(string $viewPath): string
@@ -96,9 +110,9 @@ class SingleFileComponentCompiler extends Mechanism
             $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content);
         }
 
-        // Extract inline partials before processing component
-        $inlinePartials = [];
-        $content = $this->extractInlinePartials($content, $inlinePartials);
+        // Extract inline islands before processing component
+        $inlineIslands = [];
+        $content = $this->extractInlineIslands($content, $inlineIslands);
 
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
@@ -112,7 +126,7 @@ class SingleFileComponentCompiler extends Mechanism
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
@@ -134,7 +148,7 @@ class SingleFileComponentCompiler extends Mechanism
                 null,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
@@ -150,7 +164,7 @@ class SingleFileComponentCompiler extends Mechanism
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
@@ -172,60 +186,134 @@ class SingleFileComponentCompiler extends Mechanism
                 null,
                 $layoutTemplate,
                 $layoutData,
-                $inlinePartials
+                $inlineIslands
             );
         }
 
         throw new InvalidComponentException("Component must contain either @php(new ClassName) or @php...@endphp block");
     }
 
-    protected function extractInlinePartials(string $content, array &$inlinePartials): string
+    protected function loadExternalViewAndScriptIfRequired(string $viewPath, ParsedComponent $parsed): ParsedComponent
     {
-        // Pattern to handle @partial('name', ...), @partial(namedParam: 'value', ...), and bare @partial
-        $pattern = '/@partial\s*(?:\((.*?)\))?(.*?)@endpartial/s';
+        if ($parsed->viewContent !== '') {
+            return $parsed;
+        }
 
-        return preg_replace_callback($pattern, function ($matches) use (&$inlinePartials) {
-            $parameters = isset($matches[1]) ? trim($matches[1]) : '';
-            $partialContent = trim($matches[2]);
+        $viewFilePath = str_replace('.livewire.php', '.blade.php', $viewPath);
+        $scriptFilePath = str_replace('.livewire.php', '.js', $viewPath);
 
-            // Handle different parameter formats
-            if (!empty($parameters)) {
-                // Try to extract explicit name first (old format)
-                if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
-                    // Has explicit quoted name as first parameter
-                    $partialName = $paramMatches[1];
-                    $partialData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
-                } else {
-                    // No explicit name, generate one (handles named parameters like mode: 'hey')
-                    $partialName = uniqid('partial_');
-                    $partialData = $parameters;
-                }
-            } else {
-                // Bare @partial with no parameters at all
-                $partialName = uniqid('partial_');
-                $partialData = '[]';
+        if (! file_exists($viewFilePath)) {
+            return $parsed;
+        }
+
+        $parsed->viewContent = trim(File::get($viewFilePath));
+
+        if (! file_exists($scriptFilePath)) {
+            return $parsed;
+        }
+
+        $scriptFileContents = trim(File::get($scriptFilePath));
+
+        $parsed->viewContent .= <<< HTML
+        \n
+        <script>
+            {$scriptFileContents}
+        </script>
+        HTML;
+
+        return $parsed;
+    }
+
+    protected function extractInlineIslands(string $content, array &$inlineIslands): string
+    {
+        $pass = 0;
+        while (true) {
+            $pass++;
+
+            // Find all @island and @endisland positions
+            $positions = [];
+            $pattern = '/@island|@endisland/';
+            preg_match_all($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
+            foreach ($matches[0] as $match) {
+                $positions[] = [
+                    'type' => $match[0],
+                    'pos' => $match[1],
+                ];
             }
 
-            // Generate a unique view name for this partial using content hash
-            $partialHash = substr(md5($partialContent . $partialName), 0, 8);
-            // Keep dashes in view name for consistency with tests
-            $partialViewName = 'livewire-compiled::partial_' . $partialName . '_' . $partialHash;
-            // Keep dashes in file name too (tests expect this)
-            $partialFileName = 'partial_' . $partialName . '_' . $partialHash . '.blade.php';
+            // Pair @island and @endisland tags using a stack
+            $stack = [];
+            $pairs = [];
+            foreach ($positions as $entry) {
+                if ($entry['type'] === '@island') {
+                    $stack[] = $entry['pos'];
+                } else {
+                    $start = array_pop($stack);
+                    if ($start !== null) {
+                        $pairs[] = [ 'start' => $start, 'end' => $entry['pos'] ];
+                    }
+                }
+            }
 
-            // Store the partial information
-            $inlinePartials[] = [
-                'name' => $partialName,
-                'data' => $partialData,
-                'content' => $partialContent,
-                'viewName' => $partialViewName,
-                'fileName' => $partialFileName
-            ];
+            if (empty($pairs)) break;
 
-            // Replace with a reference to the compiled partial view
-            $dataParam = $partialData !== '[]' ? ", {$partialData}" : '';
-            return "@partial('{$partialName}', '{$partialViewName}'{$dataParam})";
-        }, $content);
+            // Sort pairs by start DESC so we replace innermost first
+            usort($pairs, function($a, $b) { return $b['start'] <=> $a['start']; });
+            foreach ($pairs as $pair) {
+                // First, extract the block from the original content using the pair positions
+                $islandBlock = substr($content, $pair['start'], $pair['end'] - $pair['start'] + 10); // 10 = strlen('@endisland')
+
+                // Find the @endisland directive within this block
+                $endDirectivePos = strpos($islandBlock, '@endisland');
+                if ($endDirectivePos === false) {
+                    continue; // Skip if we can't find the end directive
+                }
+
+                // Calculate the actual end position in the original content
+                $endPos = $pair['start'] + $endDirectivePos + 10; // 10 = strlen('@endisland')
+
+                // Re-extract the block with the correct end position
+                $islandBlock = substr($content, $pair['start'], $endPos - $pair['start']);
+
+                if (preg_match('/@island\s*(?:\((.*?)\))?(.*?)@endisland/s', $islandBlock, $matches)) {
+                    $parameters = isset($matches[1]) ? trim($matches[1]) : '';
+                    $islandContent = trim($matches[2]);
+
+                    // Handle different parameter formats
+                    if (!empty($parameters)) {
+                        if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
+                            $islandName = $paramMatches[1];
+                            $islandData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
+                        } else {
+                            $islandName = uniqid('island_');
+                            $islandData = $parameters;
+                        }
+                    } else {
+                        $islandName = uniqid('island_');
+                        $islandData = '[]';
+                    }
+
+                    $islandHash = substr(md5($islandContent . $islandName), 0, 8);
+                    $islandViewName = 'livewire-compiled::island_' . $islandName . '_' . $islandHash;
+                    $islandFileName = 'island_' . $islandName . '_' . $islandHash . '.blade.php';
+
+                    $inlineIslands[] = [
+                        'name' => $islandName,
+                        'data' => $islandData,
+                        'content' => $islandContent,
+                        'viewName' => $islandViewName,
+                        'fileName' => $islandFileName
+                    ];
+
+                    $dataParam = $islandData !== '[]' ? ", {$islandData}" : '';
+                    $replacement = "@islandplaceholder('{$islandName}'{$dataParam})";
+
+                    $content = substr_replace($content, $replacement, $pair['start'], $endPos - $pair['start']);
+                }
+            }
+        }
+
+        return $content;
     }
 
     protected function parseLayoutData(string $arrayString): ?array
@@ -263,9 +351,9 @@ class SingleFileComponentCompiler extends Mechanism
         // Always generate the view file...
         $this->generateView($result, $parsed);
 
-        // Generate partial view files if present...
-        if (!empty($parsed->inlinePartials)) {
-            $this->generatePartialViews($parsed);
+        // Generate island view files if present...
+        if (!empty($parsed->inlineIslands)) {
+            $this->generateIslandViews($parsed);
         }
 
         // Only generate class file for inline components...
@@ -274,25 +362,25 @@ class SingleFileComponentCompiler extends Mechanism
         }
     }
 
-    protected function generatePartialViews(ParsedComponent $parsed): void
+    protected function generateIslandViews(ParsedComponent $parsed): void
     {
-        foreach ($parsed->inlinePartials as $partial) {
-            $partialPath = $this->viewsDirectory . '/' . $partial['fileName'];
+        foreach ($parsed->inlineIslands as $island) {
+            $islandPath = $this->viewsDirectory . '/' . $island['fileName'];
 
-            $processedPartialContent = $partial['content'];
+            $processedIslandContent = $island['content'];
 
             // For inline components, add computed property guards instead of transforming
             if ($parsed->hasInlineClass()) {
                 $computedProperties = $this->extractComputedPropertyNames($parsed->frontmatter);
-                $usedComputedProperties = $this->extractUsedComputedProperties($processedPartialContent, $computedProperties);
+                $usedComputedProperties = $this->extractUsedComputedProperties($processedIslandContent, $computedProperties);
 
                 if (!empty($usedComputedProperties)) {
                     $guards = $this->generateComputedPropertyGuards($usedComputedProperties);
-                    $processedPartialContent = $guards . $processedPartialContent;
+                    $processedIslandContent = $guards . $processedIslandContent;
                 }
             }
 
-            File::put($partialPath, $processedPartialContent);
+            File::put($islandPath, $processedIslandContent);
         }
     }
 
@@ -341,8 +429,9 @@ class SingleFileComponentCompiler extends Mechanism
         $viewName = $result->viewName;
 
         // Extract use statements and class definition from frontmatter...
-        $useStatements = $this->extractUseStatements($parsed->frontmatter);
+        $preClassCode = $this->extractPreClassCode($parsed->frontmatter);
         $classBody = $this->extractClassBody($parsed->frontmatter);
+        $classLevelAttributes = $this->extractClassLevelAttributes($parsed->frontmatter);
 
         // Generate layout attribute if present
         $layoutAttribute = '';
@@ -350,25 +439,31 @@ class SingleFileComponentCompiler extends Mechanism
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
         }
 
-        // Generate partial lookup array if partials exist
-        $partialLookupProperty = '';
-        if (!empty($parsed->inlinePartials)) {
-            $partialLookupProperty = $this->generatePartialLookupProperty($parsed->inlinePartials);
+        // Generate island lookup property if islands exist
+        $islandLookupProperty = '';
+        if (!empty($parsed->inlineIslands)) {
+            $islandLookupProperty = $this->generateIslandLookupProperty($parsed->inlineIslands);
         }
 
-        // Build the use statements section
-        $useStatementsSection = '';
-        if (!empty($useStatements)) {
-            $useStatementsSection = implode("\n", $useStatements) . "\n\n";
+        // Build the pre-class code section (imports, constants, etc.)
+        $preClassSection = '';
+        if (!empty($preClassCode)) {
+            $preClassSection = $preClassCode . "\n\n";
+        }
+
+        // Build class-level attributes section
+        $classAttributesSection = '';
+        if (!empty($classLevelAttributes)) {
+            $classAttributesSection = implode("\n", $classLevelAttributes) . "\n";
         }
 
         $classContent = "<?php
 
 namespace {$namespace};
 
-{$useStatementsSection}{$layoutAttribute}class {$className} extends \\Livewire\\Component
+{$preClassSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
 {
-{$partialLookupProperty}{$classBody}
+{$islandLookupProperty}{$classBody}
 
     public function render()
     {
@@ -537,27 +632,60 @@ namespace {$namespace};
         return preg_replace($pattern, '$this->' . $propertyName, $viewContent);
     }
 
+    protected function extractPreClassCode(string $frontmatter): string
+    {
+        // Extract everything before the class definition (new class or class keyword)
+        // This includes use statements, constants, functions, etc.
+
+        // For anonymous classes, look for "new" keyword (which might be followed by attributes then "class")
+        // For named classes, look for the class keyword directly
+
+        $classPos = false;
+
+        // First try to find "new" keyword for anonymous classes
+        if (preg_match('/\bnew\s+/', $frontmatter, $matches, PREG_OFFSET_CAPTURE)) {
+            $classPos = $matches[0][1];
+        }
+        // If no "new" found, look for named class definition
+        elseif (preg_match('/\bclass\s+\w+/', $frontmatter, $matches, PREG_OFFSET_CAPTURE)) {
+            $classPos = $matches[0][1];
+        }
+
+        if ($classPos === false) {
+            return '';
+        }
+
+        // Extract everything before the class/new statement
+        $preClassCode = substr($frontmatter, 0, $classPos);
+
+        // Clean up the pre-class code
+        $preClassCode = trim($preClassCode);
+
+        // Remove any PHP opening tags that might be present
+        $preClassCode = preg_replace('/^<\?php\s*/', '', $preClassCode);
+
+        return trim($preClassCode);
+    }
+
     protected function extractUseStatements(string $frontmatter): array
     {
+        // This method is now deprecated in favor of extractPreClassCode
+        // Keeping it for backwards compatibility in case it's used elsewhere
+        $preClassCode = $this->extractPreClassCode($frontmatter);
+
+        if (empty($preClassCode)) {
+            return [];
+        }
+
+        // Extract individual use statements from the pre-class code for backwards compatibility
+        $lines = explode("\n", $preClassCode);
         $useStatements = [];
 
-        // First, extract the class definition part to exclude trait usage inside the class
-        $classBody = '';
-        if (preg_match('/new\s+class.*?\{(.*)\}/s', $frontmatter, $matches)) {
-            $classBody = $matches[1];
-        } elseif (preg_match('/class\s+\w+.*?\{(.*)\}/s', $frontmatter, $matches)) {
-            $classBody = $matches[1];
-        }
-
-        // Extract everything outside the class body (imports)
-        $frontmatterWithoutClassBody = $frontmatter;
-        if (!empty($classBody)) {
-            $frontmatterWithoutClassBody = str_replace($classBody, '', $frontmatter);
-        }
-
-        // Match use statements only in the non-class portion (imports, not trait usage)
-        if (preg_match_all('/use\s+[A-Za-z0-9\\\\]+(?:\s+as\s+[A-Za-z0-9_]+)?;/m', $frontmatterWithoutClassBody, $matches)) {
-            $useStatements = $matches[0];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (preg_match('/^use\s+/', $line)) {
+                $useStatements[] = $line;
+            }
         }
 
         return $useStatements;
@@ -580,7 +708,8 @@ namespace {$namespace};
 
     protected function generateHash(string $viewPath, string $content): string
     {
-        return substr(md5($viewPath . $content . filemtime($viewPath)), 0, 8);
+        // The v1 is a cache version number, the same as how Laravel handles it...
+        return hash('xxh128', 'v1'.$viewPath);
     }
 
     protected function generateClassName(string $viewPath, string $hash): string
@@ -628,6 +757,8 @@ namespace {$namespace};
     {
         $content = File::get($viewPath);
         $parsed = $this->parseComponent($content);
+        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
+
         return $this->generateCompilationResult($viewPath, $parsed, $hash);
     }
 
@@ -646,15 +777,38 @@ namespace {$namespace};
         }
     }
 
-    protected function generatePartialLookupProperty(array $inlinePartials): string
+    protected function generateIslandLookupProperty(array $inlineIslands): string
     {
         $lookupEntries = [];
-        foreach ($inlinePartials as $partial) {
-            $lookupEntries[] = "        '{$partial['name']}' => '{$partial['viewName']}'";
+        foreach ($inlineIslands as $island) {
+            $lookupEntries[] = "        '{$island['name']}' => '{$island['viewName']}'";
         }
 
         $lookupArray = "[\n" . implode(",\n", $lookupEntries) . "\n    ]";
 
-        return "    protected \$partialLookup = {$lookupArray};\n\n";
+        return "    protected \$islandLookup = {$lookupArray};\n\n";
+    }
+
+    protected function extractClassLevelAttributes(string $frontmatter): array
+    {
+        $attributes = [];
+
+        // Match attributes before the class keyword, handling both compact and spaced syntax
+        // Pattern explanation:
+        // - Match 'new' followed by optional whitespace and newlines
+        // - Capture any attributes (#[...]) that come after 'new' but before 'class'
+        // - Handle multiple attributes and various spacing/newline combinations
+        if (preg_match('/new\s*\n?\s*((?:#\[[^\]]*\]\s*\n?\s*)*)\s*class/s', $frontmatter, $matches)) {
+            $attributesBlock = trim($matches[1]);
+
+            if (!empty($attributesBlock)) {
+                // Extract individual attributes from the block
+                if (preg_match_all('/#\[[^\]]*\]/', $attributesBlock, $attributeMatches)) {
+                    $attributes = $attributeMatches[0];
+                }
+            }
+        }
+
+        return $attributes;
     }
 }

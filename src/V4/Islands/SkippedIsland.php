@@ -1,11 +1,11 @@
 <?php
 
-namespace Livewire\V4\Partials;
+namespace Livewire\V4\Islands;
 
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;
 
-class SkippedPartial implements \Stringable, Htmlable, Jsonable
+class SkippedIsland implements \Stringable, Htmlable, Jsonable
 {
     public function __construct(
         public string $name,
@@ -13,8 +13,8 @@ class SkippedPartial implements \Stringable, Htmlable, Jsonable
 
     public function render()
     {
-        return "<!--[if PARTIAL:{$this->name}:skip]><![endif]-->"
-            . "<!--[if ENDPARTIAL:{$this->name}]><![endif]-->";
+        return "<!--[if ISLAND:{$this->name}:skip]><![endif]-->"
+            . "<!--[if ENDISLAND:{$this->name}]><![endif]-->";
     }
 
     public function toJson($options = 0)

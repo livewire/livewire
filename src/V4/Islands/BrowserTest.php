@@ -1,13 +1,13 @@
 <?php
 
-namespace Livewire\V4\Partials;
+namespace Livewire\V4\Islands;
 
 use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
-    public function test_can_reference_an_external_view_partial_and_it_inherits_scope()
+    public function test_can_reference_an_external_view_island_and_it_inherits_scope()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -16,7 +16,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public $counter = 0;
 
                 public function boot() {
-                    View::addNamespace('partials', __DIR__ . '/fixtures');
+                    View::addNamespace('islands', __DIR__ . '/fixtures');
                 }
 
                 public function changeItems()
@@ -25,7 +25,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     $this->items = ['baz', 'bob'];
 
-                    $this->partial('basic', 'partials::basic', ['otherCounter' => $this->counter + 5]);
+                    $this->island('basic', 'islands::basic', ['otherCounter' => $this->counter + 5]);
                 }
 
                 public function render() { return <<<'HTML'
@@ -39,7 +39,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     @endif
 
                     <div>
-                        @partial('basic', 'partials::basic', ['otherCounter' => $this->counter + 5])
+                        @island('basic', 'islands::basic', ['otherCounter' => $this->counter + 5])
                     </div>
                 </div>
                 HTML; }
@@ -60,35 +60,35 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_append_and_prepend_partials()
+    public function test_can_append_and_prepend_islands()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
                 public $items = ['foo', 'bar'];
 
                 public function boot() {
-                    View::addNamespace('partials', __DIR__ . '/fixtures');
+                    View::addNamespace('islands', __DIR__ . '/fixtures');
                 }
 
                 public function changeItems()
                 {
                     $this->items = ['baz', 'bob'];
 
-                    $this->partial('items', 'partials::items');
+                    $this->island('items', 'islands::items');
                 }
 
                 public function prependItems()
                 {
                     array_unshift($this->items, 'bar');
 
-                    $this->partial('items', 'partials::items', ['items' => ['bar']])->prepend();
+                    $this->island('items', 'islands::items', ['items' => ['bar']])->prepend();
                 }
 
                 public function appendItems()
                 {
                     array_push($this->items, 'lob');
 
-                    $this->partial('items', 'partials::items', ['items' => ['lob']])->append();
+                    $this->island('items', 'islands::items', ['items' => ['lob']])->append();
                 }
 
                 public function render() { return <<<'HTML'
@@ -98,7 +98,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <button wire:click="appendItems" dusk="append-button">Append Items</button>
 
                     <ul dusk="items">
-                        @partial('items', 'partials::items')
+                        @island('items', 'islands::items')
                     </ul>
                 </div>
                 HTML; }
@@ -114,7 +114,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_can_use_inline_partials()
+    public function test_can_use_inline_islands()
     {
         $this->markTestSkipped('This feature only works in single file components and we don\'t have a way to test those yet');
 
@@ -130,7 +130,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                     $this->items = ['baz', 'bob'];
 
-                    $this->partial('basic', ['otherCounter' => $this->counter + 5]);
+                    $this->island('basic', ['otherCounter' => $this->counter + 5]);
                 }
 
                 public function render() { return <<<'HTML'
@@ -144,7 +144,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                     @endif
 
                     <div>
-                        @partial('basic', ['otherCounter' => $this->counter + 5])
+                        @island('basic', ['otherCounter' => $this->counter + 5])
                             <div>
                                 <span dusk="other-counter">{{ $otherCounter }}</span>
 
@@ -152,7 +152,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                                     <div>{{ $item }}</div>
                                 @endforeach
                             </div>
-                        @endpartial
+                        @endisland
                     </div>
                 </div>
                 HTML; }

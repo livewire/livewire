@@ -77,7 +77,7 @@ new class extends Livewire\Component {
 
 #### Compiled Output (Generated View):
 ```php
-{{-- storage/framework/livewire/views/counter_abc123.blade.php --}}
+{{-- storage/framework/views/livewire/views/counter_abc123.blade.php --}}
 <div>
     Count: {{ $count }}
     <button wire:click="increment">Increment</button>

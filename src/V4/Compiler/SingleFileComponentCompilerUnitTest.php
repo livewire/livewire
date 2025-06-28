@@ -53,7 +53,7 @@ new class extends Livewire\Component {
     <button wire:click="increment">Increment</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -75,7 +75,7 @@ new class extends Livewire\Component {
     <button wire:click="increment">Increment</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -92,14 +92,14 @@ new class extends Livewire\Component {
         $this->expectException(CompilationException::class);
         $this->expectExceptionMessage('View file not found');
 
-        $this->compiler->compile('/non/existent/file.blade.php');
+        $this->compiler->compile('/non/existent/file.livewire.php');
     }
 
     public function test_throws_exception_for_invalid_component_without_php_block()
     {
         $componentContent = '<div>No PHP block</div>';
 
-        $viewPath = $this->tempPath . '/invalid.blade.php';
+        $viewPath = $this->tempPath . '/invalid.livewire.php';
         File::put($viewPath, $componentContent);
 
         $this->expectException(InvalidComponentException::class);
@@ -116,7 +116,7 @@ echo "This is not a class";
 
 <div>Invalid content</div>';
 
-        $viewPath = $this->tempPath . '/invalid.blade.php';
+        $viewPath = $this->tempPath . '/invalid.livewire.php';
         File::put($viewPath, $componentContent);
 
         $this->expectException(ParseException::class);
@@ -131,7 +131,7 @@ echo "This is not a class";
 
 <div>External with ::class</div>';
 
-        $viewPath = $this->tempPath . '/external.blade.php';
+        $viewPath = $this->tempPath . '/external.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -155,7 +155,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -180,7 +180,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -202,7 +202,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         // First compilation
@@ -229,10 +229,12 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent1);
 
         $result1 = $this->compiler->compile($viewPath);
+
+        $firstModified = filemtime($result1->classPath);
 
         // Change the content
         $componentContent2 = '@php
@@ -248,8 +250,11 @@ new class extends Livewire\Component {
 
         $result2 = $this->compiler->compile($viewPath);
 
-        $this->assertNotEquals($result1->hash, $result2->hash);
-        $this->assertNotEquals($result1->className, $result2->className);
+        $secondModified = filemtime($result2->classPath);
+
+        $this->assertEquals($result1->hash, $result2->hash);
+        $this->assertEquals($result1->className, $result2->className);
+        $this->assertNotEquals($firstModified, $secondModified); // File was regenerated
     }
 
     public function test_is_compiled_returns_true_for_compiled_component()
@@ -262,7 +267,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $this->assertFalse($this->compiler->isCompiled($viewPath));
@@ -282,7 +287,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -301,7 +306,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/my-special_component.blade.php';
+        $viewPath = $this->tempPath . '/my-special_component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -325,7 +330,7 @@ class Counter extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -344,7 +349,7 @@ $notAClass = "invalid";
 
 <div>Invalid</div>';
 
-        $viewPath = $this->tempPath . '/invalid.blade.php';
+        $viewPath = $this->tempPath . '/invalid.livewire.php';
         File::put($viewPath, $componentContent);
 
         // We need to manually trigger the parseComponent since the validation happens there
@@ -365,6 +370,120 @@ $notAClass = "invalid";
         $this->assertTrue(file_exists($newCacheDir . '/views'));
     }
 
+    public function test_can_compile_separate_view_and_script_files()
+    {
+        $componentClassContent = <<<'PHP'
+        <?php
+        new class extends Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+        }
+        ?>
+        PHP;
+
+        $componentViewContent = <<<'HTML'
+        <div>
+            Count: {{ $count }}
+            <button wire:click="increment">Increment</button>
+        </div>
+        HTML;
+
+        $componentScriptContent = <<<'JS'
+        console.log("Hello from script");
+        JS;
+
+        $classPath = $this->tempPath . '/counter.livewire.php';
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        $scriptPath = $this->tempPath . '/counter.js';
+        File::put($classPath, $componentClassContent);
+        File::put($viewPath, $componentViewContent);
+        File::put($scriptPath, $componentScriptContent);
+
+        $result = $this->compiler->compile($classPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertStringContainsString('Livewire\\Compiled\\Counter_', $result->className);
+        $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $viewContent = File::get($result->viewPath);
+
+        $this->assertStringContainsString(
+            <<<'HTML'
+            <div>
+                Count: {{ $count }}
+                <button wire:click="increment">Increment</button>
+            </div>
+
+
+            @script
+            <script>
+                console.log("Hello from script");
+            </script>
+            @endscript
+
+            HTML,
+            $viewContent
+        );
+    }
+
+    public function test_if_the_component_already_contains_html_then_dont_include_the_view()
+    {
+        $componentClassContent = <<<'PHP'
+        <?php
+        new class extends Livewire\Component {
+            public $count = 0;
+
+            public function increment()
+            {
+                $this->count++;
+            }
+        }
+        ?>
+
+        <div>
+            Inline content
+        </div>
+        PHP;
+
+        $componentViewContent = <<<'HTML'
+        <div>
+            External content
+        </div>
+        HTML;
+
+        $classPath = $this->tempPath . '/counter.livewire.php';
+        $viewPath = $this->tempPath . '/counter.blade.php';
+        File::put($classPath, $componentClassContent);
+        File::put($viewPath, $componentViewContent);
+
+        $result = $this->compiler->compile($classPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertStringContainsString('Livewire\\Compiled\\Counter_', $result->className);
+        $this->assertStringContainsString('livewire-compiled::counter_', $result->viewName);
+        $this->assertTrue(file_exists($result->classPath));
+        $this->assertTrue(file_exists($result->viewPath));
+
+        $viewContent = File::get($result->viewPath);
+
+        $this->assertStringContainsString(
+            <<<'HTML'
+            <div>
+                Inline content
+            </div>
+            HTML,
+            $viewContent
+        );
+    }
+
     public function test_can_compile_component_with_layout_directive()
     {
         $componentContent = '@layout(\'layouts.app\')
@@ -377,7 +496,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -401,7 +520,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -422,7 +541,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -440,7 +559,7 @@ new class extends Livewire\Component {
 
 <div>Admin Counter</div>';
 
-        $viewPath = $this->tempPath . '/admin-counter.blade.php';
+        $viewPath = $this->tempPath . '/admin-counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -465,7 +584,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/counter.blade.php';
+        $viewPath = $this->tempPath . '/counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -492,7 +611,7 @@ new class extends Livewire\Component {
     console.log("Hello from naked script");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-script.blade.php';
+        $viewPath = $this->tempPath . '/component-with-script.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -521,7 +640,7 @@ new class extends Livewire\Component {
 </script>
 @endscript';
 
-        $viewPath = $this->tempPath . '/component-with-wrapped-script.blade.php';
+        $viewPath = $this->tempPath . '/component-with-wrapped-script.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -553,7 +672,7 @@ new class extends Livewire\Component {
     console.log("Second script");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-multiple-scripts.blade.php';
+        $viewPath = $this->tempPath . '/component-with-multiple-scripts.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -583,7 +702,7 @@ new class extends Livewire\Component {
     console.log("Non-empty script");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-empty-scripts.blade.php';
+        $viewPath = $this->tempPath . '/component-with-empty-scripts.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -611,7 +730,7 @@ new class extends Livewire\Component {
     console.log("Script with attributes");
 </script>';
 
-        $viewPath = $this->tempPath . '/component-with-script-attributes.blade.php';
+        $viewPath = $this->tempPath . '/component-with-script-attributes.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -635,7 +754,7 @@ new class extends Livewire\Component {
     Count: {{ $count }}
 </div>';
 
-        $viewPath = $this->tempPath . '/component-without-script.blade.php';
+        $viewPath = $this->tempPath . '/component-without-script.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -646,7 +765,7 @@ new class extends Livewire\Component {
         $this->assertStringNotContainsString('@script', $viewContent);
     }
 
-    public function test_can_compile_component_with_inline_partials()
+    public function test_can_compile_component_with_inline_islands()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -657,16 +776,16 @@ new class extends Livewire\Component {
 <div>
     <h1>Items:</h1>
 
-    @partial("item-list")
+    @island("item-list")
     <ul>
         @foreach($items as $item)
             <li>{{ $item }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-partials.blade.php';
+        $viewPath = $this->tempPath . '/component-with-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -676,21 +795,21 @@ new class extends Livewire\Component {
 
         // Check that the main view content has been transformed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'item-list\', \'livewire-compiled::partial_item-list_', $viewContent);
-        $this->assertStringNotContainsString('@endpartial', $viewContent);
+        $this->assertStringContainsString('@island(\'item-list\', \'livewire-compiled::island_item-list_', $viewContent);
+        $this->assertStringNotContainsString('@endisland', $viewContent);
 
-        // Check that partial view file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_item-list_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island view file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_item-list_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        // Check partial content
-        $partialContent = File::get($partialFiles[0]);
-        $this->assertStringContainsString('<ul>', $partialContent);
-        $this->assertStringContainsString('@foreach($items as $item)', $partialContent);
-        $this->assertStringContainsString('<li>{{ $item }}</li>', $partialContent);
+        // Check island content
+        $islandContent = File::get($islandFiles[0]);
+        $this->assertStringContainsString('<ul>', $islandContent);
+        $this->assertStringContainsString('@foreach($items as $item)', $islandContent);
+        $this->assertStringContainsString('<li>{{ $item }}</li>', $islandContent);
     }
 
-    public function test_can_compile_component_with_inline_partials_with_data()
+    public function test_can_compile_component_with_inline_islands_with_data()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -699,24 +818,24 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("header", ["subtitle" => "Welcome"])
+    @island("header", ["subtitle" => "Welcome"])
     <h1>{{ $title }}</h1>
     <p>{{ $subtitle }}</p>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-partial-data.blade.php';
+        $viewPath = $this->tempPath . '/component-with-island-data.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
         // Check that the main view content includes the data parameter
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'header\', \'livewire-compiled::partial_header_', $viewContent);
+        $this->assertStringContainsString('@island(\'header\', \'livewire-compiled::island_header_', $viewContent);
         $this->assertStringContainsString('["subtitle" => "Welcome"]', $viewContent);
     }
 
-    public function test_can_compile_component_with_multiple_inline_partials()
+    public function test_can_compile_component_with_multiple_inline_islands()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -725,56 +844,56 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("header")
+    @island("header")
     <h1>Users</h1>
-    @endpartial
+    @endisland
 
-    @partial("user-list")
+    @island("user-list")
     <ul>
         @foreach($users as $user)
             <li>{{ $user }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 
-    @partial("footer")
+    @island("footer")
     <p>© 2024</p>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-multiple-partials.blade.php';
+        $viewPath = $this->tempPath . '/component-with-multiple-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that all partials were processed
+        // Check that all islands were processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'header\', \'livewire-compiled::partial_header_', $viewContent);
-        $this->assertStringContainsString('@partial(\'user-list\', \'livewire-compiled::partial_user-list_', $viewContent);
-        $this->assertStringContainsString('@partial(\'footer\', \'livewire-compiled::partial_footer_', $viewContent);
+        $this->assertStringContainsString('@island(\'header\', \'livewire-compiled::island_header_', $viewContent);
+        $this->assertStringContainsString('@island(\'user-list\', \'livewire-compiled::island_user-list_', $viewContent);
+        $this->assertStringContainsString('@island(\'footer\', \'livewire-compiled::island_footer_', $viewContent);
 
-        // Check that all partial files were created
-        $headerFiles = glob($this->cacheDir . '/views/partial_header_*.blade.php');
-        $userListFiles = glob($this->cacheDir . '/views/partial_user-list_*.blade.php');
-        $footerFiles = glob($this->cacheDir . '/views/partial_footer_*.blade.php');
+        // Check that all island files were created
+        $headerFiles = glob($this->cacheDir . '/views/island_header_*.blade.php');
+        $userListFiles = glob($this->cacheDir . '/views/island_user-list_*.blade.php');
+        $footerFiles = glob($this->cacheDir . '/views/island_footer_*.blade.php');
 
         $this->assertCount(1, $headerFiles);
         $this->assertCount(1, $userListFiles);
         $this->assertCount(1, $footerFiles);
     }
 
-    public function test_inline_partials_work_with_external_components()
+    public function test_inline_islands_work_with_external_components()
     {
         $componentContent = '@php(new App\Livewire\ExternalComponent)
 
 <div>
-    @partial("content")
+    @island("content")
     <h1>External Component</h1>
     <p>This is from an external component</p>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/external-with-partials.blade.php';
+        $viewPath = $this->tempPath . '/external-with-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -782,16 +901,16 @@ new class extends Livewire\Component {
         $this->assertTrue($result->isExternal);
         $this->assertEquals('App\Livewire\ExternalComponent', $result->externalClass);
 
-        // Check that partial was processed
+        // Check that island was processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'content\', \'livewire-compiled::partial_content_', $viewContent);
+        $this->assertStringContainsString('@island(\'content\', \'livewire-compiled::island_content_', $viewContent);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_content_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_content_*.blade.php');
+        $this->assertCount(1, $islandFiles);
     }
 
-    public function test_inline_partials_work_with_layout_directive()
+    public function test_inline_islands_work_with_layout_directive()
     {
         $componentContent = '@layout(\'layouts.app\')
 
@@ -802,12 +921,12 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("greeting")
+    @island("greeting")
     <h1>{{ $message }}</h1>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-layout-and-partials.blade.php';
+        $viewPath = $this->tempPath . '/component-with-layout-and-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -816,17 +935,17 @@ new class extends Livewire\Component {
         $classContent = File::get($result->classPath);
         $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.app\')]', $classContent);
 
-        // Check that partial was processed
+        // Check that island was processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'greeting\', \'livewire-compiled::partial_greeting_', $viewContent);
+        $this->assertStringContainsString('@island(\'greeting\', \'livewire-compiled::island_greeting_', $viewContent);
         $this->assertStringNotContainsString('@layout', $viewContent);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_greeting_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_greeting_*.blade.php');
+        $this->assertCount(1, $islandFiles);
     }
 
-    public function test_parsed_component_has_inline_partials_method()
+    public function test_parsed_component_has_inline_islands_method()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -835,27 +954,27 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("counter")
+    @island("counter")
     <span>{{ $count }}</span>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/test-parsed-partials.blade.php';
+        $viewPath = $this->tempPath . '/test-parsed-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         // We need to access the parseComponent method through reflection or by using compile
         $result = $this->compiler->compile($viewPath);
 
-        // Verify files were created which indicates partials were parsed
-        $partialFiles = glob($this->cacheDir . '/views/partial_counter_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Verify files were created which indicates islands were parsed
+        $islandFiles = glob($this->cacheDir . '/views/island_counter_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        // Verify the partial content
-        $partialContent = File::get($partialFiles[0]);
-        $this->assertStringContainsString('<span>{{ $count }}</span>', $partialContent);
+        // Verify the island content
+        $islandContent = File::get($islandFiles[0]);
+        $this->assertStringContainsString('<span>{{ $count }}</span>', $islandContent);
     }
 
-    public function test_component_without_inline_partials_works_as_before()
+    public function test_component_without_inline_islands_works_as_before()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -865,23 +984,23 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/no-partials.blade.php';
+        $viewPath = $this->tempPath . '/no-islands.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
         $this->assertInstanceOf(CompilationResult::class, $result);
 
-        // Check that no partial files were created
-        $partialFiles = glob($this->cacheDir . '/views/partial_*.blade.php');
-        $this->assertCount(0, $partialFiles);
+        // Check that no island files were created
+        $islandFiles = glob($this->cacheDir . '/views/island_*.blade.php');
+        $this->assertCount(0, $islandFiles);
 
         // Check view content is unchanged
         $viewContent = File::get($result->viewPath);
         $this->assertEquals('<div>Count: {{ $count }}</div>', $viewContent);
     }
 
-    public function test_generated_class_contains_partial_lookup_property()
+    public function test_generated_class_contains_island_lookup_property()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -890,33 +1009,33 @@ new class extends Livewire\Component {
 @endphp
 
 <div>
-    @partial("item-list")
+    @island("item-list")
     <ul>
         @foreach($items as $item)
             <li>{{ $item }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 
-    @partial("header")
+    @island("header")
     <h1>Items</h1>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/component-with-lookup.blade.php';
+        $viewPath = $this->tempPath . '/component-with-lookup.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that class file contains partialLookup property
+        // Check that class file contains islandLookup property
         $classContent = File::get($result->classPath);
 
-        $this->assertStringContainsString('protected $partialLookup = [', $classContent);
-        $this->assertStringContainsString("'item-list' => 'livewire-compiled::partial_item-list_", $classContent);
-        $this->assertStringContainsString("'header' => 'livewire-compiled::partial_header_", $classContent);
+        $this->assertStringContainsString('protected $islandLookup = [', $classContent);
+        $this->assertStringContainsString("'item-list' => 'livewire-compiled::island_item-list_", $classContent);
+        $this->assertStringContainsString("'header' => 'livewire-compiled::island_header_", $classContent);
     }
 
-    public function test_class_without_partials_does_not_have_lookup_property()
+    public function test_class_without_islands_does_not_have_lookup_property()
     {
         $componentContent = '@php
 new class extends Livewire\Component {
@@ -926,14 +1045,14 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/no-partials-class.blade.php';
+        $viewPath = $this->tempPath . '/no-islands-class.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that class file does NOT contain partialLookup property
+        // Check that class file does NOT contain islandLookup property
         $classContent = File::get($result->classPath);
-        $this->assertStringNotContainsString('partialLookup', $classContent);
+        $this->assertStringNotContainsString('islandLookup', $classContent);
     }
 
     public function test_preserves_use_statements_in_compiled_class()
@@ -958,7 +1077,7 @@ new class extends Livewire\Component {
     <h1>Chat</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/chat.blade.php';
+        $viewPath = $this->tempPath . '/chat.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1000,7 +1119,7 @@ new class extends Livewire\Component {
     <h1>User Profile</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/user-profile.blade.php';
+        $viewPath = $this->tempPath . '/user-profile.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1035,7 +1154,7 @@ new class extends Livewire\Component {
 
 <div>Count: {{ $count }}</div>';
 
-        $viewPath = $this->tempPath . '/simple-counter.blade.php';
+        $viewPath = $this->tempPath . '/simple-counter.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1061,7 +1180,7 @@ new class extends Livewire\Component {
     <h1>Post Component</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/post-component.blade.php';
+        $viewPath = $this->tempPath . '/post-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1102,7 +1221,7 @@ new class extends Livewire\Component {
     <button wire:click="addToCart">Add to Cart</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/product.blade.php';
+        $viewPath = $this->tempPath . '/product.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1137,7 +1256,7 @@ new class extends Livewire\Component {
     <h1>External Product Component</h1>
 </div>';
 
-        $viewPath = $this->tempPath . '/external-product.blade.php';
+        $viewPath = $this->tempPath . '/external-product.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1168,7 +1287,7 @@ new class extends Livewire\Component {
     <p>Total: ${{ $total }}</p>
 </div>';
 
-        $viewPath = $this->tempPath . '/cart.blade.php';
+        $viewPath = $this->tempPath . '/cart.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1183,7 +1302,7 @@ new class extends Livewire\Component {
         $this->assertStringNotContainsString('?>', $viewContent);
     }
 
-    public function test_traditional_php_tags_work_with_inline_partials()
+    public function test_traditional_php_tags_work_with_inline_islands()
     {
         $componentContent = '<?php
 new class extends Livewire\Component {
@@ -1192,31 +1311,31 @@ new class extends Livewire\Component {
 ?>
 
 <div>
-    @partial("fruit-list")
+    @island("fruit-list")
     <ul>
         @foreach($items as $item)
             <li>{{ $item }}</li>
         @endforeach
     </ul>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/fruit-component.blade.php';
+        $viewPath = $this->tempPath . '/fruit-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
 
-        // Check that partial was processed
+        // Check that island was processed
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@partial(\'fruit-list\', \'livewire-compiled::partial_fruit-list_', $viewContent);
+        $this->assertStringContainsString('@island(\'fruit-list\', \'livewire-compiled::island_fruit-list_', $viewContent);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_fruit-list_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created
+        $islandFiles = glob($this->cacheDir . '/views/island_fruit-list_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        // Check that class contains partial lookup
+        // Check that class contains island lookup
         $classContent = File::get($result->classPath);
-        $this->assertStringContainsString('protected $partialLookup = [', $classContent);
+        $this->assertStringContainsString('protected $islandLookup = [', $classContent);
     }
 
     /** @test */
@@ -1247,7 +1366,7 @@ new class extends Livewire\Component {
     Combined: {{ $computedProperty . $anotherComputed }}
 </div>';
 
-        $viewPath = $this->tempPath . '/computed-component.blade.php';
+        $viewPath = $this->tempPath . '/computed-component.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1292,7 +1411,7 @@ new class extends Livewire\Component {
     {{ $withSpaces }}
 </div>';
 
-        $viewPath = $this->tempPath . '/computed-syntaxes.blade.php';
+        $viewPath = $this->tempPath . '/computed-syntaxes.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1313,7 +1432,7 @@ new class extends Livewire\Component {
     {{ $computedProperty }}
 </div>';
 
-        $viewPath = $this->tempPath . '/external-computed.blade.php';
+        $viewPath = $this->tempPath . '/external-computed.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1340,7 +1459,7 @@ new class extends Livewire\Component {
     {{ $foo_bar }}
 </div>';
 
-        $viewPath = $this->tempPath . '/word-boundaries.blade.php';
+        $viewPath = $this->tempPath . '/word-boundaries.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1370,7 +1489,7 @@ new class extends Livewire\Component {
     {{ $computedProperty }}
 </div>';
 
-        $viewPath = $this->tempPath . '/reassigned-computed.blade.php';
+        $viewPath = $this->tempPath . '/reassigned-computed.livewire.php';
         File::put($viewPath, $viewContent);
 
         $this->expectException(\Livewire\V4\Compiler\Exceptions\CompilationException::class);
@@ -1405,7 +1524,7 @@ new class extends Livewire\Component {
     {{ $noVisibility }}
 </div>';
 
-        $viewPath = $this->tempPath . '/visibility-modifiers.blade.php';
+        $viewPath = $this->tempPath . '/visibility-modifiers.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1438,7 +1557,7 @@ new class extends Livewire\Component {
     {{ $computedMethod }}
 </div>';
 
-        $viewPath = $this->tempPath . '/non-computed-methods.blade.php';
+        $viewPath = $this->tempPath . '/non-computed-methods.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1478,7 +1597,7 @@ new class extends Livewire\Component {
     <button wire:click="addItem">Add Item ({{ $total }})</button>
 </div>';
 
-        $viewPath = $this->tempPath . '/complex-computed.blade.php';
+        $viewPath = $this->tempPath . '/complex-computed.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
@@ -1517,7 +1636,7 @@ new class extends Livewire\Component {
     {{ $links }}
 </div>';
 
-        $viewPath = $this->tempPath . '/paginated-component.blade.php';
+        $viewPath = $this->tempPath . '/paginated-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1565,7 +1684,7 @@ new class extends Livewire\Component {
     <div>{{ count($data) }} items</div>
 </div>';
 
-        $viewPath = $this->tempPath . '/multi-trait-component.blade.php';
+        $viewPath = $this->tempPath . '/multi-trait-component.livewire.php';
         File::put($viewPath, $componentContent);
 
         $result = $this->compiler->compile($viewPath);
@@ -1610,7 +1729,7 @@ new class extends Livewire\Component {
     }
 
     /** @test */
-    public function it_transforms_computed_properties_inside_inline_partials()
+    public function it_transforms_computed_properties_inside_inline_islands()
     {
         $viewContent = '@php
 new class extends Livewire\Component {
@@ -1631,98 +1750,422 @@ new class extends Livewire\Component {
 <div>
     Count: {{ $count }}
 
-    @partial("summary")
+    @island("summary")
         <p>Total: {{ $total }}</p>
         @if($isEmpty)
             <span>Empty state</span>
         @endif
         <span>Count again: {{ $count }}</span>
-    @endpartial
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/computed-with-partials.blade.php';
+        $viewPath = $this->tempPath . '/computed-with-islands.livewire.php';
         File::put($viewPath, $viewContent);
         $result = $this->compiler->compile($viewPath);
 
         // Check that the main view content has computed properties transformed
         $compiledViewContent = File::get($result->viewPath);
         $this->assertStringContainsString('Count: {{ $count }}', $compiledViewContent);
-        $this->assertStringContainsString('@partial(\'summary\', \'livewire-compiled::partial_summary_', $compiledViewContent);
+        $this->assertStringContainsString('@island(\'summary\', \'livewire-compiled::island_summary_', $compiledViewContent);
 
-        // Check that partial file was created and contains guard statements instead of transformed properties
-        $partialFiles = glob($this->cacheDir . '/views/partial_summary_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check that island file was created and contains guard statements instead of transformed properties
+        $islandFiles = glob($this->cacheDir . '/views/island_summary_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        $partialContent = File::get($partialFiles[0]);
+        $islandContent = File::get($islandFiles[0]);
 
         // Guard statements should be present at the top
-        $this->assertStringContainsString('<?php if (! isset($total)) $total = $this->total;', $partialContent);
-        $this->assertStringContainsString('if (! isset($isEmpty)) $isEmpty = $this->isEmpty;', $partialContent);
+        $this->assertStringContainsString('<?php if (! isset($total)) $total = $this->total;', $islandContent);
+        $this->assertStringContainsString('if (! isset($isEmpty)) $isEmpty = $this->isEmpty;', $islandContent);
 
-        // Original computed property references should remain unchanged in partial content
-        $this->assertStringContainsString('<p>Total: {{ $total }}</p>', $partialContent);
-        $this->assertStringContainsString('@if($isEmpty)', $partialContent);
+        // Original computed property references should remain unchanged in island content
+        $this->assertStringContainsString('<p>Total: {{ $total }}</p>', $islandContent);
+        $this->assertStringContainsString('@if($isEmpty)', $islandContent);
 
         // Regular properties should remain unchanged as before
-        $this->assertStringContainsString('<span>Count again: {{ $count }}</span>', $partialContent);
+        $this->assertStringContainsString('<span>Count again: {{ $count }}</span>', $islandContent);
 
-        // Computed properties should NOT be transformed to $this-> in partials anymore
-        $this->assertStringNotContainsString('{{ $this->total }}', $partialContent);
-        $this->assertStringNotContainsString('@if($this->isEmpty)', $partialContent);
+        // Computed properties should NOT be transformed to $this-> in islands anymore
+        $this->assertStringNotContainsString('{{ $this->total }}', $islandContent);
+        $this->assertStringNotContainsString('@if($this->isEmpty)', $islandContent);
     }
 
     /** @test */
-    public function it_allows_custom_data_to_override_computed_properties_in_partials()
+    public function it_allows_custom_data_to_override_computed_properties_in_islands()
     {
-        $viewContent = '@php
+        $componentContent = '@php
 new class extends Livewire\Component {
-    public $count = 5;
-
     #[Computed]
-    public function total() {
-        return $this->count * 10; // Would be 50
-    }
-
-    #[Computed]
-    public function status() {
-        return "computed";
+    public function greeting()
+    {
+        return "Hello World";
     }
 }
 @endphp
 
 <div>
-    @partial("summary", ["total" => 999, "status" => "custom"])
-        <p>Total: {{ $total }}</p>
-        <p>Status: {{ $status }}</p>
-        <p>Count: {{ $count }}</p>
-    @endpartial
+    <p>Main view: {{ $greeting }}</p>
+
+    @island(greeting: "Custom greeting")
+        <p>Island view: {{ $greeting }}</p>
+    @endisland
 </div>';
 
-        $viewPath = $this->tempPath . '/custom-data-partial.blade.php';
-        File::put($viewPath, $viewContent);
+        $viewPath = $this->tempPath . '/test.livewire.php';
+        File::put($viewPath, $componentContent);
+
         $result = $this->compiler->compile($viewPath);
 
-        // Check that partial file was created
-        $partialFiles = glob($this->cacheDir . '/views/partial_summary_*.blade.php');
-        $this->assertCount(1, $partialFiles);
+        // Check main view content (should use transformation)
+        $viewContent = File::get($result->viewPath);
+        $this->assertStringContainsString('{{ $this->greeting }}', $viewContent);
 
-        $partialContent = File::get($partialFiles[0]);
+        // Check island file content (should use guard)
+        $islandFiles = glob($this->cacheDir . '/views/island_*.blade.php');
+        $this->assertCount(1, $islandFiles);
 
-        // Guard statements should be present for computed properties
-        $this->assertStringContainsString('if (! isset($total)) $total = $this->total;', $partialContent);
-        $this->assertStringContainsString('if (! isset($status)) $status = $this->status;', $partialContent);
+        $islandContent = File::get($islandFiles[0]);
+        $this->assertStringContainsString('<?php if (! isset($greeting)) $greeting = $this->greeting; ?>', $islandContent);
+        $this->assertStringContainsString('{{ $greeting }}', $islandContent);
+    }
 
-        // Computed property references should remain as-is (not transformed)
-        $this->assertStringContainsString('{{ $total }}', $partialContent);
-        $this->assertStringContainsString('{{ $status }}', $partialContent);
-        $this->assertStringContainsString('{{ $count }}', $partialContent);
+    public function test_can_compile_component_with_class_level_attributes_compact_syntax()
+    {
+        $componentContent = '@php
+new #[Layout(\'layouts.app\')] class extends Livewire\Component {
+    public $count = 0;
 
-        // Should NOT have transformed references
-        $this->assertStringNotContainsString('{{ $this->total }}', $partialContent);
-        $this->assertStringNotContainsString('{{ $this->status }}', $partialContent);
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
 
-        // Verify the main view includes the custom data
-        $compiledViewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('["total" => 999, "status" => "custom"]', $compiledViewContent);
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that the class-level attribute is preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_can_compile_component_with_class_level_attributes_spaced_syntax()
+    {
+        $componentContent = '@php
+new
+#[Layout(\'layouts.app\')]
+class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that the class-level attribute is preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_can_compile_component_with_multiple_class_level_attributes()
+    {
+        $componentContent = '@php
+new #[Layout(\'layouts.app\')] #[Lazy] class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that both class-level attributes are preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('#[Lazy]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_can_compile_component_with_multiple_class_level_attributes_spaced()
+    {
+        $componentContent = '@php
+new
+#[Layout(\'layouts.app\')]
+#[Lazy]
+class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that both class-level attributes are preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('#[Lazy]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_class_level_attributes_work_with_layout_directive()
+    {
+        $componentContent = '@layout(\'layouts.main\')
+
+@php
+new #[Lazy] class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that both @layout directive attribute and class-level attribute are present
+        $this->assertStringContainsString('#[\\Livewire\\Attributes\\Layout(\'layouts.main\')]', $classContent);
+        $this->assertStringContainsString('#[Lazy]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+    }
+
+    public function test_class_level_attributes_work_with_traditional_php_tags()
+    {
+        $componentContent = '<?php
+new #[Layout(\'layouts.app\')] class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+?>
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that the class-level attribute is preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.app\')]', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_component_without_class_level_attributes_works_as_before()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $this->assertInstanceOf(CompilationResult::class, $result);
+        $this->assertFalse($result->isExternal);
+        $this->assertTrue(file_exists($result->classPath));
+
+        $classContent = File::get($result->classPath);
+
+        // Check that no unexpected attributes are added
+        $this->assertStringNotContainsString('#[Layout', $classContent);
+        $this->assertStringNotContainsString('#[Lazy', $classContent);
+        $this->assertStringContainsString('class ' . $result->getShortClassName() . ' extends \\Livewire\\Component', $classContent);
+        $this->assertStringContainsString('public $count = 0;', $classContent);
+        $this->assertStringContainsString('public function increment()', $classContent);
+    }
+
+    public function test_preserves_grouped_import_statements()
+    {
+        $componentContent = '@php
+
+use App\Models\Post;
+use Livewire\Attributes\{Computed, Locked, Validate, Url, Session};
+use Illuminate\Support\{Str, Collection, Carbon};
+
+new class extends Livewire\Component {
+    public Post $post;
+    public Collection $items;
+
+    #[Computed]
+    #[Locked]
+    public function title()
+    {
+        return Str::title($this->post->title);
+    }
+
+    #[Validate(\'required\')]
+    #[Session]
+    public $sessionData = [];
+}
+@endphp
+
+<div>
+    <h1>{{ $title }}</h1>
+</div>';
+
+        $viewPath = $this->tempPath . '/grouped-imports.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that all import statements are preserved exactly as written
+        $this->assertStringContainsString('use App\Models\Post;', $classContent);
+        $this->assertStringContainsString('use Livewire\Attributes\{Computed, Locked, Validate, Url, Session};', $classContent);
+        $this->assertStringContainsString('use Illuminate\Support\{Str, Collection, Carbon};', $classContent);
+
+        // Check that class properties and methods are preserved
+        $this->assertStringContainsString('public Post $post;', $classContent);
+        $this->assertStringContainsString('public Collection $items;', $classContent);
+        $this->assertStringContainsString('#[Computed]', $classContent);
+        $this->assertStringContainsString('#[Locked]', $classContent);
+        $this->assertStringContainsString('public function title()', $classContent);
+        $this->assertStringContainsString('#[Validate(\'required\')]', $classContent);
+        $this->assertStringContainsString('#[Session]', $classContent);
+        $this->assertStringContainsString('public $sessionData = [];', $classContent);
+
+        // Verify structure is correct
+        $this->assertStringContainsString('namespace Livewire\Compiled;', $classContent);
+        $this->assertStringContainsString('extends \\Livewire\\Component', $classContent);
+    }
+
+    public function test_preserves_grouped_imports_with_class_level_attributes()
+    {
+        $componentContent = '@php
+
+use App\Models\{User, Post, Comment};
+use Livewire\Attributes\{Computed, Layout};
+
+new #[Layout(\'layouts.blog\')] class extends Livewire\Component {
+    public User $author;
+    public Post $post;
+
+    #[Computed]
+    public function commentCount()
+    {
+        return Comment::where(\'post_id\', $this->post->id)->count();
+    }
+}
+@endphp
+
+<div>
+    <h1>{{ $post->title }}</h1>
+    <p>By {{ $author->name }}</p>
+    <p>Comments: {{ $commentCount }}</p>
+</div>';
+
+        $viewPath = $this->tempPath . '/grouped-imports-with-attributes.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $classContent = File::get($result->classPath);
+
+        // Check that grouped imports are preserved
+        $this->assertStringContainsString('use App\Models\{User, Post, Comment};', $classContent);
+        $this->assertStringContainsString('use Livewire\Attributes\{Computed, Layout};', $classContent);
+
+        // Check that class-level attributes are preserved
+        $this->assertStringContainsString('#[Layout(\'layouts.blog\')]', $classContent);
+
+        // Check that method attributes are preserved
+        $this->assertStringContainsString('#[Computed]', $classContent);
+        $this->assertStringContainsString('public function commentCount()', $classContent);
+
+        // Check that properties are preserved
+        $this->assertStringContainsString('public User $author;', $classContent);
+        $this->assertStringContainsString('public Post $post;', $classContent);
     }
 }

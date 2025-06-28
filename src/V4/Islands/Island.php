@@ -1,13 +1,13 @@
 <?php
 
-namespace Livewire\V4\Partials;
+namespace Livewire\V4\Islands;
 
 use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Component;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;
 
-class Partial implements \Stringable, Htmlable, Jsonable
+class Island implements \Stringable, Htmlable, Jsonable
 {
     public function __construct(
         public string $name,
@@ -21,13 +21,16 @@ class Partial implements \Stringable, Htmlable, Jsonable
     {
         app(ExtendBlade::class)->startLivewireRendering($this->component);
 
+        // @todo: this is a hack to get the component instance into the view so nested components render due to the `if (isset(\$_instance))` check in the island Blade directive...
+        \Livewire\Drawer\Utils::shareWithViews('_instance', $this->component);
+
         $output = view($this->view, $this->data)->render();
 
         app(ExtendBlade::class)->endLivewireRendering();
 
-        return "<!--[if PARTIAL:{$this->name}:{$this->mode}]><![endif]-->"
+        return "<!--[if ISLAND:{$this->name}:{$this->mode}]><![endif]-->"
             . $output
-            . "<!--[if ENDPARTIAL:{$this->name}]><![endif]-->";
+            . "<!--[if ENDISLAND:{$this->name}]><![endif]-->";
     }
 
     public function prepend()

@@ -450,7 +450,7 @@ new class extends Livewire\Component {
 #### Initial Render (Server-Side)
 1. Parent component renders and encounters `<wire:modal>`
 2. Livewire extracts the slot content: `<form>...</form>`
-3. Child component renders normally, `{{ $slot }}` outputs the actual slot content wrapped in comment markers that denote the beginning and end of a slot so that we can track it in JS and not need a single root node. They should be like the partials or morph markers type format: `<!--[if SLOT:[slot-name][parent-component-id]]><![endif]-->...content...<!--[if ENDSLOT]><![endif]-->` (only imnclude parent component id if the parent is passed into ->withSlots()...)
+3. Child component renders normally, `{{ $slot }}` outputs the actual slot content wrapped in comment markers that denote the beginning and end of a slot so that we can track it in JS and not need a single root node. They should be like the islands or morph markers type format: `<!--[if SLOT:[slot-name][parent-component-id]]><![endif]-->...content...<!--[if ENDSLOT]><![endif]-->` (only imnclude parent component id if the parent is passed into ->withSlots()...)
 4. Browser receives complete HTML with slot content in place wrapped in markers.
 5. The child also has some new "memo" that is which slots were passed in - but just info about them like name and parent id
 

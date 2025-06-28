@@ -9,10 +9,11 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [x] [Add streaming improvements](streaming.md)
 - [x] [Livewire::route() for pages](livewire-route.md)
 - [ ] [Change Livewire::route() to Route::wire(...)](livewire-route.md)
-- [x] [Add partials](partials.md)
+- [x] [Add islands](islands.md)
 - [x] [Naked @script tags](naked-scripts.md)
 - [x] [Set `this` to `$wire` for `<scripts>`](this-wire.md)
 - [x] [Add `wire:ref`](wire-ref.md)
+- [ ] [Add `wire:submit.clear`](wire-submit-dot-clear.md)
 - [ ] [Add js interceptors](interceptors.md)
 - [x] [Add with() method](add-with-method.md)
 - [ ] [Remove with() method](remove-with-method.md)
@@ -46,7 +47,8 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [ ] [wire:submit with sending form data](wire-submit-form-data.md)
 
 ## Ill-defined
-* (laracon) [wire:loading / data-loading stuff?]
+* (laracon) [requests](requests.md)
+* (laracon) [wire:loading / data-loading stuff?](loading.md)
 * (laracon) [bailable/async/parralel requests]
 * (laracon) [static methods]
 * (laracon) [Sunset Volt](sunset-volt.md)
