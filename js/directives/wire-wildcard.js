@@ -1,6 +1,7 @@
 import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
+import { implicitIslandHook, wireIslandHook } from '@/v4/features/supportWireIsland'
 import Alpine from 'alpinejs'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
@@ -18,8 +19,23 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         [attribute](e) {
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    // Forward these calls directly to $wire. Let them handle firing the request.
-                    Alpine.evaluate(el, '$wire.'+directive.expression, { scope: { $event: e }})
+                    // @todo: this is a V4 hack to get data-loading working...
+                    let evaluator = Alpine.evaluateLater(
+                        el,
+                        'await $wire.'+directive.expression,
+                        { scope: { $event: e }},
+                    )
+
+                    el.setAttribute('data-loading', 'true')
+
+                    // @todo: this is a V4 hack to get wire:island working...
+                    wireIslandHook(el)
+
+                    implicitIslandHook(el)
+
+                    evaluator(() => {
+                        el.removeAttribute('data-loading')
+                    });
                 })
             }
 

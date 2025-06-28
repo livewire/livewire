@@ -1737,7 +1737,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function generateEvaluatorFromFunction(dataStack, func) {
       return (receiver = () => {
-      }, { scope: scope2 = {}, params = [] } = {}) => {
+      }, { scope: scope2 = {}, params = [], context } = {}) => {
         let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
         runIfTypeOfFunction(receiver, result);
       };
@@ -1769,12 +1769,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     function generateEvaluatorFromString(dataStack, expression, el) {
       let func = generateFunctionFromString(expression, el);
       return (receiver = () => {
-      }, { scope: scope2 = {}, params = [] } = {}) => {
+      }, { scope: scope2 = {}, params = [], context } = {}) => {
         func.result = void 0;
         func.finished = false;
         let completeScope = mergeProxies([scope2, ...dataStack]);
         if (typeof func === "function") {
-          let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
+          let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
           if (func.finished) {
             runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
             func.result = void 0;
@@ -2863,7 +2863,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       return obj;
     }
-    var Alpine23 = {
+    var Alpine24 = {
       get reactive() {
         return reactive;
       },
@@ -2929,7 +2929,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       data,
       bind: bind2
     };
-    var alpine_default = Alpine23;
+    var alpine_default = Alpine24;
     var import_reactivity10 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
@@ -3857,8 +3857,8 @@ var require_module_cjs2 = __commonJS({
       default: () => module_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("collapse", collapse3);
+    function src_default(Alpine24) {
+      Alpine24.directive("collapse", collapse3);
       collapse3.inline = (el, { modifiers }) => {
         if (!modifiers.includes("min"))
           return;
@@ -3878,7 +3878,7 @@ var require_module_cjs2 = __commonJS({
         if (!el._x_isShown)
           el.style.overflow = "hidden";
         let setFunction = (el2, styles) => {
-          let revertFunction = Alpine23.setStyles(el2, styles);
+          let revertFunction = Alpine24.setStyles(el2, styles);
           return styles.height ? () => {
           } : revertFunction;
         };
@@ -3901,7 +3901,7 @@ var require_module_cjs2 = __commonJS({
             if (current === full) {
               current = floor;
             }
-            Alpine23.transition(el, Alpine23.setStyles, {
+            Alpine24.transition(el, Alpine24.setStyles, {
               during: transitionStyles,
               start: { height: current + "px" },
               end: { height: full + "px" }
@@ -3915,7 +3915,7 @@ var require_module_cjs2 = __commonJS({
           }, after = () => {
           }) {
             let full = el.getBoundingClientRect().height;
-            Alpine23.transition(el, setFunction, {
+            Alpine24.transition(el, setFunction, {
               during: transitionStyles,
               start: { height: full + "px" },
               end: { height: floor + "px" }
@@ -4751,14 +4751,14 @@ var require_module_cjs3 = __commonJS({
     module.exports = __toCommonJS(module_exports);
     var import_focus_trap = __toESM2(require_focus_trap());
     var import_tabbable = __toESM2(require_dist());
-    function src_default(Alpine23) {
+    function src_default(Alpine24) {
       let lastFocused;
       let currentFocused;
       window.addEventListener("focusin", () => {
         lastFocused = currentFocused;
         currentFocused = document.activeElement;
       });
-      Alpine23.magic("focus", (el) => {
+      Alpine24.magic("focus", (el) => {
         let within = el;
         return {
           __noscroll: false,
@@ -4862,7 +4862,7 @@ var require_module_cjs3 = __commonJS({
           }
         };
       });
-      Alpine23.directive("trap", Alpine23.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
+      Alpine24.directive("trap", Alpine24.skipDuringClone((el, { expression, modifiers }, { effect, evaluateLater, cleanup }) => {
         let evaluator = evaluateLater(expression);
         let oldValue = false;
         let options = {
@@ -4980,7 +4980,7 @@ var require_module_cjs4 = __commonJS({
       persist: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
+    function src_default(Alpine24) {
       let persist3 = () => {
         let alias;
         let storage;
@@ -4995,11 +4995,11 @@ var require_module_cjs4 = __commonJS({
             setItem: dummy.set.bind(dummy)
           };
         }
-        return Alpine23.interceptor((initialValue, getter, setter, path, key) => {
+        return Alpine24.interceptor((initialValue, getter, setter, path, key) => {
           let lookup = alias || `_x_${path}`;
           let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
           setter(initial);
-          Alpine23.effect(() => {
+          Alpine24.effect(() => {
             let value = getter();
             storageSet(lookup, value, storage);
             setter(value);
@@ -5015,12 +5015,12 @@ var require_module_cjs4 = __commonJS({
           };
         });
       };
-      Object.defineProperty(Alpine23, "$persist", { get: () => persist3() });
-      Alpine23.magic("persist", persist3);
-      Alpine23.persist = (key, { get, set }, storage = localStorage) => {
+      Object.defineProperty(Alpine24, "$persist", { get: () => persist3() });
+      Alpine24.magic("persist", persist3);
+      Alpine24.persist = (key, { get, set }, storage = localStorage) => {
         let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
         set(initial);
-        Alpine23.effect(() => {
+        Alpine24.effect(() => {
           let value = get();
           storageSet(key, value, storage);
           set(value);
@@ -5069,8 +5069,8 @@ var require_module_cjs5 = __commonJS({
       intersect: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("intersect", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+    function src_default(Alpine24) {
+      Alpine24.directive("intersect", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluate = evaluateLater(expression);
         let options = {
           rootMargin: getRootMargin(modifiers),
@@ -5151,8 +5151,8 @@ var require_module_cjs6 = __commonJS({
       resize: () => src_default
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("resize", Alpine23.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
+    function src_default(Alpine24) {
+      Alpine24.directive("resize", Alpine24.skipDuringClone((el, { value, expression, modifiers }, { evaluateLater, cleanup }) => {
         let evaluator = evaluateLater(expression);
         let evaluate = (width, height) => {
           evaluator(() => {
@@ -6396,20 +6396,20 @@ var require_module_cjs7 = __commonJS({
         platform: platformWithCache
       });
     };
-    function src_default(Alpine23) {
-      Alpine23.magic("anchor", (el) => {
+    function src_default(Alpine24) {
+      Alpine24.magic("anchor", (el) => {
         if (!el._x_anchor)
           throw "Alpine: No x-anchor directive found on element using $anchor...";
         return el._x_anchor;
       });
-      Alpine23.interceptClone((from, to) => {
+      Alpine24.interceptClone((from, to) => {
         if (from && from._x_anchor && !to._x_anchor) {
           to._x_anchor = from._x_anchor;
         }
       });
-      Alpine23.directive("anchor", Alpine23.skipDuringClone((el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
+      Alpine24.directive("anchor", Alpine24.skipDuringClone((el, { expression, modifiers, value }, { cleanup, evaluate: evaluate2 }) => {
         let { placement, offsetValue, unstyled } = getOptions(modifiers);
-        el._x_anchor = Alpine23.reactive({ x: 0, y: 0 });
+        el._x_anchor = Alpine24.reactive({ x: 0, y: 0 });
         let reference = evaluate2(expression);
         if (!reference)
           throw "Alpine: no element provided to x-anchor...";
@@ -6763,113 +6763,155 @@ var require_module_cjs8 = __commonJS({
     module.exports = __toCommonJS(module_exports);
     function morph3(from, toHtml, options) {
       monkeyPatchDomSetAttributeToAllowAtSymbols();
-      let fromEl;
-      let toEl;
-      let key, lookahead, updating, updated, removing, removed, adding, added;
-      function assignOptions(options2 = {}) {
-        let defaultGetKey = (el) => el.getAttribute("key");
-        let noop = () => {
-        };
-        updating = options2.updating || noop;
-        updated = options2.updated || noop;
-        removing = options2.removing || noop;
-        removed = options2.removed || noop;
-        adding = options2.adding || noop;
-        added = options2.added || noop;
-        key = options2.key || defaultGetKey;
-        lookahead = options2.lookahead || false;
+      let context = createMorphContext(options);
+      let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+        toEl._x_dataStack = window.Alpine.closestDataStack(from);
+        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
       }
-      function patch(from2, to) {
-        if (differentElementNamesTypesOrKeys(from2, to)) {
-          return swapElements(from2, to);
+      context.patch(from, toEl);
+      return from;
+    }
+    function morphBetween(startMarker, endMarker, toHtml, options = {}) {
+      monkeyPatchDomSetAttributeToAllowAtSymbols();
+      let context = createMorphContext(options);
+      let fromContainer = startMarker.parentNode;
+      let fromBlock = new Block(startMarker, endMarker);
+      let toContainer = typeof toHtml === "string" ? (() => {
+        let container = document.createElement("div");
+        container.insertAdjacentHTML("beforeend", toHtml);
+        return container;
+      })() : toHtml;
+      let toStartMarker = document.createComment("[morph-start]");
+      let toEndMarker = document.createComment("[morph-end]");
+      toContainer.insertBefore(toStartMarker, toContainer.firstChild);
+      toContainer.appendChild(toEndMarker);
+      let toBlock = new Block(toStartMarker, toEndMarker);
+      if (window.Alpine && window.Alpine.closestDataStack) {
+        toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
+        toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
+      }
+      context.patchChildren(fromBlock, toBlock);
+    }
+    function createMorphContext(options = {}) {
+      let defaultGetKey = (el) => el.getAttribute("key");
+      let noop = () => {
+      };
+      let context = {
+        key: options.key || defaultGetKey,
+        lookahead: options.lookahead || false,
+        updating: options.updating || noop,
+        updated: options.updated || noop,
+        removing: options.removing || noop,
+        removed: options.removed || noop,
+        adding: options.adding || noop,
+        added: options.added || noop
+      };
+      context.patch = function(from, to) {
+        if (context.differentElementNamesTypesOrKeys(from, to)) {
+          return context.swapElements(from, to);
         }
         let updateChildrenOnly = false;
         let skipChildren = false;
-        if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
+        let skipUntil = (predicate) => context.skipUntilCondition = predicate;
+        if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
           return;
-        if (from2.nodeType === 1 && window.Alpine) {
-          window.Alpine.cloneNode(from2, to);
-          if (from2._x_teleport && to._x_teleport) {
-            patch(from2._x_teleport, to._x_teleport);
+        if (from.nodeType === 1 && window.Alpine) {
+          window.Alpine.cloneNode(from, to);
+          if (from._x_teleport && to._x_teleport) {
+            context.patch(from._x_teleport, to._x_teleport);
           }
         }
         if (textOrComment(to)) {
-          patchNodeValue(from2, to);
-          updated(from2, to);
+          context.patchNodeValue(from, to);
+          context.updated(from, to);
           return;
         }
         if (!updateChildrenOnly) {
-          patchAttributes(from2, to);
+          context.patchAttributes(from, to);
         }
-        updated(from2, to);
+        context.updated(from, to);
         if (!skipChildren) {
-          patchChildren(from2, to);
+          context.patchChildren(from, to);
         }
-      }
-      function differentElementNamesTypesOrKeys(from2, to) {
-        return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
-      }
-      function swapElements(from2, to) {
-        if (shouldSkip(removing, from2))
+      };
+      context.differentElementNamesTypesOrKeys = function(from, to) {
+        return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
+      };
+      context.swapElements = function(from, to) {
+        if (shouldSkip(context.removing, from))
           return;
         let toCloned = to.cloneNode(true);
-        if (shouldSkip(adding, toCloned))
+        if (shouldSkip(context.adding, toCloned))
           return;
-        from2.replaceWith(toCloned);
-        removed(from2);
-        added(toCloned);
-      }
-      function patchNodeValue(from2, to) {
+        from.replaceWith(toCloned);
+        context.removed(from);
+        context.added(toCloned);
+      };
+      context.patchNodeValue = function(from, to) {
         let value = to.nodeValue;
-        if (from2.nodeValue !== value) {
-          from2.nodeValue = value;
+        if (from.nodeValue !== value) {
+          from.nodeValue = value;
         }
-      }
-      function patchAttributes(from2, to) {
-        if (from2._x_transitioning)
+      };
+      context.patchAttributes = function(from, to) {
+        if (from._x_transitioning)
           return;
-        if (from2._x_isShown && !to._x_isShown) {
-          return;
-        }
-        if (!from2._x_isShown && to._x_isShown) {
+        if (from._x_isShown && !to._x_isShown) {
           return;
         }
-        let domAttributes = Array.from(from2.attributes);
+        if (!from._x_isShown && to._x_isShown) {
+          return;
+        }
+        let domAttributes = Array.from(from.attributes);
         let toAttributes = Array.from(to.attributes);
         for (let i = domAttributes.length - 1; i >= 0; i--) {
           let name = domAttributes[i].name;
           if (!to.hasAttribute(name)) {
-            from2.removeAttribute(name);
+            from.removeAttribute(name);
           }
         }
         for (let i = toAttributes.length - 1; i >= 0; i--) {
           let name = toAttributes[i].name;
           let value = toAttributes[i].value;
-          if (from2.getAttribute(name) !== value) {
-            from2.setAttribute(name, value);
+          if (from.getAttribute(name) !== value) {
+            from.setAttribute(name, value);
           }
         }
-      }
-      function patchChildren(from2, to) {
-        let fromKeys = keyToMap(from2.children);
+      };
+      context.patchChildren = function(from, to) {
+        let fromKeys = context.keyToMap(from.children);
         let fromKeyHoldovers = {};
         let currentTo = getFirstNode(to);
-        let currentFrom = getFirstNode(from2);
+        let currentFrom = getFirstNode(from);
         while (currentTo) {
           seedingMatchingId(currentTo, currentFrom);
-          let toKey = getKey(currentTo);
-          let fromKey = getKey(currentFrom);
+          let toKey = context.getKey(currentTo);
+          let fromKey = context.getKey(currentFrom);
+          if (context.skipUntilCondition) {
+            let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
+            let toDone = !currentTo || context.skipUntilCondition(currentTo);
+            if (fromDone && toDone) {
+              context.skipUntilCondition = null;
+            } else {
+              if (!fromDone)
+                currentFrom = currentFrom && getNextSibling(from, currentFrom);
+              if (!toDone)
+                currentTo = currentTo && getNextSibling(to, currentTo);
+              continue;
+            }
+          }
           if (!currentFrom) {
             if (toKey && fromKeyHoldovers[toKey]) {
               let holdover = fromKeyHoldovers[toKey];
-              from2.appendChild(holdover);
+              from.appendChild(holdover);
               currentFrom = holdover;
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             } else {
-              if (!shouldSkip(adding, currentTo)) {
+              if (!shouldSkip(context.adding, currentTo)) {
                 let clone = currentTo.cloneNode(true);
-                from2.appendChild(clone);
-                added(clone);
+                from.appendChild(clone);
+                context.added(clone);
               }
               currentTo = getNextSibling(to, currentTo);
               continue;
@@ -6881,7 +6923,7 @@ var require_module_cjs8 = __commonJS({
             let nestedIfCount = 0;
             let fromBlockStart = currentFrom;
             while (currentFrom) {
-              let next = getNextSibling(from2, currentFrom);
+              let next = getNextSibling(from, currentFrom);
               if (isIf(next)) {
                 nestedIfCount++;
               } else if (isEnd(next) && nestedIfCount > 0) {
@@ -6910,17 +6952,17 @@ var require_module_cjs8 = __commonJS({
             let toBlockEnd = currentTo;
             let fromBlock = new Block(fromBlockStart, fromBlockEnd);
             let toBlock = new Block(toBlockStart, toBlockEnd);
-            patchChildren(fromBlock, toBlock);
+            context.patchChildren(fromBlock, toBlock);
             continue;
           }
-          if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
+          if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
             let nextToElementSibling = getNextSibling(to, currentTo);
             let found = false;
             while (!found && nextToElementSibling) {
               if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
                 found = true;
-                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
-                fromKey = getKey(currentFrom);
+                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+                fromKey = context.getKey(currentFrom);
               }
               nextToElementSibling = getNextSibling(to, nextToElementSibling);
             }
@@ -6928,9 +6970,9 @@ var require_module_cjs8 = __commonJS({
           if (toKey !== fromKey) {
             if (!toKey && fromKey) {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from2, currentFrom);
+              currentFrom = getNextSibling(from, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
@@ -6938,7 +6980,7 @@ var require_module_cjs8 = __commonJS({
               if (fromKeys[toKey]) {
                 currentFrom.replaceWith(fromKeys[toKey]);
                 currentFrom = fromKeys[toKey];
-                fromKey = getKey(currentFrom);
+                fromKey = context.getKey(currentFrom);
               }
             }
             if (toKey && fromKey) {
@@ -6947,67 +6989,57 @@ var require_module_cjs8 = __commonJS({
                 fromKeyHoldovers[fromKey] = currentFrom;
                 currentFrom.replaceWith(fromKeyNode);
                 currentFrom = fromKeyNode;
-                fromKey = getKey(currentFrom);
+                fromKey = context.getKey(currentFrom);
               } else {
                 fromKeyHoldovers[fromKey] = currentFrom;
-                currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+                currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
                 fromKeyHoldovers[fromKey].remove();
-                currentFrom = getNextSibling(from2, currentFrom);
+                currentFrom = getNextSibling(from, currentFrom);
                 currentTo = getNextSibling(to, currentTo);
                 continue;
               }
             }
           }
-          let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
-          patch(currentFrom, currentTo);
+          let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
+          context.patch(currentFrom, currentTo);
           currentTo = currentTo && getNextSibling(to, currentTo);
           currentFrom = currentFromNext;
         }
         let removals = [];
         while (currentFrom) {
-          if (!shouldSkip(removing, currentFrom))
+          if (!shouldSkip(context.removing, currentFrom))
             removals.push(currentFrom);
-          currentFrom = getNextSibling(from2, currentFrom);
+          currentFrom = getNextSibling(from, currentFrom);
         }
         while (removals.length) {
           let domForRemoval = removals.shift();
           domForRemoval.remove();
-          removed(domForRemoval);
+          context.removed(domForRemoval);
         }
-      }
-      function getKey(el) {
-        return el && el.nodeType === 1 && key(el);
-      }
-      function keyToMap(els2) {
+      };
+      context.getKey = function(el) {
+        return el && el.nodeType === 1 && context.key(el);
+      };
+      context.keyToMap = function(els2) {
         let map = {};
         for (let el of els2) {
-          let theKey = getKey(el);
+          let theKey = context.getKey(el);
           if (theKey) {
             map[theKey] = el;
           }
         }
         return map;
-      }
-      function addNodeBefore(parent, node, beforeMe) {
-        if (!shouldSkip(adding, node)) {
+      };
+      context.addNodeBefore = function(parent, node, beforeMe) {
+        if (!shouldSkip(context.adding, node)) {
           let clone = node.cloneNode(true);
           parent.insertBefore(clone, beforeMe);
-          added(clone);
+          context.added(clone);
           return clone;
         }
         return node;
-      }
-      assignOptions(options);
-      fromEl = from;
-      toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-      if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-        toEl._x_dataStack = window.Alpine.closestDataStack(from);
-        toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
-      }
-      patch(from, toEl);
-      fromEl = void 0;
-      toEl = void 0;
-      return from;
+      };
+      return context;
     }
     morph3.step = () => {
     };
@@ -7018,9 +7050,9 @@ var require_module_cjs8 = __commonJS({
       hook(...args, () => skip = true);
       return skip;
     }
-    function shouldSkipChildren(hook, skipChildren, ...args) {
+    function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
       let skip = false;
-      hook(...args, () => skip = true, skipChildren);
+      hook(...args, () => skip = true, skipChildren, skipUntil);
       return skip;
     }
     var patched = false;
@@ -7103,8 +7135,9 @@ var require_module_cjs8 = __commonJS({
       to.setAttribute("id", fromId);
       to.id = fromId;
     }
-    function src_default(Alpine23) {
-      Alpine23.morph = morph3;
+    function src_default(Alpine24) {
+      Alpine24.morph = morph3;
+      Alpine24.morphBetween = morphBetween;
     }
     var module_default = src_default;
   }
@@ -7137,8 +7170,8 @@ var require_module_cjs9 = __commonJS({
       stripDown: () => stripDown
     });
     module.exports = __toCommonJS(module_exports);
-    function src_default(Alpine23) {
-      Alpine23.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
+    function src_default(Alpine24) {
+      Alpine24.directive("mask", (el, { value, expression }, { effect, evaluateLater, cleanup }) => {
         let templateFn = () => expression;
         let lastInputValue = "";
         queueMicrotask(() => {
@@ -7147,7 +7180,7 @@ var require_module_cjs9 = __commonJS({
             effect(() => {
               templateFn = (input) => {
                 let result;
-                Alpine23.dontAutoEvaluateFunctions(() => {
+                Alpine24.dontAutoEvaluateFunctions(() => {
                   evaluator((value2) => {
                     result = typeof value2 === "function" ? value2(input) : value2;
                   }, { scope: {
@@ -8105,6 +8138,7 @@ async function requestCall(component, method, params) {
 }
 async function sendRequest(pool) {
   let [payload, handleSuccess, handleFailure] = pool.payload();
+  window.controller = new AbortController();
   let options = {
     method: "POST",
     body: JSON.stringify({
@@ -8114,7 +8148,8 @@ async function sendRequest(pool) {
     headers: {
       "Content-type": "application/json",
       "X-Livewire": ""
-    }
+    },
+    signal: window.controller.signal
   };
   let succeedCallbacks = [];
   let failCallbacks = [];
@@ -8167,7 +8202,11 @@ async function sendRequest(pool) {
     if (response.status === 419) {
       handlePageExpiry();
     }
-    return showFailureModal(content);
+    if (response.aborted) {
+      return;
+    } else {
+      return showFailureModal(content);
+    }
   }
   if (response.redirected) {
     window.location.href = response.url;
@@ -8195,6 +8234,487 @@ function showFailureModal(content) {
 
 // js/$wire.js
 var import_alpinejs2 = __toESM(require_module_cjs());
+
+// js/v4/requests/requestBus.js
+var RequestBus = class {
+  booted = false;
+  requests = /* @__PURE__ */ new Set();
+  boot() {
+    this.booted = true;
+    console.log("v4 requests enabled");
+  }
+  add(request) {
+    this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
+    this.requests.add(request);
+    request.send();
+  }
+  remove(request) {
+    this.requests.delete(request);
+  }
+  cancelRequestsThatShouldBeCancelled(shouldCancel) {
+    this.requests.forEach((request) => {
+      if (shouldCancel(request)) {
+        request.cancel();
+      }
+    });
+  }
+};
+var instance = new RequestBus();
+var requestBus_default = instance;
+
+// js/v4/requests/message.js
+var Message = class {
+  updates = {};
+  actions = [];
+  payload = {};
+  resolvers = [];
+  status = "waiting";
+  succeedCallbacks = [];
+  failCallbacks = [];
+  respondCallbacks = [];
+  finishTarget = null;
+  request = null;
+  isolate = false;
+  constructor(component) {
+    this.component = component;
+  }
+  addAction(method, params, resolve) {
+    if (!this.isMagicAction(method)) {
+      this.removeAllMagicActions();
+    }
+    if (this.isMagicAction(method)) {
+      this.findAndRemoveAction(method);
+      this.actions.push({
+        method,
+        params,
+        handleReturn: () => {
+        }
+      });
+      this.resolvers.push(resolve);
+      return;
+    }
+    this.actions.push({
+      method,
+      params,
+      handleReturn: resolve
+    });
+  }
+  magicActions() {
+    return [
+      "$refresh",
+      "$set",
+      "$sync"
+    ];
+  }
+  isMagicAction(method) {
+    return this.magicActions().includes(method);
+  }
+  removeAllMagicActions() {
+    this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
+  }
+  findAndRemoveAction(method) {
+    this.actions = this.actions.filter((i) => i.method !== method);
+  }
+  cancelIfItShouldBeCancelled() {
+    if (this.isSucceeded())
+      return;
+    this.cancel();
+  }
+  buffer() {
+    this.status = "buffering";
+  }
+  prepare() {
+    trigger("message.prepare", { component: this.component });
+    this.status = "preparing";
+    this.updates = this.component.getUpdates();
+    let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+    this.payload = {
+      snapshot,
+      updates: this.updates,
+      calls: this.actions.map((i) => ({
+        method: i.method,
+        params: i.params
+      }))
+    };
+    this.finishTarget = trigger("commit", {
+      component: this.component,
+      commit: this.payload,
+      succeed: (callback) => {
+        this.succeedCallbacks.push(callback);
+      },
+      fail: (callback) => {
+        this.failCallbacks.push(callback);
+      },
+      respond: (callback) => {
+        this.respondCallbacks.push(callback);
+      }
+    });
+  }
+  respond() {
+    this.respondCallbacks.forEach((i) => i());
+  }
+  succeed(response) {
+    if (this.isCancelled())
+      return;
+    this.status = "succeeded";
+    this.respond();
+    let { snapshot, effects } = response;
+    this.component.mergeNewSnapshot(snapshot, effects, this.updates);
+    this.component.processEffects(this.component.effects);
+    this.resolvers.forEach((i) => i());
+    if (effects["returns"]) {
+      let returns = effects["returns"];
+      let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
+      returnHandlerStack.forEach((handleReturn, index) => {
+        handleReturn(returns[index]);
+      });
+    }
+    let parsedSnapshot = JSON.parse(snapshot);
+    this.finishTarget({ snapshot: parsedSnapshot, effects });
+    this.succeedCallbacks.forEach((i) => i(response));
+  }
+  fail() {
+    this.status = "failed";
+    this.respond();
+    this.failCallbacks.forEach((i) => i());
+  }
+  cancel() {
+    this.status = "cancelled";
+  }
+  isBuffering() {
+    return this.status === "buffering";
+  }
+  isPreparing() {
+    return this.status === "preparing";
+  }
+  isSucceeded() {
+    return this.status === "succeeded";
+  }
+  isCancelled() {
+    return this.status === "cancelled";
+  }
+  isFailed() {
+    return this.status === "failed";
+  }
+  isFinished() {
+    return this.isSucceeded() || this.isCancelled() || this.isFailed();
+  }
+};
+
+// js/v4/requests/request.js
+var Request = class {
+  controller = new AbortController();
+  respondCallbacks = [];
+  succeedCallbacks = [];
+  errorCallbacks = [];
+  cancel() {
+    this.controller.abort("cancelled");
+  }
+  finish() {
+    requestBus_default.remove(this);
+  }
+  isCancelled() {
+    return this.controller.signal.aborted;
+  }
+  cancelIfItShouldBeCancelled() {
+    console.error("cancelIfItShouldBeCancelled must be implemented");
+  }
+  shouldCancel() {
+    console.error("shouldCancel must be implemented");
+  }
+  async send() {
+    console.error("send must be implemented");
+  }
+  addRespondCallback(callback) {
+    this.respondCallbacks.push(callback);
+  }
+  addSucceedCallback(callback) {
+    this.succeedCallbacks.push(callback);
+  }
+  addErrorCallback(callback) {
+    this.errorCallbacks.push(callback);
+  }
+};
+
+// js/v4/requests/messageRequest.js
+var MessageRequest = class extends Request {
+  messages = /* @__PURE__ */ new Set();
+  finishProfile = null;
+  addMessage(message) {
+    this.messages.add(message);
+    message.request = this;
+  }
+  deleteMessage(message) {
+    this.messages.delete(message);
+  }
+  hasMessageFor(component) {
+    return !!this.findMessageByComponent(component);
+  }
+  findMessageByComponent(component) {
+    return Array.from(this.messages).find((message) => message.component.id === component.id);
+  }
+  isEmpty() {
+    return this.messages.size === 0;
+  }
+  shouldCancel() {
+    return (request) => {
+      return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
+    };
+  }
+  async send() {
+    let payload = {
+      _token: getCsrfToken(),
+      components: Array.from(this.messages, (i) => i.payload)
+    };
+    let options = {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-type": "application/json",
+        "X-Livewire": "1"
+      },
+      signal: this.controller.signal
+    };
+    this.finishProfile = trigger("request.profile", options);
+    let updateUri = getUpdateUri();
+    trigger("request", {
+      url: updateUri,
+      options,
+      payload: options.body,
+      respond: (i) => this.respondCallbacks.push(i),
+      succeed: (i) => this.succeedCallbacks.push(i),
+      fail: (i) => this.errorCallbacks.push(i)
+    });
+    let response;
+    try {
+      response = await fetch(updateUri, options);
+    } catch (e) {
+      this.finish();
+      this.error();
+      return;
+    }
+    this.finish();
+    let mutableObject = {
+      status: response.status,
+      response
+    };
+    this.respond(mutableObject);
+    response = mutableObject.response;
+    let content = await response.text();
+    if (!response.ok) {
+      this.fail(response, content);
+      return;
+    }
+    this.redirectIfNeeded(response);
+    await this.succeed(response, content);
+  }
+  redirectIfNeeded(response) {
+    if (response.redirected) {
+      window.location.href = response.url;
+    }
+  }
+  respond(mutableObject) {
+    this.respondCallbacks.forEach((i) => i(mutableObject));
+  }
+  async succeed(response, content) {
+    if (contentIsFromDump(content)) {
+      let dump;
+      [dump, content] = splitDumpFromContent(content);
+      showHtmlModal(dump);
+      this.finishProfile({ content: "{}", failed: true });
+    } else {
+      this.finishProfile({ content, failed: false });
+    }
+    let { components: components2, assets } = JSON.parse(content);
+    await triggerAsync("payload.intercept", { components: components2, assets });
+    this.messages.forEach((message) => {
+      components2.forEach((component) => {
+        let snapshot = JSON.parse(component.snapshot);
+        if (snapshot.memo.id === message.component.id) {
+          message.succeed(component);
+        }
+      });
+    });
+    this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
+  }
+  cancel() {
+    this.messages.forEach((message) => {
+      message.cancelIfItShouldBeCancelled();
+    });
+    super.cancel();
+  }
+  error() {
+    this.finishProfile({ content: "{}", failed: true });
+    let preventDefault = false;
+    this.messages.forEach((message) => {
+      message.fail();
+    });
+    this.errorCallbacks.forEach((i) => i({
+      status: 503,
+      content: null,
+      preventDefault: () => preventDefault = true
+    }));
+  }
+  fail(response, content) {
+    this.finishProfile({ content: "{}", failed: true });
+    let preventDefault = false;
+    this.messages.forEach((message) => {
+      message.fail();
+    });
+    this.errorCallbacks.forEach((i) => i({
+      status: response.status,
+      content,
+      preventDefault: () => preventDefault = true
+    }));
+    if (preventDefault)
+      return;
+    if (response.status === 419) {
+      this.handlePageExpiry();
+    }
+    if (response.aborted) {
+      return;
+    } else {
+      return this.showFailureModal(content);
+    }
+  }
+  handlePageExpiry() {
+    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+  }
+  showFailureModal(content) {
+    let html = content;
+    showHtmlModal(html);
+  }
+};
+
+// js/v4/requests/messageBroker.js
+var MessageBroker = class {
+  messages = /* @__PURE__ */ new Map();
+  getMessage(component) {
+    let message = this.messages.get(component.id);
+    if (!message) {
+      message = new Message(component);
+      this.messages.set(component.id, message);
+    }
+    return message;
+  }
+  addAction(component, method, params = []) {
+    let message = this.getMessage(component);
+    let promise = new Promise((resolve) => {
+      message.addAction(method, params, resolve);
+    });
+    this.send(message);
+    return promise;
+  }
+  send(message) {
+    this.bufferMessageForFiveMs(message);
+  }
+  bufferMessageForFiveMs(message) {
+    if (message.isBuffering())
+      return;
+    message.buffer();
+    setTimeout(() => {
+      this.prepareRequests();
+    }, 5);
+  }
+  prepareRequests() {
+    trigger("message.pooling", { messages: this.messages });
+    let messages = new Set(this.messages.values());
+    this.messages.clear();
+    if (messages.size === 0)
+      return;
+    messages.forEach((message) => {
+      message.prepare();
+    });
+    let requests = this.corraleMessagesIntoRequests(messages);
+    trigger("message.pooled", { requests });
+    this.sendRequests(requests);
+  }
+  corraleMessagesIntoRequests(messages) {
+    let requests = /* @__PURE__ */ new Set();
+    for (let message of messages) {
+      let hasFoundRequest = false;
+      requests.forEach((request) => {
+        if (!hasFoundRequest && !message.isolate) {
+          request.addMessage(message);
+          hasFoundRequest = true;
+        }
+      });
+      if (!hasFoundRequest) {
+        let request = new MessageRequest();
+        request.addMessage(message);
+        requests.add(request);
+      }
+    }
+    return requests;
+  }
+  sendRequests(requests) {
+    requests.forEach((request) => {
+      requestBus_default.add(request);
+    });
+  }
+};
+var instance2 = new MessageBroker();
+var messageBroker_default = instance2;
+
+// js/v4/features/supportPaginators.js
+var paginatorObjects = /* @__PURE__ */ new WeakMap();
+function getPaginatorObject(component) {
+  let paginatorObject = paginatorObjects.get(component);
+  if (!paginatorObject) {
+    paginatorObject = Alpine.reactive({
+      renderedPages: [],
+      hasEarlier: false,
+      hasMore: false,
+      get hasNextPage() {
+        return paginatorObject.hasMore;
+      },
+      get hasPreviousPage() {
+        return paginatorObject.hasEarlier;
+      },
+      previousPage() {
+        paginatorObject.loadEarlier();
+      },
+      nextPage() {
+        paginatorObject.loadMore();
+      },
+      loadEarlier() {
+        let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
+        let leadingPage = sortedPages[0];
+        component.$wire.call("setPage", leadingPage - 1);
+      },
+      loadMore() {
+        let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
+        let trailingPage = sortedPages[sortedPages.length - 1];
+        component.$wire.call("setPage", trailingPage + 1);
+      }
+    });
+    paginatorObjects.set(component, paginatorObject);
+  }
+  return paginatorObject;
+}
+on("effect", ({ component, effects, cleanup }) => {
+  let paginators = effects["paginators"];
+  if (!paginators)
+    return;
+  let paginator = paginators["page"];
+  if (!paginator)
+    return;
+  let paginatorObject = getPaginatorObject(component);
+  applyPaginatorToReactiveObject(paginatorObject, paginator);
+});
+function applyPaginatorToReactiveObject(paginatorObject, paginator) {
+  let currentPage = paginator.currentPage;
+  paginatorObject.renderedPages.push(paginator.currentPage);
+  let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
+  if (sortedPages[sortedPages.length - 1] === currentPage) {
+    paginatorObject.hasMore = paginator.hasNextPage;
+  }
+  if (sortedPages[0] === currentPage) {
+    paginatorObject.hasEarlier = paginator.hasPreviousPage;
+  }
+}
+
+// js/$wire.js
 var properties = {};
 var fallback;
 function wireProperty(name, callback, component = null) {
@@ -8210,18 +8730,20 @@ var aliases = {
   "js": "$js",
   "get": "$get",
   "set": "$set",
+  "ref": "$ref",
   "call": "$call",
   "hook": "$hook",
-  "commit": "$commit",
   "watch": "$watch",
+  "commit": "$commit",
+  "upload": "$upload",
   "entangle": "$entangle",
   "dispatch": "$dispatch",
+  "paginator": "$paginator",
   "dispatchTo": "$dispatchTo",
   "dispatchSelf": "$dispatchSelf",
-  "upload": "$upload",
-  "uploadMultiple": "$uploadMultiple",
   "removeUpload": "$removeUpload",
-  "cancelUpload": "$cancelUpload"
+  "cancelUpload": "$cancelUpload",
+  "uploadMultiple": "$uploadMultiple"
 };
 function generateWireObject(component, state) {
   return new Proxy({}, {
@@ -8290,13 +8812,29 @@ wireProperty("$js", (component) => {
 wireProperty("$set", (component) => async (property, value, live = true) => {
   dataSet(component.reactive, property, value);
   if (live) {
+    if (requestBus_default.booted) {
+      component.queueUpdate(property, value);
+      return messageBroker_default.addAction(component, "$set");
+    }
     component.queueUpdate(property, value);
     return await requestCommit(component);
   }
   return Promise.resolve();
 });
+wireProperty("$ref", (component) => (name) => {
+  let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
+  if (!refEl)
+    throw `Ref "${name}" not found`;
+  return refEl.__livewire?.$wire;
+});
+wireProperty("$paginator", (component) => {
+  return getPaginatorObject(component);
+});
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
+});
+wireProperty("$island", (component) => async (name) => {
+  return await component.$wire.call("__island", name);
 });
 wireProperty("$entangle", (component) => (name, live = false) => {
   return generateEntangleFunction(component)(name, live);
@@ -8311,8 +8849,18 @@ wireProperty("$watch", (component) => (path, callback) => {
   let unwatch = import_alpinejs2.default.watch(getter, callback);
   component.addCleanup(unwatch);
 });
-wireProperty("$refresh", (component) => component.$wire.$commit);
-wireProperty("$commit", (component) => async () => await requestCommit(component));
+wireProperty("$refresh", (component) => async () => {
+  if (requestBus_default.booted) {
+    return messageBroker_default.addAction(component, "$refresh");
+  }
+  return component.$wire.$commit();
+});
+wireProperty("$commit", (component) => async () => {
+  if (requestBus_default.booted) {
+    return messageBroker_default.addAction(component, "$sync");
+  }
+  return await requestCommit(component);
+});
 wireProperty("$on", (component) => (...params) => listen2(component, ...params));
 wireProperty("$hook", (component) => (name, callback) => {
   let unhook = on(name, ({ component: hookComponent, ...params }) => {
@@ -8357,6 +8905,9 @@ wireFallback((component) => (property) => async (...params) => {
     if (typeof overrides[property] === "function") {
       return overrides[property](params);
     }
+  }
+  if (requestBus_default.booted) {
+    return messageBroker_default.addAction(component, property, params);
   }
   return await requestCall(component, property, params);
 });
@@ -8419,6 +8970,10 @@ var Component = class {
     this.queuedUpdates = [];
     return diff2;
   }
+  getUpdates() {
+    let propertiesDiff = diff(this.canonical, this.ephemeral);
+    return this.mergeQueuedUpdates(propertiesDiff);
+  }
   applyUpdates(object, updates) {
     for (let key in updates) {
       dataSet(object, key, updates[key]);
@@ -8445,6 +9000,12 @@ var Component = class {
   }
   get parent() {
     return closestComponent(this.el.parentElement);
+  }
+  getEncodedSnapshotWithLatestChildrenMergedIn() {
+    let { snapshotEncoded, children, snapshot } = this;
+    let childIds = children.map((child) => child.id);
+    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+    return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
   }
   inscribeSnapshotAndEffectsOnElement() {
     let el = this.el;
@@ -8481,6 +9042,360 @@ var Component = class {
   }
 };
 
+// js/morph.js
+var import_alpinejs3 = __toESM(require_module_cjs());
+
+// js/features/supportIslands.js
+on("stream", (payload) => {
+  if (payload.type !== "island")
+    return;
+  let { id, name, content } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  streamIsland(component, name, content);
+});
+function streamIsland(component, name, content) {
+  renderIsland(component, name, content);
+}
+on("effect", ({ component, effects }) => {
+  let islands = effects.islands || [];
+  islands.forEach((island) => {
+    let { name, content } = island;
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        renderIsland(component, name, content);
+      });
+    });
+  });
+});
+function renderIsland(component, name, content) {
+  let { startNode, endNode } = findIslandComments(component.el, name);
+  if (!startNode || !endNode)
+    return;
+  let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name);
+  let parentElement = startNode.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  if (mode === "append") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).forEach((node) => {
+      endNode.parentNode.insertBefore(node, endNode);
+    });
+  } else if (mode === "prepend") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).reverse().forEach((node) => {
+      startNode.parentNode.insertBefore(node, startNode.nextSibling);
+    });
+  } else {
+    morphIsland(component, startNode, endNode, strippedContent);
+  }
+}
+function skipIslandContents(el, toEl, skipUntil) {
+  if (isStartMarker(el) && isStartMarker(toEl)) {
+    let mode = extractIslandMode(toEl);
+    if (["skip", "once"].includes(mode)) {
+      skipUntil((node) => isEndMarker(node));
+    } else if (mode === "prepend") {
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+      });
+      skipUntil((node) => isEndMarker(node));
+    } else if (mode === "append") {
+      let endMarker = el.nextSibling;
+      while (endMarker && !isEndMarker(endMarker)) {
+        endMarker = endMarker.nextSibling;
+      }
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+      });
+      skipUntil((node) => isEndMarker(node));
+    }
+  }
+}
+function isStartMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+}
+function isEndMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+}
+function extractIslandMode(el) {
+  let mode = el.textContent.match(/\[if ISLAND:.*:(\w+)\]/)?.[1];
+  return mode || "replace";
+}
+function stripIslandCommentsAndExtractMode(content, islandName) {
+  let mode = "replace";
+  const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:(\\w+)\\]><\\!\\[endif\\]`));
+  if (modeMatch) {
+    mode = modeMatch[1];
+  }
+  let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+  let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return {
+    content: stripped.trim(),
+    mode
+  };
+}
+function findIslandComments(rootEl, islandName) {
+  let startNode = null;
+  let endNode = null;
+  walkElements(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          startNode = node;
+        }
+        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements(child, callback);
+  });
+}
+
+// js/morph.js
+function morph(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = closestComponent(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.setAttribute("wire:snapshot", component.snapshotEncoded);
+  let effects = { ...component.effects };
+  delete effects.html;
+  to.setAttribute("wire:effects", JSON.stringify(effects));
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  let existingComponentsMap = {};
+  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+  });
+  to.querySelectorAll("[wire\\:id]").forEach((child) => {
+    if (child.hasAttribute("wire:snapshot"))
+      return;
+    let wireId = child.getAttribute("wire:id");
+    let existingComponent = existingComponentsMap[wireId];
+    if (existingComponent) {
+      child.replaceWith(existingComponent.cloneNode(true));
+    }
+  });
+  import_alpinejs3.default.morph(el, to, getMorphConfig(component));
+  trigger("morphed", { el, component });
+}
+function morphIsland(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? closestComponent(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("island.morph", { startNode, endNode, component });
+  import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("island.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+      skipSlotContents(el, toEl, skipUntil);
+      skipIslandContents(el, toEl, skipUntil);
+      if (isntElement(el))
+        return;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
+        return skip();
+      }
+      if (el.__livewire_ignore === true)
+        return skip();
+      if (el.__livewire_ignore_self === true)
+        childrenOnly();
+      if (el.__livewire_ignore_children === true)
+        return skipChildren();
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el))
+        toEl.__livewire = component;
+    },
+    updated: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.updated", { el, component });
+    },
+    removing: (el, skip) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removing", { el, component, skip });
+    },
+    removed: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removed", { el, component });
+    },
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
+    },
+    added: (el) => {
+      if (isntElement(el))
+        return;
+      const closestComponentId = closestComponent(el).id;
+      trigger("morph.added", { el });
+    },
+    key: (el) => {
+      if (isntElement(el))
+        return;
+      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+    },
+    lookahead: false
+  };
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+
+// js/features/supportSlots.js
+on("effect", ({ component, effects }) => {
+  let slots = effects.slots;
+  if (!slots)
+    return;
+  let parentId = component.el.getAttribute("wire:id");
+  Object.entries(slots).forEach(([childId, childSlots]) => {
+    let childComponent = findComponent(childId);
+    if (!childComponent)
+      return;
+    Object.entries(childSlots).forEach(([name, content]) => {
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            let fullName = parentId ? `${name}:${parentId}` : name;
+            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+            if (!startNode || !endNode)
+              return;
+            let strippedContent = stripSlotComments(content, fullName);
+            morphIsland(childComponent, startNode, endNode, strippedContent);
+          });
+        });
+      });
+    });
+  });
+});
+function stripSlotComments(content, slotName) {
+  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findSlotComments(rootEl, slotName) {
+  let startNode = null;
+  let endNode = null;
+  walkElements2(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+          startNode = node;
+        }
+        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements2(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements2(child, callback);
+  });
+}
+function skipSlotContents(el, toEl, skipUntil) {
+  if (isStartMarker2(el) && isStartMarker2(toEl)) {
+    skipUntil((node) => isEndMarker2(node));
+  }
+}
+function isStartMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+}
+function isEndMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+}
+function extractSlotData(el) {
+  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+  let match = el.textContent.match(regex);
+  if (!match)
+    return;
+  return {
+    name: match[1],
+    parentId: match[2] || null
+  };
+}
+function checkPreviousSiblingForSlotStartMarker(el) {
+  let node = el.previousSibling;
+  while (node) {
+    if (isEndMarker2(node)) {
+      return null;
+    }
+    if (isStartMarker2(node)) {
+      return node;
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
 // js/store.js
 var components = {};
 function initComponent(el) {
@@ -8509,6 +9424,13 @@ function findComponent(id) {
   return component;
 }
 function closestComponent(el, strict = true) {
+  let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
+  if (slotStartMarker) {
+    let { name, parentId } = extractSlotData(slotStartMarker);
+    if (parentId) {
+      return findComponent(parentId);
+    }
+  }
   let closestRoot = Alpine.findClosest(el, (i) => i.__livewire);
   if (!closestRoot) {
     if (strict)
@@ -8849,14 +9771,62 @@ function getUriStringFromUrlObject(urlObject) {
   return urlObject.pathname + urlObject.search + urlObject.hash;
 }
 
+// js/v4/requests/pageRequest.js
+var PageRequest = class extends Request {
+  constructor(uri) {
+    super();
+    this.uri = uri;
+  }
+  shouldCancel() {
+    return (request) => {
+      return [
+        PageRequest.name,
+        MessageRequest.name
+      ].includes(request.constructor.name);
+    };
+  }
+  async send() {
+    let options = {
+      headers: {
+        "X-Livewire-Navigate": "1"
+      },
+      signal: this.controller.signal
+    };
+    trigger("navigate.request", {
+      url: this.uri,
+      options
+    });
+    try {
+      let response = await fetch(this.uri, options);
+      let destination = this.getDestination(response);
+      let html = await response.text();
+      this.succeedCallbacks.forEach((callback) => callback(html, destination));
+    } catch (error2) {
+      this.errorCallbacks.forEach((callback) => callback(error2));
+      throw error2;
+    }
+  }
+  getDestination(response) {
+    let destination = createUrlObjectFromString(this.uri);
+    let finalDestination = createUrlObjectFromString(response.url);
+    if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+      finalDestination.hash = destination.hash;
+    }
+    return finalDestination;
+  }
+};
+
 // js/plugins/navigate/fetch.js
-function fetchHtml(destination, callback) {
+function fetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
   performFetch(uri, (html, finalDestination) => {
     callback(html, finalDestination);
-  });
+  }, errorCallback);
 }
-function performFetch(uri, callback) {
+function performFetch(uri, callback, errorCallback) {
+  if (requestBus_default.booted) {
+    return performFetchV4(uri, callback, errorCallback);
+  }
   let options = {
     headers: {
       "X-Livewire-Navigate": ""
@@ -8876,19 +9846,31 @@ function performFetch(uri, callback) {
     return response.text();
   }).then((html) => {
     callback(html, finalDestination);
+  }).catch((error2) => {
+    errorCallback();
+    throw error2;
   });
+}
+function performFetchV4(uri, callback, errorCallback) {
+  let request = new PageRequest(uri);
+  request.addSucceedCallback(callback);
+  request.addErrorCallback(errorCallback);
+  requestBus_default.add(request);
 }
 
 // js/plugins/navigate/prefetch.js
 var prefetches = {};
 var cacheDuration = 3e4;
-function prefetchHtml(destination, callback) {
+function prefetchHtml(destination, callback, errorCallback) {
   let uri = getUriStringFromUrlObject(destination);
   if (prefetches[uri])
     return;
   prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
   performFetch(uri, (html, routedUri) => {
     callback(html, routedUri);
+  }, () => {
+    delete prefetches[uri];
+    errorCallback();
   });
 }
 function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
@@ -8918,19 +9900,19 @@ function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
 }
 
 // js/plugins/navigate/teleport.js
-var import_alpinejs3 = __toESM(require_module_cjs());
+var import_alpinejs4 = __toESM(require_module_cjs());
 function packUpPersistedTeleports(persistedEl) {
-  import_alpinejs3.default.mutateDom(() => {
+  import_alpinejs4.default.mutateDom(() => {
     persistedEl.querySelectorAll("[data-teleport-template]").forEach((i) => i._x_teleport.remove());
   });
 }
 function removeAnyLeftOverStaleTeleportTargets(body) {
-  import_alpinejs3.default.mutateDom(() => {
+  import_alpinejs4.default.mutateDom(() => {
     body.querySelectorAll("[data-teleport-target]").forEach((i) => i.remove());
   });
 }
 function unPackPersistedTeleports(persistedEl) {
-  import_alpinejs3.default.walk(persistedEl, (el, skip) => {
+  import_alpinejs4.default.walk(persistedEl, (el, skip) => {
     if (!el._x_teleport)
       return;
     el._x_teleportPutBack();
@@ -8973,14 +9955,14 @@ function restoreScrollPositionOrScrollToTop() {
 }
 
 // js/plugins/navigate/persist.js
-var import_alpinejs4 = __toESM(require_module_cjs());
+var import_alpinejs5 = __toESM(require_module_cjs());
 var els = {};
 function storePersistantElementsForLater(callback) {
   els = {};
   document.querySelectorAll("[x-persist]").forEach((i) => {
     els[i.getAttribute("x-persist")] = i;
     callback(i);
-    import_alpinejs4.default.mutateDom(() => {
+    import_alpinejs5.default.mutateDom(() => {
       i.remove();
     });
   });
@@ -8994,14 +9976,14 @@ function putPersistantElementsBack(callback) {
     usedPersists.push(i.getAttribute("x-persist"));
     old._x_wasPersisted = true;
     callback(old, i);
-    import_alpinejs4.default.mutateDom(() => {
+    import_alpinejs5.default.mutateDom(() => {
       i.replaceWith(old);
     });
   });
   Object.entries(els).forEach(([key, el]) => {
     if (usedPersists.includes(key))
       return;
-    import_alpinejs4.default.destroyTree(el);
+    import_alpinejs5.default.destroyTree(el);
   });
   els = {};
 }
@@ -9317,8 +10299,8 @@ var enablePersist = true;
 var showProgressBar = true;
 var restoreScroll = true;
 var autofocus = false;
-function navigate_default(Alpine23) {
-  Alpine23.navigate = (url, options = {}) => {
+function navigate_default(Alpine24) {
+  Alpine24.navigate = (url, options = {}) => {
     let { preserveScroll = false } = options;
     let destination = createUrlObjectFromString(url);
     let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -9330,11 +10312,11 @@ function navigate_default(Alpine23) {
       return;
     navigateTo(destination, { preserveScroll });
   };
-  Alpine23.navigate.disableProgressBar = () => {
+  Alpine24.navigate.disableProgressBar = () => {
     showProgressBar = false;
   };
-  Alpine23.addInitSelector(() => `[${Alpine23.prefixed("navigate")}]`);
-  Alpine23.directive("navigate", (el, { modifiers }) => {
+  Alpine24.addInitSelector(() => `[${Alpine24.prefixed("navigate")}]`);
+  Alpine24.directive("navigate", (el, { modifiers }) => {
     let shouldPrefetchOnHover = modifiers.includes("hover");
     let preserveScroll = modifiers.includes("preserve-scroll");
     shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
@@ -9343,6 +10325,8 @@ function navigate_default(Alpine23) {
         return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
     });
     whenThisLinkIsPressed(el, (whenItIsReleased) => {
@@ -9351,6 +10335,8 @@ function navigate_default(Alpine23) {
         return;
       prefetchHtml(destination, (html, finalDestination) => {
         storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
       whenItIsReleased(() => {
         let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -9371,7 +10357,7 @@ function navigate_default(Alpine23) {
       restoreScroll && storeScrollInformationInHtmlBeforeNavigatingAway();
       cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement();
       updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks();
-      preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
+      preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
         enablePersist && storePersistantElementsForLater((persistedEl) => {
           packUpPersistedTeleports(persistedEl);
           packUpPersistedPopovers(persistedEl);
@@ -9393,13 +10379,15 @@ function navigate_default(Alpine23) {
               setTimeout(() => {
                 autofocus && autofocusElementsWithTheAutofocusAttribute();
               });
-              nowInitializeAlpineOnTheNewPage(Alpine23);
+              nowInitializeAlpineOnTheNewPage(Alpine24);
               fireEventForOtherLibrariesToHookInto("alpine:navigated");
               showProgressBar && finishAndHideProgressBar();
             });
           });
         });
       });
+    }, () => {
+      showProgressBar && finishAndHideProgressBar();
     });
   }
   whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
@@ -9426,7 +10414,7 @@ function navigate_default(Alpine23) {
     storeScrollInformationInHtmlBeforeNavigatingAway();
     fireEventForOtherLibrariesToHookInto("alpine:navigating");
     updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageUrl, currentPageKey);
-    preventAlpineFromPickingUpDomChanges(Alpine23, (andAfterAllThis) => {
+    preventAlpineFromPickingUpDomChanges(Alpine24, (andAfterAllThis) => {
       enablePersist && storePersistantElementsForLater((persistedEl) => {
         packUpPersistedTeleports(persistedEl);
         packUpPersistedPopovers(persistedEl);
@@ -9441,7 +10429,7 @@ function navigate_default(Alpine23) {
         restoreScrollPositionOrScrollToTop();
         andAfterAllThis(() => {
           autofocus && autofocusElementsWithTheAutofocusAttribute();
-          nowInitializeAlpineOnTheNewPage(Alpine23);
+          nowInitializeAlpineOnTheNewPage(Alpine24);
           fireEventForOtherLibrariesToHookInto("alpine:navigated");
         });
       });
@@ -9451,15 +10439,15 @@ function navigate_default(Alpine23) {
     fireEventForOtherLibrariesToHookInto("alpine:navigated");
   });
 }
-function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
+function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) {
   getPretchedHtmlOr(fromDestination, callback, () => {
-    fetchHtml(fromDestination, callback);
+    fetchHtml(fromDestination, callback, errorCallback);
   });
 }
-function preventAlpineFromPickingUpDomChanges(Alpine23, callback) {
-  Alpine23.stopObservingMutations();
+function preventAlpineFromPickingUpDomChanges(Alpine24, callback) {
+  Alpine24.stopObservingMutations();
   callback((afterAllThis) => {
-    Alpine23.startObservingMutations();
+    Alpine24.startObservingMutations();
     queueMicrotask(() => {
       afterAllThis();
     });
@@ -9474,8 +10462,8 @@ function fireEventForOtherLibrariesToHookInto(name, detail) {
   document.dispatchEvent(event);
   return event.defaultPrevented;
 }
-function nowInitializeAlpineOnTheNewPage(Alpine23) {
-  Alpine23.initTree(document.body, void 0, (el, skip) => {
+function nowInitializeAlpineOnTheNewPage(Alpine24) {
+  Alpine24.initTree(document.body, void 0, (el, skip) => {
     if (el._x_wasPersisted)
       skip();
   });
@@ -9498,8 +10486,8 @@ function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
 }
 
 // js/plugins/history/index.js
-function history2(Alpine23) {
-  Alpine23.magic("queryString", (el, { interceptor }) => {
+function history2(Alpine24) {
+  Alpine24.magic("queryString", (el, { interceptor }) => {
     let alias;
     let alwaysShow = false;
     let usePush = false;
@@ -9508,9 +10496,9 @@ function history2(Alpine23) {
       let { initial, replace: replace2, push: push2, pop } = track(queryKey, initialSeedValue, alwaysShow);
       setter(initial);
       if (!usePush) {
-        Alpine23.effect(() => replace2(getter()));
+        Alpine24.effect(() => replace2(getter()));
       } else {
-        Alpine23.effect(() => push2(getter()));
+        Alpine24.effect(() => push2(getter()));
         pop(async (newValue) => {
           setter(newValue);
           let tillTheEndOfTheMicrotaskQueue = () => Promise.resolve();
@@ -9533,7 +10521,7 @@ function history2(Alpine23) {
       };
     });
   });
-  Alpine23.history = { track };
+  Alpine24.history = { track };
 }
 function track(name, initialSeedValue, alwaysShow = false, except = null) {
   let { has, get, set, remove } = queryStringUtils();
@@ -9710,25 +10698,25 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph = __toESM(require_module_cjs8());
+var import_morph3 = __toESM(require_module_cjs8());
 var import_mask = __toESM(require_module_cjs9());
-var import_alpinejs5 = __toESM(require_module_cjs());
+var import_alpinejs6 = __toESM(require_module_cjs());
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs5.default.plugin(import_morph.default);
-  import_alpinejs5.default.plugin(history2);
-  import_alpinejs5.default.plugin(import_intersect.default);
-  import_alpinejs5.default.plugin(import_resize.default);
-  import_alpinejs5.default.plugin(import_collapse.default);
-  import_alpinejs5.default.plugin(import_anchor.default);
-  import_alpinejs5.default.plugin(import_focus.default);
-  import_alpinejs5.default.plugin(import_persist2.default);
-  import_alpinejs5.default.plugin(navigate_default);
-  import_alpinejs5.default.plugin(import_mask.default);
-  import_alpinejs5.default.addRootSelector(() => "[wire\\:id]");
-  import_alpinejs5.default.onAttributesAdded((el, attributes) => {
+  import_alpinejs6.default.plugin(import_morph3.default);
+  import_alpinejs6.default.plugin(history2);
+  import_alpinejs6.default.plugin(import_intersect.default);
+  import_alpinejs6.default.plugin(import_resize.default);
+  import_alpinejs6.default.plugin(import_collapse.default);
+  import_alpinejs6.default.plugin(import_anchor.default);
+  import_alpinejs6.default.plugin(import_focus.default);
+  import_alpinejs6.default.plugin(import_persist2.default);
+  import_alpinejs6.default.plugin(navigate_default);
+  import_alpinejs6.default.plugin(import_mask.default);
+  import_alpinejs6.default.addRootSelector(() => "[wire\\:id]");
+  import_alpinejs6.default.onAttributesAdded((el, attributes) => {
     if (!Array.from(attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
     let component = closestComponent(el, false);
@@ -9739,23 +10727,23 @@ function start() {
         return;
       let directive2 = extractDirective(el, attribute.name);
       trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
   });
-  import_alpinejs5.default.interceptInit(import_alpinejs5.default.skipDuringClone((el) => {
+  import_alpinejs6.default.interceptInit(import_alpinejs6.default.skipDuringClone((el) => {
     if (!Array.from(el.attributes).some((attribute) => matchesForLivewireDirective(attribute.name)))
       return;
     if (el.hasAttribute("wire:id") && !el.__livewire && !hasComponent(el.getAttribute("wire:id"))) {
       let component2 = initComponent(el);
-      import_alpinejs5.default.onAttributeRemoved(el, "wire:id", () => {
+      import_alpinejs6.default.onAttributeRemoved(el, "wire:id", () => {
         destroyComponent(component2.id);
       });
     }
     let directives = Array.from(el.getAttributeNames()).filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(el, name));
     directives.forEach((directive2) => {
       trigger("directive.global.init", { el, directive: directive2, cleanup: (callback) => {
-        import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+        import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
       } });
     });
     let component = closestComponent(el, false);
@@ -9763,12 +10751,12 @@ function start() {
       trigger("element.init", { el, component });
       directives.forEach((directive2) => {
         trigger("directive.init", { el, component, directive: directive2, cleanup: (callback) => {
-          import_alpinejs5.default.onAttributeRemoved(el, directive2.raw, callback);
+          import_alpinejs6.default.onAttributeRemoved(el, directive2.raw, callback);
         } });
       });
     }
   }));
-  import_alpinejs5.default.start();
+  import_alpinejs6.default.start();
   setTimeout(() => window.Livewire.initialRenderIsFinished = true);
   dispatch(document, "livewire:initialized");
 }
@@ -9783,7 +10771,208 @@ function ensureLivewireScriptIsntMisplaced() {
 }
 
 // js/index.js
-var import_alpinejs21 = __toESM(require_module_cjs());
+var import_alpinejs22 = __toESM(require_module_cjs());
+
+// js/v4/features/supportPropsAndModelablesV4.js
+on("message.pooling", ({ messages }) => {
+  messages.forEach((message) => {
+    let component = message.component;
+    getDeepChildrenWithBindings(component, (child) => {
+      child.$wire.$commit();
+    });
+  });
+});
+on("message.pooled", ({ requests }) => {
+  let messages = getRequestsMessages(requests);
+  messages.forEach((message) => {
+    let component = message.component;
+    getDeepChildrenWithBindings(component, (child) => {
+      colocateRequestsByComponent(requests, component, child);
+    });
+  });
+});
+function getRequestsMessages(requests) {
+  let messages = [];
+  requests.forEach((request) => {
+    request.messages.forEach((message) => {
+      messages.push(message);
+    });
+  });
+  return messages;
+}
+function colocateRequestsByComponent(requests, component, foreignComponent) {
+  let request = findRequestWithComponent(requests, component);
+  let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+  let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
+  foreignRequest.deleteMessage(foreignMessage);
+  request.addMessage(foreignMessage);
+  requests.forEach((request2) => {
+    if (request2.isEmpty())
+      requests.delete(request2);
+  });
+}
+function findRequestWithComponent(requests, component) {
+  return Array.from(requests).find((request) => request.hasMessageFor(component));
+}
+function getDeepChildrenWithBindings(component, callback) {
+  getDeepChildren(component, (child) => {
+    if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+      callback(child);
+    }
+  });
+}
+function hasReactiveProps(component) {
+  let meta = component.snapshot.memo;
+  let props = meta.props;
+  return !!props;
+}
+function hasWireModelableBindings(component) {
+  let meta = component.snapshot.memo;
+  let bindings = meta.bindings;
+  return !!bindings;
+}
+function getDeepChildren(component, callback) {
+  component.children.forEach((child) => {
+    callback(child);
+    getDeepChildren(child, callback);
+  });
+}
+
+// js/v4/features/supportIsolatingV4.js
+var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+on("component.init", ({ component }) => {
+  let memo = component.snapshot.memo;
+  if (memo.isolate !== true)
+    return;
+  componentsThatAreIsolated.add(component);
+});
+on("message.pooling", ({ messages }) => {
+  messages.forEach((message) => {
+    if (!componentsThatAreIsolated.has(message.component))
+      return;
+    message.isolate = true;
+  });
+});
+
+// js/v4/features/supportLazyLoadingV4.js
+var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+on("component.init", ({ component }) => {
+  let memo = component.snapshot.memo;
+  if (memo.lazyLoaded === void 0)
+    return;
+  componentsThatAreLazy.add(component);
+  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+    componentsThatWantToBeBundled.add(component);
+  }
+});
+on("message.pooling", ({ messages }) => {
+  messages.forEach((message) => {
+    if (!componentsThatAreLazy.has(message.component))
+      return;
+    if (componentsThatWantToBeBundled.has(message.component)) {
+      message.isolate = false;
+      componentsThatWantToBeBundled.delete(message.component);
+    } else {
+      message.isolate = true;
+    }
+    componentsThatAreLazy.delete(message.component);
+  });
+});
+
+// js/v4/requests/index.js
+requestBus_default.boot();
+
+// js/v4/features/supportWireIntersect.js
+var import_alpinejs7 = __toESM(require_module_cjs());
+
+// js/v4/features/supportWireIsland.js
+var wireIslands = /* @__PURE__ */ new WeakMap();
+directive("island", ({ el, directive: directive2 }) => {
+  let name = directive2.expression ?? "default";
+  let mode = directive2.modifiers.includes("append") ? "append" : directive2.modifiers.includes("prepend") ? "prepend" : "replace";
+  wireIslands.set(el, {
+    name,
+    mode
+  });
+});
+function wireIslandHook(el) {
+  if (!wireIslands.has(el))
+    return;
+  let { name, mode } = wireIslands.get(el);
+  Alpine.evaluate(el, `$wire.call('__island', '${name}', '${mode}')`);
+}
+function implicitIslandHook(el) {
+  let name = closestIslandName(el);
+  if (!name)
+    return;
+  Alpine.evaluate(el, `$wire.call('__island', '${name}')`);
+}
+function closestIslandName(el) {
+  let current = el;
+  while (current) {
+    let sibling = current.previousSibling;
+    while (sibling) {
+      if (isEndMarker3(sibling)) {
+        break;
+      }
+      if (isStartMarker3(sibling)) {
+        return extractIslandName(sibling);
+      }
+      sibling = sibling.previousSibling;
+    }
+    current = current.parentElement;
+    if (current && current.hasAttribute("wire:id")) {
+      break;
+    }
+  }
+  return null;
+}
+function isStartMarker3(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+}
+function isEndMarker3(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+}
+function extractIslandName(el) {
+  let name = el.textContent.match(/\[if ISLAND:(\w+):.*\]/)?.[1];
+  return name || "default";
+}
+
+// js/v4/features/supportWireIntersect.js
+var shouldPreserveScroll = false;
+on("commit", ({ component, respond }) => {
+  respond(() => {
+    if (shouldPreserveScroll) {
+      let oldHeight = document.body.scrollHeight;
+      let oldScroll = window.scrollY;
+      setTimeout(() => {
+        let heightDiff = document.body.scrollHeight - oldHeight;
+        window.scrollTo(0, oldScroll + heightDiff);
+        shouldPreserveScroll = false;
+      });
+    }
+  });
+});
+import_alpinejs7.default.interceptInit((el) => {
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:intersect")) {
+      let { name, value } = el.attributes[i];
+      let modifierString = name.split("wire:intersect")[1];
+      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+      let evaluator = import_alpinejs7.default.evaluateLater(el, expression);
+      import_alpinejs7.default.bind(el, {
+        ["x-intersect" + modifierString]() {
+          wireIslandHook(el);
+          if (modifierString.includes(".preserve-scroll")) {
+            shouldPreserveScroll = true;
+          }
+          evaluator();
+        }
+      });
+    }
+  }
+});
 
 // js/features/supportListeners.js
 on("effect", ({ component, effects }) => {
@@ -9811,7 +11000,7 @@ function registerListeners(component, listeners2) {
 }
 
 // js/features/supportScriptsAndAssets.js
-var import_alpinejs6 = __toESM(require_module_cjs());
+var import_alpinejs8 = __toESM(require_module_cjs());
 var executedScripts = /* @__PURE__ */ new WeakMap();
 var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
@@ -9839,8 +11028,14 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs6.default.dontAutoEvaluateFunctions(() => {
-          import_alpinejs6.default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
+        import_alpinejs8.default.dontAutoEvaluateFunctions(() => {
+          import_alpinejs8.default.evaluate(component.el, scriptContent, {
+            context: component.$wire,
+            scope: {
+              "$wire": component.$wire,
+              "$js": component.$wire.$js
+            }
+          });
         });
       });
     });
@@ -9912,8 +11107,8 @@ function cloneScriptTag2(el) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs7 = __toESM(require_module_cjs());
-import_alpinejs7.default.magic("js", (el) => {
+var import_alpinejs9 = __toESM(require_module_cjs());
+import_alpinejs9.default.magic("js", (el) => {
   let component = closestComponent(el);
   return component.$wire.js;
 });
@@ -9923,111 +11118,17 @@ on("effect", ({ component, effects }) => {
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs7.default.evaluate(component.el, body);
+        import_alpinejs9.default.evaluate(component.el, body);
       });
     });
   }
   if (xjs) {
     xjs.forEach(({ expression, params }) => {
       params = Object.values(params);
-      import_alpinejs7.default.evaluate(component.el, expression, { scope: component.jsActions, params });
+      import_alpinejs9.default.evaluate(component.el, expression, { scope: component.jsActions, params });
     });
   }
 });
-
-// js/morph.js
-var import_alpinejs8 = __toESM(require_module_cjs());
-function morph2(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
-  }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  let existingComponentsMap = {};
-  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-  });
-  to.querySelectorAll("[wire\\:id]").forEach((child) => {
-    if (child.hasAttribute("wire:snapshot"))
-      return;
-    let wireId = child.getAttribute("wire:id");
-    let existingComponent = existingComponentsMap[wireId];
-    if (existingComponent) {
-      child.replaceWith(existingComponent.cloneNode(true));
-    }
-  });
-  import_alpinejs8.default.morph(el, to, {
-    updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
-      if (el2.__livewire_replace === true)
-        el2.innerHTML = toEl.innerHTML;
-      if (el2.__livewire_replace_self === true) {
-        el2.outerHTML = toEl.outerHTML;
-        return skip();
-      }
-      if (el2.__livewire_ignore === true)
-        return skip();
-      if (el2.__livewire_ignore_self === true)
-        childrenOnly();
-      if (el2.__livewire_ignore_children === true)
-        return skipChildren();
-      if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el2))
-        toEl.__livewire = component;
-    },
-    updated: (el2) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.updated", { el: el2, component });
-    },
-    removing: (el2, skip) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.removing", { el: el2, component, skip });
-    },
-    removed: (el2) => {
-      if (isntElement(el2))
-        return;
-      trigger("morph.removed", { el: el2, component });
-    },
-    adding: (el2) => {
-      trigger("morph.adding", { el: el2, component });
-    },
-    added: (el2) => {
-      if (isntElement(el2))
-        return;
-      const closestComponentId = closestComponent(el2).id;
-      trigger("morph.added", { el: el2 });
-    },
-    key: (el2) => {
-      if (isntElement(el2))
-        return;
-      return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-    },
-    lookahead: false
-  });
-  trigger("morphed", { el, component });
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
 
 // js/features/supportMorphDom.js
 on("effect", ({ component, effects }) => {
@@ -10036,7 +11137,7 @@ on("effect", ({ component, effects }) => {
     return;
   queueMicrotask(() => {
     queueMicrotask(() => {
-      morph2(component, component.el, html);
+      morph(component, component.el, html);
     });
   });
 });
@@ -10063,7 +11164,7 @@ function dispatchEvents(component, dispatches) {
 }
 
 // js/features/supportDisablingFormsDuringRequest.js
-var import_alpinejs9 = __toESM(require_module_cjs());
+var import_alpinejs10 = __toESM(require_module_cjs());
 var cleanups = new Bag();
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => setTimeout(() => {
   if (directive2.value !== "submit")
@@ -10082,7 +11183,7 @@ on("commit", ({ component, respond }) => {
 });
 function disableForm(formEl) {
   let undos = [];
-  import_alpinejs9.default.walk(formEl, (el, skip) => {
+  import_alpinejs10.default.walk(formEl, (el, skip) => {
     if (!formEl.contains(el))
       return;
     if (el.hasAttribute("wire:ignore"))
@@ -10128,7 +11229,7 @@ function markReadOnly(el) {
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {
     let component = commit.component;
-    getDeepChildrenWithBindings(component, (child) => {
+    getDeepChildrenWithBindings2(component, (child) => {
       child.$wire.$commit();
     });
   });
@@ -10137,7 +11238,7 @@ on("commit.pooled", ({ pools }) => {
   let commits = getPooledCommits(pools);
   commits.forEach((commit) => {
     let component = commit.component;
-    getDeepChildrenWithBindings(component, (child) => {
+    getDeepChildrenWithBindings2(component, (child) => {
       colocateCommitsByComponent(pools, component, child);
     });
   });
@@ -10168,27 +11269,27 @@ function findPoolWithComponent(pools, component) {
       return pool;
   }
 }
-function getDeepChildrenWithBindings(component, callback) {
-  getDeepChildren(component, (child) => {
-    if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+function getDeepChildrenWithBindings2(component, callback) {
+  getDeepChildren2(component, (child) => {
+    if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
       callback(child);
     }
   });
 }
-function hasReactiveProps(component) {
+function hasReactiveProps2(component) {
   let meta = component.snapshot.memo;
   let props = meta.props;
   return !!props;
 }
-function hasWireModelableBindings(component) {
+function hasWireModelableBindings2(component) {
   let meta = component.snapshot.memo;
   let bindings = meta.bindings;
   return !!bindings;
 }
-function getDeepChildren(component, callback) {
+function getDeepChildren2(component, callback) {
   component.children.forEach((child) => {
     callback(child);
-    getDeepChildren(child, callback);
+    getDeepChildren2(child, callback);
   });
 }
 
@@ -10229,33 +11330,33 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
 }
 
 // js/features/supportLazyLoading.js
-var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+var componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
+var componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
 on("component.init", ({ component }) => {
   let memo = component.snapshot.memo;
   if (memo.lazyLoaded === void 0)
     return;
-  componentsThatAreLazy.add(component);
+  componentsThatAreLazy2.add(component);
   if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-    componentsThatWantToBeBundled.add(component);
+    componentsThatWantToBeBundled2.add(component);
   }
 });
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {
-    if (!componentsThatAreLazy.has(commit.component))
+    if (!componentsThatAreLazy2.has(commit.component))
       return;
-    if (componentsThatWantToBeBundled.has(commit.component)) {
+    if (componentsThatWantToBeBundled2.has(commit.component)) {
       commit.isolate = false;
-      componentsThatWantToBeBundled.delete(commit.component);
+      componentsThatWantToBeBundled2.delete(commit.component);
     } else {
       commit.isolate = true;
     }
-    componentsThatAreLazy.delete(commit.component);
+    componentsThatAreLazy2.delete(commit.component);
   });
 });
 
 // js/features/supportQueryString.js
-var import_alpinejs10 = __toESM(require_module_cjs());
+var import_alpinejs11 = __toESM(require_module_cjs());
 on("effect", ({ component, effects, cleanup }) => {
   let queryString = effects["url"];
   if (!queryString)
@@ -10267,10 +11368,10 @@ on("effect", ({ component, effects, cleanup }) => {
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
     let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow, except);
     if (use === "replace") {
-      let effectReference = import_alpinejs10.default.effect(() => {
+      let effectReference = import_alpinejs11.default.effect(() => {
         replace2(dataGet(component.reactive, name));
       });
-      cleanup(() => import_alpinejs10.default.release(effectReference));
+      cleanup(() => import_alpinejs11.default.release(effectReference));
     } else if (use === "push") {
       let forgetCommitHandler = on("commit", ({ component: commitComponent, succeed }) => {
         if (component !== commitComponent)
@@ -10366,23 +11467,112 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/features/supportIsolating.js
-var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+var componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
 on("component.init", ({ component }) => {
   let memo = component.snapshot.memo;
   if (memo.isolate !== true)
     return;
-  componentsThatAreIsolated.add(component);
+  componentsThatAreIsolated2.add(component);
 });
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {
-    if (!componentsThatAreIsolated.has(commit.component))
+    if (!componentsThatAreIsolated2.has(commit.component))
       return;
     commit.isolate = true;
   });
 });
 
+// js/features/supportStreaming.js
+on("stream", (payload) => {
+  if (payload.type !== "update")
+    return;
+  let { id, key, value, mode } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  if (mode === "append") {
+    component.$wire.set(key, component.$wire.get(key) + value, false);
+  } else {
+    component.$wire.set(key, value, false);
+  }
+});
+directive("stream", ({ el, directive: directive2, cleanup }) => {
+  let { expression, modifiers } = directive2;
+  let off = on("stream", (payload) => {
+    payload.type = payload.type || "html";
+    if (payload.type !== "html")
+      return;
+    let { name, content, mode } = payload;
+    if (name !== expression)
+      return;
+    if (modifiers.includes("replace") || mode === "replace") {
+      el.innerHTML = content;
+    } else {
+      el.insertAdjacentHTML("beforeend", content);
+    }
+  });
+  cleanup(off);
+});
+on("request", ({ respond }) => {
+  respond((mutableObject) => {
+    let response = mutableObject.response;
+    if (!response.headers.has("X-Livewire-Stream"))
+      return;
+    mutableObject.response = {
+      ok: true,
+      redirected: false,
+      status: 200,
+      async text() {
+        let finalResponse = "";
+        try {
+          finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+            trigger("stream", streamed);
+          });
+        } catch (e) {
+          this.aborted = true;
+          this.ok = false;
+        }
+        if (contentIsFromDump(finalResponse)) {
+          this.ok = false;
+        }
+        return finalResponse;
+      }
+    };
+  });
+});
+async function interceptStreamAndReturnFinalResponse(response, callback) {
+  let reader = response.body.getReader();
+  let remainingResponse = "";
+  while (true) {
+    let { done, value: chunk } = await reader.read();
+    let decoder = new TextDecoder();
+    let output = decoder.decode(chunk);
+    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
+    streams.forEach((stream) => {
+      callback(stream);
+    });
+    remainingResponse = remaining;
+    if (done)
+      return remainingResponse;
+  }
+}
+function extractStreamObjects(raw) {
+  let regex = /({"stream":true.*?"endStream":true})/g;
+  let matches = raw.match(regex);
+  let parsed = [];
+  if (matches) {
+    for (let i = 0; i < matches.length; i++) {
+      parsed.push(JSON.parse(matches[i]).body);
+    }
+  }
+  let remaining = raw.replace(regex, "");
+  return [parsed, remaining];
+}
+
 // js/features/supportNavigate.js
-shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+document.addEventListener("livewire:initialized", () => {
+  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+});
 document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
 document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
 document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
@@ -10404,7 +11594,7 @@ function shouldRedirectUsingNavigateOr(effects, url, or) {
 function shouldHideProgressBar() {
   if (!!document.querySelector("[data-no-progress-bar]"))
     return true;
-  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+  if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === "data-no-progress-bar")
     return true;
   return false;
 }
@@ -10420,21 +11610,21 @@ on("effect", ({ effects }) => {
 });
 
 // js/directives/wire-transition.js
-var import_alpinejs11 = __toESM(require_module_cjs());
+var import_alpinejs12 = __toESM(require_module_cjs());
 on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup }) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:show")) {
-      import_alpinejs11.default.bind(el, {
+      import_alpinejs12.default.bind(el, {
         [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
       });
       return;
     }
   }
-  let visibility = import_alpinejs11.default.reactive({ state: el.__addedByMorph ? false : true });
-  import_alpinejs11.default.bind(el, {
+  let visibility = import_alpinejs12.default.reactive({ state: el.__addedByMorph ? false : true });
+  import_alpinejs12.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {
       return visibility.state;
@@ -10470,7 +11660,7 @@ function callAndClearComponentDebounces(component, callback) {
 }
 
 // js/directives/wire-wildcard.js
-var import_alpinejs12 = __toESM(require_module_cjs());
+var import_alpinejs13 = __toESM(require_module_cjs());
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
     return;
@@ -10480,11 +11670,17 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
     attribute = attribute + ".prevent";
   }
-  let cleanupBinding = import_alpinejs12.default.bind(el, {
+  let cleanupBinding = import_alpinejs13.default.bind(el, {
     [attribute](e) {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          import_alpinejs12.default.evaluate(el, "$wire." + directive2.expression, { scope: { $event: e } });
+          let evaluator = import_alpinejs13.default.evaluateLater(el, "await $wire." + directive2.expression, { scope: { $event: e } });
+          el.setAttribute("data-loading", "true");
+          wireIslandHook(el);
+          implicitIslandHook(el);
+          evaluator(() => {
+            el.removeAttribute("data-loading");
+          });
         });
       };
       if (el.__livewire_confirm) {
@@ -10502,23 +11698,23 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
 });
 
 // js/directives/wire-navigate.js
-var import_alpinejs13 = __toESM(require_module_cjs());
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
+var import_alpinejs14 = __toESM(require_module_cjs());
+import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate]`);
+import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
+import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
+import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
+import_alpinejs14.default.interceptInit(import_alpinejs14.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
+    import_alpinejs14.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
+    import_alpinejs14.default.bind(el, { ["x-navigate.hover"]: true });
   } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+    import_alpinejs14.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
   } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+    import_alpinejs14.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
   } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-    import_alpinejs13.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
+    import_alpinejs14.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
   }
 }));
 document.addEventListener("alpine:navigating", () => {
@@ -10557,8 +11753,8 @@ directive("confirm", ({ el, directive: directive2 }) => {
 });
 
 // js/directives/wire-current.js
-var import_alpinejs14 = __toESM(require_module_cjs());
-import_alpinejs14.default.addInitSelector(() => `[wire\\:current]`);
+var import_alpinejs15 = __toESM(require_module_cjs());
+import_alpinejs15.default.addInitSelector(() => `[wire\\:current]`);
 var onPageChanges = /* @__PURE__ */ new Map();
 document.addEventListener("livewire:navigated", () => {
   onPageChanges.forEach((i) => i(new URL(window.location.href)));
@@ -10624,7 +11820,7 @@ function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = n
     }
   } else {
     let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
-    let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
+    let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive2.modifiers.includes(i))[0] || "inline-block";
     display = directive2.modifiers.includes("remove") && !isTruthy ? cache : display;
     el.style.display = isTruthy ? display : "none";
   }
@@ -10784,77 +11980,13 @@ function getTargets(el) {
       targets.push({ target: raw });
     }
   } else {
-    let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
+    let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
     directives.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
   }
   return { targets, inverted };
 }
 function quickHash(subject) {
   return btoa(encodeURIComponent(subject));
-}
-
-// js/directives/wire-stream.js
-directive("stream", ({ el, directive: directive2, cleanup }) => {
-  let { expression, modifiers } = directive2;
-  let off = on("stream", ({ name, content, replace: replace2 }) => {
-    if (name !== expression)
-      return;
-    if (modifiers.includes("replace") || replace2) {
-      el.innerHTML = content;
-    } else {
-      el.insertAdjacentHTML("beforeend", content);
-    }
-  });
-  cleanup(off);
-});
-on("request", ({ respond }) => {
-  respond((mutableObject) => {
-    let response = mutableObject.response;
-    if (!response.headers.has("X-Livewire-Stream"))
-      return;
-    mutableObject.response = {
-      ok: true,
-      redirected: false,
-      status: 200,
-      async text() {
-        let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-          trigger("stream", streamed);
-        });
-        if (contentIsFromDump(finalResponse)) {
-          this.ok = false;
-        }
-        return finalResponse;
-      }
-    };
-  });
-});
-async function interceptStreamAndReturnFinalResponse(response, callback) {
-  let reader = response.body.getReader();
-  let remainingResponse = "";
-  while (true) {
-    let { done, value: chunk } = await reader.read();
-    let decoder = new TextDecoder();
-    let output = decoder.decode(chunk);
-    let [streams, remaining] = extractStreamObjects(remainingResponse + output);
-    streams.forEach((stream) => {
-      callback(stream);
-    });
-    remainingResponse = remaining;
-    if (done)
-      return remainingResponse;
-  }
-}
-function extractStreamObjects(raw) {
-  let regex = /({"stream":true.*?"endStream":true})/g;
-  let matches = raw.match(regex);
-  let parsed = [];
-  if (matches) {
-    for (let i = 0; i < matches.length; i++) {
-      parsed.push(JSON.parse(matches[i]).body);
-    }
-  }
-  let remaining = raw.replace(regex, "");
-  return [parsed, remaining];
 }
 
 // js/directives/wire-replace.js
@@ -10878,10 +12010,10 @@ directive("ignore", ({ el, directive: directive2 }) => {
 });
 
 // js/directives/wire-cloak.js
-var import_alpinejs15 = __toESM(require_module_cjs());
-import_alpinejs15.default.interceptInit((el) => {
+var import_alpinejs16 = __toESM(require_module_cjs());
+import_alpinejs16.default.interceptInit((el) => {
   if (el.hasAttribute("wire:cloak")) {
-    import_alpinejs15.default.mutateDom(() => el.removeAttribute("wire:cloak"));
+    import_alpinejs16.default.mutateDom(() => el.removeAttribute("wire:cloak"));
   }
 });
 
@@ -10934,7 +12066,7 @@ function dirtyTargets(el) {
 }
 
 // js/directives/wire-model.js
-var import_alpinejs16 = __toESM(require_module_cjs());
+var import_alpinejs17 = __toESM(require_module_cjs());
 directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let { expression, modifiers } = directive2;
   if (!expression) {
@@ -10952,7 +12084,7 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let isDebounced = modifiers.includes("debounce");
   let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-  import_alpinejs16.default.bind(el, {
+  import_alpinejs17.default.bind(el, {
     ["@change"]() {
       isLazy && update();
     },
@@ -11008,14 +12140,14 @@ function debounce(func, wait) {
 }
 
 // js/directives/wire-init.js
-var import_alpinejs17 = __toESM(require_module_cjs());
+var import_alpinejs18 = __toESM(require_module_cjs());
 directive("init", ({ el, directive: directive2 }) => {
   let fullMethod = directive2.expression ?? "$refresh";
-  import_alpinejs17.default.evaluate(el, `$wire.${fullMethod}`);
+  import_alpinejs18.default.evaluate(el, `$wire.${fullMethod}`);
 });
 
 // js/directives/wire-poll.js
-var import_alpinejs18 = __toESM(require_module_cjs());
+var import_alpinejs19 = __toESM(require_module_cjs());
 directive("poll", ({ el, directive: directive2 }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -11029,7 +12161,7 @@ directive("poll", ({ el, directive: directive2 }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2) {
-  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+  import_alpinejs19.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];
@@ -11118,16 +12250,16 @@ function extractDurationFrom(modifiers, defaultDuration) {
 }
 
 // js/directives/wire-show.js
-var import_alpinejs19 = __toESM(require_module_cjs());
-import_alpinejs19.default.interceptInit((el) => {
+var import_alpinejs20 = __toESM(require_module_cjs());
+import_alpinejs20.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:show")) {
       let { name, value } = el.attributes[i];
       let modifierString = name.split("wire:show")[1];
       let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-      import_alpinejs19.default.bind(el, {
+      import_alpinejs20.default.bind(el, {
         ["x-show" + modifierString]() {
-          return import_alpinejs19.default.evaluate(el, expression);
+          return import_alpinejs20.default.evaluate(el, expression);
         }
       });
     }
@@ -11135,16 +12267,16 @@ import_alpinejs19.default.interceptInit((el) => {
 });
 
 // js/directives/wire-text.js
-var import_alpinejs20 = __toESM(require_module_cjs());
-import_alpinejs20.default.interceptInit((el) => {
+var import_alpinejs21 = __toESM(require_module_cjs());
+import_alpinejs21.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:text")) {
       let { name, value } = el.attributes[i];
       let modifierString = name.split("wire:text")[1];
       let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-      import_alpinejs20.default.bind(el, {
+      import_alpinejs21.default.bind(el, {
         ["x-text" + modifierString]() {
-          return import_alpinejs20.default.evaluate(el, expression);
+          return import_alpinejs21.default.evaluate(el, expression);
         }
       });
     }
@@ -11166,7 +12298,7 @@ var Livewire2 = {
   dispatch: dispatchGlobal,
   on: on2,
   get navigate() {
-    return import_alpinejs21.default.navigate;
+    return import_alpinejs22.default.navigate;
   }
 };
 var warnAboutMultipleInstancesOf = (entity) => console.warn(`Detected multiple instances of ${entity} running`);
@@ -11175,7 +12307,7 @@ if (window.Livewire)
 if (window.Alpine)
   warnAboutMultipleInstancesOf("Alpine");
 window.Livewire = Livewire2;
-window.Alpine = import_alpinejs21.default;
+window.Alpine = import_alpinejs22.default;
 if (window.livewireScriptConfig === void 0) {
   window.Alpine.__fromLivewire = true;
   document.addEventListener("DOMContentLoaded", () => {
@@ -11185,7 +12317,7 @@ if (window.livewireScriptConfig === void 0) {
     Livewire2.start();
   });
 }
-var export_Alpine = import_alpinejs21.default;
+var export_Alpine = import_alpinejs22.default;
 export {
   export_Alpine as Alpine,
   Livewire2 as Livewire

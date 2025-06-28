@@ -104,7 +104,7 @@ Any changes made to the text input will be automatically synchronized with the `
 -------------------|-------------------------------------------------------------------------
  `.live`           | Send updates as a user types
  `.blur`           | Only send updates on the `blur` event
- `.change`         | Only send updates on the the `change` event
+ `.change`         | Only send updates on the `change` event
  `.lazy`           | An alias for `.change`
  `.debounce.[?]ms` | Debounce the sending of updates by the specified millisecond delay
  `.throttle.[?]ms` | Throttle network request updates by the specified millisecond interval

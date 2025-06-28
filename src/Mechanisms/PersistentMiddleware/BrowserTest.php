@@ -143,6 +143,10 @@ class BrowserTest extends BrowserTestCase
                 $script = <<<'JS'
                     let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
 
+                    window.controller = new AbortController()
+
+                    args[1].signal = window.controller.signal
+
                     window.fetch(...args).then(i => i.text()).then(response => {
                         document.body.textContent = 'response-ready: '+JSON.stringify(response)
                     })
@@ -187,6 +191,10 @@ JS;
             ->tap(function ($b) {
                 $script = <<<'JS'
                     let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
+
+                    window.controller = new AbortController()
+
+                    args[1].signal = window.controller.signal
 
                     window.fetch(...args).then(i => i.text()).then(response => {
                         document.body.textContent = 'response-ready: '+JSON.stringify(response)
@@ -255,6 +263,10 @@ JS;
             ->tap(function ($b) {
                 $script = <<<'JS'
                     let args = JSON.parse(localStorage.getItem('lastFetchArgs'))
+
+                    window.controller = new AbortController()
+
+                    args[1].signal = window.controller.signal
 
                     window.fetch(...args).then(i => i.text()).then(response => {
                         document.body.textContent = 'response-ready: '+JSON.stringify(response)

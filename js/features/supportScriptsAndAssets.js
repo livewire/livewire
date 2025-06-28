@@ -37,7 +37,13 @@ on('effect', ({ component, effects }) => {
                 let scriptContent = extractScriptTagContent(content)
 
                 Alpine.dontAutoEvaluateFunctions(() => {
-                    Alpine.evaluate(component.el, scriptContent, { '$wire': component.$wire, '$js': component.$wire.$js })
+                    Alpine.evaluate(component.el, scriptContent, {
+                        context: component.$wire,
+                        scope: {
+                            '$wire': component.$wire,
+                            '$js': component.$wire.$js,
+                        },
+                    })
                 })
             })
         })
