@@ -2,8 +2,9 @@
 
 namespace Livewire\V4\Paginators;
 
-use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 trait HandlesPaginators
 {
@@ -12,7 +13,9 @@ trait HandlesPaginators
 
     public function setPaginatorInstance($paginator)
     {
-        $this->__paginatorInstances[$paginator->getPageName()] = $paginator;
+        $name = $paginator instanceof CursorPaginator ? $paginator->getCursorName() : $paginator->getPageName();
+
+        $this->__paginatorInstances[$name] = $paginator;
     }
 
     public function getPaginatorPayloads()
@@ -28,10 +31,43 @@ trait HandlesPaginators
 
     protected function paginatorToPayload($paginator)
     {
-        return [
+        if ($paginator instanceof CursorPaginator) {
+            return [
+                'type' => 'cursor',
+                'count' => $paginator->count(),
+                'hasMorePages' => $paginator->hasMorePages(),
+                'hasPages' => $paginator->hasPages(),
+                'onFirstPage' => $paginator->onFirstPage(),
+                'onLastPage' => $paginator->onLastPage(),
+                'cursorName' => $paginator->getCursorName(),
+                'nextCursor' => $paginator->nextCursor()?->encode(),
+                'previousCursor' => $paginator->previousCursor()?->encode(),
+            ];
+        }
+
+        $default = [
+            'from' => $paginator->firstItem(),
+            'to' => $paginator->lastItem(),
+            'perPage' => $paginator->perPage(),
+            'hasPages' => $paginator->hasPages(),
+            'count' => $paginator->count(),
+            'onFirstPage' => $paginator->onFirstPage(),
+            'onLastPage' => $paginator->onLastPage(),
             'currentPage' => $paginator->currentPage(),
-            'hasNextPage' => $paginator->hasMorePages(),
-            'hasPreviousPage' => ! $paginator->onFirstPage(),
+            'pageName' => $paginator->getPageName(),
         ];
+
+        if ($paginator instanceof LengthAwarePaginator) {
+            return array_merge($default, [
+                'type' => 'lengthAware',
+                'total' => $paginator->total(),
+                'hasMorePages' => $paginator->hasMorePages(),
+                'lastPage' => $paginator->lastPage(),
+            ]);
+        } elseif ($paginator instanceof Paginator) {
+            return array_merge($default, [
+                'type' => 'simple',
+            ]);
+        }
     }
 }

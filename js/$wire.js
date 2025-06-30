@@ -161,9 +161,7 @@ wireProperty('$ref', (component) => (name) => {
     return refEl.__livewire?.$wire
 })
 
-wireProperty('$paginator', (component) => {
-    return getPaginatorObject(component)
-})
+wireProperty('$paginator', (component) => (name = 'page') => getPaginatorObject(component, name))
 
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
