@@ -69,5 +69,7 @@ trait HandlesPaginators
                 'type' => 'simple',
             ]);
         }
+
+        throw new \Exception('Unsupported paginator type: ' . get_class($paginator));
     }
 }
