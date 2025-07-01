@@ -36,11 +36,15 @@ on('effect', ({ component, effects }) => {
 })
 
 export function renderIsland(component, name, content) {
+    console.log('renderIsland', name, content)
+
     let { startNode, endNode } = findIslandComments(component.el, name)
 
     if (!startNode || !endNode) return
 
     let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name)
+
+    console.log('strippedContent', strippedContent, mode)
 
     let parentElement = startNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
@@ -67,6 +71,8 @@ export function renderIsland(component, name, content) {
             .forEach(node => {
                 startNode.parentNode.insertBefore(node, startNode.nextSibling)
             })
+    } else if (mode === 'skip') {
+        console.log('skipping island', name)
     } else {
         morphIsland(component, startNode, endNode, strippedContent)
     }
@@ -75,6 +81,8 @@ export function renderIsland(component, name, content) {
 export function skipIslandContents(el, toEl, skipUntil) {
     if (isStartMarker(el) && isStartMarker(toEl)) {
         let mode = extractIslandMode(toEl)
+
+        console.log('skipIslandContents', el.outerHTML, toEl.outerHTML, mode)
 
         if (['skip', 'once'].includes(mode)) {
             skipUntil(node => isEndMarker(node))

@@ -155,7 +155,7 @@ class BladeStyleCompiler extends Mechanism
         } else {
             // Clear all
             $this->compiledComponentCache = [];
-            File::deleteDirectory($this->compiler->getCacheDirectory());
+            File::deleteDirectory(\Livewire\invade($this->compiler)->cacheDirectory);
         }
     }
 

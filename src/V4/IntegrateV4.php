@@ -32,6 +32,10 @@ class IntegrateV4
         $this->supportTailwindMacro();
         $this->registerSlotDirectives();
         $this->registerSlotsSupport();
+
+        \Illuminate\Console\Application::starting(fn (\Illuminate\Console\Application $artisan) => $artisan->resolveCommands([
+            \Livewire\V4\Compiler\Commands\LivewireClearCommand::class,
+        ]));
     }
 
     protected function supportRoutingMacro()

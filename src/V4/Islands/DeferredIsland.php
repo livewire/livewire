@@ -9,6 +9,7 @@ class DeferredIsland implements \Stringable, Htmlable, Jsonable
 {
     public function __construct(
         public string $name,
+        public string $mode = 'replace',
     ) {}
 
     public function render()
@@ -22,8 +23,7 @@ class DeferredIsland implements \Stringable, Htmlable, Jsonable
     {
         return [
             'name' => $this->name,
-            'mode' => 'defer',
-            'content' => $this->render(),
+            'mode' => $this->mode,
         ];
     }
 

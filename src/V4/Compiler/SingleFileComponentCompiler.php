@@ -112,7 +112,7 @@ class SingleFileComponentCompiler extends Mechanism
 
         // Extract inline islands before processing component
         $inlineIslands = [];
-        $content = $this->extractInlineIslands($content, $inlineIslands);
+        // $content = $this->extractInlineIslands($content, $inlineIslands);
 
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
@@ -306,7 +306,7 @@ class SingleFileComponentCompiler extends Mechanism
                     ];
 
                     $dataParam = $islandData !== '[]' ? ", {$islandData}" : '';
-                    $replacement = "@islandplaceholder('{$islandName}'{$dataParam})";
+                    $replacement = "@island('{$islandName}'{$dataParam})";
 
                     $content = substr_replace($content, $replacement, $pair['start'], $endPos - $pair['start']);
                 }

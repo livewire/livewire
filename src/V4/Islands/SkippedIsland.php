@@ -22,7 +22,6 @@ class SkippedIsland implements \Stringable, Htmlable, Jsonable
         return [
             'name' => $this->name,
             'mode' => 'skip',
-            'content' => $this->render(),
         ];
     }
 

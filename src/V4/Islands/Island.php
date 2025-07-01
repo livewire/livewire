@@ -22,7 +22,9 @@ class Island implements \Stringable, Htmlable, Jsonable
         app(ExtendBlade::class)->startLivewireRendering($this->component);
 
         // @todo: this is a hack to get the component instance into the view so nested components render due to the `if (isset(\$_instance))` check in the island Blade directive...
-        \Livewire\Drawer\Utils::shareWithViews('_instance', $this->component);
+        \Livewire\Drawer\Utils::shareWithViews('__livewire', $this->component);
+
+        ray('island', $this->view, $this->data);
 
         $output = view($this->view, $this->data)->render();
 
@@ -49,10 +51,16 @@ class Island implements \Stringable, Htmlable, Jsonable
 
     public function toJson($options = 0)
     {
+        $mode = $this->mode;
+
+        // This first render happens, but on the next render it will be skipped...
+        if ($mode === 'once') {
+            $mode = 'skip';
+        }
+
         return [
             'name' => $this->name,
-            'mode' => $this->mode,
-            'content' => $this->render(),
+            'mode' => $mode,
         ];
     }
 
