@@ -36,10 +36,12 @@ trait HandlesPaginators
                 'type' => 'cursor',
                 'count' => $paginator->count(),
                 'hasMorePages' => $paginator->hasMorePages(),
+                'perPage' => $paginator->perPage(),
                 'hasPages' => $paginator->hasPages(),
                 'onFirstPage' => $paginator->onFirstPage(),
                 'onLastPage' => $paginator->onLastPage(),
                 'cursorName' => $paginator->getCursorName(),
+                'currentCursor' => $paginator->cursor()?->encode(),
                 'nextCursor' => $paginator->nextCursor()?->encode(),
                 'previousCursor' => $paginator->previousCursor()?->encode(),
             ];
@@ -62,6 +64,7 @@ trait HandlesPaginators
                 'type' => 'lengthAware',
                 'total' => $paginator->total(),
                 'hasMorePages' => $paginator->hasMorePages(),
+                'firstPage' => 1,
                 'lastPage' => $paginator->lastPage(),
             ]);
         } elseif ($paginator instanceof Paginator) {

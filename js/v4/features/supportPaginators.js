@@ -27,8 +27,6 @@ on('effect', ({ component, effects, cleanup }) => {
 
     if (! paginators) return
 
-    console.log(paginators)
-
     for (let paginatorName in paginators) {
         let paginator = paginators[paginatorName]
         let paginatorObject = getPaginatorObject(component, paginatorName)
@@ -64,6 +62,9 @@ function newPaginatorObject(component) {
         currentPage() {
             return this.paginator.currentPage
         },
+        currentCursor() {
+            return this.paginator.currentCursor
+        },
         count() {
             return this.paginator.count
         },
@@ -89,7 +90,7 @@ function newPaginatorObject(component) {
             return !! this.paginator.nextCursor
         },
         firstPage() {
-            return 1
+            return this.paginator.firstPage
         },
         lastPage() {
             return this.paginator.lastPage
