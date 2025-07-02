@@ -24,7 +24,7 @@ class Island implements \Stringable, Htmlable, Jsonable
         // @todo: this is a hack to get the component instance into the view so nested components render due to the `if (isset(\$_instance))` check in the island Blade directive...
         \Livewire\Drawer\Utils::shareWithViews('__livewire', $this->component);
 
-        ray('island', $this->view, $this->data);
+        // ray('island', $this->view, $this->data);
 
         $output = view($this->view, $this->data)->render();
 

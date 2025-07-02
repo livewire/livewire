@@ -162,13 +162,15 @@ class HandleComponents extends Mechanism
         return $newHtml;
     }
 
-    public function update($snapshot, $updates, $calls)
+    public function update($snapshot, $updates, $calls, $updateContext)
     {
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
 
         if (config('app.debug')) $start = microtime(true);
         [ $component, $context ] = $this->fromSnapshot($snapshot);
+
+        trigger('context', $component, $updateContext);
 
         $this->pushOntoComponentStack($component);
 
@@ -544,7 +546,7 @@ class HandleComponents extends Mechanism
 
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
-            $methods[] = '__island';
+            // $methods[] = '__island';
 
             if (! in_array($method, $methods)) {
                 throw new MethodNotFoundException($method);

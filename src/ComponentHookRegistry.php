@@ -45,6 +45,14 @@ class ComponentHookRegistry
                 $hook->callMount($params, $parent);
             });
 
+            on('context', function ($component, $context) use ($hook) {
+                if (! $hook = static::initializeHook($hook, $component)) {
+                    return;
+                }
+
+                $hook->callContext($context);
+            });
+
             on('hydrate', function ($component, $memo) use ($hook) {
                 if (! $hook = static::initializeHook($hook, $component)) {
                     return;
@@ -61,8 +69,8 @@ class ComponentHookRegistry
             return static::proxyCallToHooks($component, 'callUpdate')($propertyName, $fullPath, $newValue);
         });
 
-        on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
-            return static::proxyCallToHooks($component, 'callCall')($method, $params, $earlyReturn);
+        on('call', function ($component, $method, $params, $context, $earlyReturn) {
+            return static::proxyCallToHooks($component, 'callCall')($method, $params, $earlyReturn, $context);
         });
 
         on('render', function ($component, $view, $data) {

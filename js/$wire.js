@@ -7,7 +7,7 @@ import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
 import requestBus from './v4/requests/requestBus'
-import messsageBroker from './v4/requests/messageBroker'
+import messageBroker from './v4/requests/messageBroker'
 import { getPaginatorObject } from './v4/features/supportPaginators'
 
 let properties = {}
@@ -142,7 +142,7 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
         if (requestBus.booted) {
             component.queueUpdate(property, value)
 
-            return messsageBroker.addAction(component, '$set')
+            return messageBroker.addAction(component, '$set')
         }
 
         component.queueUpdate(property, value)
@@ -170,7 +170,9 @@ wireProperty('$call', (component) => async (method, ...params) => {
 })
 
 wireProperty('$island', (component) => async (name) => {
-    return await component.$wire.call('__island', name)
+    messageBroker.addContext(component, 'islands', name)
+
+    return await component.$wire.$refresh()
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -193,14 +195,14 @@ wireProperty('$watch', (component) => (path, callback) => {
 
 wireProperty('$refresh', (component) => async () => {
     if (requestBus.booted) {
-        return messsageBroker.addAction(component, '$refresh')
+        return messageBroker.addAction(component, '$refresh')
     }
 
     return component.$wire.$commit()
 })
 wireProperty('$commit', (component) => async () => {
     if (requestBus.booted) {
-        return messsageBroker.addAction(component, '$sync')
+        return messageBroker.addAction(component, '$sync')
     }
 
     return await requestCommit(component)
@@ -274,7 +276,7 @@ wireFallback((component) => (property) => async (...params) => {
     }
 
     if (requestBus.booted) {
-        return messsageBroker.addAction(component, property, params)
+        return messageBroker.addAction(component, property, params)
     }
 
     return await requestCall(component, property, params)

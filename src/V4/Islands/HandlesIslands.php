@@ -19,7 +19,7 @@ trait HandlesIslands
 
     public function island($name, $data = [], $mode = null, $skip = false, $defer = false, $lazy = false, $view = null)
     {
-        ray('island', $name, $data, $mode, $skip, $defer, $lazy, $view);
+        // ray('island', $name, $data, $mode, $skip, $defer, $lazy, $view);
         if ($view === null) {
             $view = 'livewire-compiled::island_' . $name;
         }
@@ -125,12 +125,12 @@ trait HandlesIslands
 
     // This method is called from the frontend via: wire:click="$island('name...')"
     // This method has been whitelisted in HandleComponents.php
-    public function __island($name)
-    {
-        $this->islandsToRender[] = $name;
+    // public function __island($name)
+    // {
+    //     $this->islandsToRender[] = $name;
 
-        $this->skipRender();
-    }
+    //     $this->skipRender();
+    // }
 
     public function setIslands($islands): void
     {
