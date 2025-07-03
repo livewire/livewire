@@ -170,11 +170,11 @@ class HandleComponents extends Mechanism
         if (config('app.debug')) $start = microtime(true);
         [ $component, $context ] = $this->fromSnapshot($snapshot);
 
-        trigger('context', $component, $updateContext);
-
         $this->pushOntoComponentStack($component);
 
         trigger('hydrate', $component, $memo, $context);
+
+        trigger('context', $component, $updateContext);
 
         $this->updateProperties($component, $updates, $data, $context);
         if (config('app.debug')) trigger('profile', 'hydrate', $component->getId(), [$start, microtime(true)]);

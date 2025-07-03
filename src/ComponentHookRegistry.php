@@ -45,14 +45,6 @@ class ComponentHookRegistry
                 $hook->callMount($params, $parent);
             });
 
-            on('context', function ($component, $context) use ($hook) {
-                if (! $hook = static::initializeHook($hook, $component)) {
-                    return;
-                }
-
-                $hook->callContext($context);
-            });
-
             on('hydrate', function ($component, $memo) use ($hook) {
                 if (! $hook = static::initializeHook($hook, $component)) {
                     return;
@@ -62,6 +54,10 @@ class ComponentHookRegistry
                 $hook->callHydrate($memo);
             });
         }
+
+        on('context', function ($component, $context) {
+            return static::proxyCallToHooks($component, 'callContext')($context);
+        });
 
         on('update', function ($component, $fullPath, $newValue) {
             $propertyName = Utils::beforeFirstDot($fullPath);
