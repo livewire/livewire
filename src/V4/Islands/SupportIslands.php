@@ -15,6 +15,7 @@ class SupportIslands extends ComponentHook
     static function provide()
     {
         Blade::precompiler(function ($content) {
+            ray('currentPath', Blade::getPath());
             // ray('precompiler', $content);
             return static::compileIslands($content);
         });
@@ -63,7 +64,7 @@ class SupportIslands extends ComponentHook
         $this->component->setIslands($islands);
     }
 
-    // @todo: This is being called for every call, but it should only happen once per request...
+    // @todo: decide where it would be better to have a hook that runs once after all the calls have happened but before rendering of the component starts...
     function call($method, $params, $returnEarly, $context)
     {
         // if context contains islands, then we should loop through and render them...
@@ -86,6 +87,9 @@ class SupportIslands extends ComponentHook
                 ->toArray();
 
             $context->addEffect('islands', $islandRenders);
+
+            // This ensures that if there are multiple calls, that this is only called once per request...
+            unset(static::$islands[$this->component->getId()]);
         };
     }
 
@@ -101,60 +105,7 @@ class SupportIslands extends ComponentHook
 
     static function compileIslands($content)
     {
-        return static::testDifferentRegex($content);
-
-        $viewsDirectory = storage_path('framework/views/livewire/views');
-
-        // Ensure the views directory exists
-        File::ensureDirectoryExists($viewsDirectory);
-
-        $pattern = '/@island\s*(?:\((.*?)\))?(.*?)@endisland/s';
-
-        $content = preg_replace_callback($pattern, function ($matches) use ($viewsDirectory) {
-            $parameters = isset($matches[1]) ? trim($matches[1]) : '';
-            $islandContent = trim($matches[2]);
-
-            if (!empty($parameters)) {
-                if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
-                    $islandName = $paramMatches[1];
-                    $islandData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
-                } else {
-                    $islandName = uniqid();
-                    $islandData = $parameters;
-                }
-            } else {
-                // Bare @island with no parameters at all
-                $islandName = uniqid();
-                $islandData = '[]';
-            }
-
-            ray('island', $islandName, $islandData);
-
-            // Remove any trailing commas if there are any...
-            $islandData = rtrim($islandData, ',');
-
-            $islandViewName = 'livewire-compiled::island_' . $islandName;
-            $islandFileName = 'island_' . $islandName . '.blade.php';
-
-            $islandPath = $viewsDirectory . '/' . $islandFileName;
-
-            // ray('island', $islandName, $islandViewName, $islandFileName, $islandPath);
-
-            File::put($islandPath, $islandContent);
-
-            ray('islanding', "@island('{$islandName}', {$islandData}, view: '{$islandViewName}')");
-
-            return "@island('{$islandName}', {$islandData}, view: '{$islandViewName}')";
-        }, $content);
-
-        // ray('islandCompiled', $content);
-
-        return $content;
-    }
-
-    static function testDifferentRegex($content)
-    {
-        // ray('testDifferentRegex', $content);
+        // ray('before content', $content);
 
         $viewDirectory = storage_path('framework/views/livewire/views');
 
