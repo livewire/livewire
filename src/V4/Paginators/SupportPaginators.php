@@ -2,10 +2,12 @@
 
 namespace Livewire\V4\Paginators;
 
-use Livewire\WithPagination;
-use Livewire\ComponentHook;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Container\Container;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Livewire\ComponentHook;
+use Livewire\WithPagination;
 
 class SupportPaginators extends ComponentHook
 {
@@ -19,6 +21,22 @@ class SupportPaginators extends ComponentHook
     static function provide()
     {
         Container::getInstance()->resolving(LengthAwarePaginator::class, function ($paginator) {
+            $instance = app('livewire')->current();
+
+            if ($instance) {
+                $instance->setPaginatorInstance($paginator);
+            }
+        });
+
+        Container::getInstance()->resolving(Paginator::class, function ($paginator) {
+            $instance = app('livewire')->current();
+
+            if ($instance) {
+                $instance->setPaginatorInstance($paginator);
+            }
+        });
+
+        Container::getInstance()->resolving(CursorPaginator::class, function ($paginator) {
             $instance = app('livewire')->current();
 
             if ($instance) {
