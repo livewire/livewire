@@ -2,6 +2,7 @@
 
 namespace Livewire;
 
+use Illuminate\Container\BoundMethod;
 use ReflectionClass;
 use Illuminate\Support\Str;
 
@@ -55,6 +56,26 @@ function invade($obj)
             $method = $this->reflected->getMethod($name);
 
             return $method->invoke($this->obj, ...$params);
+        }
+
+        public function withContainer()
+        {
+            return new class($this) extends BoundMethod {
+                public function __construct(
+                    private $invader
+                )
+                {}
+
+                public function __call($name, $params)
+                {
+                    $method = $this->invader->reflected->getMethod($name);
+
+                    return $method->invokeArgs(
+                        $this->invader->obj,
+                        self::getMethodDependencies(app(), [$this->invader->obj, $name])
+                    );
+                }
+            };
         }
     };
 }
