@@ -161,7 +161,26 @@ wireProperty('$ref', (component) => (name) => {
     return refEl.__livewire?.$wire
 })
 
-wireProperty('$paginator', (component) => (name = 'page') => getPaginatorObject(component, name))
+wireProperty('$paginator', (component) => {
+    let fn = (name = 'page') => getPaginatorObject(component, name)
+
+    let defaultPaginator = fn()
+
+    for (let key of Object.keys(defaultPaginator)) {
+        let value = defaultPaginator[key]
+
+        if (typeof value === 'function') {
+            fn[key] = (...args) => defaultPaginator[key](...args)
+        } else {
+            Object.defineProperty(fn, key, {
+                get: () => defaultPaginator[key],
+                set: val => { defaultPaginator[key] = val },
+            })
+        }
+    }
+
+    return fn
+})
 
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)

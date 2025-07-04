@@ -12,6 +12,154 @@ use Tests\BrowserTestCase;
 
 class SupportPaginatorsBrowserTest extends BrowserTestCase
 {
+    public function test_wire_paginator_as_a_property_forwards_calls_onto_the_default_paginator_object()
+    {
+        Livewire::visit(new class extends Component {
+            use WithPagination;
+
+            #[Computed]
+            public function users()
+            {
+                return PaginatorsUser::paginate(2);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <div dusk="users">
+                        @foreach ($this->users as $user)
+                            <div>{{ $user->name }}</div>
+                        @endforeach
+                    </div>
+
+                    <button dusk="previous-page" x-on:click="$wire.paginator.previousPage()">Previous Page</button>
+                    <button dusk="next-page" x-on:click="$wire.paginator.nextPage()">Next Page</button>
+                    <button dusk="set-page-3" x-on:click="$wire.paginator.setPage(3)">Set Page 3</button>
+                    <button dusk="reset-page" x-on:click="$wire.paginator.resetPage()">Reset Page</button>
+                    <p dusk="current-page" x-text="$wire.paginator.currentPage()"></p>
+                    <p dusk="first-page" x-text="$wire.paginator.firstPage()"></p>
+                    <p dusk="last-page" x-text="$wire.paginator.lastPage()"></p>
+                    <p dusk="has-pages" x-text="$wire.paginator.hasPages()"></p>
+                    <p dusk="has-more-pages" x-text="$wire.paginator.hasMorePages()"></p>
+                    <p dusk="has-previous-page" x-text="$wire.paginator.hasPreviousPage()"></p>
+                    <p dusk="has-next-page" x-text="$wire.paginator.hasNextPage()"></p>
+                    <p dusk="per-page" x-text="$wire.paginator.perPage()"></p>
+                    <p dusk="count" x-text="$wire.paginator.count()"></p>
+                    <p dusk="total" x-text="$wire.paginator.total()"></p>
+                    <p dusk="on-first-page" x-text="$wire.paginator.onFirstPage()"></p>
+                    <p dusk="on-last-page" x-text="$wire.paginator.onLastPage()"></p>
+                    <p dusk="first-item" x-text="$wire.paginator.firstItem()"></p>
+                    <p dusk="last-item" x-text="$wire.paginator.lastItem()"></p>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@first-page', '1')
+            ->assertSeeIn('@last-page', '3')
+            ->assertSeeIn('@has-pages', 'true')
+            ->assertSeeIn('@per-page', '2')
+            ->assertSeeIn('@count', '2')
+            ->assertSeeIn('@total', '6')
+
+            ->assertSeeIn('@users', 'John Doe')
+            ->assertSeeIn('@users', 'Jane Doe')
+            ->assertDontSeeIn('@users', 'John Smith')
+            ->assertDontSeeIn('@users', 'Jane Smith')
+            ->assertDontSeeIn('@users', 'Bob Smith')
+            ->assertDontSeeIn('@users', 'Alice Smith')
+            ->assertSeeIn('@current-page', '1')
+            ->assertSeeIn('@has-more-pages', 'true')
+            ->assertSeeIn('@has-previous-page', 'false')
+            ->assertSeeIn('@has-next-page', 'true')
+            ->assertSeeIn('@on-first-page', 'true')
+            ->assertSeeIn('@on-last-page', 'false')
+            ->assertSeeIn('@first-item', '1')
+            ->assertSeeIn('@last-item', '2')
+
+            ->waitForLivewire()->click('@next-page')
+            ->assertDontSeeIn('@users', 'John Doe')
+            ->assertDontSeeIn('@users', 'Jane Doe')
+            ->assertSeeIn('@users', 'John Smith')
+            ->assertSeeIn('@users', 'Jane Smith')
+            ->assertDontSeeIn('@users', 'Bob Smith')
+            ->assertDontSeeIn('@users', 'Alice Smith')
+            ->assertSeeIn('@current-page', '2')
+            ->assertSeeIn('@has-more-pages', 'true')
+            ->assertSeeIn('@has-previous-page', 'true')
+            ->assertSeeIn('@has-next-page', 'true')
+            ->assertSeeIn('@on-first-page', 'false')
+            ->assertSeeIn('@on-last-page', 'false')
+            ->assertSeeIn('@first-item', '3')
+            ->assertSeeIn('@last-item', '4')
+
+            ->waitForLivewire()->click('@next-page')
+            ->assertDontSeeIn('@users', 'John Doe')
+            ->assertDontSeeIn('@users', 'Jane Doe')
+            ->assertDontSeeIn('@users', 'John Smith')
+            ->assertDontSeeIn('@users', 'Jane Smith')
+            ->assertSeeIn('@users', 'Bob Smith')
+            ->assertSeeIn('@users', 'Alice Smith')
+            ->assertSeeIn('@current-page', '3')
+            ->assertSeeIn('@has-more-pages', 'false')
+            ->assertSeeIn('@has-previous-page', 'true')
+            ->assertSeeIn('@has-next-page', 'false')
+            ->assertSeeIn('@on-first-page', 'false')
+            ->assertSeeIn('@on-last-page', 'true')
+            ->assertSeeIn('@first-item', '5')
+            ->assertSeeIn('@last-item', '6')
+
+            ->waitForLivewire()->click('@previous-page')
+            ->assertDontSeeIn('@users', 'John Doe')
+            ->assertDontSeeIn('@users', 'Jane Doe')
+            ->assertSeeIn('@users', 'John Smith')
+            ->assertSeeIn('@users', 'Jane Smith')
+            ->assertDontSeeIn('@users', 'Bob Smith')
+            ->assertDontSeeIn('@users', 'Alice Smith')
+            ->assertSeeIn('@current-page', '2')
+            ->assertSeeIn('@has-more-pages', 'true')
+            ->assertSeeIn('@has-previous-page', 'true')
+            ->assertSeeIn('@has-next-page', 'true')
+
+            ->waitForLivewire()->click('@previous-page')
+            ->assertSeeIn('@users', 'John Doe')
+            ->assertSeeIn('@users', 'Jane Doe')
+            ->assertDontSeeIn('@users', 'John Smith')
+            ->assertDontSeeIn('@users', 'Jane Smith')
+            ->assertDontSeeIn('@users', 'Bob Smith')
+            ->assertDontSeeIn('@users', 'Alice Smith')
+            ->assertSeeIn('@current-page', '1')
+            ->assertSeeIn('@has-more-pages', 'true')
+            ->assertSeeIn('@has-previous-page', 'false')
+            ->assertSeeIn('@has-next-page', 'true')
+
+            ->waitForLivewire()->click('@set-page-3')
+            ->assertDontSeeIn('@users', 'John Doe')
+            ->assertDontSeeIn('@users', 'Jane Doe')
+            ->assertDontSeeIn('@users', 'John Smith')
+            ->assertDontSeeIn('@users', 'Jane Smith')
+            ->assertSeeIn('@users', 'Bob Smith')
+            ->assertSeeIn('@users', 'Alice Smith')
+            ->assertSeeIn('@current-page', '3')
+            ->assertSeeIn('@has-more-pages', 'false')
+            ->assertSeeIn('@has-previous-page', 'true')
+            ->assertSeeIn('@has-next-page', 'false')
+
+            ->waitForLivewire()->click('@reset-page')
+            ->assertSeeIn('@users', 'John Doe')
+            ->assertSeeIn('@users', 'Jane Doe')
+            ->assertDontSeeIn('@users', 'John Smith')
+            ->assertDontSeeIn('@users', 'Jane Smith')
+            ->assertDontSeeIn('@users', 'Bob Smith')
+            ->assertDontSeeIn('@users', 'Alice Smith')
+            ->assertSeeIn('@current-page', '1')
+            ->assertSeeIn('@has-more-pages', 'true')
+            ->assertSeeIn('@has-previous-page', 'false')
+            ->assertSeeIn('@has-next-page', 'true')
+            ;
+    }
+
     public function test_wire_paginator_as_a_function_returns_the_default_paginator_object()
     {
         Livewire::visit(new class extends Component {
