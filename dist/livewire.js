@@ -4790,37 +4790,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/v4/features/supportPaginators.js
   var paginatorObjects = /* @__PURE__ */ new WeakMap();
-  function getPaginatorObject(component) {
-    let paginatorObject = paginatorObjects.get(component);
+  function getPaginatorObject(component, paginatorName) {
+    let componentPaginatorObjects = paginatorObjects.get(component);
+    if (!componentPaginatorObjects) {
+      componentPaginatorObjects = /* @__PURE__ */ new Map();
+      paginatorObjects.set(component, componentPaginatorObjects);
+    }
+    let paginatorObject = componentPaginatorObjects.get(paginatorName);
     if (!paginatorObject) {
-      paginatorObject = Alpine.reactive({
-        renderedPages: [],
-        hasEarlier: false,
-        hasMore: false,
-        get hasNextPage() {
-          return paginatorObject.hasMore;
-        },
-        get hasPreviousPage() {
-          return paginatorObject.hasEarlier;
-        },
-        previousPage() {
-          paginatorObject.loadEarlier();
-        },
-        nextPage() {
-          paginatorObject.loadMore();
-        },
-        loadEarlier() {
-          let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
-          let leadingPage = sortedPages[0];
-          component.$wire.call("setPage", leadingPage - 1);
-        },
-        loadMore() {
-          let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
-          let trailingPage = sortedPages[sortedPages.length - 1];
-          component.$wire.call("setPage", trailingPage + 1);
-        }
-      });
-      paginatorObjects.set(component, paginatorObject);
+      paginatorObject = newPaginatorObject(component);
+      componentPaginatorObjects.set(paginatorName, paginatorObject);
     }
     return paginatorObject;
   }
@@ -4828,22 +4807,102 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let paginators = effects["paginators"];
     if (!paginators)
       return;
-    let paginator = paginators["page"];
-    if (!paginator)
-      return;
-    let paginatorObject = getPaginatorObject(component);
-    applyPaginatorToReactiveObject(paginatorObject, paginator);
+    for (let paginatorName in paginators) {
+      let paginator = paginators[paginatorName];
+      let paginatorObject = getPaginatorObject(component, paginatorName);
+      paginatorObject.paginator = paginator;
+    }
   });
-  function applyPaginatorToReactiveObject(paginatorObject, paginator) {
-    let currentPage = paginator.currentPage;
-    paginatorObject.renderedPages.push(paginator.currentPage);
-    let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
-    if (sortedPages[sortedPages.length - 1] === currentPage) {
-      paginatorObject.hasMore = paginator.hasNextPage;
-    }
-    if (sortedPages[0] === currentPage) {
-      paginatorObject.hasEarlier = paginator.hasPreviousPage;
-    }
+  function newPaginatorObject(component) {
+    return Alpine.reactive({
+      renderedPages: [],
+      paginator: {},
+      firstItem() {
+        return this.paginator.from;
+      },
+      lastItem() {
+        return this.paginator.to;
+      },
+      perPage() {
+        return this.paginator.perPage;
+      },
+      onFirstPage() {
+        return this.paginator.onFirstPage;
+      },
+      onLastPage() {
+        return this.paginator.onLastPage;
+      },
+      getPageName() {
+        return this.paginator.pageName;
+      },
+      getCursorName() {
+        return this.paginator.cursorName;
+      },
+      currentPage() {
+        return this.paginator.currentPage;
+      },
+      currentCursor() {
+        return this.paginator.currentCursor;
+      },
+      count() {
+        return this.paginator.count;
+      },
+      total() {
+        return this.paginator.total;
+      },
+      hasPages() {
+        return this.paginator.hasPages;
+      },
+      hasMorePages() {
+        return this.paginator.hasMorePages;
+      },
+      hasPreviousPage() {
+        return this.hasPages() && !this.onFirstPage();
+      },
+      hasNextPage() {
+        return this.hasPages() && !this.onLastPage();
+      },
+      hasPreviousCursor() {
+        return !!this.paginator.previousCursor;
+      },
+      hasNextCursor() {
+        return !!this.paginator.nextCursor;
+      },
+      firstPage() {
+        return this.paginator.firstPage;
+      },
+      lastPage() {
+        return this.paginator.lastPage;
+      },
+      previousPage() {
+        if (this.hasPreviousCursor()) {
+          return this.setPage(this.previousCursor());
+        }
+        if (this.hasPreviousPage()) {
+          component.$wire.call("previousPage", this.getPageName());
+        }
+      },
+      nextPage() {
+        if (this.hasNextCursor()) {
+          return this.setPage(this.nextCursor());
+        }
+        if (this.hasNextPage()) {
+          component.$wire.call("nextPage", this.getPageName());
+        }
+      },
+      resetPage() {
+        component.$wire.call("resetPage", this.getPageName());
+      },
+      setPage(page) {
+        component.$wire.call("setPage", page, this.getCursorName() ?? this.getPageName());
+      },
+      previousCursor() {
+        return this.paginator.previousCursor;
+      },
+      nextCursor() {
+        return this.paginator.nextCursor;
+      }
+    });
   }
 
   // js/$wire.js
@@ -4960,7 +5019,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return refEl.__livewire?.$wire;
   });
   wireProperty("$paginator", (component) => {
-    return getPaginatorObject(component);
+    let fn = (name = "page") => getPaginatorObject(component, name);
+    let defaultPaginator = fn();
+    for (let key of Object.keys(defaultPaginator)) {
+      let value = defaultPaginator[key];
+      if (typeof value === "function") {
+        fn[key] = (...args) => defaultPaginator[key](...args);
+      } else {
+        Object.defineProperty(fn, key, {
+          get: () => defaultPaginator[key],
+          set: (val) => {
+            defaultPaginator[key] = val;
+          }
+        });
+      }
+    }
+    return fn;
   });
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);

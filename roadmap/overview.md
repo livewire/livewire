@@ -45,6 +45,7 @@ Livewire 4 is a new version of Livewire focused on making livewire faster, more 
 - [ ] [Mutable updating hook](mutable-update-hook.md)
 - [ ] [Explicit hydrate/dehydrate methods](hydration-control.md)
 - [ ] [wire:submit with sending form data](wire-submit-form-data.md)
+- [ ] [Fix array update hook calls and values](array-update-hook.md)
 
 ## Ill-defined
 * (laracon) [requests](requests.md)

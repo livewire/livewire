@@ -162,7 +162,24 @@ wireProperty('$ref', (component) => (name) => {
 })
 
 wireProperty('$paginator', (component) => {
-    return getPaginatorObject(component)
+    let fn = (name = 'page') => getPaginatorObject(component, name)
+
+    let defaultPaginator = fn()
+
+    for (let key of Object.keys(defaultPaginator)) {
+        let value = defaultPaginator[key]
+
+        if (typeof value === 'function') {
+            fn[key] = (...args) => defaultPaginator[key](...args)
+        } else {
+            Object.defineProperty(fn, key, {
+                get: () => defaultPaginator[key],
+                set: val => { defaultPaginator[key] = val },
+            })
+        }
+    }
+
+    return fn
 })
 
 wireProperty('$call', (component) => async (method, ...params) => {
