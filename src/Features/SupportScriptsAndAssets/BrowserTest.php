@@ -418,4 +418,88 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn("@backendOption", '[{"text":"","explanation":"","is_correct":false}]')
         ;
     }
+
+    public function test_introduce_clone_magic_property()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public array $options = [];
+
+            public function render() {
+                return <<<'BLADE'
+                    <div x-data="testing">
+                        <div dusk="backendOption">@json($options)</div>
+
+                        <pre x-text="JSON.stringify($wire.options, null, 2)" dusk="livewireOptions"></pre>
+                        <pre x-text="JSON.stringify(options, null, 2)" dusk="options"></pre>
+                        <button x-on:click="addOption" dusk="addOption">Add</button>
+                        <button x-on:click="$wire.$refresh" dusk="refresh">Refresh</button>
+                    </div>
+
+                    @script
+                        <script>
+                            Alpine.data('testing', () => {
+                                return {
+                                    options: [],
+                                    init() {
+                                        this.options = this.$wire.$clone(this.$wire.options)
+                                    },
+                                    addOption() {
+                                        this.options.push({
+                                            text: '',
+                                            explanation: '',
+                                            is_correct: false,
+                                        });
+                                    },
+                                };
+                            });
+                        </script>
+                    @endscript
+                BLADE;
+            }
+        })
+        ->click('@addOption')
+        ->pause(1000)
+        ->click('@refresh')
+        ->pause(1000)
+        ->assertDontSeeIn("@backendOption", '[{"text":"","explanation":"","is_correct":false}]')
+        ;
+    }
+
+    public function test_why_alpine_string_not_syncing_automatically_with_form_variable()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public string $name = '';
+
+            public function render() {
+                return <<<'BLADE'
+                    <div x-data="testing">
+                        <div dusk="backendName">{{ $name }}</div>
+
+                        <pre x-text="$wire.name" dusk="livewireName"></pre>
+                        <input type="text" x-model="name" dusk="input">
+                        <button x-on:click="$wire.$refresh" dusk="refresh">Refresh</button>
+                    </div>
+
+                    @script
+                        <script>
+                            Alpine.data('testing', () => {
+                                return {
+                                    name: '',
+                                    init() {
+                                        this.name = this.$wire.name
+                                    },
+                                };
+                            });
+                        </script>
+                    @endscript
+                BLADE;
+            }
+        })
+        ->type('@input', 'foo')
+        ->pause(1000)
+        ->click('@refresh')
+        ->pause(1000)
+        ->assertDontSeeIn("@backendName", '"foo"')
+        ;
+    }
 }
