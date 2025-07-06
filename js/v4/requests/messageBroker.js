@@ -78,14 +78,14 @@ class MessageBroker {
             message.prepare()
         })
 
-        let requests = this.corraleMessagesIntoRequests(messages)
+        let requests = this.corralMessagesIntoRequests(messages)
 
         trigger('message.pooled', { requests })
 
         this.sendRequests(requests)
     }
 
-    corraleMessagesIntoRequests(messages) {
+    corralMessagesIntoRequests(messages) {
         let requests = new Set()
 
         for (let message of messages) {

@@ -6,7 +6,6 @@ import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import messageBroker from './v4/requests/messageBroker'
 import { getErrorsObject } from './v4/features/supportErrors'
 import { getPaginatorObject } from './v4/features/supportPaginators'
 import interceptorRegistry from './v4/interceptors/interceptorRegistry'
@@ -68,7 +67,7 @@ export function generateWireObject(component, state) {
                 return getProperty(component, property)
             } else if (property in state) {
                 return state[property]
-            } else if (! ['then'].includes(property)) {
+            } else if (!['then'].includes(property)) {
                 return getFallback(component)(property)
             }
         },
@@ -101,7 +100,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
     // we would want the entangle effect freed if the element was removed from the DOM...
     return new Proxy({}, {
         get(target, property) {
-            if (! component) component = closestComponent(el)
+            if (!component) component = closestComponent(el)
 
             if (['$entangle', 'entangle'].includes(property)) {
                 return generateEntangleFunction(component, cleanup)
@@ -111,7 +110,7 @@ Alpine.magic('wire', (el, { cleanup }) => {
         },
 
         set(target, property, value) {
-            if (! component) component = closestComponent(el)
+            if (!component) component = closestComponent(el)
 
             component.$wire[property] = value
 
@@ -164,6 +163,16 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     }
 
     return Promise.resolve()
+})
+
+wireProperty('$clone', () => (value) => {
+    try {
+        if (typeof structuredClone === 'function') {
+            return structuredClone(value)
+        }
+    } catch (e) {
+        return JSON.parse(JSON.stringify(value))
+    }
 })
 
 wireProperty('$ref', (component) => {
@@ -230,7 +239,7 @@ wireProperty('$entangle', (component) => (name, live = false) => {
 })
 
 wireProperty('$toggle', (component) => (name, live = true) => {
-    return component.$wire.set(name, ! component.$wire.get(name), live)
+    return component.$wire.set(name, !component.$wire.get(name), live)
 })
 
 wireProperty('$watch', (component) => (path, callback) => {
@@ -265,12 +274,12 @@ wireProperty('$commit', (component) => async () => {
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$hook', (component) => (name, callback) => {
-    let unhook = hook(name, ({component: hookComponent, ...params}) => {
+    let unhook = hook(name, ({ component: hookComponent, ...params }) => {
         // Request level hooks don't have a component, so just run the callback
         if (hookComponent === undefined) return callback(params)
 
         // Run the callback if the component in the hook matches the $wire component
-        if (hookComponent.id === component.id) return callback({component: hookComponent, ...params})
+        if (hookComponent.id === component.id) return callback({ component: hookComponent, ...params })
     })
 
     component.addCleanup(unhook)
@@ -303,7 +312,7 @@ wireProperty('$parent', component => {
 let overriddenMethods = new WeakMap
 
 export function overrideMethod(component, method, callback) {
-    if (! overriddenMethods.has(component)) {
+    if (!overriddenMethods.has(component)) {
         overriddenMethods.set(component, {})
     }
 
