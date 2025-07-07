@@ -4399,6 +4399,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     updates = {};
     actions = [];
     payload = {};
+    context = {};
     resolvers = [];
     status = "waiting";
     succeedCallbacks = [];
@@ -4409,6 +4410,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isolate = false;
     constructor(component) {
       this.component = component;
+    }
+    addContext(key, value) {
+      if (!this.context[key]) {
+        this.context[key] = [];
+      }
+      if (this.context[key].includes(value))
+        return;
+      this.context[key].push(value);
     }
     addAction(method, params, resolve) {
       if (!this.isMagicAction(method)) {
@@ -4466,7 +4475,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         calls: this.actions.map((i) => ({
           method: i.method,
           params: i.params
-        }))
+        })),
+        context: this.context
       };
       this.finishTarget = trigger2("commit", {
         component: this.component,
@@ -4728,6 +4738,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         this.messages.set(component.id, message);
       }
       return message;
+    }
+    addContext(component, key, value) {
+      let message = this.getMessage(component);
+      message.addContext(key, value);
     }
     addAction(component, method, params = []) {
       let message = this.getMessage(component);
@@ -5040,7 +5054,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return await component.$wire[method](...params);
   });
   wireProperty("$island", (component) => async (name) => {
-    return await component.$wire.call("__island", name);
+    messageBroker_default.addContext(component, "islands", name);
+    return await component.$wire.$refresh();
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
@@ -5264,19 +5279,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on2("effect", ({ component, effects }) => {
     let islands = effects.islands || [];
     islands.forEach((island) => {
-      let { name, content } = island;
+      let { name, key, content } = island;
       queueMicrotask(() => {
         queueMicrotask(() => {
-          renderIsland(component, name, content);
+          renderIsland(component, name, key, content);
         });
       });
     });
   });
-  function renderIsland(component, name, content) {
-    let { startNode, endNode } = findIslandComments(component.el, name);
+  function renderIsland(component, name, key, content) {
+    let { startNode, endNode } = findIslandComments(component.el, name, key);
     if (!startNode || !endNode)
       return;
-    let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name);
+    let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name, key);
     let parentElement = startNode.parentElement;
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
     if (mode === "append") {
@@ -5291,6 +5306,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       Array.from(container.childNodes).reverse().forEach((node) => {
         startNode.parentNode.insertBefore(node, startNode.nextSibling);
       });
+    } else if (mode === "skip") {
     } else {
       morphIsland(component, startNode, endNode, strippedContent);
     }
@@ -5329,6 +5345,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   }
+  function closestIslandName(el) {
+    let current = el;
+    while (current) {
+      let sibling = current.previousSibling;
+      let foundEndMarker = [];
+      while (sibling) {
+        if (isEndMarker(sibling)) {
+          foundEndMarker.push("a");
+        }
+        if (isStartMarker(sibling)) {
+          if (foundEndMarker.length > 0) {
+            foundEndMarker.pop();
+          } else {
+            return extractIslandName(sibling);
+          }
+        }
+        sibling = sibling.previousSibling;
+      }
+      current = current.parentElement;
+      if (current && current.hasAttribute("wire:id")) {
+        break;
+      }
+    }
+    return null;
+  }
   function isStartMarker(el) {
     return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
   }
@@ -5336,24 +5377,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
   }
   function extractIslandMode(el) {
-    let mode = el.textContent.match(/\[if ISLAND:.*:(\w+)\]/)?.[1];
+    let mode = el.textContent.match(/\[if ISLAND:.*?:.*?:(\w+)\]/)?.[1];
     return mode || "replace";
   }
-  function stripIslandCommentsAndExtractMode(content, islandName) {
+  function extractIslandName(el) {
+    let name = el.textContent.match(/\[if ISLAND:(\w+):.*?:.*?\]/)?.[1];
+    return name || "default";
+  }
+  function stripIslandCommentsAndExtractMode(content, islandName, islandKey) {
     let mode = "replace";
-    const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:(\\w+)\\]><\\!\\[endif\\]`));
+    const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}:(\\w+)\\]><\\!\\[endif\\]`));
     if (modeMatch) {
       mode = modeMatch[1];
     }
-    let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-    let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+    let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+    let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
     let stripped = content.replace(startComment, "").replace(endComment, "");
     return {
       content: stripped.trim(),
       mode
     };
   }
-  function findIslandComments(rootEl, islandName) {
+  function findIslandComments(rootEl, islandName, islandKey) {
     let startNode = null;
     let endNode = null;
     walkElements(rootEl, (el, skip) => {
@@ -5362,10 +5407,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       Array.from(el.childNodes).forEach((node) => {
         if (node.nodeType === Node.COMMENT_NODE) {
-          if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
             startNode = node;
           }
-          if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
             endNode = node;
           }
         }
@@ -10060,58 +10105,41 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/v4/requests/index.js
   requestBus_default.boot();
 
-  // js/v4/features/supportWireIsland.js
-  var wireIslands = /* @__PURE__ */ new WeakMap();
-  directive2("island", ({ el, directive: directive3 }) => {
-    let name = directive3.expression ?? "default";
-    let mode = directive3.modifiers.includes("append") ? "append" : directive3.modifiers.includes("prepend") ? "prepend" : "replace";
-    wireIslands.set(el, {
-      name,
-      mode
-    });
-  });
-  function wireIslandHook(el) {
-    if (!wireIslands.has(el))
-      return;
-    let { name, mode } = wireIslands.get(el);
-    Alpine.evaluate(el, `$wire.call('__island', '${name}', '${mode}')`);
-  }
-  function implicitIslandHook(el) {
-    let name = closestIslandName(el);
-    if (!name)
-      return;
-    Alpine.evaluate(el, `$wire.call('__island', '${name}')`);
-  }
-  function closestIslandName(el) {
-    let current = el;
-    while (current) {
-      let sibling = current.previousSibling;
-      while (sibling) {
-        if (isEndMarker3(sibling)) {
-          break;
-        }
-        if (isStartMarker3(sibling)) {
-          return extractIslandName(sibling);
-        }
-        sibling = sibling.previousSibling;
+  // js/v4/interceptors/interceptors.js
+  var Interceptors = class {
+    interceptors = /* @__PURE__ */ new Map();
+    constructor() {
+      this.globalInterceptors = /* @__PURE__ */ new Set();
+      this.componentInterceptors = /* @__PURE__ */ new Map();
+    }
+    add(callback, component = null, method = null) {
+      if (component === null) {
+        this.globalInterceptors.add(callback);
+        return;
       }
-      current = current.parentElement;
-      if (current && current.hasAttribute("wire:id")) {
-        break;
+      let interceptors2 = this.componentInterceptors.get(component);
+      if (!interceptors2) {
+        interceptors2 = /* @__PURE__ */ new Set();
+      }
+      interceptors2.add({ method, callback });
+    }
+    fire(el, directive3, component) {
+      let method = directive3.method;
+      for (let interceptor2 of this.globalInterceptors) {
+        interceptor2({ el, directive: directive3, component });
+      }
+      let componentInterceptors = this.componentInterceptors.get(component);
+      if (!componentInterceptors)
+        return;
+      for (let interceptor2 of componentInterceptors) {
+        if (interceptor2.method === method || interceptor2.method === null) {
+          interceptor2.callback({ el, directive: directive3, component });
+        }
       }
     }
-    return null;
-  }
-  function isStartMarker3(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
-  }
-  function isEndMarker3(el) {
-    return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
-  }
-  function extractIslandName(el) {
-    let name = el.textContent.match(/\[if ISLAND:(\w+):.*\]/)?.[1];
-    return name || "default";
-  }
+  };
+  var instance3 = new Interceptors();
+  var interceptors_default = instance3;
 
   // js/v4/features/supportWireIntersect.js
   var shouldPreserveScroll = false;
@@ -10132,12 +10160,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:intersect")) {
         let { name, value } = el.attributes[i];
+        let directive3 = extractDirective(el, name);
         let modifierString = name.split("wire:intersect")[1];
         let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
         let evaluator = module_default.evaluateLater(el, expression);
         module_default.bind(el, {
           ["x-intersect" + modifierString]() {
-            wireIslandHook(el);
+            let component = el.closest("[wire\\:id]")?.__livewire;
+            interceptors_default.fire(el, directive3, component);
             if (modifierString.includes(".preserve-scroll")) {
               shouldPreserveScroll = true;
             }
@@ -10146,6 +10176,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       }
     }
+  });
+
+  // js/v4/features/supportWireIsland.js
+  var wireIslands = /* @__PURE__ */ new WeakMap();
+  interceptors_default.add(({ el, directive: directive3, component }) => {
+    let name = wireIslands.get(el)?.name ?? closestIslandName(el);
+    if (!name)
+      return;
+    messageBroker_default.addContext(component, "islands", name);
+  });
+  directive2("island", ({ el, directive: directive3 }) => {
+    let name = directive3.expression ?? "default";
+    let mode = directive3.modifiers.includes("append") ? "append" : directive3.modifiers.includes("prepend") ? "prepend" : "replace";
+    wireIslands.set(el, {
+      name,
+      mode
+    });
   });
 
   // js/features/supportListeners.js
@@ -10843,9 +10890,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
             let evaluator = module_default.evaluateLater(el, "await $wire." + directive3.expression, { scope: { $event: e } });
+            interceptors_default.fire(el, directive3, component);
             el.setAttribute("data-loading", "true");
-            wireIslandHook(el);
-            implicitIslandHook(el);
             evaluator(() => {
               el.removeAttribute("data-loading");
             });
