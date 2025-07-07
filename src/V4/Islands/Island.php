@@ -11,6 +11,7 @@ class Island implements \Stringable, Htmlable, Jsonable
 {
     public function __construct(
         public string $name,
+        public string $key,
         public string $view,
         public array $data = [],
         public ?Component $component = null,
@@ -21,18 +22,13 @@ class Island implements \Stringable, Htmlable, Jsonable
     {
         app(ExtendBlade::class)->startLivewireRendering($this->component);
 
-        // @todo: this is a hack to get the component instance into the view so nested components render due to the `if (isset(\$_instance))` check in the island Blade directive...
-        \Livewire\Drawer\Utils::shareWithViews('__livewire', $this->component);
-
-        // ray('island', $this->view, $this->data);
-
         $output = view($this->view, $this->data)->render();
 
         app(ExtendBlade::class)->endLivewireRendering();
 
-        return "<!--[if ISLAND:{$this->name}:{$this->mode}]><![endif]-->"
+        return "<!--[if ISLAND:{$this->name}:{$this->key}:{$this->mode}]><![endif]-->"
             . $output
-            . "<!--[if ENDISLAND:{$this->name}]><![endif]-->";
+            . "<!--[if ENDISLAND:{$this->name}:{$this->key}]><![endif]-->";
     }
 
     public function prepend()
@@ -60,6 +56,7 @@ class Island implements \Stringable, Htmlable, Jsonable
 
         return [
             'name' => $this->name,
+            'key' => $this->key,
             'mode' => $mode,
         ];
     }

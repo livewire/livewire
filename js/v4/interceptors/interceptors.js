@@ -2,7 +2,6 @@ class Interceptors {
     interceptors = new Map()
 
     constructor() {
-        console.log('interceptors')
         this.globalInterceptors = new Set()
         this.componentInterceptors = new Map()
     }

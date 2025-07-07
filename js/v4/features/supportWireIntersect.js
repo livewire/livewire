@@ -1,6 +1,5 @@
 import Alpine from 'alpinejs'
 import interceptor from '@/v4/interceptors/interceptors.js'
-import { wireIslandHook } from './supportWireIsland'
 import { extractDirective } from '@/directives'
 import { on } from '@/hooks'
 
@@ -28,8 +27,6 @@ Alpine.interceptInit(el => {
             let { name, value } = el.attributes[i]
 
             let directive = extractDirective(el, name)
-
-            console.log('intersect',directive)
 
             let modifierString = name.split('wire:intersect')[1]
 

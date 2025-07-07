@@ -20,7 +20,6 @@ export default class PageRequest extends Request {
     }
 
     async send() {
-        // console.log('sending page request', this.uri)
         let options = {
             // method: 'GET',
             headers: {
@@ -41,12 +40,7 @@ export default class PageRequest extends Request {
 
             let html = await response.text()
 
-            // console.log('page request success', destination)
-
             this.succeedCallbacks.forEach(callback => callback(html, destination))
-
-            // console.log('page request morphed')
-
         } catch (error) {
             this.errorCallbacks.forEach(callback => callback(error))
 
