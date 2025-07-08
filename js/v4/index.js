@@ -1,3 +1,5 @@
 import './requests'
 import './features/supportPaginators.js'
 import './features/supportWireIntersect.js'
+import './features/supportWireIsland.js'
+import './interceptors'

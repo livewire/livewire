@@ -10,7 +10,6 @@ class ParsedComponent
     public ?string $externalClass;
     public ?string $layoutTemplate;
     public ?array $layoutData;
-    public array $inlineIslands;
 
     public function __construct(
         string $frontmatter,
@@ -19,7 +18,6 @@ class ParsedComponent
         ?string $externalClass = null,
         ?string $layoutTemplate = null,
         ?array $layoutData = null,
-        array $inlineIslands = []
     ) {
         $this->frontmatter = $frontmatter;
         $this->viewContent = $viewContent;
@@ -27,7 +25,6 @@ class ParsedComponent
         $this->externalClass = $externalClass;
         $this->layoutTemplate = $layoutTemplate;
         $this->layoutData = $layoutData;
-        $this->inlineIslands = $inlineIslands;
     }
 
     public function hasInlineClass(): bool
@@ -52,10 +49,5 @@ class ParsedComponent
     public function hasLayout(): bool
     {
         return !empty($this->layoutTemplate);
-    }
-
-    public function hasInlineIslands(): bool
-    {
-        return !empty($this->inlineIslands);
     }
 }

@@ -4,6 +4,7 @@ export default class Message {
     updates = {}
     actions = []
     payload = {}
+    context = {}
     resolvers = []
     status = 'waiting'
     succeedCallbacks = []
@@ -15,6 +16,16 @@ export default class Message {
 
     constructor(component) {
         this.component = component
+    }
+
+    addContext(key, value) {
+        if (! this.context[key]) {
+            this.context[key] = []
+        }
+
+        if (this.context[key].includes(value)) return
+
+        this.context[key].push(value)
     }
 
     addAction(method, params, resolve) {
@@ -95,7 +106,8 @@ export default class Message {
             calls: this.actions.map(i => ({
                 method: i.method,
                 params: i.params,
-            }))
+            })),
+            context: this.context,
         }
 
         // Allow other areas of the codebase to hook into the lifecycle

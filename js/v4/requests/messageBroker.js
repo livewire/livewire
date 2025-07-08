@@ -17,6 +17,12 @@ class MessageBroker {
         return message
     }
 
+    addContext(component, key, value) {
+        let message = this.getMessage(component)
+
+        message.addContext(key, value)
+    }
+
     addAction(component, method, params = []) {
         let message = this.getMessage(component)
 
