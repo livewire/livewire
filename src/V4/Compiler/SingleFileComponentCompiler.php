@@ -110,10 +110,6 @@ class SingleFileComponentCompiler extends Mechanism
             $content = preg_replace('/@layout\s*\([^)]+\)\s*/', '', $content);
         }
 
-        // Extract inline islands before processing component
-        $inlineIslands = [];
-        // $content = $this->extractInlineIslands($content, $inlineIslands);
-
         // Handle external class reference: @php(new App\Livewire\SomeClass)
         if (preg_match('/@php\s*\(\s*new\s+([A-Za-z0-9\\\\]+)(?:::class)?\s*\)/s', $content, $matches)) {
             $externalClass = $matches[1];
@@ -126,7 +122,6 @@ class SingleFileComponentCompiler extends Mechanism
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
-                $inlineIslands
             );
         }
 
@@ -148,7 +143,6 @@ class SingleFileComponentCompiler extends Mechanism
                 null,
                 $layoutTemplate,
                 $layoutData,
-                $inlineIslands
             );
         }
 
@@ -164,7 +158,6 @@ class SingleFileComponentCompiler extends Mechanism
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
-                $inlineIslands
             );
         }
 
@@ -186,7 +179,6 @@ class SingleFileComponentCompiler extends Mechanism
                 null,
                 $layoutTemplate,
                 $layoutData,
-                $inlineIslands
             );
         }
 
@@ -224,98 +216,6 @@ class SingleFileComponentCompiler extends Mechanism
         return $parsed;
     }
 
-    protected function extractInlineIslands(string $content, array &$inlineIslands): string
-    {
-        $pass = 0;
-        while (true) {
-            $pass++;
-
-            // Find all @island and @endisland positions
-            $positions = [];
-            $pattern = '/@island|@endisland/';
-            preg_match_all($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
-            foreach ($matches[0] as $match) {
-                $positions[] = [
-                    'type' => $match[0],
-                    'pos' => $match[1],
-                ];
-            }
-
-            // Pair @island and @endisland tags using a stack
-            $stack = [];
-            $pairs = [];
-            foreach ($positions as $entry) {
-                if ($entry['type'] === '@island') {
-                    $stack[] = $entry['pos'];
-                } else {
-                    $start = array_pop($stack);
-                    if ($start !== null) {
-                        $pairs[] = [ 'start' => $start, 'end' => $entry['pos'] ];
-                    }
-                }
-            }
-
-            if (empty($pairs)) break;
-
-            // Sort pairs by start DESC so we replace innermost first
-            usort($pairs, function($a, $b) { return $b['start'] <=> $a['start']; });
-            foreach ($pairs as $pair) {
-                // First, extract the block from the original content using the pair positions
-                $islandBlock = substr($content, $pair['start'], $pair['end'] - $pair['start'] + 10); // 10 = strlen('@endisland')
-
-                // Find the @endisland directive within this block
-                $endDirectivePos = strpos($islandBlock, '@endisland');
-                if ($endDirectivePos === false) {
-                    continue; // Skip if we can't find the end directive
-                }
-
-                // Calculate the actual end position in the original content
-                $endPos = $pair['start'] + $endDirectivePos + 10; // 10 = strlen('@endisland')
-
-                // Re-extract the block with the correct end position
-                $islandBlock = substr($content, $pair['start'], $endPos - $pair['start']);
-
-                if (preg_match('/@island\s*(?:\((.*?)\))?(.*?)@endisland/s', $islandBlock, $matches)) {
-                    $parameters = isset($matches[1]) ? trim($matches[1]) : '';
-                    $islandContent = trim($matches[2]);
-
-                    // Handle different parameter formats
-                    if (!empty($parameters)) {
-                        if (preg_match('/^[\'"]([^\'"]+)[\'"](?:\s*,\s*(.*))?$/', $parameters, $paramMatches)) {
-                            $islandName = $paramMatches[1];
-                            $islandData = isset($paramMatches[2]) && !empty(trim($paramMatches[2])) ? trim($paramMatches[2]) : '[]';
-                        } else {
-                            $islandName = uniqid('island_');
-                            $islandData = $parameters;
-                        }
-                    } else {
-                        $islandName = uniqid('island_');
-                        $islandData = '[]';
-                    }
-
-                    $islandHash = substr(md5($islandContent . $islandName), 0, 8);
-                    $islandViewName = 'livewire-compiled::island_' . $islandName . '_' . $islandHash;
-                    $islandFileName = 'island_' . $islandName . '_' . $islandHash . '.blade.php';
-
-                    $inlineIslands[] = [
-                        'name' => $islandName,
-                        'data' => $islandData,
-                        'content' => $islandContent,
-                        'viewName' => $islandViewName,
-                        'fileName' => $islandFileName
-                    ];
-
-                    $dataParam = $islandData !== '[]' ? ", {$islandData}" : '';
-                    $replacement = "@island('{$islandName}'{$dataParam})";
-
-                    $content = substr_replace($content, $replacement, $pair['start'], $endPos - $pair['start']);
-                }
-            }
-        }
-
-        return $content;
-    }
-
     protected function parseLayoutData(string $arrayString): ?array
     {
         // Simple array parsing - handles basic key-value pairs
@@ -351,36 +251,9 @@ class SingleFileComponentCompiler extends Mechanism
         // Always generate the view file...
         $this->generateView($result, $parsed);
 
-        // Generate island view files if present...
-        if (!empty($parsed->inlineIslands)) {
-            $this->generateIslandViews($parsed);
-        }
-
         // Only generate class file for inline components...
         if ($result->shouldGenerateClass()) {
             $this->generateClass($result, $parsed);
-        }
-    }
-
-    protected function generateIslandViews(ParsedComponent $parsed): void
-    {
-        foreach ($parsed->inlineIslands as $island) {
-            $islandPath = $this->viewsDirectory . '/' . $island['fileName'];
-
-            $processedIslandContent = $island['content'];
-
-            // For inline components, add computed property guards instead of transforming
-            if ($parsed->hasInlineClass()) {
-                $computedProperties = $this->extractComputedPropertyNames($parsed->frontmatter);
-                $usedComputedProperties = $this->extractUsedComputedProperties($processedIslandContent, $computedProperties);
-
-                if (!empty($usedComputedProperties)) {
-                    $guards = $this->generateComputedPropertyGuards($usedComputedProperties);
-                    $processedIslandContent = $guards . $processedIslandContent;
-                }
-            }
-
-            File::put($islandPath, $processedIslandContent);
         }
     }
 
@@ -439,12 +312,6 @@ class SingleFileComponentCompiler extends Mechanism
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
         }
 
-        // Generate island lookup property if islands exist
-        $islandLookupProperty = '';
-        if (!empty($parsed->inlineIslands)) {
-            $islandLookupProperty = $this->generateIslandLookupProperty($parsed->inlineIslands);
-        }
-
         // Build the pre-class code section (imports, constants, etc.)
         $preClassSection = '';
         if (!empty($preClassCode)) {
@@ -463,7 +330,7 @@ namespace {$namespace};
 
 {$preClassSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
 {
-{$islandLookupProperty}{$classBody}
+{$classBody}
 
     public function render()
     {
@@ -775,18 +642,6 @@ namespace {$namespace};
         if (! File::exists($gitignorePath)) {
             File::put($gitignorePath, "*\n!.gitignore");
         }
-    }
-
-    protected function generateIslandLookupProperty(array $inlineIslands): string
-    {
-        $lookupEntries = [];
-        foreach ($inlineIslands as $island) {
-            $lookupEntries[] = "        '{$island['name']}' => '{$island['viewName']}'";
-        }
-
-        $lookupArray = "[\n" . implode(",\n", $lookupEntries) . "\n    ]";
-
-        return "    protected \$islandLookup = {$lookupArray};\n\n";
     }
 
     protected function extractClassLevelAttributes(string $frontmatter): array

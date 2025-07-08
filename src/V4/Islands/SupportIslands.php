@@ -28,12 +28,6 @@ class SupportIslands extends ComponentHook
         });
     }
 
-    static function expressionStartsWithNamedParameter($expression)
-    {
-        // Check if expression starts with a named parameter (word followed by colon)
-        return !! preg_match('/^\s*\w+\s*:/', trim($expression));
-    }
-
     function context($context)
     {
         if (! isset($context['islands'])) return;

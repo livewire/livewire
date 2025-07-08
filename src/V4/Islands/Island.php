@@ -2,10 +2,11 @@
 
 namespace Livewire\V4\Islands;
 
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use Livewire\Component;
-use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Contracts\Support\Jsonable;
+use Livewire\Component;
+use Livewire\Drawer\Utils;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 
 class Island implements \Stringable, Htmlable, Jsonable
 {
@@ -22,7 +23,9 @@ class Island implements \Stringable, Htmlable, Jsonable
     {
         app(ExtendBlade::class)->startLivewireRendering($this->component);
 
-        $output = view($this->view, $this->data)->render();
+        $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this->component);
+
+        $output = view($this->view, array_merge($componentData, $this->data))->render();
 
         app(ExtendBlade::class)->endLivewireRendering();
 
