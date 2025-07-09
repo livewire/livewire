@@ -3274,7 +3274,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
-      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
@@ -4400,6 +4400,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     actions = [];
     payload = {};
     context = {};
+    interceptors = /* @__PURE__ */ new Set();
     resolvers = [];
     status = "waiting";
     succeedCallbacks = [];
@@ -4410,6 +4411,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isolate = false;
     constructor(component) {
       this.component = component;
+    }
+    addInterceptor(interceptor2) {
+      this.interceptors.add(interceptor2);
     }
     addContext(key, value) {
       if (!this.context[key]) {
@@ -4492,7 +4496,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         }
       });
     }
+    startRequest() {
+      this.interceptors.forEach((i) => i.request());
+    }
+    beforeResponse() {
+      this.interceptors.forEach((i) => i.beforeResponse());
+    }
     respond() {
+      this.interceptors.forEach((i) => i.response());
       this.respondCallbacks.forEach((i) => i());
     }
     succeed(response) {
@@ -4503,6 +4514,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let { snapshot, effects } = response;
       this.component.mergeNewSnapshot(snapshot, effects, this.updates);
       this.component.processEffects(this.component.effects);
+      this.interceptors.forEach((i) => i.success(response));
       this.resolvers.forEach((i) => i());
       if (effects["returns"]) {
         let returns = effects["returns"];
@@ -4518,10 +4530,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     fail() {
       this.status = "failed";
       this.respond();
+      this.interceptors.forEach((i) => i.error());
       this.failCallbacks.forEach((i) => i());
     }
     cancel() {
       this.status = "cancelled";
+      this.interceptors.forEach((i) => i.cancel());
     }
     isBuffering() {
       return this.status === "buffering";
@@ -4604,6 +4618,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       };
     }
     async send() {
+      this.messages.forEach((message) => {
+        message.startRequest();
+      });
       let payload = {
         _token: getCsrfToken(),
         components: Array.from(this.messages, (i) => i.payload)
@@ -4628,6 +4645,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         fail: (i) => this.errorCallbacks.push(i)
       });
       let response;
+      this.messages.forEach((message) => {
+        message.beforeResponse();
+      });
       try {
         response = await fetch(updateUri, options);
       } catch (e) {
@@ -4738,6 +4758,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         this.messages.set(component.id, message);
       }
       return message;
+    }
+    addInterceptor(interceptor2, component) {
+      let message = this.getMessage(component);
+      message.addInterceptor(interceptor2);
     }
     addContext(component, key, value) {
       let message = this.getMessage(component);
@@ -10105,6 +10129,92 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/v4/requests/index.js
   requestBus_default.boot();
 
+  // js/v4/interceptors/interceptor.js
+  var Interceptor = class {
+    callbacks = {
+      default: () => {
+      },
+      fire: () => {
+      },
+      request: () => {
+      },
+      beforeResponse: () => {
+      },
+      response: () => {
+      },
+      success: () => {
+      },
+      error: () => {
+      },
+      cancel: () => {
+      },
+      beforeMorph: () => {
+      },
+      afterMorph: () => {
+      }
+    };
+    constructor(callback, method) {
+      this.callbacks.default = callback;
+      this.method = method;
+    }
+    onFire(callback) {
+      this.callbacks.fire = callback;
+    }
+    onRequest(callback) {
+      this.callbacks.request = callback;
+    }
+    onBeforeResponse(callback) {
+      this.callbacks.beforeResponse = callback;
+    }
+    onResponse(callback) {
+      this.callbacks.response = callback;
+    }
+    onSuccess(callback) {
+      this.callbacks.success = callback;
+    }
+    onError(callback) {
+      this.callbacks.error = callback;
+    }
+    onCancel(callback) {
+      this.callbacks.cancel = callback;
+    }
+    onBeforeMorph(callback) {
+      this.callbacks.beforeMorph = callback;
+    }
+    onAfterMorph(callback) {
+      this.callbacks.afterMorph = callback;
+    }
+    fire(el, directive3, component) {
+      this.callbacks.default({ el, directive: directive3, component, request: this });
+      this.callbacks.fire();
+    }
+    request() {
+      this.callbacks.request();
+    }
+    beforeResponse() {
+      this.callbacks.beforeResponse();
+    }
+    response() {
+      this.callbacks.response();
+    }
+    success() {
+      this.callbacks.success();
+    }
+    error() {
+      this.callbacks.error();
+    }
+    cancel() {
+      this.callbacks.cancel();
+    }
+    beforeMorph() {
+      this.callbacks.beforeMorph();
+    }
+    afterMorph() {
+      this.callbacks.afterMorph();
+    }
+  };
+  var interceptor_default = Interceptor;
+
   // js/v4/interceptors/interceptors.js
   var Interceptors = class {
     interceptors = /* @__PURE__ */ new Map();
@@ -10113,27 +10223,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.componentInterceptors = /* @__PURE__ */ new Map();
     }
     add(callback, component = null, method = null) {
+      let interceptor2 = new interceptor_default(callback, method);
       if (component === null) {
-        this.globalInterceptors.add(callback);
+        this.globalInterceptors.add(interceptor2);
         return;
       }
       let interceptors2 = this.componentInterceptors.get(component);
       if (!interceptors2) {
         interceptors2 = /* @__PURE__ */ new Set();
       }
-      interceptors2.add({ method, callback });
+      interceptors2.add(interceptor2);
     }
     fire(el, directive3, component) {
       let method = directive3.method;
       for (let interceptor2 of this.globalInterceptors) {
-        interceptor2({ el, directive: directive3, component });
+        interceptor2.fire(el, directive3, component);
+        messageBroker_default.addInterceptor(interceptor2, component);
       }
       let componentInterceptors = this.componentInterceptors.get(component);
       if (!componentInterceptors)
         return;
       for (let interceptor2 of componentInterceptors) {
         if (interceptor2.method === method || interceptor2.method === null) {
-          interceptor2.callback({ el, directive: directive3, component });
+          interceptor2.fire(el, directive3, component);
+          messageBroker_default.addInterceptor(interceptor2, component);
         }
       }
     }
@@ -10141,21 +10254,55 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var instance3 = new Interceptors();
   var interceptors_default = instance3;
 
-  // js/v4/features/supportWireIntersect.js
-  var shouldPreserveScroll = false;
-  on2("commit", ({ component, respond }) => {
-    respond(() => {
-      if (shouldPreserveScroll) {
-        let oldHeight = document.body.scrollHeight;
-        let oldScroll = window.scrollY;
-        setTimeout(() => {
-          let heightDiff = document.body.scrollHeight - oldHeight;
-          window.scrollTo(0, oldScroll + heightDiff);
-          shouldPreserveScroll = false;
-        });
-      }
+  // js/v4/features/supportDataLoading.js
+  interceptors_default.add(({ el, directive: directive3, component, request }) => {
+    el.setAttribute("data-loading", "true");
+    request.onFire(() => {
+      console.log("fire");
+    });
+    request.onRequest(() => {
+      console.log("request");
+    });
+    request.onBeforeResponse(() => {
+      console.log("beforeResponse");
+    });
+    request.onResponse(() => {
+      console.log("response");
+      el.removeAttribute("data-loading");
+    });
+    request.onSuccess(() => {
+      console.log("success");
+    });
+    request.onError(() => {
+      console.log("error");
+    });
+    request.onCancel(() => {
+      console.log("cancel");
+      el.removeAttribute("data-loading");
+    });
+    request.onBeforeMorph(() => {
+      console.log("beforeMorph");
+    });
+    request.onAfterMorph(() => {
+      console.log("afterMorph");
     });
   });
+
+  // js/v4/features/supportPreserveScroll.js
+  interceptors_default.add(({ el, directive: directive3, component, request }) => {
+    if (!directive3 || !directive3.modifiers.includes("preserve-scroll"))
+      return;
+    request.onResponse(() => {
+      let oldHeight = document.body.scrollHeight;
+      let oldScroll = window.scrollY;
+      setTimeout(() => {
+        let heightDiff = document.body.scrollHeight - oldHeight;
+        window.scrollTo(0, oldScroll + heightDiff);
+      });
+    });
+  });
+
+  // js/v4/features/supportWireIntersect.js
   module_default.interceptInit((el) => {
     for (let i = 0; i < el.attributes.length; i++) {
       if (el.attributes[i].name.startsWith("wire:intersect")) {
@@ -10168,9 +10315,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           ["x-intersect" + modifierString]() {
             let component = el.closest("[wire\\:id]")?.__livewire;
             interceptors_default.fire(el, directive3, component);
-            if (modifierString.includes(".preserve-scroll")) {
-              shouldPreserveScroll = true;
-            }
             evaluator();
           }
         });
@@ -10889,12 +11033,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       [attribute](e) {
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
-            let evaluator = module_default.evaluateLater(el, "await $wire." + directive3.expression, { scope: { $event: e } });
             interceptors_default.fire(el, directive3, component);
-            el.setAttribute("data-loading", "true");
-            evaluator(() => {
-              el.removeAttribute("data-loading");
-            });
+            module_default.evaluate(el, "await $wire." + directive3.expression, { scope: { $event: e } });
           });
         };
         if (el.__livewire_confirm) {

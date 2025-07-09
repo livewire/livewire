@@ -3208,7 +3208,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -8268,6 +8268,7 @@ var Message = class {
   actions = [];
   payload = {};
   context = {};
+  interceptors = /* @__PURE__ */ new Set();
   resolvers = [];
   status = "waiting";
   succeedCallbacks = [];
@@ -8278,6 +8279,9 @@ var Message = class {
   isolate = false;
   constructor(component) {
     this.component = component;
+  }
+  addInterceptor(interceptor) {
+    this.interceptors.add(interceptor);
   }
   addContext(key, value) {
     if (!this.context[key]) {
@@ -8360,7 +8364,14 @@ var Message = class {
       }
     });
   }
+  startRequest() {
+    this.interceptors.forEach((i) => i.request());
+  }
+  beforeResponse() {
+    this.interceptors.forEach((i) => i.beforeResponse());
+  }
   respond() {
+    this.interceptors.forEach((i) => i.response());
     this.respondCallbacks.forEach((i) => i());
   }
   succeed(response) {
@@ -8371,6 +8382,7 @@ var Message = class {
     let { snapshot, effects } = response;
     this.component.mergeNewSnapshot(snapshot, effects, this.updates);
     this.component.processEffects(this.component.effects);
+    this.interceptors.forEach((i) => i.success(response));
     this.resolvers.forEach((i) => i());
     if (effects["returns"]) {
       let returns = effects["returns"];
@@ -8386,10 +8398,12 @@ var Message = class {
   fail() {
     this.status = "failed";
     this.respond();
+    this.interceptors.forEach((i) => i.error());
     this.failCallbacks.forEach((i) => i());
   }
   cancel() {
     this.status = "cancelled";
+    this.interceptors.forEach((i) => i.cancel());
   }
   isBuffering() {
     return this.status === "buffering";
@@ -8472,6 +8486,9 @@ var MessageRequest = class extends Request {
     };
   }
   async send() {
+    this.messages.forEach((message) => {
+      message.startRequest();
+    });
     let payload = {
       _token: getCsrfToken(),
       components: Array.from(this.messages, (i) => i.payload)
@@ -8496,6 +8513,9 @@ var MessageRequest = class extends Request {
       fail: (i) => this.errorCallbacks.push(i)
     });
     let response;
+    this.messages.forEach((message) => {
+      message.beforeResponse();
+    });
     try {
       response = await fetch(updateUri, options);
     } catch (e) {
@@ -8606,6 +8626,10 @@ var MessageBroker = class {
       this.messages.set(component.id, message);
     }
     return message;
+  }
+  addInterceptor(interceptor, component) {
+    let message = this.getMessage(component);
+    message.addInterceptor(interceptor);
   }
   addContext(component, key, value) {
     let message = this.getMessage(component);
@@ -11002,8 +11026,91 @@ on("message.pooling", ({ messages }) => {
 // js/v4/requests/index.js
 requestBus_default.boot();
 
-// js/v4/features/supportWireIntersect.js
-var import_alpinejs7 = __toESM(require_module_cjs());
+// js/v4/interceptors/interceptor.js
+var Interceptor = class {
+  callbacks = {
+    default: () => {
+    },
+    fire: () => {
+    },
+    request: () => {
+    },
+    beforeResponse: () => {
+    },
+    response: () => {
+    },
+    success: () => {
+    },
+    error: () => {
+    },
+    cancel: () => {
+    },
+    beforeMorph: () => {
+    },
+    afterMorph: () => {
+    }
+  };
+  constructor(callback, method) {
+    this.callbacks.default = callback;
+    this.method = method;
+  }
+  onFire(callback) {
+    this.callbacks.fire = callback;
+  }
+  onRequest(callback) {
+    this.callbacks.request = callback;
+  }
+  onBeforeResponse(callback) {
+    this.callbacks.beforeResponse = callback;
+  }
+  onResponse(callback) {
+    this.callbacks.response = callback;
+  }
+  onSuccess(callback) {
+    this.callbacks.success = callback;
+  }
+  onError(callback) {
+    this.callbacks.error = callback;
+  }
+  onCancel(callback) {
+    this.callbacks.cancel = callback;
+  }
+  onBeforeMorph(callback) {
+    this.callbacks.beforeMorph = callback;
+  }
+  onAfterMorph(callback) {
+    this.callbacks.afterMorph = callback;
+  }
+  fire(el, directive2, component) {
+    this.callbacks.default({ el, directive: directive2, component, request: this });
+    this.callbacks.fire();
+  }
+  request() {
+    this.callbacks.request();
+  }
+  beforeResponse() {
+    this.callbacks.beforeResponse();
+  }
+  response() {
+    this.callbacks.response();
+  }
+  success() {
+    this.callbacks.success();
+  }
+  error() {
+    this.callbacks.error();
+  }
+  cancel() {
+    this.callbacks.cancel();
+  }
+  beforeMorph() {
+    this.callbacks.beforeMorph();
+  }
+  afterMorph() {
+    this.callbacks.afterMorph();
+  }
+};
+var interceptor_default = Interceptor;
 
 // js/v4/interceptors/interceptors.js
 var Interceptors = class {
@@ -11013,27 +11120,30 @@ var Interceptors = class {
     this.componentInterceptors = /* @__PURE__ */ new Map();
   }
   add(callback, component = null, method = null) {
+    let interceptor = new interceptor_default(callback, method);
     if (component === null) {
-      this.globalInterceptors.add(callback);
+      this.globalInterceptors.add(interceptor);
       return;
     }
     let interceptors = this.componentInterceptors.get(component);
     if (!interceptors) {
       interceptors = /* @__PURE__ */ new Set();
     }
-    interceptors.add({ method, callback });
+    interceptors.add(interceptor);
   }
   fire(el, directive2, component) {
     let method = directive2.method;
     for (let interceptor of this.globalInterceptors) {
-      interceptor({ el, directive: directive2, component });
+      interceptor.fire(el, directive2, component);
+      messageBroker_default.addInterceptor(interceptor, component);
     }
     let componentInterceptors = this.componentInterceptors.get(component);
     if (!componentInterceptors)
       return;
     for (let interceptor of componentInterceptors) {
       if (interceptor.method === method || interceptor.method === null) {
-        interceptor.callback({ el, directive: directive2, component });
+        interceptor.fire(el, directive2, component);
+        messageBroker_default.addInterceptor(interceptor, component);
       }
     }
   }
@@ -11041,21 +11151,56 @@ var Interceptors = class {
 var instance3 = new Interceptors();
 var interceptors_default = instance3;
 
-// js/v4/features/supportWireIntersect.js
-var shouldPreserveScroll = false;
-on("commit", ({ component, respond }) => {
-  respond(() => {
-    if (shouldPreserveScroll) {
-      let oldHeight = document.body.scrollHeight;
-      let oldScroll = window.scrollY;
-      setTimeout(() => {
-        let heightDiff = document.body.scrollHeight - oldHeight;
-        window.scrollTo(0, oldScroll + heightDiff);
-        shouldPreserveScroll = false;
-      });
-    }
+// js/v4/features/supportDataLoading.js
+interceptors_default.add(({ el, directive: directive2, component, request }) => {
+  el.setAttribute("data-loading", "true");
+  request.onFire(() => {
+    console.log("fire");
+  });
+  request.onRequest(() => {
+    console.log("request");
+  });
+  request.onBeforeResponse(() => {
+    console.log("beforeResponse");
+  });
+  request.onResponse(() => {
+    console.log("response");
+    el.removeAttribute("data-loading");
+  });
+  request.onSuccess(() => {
+    console.log("success");
+  });
+  request.onError(() => {
+    console.log("error");
+  });
+  request.onCancel(() => {
+    console.log("cancel");
+    el.removeAttribute("data-loading");
+  });
+  request.onBeforeMorph(() => {
+    console.log("beforeMorph");
+  });
+  request.onAfterMorph(() => {
+    console.log("afterMorph");
   });
 });
+
+// js/v4/features/supportPreserveScroll.js
+interceptors_default.add(({ el, directive: directive2, component, request }) => {
+  if (!directive2 || !directive2.modifiers.includes("preserve-scroll"))
+    return;
+  request.onResponse(() => {
+    let oldHeight = document.body.scrollHeight;
+    let oldScroll = window.scrollY;
+    setTimeout(() => {
+      let heightDiff = document.body.scrollHeight - oldHeight;
+      window.scrollTo(0, oldScroll + heightDiff);
+    });
+  });
+});
+
+// js/v4/features/supportWireIntersect.js
+var import_alpinejs7 = __toESM(require_module_cjs());
 import_alpinejs7.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:intersect")) {
@@ -11068,9 +11213,6 @@ import_alpinejs7.default.interceptInit((el) => {
         ["x-intersect" + modifierString]() {
           let component = el.closest("[wire\\:id]")?.__livewire;
           interceptors_default.fire(el, directive2, component);
-          if (modifierString.includes(".preserve-scroll")) {
-            shouldPreserveScroll = true;
-          }
           evaluator();
         }
       });
@@ -11795,12 +11937,8 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     [attribute](e) {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          let evaluator = import_alpinejs13.default.evaluateLater(el, "await $wire." + directive2.expression, { scope: { $event: e } });
           interceptors_default.fire(el, directive2, component);
-          el.setAttribute("data-loading", "true");
-          evaluator(() => {
-            el.removeAttribute("data-loading");
-          });
+          import_alpinejs13.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
         });
       };
       if (el.__livewire_confirm) {
