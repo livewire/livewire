@@ -575,7 +575,7 @@ class PostCountBadgeTest extends TestCase
 }
 ```
 
-Sometimes it may come in handy to assert that an event was dispatched with one or more parameters. Let's have a look at a component called `ShowPosts` that dispatches an event called `banner-message` with a parameter called `message`:
+Sometimes it may come in handy to assert that an event was dispatched with one or more parameters. Let's have a look at a component called `ShowPosts` that dispatches an event called `notify` with a parameter called `message`:
 
 ```php
 <?php
