@@ -5,6 +5,7 @@ export default class Message {
     actions = []
     payload = {}
     context = {}
+    interceptors = new Set()
     resolvers = []
     status = 'waiting'
     succeedCallbacks = []
@@ -16,6 +17,10 @@ export default class Message {
 
     constructor(component) {
         this.component = component
+    }
+
+    addInterceptor(interceptor) {
+        this.interceptors.add(interceptor)
     }
 
     addContext(key, value) {
@@ -127,7 +132,17 @@ export default class Message {
         })
     }
 
+    startRequest() {
+        this.interceptors.forEach(i => i.request())
+    }
+
+    beforeResponse() {
+        this.interceptors.forEach(i => i.beforeResponse())
+    }
+
     respond() {
+        this.interceptors.forEach(i => i.response())
+
         this.respondCallbacks.forEach(i => i())
     }
 
@@ -144,6 +159,8 @@ export default class Message {
 
         // Trigger any side effects from the payload like "morph" and "dispatch event"...
         this.component.processEffects(this.component.effects)
+
+        this.interceptors.forEach(i => i.success(response))
 
         this.resolvers.forEach(i => i())
 
@@ -171,11 +188,15 @@ export default class Message {
 
         this.respond()
 
+        this.interceptors.forEach(i => i.error())
+
         this.failCallbacks.forEach(i => i())
     }
 
     cancel() {
         this.status = 'cancelled'
+
+        this.interceptors.forEach(i => i.cancel())
 
         // @todo: Get this working with `wire:loading`...
         // this.respond()

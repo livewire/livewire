@@ -1,3 +1,6 @@
+import MessageBroker from '@/v4/requests/messageBroker.js'
+import Interceptor from './interceptor.js'
+
 class Interceptors {
     interceptors = new Map()
 
@@ -7,8 +10,10 @@ class Interceptors {
     }
 
     add(callback, component = null, method = null) {
+        let interceptor = new Interceptor(callback, method)
+
         if (component === null) {
-            this.globalInterceptors.add(callback)
+            this.globalInterceptors.add(interceptor)
 
             return
         }
@@ -19,14 +24,16 @@ class Interceptors {
             interceptors = new Set()
         }
 
-        interceptors.add({ method, callback })
+        interceptors.add(interceptor)
     }
 
     fire(el, directive, component) {
         let method = directive.method
 
         for (let interceptor of this.globalInterceptors) {
-            interceptor({el, directive, component})
+            interceptor.fire(el, directive, component)
+
+            MessageBroker.addInterceptor(interceptor, component)
         }
 
         let componentInterceptors = this.componentInterceptors.get(component)
@@ -35,7 +42,9 @@ class Interceptors {
 
         for (let interceptor of componentInterceptors) {
             if (interceptor.method === method || interceptor.method === null) {
-                interceptor.callback({el, directive, component})
+                interceptor.fire(el, directive, component)
+
+                MessageBroker.addInterceptor(interceptor, component)
             }
         }
     }

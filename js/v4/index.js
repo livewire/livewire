@@ -1,5 +1,7 @@
 import './requests'
+import './features/supportDataLoading.js'
 import './features/supportPaginators.js'
+import './features/supportPreserveScroll.js'
 import './features/supportWireIntersect.js'
 import './features/supportWireIsland.js'
 import './interceptors'
