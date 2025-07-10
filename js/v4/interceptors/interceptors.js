@@ -10,10 +10,10 @@ class Interceptors {
     }
 
     add(callback, component = null, method = null) {
-        let interceptor = new Interceptor(callback, method)
+        let interceptorData = {callback, method}
 
         if (component === null) {
-            this.globalInterceptors.add(interceptor)
+            this.globalInterceptors.add(interceptorData)
 
             return
         }
@@ -22,15 +22,21 @@ class Interceptors {
 
         if (!interceptors) {
             interceptors = new Set()
+
+            this.componentInterceptors.set(component, interceptors)
         }
 
-        interceptors.add(interceptor)
+        interceptors.add(interceptorData)
     }
 
     fire(el, directive, component) {
         let method = directive.method
 
-        for (let interceptor of this.globalInterceptors) {
+        for (let interceptorData of this.globalInterceptors) {
+            let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
+
+            console.log('firing', interceptor)
+
             interceptor.fire(el, directive, component)
 
             MessageBroker.addInterceptor(interceptor, component)
@@ -40,8 +46,10 @@ class Interceptors {
 
         if (!componentInterceptors) return
 
-        for (let interceptor of componentInterceptors) {
-            if (interceptor.method === method || interceptor.method === null) {
+        for (let interceptorData of componentInterceptors) {
+            if (interceptorData.method === method || interceptorData.method === null) {
+                let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
+
                 interceptor.fire(el, directive, component)
 
                 MessageBroker.addInterceptor(interceptor, component)

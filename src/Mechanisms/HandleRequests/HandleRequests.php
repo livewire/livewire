@@ -90,7 +90,7 @@ class HandleRequests extends Mechanism
             $snapshot = json_decode($componentPayload['snapshot'], associative: true);
             $updates = $componentPayload['updates'];
             $calls = $componentPayload['calls'];
-            $context = $componentPayload['context'];
+            $context = $componentPayload['context'] ?? [];
 
             [ $snapshot, $effects ] = app('livewire')->update($snapshot, $updates, $calls, $context);
 

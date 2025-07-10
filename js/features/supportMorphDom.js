@@ -1,16 +1,19 @@
 import { morph } from '@/morph'
 import { on } from '@/hooks'
+import requestBus from './../v4/requests/requestBus'
 
-on('effect', ({ component, effects }) => {
-    let html = effects.html
-    if (! html) return
+if (! requestBus.booted) {
+    on('effect', ({ component, effects }) => {
+        let html = effects.html
+        if (! html) return
 
-    // Wrapping this in a double queueMicrotask. The first one puts it after all
-    // other "effect" hooks, and the second one puts it after all reactive
-    // Alpine effects (that are processed via flushJobs in scheduler).
-    queueMicrotask(() => {
+        // Wrapping this in a double queueMicrotask. The first one puts it after all
+        // other "effect" hooks, and the second one puts it after all reactive
+        // Alpine effects (that are processed via flushJobs in scheduler).
         queueMicrotask(() => {
-            morph(component, component.el, html)
+            queueMicrotask(() => {
+                morph(component, component.el, html)
+            })
         })
     })
-})
+}

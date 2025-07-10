@@ -1,4 +1,5 @@
 import { trigger } from '@/hooks'
+import { morph } from '@/morph'
 
 export default class Message {
     updates = {}
@@ -181,9 +182,27 @@ export default class Message {
         this.finishTarget({ snapshot: parsedSnapshot, effects })
 
         this.succeedCallbacks.forEach(i => i(response))
+
+        let html = effects['html']
+
+        if (! html) return
+
+        queueMicrotask(() => {
+            this.interceptors.forEach(i => i.beforeMorph())
+
+            morph(this.component, this.component.el, html)
+
+            this.interceptors.forEach(i => i.afterMorph())
+
+            setTimeout(() => {
+                this.interceptors.forEach(i => i.rendered())
+            })
+        })
     }
 
     fail() {
+        if (this.isCancelled()) return
+
         this.status = 'failed'
 
         this.respond()

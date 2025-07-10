@@ -10,6 +10,7 @@ class Interceptor {
         cancel: () => {},
         beforeMorph: () => {},
         afterMorph: () => {},
+        rendered: () => {},
     }
 
     constructor(callback, method) {
@@ -53,6 +54,10 @@ class Interceptor {
         this.callbacks.afterMorph = callback
     }
 
+    onRendered(callback) {
+        this.callbacks.rendered = callback
+    }
+
     fire(el, directive, component) {
         this.callbacks.default({el, directive, component, request: this})
 
@@ -89,6 +94,10 @@ class Interceptor {
 
     afterMorph() {
         this.callbacks.afterMorph()
+    }
+
+    rendered() {
+        this.callbacks.rendered()
     }
 }
 
