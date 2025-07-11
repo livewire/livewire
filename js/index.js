@@ -4,10 +4,13 @@ import { start } from './lifecycle'
 import { on as hook, trigger, triggerAsync } from './hooks'
 import { directive } from './directives'
 import Alpine from 'alpinejs'
+import Interceptors from './v4/interceptors/interceptors'
 
 let Livewire = {
     directive,
     dispatchTo,
+    // @todo: See if this can be injected from a v4 feature...
+    intercept: (callback, action = null) => Interceptors.add(callback, null, action),
     start,
     first,
     find,

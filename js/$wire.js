@@ -9,6 +9,7 @@ import { on as hook } from './hooks'
 import requestBus from './v4/requests/requestBus'
 import messageBroker from './v4/requests/messageBroker'
 import { getPaginatorObject } from './v4/features/supportPaginators'
+import Interceptors from './v4/interceptors/interceptors'
 
 let properties = {}
 let fallback
@@ -38,6 +39,7 @@ let aliases = {
     'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
+    'intercept': '$intercept',
     'paginator': '$paginator',
     'dispatchTo': '$dispatchTo',
     'dispatchSelf': '$dispatchSelf',
@@ -159,6 +161,10 @@ wireProperty('$ref', (component) => (name) => {
     if (! refEl) throw `Ref "${name}" not found`
 
     return refEl.__livewire?.$wire
+})
+
+wireProperty('$intercept', (component) => (callback, action = null) => {
+    Interceptors.add(callback, component, action)
 })
 
 wireProperty('$paginator', (component) => {

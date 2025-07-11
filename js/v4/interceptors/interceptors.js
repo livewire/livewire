@@ -1,3 +1,6 @@
+import MessageBroker from '@/v4/requests/messageBroker.js'
+import Interceptor from './interceptor.js'
+
 class Interceptors {
     interceptors = new Map()
 
@@ -7,8 +10,10 @@ class Interceptors {
     }
 
     add(callback, component = null, method = null) {
+        let interceptorData = {callback, method}
+
         if (component === null) {
-            this.globalInterceptors.add(callback)
+            this.globalInterceptors.add(interceptorData)
 
             return
         }
@@ -17,25 +22,37 @@ class Interceptors {
 
         if (!interceptors) {
             interceptors = new Set()
+
+            this.componentInterceptors.set(component, interceptors)
         }
 
-        interceptors.add({ method, callback })
+        interceptors.add(interceptorData)
     }
 
     fire(el, directive, component) {
         let method = directive.method
 
-        for (let interceptor of this.globalInterceptors) {
-            interceptor({el, directive, component})
+        for (let interceptorData of this.globalInterceptors) {
+            let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
+
+            console.log('firing', interceptor)
+
+            interceptor.fire(el, directive, component)
+
+            MessageBroker.addInterceptor(interceptor, component)
         }
 
         let componentInterceptors = this.componentInterceptors.get(component)
 
         if (!componentInterceptors) return
 
-        for (let interceptor of componentInterceptors) {
-            if (interceptor.method === method || interceptor.method === null) {
-                interceptor.callback({el, directive, component})
+        for (let interceptorData of componentInterceptors) {
+            if (interceptorData.method === method || interceptorData.method === null) {
+                let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
+
+                interceptor.fire(el, directive, component)
+
+                MessageBroker.addInterceptor(interceptor, component)
             }
         }
     }

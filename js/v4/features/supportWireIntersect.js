@@ -1,25 +1,6 @@
 import Alpine from 'alpinejs'
 import interceptor from '@/v4/interceptors/interceptors.js'
 import { extractDirective } from '@/directives'
-import { on } from '@/hooks'
-
-let shouldPreserveScroll = false
-
-on('commit', ({ component, respond }) => {
-    respond(() => {
-        if (shouldPreserveScroll) {
-            let oldHeight = document.body.scrollHeight;
-            let oldScroll = window.scrollY;
-
-            setTimeout(() => {
-                let heightDiff = document.body.scrollHeight - oldHeight;
-                window.scrollTo(0, oldScroll + heightDiff);
-
-                shouldPreserveScroll = false
-            })
-        }
-    })
-})
 
 Alpine.interceptInit(el => {
     for (let i = 0; i < el.attributes.length; i++) {
@@ -38,15 +19,10 @@ Alpine.interceptInit(el => {
 
             Alpine.bind(el, {
                 ['x-intersect' + modifierString]() {
-                    
                     // @todo: review if there is a better way to get the component...
                     let component = el.closest('[wire\\:id]')?.__livewire
 
                     interceptor.fire(el, directive, component)
-
-                    if (modifierString.includes('.preserve-scroll')) {
-                        shouldPreserveScroll = true
-                    }
 
                     evaluator()
                 }

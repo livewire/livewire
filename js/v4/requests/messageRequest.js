@@ -36,6 +36,10 @@ export default class MessageRequest extends Request {
     }
 
     async send() {
+        this.messages.forEach(message => {
+            message.startRequest()
+        })
+
         let payload = {
             _token: getCsrfToken(),
             components: Array.from(this.messages, i => i.payload)
@@ -65,6 +69,10 @@ export default class MessageRequest extends Request {
         })
 
         let response
+
+        this.messages.forEach(message => {
+            message.beforeResponse()
+        })
 
         try {
             response = await fetch(updateUri, options)

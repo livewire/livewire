@@ -3208,7 +3208,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -8233,7 +8233,7 @@ function showFailureModal(content) {
 }
 
 // js/$wire.js
-var import_alpinejs2 = __toESM(require_module_cjs());
+var import_alpinejs3 = __toESM(require_module_cjs());
 
 // js/v4/requests/requestBus.js
 var RequestBus = class {
@@ -8262,12 +8262,397 @@ var RequestBus = class {
 var instance = new RequestBus();
 var requestBus_default = instance;
 
+// js/morph.js
+var import_alpinejs2 = __toESM(require_module_cjs());
+
+// js/features/supportSlots.js
+on("effect", ({ component, effects }) => {
+  let slots = effects.slots;
+  if (!slots)
+    return;
+  let parentId = component.el.getAttribute("wire:id");
+  Object.entries(slots).forEach(([childId, childSlots]) => {
+    let childComponent = findComponent(childId);
+    if (!childComponent)
+      return;
+    Object.entries(childSlots).forEach(([name, content]) => {
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            let fullName = parentId ? `${name}:${parentId}` : name;
+            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+            if (!startNode || !endNode)
+              return;
+            let strippedContent = stripSlotComments(content, fullName);
+            morphIsland(childComponent, startNode, endNode, strippedContent);
+          });
+        });
+      });
+    });
+  });
+});
+function stripSlotComments(content, slotName) {
+  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findSlotComments(rootEl, slotName) {
+  let startNode = null;
+  let endNode = null;
+  walkElements(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+          startNode = node;
+        }
+        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements(child, callback);
+  });
+}
+function skipSlotContents(el, toEl, skipUntil) {
+  if (isStartMarker(el) && isStartMarker(toEl)) {
+    skipUntil((node) => isEndMarker(node));
+  }
+}
+function isStartMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+}
+function isEndMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+}
+function extractSlotData(el) {
+  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+  let match = el.textContent.match(regex);
+  if (!match)
+    return;
+  return {
+    name: match[1],
+    parentId: match[2] || null
+  };
+}
+function checkPreviousSiblingForSlotStartMarker(el) {
+  let node = el.previousSibling;
+  while (node) {
+    if (isEndMarker(node)) {
+      return null;
+    }
+    if (isStartMarker(node)) {
+      return node;
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
+// js/features/supportIslands.js
+on("stream", (payload) => {
+  if (payload.type !== "island")
+    return;
+  let { id, name, content } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  streamIsland(component, name, content);
+});
+function streamIsland(component, name, content) {
+  renderIsland(component, name, content);
+}
+on("effect", ({ component, effects }) => {
+  let islands = effects.islands || [];
+  islands.forEach((island) => {
+    let { name, key, content } = island;
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        renderIsland(component, name, key, content);
+      });
+    });
+  });
+});
+function renderIsland(component, name, key, content) {
+  let { startNode, endNode } = findIslandComments(component.el, name, key);
+  if (!startNode || !endNode)
+    return;
+  let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name, key);
+  let parentElement = startNode.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  if (mode === "append") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).forEach((node) => {
+      endNode.parentNode.insertBefore(node, endNode);
+    });
+  } else if (mode === "prepend") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).reverse().forEach((node) => {
+      startNode.parentNode.insertBefore(node, startNode.nextSibling);
+    });
+  } else if (mode === "skip") {
+  } else {
+    morphIsland(component, startNode, endNode, strippedContent);
+  }
+}
+function skipIslandContents(el, toEl, skipUntil) {
+  if (isStartMarker2(el) && isStartMarker2(toEl)) {
+    let mode = extractIslandMode(toEl);
+    if (["skip", "once"].includes(mode)) {
+      skipUntil((node) => isEndMarker2(node));
+    } else if (mode === "prepend") {
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker2(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+      });
+      skipUntil((node) => isEndMarker2(node));
+    } else if (mode === "append") {
+      let endMarker = el.nextSibling;
+      while (endMarker && !isEndMarker2(endMarker)) {
+        endMarker = endMarker.nextSibling;
+      }
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker2(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+      });
+      skipUntil((node) => isEndMarker2(node));
+    }
+  }
+}
+function closestIslandName(el) {
+  let current = el;
+  while (current) {
+    let sibling = current.previousSibling;
+    let foundEndMarker = [];
+    while (sibling) {
+      if (isEndMarker2(sibling)) {
+        foundEndMarker.push("a");
+      }
+      if (isStartMarker2(sibling)) {
+        if (foundEndMarker.length > 0) {
+          foundEndMarker.pop();
+        } else {
+          return extractIslandName(sibling);
+        }
+      }
+      sibling = sibling.previousSibling;
+    }
+    current = current.parentElement;
+    if (current && current.hasAttribute("wire:id")) {
+      break;
+    }
+  }
+  return null;
+}
+function isStartMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+}
+function isEndMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+}
+function extractIslandMode(el) {
+  let mode = el.textContent.match(/\[if ISLAND:.*?:.*?:(\w+)\]/)?.[1];
+  return mode || "replace";
+}
+function extractIslandName(el) {
+  let name = el.textContent.match(/\[if ISLAND:(\w+):.*?:.*?\]/)?.[1];
+  return name || "default";
+}
+function stripIslandCommentsAndExtractMode(content, islandName, islandKey) {
+  let mode = "replace";
+  const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}:(\\w+)\\]><\\!\\[endif\\]`));
+  if (modeMatch) {
+    mode = modeMatch[1];
+  }
+  let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+  let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return {
+    content: stripped.trim(),
+    mode
+  };
+}
+function findIslandComments(rootEl, islandName, islandKey) {
+  let startNode = null;
+  let endNode = null;
+  walkElements2(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          startNode = node;
+        }
+        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements2(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements2(child, callback);
+  });
+}
+
+// js/morph.js
+function morph(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = closestComponent(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.setAttribute("wire:snapshot", component.snapshotEncoded);
+  let effects = { ...component.effects };
+  delete effects.html;
+  to.setAttribute("wire:effects", JSON.stringify(effects));
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  let existingComponentsMap = {};
+  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+  });
+  to.querySelectorAll("[wire\\:id]").forEach((child) => {
+    if (child.hasAttribute("wire:snapshot"))
+      return;
+    let wireId = child.getAttribute("wire:id");
+    let existingComponent = existingComponentsMap[wireId];
+    if (existingComponent) {
+      child.replaceWith(existingComponent.cloneNode(true));
+    }
+  });
+  import_alpinejs2.default.morph(el, to, getMorphConfig(component));
+  trigger("morphed", { el, component });
+}
+function morphIsland(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? closestComponent(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("island.morph", { startNode, endNode, component });
+  import_alpinejs2.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("island.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+      skipSlotContents(el, toEl, skipUntil);
+      skipIslandContents(el, toEl, skipUntil);
+      if (isntElement(el))
+        return;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
+        return skip();
+      }
+      if (el.__livewire_ignore === true)
+        return skip();
+      if (el.__livewire_ignore_self === true)
+        childrenOnly();
+      if (el.__livewire_ignore_children === true)
+        return skipChildren();
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el))
+        toEl.__livewire = component;
+    },
+    updated: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.updated", { el, component });
+    },
+    removing: (el, skip) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removing", { el, component, skip });
+    },
+    removed: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removed", { el, component });
+    },
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
+    },
+    added: (el) => {
+      if (isntElement(el))
+        return;
+      const closestComponentId = closestComponent(el).id;
+      trigger("morph.added", { el });
+    },
+    key: (el) => {
+      if (isntElement(el))
+        return;
+      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+    },
+    lookahead: false
+  };
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+
 // js/v4/requests/message.js
 var Message = class {
   updates = {};
   actions = [];
   payload = {};
   context = {};
+  interceptors = /* @__PURE__ */ new Set();
   resolvers = [];
   status = "waiting";
   succeedCallbacks = [];
@@ -8278,6 +8663,9 @@ var Message = class {
   isolate = false;
   constructor(component) {
     this.component = component;
+  }
+  addInterceptor(interceptor) {
+    this.interceptors.add(interceptor);
   }
   addContext(key, value) {
     if (!this.context[key]) {
@@ -8360,7 +8748,14 @@ var Message = class {
       }
     });
   }
+  startRequest() {
+    this.interceptors.forEach((i) => i.request());
+  }
+  beforeResponse() {
+    this.interceptors.forEach((i) => i.beforeResponse());
+  }
   respond() {
+    this.interceptors.forEach((i) => i.response());
     this.respondCallbacks.forEach((i) => i());
   }
   succeed(response) {
@@ -8371,6 +8766,7 @@ var Message = class {
     let { snapshot, effects } = response;
     this.component.mergeNewSnapshot(snapshot, effects, this.updates);
     this.component.processEffects(this.component.effects);
+    this.interceptors.forEach((i) => i.success(response));
     this.resolvers.forEach((i) => i());
     if (effects["returns"]) {
       let returns = effects["returns"];
@@ -8382,14 +8778,29 @@ var Message = class {
     let parsedSnapshot = JSON.parse(snapshot);
     this.finishTarget({ snapshot: parsedSnapshot, effects });
     this.succeedCallbacks.forEach((i) => i(response));
+    let html = effects["html"];
+    if (!html)
+      return;
+    queueMicrotask(() => {
+      this.interceptors.forEach((i) => i.beforeMorph());
+      morph(this.component, this.component.el, html);
+      this.interceptors.forEach((i) => i.afterMorph());
+      setTimeout(() => {
+        this.interceptors.forEach((i) => i.rendered());
+      });
+    });
   }
   fail() {
+    if (this.isCancelled())
+      return;
     this.status = "failed";
     this.respond();
+    this.interceptors.forEach((i) => i.error());
     this.failCallbacks.forEach((i) => i());
   }
   cancel() {
     this.status = "cancelled";
+    this.interceptors.forEach((i) => i.cancel());
   }
   isBuffering() {
     return this.status === "buffering";
@@ -8472,6 +8883,9 @@ var MessageRequest = class extends Request {
     };
   }
   async send() {
+    this.messages.forEach((message) => {
+      message.startRequest();
+    });
     let payload = {
       _token: getCsrfToken(),
       components: Array.from(this.messages, (i) => i.payload)
@@ -8496,6 +8910,9 @@ var MessageRequest = class extends Request {
       fail: (i) => this.errorCallbacks.push(i)
     });
     let response;
+    this.messages.forEach((message) => {
+      message.beforeResponse();
+    });
     try {
       response = await fetch(updateUri, options);
     } catch (e) {
@@ -8606,6 +9023,10 @@ var MessageBroker = class {
       this.messages.set(component.id, message);
     }
     return message;
+  }
+  addInterceptor(interceptor, component) {
+    let message = this.getMessage(component);
+    message.addInterceptor(interceptor);
   }
   addContext(component, key, value) {
     let message = this.getMessage(component);
@@ -8787,6 +9208,143 @@ function newPaginatorObject(component) {
   });
 }
 
+// js/v4/interceptors/interceptor.js
+var Interceptor = class {
+  callbacks = {
+    default: () => {
+    },
+    fire: () => {
+    },
+    request: () => {
+    },
+    beforeResponse: () => {
+    },
+    response: () => {
+    },
+    success: () => {
+    },
+    error: () => {
+    },
+    cancel: () => {
+    },
+    beforeMorph: () => {
+    },
+    afterMorph: () => {
+    },
+    rendered: () => {
+    }
+  };
+  constructor(callback, method) {
+    this.callbacks.default = callback;
+    this.method = method;
+  }
+  onFire(callback) {
+    this.callbacks.fire = callback;
+  }
+  onRequest(callback) {
+    this.callbacks.request = callback;
+  }
+  onBeforeResponse(callback) {
+    this.callbacks.beforeResponse = callback;
+  }
+  onResponse(callback) {
+    this.callbacks.response = callback;
+  }
+  onSuccess(callback) {
+    this.callbacks.success = callback;
+  }
+  onError(callback) {
+    this.callbacks.error = callback;
+  }
+  onCancel(callback) {
+    this.callbacks.cancel = callback;
+  }
+  onBeforeMorph(callback) {
+    this.callbacks.beforeMorph = callback;
+  }
+  onAfterMorph(callback) {
+    this.callbacks.afterMorph = callback;
+  }
+  onRendered(callback) {
+    this.callbacks.rendered = callback;
+  }
+  fire(el, directive2, component) {
+    this.callbacks.default({ el, directive: directive2, component, request: this });
+    this.callbacks.fire();
+  }
+  request() {
+    this.callbacks.request();
+  }
+  beforeResponse() {
+    this.callbacks.beforeResponse();
+  }
+  response() {
+    this.callbacks.response();
+  }
+  success() {
+    this.callbacks.success();
+  }
+  error() {
+    this.callbacks.error();
+  }
+  cancel() {
+    this.callbacks.cancel();
+  }
+  beforeMorph() {
+    this.callbacks.beforeMorph();
+  }
+  afterMorph() {
+    this.callbacks.afterMorph();
+  }
+  rendered() {
+    this.callbacks.rendered();
+  }
+};
+var interceptor_default = Interceptor;
+
+// js/v4/interceptors/interceptors.js
+var Interceptors = class {
+  interceptors = /* @__PURE__ */ new Map();
+  constructor() {
+    this.globalInterceptors = /* @__PURE__ */ new Set();
+    this.componentInterceptors = /* @__PURE__ */ new Map();
+  }
+  add(callback, component = null, method = null) {
+    let interceptorData = { callback, method };
+    if (component === null) {
+      this.globalInterceptors.add(interceptorData);
+      return;
+    }
+    let interceptors = this.componentInterceptors.get(component);
+    if (!interceptors) {
+      interceptors = /* @__PURE__ */ new Set();
+      this.componentInterceptors.set(component, interceptors);
+    }
+    interceptors.add(interceptorData);
+  }
+  fire(el, directive2, component) {
+    let method = directive2.method;
+    for (let interceptorData of this.globalInterceptors) {
+      let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
+      console.log("firing", interceptor);
+      interceptor.fire(el, directive2, component);
+      messageBroker_default.addInterceptor(interceptor, component);
+    }
+    let componentInterceptors = this.componentInterceptors.get(component);
+    if (!componentInterceptors)
+      return;
+    for (let interceptorData of componentInterceptors) {
+      if (interceptorData.method === method || interceptorData.method === null) {
+        let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
+        interceptor.fire(el, directive2, component);
+        messageBroker_default.addInterceptor(interceptor, component);
+      }
+    }
+  }
+};
+var instance3 = new Interceptors();
+var interceptors_default = instance3;
+
 // js/$wire.js
 var properties = {};
 var fallback;
@@ -8811,6 +9369,7 @@ var aliases = {
   "upload": "$upload",
   "entangle": "$entangle",
   "dispatch": "$dispatch",
+  "intercept": "$intercept",
   "paginator": "$paginator",
   "dispatchTo": "$dispatchTo",
   "dispatchSelf": "$dispatchSelf",
@@ -8847,7 +9406,7 @@ function getProperty(component, name) {
 function getFallback(component) {
   return fallback(component);
 }
-import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
+import_alpinejs3.default.magic("wire", (el, { cleanup }) => {
   let component;
   return new Proxy({}, {
     get(target, property) {
@@ -8900,6 +9459,9 @@ wireProperty("$ref", (component) => (name) => {
     throw `Ref "${name}" not found`;
   return refEl.__livewire?.$wire;
 });
+wireProperty("$intercept", (component) => (callback, action = null) => {
+  interceptors_default.add(callback, component, action);
+});
 wireProperty("$paginator", (component) => {
   let fn = (name = "page") => getPaginatorObject(component, name);
   let defaultPaginator = fn();
@@ -8935,7 +9497,7 @@ wireProperty("$watch", (component) => (path, callback) => {
   let getter = () => {
     return dataGet(component.reactive, path);
   };
-  let unwatch = import_alpinejs2.default.watch(getter, callback);
+  let unwatch = import_alpinejs3.default.watch(getter, callback);
   component.addCleanup(unwatch);
 });
 wireProperty("$refresh", (component) => async () => {
@@ -9130,390 +9692,6 @@ var Component = class {
     }
   }
 };
-
-// js/morph.js
-var import_alpinejs3 = __toESM(require_module_cjs());
-
-// js/features/supportIslands.js
-on("stream", (payload) => {
-  if (payload.type !== "island")
-    return;
-  let { id, name, content } = payload;
-  if (!hasComponent(id))
-    return;
-  let component = findComponent(id);
-  streamIsland(component, name, content);
-});
-function streamIsland(component, name, content) {
-  renderIsland(component, name, content);
-}
-on("effect", ({ component, effects }) => {
-  let islands = effects.islands || [];
-  islands.forEach((island) => {
-    let { name, key, content } = island;
-    queueMicrotask(() => {
-      queueMicrotask(() => {
-        renderIsland(component, name, key, content);
-      });
-    });
-  });
-});
-function renderIsland(component, name, key, content) {
-  let { startNode, endNode } = findIslandComments(component.el, name, key);
-  if (!startNode || !endNode)
-    return;
-  let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name, key);
-  let parentElement = startNode.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  if (mode === "append") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).forEach((node) => {
-      endNode.parentNode.insertBefore(node, endNode);
-    });
-  } else if (mode === "prepend") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).reverse().forEach((node) => {
-      startNode.parentNode.insertBefore(node, startNode.nextSibling);
-    });
-  } else if (mode === "skip") {
-  } else {
-    morphIsland(component, startNode, endNode, strippedContent);
-  }
-}
-function skipIslandContents(el, toEl, skipUntil) {
-  if (isStartMarker(el) && isStartMarker(toEl)) {
-    let mode = extractIslandMode(toEl);
-    if (["skip", "once"].includes(mode)) {
-      skipUntil((node) => isEndMarker(node));
-    } else if (mode === "prepend") {
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
-      });
-      skipUntil((node) => isEndMarker(node));
-    } else if (mode === "append") {
-      let endMarker = el.nextSibling;
-      while (endMarker && !isEndMarker(endMarker)) {
-        endMarker = endMarker.nextSibling;
-      }
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
-      });
-      skipUntil((node) => isEndMarker(node));
-    }
-  }
-}
-function closestIslandName(el) {
-  let current = el;
-  while (current) {
-    let sibling = current.previousSibling;
-    let foundEndMarker = [];
-    while (sibling) {
-      if (isEndMarker(sibling)) {
-        foundEndMarker.push("a");
-      }
-      if (isStartMarker(sibling)) {
-        if (foundEndMarker.length > 0) {
-          foundEndMarker.pop();
-        } else {
-          return extractIslandName(sibling);
-        }
-      }
-      sibling = sibling.previousSibling;
-    }
-    current = current.parentElement;
-    if (current && current.hasAttribute("wire:id")) {
-      break;
-    }
-  }
-  return null;
-}
-function isStartMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
-}
-function isEndMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
-}
-function extractIslandMode(el) {
-  let mode = el.textContent.match(/\[if ISLAND:.*?:.*?:(\w+)\]/)?.[1];
-  return mode || "replace";
-}
-function extractIslandName(el) {
-  let name = el.textContent.match(/\[if ISLAND:(\w+):.*?:.*?\]/)?.[1];
-  return name || "default";
-}
-function stripIslandCommentsAndExtractMode(content, islandName, islandKey) {
-  let mode = "replace";
-  const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}:(\\w+)\\]><\\!\\[endif\\]`));
-  if (modeMatch) {
-    mode = modeMatch[1];
-  }
-  let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-  let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return {
-    content: stripped.trim(),
-    mode
-  };
-}
-function findIslandComments(rootEl, islandName, islandKey) {
-  let startNode = null;
-  let endNode = null;
-  walkElements(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-          startNode = node;
-        }
-        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements(child, callback);
-  });
-}
-
-// js/morph.js
-function morph(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
-  }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  let existingComponentsMap = {};
-  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-  });
-  to.querySelectorAll("[wire\\:id]").forEach((child) => {
-    if (child.hasAttribute("wire:snapshot"))
-      return;
-    let wireId = child.getAttribute("wire:id");
-    let existingComponent = existingComponentsMap[wireId];
-    if (existingComponent) {
-      child.replaceWith(existingComponent.cloneNode(true));
-    }
-  });
-  import_alpinejs3.default.morph(el, to, getMorphConfig(component));
-  trigger("morphed", { el, component });
-}
-function morphIsland(component, startNode, endNode, toHTML) {
-  let fromContainer = startNode.parentElement;
-  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-  let toContainer = document.createElement(fromContainerTag);
-  toContainer.innerHTML = toHTML;
-  toContainer.__livewire = component;
-  let parentElement = component.el.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  let parentComponent;
-  try {
-    parentComponent = parentElement ? closestComponent(parentElement) : null;
-  } catch (e) {
-  }
-  if (parentComponent) {
-    let parentProviderWrapper = document.createElement(parentElementTag);
-    parentProviderWrapper.appendChild(toContainer);
-    parentProviderWrapper.__livewire = parentComponent;
-  }
-  trigger("island.morph", { startNode, endNode, component });
-  import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-  trigger("island.morphed", { startNode, endNode, component });
-}
-function getMorphConfig(component) {
-  return {
-    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-      skipSlotContents(el, toEl, skipUntil);
-      skipIslandContents(el, toEl, skipUntil);
-      if (isntElement(el))
-        return;
-      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-      if (el.__livewire_replace === true)
-        el.innerHTML = toEl.innerHTML;
-      if (el.__livewire_replace_self === true) {
-        el.outerHTML = toEl.outerHTML;
-        return skip();
-      }
-      if (el.__livewire_ignore === true)
-        return skip();
-      if (el.__livewire_ignore_self === true)
-        childrenOnly();
-      if (el.__livewire_ignore_children === true)
-        return skipChildren();
-      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el))
-        toEl.__livewire = component;
-    },
-    updated: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.updated", { el, component });
-    },
-    removing: (el, skip) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removing", { el, component, skip });
-    },
-    removed: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removed", { el, component });
-    },
-    adding: (el) => {
-      trigger("morph.adding", { el, component });
-    },
-    added: (el) => {
-      if (isntElement(el))
-        return;
-      const closestComponentId = closestComponent(el).id;
-      trigger("morph.added", { el });
-    },
-    key: (el) => {
-      if (isntElement(el))
-        return;
-      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-    },
-    lookahead: false
-  };
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
-
-// js/features/supportSlots.js
-on("effect", ({ component, effects }) => {
-  let slots = effects.slots;
-  if (!slots)
-    return;
-  let parentId = component.el.getAttribute("wire:id");
-  Object.entries(slots).forEach(([childId, childSlots]) => {
-    let childComponent = findComponent(childId);
-    if (!childComponent)
-      return;
-    Object.entries(childSlots).forEach(([name, content]) => {
-      queueMicrotask(() => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            let fullName = parentId ? `${name}:${parentId}` : name;
-            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-            if (!startNode || !endNode)
-              return;
-            let strippedContent = stripSlotComments(content, fullName);
-            morphIsland(childComponent, startNode, endNode, strippedContent);
-          });
-        });
-      });
-    });
-  });
-});
-function stripSlotComments(content, slotName) {
-  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return stripped.trim();
-}
-function findSlotComments(rootEl, slotName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements2(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-          startNode = node;
-        }
-        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements2(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements2(child, callback);
-  });
-}
-function skipSlotContents(el, toEl, skipUntil) {
-  if (isStartMarker2(el) && isStartMarker2(toEl)) {
-    skipUntil((node) => isEndMarker2(node));
-  }
-}
-function isStartMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-}
-function isEndMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-}
-function extractSlotData(el) {
-  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
-  let match = el.textContent.match(regex);
-  if (!match)
-    return;
-  return {
-    name: match[1],
-    parentId: match[2] || null
-  };
-}
-function checkPreviousSiblingForSlotStartMarker(el) {
-  let node = el.previousSibling;
-  while (node) {
-    if (isEndMarker2(node)) {
-      return null;
-    }
-    if (isStartMarker2(node)) {
-      return node;
-    }
-    node = node.previousSibling;
-  }
-  return null;
-}
 
 // js/store.js
 var components = {};
@@ -10817,14 +10995,14 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph3 = __toESM(require_module_cjs8());
+var import_morph4 = __toESM(require_module_cjs8());
 var import_mask = __toESM(require_module_cjs9());
 var import_alpinejs6 = __toESM(require_module_cjs());
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs6.default.plugin(import_morph3.default);
+  import_alpinejs6.default.plugin(import_morph4.default);
   import_alpinejs6.default.plugin(history2);
   import_alpinejs6.default.plugin(import_intersect.default);
   import_alpinejs6.default.plugin(import_resize.default);
@@ -11002,60 +11180,33 @@ on("message.pooling", ({ messages }) => {
 // js/v4/requests/index.js
 requestBus_default.boot();
 
-// js/v4/features/supportWireIntersect.js
-var import_alpinejs7 = __toESM(require_module_cjs());
-
-// js/v4/interceptors/interceptors.js
-var Interceptors = class {
-  interceptors = /* @__PURE__ */ new Map();
-  constructor() {
-    this.globalInterceptors = /* @__PURE__ */ new Set();
-    this.componentInterceptors = /* @__PURE__ */ new Map();
-  }
-  add(callback, component = null, method = null) {
-    if (component === null) {
-      this.globalInterceptors.add(callback);
-      return;
-    }
-    let interceptors = this.componentInterceptors.get(component);
-    if (!interceptors) {
-      interceptors = /* @__PURE__ */ new Set();
-    }
-    interceptors.add({ method, callback });
-  }
-  fire(el, directive2, component) {
-    let method = directive2.method;
-    for (let interceptor of this.globalInterceptors) {
-      interceptor({ el, directive: directive2, component });
-    }
-    let componentInterceptors = this.componentInterceptors.get(component);
-    if (!componentInterceptors)
-      return;
-    for (let interceptor of componentInterceptors) {
-      if (interceptor.method === method || interceptor.method === null) {
-        interceptor.callback({ el, directive: directive2, component });
-      }
-    }
-  }
-};
-var instance3 = new Interceptors();
-var interceptors_default = instance3;
-
-// js/v4/features/supportWireIntersect.js
-var shouldPreserveScroll = false;
-on("commit", ({ component, respond }) => {
-  respond(() => {
-    if (shouldPreserveScroll) {
-      let oldHeight = document.body.scrollHeight;
-      let oldScroll = window.scrollY;
-      setTimeout(() => {
-        let heightDiff = document.body.scrollHeight - oldHeight;
-        window.scrollTo(0, oldScroll + heightDiff);
-        shouldPreserveScroll = false;
-      });
-    }
+// js/v4/features/supportDataLoading.js
+interceptors_default.add(({ el, directive: directive2, component, request }) => {
+  el.setAttribute("data-loading", "true");
+  request.onResponse(() => {
+    el.removeAttribute("data-loading");
+  });
+  request.onCancel(() => {
+    el.removeAttribute("data-loading");
   });
 });
+
+// js/v4/features/supportPreserveScroll.js
+interceptors_default.add(({ el, directive: directive2, component, request }) => {
+  if (!directive2 || !directive2.modifiers.includes("preserve-scroll"))
+    return;
+  request.onResponse(() => {
+    let oldHeight = document.body.scrollHeight;
+    let oldScroll = window.scrollY;
+    setTimeout(() => {
+      let heightDiff = document.body.scrollHeight - oldHeight;
+      window.scrollTo(0, oldScroll + heightDiff);
+    });
+  });
+});
+
+// js/v4/features/supportWireIntersect.js
+var import_alpinejs7 = __toESM(require_module_cjs());
 import_alpinejs7.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:intersect")) {
@@ -11068,9 +11219,6 @@ import_alpinejs7.default.interceptInit((el) => {
         ["x-intersect" + modifierString]() {
           let component = el.closest("[wire\\:id]")?.__livewire;
           interceptors_default.fire(el, directive2, component);
-          if (modifierString.includes(".preserve-scroll")) {
-            shouldPreserveScroll = true;
-          }
           evaluator();
         }
       });
@@ -11252,16 +11400,18 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/features/supportMorphDom.js
-on("effect", ({ component, effects }) => {
-  let html = effects.html;
-  if (!html)
-    return;
-  queueMicrotask(() => {
+if (!requestBus_default.booted) {
+  on("effect", ({ component, effects }) => {
+    let html = effects.html;
+    if (!html)
+      return;
     queueMicrotask(() => {
-      morph(component, component.el, html);
+      queueMicrotask(() => {
+        morph(component, component.el, html);
+      });
     });
   });
-});
+}
 
 // js/features/supportDispatches.js
 on("effect", ({ component, effects }) => {
@@ -11795,12 +11945,8 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     [attribute](e) {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          let evaluator = import_alpinejs13.default.evaluateLater(el, "await $wire." + directive2.expression, { scope: { $event: e } });
           interceptors_default.fire(el, directive2, component);
-          el.setAttribute("data-loading", "true");
-          evaluator(() => {
-            el.removeAttribute("data-loading");
-          });
+          import_alpinejs13.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
         });
       };
       if (el.__livewire_confirm) {
@@ -12407,6 +12553,7 @@ import_alpinejs21.default.interceptInit((el) => {
 var Livewire2 = {
   directive,
   dispatchTo,
+  intercept: (callback, action = null) => interceptors_default.add(callback, null, action),
   start,
   first,
   find,
