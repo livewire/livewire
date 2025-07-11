@@ -5521,7 +5521,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let method = directive3.method;
       for (let interceptorData of this.globalInterceptors) {
         let interceptor2 = new interceptor_default(interceptorData.callback, interceptorData.method);
-        console.log("firing", interceptor2);
         interceptor2.fire(el, directive3, component);
         messageBroker_default.addInterceptor(interceptor2, component);
       }

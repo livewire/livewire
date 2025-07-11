@@ -35,8 +35,6 @@ class Interceptors {
         for (let interceptorData of this.globalInterceptors) {
             let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
 
-            console.log('firing', interceptor)
-
             interceptor.fire(el, directive, component)
 
             MessageBroker.addInterceptor(interceptor, component)

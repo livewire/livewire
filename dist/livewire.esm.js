@@ -9392,7 +9392,6 @@ var Interceptors = class {
     let method = directive2.method;
     for (let interceptorData of this.globalInterceptors) {
       let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
-      console.log("firing", interceptor);
       interceptor.fire(el, directive2, component);
       messageBroker_default.addInterceptor(interceptor, component);
     }
