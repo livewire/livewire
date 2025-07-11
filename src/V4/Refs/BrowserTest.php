@@ -186,4 +186,49 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child1-received-output', 'false')
             ->assertSeeIn('@child2-received-output', 'false');
     }
+
+    public function test_can_use_dispatch_ref_magic_to_dispatch_an_event_to_a_ref()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child wire:ref="child1" name="child1" />
+                        <livewire:child wire:ref="child2" name="child2" />
+                        <button wire:click="$dispatchRef('child1', 'test')" dusk="send-button">Send</button>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $received = false;
+                public $name;
+
+                #[On('test')]
+                public function test()
+                {
+                    $this->received = true;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        {{ $name }}
+                        <p dusk="{{ $name }}-received-output">{{ $received ? 'true' : 'false' }}</p>
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->waitForLivewire()->click('@send-button')
+            // Wait for children to update...
+            ->pause(50)
+            ->assertConsoleLogHasNoErrors()
+            ->assertSeeIn('@child1-received-output', 'true')
+            ->assertSeeIn('@child2-received-output', 'false');
+    }
 }
