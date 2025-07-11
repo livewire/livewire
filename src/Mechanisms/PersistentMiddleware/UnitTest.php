@@ -3,7 +3,9 @@
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Support\Facades\Facade;
+use Livewire\Attributes\Persistent;
 use Livewire\Livewire;
+use function Livewire\invade;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
@@ -33,4 +35,56 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             'MyMiddleware',
         ], Livewire::getPersistentMiddleware());
     }
+	
+    public function test_it_can_filter_middleware_by_persistent_middleware_attribute()
+    {
+        $base = Livewire::getPersistentMiddleware();
+		
+        Livewire::addPersistentMiddleware([
+			PersistentMiddlewareViaMethod::class,
+			PersistentMiddlewareViaMethodAndAttribute::class,
+        ]);
+		
+		$filteredPersistentMiddleware = invade(app(PersistentMiddleware::class))->filterMiddlewareByPersistentMiddleware([
+			NonPersistentMiddleware::class,
+			PersistentMiddlewareViaMethod::class,
+			PersistentMiddlewareViaAttribute::class,
+			PersistentMiddlewareViaParentClassAttribute::class,
+			PersistentMiddlewareViaMethodAndAttribute::class,
+		]);
+		
+		$this->assertSame([
+			PersistentMiddlewareViaMethod::class,
+			PersistentMiddlewareViaAttribute::class,
+			PersistentMiddlewareViaParentClassAttribute::class,
+			PersistentMiddlewareViaMethodAndAttribute::class
+		], $filteredPersistentMiddleware);
+    }
+}
+
+class NonPersistentMiddleware
+{
+	//
+}
+
+class PersistentMiddlewareViaMethod
+{
+	//
+}
+
+#[Persistent]
+class PersistentMiddlewareViaAttribute
+{
+	//
+}
+
+class PersistentMiddlewareViaParentClassAttribute extends PersistentMiddlewareViaAttribute
+{
+	//
+}
+
+#[Persistent]
+class PersistentMiddlewareViaMethodAndAttribute
+{
+	//
 }
