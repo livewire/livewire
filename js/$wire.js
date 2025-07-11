@@ -8,6 +8,7 @@ import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
 import requestBus from './v4/requests/requestBus'
 import messageBroker from './v4/requests/messageBroker'
+import { getErrorsObject } from './v4/features/supportErrors'
 import { getPaginatorObject } from './v4/features/supportPaginators'
 import Interceptors from './v4/interceptors/interceptors'
 
@@ -36,6 +37,7 @@ let aliases = {
     'hook': '$hook',
     'watch': '$watch',
     'commit': '$commit',
+    'errors': '$errors',
     'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
@@ -166,6 +168,8 @@ wireProperty('$ref', (component) => (name) => {
 wireProperty('$intercept', (component) => (callback, action = null) => {
     Interceptors.add(callback, component, action)
 })
+
+wireProperty('$errors', (component) => getErrorsObject(component))
 
 wireProperty('$paginator', (component) => {
     let fn = (name = 'page') => getPaginatorObject(component, name)
