@@ -5540,6 +5540,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var instance3 = new Interceptors();
   var interceptors_default = instance3;
 
+  // js/v4/features/supportRefs.js
+  function findRef(component, ref) {
+    let refEl = component.el.querySelector(`[wire\\:ref="${ref}"]`);
+    if (!refEl)
+      return console.error(`Ref "${ref}" not found in component "${component.id}"`);
+    return refEl.__livewire?.$wire;
+  }
+
   // js/$wire.js
   var properties = {};
   var fallback;
@@ -5568,6 +5576,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "intercept": "$intercept",
     "paginator": "$paginator",
     "dispatchTo": "$dispatchTo",
+    "dispatchRef": "$dispatchRef",
     "dispatchSelf": "$dispatchSelf",
     "removeUpload": "$removeUpload",
     "cancelUpload": "$cancelUpload",
@@ -5649,11 +5658,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return Promise.resolve();
   });
-  wireProperty("$ref", (component) => (name) => {
-    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
-    if (!refEl)
-      throw `Ref "${name}" not found`;
-    return refEl.__livewire?.$wire;
+  wireProperty("$ref", (component) => {
+    let fn = (name) => findRef(component, name);
+    return new Proxy(fn, {
+      get(target, property) {
+        if (property in target) {
+          return target[property];
+        }
+        return fn(property);
+      }
+    });
   });
   wireProperty("$intercept", (component) => (callback, action = null) => {
     interceptors_default.add(callback, component, action);
@@ -5723,6 +5737,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
+  wireProperty("$dispatchRef", () => (...params) => dispatchRef(...params));
   wireProperty("$upload", (component) => (...params) => upload(component, ...params));
   wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
   wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
@@ -5967,6 +5982,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     targets.forEach((target) => {
       dispatchEvent(target.el, name, params, false);
     });
+  }
+  function dispatchRef(component, ref, name, params) {
+    let target = findRef(component, ref);
+    if (!target)
+      return;
+    dispatchEvent(target.__instance.el, name, params, false);
   }
   function listen2(component, name, callback) {
     component.el.addEventListener(name, (e) => {
@@ -10592,11 +10613,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+    dispatches.forEach(({ name, params = {}, self = false, to, ref }) => {
       if (self)
         dispatchSelf(component, name, params);
       else if (to)
         dispatchTo(to, name, params);
+      else if (ref)
+        dispatchRef(component, ref, name, params);
       else
         dispatch3(component, name, params);
     });

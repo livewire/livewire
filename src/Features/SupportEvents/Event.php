@@ -7,6 +7,7 @@ use Livewire\Mechanisms\ComponentRegistry;
 class Event
 {
     protected $name;
+    protected $ref;
     protected $params;
     protected $self;
     protected $component;
@@ -31,8 +32,19 @@ class Event
         return $this;
     }
 
-    public function to($name)
+    public function ref($ref)
     {
+        $this->ref = $ref;
+
+        return $this;
+    }
+
+    public function to($name = null, $ref = null)
+    {
+        if ($ref) {
+            return $this->ref($ref);
+        }
+
         return $this->component($name);
     }
 
@@ -45,6 +57,7 @@ class Event
 
         if ($this->self) $output['self'] = true;
         if ($this->component) $output['to'] = app(ComponentRegistry::class)->getName($this->component);
+        if ($this->ref) $output['ref'] = $this->ref;
 
         return $output;
     }

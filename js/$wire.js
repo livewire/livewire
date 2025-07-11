@@ -1,5 +1,5 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
-import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
+import { dispatch, dispatchSelf, dispatchTo, dispatchRef, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent } from '@/store'
 import { requestCommit, requestCall } from '@/request'
@@ -11,6 +11,7 @@ import messageBroker from './v4/requests/messageBroker'
 import { getErrorsObject } from './v4/features/supportErrors'
 import { getPaginatorObject } from './v4/features/supportPaginators'
 import Interceptors from './v4/interceptors/interceptors'
+import { findRef } from './v4/features/supportRefs'
 
 let properties = {}
 let fallback
@@ -44,6 +45,7 @@ let aliases = {
     'intercept': '$intercept',
     'paginator': '$paginator',
     'dispatchTo': '$dispatchTo',
+    'dispatchRef': '$dispatchRef',
     'dispatchSelf': '$dispatchSelf',
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
@@ -157,12 +159,17 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     return Promise.resolve()
 })
 
-wireProperty('$ref', (component) => (name) => {
-    let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`)
+wireProperty('$ref', (component) => {
+    let fn = (name) => findRef(component, name)
 
-    if (! refEl) throw `Ref "${name}" not found`
-
-    return refEl.__livewire?.$wire
+    return new Proxy(fn, {
+        get(target, property) {
+            if (property in target) {
+                return target[property]
+            }
+            return fn(property)
+        }
+    })
 })
 
 wireProperty('$intercept', (component) => (callback, action = null) => {
@@ -255,6 +262,7 @@ wireProperty('$hook', (component) => (name, callback) => {
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
 wireProperty('$dispatchTo', () => (...params) => dispatchTo(...params))
+wireProperty('$dispatchRef', () => (...params) => dispatchRef(...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
