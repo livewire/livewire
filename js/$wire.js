@@ -155,6 +155,16 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     return Promise.resolve()
 })
 
+wireProperty('$clone', () => (value) => {
+    try {
+        if (typeof structuredClone === 'function') {
+            return structuredClone(value)
+        }
+    } catch (e) {
+        return JSON.parse(JSON.stringify(value))
+    }
+})
+
 wireProperty('$ref', (component) => (name) => {
     let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`)
 
