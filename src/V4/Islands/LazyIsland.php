@@ -11,12 +11,19 @@ class LazyIsland implements \Stringable, Htmlable, Jsonable
         public string $name,
         public string $key,
         public string $mode = 'replace',
+        public ?string $placeholder = null,
     ) {}
 
     public function render()
     {
+        $placeholderContent = 'Loading...';
+
+        if (isset($this->placeholder)) {
+            $placeholderContent = view($this->placeholder)->render();
+        }
+
         return "<!--[if ISLAND:{$this->name}:{$this->key}:lazy]><![endif]-->"
-            . "<div x-intersect=\"\$wire.\$island('{$this->name}')\">Loading...</div>"
+            . "<div x-intersect=\"\$wire.\$island('{$this->name}')\">{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->name}:{$this->key}]><![endif]-->";
     }
 

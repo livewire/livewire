@@ -6,7 +6,7 @@ trait HandlesIslands
 {
     protected $islands = [];
 
-    public function island($name, $key, $data = [], $mode = null, $defer = false, $lazy = false, $view = null)
+    public function island($name, $key, $data = [], $mode = null, $defer = false, $lazy = false, $view = null, $placeholder = null)
     {
         if ($view === null && $key) {
             // @todo: See if there is a better way to do this...
@@ -38,9 +38,9 @@ trait HandlesIslands
         if ($mode === 'skip') {
             $island = new SkippedIsland($name, $key);
         } elseif ($lazy) {
-            $island = new LazyIsland($name, $key, $mode);
+            $island = new LazyIsland($name, $key, $mode, $placeholder);
         } elseif ($defer) {
-            $island = new DeferredIsland($name, $key, $mode);
+            $island = new DeferredIsland($name, $key, $mode, $placeholder);
         } else {
             $island = new Island($name, $key, $view, $data, $this, $mode);
         }

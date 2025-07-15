@@ -11,12 +11,19 @@ class DeferredIsland implements \Stringable, Htmlable, Jsonable
         public string $name,
         public string $key,
         public string $mode = 'replace',
+        public ?string $placeholder = null,
     ) {}
 
     public function render()
     {
+        $placeholderContent = 'Loading...';
+
+        if (isset($this->placeholder)) {
+            $placeholderContent = view($this->placeholder)->render();
+        }
+
         return "<!--[if ISLAND:{$this->name}:{$this->key}:defer]><![endif]-->"
-            . "<div wire:init=\"\$island('{$this->name}')\">Loading...</div>"
+                . "<div wire:init=\"\$island('{$this->name}')\">{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->name}:{$this->key}]><![endif]-->";
     }
 

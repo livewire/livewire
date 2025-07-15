@@ -298,6 +298,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
                     'name' => 'bob',
                     'view' => null,
                     'params' => [],
+                    'placeholder' => null,
                 ],
             ],
             [
@@ -306,6 +307,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
                     'name' => 'bob',
                     'view' => 'random',
                     'params' => [],
+                    'placeholder' => null,
                 ],
             ],
             [
@@ -314,8 +316,140 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
                     'name' => 'bob',
                     'view' => 'other',
                     'params' => [],
+                    'placeholder' => null,
                 ],
             ],
         ];
+    }
+
+    public function test_it_can_compile_an_inline_island_with_a_placeholder_parameter()
+    {
+        $currentPath = __DIR__ . '/fixtures/basic.livewire.php';
+
+        $content = <<< HTML
+        <div>
+            @island(defer: true, placeholder: 'Custom inline placeholder!')
+                <div>Island content</div>
+            @endisland
+        </div>
+        HTML;
+
+        $compiled = $this->compiler->compile($content, $currentPath);
+
+        $expectedCompiled = <<< HTML
+        <div>
+            @island('anonymous_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+        </div>
+        HTML;
+
+        $this->assertEquals($expectedCompiled, $compiled);
+
+        $compiledIslandFiles = glob($this->cacheDir . '/views/*.blade.php');
+
+        $this->assertCount(2, $compiledIslandFiles);
+
+        $expectedFiles = [
+            'basic_island_0.blade.php' => <<< HTML
+            <div>Island content</div>
+            HTML,
+            'basic_island_0_placeholder.blade.php' => <<< HTML
+            Custom inline placeholder!
+            HTML,
+        ];
+
+        foreach ($compiledIslandFiles as $compiledIslandFile) {
+            $compiledIslandContent = File::get($compiledIslandFile);
+            $compiledIslandFileName = basename($compiledIslandFile);
+
+            $this->assertStringContainsString($expectedFiles[$compiledIslandFileName], $compiledIslandContent);
+        }
+    }
+
+    public function test_it_can_compile_an_inline_island_with_a_placeholder_directive()
+    {
+        $currentPath = __DIR__ . '/fixtures/basic.livewire.php';
+
+        $content = <<< HTML
+        <div>
+            @island(defer: true)
+                @placeholder
+                    <p>Custom placeholder!</p>
+                @endplaceholder
+
+                <div>Island content</div>
+            @endisland
+        </div>
+        HTML;
+
+        $compiled = $this->compiler->compile($content, $currentPath);
+
+        $expectedCompiled = <<< HTML
+        <div>
+            @island('anonymous_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+        </div>
+        HTML;
+
+        $this->assertEquals($expectedCompiled, $compiled);
+
+        $compiledIslandFiles = glob($this->cacheDir . '/views/*.blade.php');
+
+        $this->assertCount(2, $compiledIslandFiles);
+
+        $expectedFiles = [
+            'basic_island_0.blade.php' => <<< HTML
+            <div>Island content</div>
+            HTML,
+            'basic_island_0_placeholder.blade.php' => <<< HTML
+            <p>Custom placeholder!</p>
+            HTML,
+        ];
+
+        foreach ($compiledIslandFiles as $compiledIslandFile) {
+            $compiledIslandContent = File::get($compiledIslandFile);
+            $compiledIslandFileName = basename($compiledIslandFile);
+
+            $this->assertStringContainsString($expectedFiles[$compiledIslandFileName], $compiledIslandContent);
+        }
+    }
+
+    public function test_it_can_compile_an_external_island_with_a_placeholder_parameter()
+    {
+        $currentPath = __DIR__ . '/fixtures/basic.livewire.php';
+
+        $content = <<< HTML
+        <div>
+            @island(defer: true, view: 'external-island', placeholder: 'Custom inline placeholder!')
+        </div>
+        HTML;
+
+        $compiled = $this->compiler->compile($content, $currentPath);
+
+        $expectedCompiled = <<< HTML
+        <div>
+            @island('anonymous_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+        </div>
+        HTML;
+
+        $this->assertEquals($expectedCompiled, $compiled);
+
+        $compiledIslandFiles = glob($this->cacheDir . '/views/*.blade.php');
+
+        $this->assertCount(2, $compiledIslandFiles);
+
+        $expectedFiles = [
+            'basic_island_0.blade.php' => <<< HTML
+            @include('external-island')
+            HTML,
+            'basic_island_0_placeholder.blade.php' => <<< HTML
+            Custom inline placeholder!
+            HTML,
+        ];
+
+        foreach ($compiledIslandFiles as $compiledIslandFile) {
+            $compiledIslandContent = File::get($compiledIslandFile);
+            $compiledIslandFileName = basename($compiledIslandFile);
+
+            $this->assertStringContainsString($expectedFiles[$compiledIslandFileName], $compiledIslandContent);
+        }
     }
 }
