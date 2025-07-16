@@ -4794,6 +4794,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.component = component;
     }
     addInterceptor(interceptor2) {
+      interceptor2.cancel = () => this.cancel();
       this.interceptors.add(interceptor2);
     }
     addContext(key, value) {
@@ -4876,26 +4877,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           this.respondCallbacks.push(callback);
         }
       });
+      this.beforeSend();
     }
-    startRequest() {
-      this.interceptors.forEach((i) => i.request());
+    beforeSend() {
+      this.interceptors.forEach((i) => i.beforeSend({ component: this.component, payload: this.payload }));
     }
-    beforeResponse() {
-      this.interceptors.forEach((i) => i.beforeResponse());
+    afterSend() {
+      this.interceptors.forEach((i) => i.afterSend({ component: this.component, payload: this.payload }));
+    }
+    beforeResponse(response) {
+      this.interceptors.forEach((i) => i.beforeResponse({ component: this.component, response }));
+    }
+    afterResponse(response) {
+      this.interceptors.forEach((i) => i.afterResponse({ component: this.component, response }));
     }
     respond() {
-      this.interceptors.forEach((i) => i.response());
       this.respondCallbacks.forEach((i) => i());
     }
     succeed(response) {
       if (this.isCancelled())
         return;
       this.status = "succeeded";
+      this.beforeResponse(response);
       this.respond();
       let { snapshot, effects } = response;
       this.component.mergeNewSnapshot(snapshot, effects, this.updates);
+      this.afterResponse(response);
       this.component.processEffects(this.component.effects);
-      this.interceptors.forEach((i) => i.success(response));
       this.resolvers.forEach((i) => i());
       if (effects["returns"]) {
         let returns = effects["returns"];
@@ -4906,30 +4914,38 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       let parsedSnapshot = JSON.parse(snapshot);
       this.finishTarget({ snapshot: parsedSnapshot, effects });
+      this.interceptors.forEach((i) => i.onSuccess(response));
       this.succeedCallbacks.forEach((i) => i(response));
       let html = effects["html"];
       if (!html)
         return;
+      this.interceptors.forEach((i) => i.beforeRender({ component: this.component }));
       queueMicrotask(() => {
-        this.interceptors.forEach((i) => i.beforeMorph());
+        this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
         morph(this.component, this.component.el, html);
-        this.interceptors.forEach((i) => i.afterMorph());
+        this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
         setTimeout(() => {
-          this.interceptors.forEach((i) => i.rendered());
+          this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
         });
       });
     }
-    fail() {
+    error(e) {
+      if (this.isCancelled())
+        return;
+      this.status = "errored";
+      this.interceptors.forEach((i) => i.onError(e));
+    }
+    fail(response, content) {
       if (this.isCancelled())
         return;
       this.status = "failed";
       this.respond();
-      this.interceptors.forEach((i) => i.error());
+      this.interceptors.forEach((i) => i.onError(response, content));
       this.failCallbacks.forEach((i) => i());
     }
     cancel() {
       this.status = "cancelled";
-      this.interceptors.forEach((i) => i.cancel());
+      this.interceptors.forEach((i) => i.onCancel());
     }
     isBuffering() {
       return this.status === "buffering";
@@ -4943,11 +4959,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     isCancelled() {
       return this.status === "cancelled";
     }
+    isErrored() {
+      return this.status === "errored";
+    }
     isFailed() {
       return this.status === "failed";
     }
     isFinished() {
-      return this.isSucceeded() || this.isCancelled() || this.isFailed();
+      return this.isSucceeded() || this.isCancelled() || this.isFailed() || this.isErrored();
     }
   };
 
@@ -5012,9 +5031,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       };
     }
     async send() {
-      this.messages.forEach((message) => {
-        message.startRequest();
-      });
       let payload = {
         _token: getCsrfToken(),
         components: Array.from(this.messages, (i) => i.payload)
@@ -5039,14 +5055,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         fail: (i) => this.errorCallbacks.push(i)
       });
       let response;
-      this.messages.forEach((message) => {
-        message.beforeResponse();
-      });
       try {
-        response = await fetch(updateUri, options);
+        let fetchPromise = fetch(updateUri, options);
+        this.messages.forEach((message) => {
+          message.afterSend();
+        });
+        response = await fetchPromise;
       } catch (e) {
         this.finish();
-        this.error();
+        this.error(e);
         return;
       }
       this.finish();
@@ -5099,11 +5116,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
       super.cancel();
     }
-    error() {
+    error(e) {
       this.finishProfile({ content: "{}", failed: true });
       let preventDefault = false;
       this.messages.forEach((message) => {
-        message.fail();
+        message.error(e);
       });
       this.errorCallbacks.forEach((i) => i({
         status: 503,
@@ -5115,7 +5132,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.finishProfile({ content: "{}", failed: true });
       let preventDefault = false;
       this.messages.forEach((message) => {
-        message.fail();
+        message.fail(response, content);
       });
       this.errorCallbacks.forEach((i) => i({
         status: response.status,
@@ -5196,6 +5213,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     corraleMessagesIntoRequests(messages) {
       let requests = /* @__PURE__ */ new Set();
       for (let message of messages) {
+        if (message.isCancelled())
+          continue;
         let hasFoundRequest = false;
         requests.forEach((request) => {
           if (!hasFoundRequest && !message.isolate) {
@@ -5405,100 +5424,58 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/v4/interceptors/interceptor.js
   var Interceptor = class {
-    callbacks = {
-      default: () => {
-      },
-      fire: () => {
-      },
-      request: () => {
-      },
-      beforeResponse: () => {
-      },
-      response: () => {
-      },
-      success: () => {
-      },
-      error: () => {
-      },
-      cancel: () => {
-      },
-      beforeMorph: () => {
-      },
-      afterMorph: () => {
-      },
-      rendered: () => {
-      }
+    beforeSend = () => {
     };
-    constructor(callback, method) {
-      this.callbacks.default = callback;
-      this.method = method;
+    afterSend = () => {
+    };
+    beforeResponse = () => {
+    };
+    afterResponse = () => {
+    };
+    beforeRender = () => {
+    };
+    afterRender = () => {
+    };
+    beforeMorph = () => {
+    };
+    afterMorph = () => {
+    };
+    onError = () => {
+    };
+    onFailure = () => {
+    };
+    onSuccess = () => {
+    };
+    onCancel = () => {
+    };
+    cancel = () => {
+    };
+    constructor(callback, action) {
+      this.callback = callback;
+      this.action = action;
     }
-    onFire(callback) {
-      this.callbacks.fire = callback;
-    }
-    onRequest(callback) {
-      this.callbacks.request = callback;
-    }
-    onBeforeResponse(callback) {
-      this.callbacks.beforeResponse = callback;
-    }
-    onResponse(callback) {
-      this.callbacks.response = callback;
-    }
-    onSuccess(callback) {
-      this.callbacks.success = callback;
-    }
-    onError(callback) {
-      this.callbacks.error = callback;
-    }
-    onCancel(callback) {
-      this.callbacks.cancel = callback;
-    }
-    onBeforeMorph(callback) {
-      this.callbacks.beforeMorph = callback;
-    }
-    onAfterMorph(callback) {
-      this.callbacks.afterMorph = callback;
-    }
-    onRendered(callback) {
-      this.callbacks.rendered = callback;
-    }
-    fire(el, directive3, component) {
-      this.callbacks.default({ el, directive: directive3, component, request: this });
-      this.callbacks.fire();
-    }
-    request() {
-      this.callbacks.request();
-    }
-    beforeResponse() {
-      this.callbacks.beforeResponse();
-    }
-    response() {
-      this.callbacks.response();
-    }
-    success() {
-      this.callbacks.success();
-    }
-    error() {
-      this.callbacks.error();
-    }
-    cancel() {
-      this.callbacks.cancel();
-    }
-    beforeMorph() {
-      this.callbacks.beforeMorph();
-    }
-    afterMorph() {
-      this.callbacks.afterMorph();
-    }
-    rendered() {
-      this.callbacks.rendered();
+    init(el, directive3, component) {
+      let request = {
+        beforeSend: (callback) => this.beforeSend = callback,
+        afterSend: (callback) => this.afterSend = callback,
+        beforeResponse: (callback) => this.beforeResponse = callback,
+        afterResponse: (callback) => this.afterResponse = callback,
+        beforeRender: (callback) => this.beforeRender = callback,
+        afterRender: (callback) => this.afterRender = callback,
+        beforeMorph: (callback) => this.beforeMorph = callback,
+        afterMorph: (callback) => this.afterMorph = callback,
+        onError: (callback) => this.onError = callback,
+        onFailure: (callback) => this.onFailure = callback,
+        onSuccess: (callback) => this.onSuccess = callback,
+        onCancel: (callback) => this.onCancel = callback
+      };
+      this.callback({ el, directive: directive3, component, request });
     }
   };
   var interceptor_default = Interceptor;
 
-  // js/v4/interceptors/interceptors.js
-  var Interceptors = class {
+  // js/v4/interceptors/interceptorRegistry.js
+  var InterceptorRegistry = class {
     interceptors = /* @__PURE__ */ new Map();
     constructor() {
       this.globalInterceptors = /* @__PURE__ */ new Set();
@@ -5521,7 +5498,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let method = directive3.method;
       for (let interceptorData of this.globalInterceptors) {
         let interceptor2 = new interceptor_default(interceptorData.callback, interceptorData.method);
-        interceptor2.fire(el, directive3, component);
+        interceptor2.init(el, directive3, component);
         messageBroker_default.addInterceptor(interceptor2, component);
       }
       let componentInterceptors = this.componentInterceptors.get(component);
@@ -5530,14 +5507,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       for (let interceptorData of componentInterceptors) {
         if (interceptorData.method === method || interceptorData.method === null) {
           let interceptor2 = new interceptor_default(interceptorData.callback, interceptorData.method);
-          interceptor2.fire(el, directive3, component);
+          interceptor2.init(el, directive3, component);
           messageBroker_default.addInterceptor(interceptor2, component);
         }
       }
     }
   };
-  var instance3 = new Interceptors();
-  var interceptors_default = instance3;
+  var instance3 = new InterceptorRegistry();
+  var interceptorRegistry_default = instance3;
 
   // js/v4/features/supportRefs.js
   function findRef(component, ref) {
@@ -5668,8 +5645,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   });
-  wireProperty("$intercept", (component) => (callback, action = null) => {
-    interceptors_default.add(callback, component, action);
+  wireProperty("$intercept", (component) => (action, callback = null) => {
+    if (callback === null) {
+      callback = action;
+      action = null;
+    }
+    interceptorRegistry_default.add(callback, component, action);
   });
   wireProperty("$errors", (component) => getErrorsObject(component));
   wireProperty("$paginator", (component) => {
@@ -10372,9 +10353,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   requestBus_default.boot();
 
   // js/v4/features/supportDataLoading.js
-  interceptors_default.add(({ el, directive: directive3, component, request }) => {
+  interceptorRegistry_default.add(({ el, directive: directive3, component, request }) => {
     el.setAttribute("data-loading", "true");
-    request.onResponse(() => {
+    request.afterResponse(() => {
       el.removeAttribute("data-loading");
     });
     request.onCancel(() => {
@@ -10383,16 +10364,20 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/v4/features/supportPreserveScroll.js
-  interceptors_default.add(({ el, directive: directive3, component, request }) => {
+  interceptorRegistry_default.add(({ el, directive: directive3, component, request }) => {
     if (!directive3 || !directive3.modifiers.includes("preserve-scroll"))
       return;
-    request.onResponse(() => {
-      let oldHeight = document.body.scrollHeight;
-      let oldScroll = window.scrollY;
-      setTimeout(() => {
-        let heightDiff = document.body.scrollHeight - oldHeight;
-        window.scrollTo(0, oldScroll + heightDiff);
-      });
+    let oldHeight;
+    let oldScroll;
+    request.beforeRender(() => {
+      oldHeight = document.body.scrollHeight;
+      oldScroll = window.scrollY;
+    });
+    request.afterRender(() => {
+      let heightDiff = document.body.scrollHeight - oldHeight;
+      window.scrollTo(0, oldScroll + heightDiff);
+      oldHeight = null;
+      oldScroll = null;
     });
   });
 
@@ -10408,7 +10393,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         module_default.bind(el, {
           ["x-intersect" + modifierString]() {
             let component = el.closest("[wire\\:id]")?.__livewire;
-            interceptors_default.fire(el, directive3, component);
+            interceptorRegistry_default.fire(el, directive3, component);
             evaluator();
           }
         });
@@ -10418,7 +10403,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/v4/features/supportWireIsland.js
   var wireIslands = /* @__PURE__ */ new WeakMap();
-  interceptors_default.add(({ el, directive: directive3, component }) => {
+  interceptorRegistry_default.add(({ el, directive: directive3, component }) => {
     let name = wireIslands.get(el)?.name ?? closestIslandName(el);
     if (!name)
       return;
@@ -11131,7 +11116,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       [attribute](e) {
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
-            interceptors_default.fire(el, directive3, component);
+            interceptorRegistry_default.fire(el, directive3, component);
             module_default.evaluate(el, "await $wire." + directive3.expression, { scope: { $event: e } });
           });
         };
@@ -11731,7 +11716,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive: directive2,
     dispatchTo,
-    intercept: (callback, action = null) => interceptors_default.add(callback, null, action),
+    intercept: (callback) => interceptorRegistry_default.add(callback),
     start: start2,
     first,
     find,
