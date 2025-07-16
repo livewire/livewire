@@ -1,103 +1,41 @@
 class Interceptor {
-    callbacks = {
-        default: () => {},
-        fire: () => {},
-        request: () => {},
-        beforeResponse: () => {},
-        response: () => {},
-        success: () => {},
-        error: () => {},
-        cancel: () => {},
-        beforeMorph: () => {},
-        afterMorph: () => {},
-        rendered: () => {},
+    beforeSend = () => {}
+    afterSend = () => {}
+    beforeResponse = () => {}
+    afterResponse = () => {}
+    beforeRender = () => {}
+    afterRender = () => {}
+    beforeMorph = () => {}
+    afterMorph = () => {}
+    onError = () => {}
+    onFailure = () => {}
+    onSuccess = () => {}
+    onCancel = () => {}
+    cancel = () => {}
+
+    constructor(callback, action) {
+        this.callback = callback
+        this.action = action
     }
 
-    constructor(callback, method) {
-        this.callbacks.default = callback
-        this.method = method
-    }
+    init(el, directive, component) {
+        let request = {
+            beforeSend: (callback) => this.beforeSend = callback,
+            afterSend: (callback) => this.afterSend = callback,
+            beforeResponse: (callback) => this.beforeResponse = callback,
+            afterResponse: (callback) => this.afterResponse = callback,
+            beforeRender: (callback) => this.beforeRender = callback,
+            afterRender: (callback) => this.afterRender = callback,
+            beforeMorph: (callback) => this.beforeMorph = callback,
+            afterMorph: (callback) => this.afterMorph = callback,
 
-    onFire(callback) {
-        this.callbacks.fire = callback
-    }
+            onError: (callback) => this.onError = callback,
+            onFailure: (callback) => this.onFailure = callback,
+            onSuccess: (callback) => this.onSuccess = callback,
+            onCancel: (callback) => this.onCancel = callback,
+        }
 
-    onRequest(callback) {
-        this.callbacks.request = callback
-    }
-
-    onBeforeResponse(callback) {
-        this.callbacks.beforeResponse = callback
-    }
-
-    onResponse(callback) {
-        this.callbacks.response = callback
-    }
-
-    onSuccess(callback) {
-        this.callbacks.success = callback
-    }
-
-    onError(callback) {
-        this.callbacks.error = callback
-    }
-
-    onCancel(callback) {
-        this.callbacks.cancel = callback
-    }
-
-    onBeforeMorph(callback) {
-        this.callbacks.beforeMorph = callback
-    }
-
-    onAfterMorph(callback) {
-        this.callbacks.afterMorph = callback
-    }
-
-    onRendered(callback) {
-        this.callbacks.rendered = callback
-    }
-
-    fire(el, directive, component) {
-        this.callbacks.default({el, directive, component, request: this})
-
-        this.callbacks.fire()
-    }
-
-    request() {
-        this.callbacks.request()
-    }
-
-    beforeResponse() {
-        this.callbacks.beforeResponse()
-    }
-
-    response() {
-        this.callbacks.response()
-    }
-
-    success() {
-        this.callbacks.success()
-    }
-
-    error() {
-        this.callbacks.error()
-    }
-
-    cancel() {
-        this.callbacks.cancel()
-    }
-
-    beforeMorph() {
-        this.callbacks.beforeMorph()
-    }
-
-    afterMorph() {
-        this.callbacks.afterMorph()
-    }
-
-    rendered() {
-        this.callbacks.rendered()
+        this.callback({el, directive, component, request})
     }
 }
 

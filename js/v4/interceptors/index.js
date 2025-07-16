@@ -1,1 +1,1 @@
-import './interceptors.js'
+import './interceptorRegistry.js'

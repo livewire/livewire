@@ -10,7 +10,7 @@ import requestBus from './v4/requests/requestBus'
 import messageBroker from './v4/requests/messageBroker'
 import { getErrorsObject } from './v4/features/supportErrors'
 import { getPaginatorObject } from './v4/features/supportPaginators'
-import Interceptors from './v4/interceptors/interceptors'
+import interceptorRegistry from './v4/interceptors/interceptorRegistry'
 import { findRef } from './v4/features/supportRefs'
 
 let properties = {}
@@ -172,8 +172,13 @@ wireProperty('$ref', (component) => {
     })
 })
 
-wireProperty('$intercept', (component) => (callback, action = null) => {
-    Interceptors.add(callback, component, action)
+wireProperty('$intercept', (component) => (action, callback = null) => {
+    if (callback === null) {
+        callback = action
+        action = null
+    }
+
+    interceptorRegistry.add(callback, component, action)
 })
 
 wireProperty('$errors', (component) => getErrorsObject(component))

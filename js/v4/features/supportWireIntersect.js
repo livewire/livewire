@@ -1,5 +1,5 @@
 import Alpine from 'alpinejs'
-import interceptor from '@/v4/interceptors/interceptors.js'
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 import { extractDirective } from '@/directives'
 
 Alpine.interceptInit(el => {
@@ -22,7 +22,7 @@ Alpine.interceptInit(el => {
                     // @todo: review if there is a better way to get the component...
                     let component = el.closest('[wire\\:id]')?.__livewire
 
-                    interceptor.fire(el, directive, component)
+                    interceptorRegistry.fire(el, directive, component)
 
                     evaluator()
                 }

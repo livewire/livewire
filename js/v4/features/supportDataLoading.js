@@ -1,9 +1,9 @@
-import interceptor from '@/v4/interceptors/interceptors.js'
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 
-interceptor.add(({el, directive, component, request}) => {
+interceptorRegistry.add(({el, directive, component, request}) => {
     el.setAttribute('data-loading', 'true')
 
-    request.onResponse(() => {
+    request.afterResponse(() => {
         el.removeAttribute('data-loading')
     })
 

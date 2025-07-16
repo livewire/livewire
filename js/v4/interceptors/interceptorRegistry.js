@@ -1,7 +1,7 @@
 import MessageBroker from '@/v4/requests/messageBroker.js'
 import Interceptor from './interceptor.js'
 
-class Interceptors {
+class InterceptorRegistry {
     interceptors = new Map()
 
     constructor() {
@@ -35,7 +35,7 @@ class Interceptors {
         for (let interceptorData of this.globalInterceptors) {
             let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
 
-            interceptor.fire(el, directive, component)
+            interceptor.init(el, directive, component)
 
             MessageBroker.addInterceptor(interceptor, component)
         }
@@ -48,7 +48,7 @@ class Interceptors {
             if (interceptorData.method === method || interceptorData.method === null) {
                 let interceptor = new Interceptor(interceptorData.callback, interceptorData.method)
 
-                interceptor.fire(el, directive, component)
+                interceptor.init(el, directive, component)
 
                 MessageBroker.addInterceptor(interceptor, component)
             }
@@ -56,6 +56,6 @@ class Interceptors {
     }
 }
 
-let instance = new Interceptors()
+let instance = new InterceptorRegistry()
 
 export default instance

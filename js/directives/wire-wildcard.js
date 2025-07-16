@@ -2,7 +2,7 @@ import { callAndClearComponentDebounces } from '@/debounce'
 import { customDirectiveHasBeenRegistered } from '@/directives'
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
-import interceptor from '@/v4/interceptors/interceptors.js'
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
     if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty'].includes(directive.value)) return
@@ -19,7 +19,7 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
         [attribute](e) {
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
-                    interceptor.fire(el, directive, component)
+                    interceptorRegistry.fire(el, directive, component)
 
                     Alpine.evaluate(el, 'await $wire.'+directive.expression, { scope: { $event: e }})
                 })
