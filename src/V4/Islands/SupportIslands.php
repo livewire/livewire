@@ -41,7 +41,7 @@ class SupportIslands extends ComponentHook
 
         if (! isset($memo['islands'])) return;
 
-        $islands = collect($memo['islands'])->map(fn ($island) => $this->component->island(name: $island['name'], key: $island['key'], data: ['__livewire' => $this->component], mode: $island['mode']))->toArray();
+        $islands = collect($memo['islands'])->map(fn ($island) => $this->component->island(name: $island['name'], key: $island['key'], mode: $island['mode']))->toArray();
 
         $this->component->setIslands($islands);
     }

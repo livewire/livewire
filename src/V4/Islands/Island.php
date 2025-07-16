@@ -14,7 +14,6 @@ class Island implements \Stringable, Htmlable, Jsonable
         public string $name,
         public string $key,
         public string $view,
-        public array $data = [],
         public ?Component $component = null,
         public string $mode = 'replace',
     ) {}
@@ -25,7 +24,8 @@ class Island implements \Stringable, Htmlable, Jsonable
 
         $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this->component);
 
-        $output = view($this->view, array_merge($componentData, $this->data))->render();
+        // We need to ensure that the component instance is available in the island view, so any nested islands can access it...
+        $output = view($this->view, array_merge($componentData, ['__livewire' => $this->component]))->render();
 
         app(ExtendBlade::class)->endLivewireRendering();
 
