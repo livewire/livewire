@@ -2,38 +2,17 @@
 
 namespace Livewire\V4\Islands;
 
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Support\Htmlable;
-
-class DeferredIsland implements \Stringable, Htmlable, Jsonable
+class DeferredIsland
 {
     public function __construct(
+        public string $key,
         public string $name,
     ) {}
 
     public function render()
     {
-        return "<!--[if ISLAND:{$this->name}:defer]><![endif]-->"
+        return "<!--[if ISLAND:{$this->key}]><![endif]-->"
             . "<div wire:init=\"\$island('{$this->name}')\">Loading...</div>"
-            . "<!--[if ENDISLAND:{$this->name}]><![endif]-->";
-    }
-
-    public function toJson($options = 0)
-    {
-        return [
-            'name' => $this->name,
-            'mode' => 'defer',
-            'content' => $this->render(),
-        ];
-    }
-
-    public function __toString()
-    {
-        return $this->render();
-    }
-
-    public function toHtml()
-    {
-        return $this->render();
+            . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
 }

@@ -247,13 +247,14 @@ class Testable
      *
      * @return $this
      */
-    function update($calls = [], $updates = [])
+    function update($calls = [], $updates = [], $context = [])
     {
         $newState = SubsequentRender::make(
             $this->requestBroker,
             $this->lastState,
             $calls,
             $updates,
+            $context,
             app('request')->cookies->all()
         );
 

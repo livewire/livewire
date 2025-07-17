@@ -1,9 +1,12 @@
 import { trigger } from '@/hooks'
+import { morph } from '@/morph'
 
 export default class Message {
     updates = {}
     actions = []
     payload = {}
+    context = {}
+    interceptors = new Set()
     resolvers = []
     status = 'waiting'
     succeedCallbacks = []
@@ -15,6 +18,22 @@ export default class Message {
 
     constructor(component) {
         this.component = component
+    }
+
+    addInterceptor(interceptor) {
+        interceptor.cancel = () => this.cancel()
+
+        this.interceptors.add(interceptor)
+    }
+
+    addContext(key, value) {
+        if (! this.context[key]) {
+            this.context[key] = []
+        }
+
+        if (this.context[key].includes(value)) return
+
+        this.context[key].push(value)
     }
 
     addAction(method, params, resolve) {
@@ -95,7 +114,8 @@ export default class Message {
             calls: this.actions.map(i => ({
                 method: i.method,
                 params: i.params,
-            }))
+            })),
+            context: this.context,
         }
 
         // Allow other areas of the codebase to hook into the lifecycle
@@ -113,6 +133,24 @@ export default class Message {
                 this.respondCallbacks.push(callback)
             },
         })
+
+        this.beforeSend()
+    }
+
+    beforeSend() {
+        this.interceptors.forEach(i => i.beforeSend({ component: this.component, payload: this.payload }))
+    }
+
+    afterSend() {
+        this.interceptors.forEach(i => i.afterSend({ component: this.component, payload: this.payload }))
+    }
+
+    beforeResponse(response) {
+        this.interceptors.forEach(i => i.beforeResponse({ component: this.component, response }))
+    }
+
+    afterResponse(response) {
+        this.interceptors.forEach(i => i.afterResponse({ component: this.component, response }))
     }
 
     respond() {
@@ -124,11 +162,15 @@ export default class Message {
 
         this.status = 'succeeded'
 
+        this.beforeResponse(response)
+
         this.respond()
 
         let { snapshot, effects } = response
 
         this.component.mergeNewSnapshot(snapshot, effects, this.updates)
+
+        this.afterResponse(response)
 
         // Trigger any side effects from the payload like "morph" and "dispatch event"...
         this.component.processEffects(this.component.effects)
@@ -151,19 +193,53 @@ export default class Message {
 
         this.finishTarget({ snapshot: parsedSnapshot, effects })
 
+        this.interceptors.forEach(i => i.onSuccess(response))
+
         this.succeedCallbacks.forEach(i => i(response))
+
+        let html = effects['html']
+
+        if (! html) return
+
+        this.interceptors.forEach(i => i.beforeRender({ component: this.component }))
+
+        queueMicrotask(() => {
+            this.interceptors.forEach(i => i.beforeMorph({ component: this.component, el: this.component.el, html }))
+
+            morph(this.component, this.component.el, html)
+
+            this.interceptors.forEach(i => i.afterMorph({ component: this.component, el: this.component.el, html }))
+
+            setTimeout(() => {
+                this.interceptors.forEach(i => i.afterRender({ component: this.component }))
+            })
+        })
     }
 
-    fail() {
+    error(e) {
+        if (this.isCancelled()) return
+
+        this.status = 'errored'
+
+        this.interceptors.forEach(i => i.onError(e))
+    }
+
+    fail(response, content) {
+        if (this.isCancelled()) return
+
         this.status = 'failed'
 
         this.respond()
+
+        this.interceptors.forEach(i => i.onError(response, content))
 
         this.failCallbacks.forEach(i => i())
     }
 
     cancel() {
         this.status = 'cancelled'
+
+        this.interceptors.forEach(i => i.onCancel())
 
         // @todo: Get this working with `wire:loading`...
         // this.respond()
@@ -185,11 +261,15 @@ export default class Message {
         return this.status === 'cancelled'
     }
 
+    isErrored() {
+        return this.status === 'errored'
+    }
+
     isFailed() {
         return this.status === 'failed'
     }
 
     isFinished() {
-        return this.isSucceeded() || this.isCancelled() || this.isFailed()
+        return this.isSucceeded() || this.isCancelled() || this.isFailed() || this.isErrored()
     }
 }

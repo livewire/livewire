@@ -11,36 +11,39 @@ on('stream', (payload) => {
 
     let component = findComponent(id)
 
-    streamIsland(component, name, content)
+    streamIsland(component, key, content)
 })
 
-export function streamIsland(component, name, content) {
-    renderIsland(component, name, content)
+export function streamIsland(component, key, content) {
+    renderIsland(component, key, content)
 }
 
 on('effect', ({ component, effects }) => {
     let islands = effects.islands || []
 
     islands.forEach(island => {
-        let { name, content } = island
+        let { key, content } = island
 
         // Wrapping this in a double queueMicrotask. The first one puts it after all
         // other "effect" hooks, and the second one puts it after all reactive
         // Alpine effects (that are processed via flushJobs in scheduler).
         queueMicrotask(() => {
             queueMicrotask(() => {
-                renderIsland(component, name, content)
+                renderIsland(component, key, content)
             })
         })
     })
 })
 
-export function renderIsland(component, name, content) {
-    let { startNode, endNode } = findIslandComments(component.el, name)
+export function renderIsland(component, key, content) {
+    let island = component.islands[key]
+    let mode = island.mode
+
+    let { startNode, endNode } = findIslandComments(component.el, key)
 
     if (!startNode || !endNode) return
 
-    let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name)
+    let strippedContent = stripIslandComments(content, key)
 
     let parentElement = startNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
@@ -72,11 +75,14 @@ export function renderIsland(component, name, content) {
     }
 }
 
-export function skipIslandContents(el, toEl, skipUntil) {
+export function skipIslandContents(component, el, toEl, skipUntil) {
     if (isStartMarker(el) && isStartMarker(toEl)) {
-        let mode = extractIslandMode(toEl)
+        let key = extractIslandKey(toEl)
+        let island = component.islands[key]
+        let mode = island.mode
+        let render = island.render
 
-        if (['skip', 'once'].includes(mode)) {
+        if (['skip', 'once'].includes(render)) {
             skipUntil(node => isEndMarker(node))
         } else if (mode === 'prepend') {
             // Collect all siblings until end marker
@@ -118,6 +124,45 @@ export function skipIslandContents(el, toEl, skipUntil) {
     }
 }
 
+export function closestIslandName(component, el) {
+    let current = el;
+
+    while (current) {
+        // Check previous siblings
+        let sibling = current.previousSibling;
+
+        let foundEndMarker = []
+        while (sibling) {
+            if (isEndMarker(sibling)) {
+                // Keep iterating up until we find the start marker and skip it...
+                foundEndMarker.push('a')
+            }
+
+            if (isStartMarker(sibling)) {
+                if (foundEndMarker.length > 0) {
+                    foundEndMarker.pop()
+                } else {
+                    let key = extractIslandKey(sibling)
+
+                    return component.islands[key].name
+                }
+            }
+
+            sibling = sibling.previousSibling;
+        }
+
+        // No start marker found at this level or found end marker
+        // Go up to parent unless we've hit the component root
+        current = current.parentElement;
+
+        if (current && current.hasAttribute('wire:id')) {
+            break; // Stop at component root
+        }
+    }
+
+    return null;
+}
+
 function isStartMarker(el) {
     return el.nodeType === 8 && el.textContent.startsWith('[if ISLAND')
 }
@@ -126,36 +171,26 @@ function isEndMarker(el) {
     return el.nodeType === 8 && el.textContent.startsWith('[if ENDISLAND')
 }
 
-function extractIslandMode(el) {
-    let mode = el.textContent.match(/\[if ISLAND:.*:(\w+)\]/)?.[1]
+function extractIslandKey(el) {
+    let key = el.textContent.match(/\[if ISLAND:(\w+)\]/)?.[1]
 
-    return mode || 'replace'
+    return key
 }
 
-function stripIslandCommentsAndExtractMode(content, islandName) {
-    // Extract mode from start comment if present
-    let mode = 'replace'
-    const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:(\\w+)\\]><\\!\\[endif\\]`))
-    if (modeMatch) {
-        mode = modeMatch[1]
-    }
-
+function stripIslandComments(content, key) {
     // Remove the start and end comment markers
-    let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
-    let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
+    let startComment = new RegExp(`<!--\\[if ISLAND:${key}\\]><\\!\\[endif\\]-->`)
+    let endComment = new RegExp(`<!--\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]-->`)
 
     // Strip out the comments from the content
     let stripped = content
         .replace(startComment, '')
         .replace(endComment, '')
 
-    return {
-        content: stripped.trim(),
-        mode
-    }
+    return stripped.trim()
 }
 
-function findIslandComments(rootEl, islandName) {
+function findIslandComments(rootEl, key) {
     let startNode = null
     let endNode = null
 
@@ -168,11 +203,11 @@ function findIslandComments(rootEl, islandName) {
         // Check all child nodes (including text and comment nodes)
         Array.from(el.childNodes).forEach(node => {
             if (node.nodeType === Node.COMMENT_NODE) {
-                if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+                if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}\\]><\\!\\[endif\\]`))) {
                     startNode = node
                 }
 
-                if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+                if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]`))) {
                     endNode = node
                 }
             }

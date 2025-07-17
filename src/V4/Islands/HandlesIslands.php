@@ -2,34 +2,18 @@
 
 namespace Livewire\V4\Islands;
 
-use Livewire\Drawer\Utils;
-
 trait HandlesIslands
 {
     protected $islands = [];
 
-    // @todo: hack...
-    public $isSubsequentRequest = false;
-
-    public function renderIsland($name, $view = null, $data = [], $mode = null, $defer = false, $fromBladeDirective = false)
+    public function island($name, $key, $mode = 'replace', $render = 'once', $defer = false, $lazy = false, $view = null)
     {
-        return $this->island($name, $view, $data, $mode, $defer, $fromBladeDirective);
-    }
-
-    public function island($name, $view = null, $data = [], $mode = null, $defer = false, $fromBladeDirective = false)
-    {
-        // If second parameter is an array, treat it as data and use lookup for view
-        if (is_array($view)) {
-            $data = $view;
-            $view = null;
+        if ($view === null && $key) {
+            // @todo: See if there is a better way to do this...
+            $view = "livewire-compiled::{$key}";
         }
 
-        // If no view provided, try to look it up from compiled islands
-        if ($view === null && property_exists($this, 'islandLookup') && isset($this->islandLookup[$name])) {
-            $view = $this->islandLookup[$name];
-        }
-
-        // If still no view, throw helpful error
+        // If no view, throw helpful error
         if ($view === null) {
             throw new \InvalidArgumentException(
                 "No view specified for island '{$name}'. " .
@@ -37,49 +21,27 @@ trait HandlesIslands
             );
         }
 
-        if ($mode === null) {
-            $mode = 'replace';
-
-            // This is a potential default...
-            // $mode = ($this->isSubsequentRequest && $fromBladeDirective) ? 'skip' : 'replace';
+        if ($defer && $lazy) {
+            throw new \InvalidArgumentException(
+                "Cannot use both 'defer' and 'lazy' for island '{$name}'."
+            );
+        }
+        
+        if ($island = collect($this->islands)->get($key)) {
+            ray('return existing', $island);
+            return $island;
         }
 
-        if ($fromBladeDirective) {
-            if ($this->isSubsequentRequest) {
-                if ($mode === 'once') {
-                    return new SkippedIsland($name);
-                }
-            } else {
-                if ($mode === 'once') {
-                    // ...
-                } if ($mode === 'skip') {
-                    return new SkippedIsland($name);
-                } elseif ($defer || $mode === 'defer') {
-                    return new DeferredIsland($name);
-                } elseif ($mode === 'lazy') {
-                    return new LazyIsland($name);
-                }
-            }
-        }
+        $island = new Island($name, $key, $view, $this, $mode, $render, $defer, $lazy);
 
-        $componentData = Utils::getPublicPropertiesDefinedOnSubclass($this);
-
-        $island = new Island($name, $view, array_merge($componentData, $data), $this, $mode);
-
-        if (! $fromBladeDirective) {
-            $this->skipRender();
-
-            $this->islands[] = $island;
-        }
+        $this->islands[$island->key] = $island;
 
         return $island;
     }
 
-    // This method is called from the frontend via: wire:click="$island('name...')"
-    // This method has been whitelisted in HandleComponents.php
-    public function __island($name, $mode = null)
+    public function setIslands($islands): void
     {
-        $this->island($name, mode: $mode);
+        $this->islands = $islands;
     }
 
     public function getIslands(): array

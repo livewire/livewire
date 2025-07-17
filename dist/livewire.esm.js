@@ -9,9 +9,9 @@ var __commonJS = (cb, mod) => function __require() {
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    for (let key2 of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key2) && key2 !== except)
+        __defProp(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable });
   }
   return to;
 };
@@ -35,9 +35,9 @@ var require_module_cjs = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -142,8 +142,8 @@ var require_module_cjs = __commonJS({
               const item = value[i];
               const normalized = normalizeStyle(isString(item) ? parseStringStyle(item) : item);
               if (normalized) {
-                for (const key in normalized) {
-                  res[key] = normalized[key];
+                for (const key2 in normalized) {
+                  res[key2] = normalized[key2];
                 }
               }
             }
@@ -169,9 +169,9 @@ var require_module_cjs = __commonJS({
           if (!styles) {
             return ret;
           }
-          for (const key in styles) {
-            const value = styles[key];
-            const normalizedKey = key.startsWith(`--`) ? key : hyphenate(key);
+          for (const key2 in styles) {
+            const value = styles[key2];
+            const normalizedKey = key2.startsWith(`--`) ? key2 : hyphenate(key2);
             if (isString(value) || typeof value === "number" && isNoUnitNumericStyleProp(normalizedKey)) {
               ret += `${normalizedKey}:${value};`;
             }
@@ -280,10 +280,10 @@ var require_module_cjs = __commonJS({
             if (aKeysCount !== bKeysCount) {
               return false;
             }
-            for (const key in a) {
-              const aHasKey = a.hasOwnProperty(key);
-              const bHasKey = b.hasOwnProperty(key);
-              if (aHasKey && !bHasKey || !aHasKey && bHasKey || !looseEqual(a[key], b[key])) {
+            for (const key2 in a) {
+              const aHasKey = a.hasOwnProperty(key2);
+              const bHasKey = b.hasOwnProperty(key2);
+              if (aHasKey && !bHasKey || !aHasKey && bHasKey || !looseEqual(a[key2], b[key2])) {
                 return false;
               }
             }
@@ -299,8 +299,8 @@ var require_module_cjs = __commonJS({
         var replacer = (_key, val) => {
           if (isMap(val)) {
             return {
-              [`Map(${val.size})`]: [...val.entries()].reduce((entries, [key, val2]) => {
-                entries[`${key} =>`] = val2;
+              [`Map(${val.size})`]: [...val.entries()].reduce((entries, [key2, val2]) => {
+                entries[`${key2} =>`] = val2;
                 return entries;
               }, {})
             };
@@ -324,8 +324,8 @@ var require_module_cjs = __commonJS({
         };
         var NO = () => false;
         var onRE = /^on[^a-z]/;
-        var isOn = (key) => onRE.test(key);
-        var isModelListener = (key) => key.startsWith("onUpdate:");
+        var isOn = (key2) => onRE.test(key2);
+        var isModelListener = (key2) => key2.startsWith("onUpdate:");
         var extend = Object.assign;
         var remove = (arr, el) => {
           const i = arr.indexOf(el);
@@ -334,7 +334,7 @@ var require_module_cjs = __commonJS({
           }
         };
         var hasOwnProperty = Object.prototype.hasOwnProperty;
-        var hasOwn = (val, key) => hasOwnProperty.call(val, key);
+        var hasOwn = (val, key2) => hasOwnProperty.call(val, key2);
         var isArray2 = Array.isArray;
         var isMap = (val) => toTypeString(val) === "[object Map]";
         var isSet = (val) => toTypeString(val) === "[object Set]";
@@ -352,7 +352,7 @@ var require_module_cjs = __commonJS({
           return toTypeString(value).slice(8, -1);
         };
         var isPlainObject = (val) => toTypeString(val) === "[object Object]";
-        var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
+        var isIntegerKey = (key2) => isString(key2) && key2 !== "NaN" && key2[0] !== "-" && "" + parseInt(key2, 10) === key2;
         var isReservedProp = /* @__PURE__ */ makeMap(",key,ref,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted");
         var cacheStringFunction = (fn) => {
           const cache = /* @__PURE__ */ Object.create(null);
@@ -375,8 +375,8 @@ var require_module_cjs = __commonJS({
             fns[i](arg);
           }
         };
-        var def = (obj, key, value) => {
-          Object.defineProperty(obj, key, {
+        var def = (obj, key2, value) => {
+          Object.defineProperty(obj, key2, {
             configurable: true,
             enumerable: false,
             value
@@ -543,7 +543,7 @@ var require_module_cjs = __commonJS({
           const last = trackStack.pop();
           shouldTrack = last === void 0 ? true : last;
         }
-        function track2(target, type, key) {
+        function track2(target, type, key2) {
           if (!shouldTrack || activeEffect === void 0) {
             return;
           }
@@ -551,9 +551,9 @@ var require_module_cjs = __commonJS({
           if (!depsMap) {
             targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
           }
-          let dep = depsMap.get(key);
+          let dep = depsMap.get(key2);
           if (!dep) {
-            depsMap.set(key, dep = /* @__PURE__ */ new Set());
+            depsMap.set(key2, dep = /* @__PURE__ */ new Set());
           }
           if (!dep.has(activeEffect)) {
             dep.add(activeEffect);
@@ -563,12 +563,12 @@ var require_module_cjs = __commonJS({
                 effect: activeEffect,
                 target,
                 type,
-                key
+                key: key2
               });
             }
           }
         }
-        function trigger2(target, type, key, newValue, oldValue, oldTarget) {
+        function trigger2(target, type, key2, newValue, oldValue, oldTarget) {
           const depsMap = targetMap.get(target);
           if (!depsMap) {
             return;
@@ -585,15 +585,15 @@ var require_module_cjs = __commonJS({
           };
           if (type === "clear") {
             depsMap.forEach(add2);
-          } else if (key === "length" && shared.isArray(target)) {
-            depsMap.forEach((dep, key2) => {
-              if (key2 === "length" || key2 >= newValue) {
+          } else if (key2 === "length" && shared.isArray(target)) {
+            depsMap.forEach((dep, key22) => {
+              if (key22 === "length" || key22 >= newValue) {
                 add2(dep);
               }
             });
           } else {
-            if (key !== void 0) {
-              add2(depsMap.get(key));
+            if (key2 !== void 0) {
+              add2(depsMap.get(key2));
             }
             switch (type) {
               case "add":
@@ -602,7 +602,7 @@ var require_module_cjs = __commonJS({
                   if (shared.isMap(target)) {
                     add2(depsMap.get(MAP_KEY_ITERATE_KEY));
                   }
-                } else if (shared.isIntegerKey(key)) {
+                } else if (shared.isIntegerKey(key2)) {
                   add2(depsMap.get("length"));
                 }
                 break;
@@ -626,7 +626,7 @@ var require_module_cjs = __commonJS({
               effect4.options.onTrigger({
                 effect: effect4,
                 target,
-                key,
+                key: key2,
                 type,
                 newValue,
                 oldValue,
@@ -642,7 +642,7 @@ var require_module_cjs = __commonJS({
           effects.forEach(run);
         }
         var isNonTrackableKeys = /* @__PURE__ */ shared.makeMap(`__proto__,__v_isRef,__isVue`);
-        var builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol).map((key) => Symbol[key]).filter(shared.isSymbol));
+        var builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol).map((key2) => Symbol[key2]).filter(shared.isSymbol));
         var get2 = /* @__PURE__ */ createGetter();
         var shallowGet = /* @__PURE__ */ createGetter(false, true);
         var readonlyGet = /* @__PURE__ */ createGetter(true);
@@ -650,24 +650,24 @@ var require_module_cjs = __commonJS({
         var arrayInstrumentations = /* @__PURE__ */ createArrayInstrumentations();
         function createArrayInstrumentations() {
           const instrumentations = {};
-          ["includes", "indexOf", "lastIndexOf"].forEach((key) => {
-            instrumentations[key] = function(...args) {
+          ["includes", "indexOf", "lastIndexOf"].forEach((key2) => {
+            instrumentations[key2] = function(...args) {
               const arr = toRaw2(this);
               for (let i = 0, l = this.length; i < l; i++) {
                 track2(arr, "get", i + "");
               }
-              const res = arr[key](...args);
+              const res = arr[key2](...args);
               if (res === -1 || res === false) {
-                return arr[key](...args.map(toRaw2));
+                return arr[key2](...args.map(toRaw2));
               } else {
                 return res;
               }
             };
           });
-          ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
-            instrumentations[key] = function(...args) {
+          ["push", "pop", "shift", "unshift", "splice"].forEach((key2) => {
+            instrumentations[key2] = function(...args) {
               pauseTracking();
-              const res = toRaw2(this)[key].apply(this, args);
+              const res = toRaw2(this)[key2].apply(this, args);
               resetTracking();
               return res;
             };
@@ -675,30 +675,30 @@ var require_module_cjs = __commonJS({
           return instrumentations;
         }
         function createGetter(isReadonly2 = false, shallow = false) {
-          return function get3(target, key, receiver) {
-            if (key === "__v_isReactive") {
+          return function get3(target, key2, receiver) {
+            if (key2 === "__v_isReactive") {
               return !isReadonly2;
-            } else if (key === "__v_isReadonly") {
+            } else if (key2 === "__v_isReadonly") {
               return isReadonly2;
-            } else if (key === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
+            } else if (key2 === "__v_raw" && receiver === (isReadonly2 ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
               return target;
             }
             const targetIsArray = shared.isArray(target);
-            if (!isReadonly2 && targetIsArray && shared.hasOwn(arrayInstrumentations, key)) {
-              return Reflect.get(arrayInstrumentations, key, receiver);
+            if (!isReadonly2 && targetIsArray && shared.hasOwn(arrayInstrumentations, key2)) {
+              return Reflect.get(arrayInstrumentations, key2, receiver);
             }
-            const res = Reflect.get(target, key, receiver);
-            if (shared.isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
+            const res = Reflect.get(target, key2, receiver);
+            if (shared.isSymbol(key2) ? builtInSymbols.has(key2) : isNonTrackableKeys(key2)) {
               return res;
             }
             if (!isReadonly2) {
-              track2(target, "get", key);
+              track2(target, "get", key2);
             }
             if (shallow) {
               return res;
             }
             if (isRef(res)) {
-              const shouldUnwrap = !targetIsArray || !shared.isIntegerKey(key);
+              const shouldUnwrap = !targetIsArray || !shared.isIntegerKey(key2);
               return shouldUnwrap ? res.value : res;
             }
             if (shared.isObject(res)) {
@@ -710,8 +710,8 @@ var require_module_cjs = __commonJS({
         var set2 = /* @__PURE__ */ createSetter();
         var shallowSet = /* @__PURE__ */ createSetter(true);
         function createSetter(shallow = false) {
-          return function set3(target, key, value, receiver) {
-            let oldValue = target[key];
+          return function set3(target, key2, value, receiver) {
+            let oldValue = target[key2];
             if (!shallow) {
               value = toRaw2(value);
               oldValue = toRaw2(oldValue);
@@ -720,31 +720,31 @@ var require_module_cjs = __commonJS({
                 return true;
               }
             }
-            const hadKey = shared.isArray(target) && shared.isIntegerKey(key) ? Number(key) < target.length : shared.hasOwn(target, key);
-            const result = Reflect.set(target, key, value, receiver);
+            const hadKey = shared.isArray(target) && shared.isIntegerKey(key2) ? Number(key2) < target.length : shared.hasOwn(target, key2);
+            const result = Reflect.set(target, key2, value, receiver);
             if (target === toRaw2(receiver)) {
               if (!hadKey) {
-                trigger2(target, "add", key, value);
+                trigger2(target, "add", key2, value);
               } else if (shared.hasChanged(value, oldValue)) {
-                trigger2(target, "set", key, value, oldValue);
+                trigger2(target, "set", key2, value, oldValue);
               }
             }
             return result;
           };
         }
-        function deleteProperty(target, key) {
-          const hadKey = shared.hasOwn(target, key);
-          const oldValue = target[key];
-          const result = Reflect.deleteProperty(target, key);
+        function deleteProperty(target, key2) {
+          const hadKey = shared.hasOwn(target, key2);
+          const oldValue = target[key2];
+          const result = Reflect.deleteProperty(target, key2);
           if (result && hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key2, void 0, oldValue);
           }
           return result;
         }
-        function has(target, key) {
-          const result = Reflect.has(target, key);
-          if (!shared.isSymbol(key) || !builtInSymbols.has(key)) {
-            track2(target, "has", key);
+        function has(target, key2) {
+          const result = Reflect.has(target, key2);
+          if (!shared.isSymbol(key2) || !builtInSymbols.has(key2)) {
+            track2(target, "has", key2);
           }
           return result;
         }
@@ -761,15 +761,15 @@ var require_module_cjs = __commonJS({
         };
         var readonlyHandlers = {
           get: readonlyGet,
-          set(target, key) {
+          set(target, key2) {
             {
-              console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
+              console.warn(`Set operation on key "${String(key2)}" failed: target is readonly.`, target);
             }
             return true;
           },
-          deleteProperty(target, key) {
+          deleteProperty(target, key2) {
             {
-              console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
+              console.warn(`Delete operation on key "${String(key2)}" failed: target is readonly.`, target);
             }
             return true;
           }
@@ -785,33 +785,33 @@ var require_module_cjs = __commonJS({
         var toReadonly = (value) => shared.isObject(value) ? readonly(value) : value;
         var toShallow = (value) => value;
         var getProto = (v) => Reflect.getPrototypeOf(v);
-        function get$1(target, key, isReadonly2 = false, isShallow = false) {
+        function get$1(target, key2, isReadonly2 = false, isShallow = false) {
           target = target["__v_raw"];
           const rawTarget = toRaw2(target);
-          const rawKey = toRaw2(key);
-          if (key !== rawKey) {
-            !isReadonly2 && track2(rawTarget, "get", key);
+          const rawKey = toRaw2(key2);
+          if (key2 !== rawKey) {
+            !isReadonly2 && track2(rawTarget, "get", key2);
           }
           !isReadonly2 && track2(rawTarget, "get", rawKey);
           const { has: has2 } = getProto(rawTarget);
           const wrap = isShallow ? toShallow : isReadonly2 ? toReadonly : toReactive;
-          if (has2.call(rawTarget, key)) {
-            return wrap(target.get(key));
+          if (has2.call(rawTarget, key2)) {
+            return wrap(target.get(key2));
           } else if (has2.call(rawTarget, rawKey)) {
             return wrap(target.get(rawKey));
           } else if (target !== rawTarget) {
-            target.get(key);
+            target.get(key2);
           }
         }
-        function has$1(key, isReadonly2 = false) {
+        function has$1(key2, isReadonly2 = false) {
           const target = this["__v_raw"];
           const rawTarget = toRaw2(target);
-          const rawKey = toRaw2(key);
-          if (key !== rawKey) {
-            !isReadonly2 && track2(rawTarget, "has", key);
+          const rawKey = toRaw2(key2);
+          if (key2 !== rawKey) {
+            !isReadonly2 && track2(rawTarget, "has", key2);
           }
           !isReadonly2 && track2(rawTarget, "has", rawKey);
-          return key === rawKey ? target.has(key) : target.has(key) || target.has(rawKey);
+          return key2 === rawKey ? target.has(key2) : target.has(key2) || target.has(rawKey);
         }
         function size(target, isReadonly2 = false) {
           target = target["__v_raw"];
@@ -829,40 +829,40 @@ var require_module_cjs = __commonJS({
           }
           return this;
         }
-        function set$1(key, value) {
+        function set$1(key2, value) {
           value = toRaw2(value);
           const target = toRaw2(this);
           const { has: has2, get: get3 } = getProto(target);
-          let hadKey = has2.call(target, key);
+          let hadKey = has2.call(target, key2);
           if (!hadKey) {
-            key = toRaw2(key);
-            hadKey = has2.call(target, key);
+            key2 = toRaw2(key2);
+            hadKey = has2.call(target, key2);
           } else {
-            checkIdentityKeys(target, has2, key);
+            checkIdentityKeys(target, has2, key2);
           }
-          const oldValue = get3.call(target, key);
-          target.set(key, value);
+          const oldValue = get3.call(target, key2);
+          target.set(key2, value);
           if (!hadKey) {
-            trigger2(target, "add", key, value);
+            trigger2(target, "add", key2, value);
           } else if (shared.hasChanged(value, oldValue)) {
-            trigger2(target, "set", key, value, oldValue);
+            trigger2(target, "set", key2, value, oldValue);
           }
           return this;
         }
-        function deleteEntry(key) {
+        function deleteEntry(key2) {
           const target = toRaw2(this);
           const { has: has2, get: get3 } = getProto(target);
-          let hadKey = has2.call(target, key);
+          let hadKey = has2.call(target, key2);
           if (!hadKey) {
-            key = toRaw2(key);
-            hadKey = has2.call(target, key);
+            key2 = toRaw2(key2);
+            hadKey = has2.call(target, key2);
           } else {
-            checkIdentityKeys(target, has2, key);
+            checkIdentityKeys(target, has2, key2);
           }
-          const oldValue = get3 ? get3.call(target, key) : void 0;
-          const result = target.delete(key);
+          const oldValue = get3 ? get3.call(target, key2) : void 0;
+          const result = target.delete(key2);
           if (hadKey) {
-            trigger2(target, "delete", key, void 0, oldValue);
+            trigger2(target, "delete", key2, void 0, oldValue);
           }
           return result;
         }
@@ -883,8 +883,8 @@ var require_module_cjs = __commonJS({
             const rawTarget = toRaw2(target);
             const wrap = isShallow ? toShallow : isReadonly2 ? toReadonly : toReactive;
             !isReadonly2 && track2(rawTarget, "iterate", ITERATE_KEY);
-            return target.forEach((value, key) => {
-              return callback.call(thisArg, wrap(value), wrap(key), observed);
+            return target.forEach((value, key2) => {
+              return callback.call(thisArg, wrap(value), wrap(key2), observed);
             });
           };
         }
@@ -915,16 +915,16 @@ var require_module_cjs = __commonJS({
         function createReadonlyMethod(type) {
           return function(...args) {
             {
-              const key = args[0] ? `on key "${args[0]}" ` : ``;
-              console.warn(`${shared.capitalize(type)} operation ${key}failed: target is readonly.`, toRaw2(this));
+              const key2 = args[0] ? `on key "${args[0]}" ` : ``;
+              console.warn(`${shared.capitalize(type)} operation ${key2}failed: target is readonly.`, toRaw2(this));
             }
             return type === "delete" ? false : this;
           };
         }
         function createInstrumentations() {
           const mutableInstrumentations2 = {
-            get(key) {
-              return get$1(this, key);
+            get(key2) {
+              return get$1(this, key2);
             },
             get size() {
               return size(this);
@@ -937,8 +937,8 @@ var require_module_cjs = __commonJS({
             forEach: createForEach(false, false)
           };
           const shallowInstrumentations2 = {
-            get(key) {
-              return get$1(this, key, false, true);
+            get(key2) {
+              return get$1(this, key2, false, true);
             },
             get size() {
               return size(this);
@@ -951,14 +951,14 @@ var require_module_cjs = __commonJS({
             forEach: createForEach(false, true)
           };
           const readonlyInstrumentations2 = {
-            get(key) {
-              return get$1(this, key, true);
+            get(key2) {
+              return get$1(this, key2, true);
             },
             get size() {
               return size(this, true);
             },
-            has(key) {
-              return has$1.call(this, key, true);
+            has(key2) {
+              return has$1.call(this, key2, true);
             },
             add: createReadonlyMethod("add"),
             set: createReadonlyMethod("set"),
@@ -967,14 +967,14 @@ var require_module_cjs = __commonJS({
             forEach: createForEach(true, false)
           };
           const shallowReadonlyInstrumentations2 = {
-            get(key) {
-              return get$1(this, key, true, true);
+            get(key2) {
+              return get$1(this, key2, true, true);
             },
             get size() {
               return size(this, true);
             },
-            has(key) {
-              return has$1.call(this, key, true);
+            has(key2) {
+              return has$1.call(this, key2, true);
             },
             add: createReadonlyMethod("add"),
             set: createReadonlyMethod("set"),
@@ -999,15 +999,15 @@ var require_module_cjs = __commonJS({
         var [mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations, shallowReadonlyInstrumentations] = /* @__PURE__ */ createInstrumentations();
         function createInstrumentationGetter(isReadonly2, shallow) {
           const instrumentations = shallow ? isReadonly2 ? shallowReadonlyInstrumentations : shallowInstrumentations : isReadonly2 ? readonlyInstrumentations : mutableInstrumentations;
-          return (target, key, receiver) => {
-            if (key === "__v_isReactive") {
+          return (target, key2, receiver) => {
+            if (key2 === "__v_isReactive") {
               return !isReadonly2;
-            } else if (key === "__v_isReadonly") {
+            } else if (key2 === "__v_isReadonly") {
               return isReadonly2;
-            } else if (key === "__v_raw") {
+            } else if (key2 === "__v_raw") {
               return target;
             }
-            return Reflect.get(shared.hasOwn(instrumentations, key) && key in target ? instrumentations : target, key, receiver);
+            return Reflect.get(shared.hasOwn(instrumentations, key2) && key2 in target ? instrumentations : target, key2, receiver);
           };
         }
         var mutableCollectionHandlers = {
@@ -1022,9 +1022,9 @@ var require_module_cjs = __commonJS({
         var shallowReadonlyCollectionHandlers = {
           get: /* @__PURE__ */ createInstrumentationGetter(true, true)
         };
-        function checkIdentityKeys(target, has2, key) {
-          const rawKey = toRaw2(key);
-          if (rawKey !== key && has2.call(target, rawKey)) {
+        function checkIdentityKeys(target, has2, key2) {
+          const rawKey = toRaw2(key2);
+          if (rawKey !== key2 && has2.call(target, rawKey)) {
             const type = shared.toRawType(target);
             console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
           }
@@ -1149,14 +1149,14 @@ var require_module_cjs = __commonJS({
           return isRef(ref2) ? ref2.value : ref2;
         }
         var shallowUnwrapHandlers = {
-          get: (target, key, receiver) => unref(Reflect.get(target, key, receiver)),
-          set: (target, key, value, receiver) => {
-            const oldValue = target[key];
+          get: (target, key2, receiver) => unref(Reflect.get(target, key2, receiver)),
+          set: (target, key2, value, receiver) => {
+            const oldValue = target[key2];
             if (isRef(oldValue) && !isRef(value)) {
               oldValue.value = value;
               return true;
             } else {
-              return Reflect.set(target, key, value, receiver);
+              return Reflect.set(target, key2, value, receiver);
             }
           }
         };
@@ -1185,8 +1185,8 @@ var require_module_cjs = __commonJS({
             console.warn(`toRefs() expects a reactive object but received a plain one.`);
           }
           const ret = shared.isArray(object) ? new Array(object.length) : {};
-          for (const key in object) {
-            ret[key] = toRef(object, key);
+          for (const key2 in object) {
+            ret[key2] = toRef(object, key2);
           }
           return ret;
         }
@@ -1203,8 +1203,8 @@ var require_module_cjs = __commonJS({
             this._object[this._key] = newVal;
           }
         };
-        function toRef(object, key) {
-          return isRef(object[key]) ? object[key] : new ObjectRefImpl(object, key);
+        function toRef(object, key2) {
+          return isRef(object[key2]) ? object[key2] : new ObjectRefImpl(object, key2);
         }
         var ComputedRefImpl = class {
           constructor(getter, _setter, isReadonly2) {
@@ -1602,22 +1602,22 @@ var require_module_cjs = __commonJS({
     };
     function collapseProxies() {
       let keys = Reflect.ownKeys(this);
-      return keys.reduce((acc, key) => {
-        acc[key] = Reflect.get(this, key);
+      return keys.reduce((acc, key2) => {
+        acc[key2] = Reflect.get(this, key2);
         return acc;
       }, {});
     }
     function initInterceptors(data2) {
       let isObject2 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
       let recurse = (obj, basePath = "") => {
-        Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
+        Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key2, { value, enumerable }]) => {
           if (enumerable === false || value === void 0)
             return;
           if (typeof value === "object" && value !== null && value.__v_skip)
             return;
-          let path = basePath === "" ? key : `${basePath}.${key}`;
+          let path = basePath === "" ? key2 : `${basePath}.${key2}`;
           if (typeof value === "object" && value !== null && value._x_interceptor) {
-            obj[key] = value.initialize(data2, path, key);
+            obj[key2] = value.initialize(data2, path, key2);
           } else {
             if (isObject2(value) && value !== obj && !(value instanceof Element)) {
               recurse(value, path);
@@ -1632,18 +1632,18 @@ var require_module_cjs = __commonJS({
       let obj = {
         initialValue: void 0,
         _x_interceptor: true,
-        initialize(data2, path, key) {
-          return callback(this.initialValue, () => get(data2, path), (value) => set(data2, path, value), path, key);
+        initialize(data2, path, key2) {
+          return callback(this.initialValue, () => get(data2, path), (value) => set(data2, path, value), path, key2);
         }
       };
       mutateObj(obj);
       return (initialValue) => {
         if (typeof initialValue === "object" && initialValue !== null && initialValue._x_interceptor) {
           let initialize = obj.initialize.bind(obj);
-          obj.initialize = (data2, path, key) => {
-            let innerValue = initialValue.initialize(data2, path, key);
+          obj.initialize = (data2, path, key2) => {
+            let innerValue = initialValue.initialize(data2, path, key2);
             obj.initialValue = innerValue;
-            return initialize(data2, path, key);
+            return initialize(data2, path, key2);
           };
         } else {
           obj.initialValue = initialValue;
@@ -1854,13 +1854,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var currentHandlerStackKey = Symbol();
     function deferHandlingDirectives(callback) {
       isDeferringHandlers = true;
-      let key = Symbol();
-      currentHandlerStackKey = key;
-      directiveHandlerStacks.set(key, []);
+      let key2 = Symbol();
+      currentHandlerStackKey = key2;
+      directiveHandlerStacks.set(key2, []);
       let flushHandlers = () => {
-        while (directiveHandlerStacks.get(key).length)
-          directiveHandlerStacks.get(key).shift()();
-        directiveHandlerStacks.delete(key);
+        while (directiveHandlerStacks.get(key2).length)
+          directiveHandlerStacks.get(key2).shift()();
+        directiveHandlerStacks.delete(key2);
       };
       let stopDeferring = () => {
         isDeferringHandlers = false;
@@ -2171,12 +2171,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function setStylesFromObject(el, value) {
       let previousStyles = {};
-      Object.entries(value).forEach(([key, value2]) => {
-        previousStyles[key] = el.style[key];
-        if (!key.startsWith("--")) {
-          key = kebabCase(key);
+      Object.entries(value).forEach(([key2, value2]) => {
+        previousStyles[key2] = el.style[key2];
+        if (!key2.startsWith("--")) {
+          key2 = kebabCase(key2);
         }
-        el.style.setProperty(key, value2);
+        el.style.setProperty(key2, value2);
       });
       setTimeout(() => {
         if (el.style.length === 0) {
@@ -2462,24 +2462,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
       });
     }
-    function modifierValue(modifiers, key, fallback2) {
-      if (modifiers.indexOf(key) === -1)
+    function modifierValue(modifiers, key2, fallback2) {
+      if (modifiers.indexOf(key2) === -1)
         return fallback2;
-      const rawValue = modifiers[modifiers.indexOf(key) + 1];
+      const rawValue = modifiers[modifiers.indexOf(key2) + 1];
       if (!rawValue)
         return fallback2;
-      if (key === "scale") {
+      if (key2 === "scale") {
         if (isNaN(rawValue))
           return fallback2;
       }
-      if (key === "duration" || key === "delay") {
+      if (key2 === "duration" || key2 === "delay") {
         let match = rawValue.match(/([0-9]+)ms/);
         if (match)
           return match[1];
       }
-      if (key === "origin") {
-        if (["top", "right", "left", "center", "bottom"].includes(modifiers[modifiers.indexOf(key) + 2])) {
-          return [rawValue, modifiers[modifiers.indexOf(key) + 2]].join(" ");
+      if (key2 === "origin") {
+        if (["top", "right", "left", "center", "bottom"].includes(modifiers[modifiers.indexOf(key2) + 2])) {
+          return [rawValue, modifiers[modifiers.indexOf(key2) + 2]].join(" ");
         }
       }
       return rawValue;
@@ -2933,8 +2933,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     var import_reactivity10 = __toESM2(require_reactivity());
     magic("nextTick", () => nextTick);
     magic("dispatch", (el) => dispatch3.bind(dispatch3, el));
-    magic("watch", (el, { evaluateLater: evaluateLater2, cleanup }) => (key, callback) => {
-      let evaluate2 = evaluateLater2(key);
+    magic("watch", (el, { evaluateLater: evaluateLater2, cleanup }) => (key2, callback) => {
+      let evaluate2 = evaluateLater2(key2);
       let getter = () => {
         let value;
         evaluate2((i) => value = i);
@@ -2978,12 +2978,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (!el._x_ids[name])
         el._x_ids[name] = findAndIncrementId(name);
     }
-    magic("id", (el, { cleanup }) => (name, key = null) => {
-      let cacheKey = `${name}${key ? `-${key}` : ""}`;
+    magic("id", (el, { cleanup }) => (name, key2 = null) => {
+      let cacheKey = `${name}${key2 ? `-${key2}` : ""}`;
       return cacheIdByNameOnElement(el, cacheKey, cleanup, () => {
         let root = closestIdRoot(el, name);
         let id = root ? root._x_ids[name] : findAndIncrementId(name);
-        return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+        return key2 ? `${name}-${id}-${key2}` : `${name}-${id}`;
       });
     });
     interceptClone((from, to) => {
@@ -3208,7 +3208,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -3240,10 +3240,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
       return true;
     }
-    function keyToModifiers(key) {
-      if (!key)
+    function keyToModifiers(key2) {
+      if (!key2)
         return [];
-      key = kebabCase2(key);
+      key2 = kebabCase2(key2);
       let modifierToKeyMap = {
         "ctrl": "control",
         "slash": "/",
@@ -3261,9 +3261,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         "minus": "-",
         "underscore": "_"
       };
-      modifierToKeyMap[key] = key;
+      modifierToKeyMap[key2] = key2;
       return Object.keys(modifierToKeyMap).map((modifier) => {
-        if (modifierToKeyMap[modifier] === key)
+        if (modifierToKeyMap[modifier] === key2)
           return modifier;
       }).filter((modifier) => modifier);
     }
@@ -3597,13 +3597,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let scopes = [];
         let keys = [];
         if (isObject2(items)) {
-          items = Object.entries(items).map(([key, value]) => {
-            let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
+          items = Object.entries(items).map(([key2, value]) => {
+            let scope2 = getIterationScopeVariables(iteratorNames, value, key2, items);
             evaluateKey((value2) => {
               if (keys.includes(value2))
                 warn("Duplicate key on x-for", el);
               keys.push(value2);
-            }, { scope: { index: key, ...scope2 } });
+            }, { scope: { index: key2, ...scope2 } });
             scopes.push(scope2);
           });
         } else {
@@ -3622,17 +3622,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         let removes = [];
         let sames = [];
         for (let i = 0; i < prevKeys.length; i++) {
-          let key = prevKeys[i];
-          if (keys.indexOf(key) === -1)
-            removes.push(key);
+          let key2 = prevKeys[i];
+          if (keys.indexOf(key2) === -1)
+            removes.push(key2);
         }
-        prevKeys = prevKeys.filter((key) => !removes.includes(key));
+        prevKeys = prevKeys.filter((key2) => !removes.includes(key2));
         let lastKey = "template";
         for (let i = 0; i < keys.length; i++) {
-          let key = keys[i];
-          let prevIndex = prevKeys.indexOf(key);
+          let key2 = keys[i];
+          let prevIndex = prevKeys.indexOf(key2);
           if (prevIndex === -1) {
-            prevKeys.splice(i, 0, key);
+            prevKeys.splice(i, 0, key2);
             adds.push([lastKey, i]);
           } else if (prevIndex !== i) {
             let keyInSpot = prevKeys.splice(i, 1)[0];
@@ -3641,19 +3641,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             prevKeys.splice(prevIndex, 0, keyInSpot);
             moves.push([keyInSpot, keyForSpot]);
           } else {
-            sames.push(key);
+            sames.push(key2);
           }
-          lastKey = key;
+          lastKey = key2;
         }
         for (let i = 0; i < removes.length; i++) {
-          let key = removes[i];
-          if (!(key in lookup))
+          let key2 = removes[i];
+          if (!(key2 in lookup))
             continue;
           mutateDom(() => {
-            destroyTree(lookup[key]);
-            lookup[key].remove();
+            destroyTree(lookup[key2]);
+            lookup[key2].remove();
           });
-          delete lookup[key];
+          delete lookup[key2];
         }
         for (let i = 0; i < moves.length; i++) {
           let [keyInSpot, keyForSpot] = moves[i];
@@ -3678,23 +3678,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           if (lastEl._x_currentIfEl)
             lastEl = lastEl._x_currentIfEl;
           let scope2 = scopes[index];
-          let key = keys[index];
+          let key2 = keys[index];
           let clone2 = document.importNode(templateEl.content, true).firstElementChild;
           let reactiveScope = reactive(scope2);
           addScopeToNode(clone2, reactiveScope, templateEl);
           clone2._x_refreshXForScope = (newScope) => {
-            Object.entries(newScope).forEach(([key2, value]) => {
-              reactiveScope[key2] = value;
+            Object.entries(newScope).forEach(([key22, value]) => {
+              reactiveScope[key22] = value;
             });
           };
           mutateDom(() => {
             lastEl.after(clone2);
             skipDuringClone(() => initTree(clone2))();
           });
-          if (typeof key === "object") {
+          if (typeof key2 === "object") {
             warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
           }
-          lookup[key] = clone2;
+          lookup[key2] = clone2;
         }
         for (let i = 0; i < sames.length; i++) {
           lookup[sames[i]]._x_refreshXForScope(scopes[keys.indexOf(sames[i])]);
@@ -3844,9 +3844,9 @@ var require_module_cjs2 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -3930,18 +3930,18 @@ var require_module_cjs2 = __commonJS({
         };
       }
     }
-    function modifierValue(modifiers, key, fallback2) {
-      if (modifiers.indexOf(key) === -1)
+    function modifierValue(modifiers, key2, fallback2) {
+      if (modifiers.indexOf(key2) === -1)
         return fallback2;
-      const rawValue = modifiers[modifiers.indexOf(key) + 1];
+      const rawValue = modifiers[modifiers.indexOf(key2) + 1];
       if (!rawValue)
         return fallback2;
-      if (key === "duration") {
+      if (key2 === "duration") {
         let match = rawValue.match(/([0-9]+)ms/);
         if (match)
           return match[1];
       }
-      if (key === "min") {
+      if (key2 === "min") {
         let match = rawValue.match(/([0-9]+)px/);
         if (match)
           return match[1];
@@ -3970,9 +3970,9 @@ var require_module_cjs3 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -4277,24 +4277,24 @@ var require_module_cjs3 = __commonJS({
         function _objectSpread2(target) {
           for (var i = 1; i < arguments.length; i++) {
             var source = null != arguments[i] ? arguments[i] : {};
-            i % 2 ? ownKeys(Object(source), true).forEach(function(key) {
-              _defineProperty(target, key, source[key]);
-            }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function(key) {
-              Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+            i % 2 ? ownKeys(Object(source), true).forEach(function(key2) {
+              _defineProperty(target, key2, source[key2]);
+            }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function(key2) {
+              Object.defineProperty(target, key2, Object.getOwnPropertyDescriptor(source, key2));
             });
           }
           return target;
         }
-        function _defineProperty(obj, key, value) {
-          if (key in obj) {
-            Object.defineProperty(obj, key, {
+        function _defineProperty(obj, key2, value) {
+          if (key2 in obj) {
+            Object.defineProperty(obj, key2, {
               value,
               enumerable: true,
               configurable: true,
               writable: true
             });
           } else {
-            obj[key] = value;
+            obj[key2] = value;
           }
           return obj;
         }
@@ -4967,9 +4967,9 @@ var require_module_cjs4 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -4995,7 +4995,7 @@ var require_module_cjs4 = __commonJS({
             setItem: dummy.set.bind(dummy)
           };
         }
-        return Alpine24.interceptor((initialValue, getter, setter, path, key) => {
+        return Alpine24.interceptor((initialValue, getter, setter, path, key2) => {
           let lookup = alias || `_x_${path}`;
           let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
           setter(initial);
@@ -5006,8 +5006,8 @@ var require_module_cjs4 = __commonJS({
           });
           return initial;
         }, (func) => {
-          func.as = (key) => {
-            alias = key;
+          func.as = (key2) => {
+            alias = key2;
             return func;
           }, func.using = (target) => {
             storage = target;
@@ -5017,27 +5017,27 @@ var require_module_cjs4 = __commonJS({
       };
       Object.defineProperty(Alpine24, "$persist", { get: () => persist3() });
       Alpine24.magic("persist", persist3);
-      Alpine24.persist = (key, { get, set }, storage = localStorage) => {
-        let initial = storageHas(key, storage) ? storageGet(key, storage) : get();
+      Alpine24.persist = (key2, { get, set }, storage = localStorage) => {
+        let initial = storageHas(key2, storage) ? storageGet(key2, storage) : get();
         set(initial);
         Alpine24.effect(() => {
           let value = get();
-          storageSet(key, value, storage);
+          storageSet(key2, value, storage);
           set(value);
         });
       };
     }
-    function storageHas(key, storage) {
-      return storage.getItem(key) !== null;
+    function storageHas(key2, storage) {
+      return storage.getItem(key2) !== null;
     }
-    function storageGet(key, storage) {
-      let value = storage.getItem(key, storage);
+    function storageGet(key2, storage) {
+      let value = storage.getItem(key2, storage);
       if (value === void 0)
         return;
       return JSON.parse(value);
     }
-    function storageSet(key, value, storage) {
-      storage.setItem(key, JSON.stringify(value));
+    function storageSet(key2, value, storage) {
+      storage.setItem(key2, JSON.stringify(value));
     }
     var module_default = src_default;
   }
@@ -5056,9 +5056,9 @@ var require_module_cjs5 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -5109,9 +5109,9 @@ var require_module_cjs5 = __commonJS({
       return match ? match[1] + (match[2] || "px") : void 0;
     }
     function getRootMargin(modifiers) {
-      const key = "margin";
+      const key2 = "margin";
       const fallback2 = "0px 0px 0px 0px";
-      const index = modifiers.indexOf(key);
+      const index = modifiers.indexOf(key2);
       if (index === -1)
         return fallback2;
       let values = [];
@@ -5138,9 +5138,9 @@ var require_module_cjs6 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -5210,9 +5210,9 @@ var require_module_cjs7 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -6487,11 +6487,11 @@ var require_nprogress = __commonJS({
         template: '<div class="bar" role="bar"><div class="peg"></div></div><div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
       };
       NProgress2.configure = function(options) {
-        var key, value;
-        for (key in options) {
-          value = options[key];
-          if (value !== void 0 && options.hasOwnProperty(key))
-            Settings[key] = value;
+        var key2, value;
+        for (key2 in options) {
+          value = options[key2];
+          if (value !== void 0 && options.hasOwnProperty(key2))
+            Settings[key2] = value;
         }
         return this;
       };
@@ -6748,9 +6748,9 @@ var require_module_cjs8 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -7156,9 +7156,9 @@ var require_module_cjs9 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp2(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -7346,40 +7346,40 @@ var Bag = class {
   constructor() {
     this.arrays = {};
   }
-  add(key, value) {
-    if (!this.arrays[key])
-      this.arrays[key] = [];
-    this.arrays[key].push(value);
+  add(key2, value) {
+    if (!this.arrays[key2])
+      this.arrays[key2] = [];
+    this.arrays[key2].push(value);
   }
-  remove(key) {
-    if (this.arrays[key])
-      delete this.arrays[key];
+  remove(key2) {
+    if (this.arrays[key2])
+      delete this.arrays[key2];
   }
-  get(key) {
-    return this.arrays[key] || [];
+  get(key2) {
+    return this.arrays[key2] || [];
   }
-  each(key, callback) {
-    return this.get(key).forEach(callback);
+  each(key2, callback) {
+    return this.get(key2).forEach(callback);
   }
 };
 var WeakBag = class {
   constructor() {
     this.arrays = /* @__PURE__ */ new WeakMap();
   }
-  add(key, value) {
-    if (!this.arrays.has(key))
-      this.arrays.set(key, []);
-    this.arrays.get(key).push(value);
+  add(key2, value) {
+    if (!this.arrays.has(key2))
+      this.arrays.set(key2, []);
+    this.arrays.get(key2).push(value);
   }
-  remove(key) {
-    if (this.arrays.has(key))
-      this.arrays.delete(key, []);
+  remove(key2) {
+    if (this.arrays.has(key2))
+      this.arrays.delete(key2, []);
   }
-  get(key) {
-    return this.arrays.has(key) ? this.arrays.get(key) : [];
+  get(key2) {
+    return this.arrays.has(key2) ? this.arrays.get(key2) : [];
   }
-  each(key, callback) {
-    return this.get(key).forEach(callback);
+  each(key2, callback) {
+    return this.get(key2).forEach(callback);
   }
 };
 function dispatch(target, name, detail = {}, bubbles = true) {
@@ -7412,17 +7412,17 @@ function isPrimitive(subject) {
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
-function dataGet(object, key) {
-  if (key === "")
+function dataGet(object, key2) {
+  if (key2 === "")
     return object;
-  return key.split(".").reduce((carry, i) => {
+  return key2.split(".").reduce((carry, i) => {
     return carry?.[i];
   }, object);
 }
-function dataSet(object, key, value) {
-  let segments = key.split(".");
+function dataSet(object, key2, value) {
+  let segments = key2.split(".");
   if (segments.length === 1) {
-    return object[key] = value;
+    return object[key2] = value;
   }
   let firstSegment = segments.shift();
   let restOfSegments = segments.join(".");
@@ -7443,12 +7443,12 @@ function diff(left, right, diffs = {}, path = "") {
     return diffs;
   }
   let leftKeys = Object.keys(left);
-  Object.entries(right).forEach(([key, value]) => {
-    diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
-    leftKeys = leftKeys.filter((i) => i !== key);
+  Object.entries(right).forEach(([key2, value]) => {
+    diffs = { ...diffs, ...diff(left[key2], right[key2], diffs, path === "" ? key2 : `${path}.${key2}`) };
+    leftKeys = leftKeys.filter((i) => i !== key2);
   });
-  leftKeys.forEach((key) => {
-    diffs[`${path}.${key}`] = "__rm__";
+  leftKeys.forEach((key2) => {
+    diffs[`${path}.${key2}`] = "__rm__";
   });
   return diffs;
 }
@@ -7456,8 +7456,8 @@ function extractData(payload) {
   let value = isSynthetic(payload) ? payload[0] : payload;
   let meta = isSynthetic(payload) ? payload[1] : void 0;
   if (isObjecty(value)) {
-    Object.entries(value).forEach(([key, iValue]) => {
-      value[key] = extractData(iValue);
+    Object.entries(value).forEach(([key2, iValue]) => {
+      value[key2] = extractData(iValue);
     });
   }
   return value;
@@ -7635,8 +7635,8 @@ var UploadManager = class {
   makeRequest(name, formData, method, url, headers, retrievePaths) {
     let request = new XMLHttpRequest();
     request.open(method, url);
-    Object.entries(headers).forEach(([key, value]) => {
-      request.setRequestHeader(key, value);
+    Object.entries(headers).forEach(([key2, value]) => {
+      request.setRequestHeader(key2, value);
     });
     request.upload.addEventListener("progress", (e) => {
       e.detail = {};
@@ -7770,7 +7770,7 @@ function generateEntangleFunction(component, cleanup) {
     let livewireProperty = name;
     let livewireComponent = component.$wire;
     let livewirePropertyValue = livewireComponent.get(livewireProperty);
-    let interceptor = import_alpinejs.default.interceptor((initialValue, getter, setter, path, key) => {
+    let interceptor = import_alpinejs.default.interceptor((initialValue, getter, setter, path, key2) => {
       if (typeof livewirePropertyValue === "undefined") {
         console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
         return;
@@ -7971,7 +7971,7 @@ var Commit = class {
   getEncodedSnapshotWithLatestChildrenMergedIn() {
     let { snapshotEncoded, children, snapshot } = this.component;
     let childIds = children.map((child) => child.id);
-    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
     return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
   }
   toRequestPayload() {
@@ -8233,7 +8233,7 @@ function showFailureModal(content) {
 }
 
 // js/$wire.js
-var import_alpinejs2 = __toESM(require_module_cjs());
+var import_alpinejs3 = __toESM(require_module_cjs());
 
 // js/v4/requests/requestBus.js
 var RequestBus = class {
@@ -8262,11 +8262,390 @@ var RequestBus = class {
 var instance = new RequestBus();
 var requestBus_default = instance;
 
+// js/morph.js
+var import_alpinejs2 = __toESM(require_module_cjs());
+
+// js/features/supportSlots.js
+on("effect", ({ component, effects }) => {
+  let slots = effects.slots;
+  if (!slots)
+    return;
+  let parentId = component.el.getAttribute("wire:id");
+  Object.entries(slots).forEach(([childId, childSlots]) => {
+    let childComponent = findComponent(childId);
+    if (!childComponent)
+      return;
+    Object.entries(childSlots).forEach(([name, content]) => {
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            let fullName = parentId ? `${name}:${parentId}` : name;
+            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+            if (!startNode || !endNode)
+              return;
+            let strippedContent = stripSlotComments(content, fullName);
+            morphIsland(childComponent, startNode, endNode, strippedContent);
+          });
+        });
+      });
+    });
+  });
+});
+function stripSlotComments(content, slotName) {
+  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findSlotComments(rootEl, slotName) {
+  let startNode = null;
+  let endNode = null;
+  walkElements(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+          startNode = node;
+        }
+        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements(child, callback);
+  });
+}
+function skipSlotContents(el, toEl, skipUntil) {
+  if (isStartMarker(el) && isStartMarker(toEl)) {
+    skipUntil((node) => isEndMarker(node));
+  }
+}
+function isStartMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+}
+function isEndMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+}
+function extractSlotData(el) {
+  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+  let match = el.textContent.match(regex);
+  if (!match)
+    return;
+  return {
+    name: match[1],
+    parentId: match[2] || null
+  };
+}
+function checkPreviousSiblingForSlotStartMarker(el) {
+  let node = el.previousSibling;
+  while (node) {
+    if (isEndMarker(node)) {
+      return null;
+    }
+    if (isStartMarker(node)) {
+      return node;
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
+// js/features/supportIslands.js
+on("stream", (payload) => {
+  if (payload.type !== "island")
+    return;
+  let { id, name, content } = payload;
+  if (!hasComponent(id))
+    return;
+  let component = findComponent(id);
+  streamIsland(component, key, content);
+});
+function streamIsland(component, key2, content) {
+  renderIsland(component, key2, content);
+}
+on("effect", ({ component, effects }) => {
+  let islands = effects.islands || [];
+  islands.forEach((island) => {
+    let { key: key2, content } = island;
+    queueMicrotask(() => {
+      queueMicrotask(() => {
+        renderIsland(component, key2, content);
+      });
+    });
+  });
+});
+function renderIsland(component, key2, content) {
+  let island = component.islands[key2];
+  let mode = island.mode;
+  let { startNode, endNode } = findIslandComments(component.el, key2);
+  if (!startNode || !endNode)
+    return;
+  let strippedContent = stripIslandComments(content, key2);
+  let parentElement = startNode.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  if (mode === "append") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).forEach((node) => {
+      endNode.parentNode.insertBefore(node, endNode);
+    });
+  } else if (mode === "prepend") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).reverse().forEach((node) => {
+      startNode.parentNode.insertBefore(node, startNode.nextSibling);
+    });
+  } else {
+    morphIsland(component, startNode, endNode, strippedContent);
+  }
+}
+function skipIslandContents(component, el, toEl, skipUntil) {
+  if (isStartMarker2(el) && isStartMarker2(toEl)) {
+    let key2 = extractIslandKey(toEl);
+    let island = component.islands[key2];
+    let mode = island.mode;
+    let render = island.render;
+    if (["skip", "once"].includes(render)) {
+      skipUntil((node) => isEndMarker2(node));
+    } else if (mode === "prepend") {
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker2(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+      });
+      skipUntil((node) => isEndMarker2(node));
+    } else if (mode === "append") {
+      let endMarker = el.nextSibling;
+      while (endMarker && !isEndMarker2(endMarker)) {
+        endMarker = endMarker.nextSibling;
+      }
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker2(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+      });
+      skipUntil((node) => isEndMarker2(node));
+    }
+  }
+}
+function closestIslandName(component, el) {
+  let current = el;
+  while (current) {
+    let sibling = current.previousSibling;
+    let foundEndMarker = [];
+    while (sibling) {
+      if (isEndMarker2(sibling)) {
+        foundEndMarker.push("a");
+      }
+      if (isStartMarker2(sibling)) {
+        if (foundEndMarker.length > 0) {
+          foundEndMarker.pop();
+        } else {
+          let key2 = extractIslandKey(sibling);
+          return component.islands[key2].name;
+        }
+      }
+      sibling = sibling.previousSibling;
+    }
+    current = current.parentElement;
+    if (current && current.hasAttribute("wire:id")) {
+      break;
+    }
+  }
+  return null;
+}
+function isStartMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+}
+function isEndMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+}
+function extractIslandKey(el) {
+  let key2 = el.textContent.match(/\[if ISLAND:(\w+)\]/)?.[1];
+  return key2;
+}
+function stripIslandComments(content, key2) {
+  let startComment = new RegExp(`<!--\\[if ISLAND:${key2}\\]><\\!\\[endif\\]-->`);
+  let endComment = new RegExp(`<!--\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]-->`);
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findIslandComments(rootEl, key2) {
+  let startNode = null;
+  let endNode = null;
+  walkElements2(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent.match(new RegExp(`\\[if ISLAND:${key2}\\]><\\!\\[endif\\]`))) {
+          startNode = node;
+        }
+        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]`))) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements2(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements2(child, callback);
+  });
+}
+
+// js/morph.js
+function morph(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = closestComponent(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.setAttribute("wire:snapshot", component.snapshotEncoded);
+  let effects = { ...component.effects };
+  delete effects.html;
+  to.setAttribute("wire:effects", JSON.stringify(effects));
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  let existingComponentsMap = {};
+  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+  });
+  to.querySelectorAll("[wire\\:id]").forEach((child) => {
+    if (child.hasAttribute("wire:snapshot"))
+      return;
+    let wireId = child.getAttribute("wire:id");
+    let existingComponent = existingComponentsMap[wireId];
+    if (existingComponent) {
+      child.replaceWith(existingComponent.cloneNode(true));
+    }
+  });
+  import_alpinejs2.default.morph(el, to, getMorphConfig(component));
+  trigger("morphed", { el, component });
+}
+function morphIsland(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? closestComponent(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("island.morph", { startNode, endNode, component });
+  import_alpinejs2.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("island.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+      skipSlotContents(el, toEl, skipUntil);
+      skipIslandContents(component, el, toEl, skipUntil);
+      if (isntElement(el))
+        return;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
+        return skip();
+      }
+      if (el.__livewire_ignore === true)
+        return skip();
+      if (el.__livewire_ignore_self === true)
+        childrenOnly();
+      if (el.__livewire_ignore_children === true)
+        return skipChildren();
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el))
+        toEl.__livewire = component;
+    },
+    updated: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.updated", { el, component });
+    },
+    removing: (el, skip) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removing", { el, component, skip });
+    },
+    removed: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removed", { el, component });
+    },
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
+    },
+    added: (el) => {
+      if (isntElement(el))
+        return;
+      const closestComponentId = closestComponent(el).id;
+      trigger("morph.added", { el });
+    },
+    key: (el) => {
+      if (isntElement(el))
+        return;
+      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+    },
+    lookahead: false
+  };
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+
 // js/v4/requests/message.js
 var Message = class {
   updates = {};
   actions = [];
   payload = {};
+  context = {};
+  interceptors = /* @__PURE__ */ new Set();
   resolvers = [];
   status = "waiting";
   succeedCallbacks = [];
@@ -8277,6 +8656,18 @@ var Message = class {
   isolate = false;
   constructor(component) {
     this.component = component;
+  }
+  addInterceptor(interceptor) {
+    interceptor.cancel = () => this.cancel();
+    this.interceptors.add(interceptor);
+  }
+  addContext(key2, value) {
+    if (!this.context[key2]) {
+      this.context[key2] = [];
+    }
+    if (this.context[key2].includes(value))
+      return;
+    this.context[key2].push(value);
   }
   addAction(method, params, resolve) {
     if (!this.isMagicAction(method)) {
@@ -8334,7 +8725,8 @@ var Message = class {
       calls: this.actions.map((i) => ({
         method: i.method,
         params: i.params
-      }))
+      })),
+      context: this.context
     };
     this.finishTarget = trigger("commit", {
       component: this.component,
@@ -8349,6 +8741,19 @@ var Message = class {
         this.respondCallbacks.push(callback);
       }
     });
+    this.beforeSend();
+  }
+  beforeSend() {
+    this.interceptors.forEach((i) => i.beforeSend({ component: this.component, payload: this.payload }));
+  }
+  afterSend() {
+    this.interceptors.forEach((i) => i.afterSend({ component: this.component, payload: this.payload }));
+  }
+  beforeResponse(response) {
+    this.interceptors.forEach((i) => i.beforeResponse({ component: this.component, response }));
+  }
+  afterResponse(response) {
+    this.interceptors.forEach((i) => i.afterResponse({ component: this.component, response }));
   }
   respond() {
     this.respondCallbacks.forEach((i) => i());
@@ -8357,9 +8762,11 @@ var Message = class {
     if (this.isCancelled())
       return;
     this.status = "succeeded";
+    this.beforeResponse(response);
     this.respond();
     let { snapshot, effects } = response;
     this.component.mergeNewSnapshot(snapshot, effects, this.updates);
+    this.afterResponse(response);
     this.component.processEffects(this.component.effects);
     this.resolvers.forEach((i) => i());
     if (effects["returns"]) {
@@ -8371,15 +8778,38 @@ var Message = class {
     }
     let parsedSnapshot = JSON.parse(snapshot);
     this.finishTarget({ snapshot: parsedSnapshot, effects });
+    this.interceptors.forEach((i) => i.onSuccess(response));
     this.succeedCallbacks.forEach((i) => i(response));
+    let html = effects["html"];
+    if (!html)
+      return;
+    this.interceptors.forEach((i) => i.beforeRender({ component: this.component }));
+    queueMicrotask(() => {
+      this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
+      morph(this.component, this.component.el, html);
+      this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
+      setTimeout(() => {
+        this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
+      });
+    });
   }
-  fail() {
+  error(e) {
+    if (this.isCancelled())
+      return;
+    this.status = "errored";
+    this.interceptors.forEach((i) => i.onError(e));
+  }
+  fail(response, content) {
+    if (this.isCancelled())
+      return;
     this.status = "failed";
     this.respond();
+    this.interceptors.forEach((i) => i.onError(response, content));
     this.failCallbacks.forEach((i) => i());
   }
   cancel() {
     this.status = "cancelled";
+    this.interceptors.forEach((i) => i.onCancel());
   }
   isBuffering() {
     return this.status === "buffering";
@@ -8393,11 +8823,14 @@ var Message = class {
   isCancelled() {
     return this.status === "cancelled";
   }
+  isErrored() {
+    return this.status === "errored";
+  }
   isFailed() {
     return this.status === "failed";
   }
   isFinished() {
-    return this.isSucceeded() || this.isCancelled() || this.isFailed();
+    return this.isSucceeded() || this.isCancelled() || this.isFailed() || this.isErrored();
   }
 };
 
@@ -8487,10 +8920,14 @@ var MessageRequest = class extends Request {
     });
     let response;
     try {
-      response = await fetch(updateUri, options);
+      let fetchPromise = fetch(updateUri, options);
+      this.messages.forEach((message) => {
+        message.afterSend();
+      });
+      response = await fetchPromise;
     } catch (e) {
       this.finish();
-      this.error();
+      this.error(e);
       return;
     }
     this.finish();
@@ -8543,11 +8980,11 @@ var MessageRequest = class extends Request {
     });
     super.cancel();
   }
-  error() {
+  error(e) {
     this.finishProfile({ content: "{}", failed: true });
     let preventDefault = false;
     this.messages.forEach((message) => {
-      message.fail();
+      message.error(e);
     });
     this.errorCallbacks.forEach((i) => i({
       status: 503,
@@ -8559,7 +8996,7 @@ var MessageRequest = class extends Request {
     this.finishProfile({ content: "{}", failed: true });
     let preventDefault = false;
     this.messages.forEach((message) => {
-      message.fail();
+      message.fail(response, content);
     });
     this.errorCallbacks.forEach((i) => i({
       status: response.status,
@@ -8597,6 +9034,14 @@ var MessageBroker = class {
     }
     return message;
   }
+  addInterceptor(interceptor, component) {
+    let message = this.getMessage(component);
+    message.addInterceptor(interceptor);
+  }
+  addContext(component, key2, value) {
+    let message = this.getMessage(component);
+    message.addContext(key2, value);
+  }
   addAction(component, method, params = []) {
     let message = this.getMessage(component);
     let promise = new Promise((resolve) => {
@@ -8632,6 +9077,8 @@ var MessageBroker = class {
   corraleMessagesIntoRequests(messages) {
     let requests = /* @__PURE__ */ new Set();
     for (let message of messages) {
+      if (message.isCancelled())
+        continue;
       let hasFoundRequest = false;
       requests.forEach((request) => {
         if (!hasFoundRequest && !message.isolate) {
@@ -8656,39 +9103,84 @@ var MessageBroker = class {
 var instance2 = new MessageBroker();
 var messageBroker_default = instance2;
 
+// js/v4/features/supportErrors.js
+function getErrorsObject(component) {
+  return {
+    messages() {
+      return component.snapshot.memo.errors;
+    },
+    keys() {
+      return Object.keys(this.messages());
+    },
+    has(...keys) {
+      if (this.isEmpty())
+        return false;
+      if (keys.length === 0 || keys.length === 1 && keys[0] == null)
+        return this.any();
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      for (let key2 of keys) {
+        if (this.first(key2) === "")
+          return false;
+      }
+      return true;
+    },
+    hasAny(keys) {
+      if (this.isEmpty())
+        return false;
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      for (let key2 of keys) {
+        if (this.has(key2))
+          return true;
+      }
+      return false;
+    },
+    missing(...keys) {
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      return !this.hasAny(keys);
+    },
+    first(key2 = null) {
+      let messages = key2 === null ? this.all() : this.get(key2);
+      let firstMessage = messages.length > 0 ? messages[0] : "";
+      return Array.isArray(firstMessage) ? firstMessage[0] : firstMessage;
+    },
+    get(key2) {
+      return component.snapshot.memo.errors[key2] || [];
+    },
+    all() {
+      return Object.values(this.messages()).flat();
+    },
+    isEmpty() {
+      return !this.any();
+    },
+    isNotEmpty() {
+      return this.any();
+    },
+    any() {
+      return Object.keys(this.messages()).length > 0;
+    },
+    count() {
+      return Object.values(this.messages()).reduce((total, array) => {
+        return total + array.length;
+      }, 0);
+    }
+  };
+}
+
 // js/v4/features/supportPaginators.js
 var paginatorObjects = /* @__PURE__ */ new WeakMap();
-function getPaginatorObject(component) {
-  let paginatorObject = paginatorObjects.get(component);
+function getPaginatorObject(component, paginatorName) {
+  let componentPaginatorObjects = paginatorObjects.get(component);
+  if (!componentPaginatorObjects) {
+    componentPaginatorObjects = /* @__PURE__ */ new Map();
+    paginatorObjects.set(component, componentPaginatorObjects);
+  }
+  let paginatorObject = componentPaginatorObjects.get(paginatorName);
   if (!paginatorObject) {
-    paginatorObject = Alpine.reactive({
-      renderedPages: [],
-      hasEarlier: false,
-      hasMore: false,
-      get hasNextPage() {
-        return paginatorObject.hasMore;
-      },
-      get hasPreviousPage() {
-        return paginatorObject.hasEarlier;
-      },
-      previousPage() {
-        paginatorObject.loadEarlier();
-      },
-      nextPage() {
-        paginatorObject.loadMore();
-      },
-      loadEarlier() {
-        let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
-        let leadingPage = sortedPages[0];
-        component.$wire.call("setPage", leadingPage - 1);
-      },
-      loadMore() {
-        let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
-        let trailingPage = sortedPages[sortedPages.length - 1];
-        component.$wire.call("setPage", trailingPage + 1);
-      }
-    });
-    paginatorObjects.set(component, paginatorObject);
+    paginatorObject = newPaginatorObject(component);
+    componentPaginatorObjects.set(paginatorName, paginatorObject);
   }
   return paginatorObject;
 }
@@ -8696,22 +9188,204 @@ on("effect", ({ component, effects, cleanup }) => {
   let paginators = effects["paginators"];
   if (!paginators)
     return;
-  let paginator = paginators["page"];
-  if (!paginator)
-    return;
-  let paginatorObject = getPaginatorObject(component);
-  applyPaginatorToReactiveObject(paginatorObject, paginator);
+  for (let paginatorName in paginators) {
+    let paginator = paginators[paginatorName];
+    let paginatorObject = getPaginatorObject(component, paginatorName);
+    paginatorObject.paginator = paginator;
+  }
 });
-function applyPaginatorToReactiveObject(paginatorObject, paginator) {
-  let currentPage = paginator.currentPage;
-  paginatorObject.renderedPages.push(paginator.currentPage);
-  let sortedPages = paginatorObject.renderedPages.sort((a, b) => a - b);
-  if (sortedPages[sortedPages.length - 1] === currentPage) {
-    paginatorObject.hasMore = paginator.hasNextPage;
+function newPaginatorObject(component) {
+  return Alpine.reactive({
+    renderedPages: [],
+    paginator: {},
+    firstItem() {
+      return this.paginator.from;
+    },
+    lastItem() {
+      return this.paginator.to;
+    },
+    perPage() {
+      return this.paginator.perPage;
+    },
+    onFirstPage() {
+      return this.paginator.onFirstPage;
+    },
+    onLastPage() {
+      return this.paginator.onLastPage;
+    },
+    getPageName() {
+      return this.paginator.pageName;
+    },
+    getCursorName() {
+      return this.paginator.cursorName;
+    },
+    currentPage() {
+      return this.paginator.currentPage;
+    },
+    currentCursor() {
+      return this.paginator.currentCursor;
+    },
+    count() {
+      return this.paginator.count;
+    },
+    total() {
+      return this.paginator.total;
+    },
+    hasPages() {
+      return this.paginator.hasPages;
+    },
+    hasMorePages() {
+      return this.paginator.hasMorePages;
+    },
+    hasPreviousPage() {
+      return this.hasPages() && !this.onFirstPage();
+    },
+    hasNextPage() {
+      return this.hasPages() && !this.onLastPage();
+    },
+    hasPreviousCursor() {
+      return !!this.paginator.previousCursor;
+    },
+    hasNextCursor() {
+      return !!this.paginator.nextCursor;
+    },
+    firstPage() {
+      return this.paginator.firstPage;
+    },
+    lastPage() {
+      return this.paginator.lastPage;
+    },
+    previousPage() {
+      if (this.hasPreviousCursor()) {
+        return this.setPage(this.previousCursor());
+      }
+      if (this.hasPreviousPage()) {
+        component.$wire.call("previousPage", this.getPageName());
+      }
+    },
+    nextPage() {
+      if (this.hasNextCursor()) {
+        return this.setPage(this.nextCursor());
+      }
+      if (this.hasNextPage()) {
+        component.$wire.call("nextPage", this.getPageName());
+      }
+    },
+    resetPage() {
+      component.$wire.call("resetPage", this.getPageName());
+    },
+    setPage(page) {
+      component.$wire.call("setPage", page, this.getCursorName() ?? this.getPageName());
+    },
+    previousCursor() {
+      return this.paginator.previousCursor;
+    },
+    nextCursor() {
+      return this.paginator.nextCursor;
+    }
+  });
+}
+
+// js/v4/interceptors/interceptor.js
+var Interceptor = class {
+  beforeSend = () => {
+  };
+  afterSend = () => {
+  };
+  beforeResponse = () => {
+  };
+  afterResponse = () => {
+  };
+  beforeRender = () => {
+  };
+  afterRender = () => {
+  };
+  beforeMorph = () => {
+  };
+  afterMorph = () => {
+  };
+  onError = () => {
+  };
+  onFailure = () => {
+  };
+  onSuccess = () => {
+  };
+  onCancel = () => {
+  };
+  cancel = () => {
+  };
+  constructor(callback, action) {
+    this.callback = callback;
+    this.action = action;
   }
-  if (sortedPages[0] === currentPage) {
-    paginatorObject.hasEarlier = paginator.hasPreviousPage;
+  init(el, directive2, component) {
+    let request = {
+      beforeSend: (callback) => this.beforeSend = callback,
+      afterSend: (callback) => this.afterSend = callback,
+      beforeResponse: (callback) => this.beforeResponse = callback,
+      afterResponse: (callback) => this.afterResponse = callback,
+      beforeRender: (callback) => this.beforeRender = callback,
+      afterRender: (callback) => this.afterRender = callback,
+      beforeMorph: (callback) => this.beforeMorph = callback,
+      afterMorph: (callback) => this.afterMorph = callback,
+      onError: (callback) => this.onError = callback,
+      onFailure: (callback) => this.onFailure = callback,
+      onSuccess: (callback) => this.onSuccess = callback,
+      onCancel: (callback) => this.onCancel = callback
+    };
+    this.callback({ el, directive: directive2, component, request });
   }
+};
+var interceptor_default = Interceptor;
+
+// js/v4/interceptors/interceptorRegistry.js
+var InterceptorRegistry = class {
+  interceptors = /* @__PURE__ */ new Map();
+  constructor() {
+    this.globalInterceptors = /* @__PURE__ */ new Set();
+    this.componentInterceptors = /* @__PURE__ */ new Map();
+  }
+  add(callback, component = null, method = null) {
+    let interceptorData = { callback, method };
+    if (component === null) {
+      this.globalInterceptors.add(interceptorData);
+      return;
+    }
+    let interceptors = this.componentInterceptors.get(component);
+    if (!interceptors) {
+      interceptors = /* @__PURE__ */ new Set();
+      this.componentInterceptors.set(component, interceptors);
+    }
+    interceptors.add(interceptorData);
+  }
+  fire(el, directive2, component) {
+    let method = directive2.method;
+    for (let interceptorData of this.globalInterceptors) {
+      let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
+      interceptor.init(el, directive2, component);
+      messageBroker_default.addInterceptor(interceptor, component);
+    }
+    let componentInterceptors = this.componentInterceptors.get(component);
+    if (!componentInterceptors)
+      return;
+    for (let interceptorData of componentInterceptors) {
+      if (interceptorData.method === method || interceptorData.method === null) {
+        let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
+        interceptor.init(el, directive2, component);
+        messageBroker_default.addInterceptor(interceptor, component);
+      }
+    }
+  }
+};
+var instance3 = new InterceptorRegistry();
+var interceptorRegistry_default = instance3;
+
+// js/v4/features/supportRefs.js
+function findRef(component, ref) {
+  let refEl = component.el.querySelector(`[wire\\:ref="${ref}"]`);
+  if (!refEl)
+    return console.error(`Ref "${ref}" not found in component "${component.id}"`);
+  return refEl.__livewire?.$wire;
 }
 
 // js/$wire.js
@@ -8731,15 +9405,20 @@ var aliases = {
   "get": "$get",
   "set": "$set",
   "ref": "$ref",
+  "refs": "$ref",
+  "$refs": "$ref",
   "call": "$call",
   "hook": "$hook",
   "watch": "$watch",
   "commit": "$commit",
+  "errors": "$errors",
   "upload": "$upload",
   "entangle": "$entangle",
   "dispatch": "$dispatch",
+  "intercept": "$intercept",
   "paginator": "$paginator",
   "dispatchTo": "$dispatchTo",
+  "dispatchRef": "$dispatchRef",
   "dispatchSelf": "$dispatchSelf",
   "removeUpload": "$removeUpload",
   "cancelUpload": "$cancelUpload",
@@ -8774,7 +9453,7 @@ function getProperty(component, name) {
 function getFallback(component) {
   return fallback(component);
 }
-import_alpinejs2.default.magic("wire", (el, { cleanup }) => {
+import_alpinejs3.default.magic("wire", (el, { cleanup }) => {
   let component;
   return new Proxy({}, {
     get(target, property) {
@@ -8821,20 +9500,49 @@ wireProperty("$set", (component) => async (property, value, live = true) => {
   }
   return Promise.resolve();
 });
-wireProperty("$ref", (component) => (name) => {
-  let refEl = component.el.querySelector(`[wire\\:ref="${name}"]`);
-  if (!refEl)
-    throw `Ref "${name}" not found`;
-  return refEl.__livewire?.$wire;
+wireProperty("$ref", (component) => {
+  let fn = (name) => findRef(component, name);
+  return new Proxy(fn, {
+    get(target, property) {
+      if (property in target) {
+        return target[property];
+      }
+      return fn(property);
+    }
+  });
 });
+wireProperty("$intercept", (component) => (action, callback = null) => {
+  if (callback === null) {
+    callback = action;
+    action = null;
+  }
+  interceptorRegistry_default.add(callback, component, action);
+});
+wireProperty("$errors", (component) => getErrorsObject(component));
 wireProperty("$paginator", (component) => {
-  return getPaginatorObject(component);
+  let fn = (name = "page") => getPaginatorObject(component, name);
+  let defaultPaginator = fn();
+  for (let key2 of Object.keys(defaultPaginator)) {
+    let value = defaultPaginator[key2];
+    if (typeof value === "function") {
+      fn[key2] = (...args) => defaultPaginator[key2](...args);
+    } else {
+      Object.defineProperty(fn, key2, {
+        get: () => defaultPaginator[key2],
+        set: (val) => {
+          defaultPaginator[key2] = val;
+        }
+      });
+    }
+  }
+  return fn;
 });
 wireProperty("$call", (component) => async (method, ...params) => {
   return await component.$wire[method](...params);
 });
 wireProperty("$island", (component) => async (name) => {
-  return await component.$wire.call("__island", name);
+  messageBroker_default.addContext(component, "islands", name);
+  return await component.$wire.$refresh();
 });
 wireProperty("$entangle", (component) => (name, live = false) => {
   return generateEntangleFunction(component)(name, live);
@@ -8846,7 +9554,7 @@ wireProperty("$watch", (component) => (path, callback) => {
   let getter = () => {
     return dataGet(component.reactive, path);
   };
-  let unwatch = import_alpinejs2.default.watch(getter, callback);
+  let unwatch = import_alpinejs3.default.watch(getter, callback);
   component.addCleanup(unwatch);
 });
 wireProperty("$refresh", (component) => async () => {
@@ -8875,6 +9583,7 @@ wireProperty("$hook", (component) => (name, callback) => {
 wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
 wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
 wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
+wireProperty("$dispatchRef", (component) => (...params) => dispatchRef(component, ...params));
 wireProperty("$upload", (component) => (...params) => upload(component, ...params));
 wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
 wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
@@ -8949,8 +9658,8 @@ var Component = class {
     this.effects = effects;
     this.canonical = extractData(deepClone(snapshot.data));
     let newData = extractData(deepClone(snapshot.data));
-    Object.entries(dirty).forEach(([key, value]) => {
-      let rootKey = key.split(".")[0];
+    Object.entries(dirty).forEach(([key2, value]) => {
+      let rootKey = key2.split(".")[0];
       this.reactive[rootKey] = newData[rootKey];
     });
     return dirty;
@@ -8975,8 +9684,8 @@ var Component = class {
     return this.mergeQueuedUpdates(propertiesDiff);
   }
   applyUpdates(object, updates) {
-    for (let key in updates) {
-      dataSet(object, key, updates[key]);
+    for (let key2 in updates) {
+      dataSet(object, key2, updates[key2]);
     }
     return object;
   }
@@ -8998,13 +9707,17 @@ var Component = class {
     let childIds = Object.values(meta.children).map((i) => i[1]);
     return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
   }
+  get islands() {
+    let islands = this.snapshot.memo.islands;
+    return islands;
+  }
   get parent() {
     return closestComponent(this.el.parentElement);
   }
   getEncodedSnapshotWithLatestChildrenMergedIn() {
     let { snapshotEncoded, children, snapshot } = this;
     let childIds = children.map((child) => child.id);
-    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
     return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
   }
   inscribeSnapshotAndEffectsOnElement() {
@@ -9041,360 +9754,6 @@ var Component = class {
     }
   }
 };
-
-// js/morph.js
-var import_alpinejs3 = __toESM(require_module_cjs());
-
-// js/features/supportIslands.js
-on("stream", (payload) => {
-  if (payload.type !== "island")
-    return;
-  let { id, name, content } = payload;
-  if (!hasComponent(id))
-    return;
-  let component = findComponent(id);
-  streamIsland(component, name, content);
-});
-function streamIsland(component, name, content) {
-  renderIsland(component, name, content);
-}
-on("effect", ({ component, effects }) => {
-  let islands = effects.islands || [];
-  islands.forEach((island) => {
-    let { name, content } = island;
-    queueMicrotask(() => {
-      queueMicrotask(() => {
-        renderIsland(component, name, content);
-      });
-    });
-  });
-});
-function renderIsland(component, name, content) {
-  let { startNode, endNode } = findIslandComments(component.el, name);
-  if (!startNode || !endNode)
-    return;
-  let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name);
-  let parentElement = startNode.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  if (mode === "append") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).forEach((node) => {
-      endNode.parentNode.insertBefore(node, endNode);
-    });
-  } else if (mode === "prepend") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).reverse().forEach((node) => {
-      startNode.parentNode.insertBefore(node, startNode.nextSibling);
-    });
-  } else {
-    morphIsland(component, startNode, endNode, strippedContent);
-  }
-}
-function skipIslandContents(el, toEl, skipUntil) {
-  if (isStartMarker(el) && isStartMarker(toEl)) {
-    let mode = extractIslandMode(toEl);
-    if (["skip", "once"].includes(mode)) {
-      skipUntil((node) => isEndMarker(node));
-    } else if (mode === "prepend") {
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
-      });
-      skipUntil((node) => isEndMarker(node));
-    } else if (mode === "append") {
-      let endMarker = el.nextSibling;
-      while (endMarker && !isEndMarker(endMarker)) {
-        endMarker = endMarker.nextSibling;
-      }
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
-      });
-      skipUntil((node) => isEndMarker(node));
-    }
-  }
-}
-function isStartMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
-}
-function isEndMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
-}
-function extractIslandMode(el) {
-  let mode = el.textContent.match(/\[if ISLAND:.*:(\w+)\]/)?.[1];
-  return mode || "replace";
-}
-function stripIslandCommentsAndExtractMode(content, islandName) {
-  let mode = "replace";
-  const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:(\\w+)\\]><\\!\\[endif\\]`));
-  if (modeMatch) {
-    mode = modeMatch[1];
-  }
-  let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-  let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]-->`);
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return {
-    content: stripped.trim(),
-    mode
-  };
-}
-function findIslandComments(rootEl, islandName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-          startNode = node;
-        }
-        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements(child, callback);
-  });
-}
-
-// js/morph.js
-function morph(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
-  }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  let existingComponentsMap = {};
-  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-  });
-  to.querySelectorAll("[wire\\:id]").forEach((child) => {
-    if (child.hasAttribute("wire:snapshot"))
-      return;
-    let wireId = child.getAttribute("wire:id");
-    let existingComponent = existingComponentsMap[wireId];
-    if (existingComponent) {
-      child.replaceWith(existingComponent.cloneNode(true));
-    }
-  });
-  import_alpinejs3.default.morph(el, to, getMorphConfig(component));
-  trigger("morphed", { el, component });
-}
-function morphIsland(component, startNode, endNode, toHTML) {
-  let fromContainer = startNode.parentElement;
-  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-  let toContainer = document.createElement(fromContainerTag);
-  toContainer.innerHTML = toHTML;
-  toContainer.__livewire = component;
-  let parentElement = component.el.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  let parentComponent;
-  try {
-    parentComponent = parentElement ? closestComponent(parentElement) : null;
-  } catch (e) {
-  }
-  if (parentComponent) {
-    let parentProviderWrapper = document.createElement(parentElementTag);
-    parentProviderWrapper.appendChild(toContainer);
-    parentProviderWrapper.__livewire = parentComponent;
-  }
-  trigger("island.morph", { startNode, endNode, component });
-  import_alpinejs3.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-  trigger("island.morphed", { startNode, endNode, component });
-}
-function getMorphConfig(component) {
-  return {
-    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-      skipSlotContents(el, toEl, skipUntil);
-      skipIslandContents(el, toEl, skipUntil);
-      if (isntElement(el))
-        return;
-      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-      if (el.__livewire_replace === true)
-        el.innerHTML = toEl.innerHTML;
-      if (el.__livewire_replace_self === true) {
-        el.outerHTML = toEl.outerHTML;
-        return skip();
-      }
-      if (el.__livewire_ignore === true)
-        return skip();
-      if (el.__livewire_ignore_self === true)
-        childrenOnly();
-      if (el.__livewire_ignore_children === true)
-        return skipChildren();
-      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el))
-        toEl.__livewire = component;
-    },
-    updated: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.updated", { el, component });
-    },
-    removing: (el, skip) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removing", { el, component, skip });
-    },
-    removed: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removed", { el, component });
-    },
-    adding: (el) => {
-      trigger("morph.adding", { el, component });
-    },
-    added: (el) => {
-      if (isntElement(el))
-        return;
-      const closestComponentId = closestComponent(el).id;
-      trigger("morph.added", { el });
-    },
-    key: (el) => {
-      if (isntElement(el))
-        return;
-      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-    },
-    lookahead: false
-  };
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
-
-// js/features/supportSlots.js
-on("effect", ({ component, effects }) => {
-  let slots = effects.slots;
-  if (!slots)
-    return;
-  let parentId = component.el.getAttribute("wire:id");
-  Object.entries(slots).forEach(([childId, childSlots]) => {
-    let childComponent = findComponent(childId);
-    if (!childComponent)
-      return;
-    Object.entries(childSlots).forEach(([name, content]) => {
-      queueMicrotask(() => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            let fullName = parentId ? `${name}:${parentId}` : name;
-            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-            if (!startNode || !endNode)
-              return;
-            let strippedContent = stripSlotComments(content, fullName);
-            morphIsland(childComponent, startNode, endNode, strippedContent);
-          });
-        });
-      });
-    });
-  });
-});
-function stripSlotComments(content, slotName) {
-  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return stripped.trim();
-}
-function findSlotComments(rootEl, slotName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements2(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-          startNode = node;
-        }
-        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements2(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements2(child, callback);
-  });
-}
-function skipSlotContents(el, toEl, skipUntil) {
-  if (isStartMarker2(el) && isStartMarker2(toEl)) {
-    skipUntil((node) => isEndMarker2(node));
-  }
-}
-function isStartMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-}
-function isEndMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-}
-function extractSlotData(el) {
-  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
-  let match = el.textContent.match(regex);
-  if (!match)
-    return;
-  return {
-    name: match[1],
-    parentId: match[2] || null
-  };
-}
-function checkPreviousSiblingForSlotStartMarker(el) {
-  let node = el.previousSibling;
-  while (node) {
-    if (isEndMarker2(node)) {
-      return null;
-    }
-    if (isStartMarker2(node)) {
-      return node;
-    }
-    node = node.previousSibling;
-  }
-  return null;
-}
 
 // js/store.js
 var components = {};
@@ -9473,6 +9832,12 @@ function dispatchTo(componentName, name, params) {
   targets.forEach((target) => {
     dispatchEvent(target.el, name, params, false);
   });
+}
+function dispatchRef(component, ref, name, params) {
+  let target = findRef(component, ref);
+  if (!target)
+    return;
+  dispatchEvent(target.__instance.el, name, params, false);
 }
 function listen2(component, name, callback) {
   component.el.addEventListener(name, (e) => {
@@ -9638,24 +10003,24 @@ var snapshotCache = {
       throw "No back button cache found for current location: " + location;
     return snapshot;
   },
-  replace(key, snapshot) {
-    if (this.has(key)) {
-      this.lookup[key] = snapshot;
+  replace(key2, snapshot) {
+    if (this.has(key2)) {
+      this.lookup[key2] = snapshot;
     } else {
-      this.push(key, snapshot);
+      this.push(key2, snapshot);
     }
   },
-  push(key, snapshot) {
-    this.lookup[key] = snapshot;
-    let index = this.keys.indexOf(key);
+  push(key2, snapshot) {
+    this.lookup[key2] = snapshot;
+    let index = this.keys.indexOf(key2);
     if (index > -1)
       this.keys.splice(index, 1);
-    this.keys.unshift(key);
+    this.keys.unshift(key2);
     this.trim();
   },
   trim() {
-    for (let key of this.keys.splice(this.limit)) {
-      delete this.lookup[key];
+    for (let key2 of this.keys.splice(this.limit)) {
+      delete this.lookup[key2];
     }
   }
 };
@@ -9663,9 +10028,9 @@ function updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks() {
   let url = new URL(window.location.href, document.baseURI);
   replaceUrl(url, document.documentElement.outerHTML);
 }
-function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
+function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key2, url) {
   let html = document.documentElement.outerHTML;
-  snapshotCache.replace(key, new Snapshot(url, html));
+  snapshotCache.replace(key2, new Snapshot(url, html));
 }
 function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
   let fallback2;
@@ -9695,16 +10060,16 @@ function replaceUrl(url, html) {
   updateUrl("replaceState", url, html);
 }
 function updateUrl(method, url, html) {
-  let key = url.toString() + "-" + Math.random();
-  method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
+  let key2 = url.toString() + "-" + Math.random();
+  method === "pushState" ? snapshotCache.push(key2, new Snapshot(url, html)) : snapshotCache.replace(key2 = snapshotCache.currentKey ?? key2, new Snapshot(url, html));
   let state = history.state || {};
   if (!state.alpine)
     state.alpine = {};
-  state.alpine.snapshotIdx = key;
+  state.alpine.snapshotIdx = key2;
   state.alpine.url = url.toString();
   try {
     history[method](state, JSON.stringify(document.title), url);
-    snapshotCache.currentKey = key;
+    snapshotCache.currentKey = key2;
     snapshotCache.currentUrl = url;
   } catch (error2) {
     if (error2 instanceof DOMException && error2.name === "SecurityError") {
@@ -9980,8 +10345,8 @@ function putPersistantElementsBack(callback) {
       i.replaceWith(old);
     });
   });
-  Object.entries(els).forEach(([key, el]) => {
-    if (usedPersists.includes(key))
+  Object.entries(els).forEach(([key2, el]) => {
+    if (usedPersists.includes(key2))
       return;
     import_alpinejs5.default.destroyTree(el);
   });
@@ -10491,7 +10856,7 @@ function history2(Alpine24) {
     let alias;
     let alwaysShow = false;
     let usePush = false;
-    return interceptor((initialSeedValue, getter, setter, path, key) => {
+    return interceptor((initialSeedValue, getter, setter, path, key2) => {
       let queryKey = alias || path;
       let { initial, replace: replace2, push: push2, pop } = track(queryKey, initialSeedValue, alwaysShow);
       setter(initial);
@@ -10515,8 +10880,8 @@ function history2(Alpine24) {
         usePush = true;
         return func;
       };
-      func.as = (key) => {
-        alias = key;
+      func.as = (key2) => {
+        alias = key2;
         return func;
       };
     });
@@ -10580,22 +10945,22 @@ function track(name, initialSeedValue, alwaysShow = false, except = null) {
     }
   };
 }
-function replace(url, key, object) {
+function replace(url, key2, object) {
   let state = window.history.state || {};
   if (!state.alpine)
     state.alpine = {};
-  state.alpine[key] = unwrap(object);
+  state.alpine[key2] = unwrap(object);
   try {
     window.history.replaceState(state, "", url.toString());
   } catch (e) {
     console.error(e);
   }
 }
-function push(url, key, object) {
+function push(url, key2, object) {
   let state = window.history.state || {};
   if (!state.alpine)
     state.alpine = {};
-  state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
+  state = { alpine: { ...state.alpine, ...{ [key2]: unwrap(object) } } };
   try {
     window.history.pushState(state, "", url.toString());
   } catch (e) {
@@ -10609,29 +10974,29 @@ function unwrap(object) {
 }
 function queryStringUtils() {
   return {
-    has(url, key) {
+    has(url, key2) {
       let search = url.search;
       if (!search)
         return false;
-      let data = fromQueryString(search, key);
-      return Object.keys(data).includes(key);
+      let data = fromQueryString(search, key2);
+      return Object.keys(data).includes(key2);
     },
-    get(url, key) {
+    get(url, key2) {
       let search = url.search;
       if (!search)
         return false;
-      let data = fromQueryString(search, key);
-      return data[key];
+      let data = fromQueryString(search, key2);
+      return data[key2];
     },
-    set(url, key, value) {
-      let data = fromQueryString(url.search, key);
-      data[key] = stripNulls(unwrap(value));
+    set(url, key2, value) {
+      let data = fromQueryString(url.search, key2);
+      data[key2] = stripNulls(unwrap(value));
       url.search = toQueryString(data);
       return url;
     },
-    remove(url, key) {
-      let data = fromQueryString(url.search, key);
-      delete data[key];
+    remove(url, key2) {
+      let data = fromQueryString(url.search, key2);
+      delete data[key2];
       url.search = toQueryString(data);
       return url;
     }
@@ -10640,11 +11005,11 @@ function queryStringUtils() {
 function stripNulls(value) {
   if (!isObjecty(value))
     return value;
-  for (let key in value) {
-    if (value[key] === null)
-      delete value[key];
+  for (let key2 in value) {
+    if (value[key2] === null)
+      delete value[key2];
     else
-      value[key] = stripNulls(value[key]);
+      value[key2] = stripNulls(value[key2]);
   }
   return value;
 }
@@ -10652,28 +11017,28 @@ function toQueryString(data) {
   let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
   let buildQueryStringEntries = (data2, entries2 = {}, baseKey = "") => {
     Object.entries(data2).forEach(([iKey, iValue]) => {
-      let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
+      let key2 = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
       if (iValue === null) {
-        entries2[key] = "";
+        entries2[key2] = "";
       } else if (!isObjecty2(iValue)) {
-        entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+").replaceAll("%2C", ",");
+        entries2[key2] = encodeURIComponent(iValue).replaceAll("%20", "+").replaceAll("%2C", ",");
       } else {
-        entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
+        entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key2) };
       }
     });
     return entries2;
   };
   let entries = buildQueryStringEntries(data);
-  return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
+  return Object.entries(entries).map(([key2, value]) => `${key2}=${value}`).join("&");
 }
 function fromQueryString(search, queryKey) {
   search = search.replace("?", "");
   if (search === "")
     return {};
-  let insertDotNotatedValueIntoData = (key, value, data2) => {
-    let [first2, second, ...rest] = key.split(".");
+  let insertDotNotatedValueIntoData = (key2, value, data2) => {
+    let [first2, second, ...rest] = key2.split(".");
     if (!second)
-      return data2[key] = value;
+      return data2[key2] = value;
     if (data2[first2] === void 0) {
       data2[first2] = isNaN(second) ? {} : [];
     }
@@ -10681,14 +11046,14 @@ function fromQueryString(search, queryKey) {
   };
   let entries = search.split("&").map((i) => i.split("="));
   let data = /* @__PURE__ */ Object.create(null);
-  entries.forEach(([key, value]) => {
+  entries.forEach(([key2, value]) => {
     if (typeof value == "undefined")
       return;
     value = decodeURIComponent(value.replaceAll("+", "%20"));
-    let decodedKey = decodeURIComponent(key);
+    let decodedKey = decodeURIComponent(key2);
     let shouldBeHandledAsArray = decodedKey.includes("[") && decodedKey.startsWith(queryKey);
     if (!shouldBeHandledAsArray) {
-      data[key] = value;
+      data[key2] = value;
     } else {
       let dotNotatedKey = decodedKey.replaceAll("[", ".").replaceAll("]", "");
       insertDotNotatedValueIntoData(dotNotatedKey, value, data);
@@ -10698,14 +11063,14 @@ function fromQueryString(search, queryKey) {
 }
 
 // js/lifecycle.js
-var import_morph3 = __toESM(require_module_cjs8());
+var import_morph4 = __toESM(require_module_cjs8());
 var import_mask = __toESM(require_module_cjs9());
 var import_alpinejs6 = __toESM(require_module_cjs());
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
   dispatch(document, "livewire:initializing");
-  import_alpinejs6.default.plugin(import_morph3.default);
+  import_alpinejs6.default.plugin(import_morph4.default);
   import_alpinejs6.default.plugin(history2);
   import_alpinejs6.default.plugin(import_intersect.default);
   import_alpinejs6.default.plugin(import_resize.default);
@@ -10883,11 +11248,64 @@ on("message.pooling", ({ messages }) => {
 // js/v4/requests/index.js
 requestBus_default.boot();
 
+// js/v4/features/supportDataLoading.js
+interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
+  el.setAttribute("data-loading", "true");
+  request.afterResponse(() => {
+    el.removeAttribute("data-loading");
+  });
+  request.onCancel(() => {
+    el.removeAttribute("data-loading");
+  });
+});
+
+// js/v4/features/supportPreserveScroll.js
+interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
+  if (!directive2 || !directive2.modifiers.includes("preserve-scroll"))
+    return;
+  let oldHeight;
+  let oldScroll;
+  request.beforeRender(() => {
+    oldHeight = document.body.scrollHeight;
+    oldScroll = window.scrollY;
+  });
+  request.afterRender(() => {
+    let heightDiff = document.body.scrollHeight - oldHeight;
+    window.scrollTo(0, oldScroll + heightDiff);
+    oldHeight = null;
+    oldScroll = null;
+  });
+});
+
 // js/v4/features/supportWireIntersect.js
 var import_alpinejs7 = __toESM(require_module_cjs());
+import_alpinejs7.default.interceptInit((el) => {
+  for (let i = 0; i < el.attributes.length; i++) {
+    if (el.attributes[i].name.startsWith("wire:intersect")) {
+      let { name, value } = el.attributes[i];
+      let directive2 = extractDirective(el, name);
+      let modifierString = name.split("wire:intersect")[1];
+      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+      let evaluator = import_alpinejs7.default.evaluateLater(el, expression);
+      import_alpinejs7.default.bind(el, {
+        ["x-intersect" + modifierString]() {
+          let component = el.closest("[wire\\:id]")?.__livewire;
+          interceptorRegistry_default.fire(el, directive2, component);
+          evaluator();
+        }
+      });
+    }
+  }
+});
 
 // js/v4/features/supportWireIsland.js
 var wireIslands = /* @__PURE__ */ new WeakMap();
+interceptorRegistry_default.add(({ el, directive: directive2, component }) => {
+  let name = wireIslands.get(el)?.name ?? closestIslandName(component, el);
+  if (!name)
+    return;
+  messageBroker_default.addContext(component, "islands", name);
+});
 directive("island", ({ el, directive: directive2 }) => {
   let name = directive2.expression ?? "default";
   let mode = directive2.modifiers.includes("append") ? "append" : directive2.modifiers.includes("prepend") ? "prepend" : "replace";
@@ -10895,83 +11313,6 @@ directive("island", ({ el, directive: directive2 }) => {
     name,
     mode
   });
-});
-function wireIslandHook(el) {
-  if (!wireIslands.has(el))
-    return;
-  let { name, mode } = wireIslands.get(el);
-  Alpine.evaluate(el, `$wire.call('__island', '${name}', '${mode}')`);
-}
-function implicitIslandHook(el) {
-  let name = closestIslandName(el);
-  if (!name)
-    return;
-  Alpine.evaluate(el, `$wire.call('__island', '${name}')`);
-}
-function closestIslandName(el) {
-  let current = el;
-  while (current) {
-    let sibling = current.previousSibling;
-    while (sibling) {
-      if (isEndMarker3(sibling)) {
-        break;
-      }
-      if (isStartMarker3(sibling)) {
-        return extractIslandName(sibling);
-      }
-      sibling = sibling.previousSibling;
-    }
-    current = current.parentElement;
-    if (current && current.hasAttribute("wire:id")) {
-      break;
-    }
-  }
-  return null;
-}
-function isStartMarker3(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
-}
-function isEndMarker3(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
-}
-function extractIslandName(el) {
-  let name = el.textContent.match(/\[if ISLAND:(\w+):.*\]/)?.[1];
-  return name || "default";
-}
-
-// js/v4/features/supportWireIntersect.js
-var shouldPreserveScroll = false;
-on("commit", ({ component, respond }) => {
-  respond(() => {
-    if (shouldPreserveScroll) {
-      let oldHeight = document.body.scrollHeight;
-      let oldScroll = window.scrollY;
-      setTimeout(() => {
-        let heightDiff = document.body.scrollHeight - oldHeight;
-        window.scrollTo(0, oldScroll + heightDiff);
-        shouldPreserveScroll = false;
-      });
-    }
-  });
-});
-import_alpinejs7.default.interceptInit((el) => {
-  for (let i = 0; i < el.attributes.length; i++) {
-    if (el.attributes[i].name.startsWith("wire:intersect")) {
-      let { name, value } = el.attributes[i];
-      let modifierString = name.split("wire:intersect")[1];
-      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-      let evaluator = import_alpinejs7.default.evaluateLater(el, expression);
-      import_alpinejs7.default.bind(el, {
-        ["x-intersect" + modifierString]() {
-          wireIslandHook(el);
-          if (modifierString.includes(".preserve-scroll")) {
-            shouldPreserveScroll = true;
-          }
-          evaluator();
-        }
-      });
-    }
-  }
 });
 
 // js/features/supportListeners.js
@@ -11006,8 +11347,8 @@ var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
   if (!assets)
     return;
-  for (let [key, asset] of Object.entries(assets)) {
-    await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
+  for (let [key2, asset] of Object.entries(assets)) {
+    await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key2, async () => {
       await addAssetsToHeadTagOfPage(asset);
     });
   }
@@ -11015,18 +11356,18 @@ on("payload.intercept", async ({ assets }) => {
 on("component.init", ({ component }) => {
   let assets = component.snapshot.memo.assets;
   if (assets) {
-    assets.forEach((key) => {
-      if (executedAssets.has(key))
+    assets.forEach((key2) => {
+      if (executedAssets.has(key2))
         return;
-      executedAssets.add(key);
+      executedAssets.add(key2);
     });
   }
 });
 on("effect", ({ component, effects }) => {
   let scripts = effects.scripts;
   if (scripts) {
-    Object.entries(scripts).forEach(([key, content]) => {
-      onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
+    Object.entries(scripts).forEach(([key2, content]) => {
+      onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key2, () => {
         let scriptContent = extractScriptTagContent(content);
         import_alpinejs8.default.dontAutoEvaluateFunctions(() => {
           import_alpinejs8.default.evaluate(component.el, scriptContent, {
@@ -11041,17 +11382,17 @@ on("effect", ({ component, effects }) => {
     });
   }
 });
-function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
+function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key2, callback) {
   if (executedScripts.has(component)) {
     let alreadyRunKeys2 = executedScripts.get(component);
-    if (alreadyRunKeys2.includes(key))
+    if (alreadyRunKeys2.includes(key2))
       return;
   }
   callback();
   if (!executedScripts.has(component))
     executedScripts.set(component, []);
   let alreadyRunKeys = executedScripts.get(component);
-  alreadyRunKeys.push(key);
+  alreadyRunKeys.push(key2);
   executedScripts.set(component, alreadyRunKeys);
 }
 function extractScriptTagContent(rawHtml) {
@@ -11060,11 +11401,11 @@ function extractScriptTagContent(rawHtml) {
   let innards = matches && matches[1] ? matches[1].trim() : "";
   return innards;
 }
-async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
-  if (executedAssets.has(key))
+async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key2, callback) {
+  if (executedAssets.has(key2))
     return;
   await callback();
-  executedAssets.add(key);
+  executedAssets.add(key2);
 }
 async function addAssetsToHeadTagOfPage(rawHtml) {
   let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
@@ -11131,16 +11472,18 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/features/supportMorphDom.js
-on("effect", ({ component, effects }) => {
-  let html = effects.html;
-  if (!html)
-    return;
-  queueMicrotask(() => {
+if (!requestBus_default.booted) {
+  on("effect", ({ component, effects }) => {
+    let html = effects.html;
+    if (!html)
+      return;
     queueMicrotask(() => {
-      morph(component, component.el, html);
+      queueMicrotask(() => {
+        morph(component, component.el, html);
+      });
     });
   });
-});
+}
 
 // js/features/supportDispatches.js
 on("effect", ({ component, effects }) => {
@@ -11153,11 +11496,13 @@ on("effect", ({ component, effects }) => {
   });
 });
 function dispatchEvents(component, dispatches) {
-  dispatches.forEach(({ name, params = {}, self: self2 = false, to }) => {
+  dispatches.forEach(({ name, params = {}, self: self2 = false, to, ref }) => {
     if (self2)
       dispatchSelf(component, name, params);
     else if (to)
       dispatchTo(to, name, params);
+    else if (ref)
+      dispatchRef(component, ref, name, params);
     else
       dispatch2(component, name, params);
   });
@@ -11361,8 +11706,8 @@ on("effect", ({ component, effects, cleanup }) => {
   let queryString = effects["url"];
   if (!queryString)
     return;
-  Object.entries(queryString).forEach(([key, value]) => {
-    let { name, as, use, alwaysShow, except } = normalizeQueryStringEntry(key, value);
+  Object.entries(queryString).forEach(([key2, value]) => {
+    let { name, as, use, alwaysShow, except } = normalizeQueryStringEntry(key2, value);
     if (!as)
       as = name;
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
@@ -11397,12 +11742,12 @@ on("effect", ({ component, effects, cleanup }) => {
     }
   });
 });
-function normalizeQueryStringEntry(key, value) {
+function normalizeQueryStringEntry(key2, value) {
   let defaults = { use: "replace", alwaysShow: false };
   if (typeof value === "string") {
     return { ...defaults, name: value, as: value };
   } else {
-    let fullerDefaults = { ...defaults, name: key, as: key };
+    let fullerDefaults = { ...defaults, name: key2, as: key2 };
     return { ...fullerDefaults, ...value };
   }
 }
@@ -11486,14 +11831,14 @@ on("commit.pooling", ({ commits }) => {
 on("stream", (payload) => {
   if (payload.type !== "update")
     return;
-  let { id, key, value, mode } = payload;
+  let { id, key: key2, value, mode } = payload;
   if (!hasComponent(id))
     return;
   let component = findComponent(id);
   if (mode === "append") {
-    component.$wire.set(key, component.$wire.get(key) + value, false);
+    component.$wire.set(key2, component.$wire.get(key2) + value, false);
   } else {
-    component.$wire.set(key, value, false);
+    component.$wire.set(key2, value, false);
   }
 });
 directive("stream", ({ el, directive: directive2, cleanup }) => {
@@ -11674,13 +12019,8 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
     [attribute](e) {
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
-          let evaluator = import_alpinejs13.default.evaluateLater(el, "await $wire." + directive2.expression, { scope: { $event: e } });
-          el.setAttribute("data-loading", "true");
-          wireIslandHook(el);
-          implicitIslandHook(el);
-          evaluator(() => {
-            el.removeAttribute("data-loading");
-          });
+          interceptorRegistry_default.fire(el, directive2, component);
+          import_alpinejs13.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
         });
       };
       if (el.__livewire_confirm) {
@@ -11872,9 +12212,9 @@ function applyDelay(directive2) {
     "longer": 500,
     "longest": 1e3
   };
-  Object.keys(delayModifiers).some((key) => {
-    if (directive2.modifiers.includes(key)) {
-      duration = delayModifiers[key];
+  Object.keys(delayModifiers).some((key2) => {
+    if (directive2.modifiers.includes(key2)) {
+      duration = delayModifiers[key2];
       return true;
     }
   });
@@ -12287,6 +12627,7 @@ import_alpinejs21.default.interceptInit((el) => {
 var Livewire2 = {
   directive,
   dispatchTo,
+  intercept: (callback) => interceptorRegistry_default.add(callback),
   start,
   first,
   find,

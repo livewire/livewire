@@ -67,11 +67,17 @@ export default class MessageRequest extends Request {
         let response
 
         try {
-            response = await fetch(updateUri, options)
+            let fetchPromise = fetch(updateUri, options)
+
+            this.messages.forEach(message => {
+                message.afterSend()
+            })
+
+            response = await fetchPromise
         } catch (e) {
             this.finish()
 
-            this.error()
+            this.error(e)
 
             return
         }
@@ -156,13 +162,13 @@ export default class MessageRequest extends Request {
     // If something went wrong with the fetch (particularly
     // this would happen if the connection went offline)
     // fail with a 503 and allow Livewire to clean up
-    error() {
+    error(e) {
         this.finishProfile({ content: '{}', failed: true })
 
         let preventDefault = false
 
         this.messages.forEach(message => {
-            message.fail()
+            message.error(e)
         })
 
         this.errorCallbacks.forEach(i => i({
@@ -178,7 +184,7 @@ export default class MessageRequest extends Request {
         let preventDefault = false
 
         this.messages.forEach(message => {
-            message.fail()
+            message.fail(response, content)
         })
 
         this.errorCallbacks.forEach(i => i({

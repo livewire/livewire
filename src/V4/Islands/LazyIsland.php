@@ -2,38 +2,17 @@
 
 namespace Livewire\V4\Islands;
 
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Support\Htmlable;
-
-class LazyIsland implements \Stringable, Htmlable, Jsonable
+class LazyIsland
 {
     public function __construct(
+        public string $key,
         public string $name,
     ) {}
 
     public function render()
     {
-        return "<!--[if ISLAND:{$this->name}:lazy]><![endif]-->"
+        return "<!--[if ISLAND:{$this->key}]><![endif]-->"
             . "<div x-intersect=\"\$wire.\$island('{$this->name}')\">Loading...</div>"
-            . "<!--[if ENDISLAND:{$this->name}]><![endif]-->";
-    }
-
-    public function toJson($options = 0)
-    {
-        return [
-            'name' => $this->name,
-            'mode' => 'lazy',
-            'content' => $this->render(),
-        ];
-    }
-
-    public function __toString()
-    {
-        return $this->render();
-    }
-
-    public function toHtml()
-    {
-        return $this->render();
+            . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
 }

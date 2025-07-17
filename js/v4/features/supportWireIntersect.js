@@ -1,29 +1,13 @@
 import Alpine from 'alpinejs'
-import { wireIslandHook } from './supportWireIsland'
-import { on } from '@/hooks'
-
-let shouldPreserveScroll = false
-
-on('commit', ({ component, respond }) => {
-    respond(() => {
-        if (shouldPreserveScroll) {
-            let oldHeight = document.body.scrollHeight;
-            let oldScroll = window.scrollY;
-
-            setTimeout(() => {
-                let heightDiff = document.body.scrollHeight - oldHeight;
-                window.scrollTo(0, oldScroll + heightDiff);
-
-                shouldPreserveScroll = false
-            })
-        }
-    })
-})
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
+import { extractDirective } from '@/directives'
 
 Alpine.interceptInit(el => {
     for (let i = 0; i < el.attributes.length; i++) {
         if (el.attributes[i].name.startsWith('wire:intersect')) {
             let { name, value } = el.attributes[i]
+
+            let directive = extractDirective(el, name)
 
             let modifierString = name.split('wire:intersect')[1]
 
@@ -35,12 +19,10 @@ Alpine.interceptInit(el => {
 
             Alpine.bind(el, {
                 ['x-intersect' + modifierString]() {
-                    // @todo: this is a V4 hack to get wire:island working...
-                    wireIslandHook(el)
+                    // @todo: review if there is a better way to get the component...
+                    let component = el.closest('[wire\\:id]')?.__livewire
 
-                    if (modifierString.includes('.preserve-scroll')) {
-                        shouldPreserveScroll = true
-                    }
+                    interceptorRegistry.fire(el, directive, component)
 
                     evaluator()
                 }

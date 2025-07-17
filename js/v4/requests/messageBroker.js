@@ -17,6 +17,18 @@ class MessageBroker {
         return message
     }
 
+    addInterceptor(interceptor, component) {
+        let message = this.getMessage(component)
+
+        message.addInterceptor(interceptor)
+    }
+
+    addContext(component, key, value) {
+        let message = this.getMessage(component)
+
+        message.addContext(key, value)
+    }
+
     addAction(component, method, params = []) {
         let message = this.getMessage(component)
 
@@ -69,6 +81,8 @@ class MessageBroker {
         let requests = new Set()
 
         for (let message of messages) {
+            if (message.isCancelled()) continue
+
             let hasFoundRequest = false
 
             requests.forEach(request => {

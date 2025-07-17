@@ -2,57 +2,58 @@
 
 namespace Livewire\V4\Islands;
 
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
-use Livewire\Component;
-use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Contracts\Support\Jsonable;
+use Livewire\Component;
 
 class Island implements \Stringable, Htmlable, Jsonable
 {
     public function __construct(
         public string $name,
+        public string $key,
         public string $view,
-        public array $data = [],
         public ?Component $component = null,
         public string $mode = 'replace',
+        public string $render = 'once',
+        public bool $defer = false,
+        public bool $lazy = false,
     ) {}
 
-    public function render()
+    public function render($force = false)
     {
-        app(ExtendBlade::class)->startLivewireRendering($this->component);
+        if ($force) {
+            return (new DefaultIsland($this->key, $this->view, $this->component))->render();
+        }
 
-        // @todo: this is a hack to get the component instance into the view so nested components render due to the `if (isset(\$_instance))` check in the island Blade directive...
-        \Livewire\Drawer\Utils::shareWithViews('_instance', $this->component);
+        if ($this->render === 'skip') {
+            return (new SkippedIsland($this->key))->render();
+        }
+        
+        if ($this->lazy) {
+            return (new LazyIsland($this->key, $this->name))->render();
+        }
 
-        $output = view($this->view, $this->data)->render();
+        if ($this->defer) {
+            return (new DeferredIsland($this->key, $this->name))->render();
+        }
 
-        app(ExtendBlade::class)->endLivewireRendering();
-
-        return "<!--[if ISLAND:{$this->name}:{$this->mode}]><![endif]-->"
-            . $output
-            . "<!--[if ENDISLAND:{$this->name}]><![endif]-->";
-    }
-
-    public function prepend()
-    {
-        $this->mode = 'prepend';
-
-        return $this;
-    }
-
-    public function append()
-    {
-        $this->mode = 'append';
-
-        return $this;
+        return (new DefaultIsland($this->key, $this->view, $this->component))->render();
     }
 
     public function toJson($options = 0)
     {
+        $render = $this->render;
+
+        // This first render happens, but on the next render it will be skipped...
+        if ($render === 'once') {
+            $render = 'skip';
+        }
+
         return [
             'name' => $this->name,
+            'key' => $this->key,
             'mode' => $this->mode,
-            'content' => $this->render(),
+            'render' => $render,
         ];
     }
 
@@ -63,6 +64,6 @@ class Island implements \Stringable, Htmlable, Jsonable
 
     public function toHtml()
     {
-        return $this->render();
+        return $this->render(force: true);
     }
 }
