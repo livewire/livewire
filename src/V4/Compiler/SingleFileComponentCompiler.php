@@ -13,6 +13,7 @@ class SingleFileComponentCompiler extends Mechanism
     protected string $cacheDirectory;
     protected string $classesDirectory;
     protected string $viewsDirectory;
+    protected string $scriptsDirectory;
     protected array $supportedExtensions;
 
     public function __construct(?string $cacheDirectory = null, ?array $supportedExtensions = null)
@@ -20,6 +21,7 @@ class SingleFileComponentCompiler extends Mechanism
         $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/views/livewire');
         $this->classesDirectory = $this->cacheDirectory . '/classes';
         $this->viewsDirectory = $this->cacheDirectory . '/views';
+        $this->scriptsDirectory = $this->cacheDirectory . '/scripts';
         $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php'];
 
         $this->ensureDirectoriesExist();
@@ -171,13 +173,18 @@ class SingleFileComponentCompiler extends Mechanism
             $externalClass = $matches[1];
             $viewContent = preg_replace('/@php\s*\([^)]+\)/s', '', $content);
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 '',
-                trim($viewContent),
+                trim($cleanViewContent),
                 true,
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -192,13 +199,18 @@ class SingleFileComponentCompiler extends Mechanism
                 throw new ParseException("Invalid component: @php block must contain a class definition");
             }
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 $frontmatter,
-                trim($viewContent),
+                trim($cleanViewContent),
                 false,
                 null,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -207,13 +219,18 @@ class SingleFileComponentCompiler extends Mechanism
             $externalClass = $matches[1];
             $viewContent = preg_replace('/<\?php\s*\([^)]+\)\s*\?>/s', '', $content);
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 '',
-                trim($viewContent),
+                trim($cleanViewContent),
                 true,
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -228,13 +245,18 @@ class SingleFileComponentCompiler extends Mechanism
                 throw new ParseException("Invalid component: <"."?php block must contain a class definition");
             }
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 $frontmatter,
-                trim($viewContent),
+                trim($cleanViewContent),
                 false,
                 null,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -291,6 +313,12 @@ class SingleFileComponentCompiler extends Mechanism
         $viewName = $this->generateViewName($viewPath, $hash);
         $compiledViewPath = $this->getViewPath($viewName);
 
+        // Generate script path if component has scripts
+        $scriptPath = null;
+        if ($parsed->hasScripts()) {
+            $scriptPath = $this->getScriptPath($this->generateScriptName($viewPath, $hash));
+        }
+
         return new CompilationResult(
             className: $className,
             classPath: $classPath,
@@ -298,8 +326,20 @@ class SingleFileComponentCompiler extends Mechanism
             viewPath: $compiledViewPath,
             isExternal: $parsed->isExternal,
             externalClass: $parsed->externalClass,
-            hash: $hash
+            hash: $hash,
+            scriptPath: $scriptPath,
         );
+    }
+
+    protected function generateScriptName(string $viewPath, string $hash): string
+    {
+        $name = $this->getComponentNameFromPath($viewPath);
+        return "{$name}_{$hash}";
+    }
+
+    protected function getScriptPath(string $scriptName): string
+    {
+        return $this->scriptsDirectory . '/' . $scriptName . '.js';
     }
 
     protected function generateFiles(CompilationResult $result, ParsedComponent $parsed): void
@@ -311,6 +351,29 @@ class SingleFileComponentCompiler extends Mechanism
         if ($result->shouldGenerateClass()) {
             $this->generateClass($result, $parsed);
         }
+
+        // Generate script file if component has scripts...
+        if ($parsed->hasScripts() && $result->hasScripts()) {
+            $this->generateScriptFile($result, $parsed);
+        }
+    }
+
+    protected function generateScriptFile(CompilationResult $result, ParsedComponent $parsed): void
+    {
+        $scriptContent = $this->compileScripts($parsed->scripts);
+        File::put($result->scriptPath, $scriptContent);
+    }
+
+    protected function compileScripts(array $scripts): string
+    {
+        $compiled = [];
+
+        foreach ($scripts as $script) {
+            // Add script content with optional comment for debugging
+            $compiled[] = "// Script extracted from component\n" . $script['content'];
+        }
+
+        return implode("\n\n", $compiled);
     }
 
     /**
@@ -432,7 +495,8 @@ namespace {$namespace};
 
     protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
     {
-        $processedViewContent = $this->transformNakedScripts($parsed->viewContent);
+        // Scripts are already extracted during parsing, so view content is clean
+        $processedViewContent = $parsed->viewContent;
 
         // Transform computed property references if this is an inline component
         if ($parsed->hasInlineClass()) {
@@ -443,10 +507,107 @@ namespace {$namespace};
     }
 
     /**
+     * Extract script tags from view content and return structured script data.
+     */
+    protected function extractScripts(string $viewContent): array
+    {
+        $scripts = [];
+
+        // Don't process if there are no script tags
+        if (!str_contains($viewContent, '<script')) {
+            return $scripts;
+        }
+
+        // Don't process if there are already @script directives present
+        if (str_contains($viewContent, '@script')) {
+            return $scripts;
+        }
+
+        // Match script tags that are not already wrapped in @script directives
+        // This pattern matches <script> tags with their content and closing </script>
+        $pattern = '/<script\b([^>]*)>(.*?)<\/script>/s';
+
+        preg_match_all($pattern, $viewContent, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $fullScriptTag = $match[0];
+            $attributes = trim($match[1]);
+            $scriptContent = trim($match[2]);
+
+            // Skip empty scripts
+            if (empty($scriptContent)) {
+                continue;
+            }
+
+            $scripts[] = [
+                'content' => $scriptContent,
+                'attributes' => $this->parseScriptAttributes($attributes),
+                'fullTag' => $fullScriptTag,
+            ];
+        }
+
+        return $scripts;
+    }
+
+    /**
+     * Remove script tags from view content.
+     */
+    protected function removeScripts(string $viewContent): string
+    {
+        // Don't process if there are no script tags
+        if (!str_contains($viewContent, '<script')) {
+            return $viewContent;
+        }
+
+        // Don't process if there are already @script directives present
+        if (str_contains($viewContent, '@script')) {
+            return $viewContent;
+        }
+
+        // Remove script tags but preserve whitespace structure
+        $pattern = '/<script\b[^>]*>.*?<\/script>/s';
+
+        return preg_replace($pattern, '', $viewContent);
+    }
+
+    /**
+     * Parse script tag attributes into structured format.
+     */
+    protected function parseScriptAttributes(string $attributesString): array
+    {
+        $attributes = [];
+
+        if (empty(trim($attributesString))) {
+            return $attributes;
+        }
+
+        // Simple attribute parsing - can be enhanced later for complex cases
+        if (preg_match('/type=["\']([^"\']*)["\']/', $attributesString, $matches)) {
+            $attributes['type'] = $matches[1];
+        }
+
+        if (preg_match('/src=["\']([^"\']*)["\']/', $attributesString, $matches)) {
+            $attributes['src'] = $matches[1];
+        }
+
+        if (preg_match('/defer/', $attributesString)) {
+            $attributes['defer'] = true;
+        }
+
+        if (preg_match('/async/', $attributesString)) {
+            $attributes['async'] = true;
+        }
+
+        return $attributes;
+    }
+
+    /**
      * Transform naked <script> tags into @script wrapped scripts.
      *
      * This detects script tags that are not already wrapped in @script directives
      * and automatically wraps them for proper Livewire integration.
+     *
+     * @deprecated This method is deprecated in favor of extractScripts() for new script extraction approach
      */
     protected function transformNakedScripts(string $viewContent): string
     {
@@ -696,6 +857,12 @@ namespace {$namespace};
         $viewName = $this->generateViewName($directory, $hash);
         $compiledViewPath = $this->getViewPath($viewName);
 
+        // Generate script path if component has scripts
+        $scriptPath = null;
+        if ($parsed->hasScripts()) {
+            $scriptPath = $this->getScriptPath($this->generateScriptName($directory, $hash));
+        }
+
         return new CompilationResult(
             className: $className,
             classPath: $classPath,
@@ -703,7 +870,8 @@ namespace {$namespace};
             viewPath: $compiledViewPath,
             isExternal: $parsed->isExternal,
             externalClass: $parsed->externalClass,
-            hash: $hash
+            hash: $hash,
+            scriptPath: $scriptPath,
         );
     }
 
@@ -768,6 +936,7 @@ namespace {$namespace};
     {
         File::ensureDirectoryExists($this->classesDirectory);
         File::ensureDirectoryExists($this->viewsDirectory);
+        File::ensureDirectoryExists($this->scriptsDirectory);
     }
 
     protected function ensureCacheDirectoryIsGitIgnored(): void

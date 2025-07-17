@@ -476,11 +476,21 @@ The compiler provides specific exceptions for different error scenarios:
 - Supports both simple layouts and layouts with data arrays
 - Works with both inline and external components
 
-#### ✅ **Naked Script Transformation**
+#### ✅ **Script Extraction and Separation** ✨ **NEW**
+- **Extracts** `<script>` tags from component views during parsing
+- **Separates** scripts into dedicated `.js` files in compiled directory
+- **Generates** clean view files with scripts removed
+- **Preserves** script attributes (type, defer, async) for future processing
+- **Structured** script data for enhanced processing capabilities
+- **Foundation** for future dynamic import and module loading features
+
+#### ✅ **Naked Script Transformation** (Legacy Support)
+- **@deprecated** Original approach that wraps scripts with `@script` directives
 - Automatically detects naked `<script>` tags in component views
 - Wraps them with `@script`/`@endscript` directives during compilation
 - Preserves all script attributes and handles multiple scripts
 - Skips components that already have `@script` directives
+- **Note**: Legacy support maintained for components with existing `@script` directives
 
 #### ✅ **Computed Property Transformation**
 - Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in main view content
@@ -551,7 +561,8 @@ The compiler provides specific exceptions for different error scenarios:
 - Name normalization
 - Directory management
 - Layout directive processing
-- Naked script transformation
+- Script extraction and separation (🆕 NEW)
+- Naked script transformation (legacy support)
 - Computed property transformation (with guard statements in islands)
 - Custom data override support in islands
 - Inline islands processing
@@ -682,5 +693,144 @@ public function compile(string $viewPath): CompilationResult
     $this->generateFiles($result, $parsed);
 
     return $result;
+}
+```
+
+### Script Extraction System ✨ **NEW**
+
+The V4 compiler now includes a sophisticated script extraction system that separates JavaScript from component views.
+
+#### **Script Extraction Process**
+
+```php
+// During parsing (parseComponent method):
+$scripts = $this->extractScripts($viewContent);           // Extract scripts
+$cleanViewContent = $this->removeScripts($viewContent);   // Clean view content
+
+$parsed = new ParsedComponent(
+    $frontmatter,
+    $cleanViewContent,  // Scripts removed
+    $isExternal,
+    $externalClass,
+    $layoutTemplate,
+    $layoutData,
+    $scripts           // Scripts stored separately
+);
+```
+
+#### **Generated File Structure**
+
+The new system generates an additional file type:
+
+```
+storage/framework/views/livewire/
+├── classes/              (existing - compiled PHP classes)
+├── views/                (existing - cleaned view files)
+└── scripts/              (🆕 NEW - extracted JavaScript files)
+    └── ComponentName_hash123.js
+```
+
+#### **Script Data Structure**
+
+Each extracted script contains structured information:
+
+```php
+[
+    'content' => 'console.log("Script content");',
+    'attributes' => [
+        'type' => 'text/javascript',
+        'defer' => true,
+        'async' => false,
+    ],
+    'fullTag' => '<script type="text/javascript" defer>...</script>'
+]
+```
+
+#### **CompilationResult Enhancement**
+
+The `CompilationResult` class now includes script file tracking:
+
+```php
+class CompilationResult {
+    public string $className;
+    public string $classPath;
+    public string $viewName;
+    public string $viewPath;
+    public ?string $scriptPath;  // 🆕 NEW
+
+    public function hasScripts(): bool  // 🆕 NEW
+}
+```
+
+#### **Future Integration Points**
+
+This foundation enables future enhancements:
+
+- **Dynamic ES6 imports**: `import('./path/to/script.js')`
+- **Module loading strategies**: Lazy loading, preloading
+- **Build tool integration**: Minification, bundling
+- **Asset pipeline**: Automatic versioning, cache busting
+
+#### **Legacy Compatibility**
+
+Components with existing `@script` directives are unchanged:
+- Script extraction **skipped** if `@script` directives detected
+- Maintains backward compatibility
+- Gradual migration path available
+
+#### **Example: Script Extraction in Action**
+
+**Input Component** (`counter.livewire.php`):
+```php
+@php
+new class extends Livewire\Component {
+    public $count = 0;
+    public function increment() { $this->count++; }
+}
+@endphp
+
+<div>
+    <h1>Count: {{ $count }}</h1>
+    <button wire:click="increment">+</button>
+</div>
+
+<script>
+console.log('Counter component loaded!');
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Counter ready:', {{ $count }});
+});
+</script>
+```
+
+**Generated Files:**
+
+1. **Compiled View** (`storage/.../views/counter_abc123.blade.php`):
+```html
+<div>
+    <h1>Count: {{ $count }}</h1>
+    <button wire:click="increment">+</button>
+</div>
+```
+
+2. **Extracted Script** (`storage/.../scripts/counter_abc123.js`):
+```javascript
+// Script extracted from component
+console.log('Counter component loaded!');
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Counter ready:', {{ $count }});
+});
+```
+
+3. **CompilationResult Object**:
+```php
+CompilationResult {
+    className: "Livewire\Compiled\Counter_abc123",
+    classPath: "/storage/.../classes/Counter_abc123.php",
+    viewName: "livewire-compiled::counter_abc123",
+    viewPath: "/storage/.../views/counter_abc123.blade.php",
+    scriptPath: "/storage/.../scripts/counter_abc123.js",  // 🆕 NEW
+    hasScripts(): true  // 🆕 NEW
 }
 ```

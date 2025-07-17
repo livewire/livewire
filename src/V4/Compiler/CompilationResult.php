@@ -8,6 +8,7 @@ class CompilationResult
     public string $classPath;
     public string $viewName;
     public string $viewPath;
+    public ?string $scriptPath;
     public bool $isExternal;
     public ?string $externalClass;
     public string $hash;
@@ -19,7 +20,8 @@ class CompilationResult
         string $viewPath,
         bool $isExternal = false,
         ?string $externalClass = null,
-        string $hash = ''
+        string $hash = '',
+        ?string $scriptPath = null,
     ) {
         $this->className = $className;
         $this->classPath = $classPath;
@@ -28,11 +30,17 @@ class CompilationResult
         $this->isExternal = $isExternal;
         $this->externalClass = $externalClass;
         $this->hash = $hash;
+        $this->scriptPath = $scriptPath;
     }
 
     public function shouldGenerateClass(): bool
     {
         return !$this->isExternal;
+    }
+
+    public function hasScripts(): bool
+    {
+        return !empty($this->scriptPath);
     }
 
     public function getClassNamespace(): string
