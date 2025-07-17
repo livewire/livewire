@@ -47,6 +47,9 @@ The main compiler class that handles parsing, compilation, and caching of single
 // Compile a view file into usable class and view files
 public function compile(string $viewPath): CompilationResult
 
+// Compile a multi-file component directory into usable class and view files
+public function compileMultiFileComponent(string $directory): CompilationResult
+
 // Check if a component is already compiled and up-to-date
 public function isCompiled(string $viewPath, ?string $hash = null): bool
 
@@ -201,6 +204,68 @@ new class extends Livewire\Component {
     <h1>{{ $title }}</h1>
 </div>
 ```
+
+#### 5. **Multi-File Components**
+The compiler also supports a directory-based approach where the frontmatter and view content are separated into individual files.
+
+##### Directory Structure
+```
+counter/
+├── counter.livewire.php  (frontmatter/class)
+└── counter.blade.php     (view content)
+```
+
+##### Example Files
+
+**counter/counter.livewire.php**
+```php
+<?php
+
+use Livewire\Attributes\Computed;
+
+new class extends Component {
+    public $count = 0;
+
+    public function increment()
+    {
+        $this->count++;
+    }
+
+    #[Computed]
+    public function doubleCount()
+    {
+        return $this->count * 2;
+    }
+}
+```
+
+**counter/counter.blade.php**
+```html
+<div>
+    <h2>Count: {{ $count }}</h2>
+    <p>Double: {{ $doubleCount }}</p>
+    <button wire:click="increment">+</button>
+</div>
+```
+
+##### Compilation Process for Multi-File Components
+```php
+use Livewire\V4\Compiler\SingleFileComponentCompiler;
+
+$compiler = new SingleFileComponentCompiler();
+
+// Compile a multi-file component directory
+$result = $compiler->compileMultiFileComponent('/path/to/counter');
+```
+
+The multi-file compilation process:
+1. **Validates directory structure** - Ensures directory exists and contains required files
+2. **Reads both files** - Loads `counter.livewire.php` and `counter.blade.php`
+3. **Concatenates content** - Combines them into standard format: `@php frontmatter @endphp view_content`
+4. **Uses standard pipeline** - Continues with normal parsing and compilation process
+5. **Generates same output** - Creates identical class and view files as single-file components
+
+This approach provides **separation of concerns** while maintaining full compatibility with all existing features (computed properties, layouts, class-level attributes, etc.).
 
 ### Compilation Process
 
@@ -457,6 +522,12 @@ The compiler provides specific exceptions for different error scenarios:
 - Works with both `@php ... @endphp` and `<?php ... ?>` syntax
 - Integrates seamlessly with `@layout()` directives (both can be used together)
 - Maintains backwards compatibility - components without class-level attributes work unchanged
+
+#### ✅ **Multi-File Component Support**
+- Supports compiling a directory of frontmatter/class and view files
+- Handles validation, parsing, compilation, and caching for multi-file components
+- Generates identical class and view files as single-file components
+- Maintains all existing features (computed properties, layouts, class-level attributes, etc.)
 
 ### Test Coverage
 

@@ -263,26 +263,43 @@ $resolver->namespace('admin', resource_path('views/admin'));
 // Now 'admin::user-list' resolves to resources/views/admin/user-list.blade.php
 ```
 
-#### 3. **Three File Resolution Conventions**
+#### 3. **Four File Resolution Conventions**
 When resolving a component name, the system tries these conventions in order:
 
-1. **Direct file**: `foo.blade.php`
-2. **Folder with same name**: `foo/foo.blade.php`
-3. **Index file**: `foo/index.blade.php`
+1. **Direct file**: `foo.livewire.php`
+2. **Multi-file component**: `foo/` directory containing both `foo.livewire.php` and `foo.blade.php`
+3. **Folder with same name**: `foo/foo.livewire.php`
+4. **Index file**: `foo/index.livewire.php`
 
-#### 4. **Nested Component Support**
+#### 4. **Multi-File Component Support** ✨ **NEW**
+The resolver now supports directory-based multi-file components where the frontmatter and view content are separated into individual files:
+
+**Directory Structure:**
+```
+counter/
+├── counter.livewire.php  (frontmatter/class definition)
+└── counter.blade.php     (view content)
+```
+
+This approach provides:
+- **Separation of concerns** - PHP logic separate from HTML markup
+- **Better IDE support** - Proper syntax highlighting for both PHP and Blade
+- **Team collaboration** - Developers can work on logic and markup independently
+- **Full feature compatibility** - All existing features work (computed properties, layouts, etc.)
+
+#### 5. **Nested Component Support**
 Supports dot notation for nested components:
 ```php
 // 'forms.input' resolves to forms/input.blade.php
 $resolver->resolve('forms.input');
 ```
 
-#### 5. **Multiple Directory Fallback**
+#### 6. **Multiple Directory Fallback**
 Tries multiple default directories:
 - `resources/views/components` (first priority)
 - `resources/views/livewire` (fallback)
 
-#### 6. **Priority System**
+#### 7. **Priority System**
 Aliases take priority over default resolution, so explicit registrations override auto-discovery.
 
 ### Resolution Algorithm
@@ -292,20 +309,49 @@ The resolution process works as follows:
 1. **Check aliases first** - If the component name is explicitly registered, use that path
 2. **Handle namespaced components** - Parse `namespace::component` syntax and resolve within the namespace directory
 3. **Try default directories** - Look in `resources/views/components` then `resources/views/livewire`
-4. **Apply file conventions** - For each directory, try the three file naming conventions
-5. **Throw exception** - If no view file is found, throw `ViewNotFoundException`
+4. **Apply file conventions** - For each directory, try the four file naming conventions:
+   - Direct single file (`foo.livewire.php`)
+   - Multi-file directory (`foo/` with both `foo.livewire.php` and `foo.blade.php`)
+   - Subdirectory single file (`foo/foo.livewire.php`)
+   - Index file (`foo/index.livewire.php`)
+5. **Return path type** - Returns either:
+   - **File path** for single-file components → passed to `SingleFileComponentCompiler::compile()`
+   - **Directory path** for multi-file components → passed to `SingleFileComponentCompiler::compileMultiFileComponent()`
+6. **Throw exception** - If no view file is found, throw `ViewNotFoundException`
+
+### Integration with Compilation System
+
+The resolver integrates seamlessly with the V4 compilation system in `IntegrateV4.php`:
+
+```php
+// Registry resolves component name to either file or directory path
+$viewPath = $this->finder->resolve($componentName);
+
+// Compilation system detects path type and uses appropriate compiler method
+if (is_dir($viewPath)) {
+    // Multi-file component - directory compilation
+    $result = $this->compiler->compileMultiFileComponent($viewPath);
+} else {
+    // Single-file component - standard compilation
+    $result = $this->compiler->compile($viewPath);
+}
+```
+
+This unified approach means both component types generate identical compiled output and have the same runtime performance.
 
 ### Testing
 
 Comprehensive unit tests cover:
 - ✅ Alias registration and resolution
 - ✅ Namespace registration and resolution
-- ✅ All three file resolution conventions
+- ✅ All four file resolution conventions (including multi-file components)
+- ✅ Multi-file component directory validation
 - ✅ Nested components with dot notation
 - ✅ Directory fallback behavior
 - ✅ Exception handling for missing files/namespaces
 - ✅ Path normalization
 - ✅ Priority system (aliases override defaults)
+- ✅ Multi-file component resolution (NEW)
 
 **Test Command**: `phpunit src/V4/Registry/ComponentViewPathResolverUnitTest.php`
 
@@ -317,44 +363,104 @@ use Livewire\V4\Registry\ComponentViewPathResolver;
 $resolver = new ComponentViewPathResolver();
 
 // Register a custom component
-$resolver->component('special-button', resource_path('views/custom/button.blade.php'));
+$resolver->component('special-button', resource_path('views/custom/button.livewire.php'));
 
 // Register an admin namespace
 $resolver->namespace('admin', resource_path('views/admin'));
 
 // Resolve various component types
-$path1 = $resolver->resolve('some-component');        // → resources/views/components/some-component.blade.php
-$path2 = $resolver->resolve('admin::user-list');     // → resources/views/admin/user-list.blade.php
-$path3 = $resolver->resolve('forms.input');          // → resources/views/components/forms/input.blade.php
-$path4 = $resolver->resolve('special-button');       // → resources/views/custom/button.blade.php
+$path1 = $resolver->resolve('some-component');        // → resources/views/components/some-component.livewire.php
+$path2 = $resolver->resolve('admin::user-list');     // → resources/views/admin/user-list.livewire.php
+$path3 = $resolver->resolve('forms.input');          // → resources/views/components/forms/input.livewire.php
+$path4 = $resolver->resolve('special-button');       // → resources/views/custom/button.livewire.php
+
+// Multi-file component resolution (NEW)
+$path5 = $resolver->resolve('counter');              // → resources/views/components/counter/ (directory)
+```
+
+#### Component Structure Examples
+
+**Single-File Component:**
+```
+resources/views/components/
+└── counter.livewire.php
+```
+
+**Multi-File Component:**
+```
+resources/views/components/
+└── counter/
+    ├── counter.livewire.php
+    └── counter.blade.php
+```
+
+**Multi-File Component Files:**
+
+`counter/counter.livewire.php`:
+```php
+use Livewire\Attributes\Computed;
+
+new class extends Livewire\Component {
+    public $count = 0;
+
+    public function increment() {
+        $this->count++;
+    }
+
+    #[Computed]
+    public function doubleCount() {
+        return $this->count * 2;
+    }
+}
+```
+
+`counter/counter.blade.php`:
+```html
+<div>
+    <h2>Count: {{ $count }}</h2>
+    <p>Double: {{ $doubleCount }}</p>
+    <button wire:click="increment">+</button>
+</div>
 ```
 
 ### What Still Needs to Be Done
 
-This implementation addresses the **view resolution** portion of the V4 registry system. However, several pieces are still needed to complete the V4 vision:
+This implementation addresses the **view resolution** portion of the V4 registry system and now includes **complete multi-file component support** with **full compilation system integration**. However, several pieces are still needed to complete the V4 vision:
 
-#### 1. **View Parser**
-Need a system to parse the view files and extract the component class definition from the front-matter (`@php` blocks).
+#### ✅ **COMPLETED: Multi-File Component Support**
+- ✅ Component resolution for directory-based multi-file components
+- ✅ Integration with `SingleFileComponentCompiler::compileMultiFileComponent()`
+- ✅ Automatic detection and routing of file vs. directory paths
+- ✅ Full feature compatibility with single-file components
 
-#### 2. **Component Class Extraction**
-Handle both inline anonymous classes and external class references:
+#### 1. **View Parser** (Partially Complete)
+The `SingleFileComponentCompiler` handles parsing, but this could be further abstracted:
+- ✅ Parse `@php` blocks and extract component class definitions
+- ✅ Handle both inline anonymous classes and external class references
+- ✅ Support for multi-file component concatenation
+- ⚠️ Could benefit from more sophisticated parsing for complex scenarios
+
+#### 2. **Component Class Extraction** (Complete)
+✅ Handle both inline anonymous classes and external class references:
 ```php
-// Inline class extraction
+// Inline class extraction (DONE)
 @php
 new class extends Livewire\Component {
     // ... component logic
 }
 @endphp
 
-// External class reference extraction
+// External class reference extraction (DONE)
 @php(new App\Livewire\SomeComponent::class)
 ```
 
-#### 3. **Integration with V3 Registry**
-The `ComponentViewPathResolver` needs to be integrated with the existing `ComponentRegistry` to create a unified system that supports both V3 class-first and V4 view-first components.
+#### 3. **Integration with V3 Registry** (Partially Complete)
+- ✅ `ComponentViewPathResolver` integrated with compilation system
+- ✅ View-first components work alongside class-first components
+- ⚠️ Full backward compatibility testing needed
 
-#### 4. **Component Instantiation**
-Bridge the gap between resolved view paths and actual component instances that can be mounted and rendered.
+#### 4. **Component Instantiation** (Complete)
+✅ Bridge between resolved view paths and component instances via compilation system
 
 #### 5. **Backwards Compatibility Layer**
 Determine how V3 class-first components will coexist with V4 view-first components.
@@ -364,10 +470,32 @@ Allow users to configure default view directories and other registry settings.
 
 ### Next Steps
 
-The immediate next step would be to create a **ViewParser** class that can:
-1. Read a resolved view file path
-2. Extract the component class definition from the front-matter
-3. Return either an anonymous class definition or a reference to an external class
-4. Provide the view content separate from the PHP logic
+With **multi-file component support now complete**, the V4 registry system has achieved significant functionality. The immediate priorities are:
 
-This would complete the view-to-class resolution pipeline needed for the V4 view-first system.
+#### 1. **Comprehensive Backwards Compatibility Testing**
+- Test V3 class-first components alongside V4 view-first components
+- Ensure existing applications can gradually migrate to V4 without breaking changes
+- Document migration patterns and best practices
+
+#### 2. **Configuration System Enhancement**
+- Allow users to configure default view directories
+- Support custom file extensions beyond `.livewire.php`
+- Provide registry configuration options
+
+#### 3. **Advanced Parser Improvements**
+While the current `SingleFileComponentCompiler` handles most scenarios well, it could benefit from:
+- More sophisticated PHP parsing for edge cases
+- Better error messages for malformed components
+- Support for additional frontmatter formats
+
+#### 4. **Developer Experience Improvements**
+- Enhanced error messages with suggestions
+- Better debugging tools for component resolution
+- IDE integration and tooling support
+
+#### 5. **Performance Optimizations**
+- Caching for repeated component resolutions
+- Optimized file system operations
+- Benchmark and optimize the resolution algorithm
+
+The **core view-first component system is now fully functional** with both single-file and multi-file component support, making V4 ready for real-world usage and testing.

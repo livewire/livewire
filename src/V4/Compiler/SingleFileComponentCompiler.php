@@ -58,6 +58,62 @@ class SingleFileComponentCompiler extends Mechanism
         return $result;
     }
 
+    public function compileMultiFileComponent(string $directory): CompilationResult
+    {
+        if (! file_exists($directory) || ! is_dir($directory)) {
+            throw new CompilationException("Directory not found: [{$directory}]");
+        }
+
+        // Get the component name from the directory
+        $componentName = basename($directory);
+
+        // Define the expected file paths
+        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
+
+        // Check if both required files exist
+        if (! file_exists($livewireFilePath)) {
+            throw new CompilationException("Livewire file not found: [{$livewireFilePath}]");
+        }
+
+        if (! file_exists($bladeFilePath)) {
+            throw new CompilationException("Blade file not found: [{$bladeFilePath}]");
+        }
+
+        // Read the contents of both files
+        $livewireContent = File::get($livewireFilePath);
+        $bladeContent = File::get($bladeFilePath);
+
+        // Remove PHP opening tags from livewire content if present
+        $livewireContent = preg_replace('/^<\?php\s*/', '', trim($livewireContent));
+
+        // Concatenate the contents to simulate a single file component
+        // Format: @php frontmatter @endphp blade_content
+        $content = "@php\n" . $livewireContent . "\n@endphp\n" . $bladeContent;
+
+        // Generate hash based on the directory path and combined content
+        $hash = $this->generateMultiFileHash($directory, $livewireContent, $bladeContent);
+
+        // Check if already compiled and up to date...
+        if ($this->isMultiFileCompiled($directory, $hash)) {
+            return $this->getExistingMultiFileCompilationResult($directory, $hash);
+        }
+
+        // Parse the component using the concatenated content...
+        $parsed = $this->parseComponent($content);
+
+        // For multi-file components, we don't need to load external view/script
+        // since they're already separate files
+
+        // Generate compilation result using the directory as the "view path"...
+        $result = $this->generateMultiFileCompilationResult($directory, $parsed, $hash);
+
+        // Generate files...
+        $this->generateFiles($result, $parsed);
+
+        return $result;
+    }
+
     public function isCompiled(string $viewPath, ?string $hash = null): bool
     {
         $originalViewLastModified = File::lastModified($viewPath);
@@ -579,6 +635,47 @@ namespace {$namespace};
         return hash('xxh128', 'v1'.$viewPath);
     }
 
+    protected function generateMultiFileHash(string $directory, string $livewireContent, string $bladeContent): string
+    {
+        // Include directory path in hash like the original method, plus a version identifier
+        return hash('xxh128', 'v1'.$directory.$livewireContent.$bladeContent);
+    }
+
+    protected function isMultiFileCompiled(string $directory, string $hash): bool
+    {
+        $componentName = basename($directory);
+        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
+
+        if (! file_exists($livewireFilePath) || ! file_exists($bladeFilePath)) {
+            return false;
+        }
+
+        // Get the latest modification time from source files
+        $livewireLastModified = File::lastModified($livewireFilePath);
+        $bladeLastModified = File::lastModified($bladeFilePath);
+        $sourceLastModified = max($livewireLastModified, $bladeLastModified);
+
+        // Check if compiled files exist and are newer than source files
+        $className = $this->generateClassName($directory, $hash);
+        $classPath = $this->getClassPath($className);
+        $viewName = $this->generateViewName($directory, $hash);
+        $viewPath = $this->getViewPath($viewName);
+
+        try {
+            $classLastModified = File::lastModified($classPath);
+            $viewLastModified = File::lastModified($viewPath);
+
+            return $sourceLastModified <= $classLastModified && $sourceLastModified <= $viewLastModified;
+        } catch (\ErrorException $exception) {
+            if (! File::exists($classPath) || ! File::exists($viewPath)) {
+                return false;
+            }
+
+            throw $exception;
+        }
+    }
+
     protected function generateClassName(string $viewPath, string $hash): string
     {
         $name = $this->getComponentNameFromPath($viewPath);
@@ -590,6 +687,53 @@ namespace {$namespace};
     {
         $name = $this->getComponentNameFromPath($viewPath);
         return "livewire-compiled::{$name}_{$hash}";
+    }
+
+    protected function generateMultiFileCompilationResult(string $directory, ParsedComponent $parsed, string $hash): CompilationResult
+    {
+        $className = $this->generateClassName($directory, $hash);
+        $classPath = $this->getClassPath($className);
+        $viewName = $this->generateViewName($directory, $hash);
+        $compiledViewPath = $this->getViewPath($viewName);
+
+        return new CompilationResult(
+            className: $className,
+            classPath: $classPath,
+            viewName: $viewName,
+            viewPath: $compiledViewPath,
+            isExternal: $parsed->isExternal,
+            externalClass: $parsed->externalClass,
+            hash: $hash
+        );
+    }
+
+    protected function getExistingMultiFileCompilationResult(string $directory, string $hash): CompilationResult
+    {
+        $componentName = basename($directory);
+        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
+
+        $livewireContent = File::get($livewireFilePath);
+        $bladeContent = File::get($bladeFilePath);
+
+        // Remove PHP opening tags from livewire content if present
+        $livewireContent = preg_replace('/^<\?php\s*/', '', trim($livewireContent));
+
+        $content = "@php\n" . $livewireContent . "\n@endphp\n" . $bladeContent;
+
+        $parsed = $this->parseComponent($content);
+        // No need to load external view/script for multi-file components
+
+        return $this->generateMultiFileCompilationResult($directory, $parsed, $hash);
+    }
+
+    protected function getExistingCompilationResult(string $viewPath, string $hash): CompilationResult
+    {
+        $content = File::get($viewPath);
+        $parsed = $this->parseComponent($content);
+        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
+
+        return $this->generateCompilationResult($viewPath, $parsed, $hash);
     }
 
     protected function getComponentNameFromPath(string $viewPath): string
@@ -618,15 +762,6 @@ namespace {$namespace};
     {
         $relativePath = str_replace('livewire-compiled::', '', $viewName) . '.blade.php';
         return $this->viewsDirectory . '/' . $relativePath;
-    }
-
-    protected function getExistingCompilationResult(string $viewPath, string $hash): CompilationResult
-    {
-        $content = File::get($viewPath);
-        $parsed = $this->parseComponent($content);
-        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
-
-        return $this->generateCompilationResult($viewPath, $parsed, $hash);
     }
 
     protected function ensureDirectoriesExist(): void

@@ -62,7 +62,14 @@ class IntegrateV4
         app('livewire')->resolveMissingComponent(function ($componentName) {
             $viewPath = $this->finder->resolve($componentName);
 
-            $result = $this->compiler->compile($viewPath);
+            // Detect if this is a multi-file component (directory) or single-file component
+            if (is_dir($viewPath)) {
+                // Multi-file component - use directory compilation
+                $result = $this->compiler->compileMultiFileComponent($viewPath);
+            } else {
+                // Single-file component - use standard compilation
+                $result = $this->compiler->compile($viewPath);
+            }
 
             $className = $result->className;
 
