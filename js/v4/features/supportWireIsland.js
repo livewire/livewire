@@ -6,7 +6,7 @@ import { closestIslandName } from '@/features/supportIslands.js'
 let wireIslands = new WeakMap
 
 interceptorRegistry.add(({el, directive, component}) => {
-    let name = wireIslands.get(el)?.name ?? closestIslandName(el)
+    let name = wireIslands.get(el)?.name ?? closestIslandName(component, el)
 
     if (! name) return
 

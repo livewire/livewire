@@ -6,7 +6,7 @@ trait HandlesIslands
 {
     protected $islands = [];
 
-    public function island($name, $key, $mode = null, $defer = false, $lazy = false, $view = null)
+    public function island($name, $key, $mode = 'replace', $render = 'once', $defer = false, $lazy = false, $view = null)
     {
         if ($view === null && $key) {
             // @todo: See if there is a better way to do this...
@@ -26,26 +26,15 @@ trait HandlesIslands
                 "Cannot use both 'defer' and 'lazy' for island '{$name}'."
             );
         }
-
-        if ($island = collect($this->islands)->first(fn($island) => $island->name === $name && $island->key === $key)) {
+        
+        if ($island = collect($this->islands)->get($key)) {
+            ray('return existing', $island);
             return $island;
         }
 
-        if ($mode === null) {
-            $mode = 'replace';
-        }
+        $island = new Island($name, $key, $view, $this, $mode, $render, $defer, $lazy);
 
-        if ($mode === 'skip') {
-            $island = new SkippedIsland($name, $key);
-        } elseif ($lazy) {
-            $island = new LazyIsland($name, $key, $mode);
-        } elseif ($defer) {
-            $island = new DeferredIsland($name, $key, $mode);
-        } else {
-            $island = new Island($name, $key, $view, $this, $mode);
-        }
-
-        $this->islands[] = $island;
+        $this->islands[$island->key] = $island;
 
         return $island;
     }

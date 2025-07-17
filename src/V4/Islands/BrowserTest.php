@@ -46,9 +46,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@island-count', 'Island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action should re-render the component and the island...
+        // A component action should re-render the component but not the island...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@island-count', 'Island count: 2')
+        ->assertSeeIn('@island-count', 'Island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 2')
         ;
     }
@@ -110,10 +110,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@island-2-count', 'Island 2 count: 2')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action should re-render the component and the islands...
+        // A component action should re-render the component but not the islands...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@island-1-count', 'Island 1 count: 3')
-        ->assertSeeIn('@island-2-count', 'Island 2 count: 3')
+        ->assertSeeIn('@island-1-count', 'Island 1 count: 1')
+        ->assertSeeIn('@island-2-count', 'Island 2 count: 2')
         ->assertSeeIn('@component-count', 'Component count: 3')
         ;
     }
@@ -168,16 +168,16 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@inner-island-count', 'Inner island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A island action should only re-render that island and any nested islands, but not the component...
+        // A island action should only re-render that island but not the component or any nested islands...
         ->waitForLivewire()->click('@outer-island-count-button')
         ->assertSeeIn('@outer-island-count', 'Outer island count: 2')
-        ->assertSeeIn('@inner-island-count', 'Inner island count: 2')
+        ->assertSeeIn('@inner-island-count', 'Inner island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action should re-render the component and the islands...
+        // A component action should re-render the component but not the islands...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@outer-island-count', 'Outer island count: 3')
-        ->assertSeeIn('@inner-island-count', 'Inner island count: 3')
+        ->assertSeeIn('@outer-island-count', 'Outer island count: 2')
+        ->assertSeeIn('@inner-island-count', 'Inner island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 3')
         ;
     }
@@ -218,9 +218,9 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@external-island-count', 'External island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action should re-render the component and the island...
+        // A component action should re-render the component but not the island...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@external-island-count', 'External island count: 2')
+        ->assertSeeIn('@external-island-count', 'External island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 2')
         ;
     }
@@ -346,15 +346,15 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@external-island-2-count', 'External island 2 count: 2')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action should re-render the component and the islands...
+        // A component action should re-render the component but not the islands...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@external-island-1-count', 'External island 1 count: 3')
-        ->assertSeeIn('@external-island-2-count', 'External island 2 count: 3')
+        ->assertSeeIn('@external-island-1-count', 'External island 1 count: 1')
+        ->assertSeeIn('@external-island-2-count', 'External island 2 count: 2')
         ->assertSeeIn('@component-count', 'Component count: 3')
         ;
     }
 
-    public function test_an_inline_island_can_be_mode_append()
+    public function test_an_inline_island_can_be_mode_append_and_render_always()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -368,7 +368,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() { return <<<'HTML'
                 <div>
                     <div dusk="island-container">
-                        @island(mode: 'append')
+                        @island(mode: 'append', render: 'always')
                             <p>Island count: {{ $count }}</p>
                         @endisland
                     </div>
@@ -412,7 +412,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_an_inline_island_can_be_mode_prepend()
+    public function test_an_inline_island_can_be_mode_prepend_and_render_always()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -426,7 +426,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() { return <<<'HTML'
                 <div>
                     <div dusk="island-container">
-                        @island(mode: 'prepend')
+                        @island(mode: 'prepend', render: 'always')
                             <p>Island count: {{ $count }}</p>
                         @endisland
                     </div>
@@ -470,7 +470,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_an_inline_island_can_be_mode_once()
+    public function test_an_island_is_rendered_by_the_component_once_by_default()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
@@ -484,7 +484,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 public function render() { return <<<'HTML'
                 <div>
                     <div dusk="island-container">
-                        @island(mode: 'once')
+                        @island
                             <p>Island count: {{ $count }}</p>
                         @endisland
                     </div>
@@ -500,26 +500,68 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@island-container', 'Island count: 0')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action normally re-renders the component and the island, but as island mode is 'once', it should not re-render the island...
+        // A component should not re-render the island by default...
         ->waitForLivewire()->click('@component-count-button')
         ->assertSeeIn('@island-container', 'Island count: 0')
         ->assertSeeIn('@component-count', 'Component count: 1')
 
-        // A component action normally re-renders the component and the island, but as island mode is 'once', it should not re-render the island...
+        // A component should not re-render the island by default...
         ->waitForLivewire()->click('@component-count-button')
         ->assertSeeIn('@island-container', 'Island count: 0')
         ->assertSeeIn('@component-count', 'Component count: 2')
         ;
     }
 
-    public function test_an_inline_island_can_be_mode_skip()
+    public function test_an_island_is_rendered_by_the_component_every_time_if_render_is_set_to_always()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island-container">
+                        @island(render: 'always')
+                            <p>Island count: {{ $count }}</p>
+                        @endisland
+                    </div>
+
+                    <p dusk="component-count">Component count: {{ $count }}</p>
+
+                    <button wire:click="incrementCount" dusk="component-count-button">Component increment count</button>
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+
+        ->assertSeeIn('@island-container', 'Island count: 0')
+        ->assertSeeIn('@component-count', 'Component count: 0')
+
+        // A component should re-render the island...
+        ->waitForLivewire()->click('@component-count-button')
+        ->assertSeeIn('@island-container', 'Island count: 1')
+        ->assertSeeIn('@component-count', 'Component count: 1')
+
+        // A component should re-render the island...
+        ->waitForLivewire()->click('@component-count-button')
+        ->assertSeeIn('@island-container', 'Island count: 2')
+        ->assertSeeIn('@component-count', 'Component count: 2')
+        ;
+    }
+
+    public function test_an_island_is_not_rendered_by_the_component_if_render_is_set_to_skip()
     {
         Livewire::visit(
             new class extends \Livewire\Component {
                 public function render() { return <<<'HTML'
                 <div>
                     <div dusk="island-container">
-                        @island(mode: 'skip')
+                        @island(render: 'skip')
                             <p>Island content</p>
                         @endisland
                     </div>
@@ -530,7 +572,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeNothingIn('@island-container')
         ;
     }
-    
+
     public function test_a_named_inline_island_can_be_interacted_with()
     {
         Livewire::visit(
@@ -570,13 +612,13 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@bob-island-count', 'Bob island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action should re-render the component and the island...
+        // A component action should re-render the component but not the island...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@bob-island-count', 'Bob island count: 2')
+        ->assertSeeIn('@bob-island-count', 'Bob island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 2')
         ;
     }
-    
+
     public function test_two_named_islands_can_have_the_same_name_and_can_be_interacted_with()
     {
         Livewire::visit(
@@ -628,11 +670,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@component-count', 'Component count: 0')
         ->assertSeeIn('@bob-after-island-count', 'Bob after island count: 1')
 
-        // An island action should re-render any islands with the same name, but not the component...
+        // A component action should re-render the component but not the islands...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@bob-island-count', 'Bob island count: 2')
+        ->assertSeeIn('@bob-island-count', 'Bob island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 2')
-        ->assertSeeIn('@bob-after-island-count', 'Bob after island count: 2')
+        ->assertSeeIn('@bob-after-island-count', 'Bob after island count: 1')
         ;
     }
 
@@ -681,10 +723,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 2')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A component action should re-render the component and the islands...
+        // A component action should re-render the component but not the islands...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 2')
-        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 3')
+        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 1')
+        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 2')
         ->assertSeeIn('@component-count', 'Component count: 3')
         ;
     }

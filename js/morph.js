@@ -98,7 +98,7 @@ function getMorphConfig(component) {
     return {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             skipSlotContents(el, toEl, skipUntil)
-            skipIslandContents(el, toEl, skipUntil)
+            skipIslandContents(component, el, toEl, skipUntil)
 
             if (isntElement(el)) return
 
