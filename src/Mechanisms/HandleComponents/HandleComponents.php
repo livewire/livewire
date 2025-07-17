@@ -216,6 +216,24 @@ class HandleComponents extends Mechanism
         });
     }
 
+    protected function hydratePropertyUpdate($valueOrTuple, $context, $path, $raw)
+    {
+        if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
+
+        [$value, $meta] = $tuple;
+
+        // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
+        if ($this->isRemoval($value) && str($path)->contains('.')) {
+            return $value;
+        }
+
+        $synth = $this->propertySynth($meta['s'], $context, $path);
+
+        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
+            return $this->hydrateForUpdate($raw, "{$path}.{$name}", $child, $context);
+        });
+    }
+
     protected function render($component, $default = null)
     {
         if ($html = store($component)->get('skipRender', false)) {
@@ -339,7 +357,7 @@ class HandleComponents extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            return $this->hydrate([$value, $meta], $context, $path);
+            return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
