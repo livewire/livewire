@@ -120,6 +120,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             \Livewire\V4\Islands\SupportIslands::class,
             \Livewire\V4\Slots\SupportSlots::class,
             \Livewire\V4\HtmlAttributes\SupportsHtmlAttributes::class,
+            \Livewire\V4\JsModules\SupportJsModules::class,
             \Livewire\V4\WithMethod\SupportWithMethod::class,
             \Livewire\V4\MagicActions\SupportMagicActions::class,
             \Livewire\V4\Paginators\SupportPaginators::class,

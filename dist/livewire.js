@@ -3274,7 +3274,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
     let keyModifiers = modifiers.filter((i) => {
-      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
+      return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
     });
     if (keyModifiers.includes("debounce")) {
       let debounceIndex = keyModifiers.indexOf("debounce");
@@ -10415,6 +10415,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       name,
       mode
     });
+  });
+
+  // js/v4/features/supportJsModules.js
+  on2("effect", ({ component, effects }) => {
+    let hasModule = effects.hasJsModule;
+    if (hasModule) {
+      import(`/livewire/js/${component.name.replace(".", "--")}.js`).then((module) => {
+        module.run.bind(component.$wire)();
+      });
+    }
   });
 
   // js/features/supportListeners.js

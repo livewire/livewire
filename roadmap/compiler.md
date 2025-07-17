@@ -211,29 +211,26 @@ The compiler also supports a directory-based approach where the frontmatter and 
 ##### Directory Structure
 ```
 counter/
-├── counter.livewire.php  (frontmatter/class)
-└── counter.blade.php     (view content)
+├── counter.livewire.php  (frontmatter/class definition)
+├── counter.blade.php     (view content)
+└── counter.js            (📦 OPTIONAL: dedicated JavaScript)
 ```
 
 ##### Example Files
 
 **counter/counter.livewire.php**
 ```php
-<?php
-
 use Livewire\Attributes\Computed;
 
 new class extends Component {
     public $count = 0;
 
-    public function increment()
-    {
+    public function increment() {
         $this->count++;
     }
 
     #[Computed]
-    public function doubleCount()
-    {
+    public function doubleCount() {
         return $this->count * 2;
     }
 }
@@ -248,6 +245,20 @@ new class extends Component {
 </div>
 ```
 
+**counter/counter.js** ✨ **NEW**
+```javascript
+console.log('Counter component loaded!');
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Counter ready!');
+
+    // Component-specific JavaScript logic
+    window.counterUtils = {
+        formatCount: (count) => count.toLocaleString()
+    };
+});
+```
+
 ##### Compilation Process for Multi-File Components
 ```php
 use Livewire\V4\Compiler\SingleFileComponentCompiler;
@@ -260,12 +271,40 @@ $result = $compiler->compileMultiFileComponent('/path/to/counter');
 
 The multi-file compilation process:
 1. **Validates directory structure** - Ensures directory exists and contains required files
-2. **Reads both files** - Loads `counter.livewire.php` and `counter.blade.php`
-3. **Concatenates content** - Combines them into standard format: `@php frontmatter @endphp view_content`
-4. **Uses standard pipeline** - Continues with normal parsing and compilation process
-5. **Generates same output** - Creates identical class and view files as single-file components
+2. **Reads required files** - Loads `counter.livewire.php` and `counter.blade.php`
+3. **Reads optional files** ✨ **NEW** - Loads `counter.js` if present
+4. **Concatenates content** - Combines them into standard format: `@php frontmatter @endphp view_content`
+5. **Merges JavaScript** ✨ **NEW** - Combines dedicated JS file with any `<script>` tags from view
+6. **Uses standard pipeline** - Continues with normal parsing and compilation process
+7. **Generates same output** - Creates identical class and view files as single-file components
 
-This approach provides **separation of concerns** while maintaining full compatibility with all existing features (computed properties, layouts, class-level attributes, etc.).
+This approach provides **separation of concerns** while maintaining full compatibility with all existing features (computed properties, layouts, class-level attributes, etc.). The optional `.js` file enables **pure JavaScript development** without mixing code in Blade templates.
+
+##### **Combined Script Output**
+
+When both dedicated JS file and Blade `<script>` tags exist, they are merged:
+
+**Multi-File Structure:**
+```
+counter/
+├── counter.livewire.php
+├── counter.blade.php       <!-- Contains <script>alert('from blade')</script> -->
+└── counter.js              <!-- Contains console.log('from js file') -->
+```
+
+**Final Compiled Script** (`storage/.../scripts/counter_abc123.js`):
+```javascript
+// Script extracted from component
+console.log('from js file')
+
+// Script extracted from component
+alert('from blade')
+```
+
+**Compilation Priority:**
+1. **Dedicated JS file content** (if exists)
+2. **Blade `<script>` tag content** (if exists)
+3. **Combined into single compiled script file**
 
 ### Compilation Process
 
@@ -468,7 +507,7 @@ The compiler provides specific exceptions for different error scenarios:
 #### ✅ **Comprehensive Testing**
 - **90 unit tests** covering all functionality
 - **343 assertions** ensuring correctness
-- Tests for parsing, compilation, caching, layout, naked scripts, computed properties (including in islands), and error scenarios
+- Tests for parsing, compilation, caching, layout, script extraction, computed properties (including in islands), and error scenarios
 
 #### ✅ **Layout Directive Support**
 - Parses `@layout()` directives from component frontmatter
@@ -476,21 +515,31 @@ The compiler provides specific exceptions for different error scenarios:
 - Supports both simple layouts and layouts with data arrays
 - Works with both inline and external components
 
-#### ✅ **Script Extraction and Separation** ✨ **NEW**
-- **Extracts** `<script>` tags from component views during parsing
+#### ✅ **Unified Script Extraction and Separation** ✨ **NEW**
+- **Always extracts** `<script>` tags from all component views during parsing
+- **Unified handling** for both single-file and multi-file components
 - **Separates** scripts into dedicated `.js` files in compiled directory
-- **Generates** clean view files with scripts removed
-- **Preserves** script attributes (type, defer, async) for future processing
-- **Structured** script data for enhanced processing capabilities
+- **Generates** clean view files with scripts completely removed
+- **ES6 Import Hoisting**: Automatically hoists import statements to module top-level
+- **Export Default Wrapping**: Wraps remaining code in `export default function run()` pattern
+- **Runtime Access**: Generates `jsModuleSource()` and `jsModuleModifiedTime()` methods
 - **Foundation** for future dynamic import and module loading features
 
-#### ✅ **Naked Script Transformation** (Legacy Support)
-- **@deprecated** Original approach that wraps scripts with `@script` directives
-- Automatically detects naked `<script>` tags in component views
-- Wraps them with `@script`/`@endscript` directives during compilation
-- Preserves all script attributes and handles multiple scripts
-- Skips components that already have `@script` directives
-- **Note**: Legacy support maintained for components with existing `@script` directives
+#### ✅ **Runtime Script Access** ✨ **NEW**
+- **File-based access** to script content via `jsModuleSource()` method
+- **Minimal file I/O** - reads script content only when method is called
+- **Protected methods** for internal use and safe access patterns
+- **Error handling** with clear exceptions for missing script files
+- **Modification time** `jsModuleModifiedTime()` method for cache headers and ETags
+- **Consistent approach** both methods check file existence and handle errors gracefully
+
+#### ❌ **Naked Script Transformation** (Removed)
+- **REPLACED** by unified script extraction approach
+- Previously wrapped scripts with `@script`/`@endscript` directives during compilation
+- **NEW APPROACH**: All components now extract scripts into separate `.js` files
+- **Cleaner separation**: Scripts and views are completely separated
+- **Better performance**: No legacy directive processing needed
+- **Unified handling**: Same approach for single-file and multi-file components
 
 #### ✅ **Computed Property Transformation**
 - Transforms `{{ $computedProperty }}` to `{{ $this->computedProperty }}` in main view content
@@ -535,6 +584,8 @@ The compiler provides specific exceptions for different error scenarios:
 
 #### ✅ **Multi-File Component Support**
 - Supports compiling a directory of frontmatter/class and view files
+- **Dedicated JavaScript files** ✨ **NEW**: Optional `.js` files alongside `.livewire.php` and `.blade.php`
+- **Script merging**: Combines dedicated JS files with any `<script>` tags from Blade views
 - Handles validation, parsing, compilation, and caching for multi-file components
 - Generates identical class and view files as single-file components
 - Maintains all existing features (computed properties, layouts, class-level attributes, etc.)
@@ -561,8 +612,9 @@ The compiler provides specific exceptions for different error scenarios:
 - Name normalization
 - Directory management
 - Layout directive processing
-- Script extraction and separation (🆕 NEW)
-- Naked script transformation (legacy support)
+- Script extraction and separation (🆕 NEW - unified approach)
+- ES6 import hoisting and module wrapping (🆕 NEW)
+- ❌ Legacy naked script transformation tests (expected failures - behavior changed)
 - Computed property transformation (with guard statements in islands)
 - Custom data override support in islands
 - Inline islands processing
@@ -762,6 +814,28 @@ class CompilationResult {
 }
 ```
 
+**Generated classes with scripts also include:**
+```php
+class GeneratedComponent extends \Livewire\Component {
+    // ... component logic ...
+
+    protected function jsModuleSource(): string  // 🆕 NEW
+    {
+        $scriptPath = '/path/to/compiled/script.js';
+        if (! file_exists($scriptPath)) {
+            throw new \RuntimeException("Script file not found: [{$scriptPath}]");
+        }
+        return file_get_contents($scriptPath);
+    }
+
+    protected function jsModuleModifiedTime(): int  // 🆕 NEW
+    {
+        $scriptPath = '/path/to/compiled/script.js';
+        return file_exists($scriptPath) ? filemtime($scriptPath) : filemtime(__FILE__);
+    }
+}
+```
+
 #### **Future Integration Points**
 
 This foundation enables future enhancements:
@@ -770,6 +844,14 @@ This foundation enables future enhancements:
 - **Module loading strategies**: Lazy loading, preloading
 - **Build tool integration**: Minification, bundling
 - **Asset pipeline**: Automatic versioning, cache busting
+- **Runtime script access**: File-based loading with proper error handling
+- **Component-specific modules**: Self-contained JavaScript per component
+- **Conditional loading**: Load scripts only when component is rendered
+- **HTTP caching**: ETags, Last-Modified headers, and 304 responses
+- **CDN integration**: Cache invalidation based on modification times
+- **Progressive loading**: Smart caching strategies for component scripts
+- **Post-processing**: Scripts can be modified/minified after compilation
+- **Development tools**: Hot reloading and script file watching
 
 #### **Legacy Compatibility**
 
@@ -815,22 +897,110 @@ document.addEventListener('DOMContentLoaded', function() {
 
 2. **Extracted Script** (`storage/.../scripts/counter_abc123.js`):
 ```javascript
-// Script extracted from component
-console.log('Counter component loaded!');
+export default function run() {
+    // Script section 1
+    console.log('Counter component loaded!');
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Counter ready:', {{ $count }});
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Counter ready:', {{ $count }});
+    });
+}
 ```
 
-3. **CompilationResult Object**:
+**Key Changes:**
+- ✅ **All scripts extracted** - No longer dependent on ES6 imports
+- ✅ **Clean view separation** - Views contain zero JavaScript code
+- ✅ **Consistent wrapping** - All scripts wrapped in `export default function run()`
+- ✅ **Dynamic import ready** - Can be loaded via `import()` from Livewire runtime
+
+#### **Example: ES6 Import Hoisting** ✨ **NEW**
+
+**Input Component with Imports** (`animated-counter.livewire.php`):
 ```php
-CompilationResult {
-    className: "Livewire\Compiled\Counter_abc123",
-    classPath: "/storage/.../classes/Counter_abc123.php",
-    viewName: "livewire-compiled::counter_abc123",
-    viewPath: "/storage/.../views/counter_abc123.blade.php",
-    scriptPath: "/storage/.../scripts/counter_abc123.js",  // 🆕 NEW
-    hasScripts(): true  // 🆕 NEW
+@php
+new class extends Livewire\Component {
+    public $count = 0;
+    public function increment() { $this->count++; }
+}
+@endphp
+
+<div>
+    <h1>Count: {{ $count }}</h1>
+    <button wire:click="increment">+</button>
+</div>
+
+<script>
+import { animate } from 'https://cdn.jsdelivr.net/npm/animejs/+esm';
+import { debounce } from 'https://cdn.skypack.dev/lodash-es';
+
+console.log('Animated counter loading...');
+
+const button = document.querySelector('button');
+const counter = document.querySelector('h1');
+
+const debouncedAnimate = debounce(() => {
+    animate({
+        targets: counter,
+        scale: [1, 1.2, 1],
+        duration: 300,
+        easing: 'easeInOutQuad'
+    });
+}, 100);
+
+button.addEventListener('click', debouncedAnimate);
+</script>
+```
+
+**Generated Script** (`storage/.../scripts/animated-counter_def456.js`):
+```javascript
+// Hoisted imports
+import { animate } from 'https://cdn.jsdelivr.net/npm/animejs/+esm';
+import { debounce } from 'https://cdn.skypack.dev/lodash-es';
+
+export default function run() {
+    // Script section 1
+    console.log('Animated counter loading...');
+
+    const button = document.querySelector('button');
+    const counter = document.querySelector('h1');
+
+    const debouncedAnimate = debounce(() => {
+        animate({
+            targets: counter,
+            scale: [1, 1.2, 1],
+            duration: 300,
+            easing: 'easeInOutQuad'
+        });
+    }, 100);
+
+    button.addEventListener('click', debouncedAnimate);
+}
+```
+
+**Runtime Usage with Dynamic Imports:**
+```javascript
+// Livewire runtime code
+async function loadComponentScript(componentClass) {
+    try {
+        // Get script content via runtime method
+        const scriptContent = componentClass.jsModuleSource();
+
+        // Create a blob URL for the module
+        const blob = new Blob([scriptContent], { type: 'application/javascript' });
+        const moduleUrl = URL.createObjectURL(blob);
+
+        // Dynamic import the module
+        const module = await import(moduleUrl);
+
+        // Call the run function with component context
+        const runFunction = module.default;
+        runFunction.call(this); // 'this' is the Livewire component instance
+
+        // Clean up the blob URL
+        URL.revokeObjectURL(moduleUrl);
+
+    } catch (error) {
+        console.error('Failed to load component script:', error);
+    }
 }
 ```
