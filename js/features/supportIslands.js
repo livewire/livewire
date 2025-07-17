@@ -172,7 +172,7 @@ function isEndMarker(el) {
 }
 
 function extractIslandKey(el) {
-    let key = el.textContent.match(/\[if ISLAND:(\w+)\]/)?.[1]
+    let key = el.textContent.match(/\[if ISLAND:([\w-]+)\]/)?.[1]
 
     return key
 }

@@ -26,9 +26,8 @@ trait HandlesIslands
                 "Cannot use both 'defer' and 'lazy' for island '{$name}'."
             );
         }
-        
+
         if ($island = collect($this->islands)->get($key)) {
-            ray('return existing', $island);
             return $island;
         }
 

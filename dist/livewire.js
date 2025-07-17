@@ -4609,7 +4609,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
   }
   function extractIslandKey(el) {
-    let key2 = el.textContent.match(/\[if ISLAND:(\w+)\]/)?.[1];
+    let key2 = el.textContent.match(/\[if ISLAND:([\w-]+)\]/)?.[1];
     return key2;
   }
   function stripIslandComments(content, key2) {
