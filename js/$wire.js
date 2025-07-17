@@ -34,6 +34,10 @@ let aliases = {
     'get': '$get',
     'set': '$set',
     'ref': '$ref',
+    // Alias `refs` to `$ref` so it matches Alpine...
+    'refs': '$ref',
+    // Alias `$refs` to `$ref` so it matches Alpine...
+    '$refs': '$ref',
     'call': '$call',
     'hook': '$hook',
     'watch': '$watch',

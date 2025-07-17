@@ -9405,6 +9405,8 @@ var aliases = {
   "get": "$get",
   "set": "$set",
   "ref": "$ref",
+  "refs": "$ref",
+  "$refs": "$ref",
   "call": "$call",
   "hook": "$hook",
   "watch": "$watch",
