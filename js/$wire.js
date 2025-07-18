@@ -1,11 +1,17 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
-import { dispatch, dispatchSelf, dispatchTo, listen } from '@/events'
+import { dispatch, dispatchSelf, dispatchTo, dispatchRef, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { closestComponent } from '@/store'
 import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
+import requestBus from './v4/requests/requestBus'
+import messageBroker from './v4/requests/messageBroker'
+import { getErrorsObject } from './v4/features/supportErrors'
+import { getPaginatorObject } from './v4/features/supportPaginators'
+import interceptorRegistry from './v4/interceptors/interceptorRegistry'
+import { findRef } from './v4/features/supportRefs'
 
 let properties = {}
 let fallback
@@ -27,18 +33,27 @@ let aliases = {
     'js': '$js',
     'get': '$get',
     'set': '$set',
+    'ref': '$ref',
+    // Alias `refs` to `$ref` so it matches Alpine...
+    'refs': '$ref',
+    // Alias `$refs` to `$ref` so it matches Alpine...
+    '$refs': '$ref',
     'call': '$call',
     'hook': '$hook',
-    'commit': '$commit',
     'watch': '$watch',
+    'commit': '$commit',
+    'errors': '$errors',
+    'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
+    'intercept': '$intercept',
+    'paginator': '$paginator',
     'dispatchTo': '$dispatchTo',
+    'dispatchRef': '$dispatchRef',
     'dispatchSelf': '$dispatchSelf',
-    'upload': '$upload',
-    'uploadMultiple': '$uploadMultiple',
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
+    'uploadMultiple': '$uploadMultiple',
 }
 
 export function generateWireObject(component, state) {
@@ -134,6 +149,12 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
+        if (requestBus.booted) {
+            component.queueUpdate(property, value)
+
+            return messageBroker.addAction(component, '$set')
+        }
+
         component.queueUpdate(property, value)
 
         return await requestCommit(component)
@@ -142,8 +163,59 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     return Promise.resolve()
 })
 
+wireProperty('$ref', (component) => {
+    let fn = (name) => findRef(component, name)
+
+    return new Proxy(fn, {
+        get(target, property) {
+            if (property in target) {
+                return target[property]
+            }
+            return fn(property)
+        }
+    })
+})
+
+wireProperty('$intercept', (component) => (action, callback = null) => {
+    if (callback === null) {
+        callback = action
+        action = null
+    }
+
+    interceptorRegistry.add(callback, component, action)
+})
+
+wireProperty('$errors', (component) => getErrorsObject(component))
+
+wireProperty('$paginator', (component) => {
+    let fn = (name = 'page') => getPaginatorObject(component, name)
+
+    let defaultPaginator = fn()
+
+    for (let key of Object.keys(defaultPaginator)) {
+        let value = defaultPaginator[key]
+
+        if (typeof value === 'function') {
+            fn[key] = (...args) => defaultPaginator[key](...args)
+        } else {
+            Object.defineProperty(fn, key, {
+                get: () => defaultPaginator[key],
+                set: val => { defaultPaginator[key] = val },
+            })
+        }
+    }
+
+    return fn
+})
+
 wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
+})
+
+wireProperty('$island', (component) => async (name) => {
+    messageBroker.addContext(component, 'islands', name)
+
+    return await component.$wire.$refresh()
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -164,8 +236,20 @@ wireProperty('$watch', (component) => (path, callback) => {
     component.addCleanup(unwatch)
 })
 
-wireProperty('$refresh', (component) => component.$wire.$commit)
-wireProperty('$commit', (component) => async () => await requestCommit(component))
+wireProperty('$refresh', (component) => async () => {
+    if (requestBus.booted) {
+        return messageBroker.addAction(component, '$refresh')
+    }
+
+    return component.$wire.$commit()
+})
+wireProperty('$commit', (component) => async () => {
+    if (requestBus.booted) {
+        return messageBroker.addAction(component, '$sync')
+    }
+
+    return await requestCommit(component)
+})
 
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
@@ -187,6 +271,7 @@ wireProperty('$hook', (component) => (name, callback) => {
 wireProperty('$dispatch', (component) => (...params) => dispatch(component, ...params))
 wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(component, ...params))
 wireProperty('$dispatchTo', () => (...params) => dispatchTo(...params))
+wireProperty('$dispatchRef', (component) => (...params) => dispatchRef(component, ...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
@@ -232,6 +317,10 @@ wireFallback((component) => (property) => async (...params) => {
         if (typeof overrides[property] === 'function') {
             return overrides[property](params)
         }
+    }
+
+    if (requestBus.booted) {
+        return messageBroker.addAction(component, property, params)
     }
 
     return await requestCall(component, property, params)

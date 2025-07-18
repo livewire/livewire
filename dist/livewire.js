@@ -10,9 +10,9 @@
   };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
-      for (let key of __getOwnPropNames(from))
-        if (!__hasOwnProp.call(to, key) && key !== except)
-          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      for (let key2 of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key2) && key2 !== except)
+          __defProp(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable });
     }
     return to;
   };
@@ -47,11 +47,11 @@
           template: '<div class="bar" role="bar"><div class="peg"></div></div><div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
         };
         NProgress2.configure = function(options) {
-          var key, value;
-          for (key in options) {
-            value = options[key];
-            if (value !== void 0 && options.hasOwnProperty(key))
-              Settings[key] = value;
+          var key2, value;
+          for (key2 in options) {
+            value = options[key2];
+            if (value !== void 0 && options.hasOwnProperty(key2))
+              Settings[key2] = value;
           }
           return this;
         };
@@ -300,40 +300,40 @@
     constructor() {
       this.arrays = {};
     }
-    add(key, value) {
-      if (!this.arrays[key])
-        this.arrays[key] = [];
-      this.arrays[key].push(value);
+    add(key2, value) {
+      if (!this.arrays[key2])
+        this.arrays[key2] = [];
+      this.arrays[key2].push(value);
     }
-    remove(key) {
-      if (this.arrays[key])
-        delete this.arrays[key];
+    remove(key2) {
+      if (this.arrays[key2])
+        delete this.arrays[key2];
     }
-    get(key) {
-      return this.arrays[key] || [];
+    get(key2) {
+      return this.arrays[key2] || [];
     }
-    each(key, callback) {
-      return this.get(key).forEach(callback);
+    each(key2, callback) {
+      return this.get(key2).forEach(callback);
     }
   };
   var WeakBag = class {
     constructor() {
       this.arrays = /* @__PURE__ */ new WeakMap();
     }
-    add(key, value) {
-      if (!this.arrays.has(key))
-        this.arrays.set(key, []);
-      this.arrays.get(key).push(value);
+    add(key2, value) {
+      if (!this.arrays.has(key2))
+        this.arrays.set(key2, []);
+      this.arrays.get(key2).push(value);
     }
-    remove(key) {
-      if (this.arrays.has(key))
-        this.arrays.delete(key, []);
+    remove(key2) {
+      if (this.arrays.has(key2))
+        this.arrays.delete(key2, []);
     }
-    get(key) {
-      return this.arrays.has(key) ? this.arrays.get(key) : [];
+    get(key2) {
+      return this.arrays.has(key2) ? this.arrays.get(key2) : [];
     }
-    each(key, callback) {
-      return this.get(key).forEach(callback);
+    each(key2, callback) {
+      return this.get(key2).forEach(callback);
     }
   };
   function dispatch(target, name, detail = {}, bubbles = true) {
@@ -366,17 +366,17 @@
   function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
-  function dataGet(object, key) {
-    if (key === "")
+  function dataGet(object, key2) {
+    if (key2 === "")
       return object;
-    return key.split(".").reduce((carry, i) => {
+    return key2.split(".").reduce((carry, i) => {
       return carry?.[i];
     }, object);
   }
-  function dataSet(object, key, value) {
-    let segments = key.split(".");
+  function dataSet(object, key2, value) {
+    let segments = key2.split(".");
     if (segments.length === 1) {
-      return object[key] = value;
+      return object[key2] = value;
     }
     let firstSegment = segments.shift();
     let restOfSegments = segments.join(".");
@@ -397,12 +397,12 @@
       return diffs;
     }
     let leftKeys = Object.keys(left);
-    Object.entries(right).forEach(([key, value]) => {
-      diffs = { ...diffs, ...diff(left[key], right[key], diffs, path === "" ? key : `${path}.${key}`) };
-      leftKeys = leftKeys.filter((i) => i !== key);
+    Object.entries(right).forEach(([key2, value]) => {
+      diffs = { ...diffs, ...diff(left[key2], right[key2], diffs, path === "" ? key2 : `${path}.${key2}`) };
+      leftKeys = leftKeys.filter((i) => i !== key2);
     });
-    leftKeys.forEach((key) => {
-      diffs[`${path}.${key}`] = "__rm__";
+    leftKeys.forEach((key2) => {
+      diffs[`${path}.${key2}`] = "__rm__";
     });
     return diffs;
   }
@@ -410,8 +410,8 @@
     let value = isSynthetic(payload) ? payload[0] : payload;
     let meta = isSynthetic(payload) ? payload[1] : void 0;
     if (isObjecty(value)) {
-      Object.entries(value).forEach(([key, iValue]) => {
-        value[key] = extractData(iValue);
+      Object.entries(value).forEach(([key2, iValue]) => {
+        value[key2] = extractData(iValue);
       });
     }
     return value;
@@ -589,8 +589,8 @@
     makeRequest(name, formData, method, url, headers, retrievePaths) {
       let request = new XMLHttpRequest();
       request.open(method, url);
-      Object.entries(headers).forEach(([key, value]) => {
-        request.setRequestHeader(key, value);
+      Object.entries(headers).forEach(([key2, value]) => {
+        request.setRequestHeader(key2, value);
       });
       request.upload.addEventListener("progress", (e) => {
         e.detail = {};
@@ -1021,22 +1021,22 @@
   };
   function collapseProxies() {
     let keys = Reflect.ownKeys(this);
-    return keys.reduce((acc, key) => {
-      acc[key] = Reflect.get(this, key);
+    return keys.reduce((acc, key2) => {
+      acc[key2] = Reflect.get(this, key2);
       return acc;
     }, {});
   }
   function initInterceptors(data2) {
     let isObject22 = (val) => typeof val === "object" && !Array.isArray(val) && val !== null;
     let recurse = (obj, basePath = "") => {
-      Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key, { value, enumerable }]) => {
+      Object.entries(Object.getOwnPropertyDescriptors(obj)).forEach(([key2, { value, enumerable }]) => {
         if (enumerable === false || value === void 0)
           return;
         if (typeof value === "object" && value !== null && value.__v_skip)
           return;
-        let path = basePath === "" ? key : `${basePath}.${key}`;
+        let path = basePath === "" ? key2 : `${basePath}.${key2}`;
         if (typeof value === "object" && value !== null && value._x_interceptor) {
-          obj[key] = value.initialize(data2, path, key);
+          obj[key2] = value.initialize(data2, path, key2);
         } else {
           if (isObject22(value) && value !== obj && !(value instanceof Element)) {
             recurse(value, path);
@@ -1051,18 +1051,18 @@
     let obj = {
       initialValue: void 0,
       _x_interceptor: true,
-      initialize(data2, path, key) {
-        return callback(this.initialValue, () => get(data2, path), (value) => set(data2, path, value), path, key);
+      initialize(data2, path, key2) {
+        return callback(this.initialValue, () => get(data2, path), (value) => set(data2, path, value), path, key2);
       }
     };
     mutateObj(obj);
     return (initialValue) => {
       if (typeof initialValue === "object" && initialValue !== null && initialValue._x_interceptor) {
         let initialize = obj.initialize.bind(obj);
-        obj.initialize = (data2, path, key) => {
-          let innerValue = initialValue.initialize(data2, path, key);
+        obj.initialize = (data2, path, key2) => {
+          let innerValue = initialValue.initialize(data2, path, key2);
           obj.initialValue = innerValue;
-          return initialize(data2, path, key);
+          return initialize(data2, path, key2);
         };
       } else {
         obj.initialValue = initialValue;
@@ -1156,7 +1156,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function generateEvaluatorFromFunction(dataStack, func) {
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [] } = {}) => {
+    }, { scope: scope2 = {}, params = [], context } = {}) => {
       let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
       runIfTypeOfFunction(receiver, result);
     };
@@ -1188,12 +1188,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function generateEvaluatorFromString(dataStack, expression, el) {
     let func = generateFunctionFromString(expression, el);
     return (receiver = () => {
-    }, { scope: scope2 = {}, params = [] } = {}) => {
+    }, { scope: scope2 = {}, params = [], context } = {}) => {
       func.result = void 0;
       func.finished = false;
       let completeScope = mergeProxies([scope2, ...dataStack]);
       if (typeof func === "function") {
-        let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
+        let promise = func.call(context, func, completeScope).catch((error2) => handleError(error2, el, expression));
         if (func.finished) {
           runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
           func.result = void 0;
@@ -1273,13 +1273,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var currentHandlerStackKey = Symbol();
   function deferHandlingDirectives(callback) {
     isDeferringHandlers = true;
-    let key = Symbol();
-    currentHandlerStackKey = key;
-    directiveHandlerStacks.set(key, []);
+    let key2 = Symbol();
+    currentHandlerStackKey = key2;
+    directiveHandlerStacks.set(key2, []);
     let flushHandlers = () => {
-      while (directiveHandlerStacks.get(key).length)
-        directiveHandlerStacks.get(key).shift()();
-      directiveHandlerStacks.delete(key);
+      while (directiveHandlerStacks.get(key2).length)
+        directiveHandlerStacks.get(key2).shift()();
+      directiveHandlerStacks.delete(key2);
     };
     let stopDeferring = () => {
       isDeferringHandlers = false;
@@ -1590,12 +1590,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function setStylesFromObject(el, value) {
     let previousStyles = {};
-    Object.entries(value).forEach(([key, value2]) => {
-      previousStyles[key] = el.style[key];
-      if (!key.startsWith("--")) {
-        key = kebabCase(key);
+    Object.entries(value).forEach(([key2, value2]) => {
+      previousStyles[key2] = el.style[key2];
+      if (!key2.startsWith("--")) {
+        key2 = kebabCase(key2);
       }
-      el.style.setProperty(key, value2);
+      el.style.setProperty(key2, value2);
     });
     setTimeout(() => {
       if (el.style.length === 0) {
@@ -1881,24 +1881,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       });
     });
   }
-  function modifierValue(modifiers, key, fallback2) {
-    if (modifiers.indexOf(key) === -1)
+  function modifierValue(modifiers, key2, fallback2) {
+    if (modifiers.indexOf(key2) === -1)
       return fallback2;
-    const rawValue = modifiers[modifiers.indexOf(key) + 1];
+    const rawValue = modifiers[modifiers.indexOf(key2) + 1];
     if (!rawValue)
       return fallback2;
-    if (key === "scale") {
+    if (key2 === "scale") {
       if (isNaN(rawValue))
         return fallback2;
     }
-    if (key === "duration" || key === "delay") {
+    if (key2 === "duration" || key2 === "delay") {
       let match = rawValue.match(/([0-9]+)ms/);
       if (match)
         return match[1];
     }
-    if (key === "origin") {
-      if (["top", "right", "left", "center", "bottom"].includes(modifiers[modifiers.indexOf(key) + 2])) {
-        return [rawValue, modifiers[modifiers.indexOf(key) + 2]].join(" ");
+    if (key2 === "origin") {
+      if (["top", "right", "left", "center", "bottom"].includes(modifiers[modifiers.indexOf(key2) + 2])) {
+        return [rawValue, modifiers[modifiers.indexOf(key2) + 2]].join(" ");
       }
     }
     return rawValue;
@@ -2362,7 +2362,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var EMPTY_OBJ = true ? Object.freeze({}) : {};
   var EMPTY_ARR = true ? Object.freeze([]) : [];
   var hasOwnProperty = Object.prototype.hasOwnProperty;
-  var hasOwn = (val, key) => hasOwnProperty.call(val, key);
+  var hasOwn = (val, key2) => hasOwnProperty.call(val, key2);
   var isArray2 = Array.isArray;
   var isMap = (val) => toTypeString(val) === "[object Map]";
   var isString = (val) => typeof val === "string";
@@ -2373,7 +2373,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var toRawType = (value) => {
     return toTypeString(value).slice(8, -1);
   };
-  var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
+  var isIntegerKey = (key2) => isString(key2) && key2 !== "NaN" && key2[0] !== "-" && "" + parseInt(key2, 10) === key2;
   var cacheStringFunction = (fn) => {
     const cache = /* @__PURE__ */ Object.create(null);
     return (str) => {
@@ -2469,7 +2469,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     const last = trackStack.pop();
     shouldTrack = last === void 0 ? true : last;
   }
-  function track(target, type, key) {
+  function track(target, type, key2) {
     if (!shouldTrack || activeEffect === void 0) {
       return;
     }
@@ -2477,9 +2477,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!depsMap) {
       targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
     }
-    let dep = depsMap.get(key);
+    let dep = depsMap.get(key2);
     if (!dep) {
-      depsMap.set(key, dep = /* @__PURE__ */ new Set());
+      depsMap.set(key2, dep = /* @__PURE__ */ new Set());
     }
     if (!dep.has(activeEffect)) {
       dep.add(activeEffect);
@@ -2489,12 +2489,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           effect: activeEffect,
           target,
           type,
-          key
+          key: key2
         });
       }
     }
   }
-  function trigger(target, type, key, newValue, oldValue, oldTarget) {
+  function trigger(target, type, key2, newValue, oldValue, oldTarget) {
     const depsMap = targetMap.get(target);
     if (!depsMap) {
       return;
@@ -2511,15 +2511,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     if (type === "clear") {
       depsMap.forEach(add2);
-    } else if (key === "length" && isArray2(target)) {
-      depsMap.forEach((dep, key2) => {
-        if (key2 === "length" || key2 >= newValue) {
+    } else if (key2 === "length" && isArray2(target)) {
+      depsMap.forEach((dep, key22) => {
+        if (key22 === "length" || key22 >= newValue) {
           add2(dep);
         }
       });
     } else {
-      if (key !== void 0) {
-        add2(depsMap.get(key));
+      if (key2 !== void 0) {
+        add2(depsMap.get(key2));
       }
       switch (type) {
         case "add":
@@ -2528,7 +2528,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (isMap(target)) {
               add2(depsMap.get(MAP_KEY_ITERATE_KEY));
             }
-          } else if (isIntegerKey(key)) {
+          } else if (isIntegerKey(key2)) {
             add2(depsMap.get("length"));
           }
           break;
@@ -2552,7 +2552,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         effect3.options.onTrigger({
           effect: effect3,
           target,
-          key,
+          key: key2,
           type,
           newValue,
           oldValue,
@@ -2568,30 +2568,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     effects.forEach(run);
   }
   var isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);
-  var builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol).map((key) => Symbol[key]).filter(isSymbol));
+  var builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol).map((key2) => Symbol[key2]).filter(isSymbol));
   var get2 = /* @__PURE__ */ createGetter();
   var readonlyGet = /* @__PURE__ */ createGetter(true);
   var arrayInstrumentations = /* @__PURE__ */ createArrayInstrumentations();
   function createArrayInstrumentations() {
     const instrumentations = {};
-    ["includes", "indexOf", "lastIndexOf"].forEach((key) => {
-      instrumentations[key] = function(...args) {
+    ["includes", "indexOf", "lastIndexOf"].forEach((key2) => {
+      instrumentations[key2] = function(...args) {
         const arr = toRaw(this);
         for (let i = 0, l = this.length; i < l; i++) {
           track(arr, "get", i + "");
         }
-        const res = arr[key](...args);
+        const res = arr[key2](...args);
         if (res === -1 || res === false) {
-          return arr[key](...args.map(toRaw));
+          return arr[key2](...args.map(toRaw));
         } else {
           return res;
         }
       };
     });
-    ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
-      instrumentations[key] = function(...args) {
+    ["push", "pop", "shift", "unshift", "splice"].forEach((key2) => {
+      instrumentations[key2] = function(...args) {
         pauseTracking();
-        const res = toRaw(this)[key].apply(this, args);
+        const res = toRaw(this)[key2].apply(this, args);
         resetTracking();
         return res;
       };
@@ -2599,30 +2599,30 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return instrumentations;
   }
   function createGetter(isReadonly = false, shallow = false) {
-    return function get3(target, key, receiver) {
-      if (key === "__v_isReactive") {
+    return function get3(target, key2, receiver) {
+      if (key2 === "__v_isReactive") {
         return !isReadonly;
-      } else if (key === "__v_isReadonly") {
+      } else if (key2 === "__v_isReadonly") {
         return isReadonly;
-      } else if (key === "__v_raw" && receiver === (isReadonly ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
+      } else if (key2 === "__v_raw" && receiver === (isReadonly ? shallow ? shallowReadonlyMap : readonlyMap : shallow ? shallowReactiveMap : reactiveMap).get(target)) {
         return target;
       }
       const targetIsArray = isArray2(target);
-      if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
-        return Reflect.get(arrayInstrumentations, key, receiver);
+      if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key2)) {
+        return Reflect.get(arrayInstrumentations, key2, receiver);
       }
-      const res = Reflect.get(target, key, receiver);
-      if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
+      const res = Reflect.get(target, key2, receiver);
+      if (isSymbol(key2) ? builtInSymbols.has(key2) : isNonTrackableKeys(key2)) {
         return res;
       }
       if (!isReadonly) {
-        track(target, "get", key);
+        track(target, "get", key2);
       }
       if (shallow) {
         return res;
       }
       if (isRef(res)) {
-        const shouldUnwrap = !targetIsArray || !isIntegerKey(key);
+        const shouldUnwrap = !targetIsArray || !isIntegerKey(key2);
         return shouldUnwrap ? res.value : res;
       }
       if (isObject2(res)) {
@@ -2633,8 +2633,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   var set2 = /* @__PURE__ */ createSetter();
   function createSetter(shallow = false) {
-    return function set3(target, key, value, receiver) {
-      let oldValue = target[key];
+    return function set3(target, key2, value, receiver) {
+      let oldValue = target[key2];
       if (!shallow) {
         value = toRaw(value);
         oldValue = toRaw(oldValue);
@@ -2643,31 +2643,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return true;
         }
       }
-      const hadKey = isArray2(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
-      const result = Reflect.set(target, key, value, receiver);
+      const hadKey = isArray2(target) && isIntegerKey(key2) ? Number(key2) < target.length : hasOwn(target, key2);
+      const result = Reflect.set(target, key2, value, receiver);
       if (target === toRaw(receiver)) {
         if (!hadKey) {
-          trigger(target, "add", key, value);
+          trigger(target, "add", key2, value);
         } else if (hasChanged(value, oldValue)) {
-          trigger(target, "set", key, value, oldValue);
+          trigger(target, "set", key2, value, oldValue);
         }
       }
       return result;
     };
   }
-  function deleteProperty(target, key) {
-    const hadKey = hasOwn(target, key);
-    const oldValue = target[key];
-    const result = Reflect.deleteProperty(target, key);
+  function deleteProperty(target, key2) {
+    const hadKey = hasOwn(target, key2);
+    const oldValue = target[key2];
+    const result = Reflect.deleteProperty(target, key2);
     if (result && hadKey) {
-      trigger(target, "delete", key, void 0, oldValue);
+      trigger(target, "delete", key2, void 0, oldValue);
     }
     return result;
   }
-  function has(target, key) {
-    const result = Reflect.has(target, key);
-    if (!isSymbol(key) || !builtInSymbols.has(key)) {
-      track(target, "has", key);
+  function has(target, key2) {
+    const result = Reflect.has(target, key2);
+    if (!isSymbol(key2) || !builtInSymbols.has(key2)) {
+      track(target, "has", key2);
     }
     return result;
   }
@@ -2684,15 +2684,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   };
   var readonlyHandlers = {
     get: readonlyGet,
-    set(target, key) {
+    set(target, key2) {
       if (true) {
-        console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
+        console.warn(`Set operation on key "${String(key2)}" failed: target is readonly.`, target);
       }
       return true;
     },
-    deleteProperty(target, key) {
+    deleteProperty(target, key2) {
       if (true) {
-        console.warn(`Delete operation on key "${String(key)}" failed: target is readonly.`, target);
+        console.warn(`Delete operation on key "${String(key2)}" failed: target is readonly.`, target);
       }
       return true;
     }
@@ -2701,33 +2701,33 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var toReadonly = (value) => isObject2(value) ? readonly(value) : value;
   var toShallow = (value) => value;
   var getProto = (v) => Reflect.getPrototypeOf(v);
-  function get$1(target, key, isReadonly = false, isShallow = false) {
+  function get$1(target, key2, isReadonly = false, isShallow = false) {
     target = target["__v_raw"];
     const rawTarget = toRaw(target);
-    const rawKey = toRaw(key);
-    if (key !== rawKey) {
-      !isReadonly && track(rawTarget, "get", key);
+    const rawKey = toRaw(key2);
+    if (key2 !== rawKey) {
+      !isReadonly && track(rawTarget, "get", key2);
     }
     !isReadonly && track(rawTarget, "get", rawKey);
     const { has: has2 } = getProto(rawTarget);
     const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive;
-    if (has2.call(rawTarget, key)) {
-      return wrap(target.get(key));
+    if (has2.call(rawTarget, key2)) {
+      return wrap(target.get(key2));
     } else if (has2.call(rawTarget, rawKey)) {
       return wrap(target.get(rawKey));
     } else if (target !== rawTarget) {
-      target.get(key);
+      target.get(key2);
     }
   }
-  function has$1(key, isReadonly = false) {
+  function has$1(key2, isReadonly = false) {
     const target = this["__v_raw"];
     const rawTarget = toRaw(target);
-    const rawKey = toRaw(key);
-    if (key !== rawKey) {
-      !isReadonly && track(rawTarget, "has", key);
+    const rawKey = toRaw(key2);
+    if (key2 !== rawKey) {
+      !isReadonly && track(rawTarget, "has", key2);
     }
     !isReadonly && track(rawTarget, "has", rawKey);
-    return key === rawKey ? target.has(key) : target.has(key) || target.has(rawKey);
+    return key2 === rawKey ? target.has(key2) : target.has(key2) || target.has(rawKey);
   }
   function size(target, isReadonly = false) {
     target = target["__v_raw"];
@@ -2745,40 +2745,40 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return this;
   }
-  function set$1(key, value) {
+  function set$1(key2, value) {
     value = toRaw(value);
     const target = toRaw(this);
     const { has: has2, get: get3 } = getProto(target);
-    let hadKey = has2.call(target, key);
+    let hadKey = has2.call(target, key2);
     if (!hadKey) {
-      key = toRaw(key);
-      hadKey = has2.call(target, key);
+      key2 = toRaw(key2);
+      hadKey = has2.call(target, key2);
     } else if (true) {
-      checkIdentityKeys(target, has2, key);
+      checkIdentityKeys(target, has2, key2);
     }
-    const oldValue = get3.call(target, key);
-    target.set(key, value);
+    const oldValue = get3.call(target, key2);
+    target.set(key2, value);
     if (!hadKey) {
-      trigger(target, "add", key, value);
+      trigger(target, "add", key2, value);
     } else if (hasChanged(value, oldValue)) {
-      trigger(target, "set", key, value, oldValue);
+      trigger(target, "set", key2, value, oldValue);
     }
     return this;
   }
-  function deleteEntry(key) {
+  function deleteEntry(key2) {
     const target = toRaw(this);
     const { has: has2, get: get3 } = getProto(target);
-    let hadKey = has2.call(target, key);
+    let hadKey = has2.call(target, key2);
     if (!hadKey) {
-      key = toRaw(key);
-      hadKey = has2.call(target, key);
+      key2 = toRaw(key2);
+      hadKey = has2.call(target, key2);
     } else if (true) {
-      checkIdentityKeys(target, has2, key);
+      checkIdentityKeys(target, has2, key2);
     }
-    const oldValue = get3 ? get3.call(target, key) : void 0;
-    const result = target.delete(key);
+    const oldValue = get3 ? get3.call(target, key2) : void 0;
+    const result = target.delete(key2);
     if (hadKey) {
-      trigger(target, "delete", key, void 0, oldValue);
+      trigger(target, "delete", key2, void 0, oldValue);
     }
     return result;
   }
@@ -2799,8 +2799,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       const rawTarget = toRaw(target);
       const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive;
       !isReadonly && track(rawTarget, "iterate", ITERATE_KEY);
-      return target.forEach((value, key) => {
-        return callback.call(thisArg, wrap(value), wrap(key), observed);
+      return target.forEach((value, key2) => {
+        return callback.call(thisArg, wrap(value), wrap(key2), observed);
       });
     };
   }
@@ -2831,16 +2831,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function createReadonlyMethod(type) {
     return function(...args) {
       if (true) {
-        const key = args[0] ? `on key "${args[0]}" ` : ``;
-        console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
+        const key2 = args[0] ? `on key "${args[0]}" ` : ``;
+        console.warn(`${capitalize(type)} operation ${key2}failed: target is readonly.`, toRaw(this));
       }
       return type === "delete" ? false : this;
     };
   }
   function createInstrumentations() {
     const mutableInstrumentations2 = {
-      get(key) {
-        return get$1(this, key);
+      get(key2) {
+        return get$1(this, key2);
       },
       get size() {
         return size(this);
@@ -2853,8 +2853,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       forEach: createForEach(false, false)
     };
     const shallowInstrumentations2 = {
-      get(key) {
-        return get$1(this, key, false, true);
+      get(key2) {
+        return get$1(this, key2, false, true);
       },
       get size() {
         return size(this);
@@ -2867,14 +2867,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       forEach: createForEach(false, true)
     };
     const readonlyInstrumentations2 = {
-      get(key) {
-        return get$1(this, key, true);
+      get(key2) {
+        return get$1(this, key2, true);
       },
       get size() {
         return size(this, true);
       },
-      has(key) {
-        return has$1.call(this, key, true);
+      has(key2) {
+        return has$1.call(this, key2, true);
       },
       add: createReadonlyMethod("add"),
       set: createReadonlyMethod("set"),
@@ -2883,14 +2883,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       forEach: createForEach(true, false)
     };
     const shallowReadonlyInstrumentations2 = {
-      get(key) {
-        return get$1(this, key, true, true);
+      get(key2) {
+        return get$1(this, key2, true, true);
       },
       get size() {
         return size(this, true);
       },
-      has(key) {
-        return has$1.call(this, key, true);
+      has(key2) {
+        return has$1.call(this, key2, true);
       },
       add: createReadonlyMethod("add"),
       set: createReadonlyMethod("set"),
@@ -2915,15 +2915,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var [mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations, shallowReadonlyInstrumentations] = /* @__PURE__ */ createInstrumentations();
   function createInstrumentationGetter(isReadonly, shallow) {
     const instrumentations = shallow ? isReadonly ? shallowReadonlyInstrumentations : shallowInstrumentations : isReadonly ? readonlyInstrumentations : mutableInstrumentations;
-    return (target, key, receiver) => {
-      if (key === "__v_isReactive") {
+    return (target, key2, receiver) => {
+      if (key2 === "__v_isReactive") {
         return !isReadonly;
-      } else if (key === "__v_isReadonly") {
+      } else if (key2 === "__v_isReadonly") {
         return isReadonly;
-      } else if (key === "__v_raw") {
+      } else if (key2 === "__v_raw") {
         return target;
       }
-      return Reflect.get(hasOwn(instrumentations, key) && key in target ? instrumentations : target, key, receiver);
+      return Reflect.get(hasOwn(instrumentations, key2) && key2 in target ? instrumentations : target, key2, receiver);
     };
   }
   var mutableCollectionHandlers = {
@@ -2932,9 +2932,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var readonlyCollectionHandlers = {
     get: /* @__PURE__ */ createInstrumentationGetter(true, false)
   };
-  function checkIdentityKeys(target, has2, key) {
-    const rawKey = toRaw(key);
-    if (rawKey !== key && has2.call(target, rawKey)) {
+  function checkIdentityKeys(target, has2, key2) {
+    const rawKey = toRaw(key2);
+    if (rawKey !== key2 && has2.call(target, rawKey)) {
       const type = toRawType(target);
       console.warn(`Reactive ${type} contains both the raw and reactive versions of the same object${type === `Map` ? ` as keys` : ``}, which can lead to inconsistencies. Avoid differentiating between the raw and reactive versions of an object and only use the reactive version if possible.`);
     }
@@ -2999,8 +2999,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   magic("nextTick", () => nextTick);
   magic("dispatch", (el) => dispatch2.bind(dispatch2, el));
-  magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key, callback) => {
-    let evaluate22 = evaluateLater2(key);
+  magic("watch", (el, { evaluateLater: evaluateLater2, cleanup: cleanup2 }) => (key2, callback) => {
+    let evaluate22 = evaluateLater2(key2);
     let getter = () => {
       let value;
       evaluate22((i) => value = i);
@@ -3044,12 +3044,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     if (!el._x_ids[name])
       el._x_ids[name] = findAndIncrementId(name);
   }
-  magic("id", (el, { cleanup: cleanup2 }) => (name, key = null) => {
-    let cacheKey = `${name}${key ? `-${key}` : ""}`;
+  magic("id", (el, { cleanup: cleanup2 }) => (name, key2 = null) => {
+    let cacheKey = `${name}${key2 ? `-${key2}` : ""}`;
     return cacheIdByNameOnElement(el, cacheKey, cleanup2, () => {
       let root = closestIdRoot(el, name);
       let id = root ? root._x_ids[name] : findAndIncrementId(name);
-      return key ? `${name}-${id}-${key}` : `${name}-${id}`;
+      return key2 ? `${name}-${id}-${key2}` : `${name}-${id}`;
     });
   });
   interceptClone((from, to) => {
@@ -3306,10 +3306,10 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     return true;
   }
-  function keyToModifiers(key) {
-    if (!key)
+  function keyToModifiers(key2) {
+    if (!key2)
       return [];
-    key = kebabCase2(key);
+    key2 = kebabCase2(key2);
     let modifierToKeyMap = {
       "ctrl": "control",
       "slash": "/",
@@ -3327,9 +3327,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "minus": "-",
       "underscore": "_"
     };
-    modifierToKeyMap[key] = key;
+    modifierToKeyMap[key2] = key2;
     return Object.keys(modifierToKeyMap).map((modifier) => {
-      if (modifierToKeyMap[modifier] === key)
+      if (modifierToKeyMap[modifier] === key2)
         return modifier;
     }).filter((modifier) => modifier);
   }
@@ -3663,13 +3663,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let scopes = [];
       let keys = [];
       if (isObject22(items)) {
-        items = Object.entries(items).map(([key, value]) => {
-          let scope2 = getIterationScopeVariables(iteratorNames, value, key, items);
+        items = Object.entries(items).map(([key2, value]) => {
+          let scope2 = getIterationScopeVariables(iteratorNames, value, key2, items);
           evaluateKey((value2) => {
             if (keys.includes(value2))
               warn("Duplicate key on x-for", el);
             keys.push(value2);
-          }, { scope: { index: key, ...scope2 } });
+          }, { scope: { index: key2, ...scope2 } });
           scopes.push(scope2);
         });
       } else {
@@ -3688,17 +3688,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let removes = [];
       let sames = [];
       for (let i = 0; i < prevKeys.length; i++) {
-        let key = prevKeys[i];
-        if (keys.indexOf(key) === -1)
-          removes.push(key);
+        let key2 = prevKeys[i];
+        if (keys.indexOf(key2) === -1)
+          removes.push(key2);
       }
-      prevKeys = prevKeys.filter((key) => !removes.includes(key));
+      prevKeys = prevKeys.filter((key2) => !removes.includes(key2));
       let lastKey = "template";
       for (let i = 0; i < keys.length; i++) {
-        let key = keys[i];
-        let prevIndex = prevKeys.indexOf(key);
+        let key2 = keys[i];
+        let prevIndex = prevKeys.indexOf(key2);
         if (prevIndex === -1) {
-          prevKeys.splice(i, 0, key);
+          prevKeys.splice(i, 0, key2);
           adds.push([lastKey, i]);
         } else if (prevIndex !== i) {
           let keyInSpot = prevKeys.splice(i, 1)[0];
@@ -3707,19 +3707,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           prevKeys.splice(prevIndex, 0, keyInSpot);
           moves.push([keyInSpot, keyForSpot]);
         } else {
-          sames.push(key);
+          sames.push(key2);
         }
-        lastKey = key;
+        lastKey = key2;
       }
       for (let i = 0; i < removes.length; i++) {
-        let key = removes[i];
-        if (!(key in lookup))
+        let key2 = removes[i];
+        if (!(key2 in lookup))
           continue;
         mutateDom(() => {
-          destroyTree(lookup[key]);
-          lookup[key].remove();
+          destroyTree(lookup[key2]);
+          lookup[key2].remove();
         });
-        delete lookup[key];
+        delete lookup[key2];
       }
       for (let i = 0; i < moves.length; i++) {
         let [keyInSpot, keyForSpot] = moves[i];
@@ -3744,23 +3744,23 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (lastEl._x_currentIfEl)
           lastEl = lastEl._x_currentIfEl;
         let scope2 = scopes[index];
-        let key = keys[index];
+        let key2 = keys[index];
         let clone2 = document.importNode(templateEl.content, true).firstElementChild;
         let reactiveScope = reactive(scope2);
         addScopeToNode(clone2, reactiveScope, templateEl);
         clone2._x_refreshXForScope = (newScope) => {
-          Object.entries(newScope).forEach(([key2, value]) => {
-            reactiveScope[key2] = value;
+          Object.entries(newScope).forEach(([key22, value]) => {
+            reactiveScope[key22] = value;
           });
         };
         mutateDom(() => {
           lastEl.after(clone2);
           skipDuringClone(() => initTree(clone2))();
         });
-        if (typeof key === "object") {
+        if (typeof key2 === "object") {
           warn("x-for key cannot be an object, it must be a string or an integer", templateEl);
         }
-        lookup[key] = clone2;
+        lookup[key2] = clone2;
       }
       for (let i = 0; i < sames.length; i++) {
         lookup[sames[i]]._x_refreshXForScope(scopes[keys.indexOf(sames[i])]);
@@ -3905,7 +3905,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let livewireProperty = name;
       let livewireComponent = component.$wire;
       let livewirePropertyValue = livewireComponent.get(livewireProperty);
-      let interceptor2 = module_default.interceptor((initialValue, getter, setter, path, key) => {
+      let interceptor2 = module_default.interceptor((initialValue, getter, setter, path, key2) => {
         if (typeof livewirePropertyValue === "undefined") {
           console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
           return;
@@ -4106,7 +4106,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     getEncodedSnapshotWithLatestChildrenMergedIn() {
       let { snapshotEncoded, children, snapshot } = this.component;
       let childIds = children.map((child) => child.id);
-      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key, value]) => childIds.includes(value[1])));
+      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
       return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
     }
     toRequestPayload() {
@@ -4273,6 +4273,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   async function sendRequest(pool) {
     let [payload, handleSuccess, handleFailure] = pool.payload();
+    window.controller = new AbortController();
     let options = {
       method: "POST",
       body: JSON.stringify({
@@ -4282,7 +4283,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       headers: {
         "Content-type": "application/json",
         "X-Livewire": ""
-      }
+      },
+      signal: window.controller.signal
     };
     let succeedCallbacks = [];
     let failCallbacks = [];
@@ -4335,7 +4337,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (response.status === 419) {
         handlePageExpiry();
       }
-      return showFailureModal(content);
+      if (response.aborted) {
+        return;
+      } else {
+        return showFailureModal(content);
+      }
     }
     if (response.redirected) {
       window.location.href = response.url;
@@ -4361,6 +4367,1156 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     showHtmlModal(html);
   }
 
+  // js/v4/requests/requestBus.js
+  var RequestBus = class {
+    booted = false;
+    requests = /* @__PURE__ */ new Set();
+    boot() {
+      this.booted = true;
+      console.log("v4 requests enabled");
+    }
+    add(request) {
+      this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
+      this.requests.add(request);
+      request.send();
+    }
+    remove(request) {
+      this.requests.delete(request);
+    }
+    cancelRequestsThatShouldBeCancelled(shouldCancel) {
+      this.requests.forEach((request) => {
+        if (shouldCancel(request)) {
+          request.cancel();
+        }
+      });
+    }
+  };
+  var instance = new RequestBus();
+  var requestBus_default = instance;
+
+  // js/features/supportSlots.js
+  on2("effect", ({ component, effects }) => {
+    let slots = effects.slots;
+    if (!slots)
+      return;
+    let parentId = component.el.getAttribute("wire:id");
+    Object.entries(slots).forEach(([childId, childSlots]) => {
+      let childComponent = findComponent(childId);
+      if (!childComponent)
+        return;
+      Object.entries(childSlots).forEach(([name, content]) => {
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            queueMicrotask(() => {
+              let fullName = parentId ? `${name}:${parentId}` : name;
+              let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+              if (!startNode || !endNode)
+                return;
+              let strippedContent = stripSlotComments(content, fullName);
+              morphIsland(childComponent, startNode, endNode, strippedContent);
+            });
+          });
+        });
+      });
+    });
+  });
+  function stripSlotComments(content, slotName) {
+    let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+    let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+    let stripped = content.replace(startComment, "").replace(endComment, "");
+    return stripped.trim();
+  }
+  function findSlotComments(rootEl, slotName) {
+    let startNode = null;
+    let endNode = null;
+    walkElements(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+            startNode = node;
+          }
+          if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements(child, callback);
+    });
+  }
+  function skipSlotContents(el, toEl, skipUntil) {
+    if (isStartMarker(el) && isStartMarker(toEl)) {
+      skipUntil((node) => isEndMarker(node));
+    }
+  }
+  function isStartMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+  }
+  function isEndMarker(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+  }
+  function extractSlotData(el) {
+    let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+    let match = el.textContent.match(regex);
+    if (!match)
+      return;
+    return {
+      name: match[1],
+      parentId: match[2] || null
+    };
+  }
+  function checkPreviousSiblingForSlotStartMarker(el) {
+    let node = el.previousSibling;
+    while (node) {
+      if (isEndMarker(node)) {
+        return null;
+      }
+      if (isStartMarker(node)) {
+        return node;
+      }
+      node = node.previousSibling;
+    }
+    return null;
+  }
+
+  // js/features/supportIslands.js
+  on2("stream", (payload) => {
+    if (payload.type !== "island")
+      return;
+    let { id, name, content } = payload;
+    if (!hasComponent(id))
+      return;
+    let component = findComponent(id);
+    streamIsland(component, key, content);
+  });
+  function streamIsland(component, key2, content) {
+    renderIsland(component, key2, content);
+  }
+  on2("effect", ({ component, effects }) => {
+    let islands = effects.islands || [];
+    islands.forEach((island) => {
+      let { key: key2, content } = island;
+      queueMicrotask(() => {
+        queueMicrotask(() => {
+          renderIsland(component, key2, content);
+        });
+      });
+    });
+  });
+  function renderIsland(component, key2, content) {
+    let island = component.islands[key2];
+    let mode = island.mode;
+    let { startNode, endNode } = findIslandComments(component.el, key2);
+    if (!startNode || !endNode)
+      return;
+    let strippedContent = stripIslandComments(content, key2);
+    let parentElement = startNode.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    if (mode === "append") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).forEach((node) => {
+        endNode.parentNode.insertBefore(node, endNode);
+      });
+    } else if (mode === "prepend") {
+      let container = document.createElement(parentElementTag);
+      container.innerHTML = strippedContent;
+      Array.from(container.childNodes).reverse().forEach((node) => {
+        startNode.parentNode.insertBefore(node, startNode.nextSibling);
+      });
+    } else {
+      morphIsland(component, startNode, endNode, strippedContent);
+    }
+  }
+  function skipIslandContents(component, el, toEl, skipUntil) {
+    if (isStartMarker2(el) && isStartMarker2(toEl)) {
+      let key2 = extractIslandKey(toEl);
+      let island = component.islands[key2];
+      let mode = island.mode;
+      let render = island.render;
+      if (["skip", "once"].includes(render)) {
+        skipUntil((node) => isEndMarker2(node));
+      } else if (mode === "prepend") {
+        let sibling = toEl.nextSibling;
+        let siblings = [];
+        while (sibling && !isEndMarker2(sibling)) {
+          siblings.push(sibling);
+          sibling = sibling.nextSibling;
+        }
+        siblings.forEach((node) => {
+          el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+        });
+        skipUntil((node) => isEndMarker2(node));
+      } else if (mode === "append") {
+        let endMarker = el.nextSibling;
+        while (endMarker && !isEndMarker2(endMarker)) {
+          endMarker = endMarker.nextSibling;
+        }
+        let sibling = toEl.nextSibling;
+        let siblings = [];
+        while (sibling && !isEndMarker2(sibling)) {
+          siblings.push(sibling);
+          sibling = sibling.nextSibling;
+        }
+        siblings.forEach((node) => {
+          endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+        });
+        skipUntil((node) => isEndMarker2(node));
+      }
+    }
+  }
+  function closestIslandName(component, el) {
+    let current = el;
+    while (current) {
+      let sibling = current.previousSibling;
+      let foundEndMarker = [];
+      while (sibling) {
+        if (isEndMarker2(sibling)) {
+          foundEndMarker.push("a");
+        }
+        if (isStartMarker2(sibling)) {
+          if (foundEndMarker.length > 0) {
+            foundEndMarker.pop();
+          } else {
+            let key2 = extractIslandKey(sibling);
+            return component.islands[key2].name;
+          }
+        }
+        sibling = sibling.previousSibling;
+      }
+      current = current.parentElement;
+      if (current && current.hasAttribute("wire:id")) {
+        break;
+      }
+    }
+    return null;
+  }
+  function isStartMarker2(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+  }
+  function isEndMarker2(el) {
+    return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+  }
+  function extractIslandKey(el) {
+    let key2 = el.textContent.match(/\[if ISLAND:([\w-]+)\]/)?.[1];
+    return key2;
+  }
+  function stripIslandComments(content, key2) {
+    let startComment = new RegExp(`<!--\\[if ISLAND:${key2}\\]><\\!\\[endif\\]-->`);
+    let endComment = new RegExp(`<!--\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]-->`);
+    let stripped = content.replace(startComment, "").replace(endComment, "");
+    return stripped.trim();
+  }
+  function findIslandComments(rootEl, key2) {
+    let startNode = null;
+    let endNode = null;
+    walkElements2(rootEl, (el, skip) => {
+      if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+        return skip();
+      }
+      Array.from(el.childNodes).forEach((node) => {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          if (node.textContent.match(new RegExp(`\\[if ISLAND:${key2}\\]><\\!\\[endif\\]`))) {
+            startNode = node;
+          }
+          if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]`))) {
+            endNode = node;
+          }
+        }
+      });
+    });
+    return { startNode, endNode };
+  }
+  function walkElements2(el, callback) {
+    let skip = false;
+    callback(el, () => skip = true);
+    if (skip)
+      return;
+    Array.from(el.children).forEach((child) => {
+      walkElements2(child, callback);
+    });
+  }
+
+  // js/morph.js
+  function morph(component, el, html) {
+    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+    let wrapper = document.createElement(wrapperTag);
+    wrapper.innerHTML = html;
+    let parentComponent;
+    try {
+      parentComponent = closestComponent(el.parentElement);
+    } catch (e) {
+    }
+    parentComponent && (wrapper.__livewire = parentComponent);
+    let to = wrapper.firstElementChild;
+    to.setAttribute("wire:snapshot", component.snapshotEncoded);
+    let effects = { ...component.effects };
+    delete effects.html;
+    to.setAttribute("wire:effects", JSON.stringify(effects));
+    to.__livewire = component;
+    trigger2("morph", { el, toEl: to, component });
+    let existingComponentsMap = {};
+    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+    });
+    to.querySelectorAll("[wire\\:id]").forEach((child) => {
+      if (child.hasAttribute("wire:snapshot"))
+        return;
+      let wireId = child.getAttribute("wire:id");
+      let existingComponent = existingComponentsMap[wireId];
+      if (existingComponent) {
+        child.replaceWith(existingComponent.cloneNode(true));
+      }
+    });
+    module_default.morph(el, to, getMorphConfig(component));
+    trigger2("morphed", { el, component });
+  }
+  function morphIsland(component, startNode, endNode, toHTML) {
+    let fromContainer = startNode.parentElement;
+    let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+    let toContainer = document.createElement(fromContainerTag);
+    toContainer.innerHTML = toHTML;
+    toContainer.__livewire = component;
+    let parentElement = component.el.parentElement;
+    let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+    let parentComponent;
+    try {
+      parentComponent = parentElement ? closestComponent(parentElement) : null;
+    } catch (e) {
+    }
+    if (parentComponent) {
+      let parentProviderWrapper = document.createElement(parentElementTag);
+      parentProviderWrapper.appendChild(toContainer);
+      parentProviderWrapper.__livewire = parentComponent;
+    }
+    trigger2("island.morph", { startNode, endNode, component });
+    module_default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+    trigger2("island.morphed", { startNode, endNode, component });
+  }
+  function getMorphConfig(component) {
+    return {
+      updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+        skipSlotContents(el, toEl, skipUntil);
+        skipIslandContents(component, el, toEl, skipUntil);
+        if (isntElement(el))
+          return;
+        trigger2("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+        if (el.__livewire_replace === true)
+          el.innerHTML = toEl.innerHTML;
+        if (el.__livewire_replace_self === true) {
+          el.outerHTML = toEl.outerHTML;
+          return skip();
+        }
+        if (el.__livewire_ignore === true)
+          return skip();
+        if (el.__livewire_ignore_self === true)
+          childrenOnly();
+        if (el.__livewire_ignore_children === true)
+          return skipChildren();
+        if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+          return skip();
+        if (isComponentRootEl(el))
+          toEl.__livewire = component;
+      },
+      updated: (el) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.updated", { el, component });
+      },
+      removing: (el, skip) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.removing", { el, component, skip });
+      },
+      removed: (el) => {
+        if (isntElement(el))
+          return;
+        trigger2("morph.removed", { el, component });
+      },
+      adding: (el) => {
+        trigger2("morph.adding", { el, component });
+      },
+      added: (el) => {
+        if (isntElement(el))
+          return;
+        const closestComponentId = closestComponent(el).id;
+        trigger2("morph.added", { el });
+      },
+      key: (el) => {
+        if (isntElement(el))
+          return;
+        return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+      },
+      lookahead: false
+    };
+  }
+  function isntElement(el) {
+    return typeof el.hasAttribute !== "function";
+  }
+  function isComponentRootEl(el) {
+    return el.hasAttribute("wire:id");
+  }
+
+  // js/v4/requests/message.js
+  var Message = class {
+    updates = {};
+    actions = [];
+    payload = {};
+    context = {};
+    interceptors = /* @__PURE__ */ new Set();
+    resolvers = [];
+    status = "waiting";
+    succeedCallbacks = [];
+    failCallbacks = [];
+    respondCallbacks = [];
+    finishTarget = null;
+    request = null;
+    isolate = false;
+    constructor(component) {
+      this.component = component;
+    }
+    addInterceptor(interceptor2) {
+      interceptor2.cancel = () => this.cancel();
+      this.interceptors.add(interceptor2);
+    }
+    addContext(key2, value) {
+      if (!this.context[key2]) {
+        this.context[key2] = [];
+      }
+      if (this.context[key2].includes(value))
+        return;
+      this.context[key2].push(value);
+    }
+    addAction(method, params, resolve) {
+      if (!this.isMagicAction(method)) {
+        this.removeAllMagicActions();
+      }
+      if (this.isMagicAction(method)) {
+        this.findAndRemoveAction(method);
+        this.actions.push({
+          method,
+          params,
+          handleReturn: () => {
+          }
+        });
+        this.resolvers.push(resolve);
+        return;
+      }
+      this.actions.push({
+        method,
+        params,
+        handleReturn: resolve
+      });
+    }
+    magicActions() {
+      return [
+        "$refresh",
+        "$set",
+        "$sync"
+      ];
+    }
+    isMagicAction(method) {
+      return this.magicActions().includes(method);
+    }
+    removeAllMagicActions() {
+      this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
+    }
+    findAndRemoveAction(method) {
+      this.actions = this.actions.filter((i) => i.method !== method);
+    }
+    cancelIfItShouldBeCancelled() {
+      if (this.isSucceeded())
+        return;
+      this.cancel();
+    }
+    buffer() {
+      this.status = "buffering";
+    }
+    prepare() {
+      trigger2("message.prepare", { component: this.component });
+      this.status = "preparing";
+      this.updates = this.component.getUpdates();
+      let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+      this.payload = {
+        snapshot,
+        updates: this.updates,
+        calls: this.actions.map((i) => ({
+          method: i.method,
+          params: i.params
+        })),
+        context: this.context
+      };
+      this.finishTarget = trigger2("commit", {
+        component: this.component,
+        commit: this.payload,
+        succeed: (callback) => {
+          this.succeedCallbacks.push(callback);
+        },
+        fail: (callback) => {
+          this.failCallbacks.push(callback);
+        },
+        respond: (callback) => {
+          this.respondCallbacks.push(callback);
+        }
+      });
+      this.beforeSend();
+    }
+    beforeSend() {
+      this.interceptors.forEach((i) => i.beforeSend({ component: this.component, payload: this.payload }));
+    }
+    afterSend() {
+      this.interceptors.forEach((i) => i.afterSend({ component: this.component, payload: this.payload }));
+    }
+    beforeResponse(response) {
+      this.interceptors.forEach((i) => i.beforeResponse({ component: this.component, response }));
+    }
+    afterResponse(response) {
+      this.interceptors.forEach((i) => i.afterResponse({ component: this.component, response }));
+    }
+    respond() {
+      this.respondCallbacks.forEach((i) => i());
+    }
+    succeed(response) {
+      if (this.isCancelled())
+        return;
+      this.status = "succeeded";
+      this.beforeResponse(response);
+      this.respond();
+      let { snapshot, effects } = response;
+      this.component.mergeNewSnapshot(snapshot, effects, this.updates);
+      this.afterResponse(response);
+      this.component.processEffects(this.component.effects);
+      this.resolvers.forEach((i) => i());
+      if (effects["returns"]) {
+        let returns = effects["returns"];
+        let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
+        returnHandlerStack.forEach((handleReturn, index) => {
+          handleReturn(returns[index]);
+        });
+      }
+      let parsedSnapshot = JSON.parse(snapshot);
+      this.finishTarget({ snapshot: parsedSnapshot, effects });
+      this.interceptors.forEach((i) => i.onSuccess(response));
+      this.succeedCallbacks.forEach((i) => i(response));
+      let html = effects["html"];
+      if (!html)
+        return;
+      this.interceptors.forEach((i) => i.beforeRender({ component: this.component }));
+      queueMicrotask(() => {
+        this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
+        morph(this.component, this.component.el, html);
+        this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
+        setTimeout(() => {
+          this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
+        });
+      });
+    }
+    error(e) {
+      if (this.isCancelled())
+        return;
+      this.status = "errored";
+      this.interceptors.forEach((i) => i.onError(e));
+    }
+    fail(response, content) {
+      if (this.isCancelled())
+        return;
+      this.status = "failed";
+      this.respond();
+      this.interceptors.forEach((i) => i.onError(response, content));
+      this.failCallbacks.forEach((i) => i());
+    }
+    cancel() {
+      this.status = "cancelled";
+      this.interceptors.forEach((i) => i.onCancel());
+    }
+    isBuffering() {
+      return this.status === "buffering";
+    }
+    isPreparing() {
+      return this.status === "preparing";
+    }
+    isSucceeded() {
+      return this.status === "succeeded";
+    }
+    isCancelled() {
+      return this.status === "cancelled";
+    }
+    isErrored() {
+      return this.status === "errored";
+    }
+    isFailed() {
+      return this.status === "failed";
+    }
+    isFinished() {
+      return this.isSucceeded() || this.isCancelled() || this.isFailed() || this.isErrored();
+    }
+  };
+
+  // js/v4/requests/request.js
+  var Request = class {
+    controller = new AbortController();
+    respondCallbacks = [];
+    succeedCallbacks = [];
+    errorCallbacks = [];
+    cancel() {
+      this.controller.abort("cancelled");
+    }
+    finish() {
+      requestBus_default.remove(this);
+    }
+    isCancelled() {
+      return this.controller.signal.aborted;
+    }
+    cancelIfItShouldBeCancelled() {
+      console.error("cancelIfItShouldBeCancelled must be implemented");
+    }
+    shouldCancel() {
+      console.error("shouldCancel must be implemented");
+    }
+    async send() {
+      console.error("send must be implemented");
+    }
+    addRespondCallback(callback) {
+      this.respondCallbacks.push(callback);
+    }
+    addSucceedCallback(callback) {
+      this.succeedCallbacks.push(callback);
+    }
+    addErrorCallback(callback) {
+      this.errorCallbacks.push(callback);
+    }
+  };
+
+  // js/v4/requests/messageRequest.js
+  var MessageRequest = class extends Request {
+    messages = /* @__PURE__ */ new Set();
+    finishProfile = null;
+    addMessage(message) {
+      this.messages.add(message);
+      message.request = this;
+    }
+    deleteMessage(message) {
+      this.messages.delete(message);
+    }
+    hasMessageFor(component) {
+      return !!this.findMessageByComponent(component);
+    }
+    findMessageByComponent(component) {
+      return Array.from(this.messages).find((message) => message.component.id === component.id);
+    }
+    isEmpty() {
+      return this.messages.size === 0;
+    }
+    shouldCancel() {
+      return (request) => {
+        return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
+      };
+    }
+    async send() {
+      let payload = {
+        _token: getCsrfToken(),
+        components: Array.from(this.messages, (i) => i.payload)
+      };
+      let options = {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-type": "application/json",
+          "X-Livewire": "1"
+        },
+        signal: this.controller.signal
+      };
+      this.finishProfile = trigger2("request.profile", options);
+      let updateUri = getUpdateUri();
+      trigger2("request", {
+        url: updateUri,
+        options,
+        payload: options.body,
+        respond: (i) => this.respondCallbacks.push(i),
+        succeed: (i) => this.succeedCallbacks.push(i),
+        fail: (i) => this.errorCallbacks.push(i)
+      });
+      let response;
+      try {
+        let fetchPromise = fetch(updateUri, options);
+        this.messages.forEach((message) => {
+          message.afterSend();
+        });
+        response = await fetchPromise;
+      } catch (e) {
+        this.finish();
+        this.error(e);
+        return;
+      }
+      this.finish();
+      let mutableObject = {
+        status: response.status,
+        response
+      };
+      this.respond(mutableObject);
+      response = mutableObject.response;
+      let content = await response.text();
+      if (!response.ok) {
+        this.fail(response, content);
+        return;
+      }
+      this.redirectIfNeeded(response);
+      await this.succeed(response, content);
+    }
+    redirectIfNeeded(response) {
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+    }
+    respond(mutableObject) {
+      this.respondCallbacks.forEach((i) => i(mutableObject));
+    }
+    async succeed(response, content) {
+      if (contentIsFromDump(content)) {
+        let dump;
+        [dump, content] = splitDumpFromContent(content);
+        showHtmlModal(dump);
+        this.finishProfile({ content: "{}", failed: true });
+      } else {
+        this.finishProfile({ content, failed: false });
+      }
+      let { components: components2, assets } = JSON.parse(content);
+      await triggerAsync("payload.intercept", { components: components2, assets });
+      this.messages.forEach((message) => {
+        components2.forEach((component) => {
+          let snapshot = JSON.parse(component.snapshot);
+          if (snapshot.memo.id === message.component.id) {
+            message.succeed(component);
+          }
+        });
+      });
+      this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
+    }
+    cancel() {
+      this.messages.forEach((message) => {
+        message.cancelIfItShouldBeCancelled();
+      });
+      super.cancel();
+    }
+    error(e) {
+      this.finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.error(e);
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: 503,
+        content: null,
+        preventDefault: () => preventDefault = true
+      }));
+    }
+    fail(response, content) {
+      this.finishProfile({ content: "{}", failed: true });
+      let preventDefault = false;
+      this.messages.forEach((message) => {
+        message.fail(response, content);
+      });
+      this.errorCallbacks.forEach((i) => i({
+        status: response.status,
+        content,
+        preventDefault: () => preventDefault = true
+      }));
+      if (preventDefault)
+        return;
+      if (response.status === 419) {
+        this.handlePageExpiry();
+      }
+      if (response.aborted) {
+        return;
+      } else {
+        return this.showFailureModal(content);
+      }
+    }
+    handlePageExpiry() {
+      confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+    }
+    showFailureModal(content) {
+      let html = content;
+      showHtmlModal(html);
+    }
+  };
+
+  // js/v4/requests/messageBroker.js
+  var MessageBroker = class {
+    messages = /* @__PURE__ */ new Map();
+    getMessage(component) {
+      let message = this.messages.get(component.id);
+      if (!message) {
+        message = new Message(component);
+        this.messages.set(component.id, message);
+      }
+      return message;
+    }
+    addInterceptor(interceptor2, component) {
+      let message = this.getMessage(component);
+      message.addInterceptor(interceptor2);
+    }
+    addContext(component, key2, value) {
+      let message = this.getMessage(component);
+      message.addContext(key2, value);
+    }
+    addAction(component, method, params = []) {
+      let message = this.getMessage(component);
+      let promise = new Promise((resolve) => {
+        message.addAction(method, params, resolve);
+      });
+      this.send(message);
+      return promise;
+    }
+    send(message) {
+      this.bufferMessageForFiveMs(message);
+    }
+    bufferMessageForFiveMs(message) {
+      if (message.isBuffering())
+        return;
+      message.buffer();
+      setTimeout(() => {
+        this.prepareRequests();
+      }, 5);
+    }
+    prepareRequests() {
+      trigger2("message.pooling", { messages: this.messages });
+      let messages = new Set(this.messages.values());
+      this.messages.clear();
+      if (messages.size === 0)
+        return;
+      messages.forEach((message) => {
+        message.prepare();
+      });
+      let requests = this.corraleMessagesIntoRequests(messages);
+      trigger2("message.pooled", { requests });
+      this.sendRequests(requests);
+    }
+    corraleMessagesIntoRequests(messages) {
+      let requests = /* @__PURE__ */ new Set();
+      for (let message of messages) {
+        if (message.isCancelled())
+          continue;
+        let hasFoundRequest = false;
+        requests.forEach((request) => {
+          if (!hasFoundRequest && !message.isolate) {
+            request.addMessage(message);
+            hasFoundRequest = true;
+          }
+        });
+        if (!hasFoundRequest) {
+          let request = new MessageRequest();
+          request.addMessage(message);
+          requests.add(request);
+        }
+      }
+      return requests;
+    }
+    sendRequests(requests) {
+      requests.forEach((request) => {
+        requestBus_default.add(request);
+      });
+    }
+  };
+  var instance2 = new MessageBroker();
+  var messageBroker_default = instance2;
+
+  // js/v4/features/supportErrors.js
+  function getErrorsObject(component) {
+    return {
+      messages() {
+        return component.snapshot.memo.errors;
+      },
+      keys() {
+        return Object.keys(this.messages());
+      },
+      has(...keys) {
+        if (this.isEmpty())
+          return false;
+        if (keys.length === 0 || keys.length === 1 && keys[0] == null)
+          return this.any();
+        if (keys.length === 1 && Array.isArray(keys[0]))
+          keys = keys[0];
+        for (let key2 of keys) {
+          if (this.first(key2) === "")
+            return false;
+        }
+        return true;
+      },
+      hasAny(keys) {
+        if (this.isEmpty())
+          return false;
+        if (keys.length === 1 && Array.isArray(keys[0]))
+          keys = keys[0];
+        for (let key2 of keys) {
+          if (this.has(key2))
+            return true;
+        }
+        return false;
+      },
+      missing(...keys) {
+        if (keys.length === 1 && Array.isArray(keys[0]))
+          keys = keys[0];
+        return !this.hasAny(keys);
+      },
+      first(key2 = null) {
+        let messages = key2 === null ? this.all() : this.get(key2);
+        let firstMessage = messages.length > 0 ? messages[0] : "";
+        return Array.isArray(firstMessage) ? firstMessage[0] : firstMessage;
+      },
+      get(key2) {
+        return component.snapshot.memo.errors[key2] || [];
+      },
+      all() {
+        return Object.values(this.messages()).flat();
+      },
+      isEmpty() {
+        return !this.any();
+      },
+      isNotEmpty() {
+        return this.any();
+      },
+      any() {
+        return Object.keys(this.messages()).length > 0;
+      },
+      count() {
+        return Object.values(this.messages()).reduce((total, array) => {
+          return total + array.length;
+        }, 0);
+      }
+    };
+  }
+
+  // js/v4/features/supportPaginators.js
+  var paginatorObjects = /* @__PURE__ */ new WeakMap();
+  function getPaginatorObject(component, paginatorName) {
+    let componentPaginatorObjects = paginatorObjects.get(component);
+    if (!componentPaginatorObjects) {
+      componentPaginatorObjects = /* @__PURE__ */ new Map();
+      paginatorObjects.set(component, componentPaginatorObjects);
+    }
+    let paginatorObject = componentPaginatorObjects.get(paginatorName);
+    if (!paginatorObject) {
+      paginatorObject = newPaginatorObject(component);
+      componentPaginatorObjects.set(paginatorName, paginatorObject);
+    }
+    return paginatorObject;
+  }
+  on2("effect", ({ component, effects, cleanup: cleanup2 }) => {
+    let paginators = effects["paginators"];
+    if (!paginators)
+      return;
+    for (let paginatorName in paginators) {
+      let paginator = paginators[paginatorName];
+      let paginatorObject = getPaginatorObject(component, paginatorName);
+      paginatorObject.paginator = paginator;
+    }
+  });
+  function newPaginatorObject(component) {
+    return Alpine.reactive({
+      renderedPages: [],
+      paginator: {},
+      firstItem() {
+        return this.paginator.from;
+      },
+      lastItem() {
+        return this.paginator.to;
+      },
+      perPage() {
+        return this.paginator.perPage;
+      },
+      onFirstPage() {
+        return this.paginator.onFirstPage;
+      },
+      onLastPage() {
+        return this.paginator.onLastPage;
+      },
+      getPageName() {
+        return this.paginator.pageName;
+      },
+      getCursorName() {
+        return this.paginator.cursorName;
+      },
+      currentPage() {
+        return this.paginator.currentPage;
+      },
+      currentCursor() {
+        return this.paginator.currentCursor;
+      },
+      count() {
+        return this.paginator.count;
+      },
+      total() {
+        return this.paginator.total;
+      },
+      hasPages() {
+        return this.paginator.hasPages;
+      },
+      hasMorePages() {
+        return this.paginator.hasMorePages;
+      },
+      hasPreviousPage() {
+        return this.hasPages() && !this.onFirstPage();
+      },
+      hasNextPage() {
+        return this.hasPages() && !this.onLastPage();
+      },
+      hasPreviousCursor() {
+        return !!this.paginator.previousCursor;
+      },
+      hasNextCursor() {
+        return !!this.paginator.nextCursor;
+      },
+      firstPage() {
+        return this.paginator.firstPage;
+      },
+      lastPage() {
+        return this.paginator.lastPage;
+      },
+      previousPage() {
+        if (this.hasPreviousCursor()) {
+          return this.setPage(this.previousCursor());
+        }
+        if (this.hasPreviousPage()) {
+          component.$wire.call("previousPage", this.getPageName());
+        }
+      },
+      nextPage() {
+        if (this.hasNextCursor()) {
+          return this.setPage(this.nextCursor());
+        }
+        if (this.hasNextPage()) {
+          component.$wire.call("nextPage", this.getPageName());
+        }
+      },
+      resetPage() {
+        component.$wire.call("resetPage", this.getPageName());
+      },
+      setPage(page) {
+        component.$wire.call("setPage", page, this.getCursorName() ?? this.getPageName());
+      },
+      previousCursor() {
+        return this.paginator.previousCursor;
+      },
+      nextCursor() {
+        return this.paginator.nextCursor;
+      }
+    });
+  }
+
+  // js/v4/interceptors/interceptor.js
+  var Interceptor = class {
+    beforeSend = () => {
+    };
+    afterSend = () => {
+    };
+    beforeResponse = () => {
+    };
+    afterResponse = () => {
+    };
+    beforeRender = () => {
+    };
+    afterRender = () => {
+    };
+    beforeMorph = () => {
+    };
+    afterMorph = () => {
+    };
+    onError = () => {
+    };
+    onFailure = () => {
+    };
+    onSuccess = () => {
+    };
+    onCancel = () => {
+    };
+    cancel = () => {
+    };
+    constructor(callback, action) {
+      this.callback = callback;
+      this.action = action;
+    }
+    init(el, directive3, component) {
+      let request = {
+        beforeSend: (callback) => this.beforeSend = callback,
+        afterSend: (callback) => this.afterSend = callback,
+        beforeResponse: (callback) => this.beforeResponse = callback,
+        afterResponse: (callback) => this.afterResponse = callback,
+        beforeRender: (callback) => this.beforeRender = callback,
+        afterRender: (callback) => this.afterRender = callback,
+        beforeMorph: (callback) => this.beforeMorph = callback,
+        afterMorph: (callback) => this.afterMorph = callback,
+        onError: (callback) => this.onError = callback,
+        onFailure: (callback) => this.onFailure = callback,
+        onSuccess: (callback) => this.onSuccess = callback,
+        onCancel: (callback) => this.onCancel = callback
+      };
+      this.callback({ el, directive: directive3, component, request });
+    }
+  };
+  var interceptor_default = Interceptor;
+
+  // js/v4/interceptors/interceptorRegistry.js
+  var InterceptorRegistry = class {
+    interceptors = /* @__PURE__ */ new Map();
+    constructor() {
+      this.globalInterceptors = /* @__PURE__ */ new Set();
+      this.componentInterceptors = /* @__PURE__ */ new Map();
+    }
+    add(callback, component = null, method = null) {
+      let interceptorData = { callback, method };
+      if (component === null) {
+        this.globalInterceptors.add(interceptorData);
+        return;
+      }
+      let interceptors2 = this.componentInterceptors.get(component);
+      if (!interceptors2) {
+        interceptors2 = /* @__PURE__ */ new Set();
+        this.componentInterceptors.set(component, interceptors2);
+      }
+      interceptors2.add(interceptorData);
+    }
+    fire(el, directive3, component) {
+      let method = directive3.method;
+      for (let interceptorData of this.globalInterceptors) {
+        let interceptor2 = new interceptor_default(interceptorData.callback, interceptorData.method);
+        interceptor2.init(el, directive3, component);
+        messageBroker_default.addInterceptor(interceptor2, component);
+      }
+      let componentInterceptors = this.componentInterceptors.get(component);
+      if (!componentInterceptors)
+        return;
+      for (let interceptorData of componentInterceptors) {
+        if (interceptorData.method === method || interceptorData.method === null) {
+          let interceptor2 = new interceptor_default(interceptorData.callback, interceptorData.method);
+          interceptor2.init(el, directive3, component);
+          messageBroker_default.addInterceptor(interceptor2, component);
+        }
+      }
+    }
+  };
+  var instance3 = new InterceptorRegistry();
+  var interceptorRegistry_default = instance3;
+
+  // js/v4/features/supportRefs.js
+  function findRef(component, ref) {
+    let refEl = component.el.querySelector(`[wire\\:ref="${ref}"]`);
+    if (!refEl)
+      return console.error(`Ref "${ref}" not found in component "${component.id}"`);
+    return refEl.__livewire?.$wire;
+  }
+
   // js/$wire.js
   var properties = {};
   var fallback;
@@ -4377,18 +5533,25 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "js": "$js",
     "get": "$get",
     "set": "$set",
+    "ref": "$ref",
+    "refs": "$ref",
+    "$refs": "$ref",
     "call": "$call",
     "hook": "$hook",
-    "commit": "$commit",
     "watch": "$watch",
+    "commit": "$commit",
+    "errors": "$errors",
+    "upload": "$upload",
     "entangle": "$entangle",
     "dispatch": "$dispatch",
+    "intercept": "$intercept",
+    "paginator": "$paginator",
     "dispatchTo": "$dispatchTo",
+    "dispatchRef": "$dispatchRef",
     "dispatchSelf": "$dispatchSelf",
-    "upload": "$upload",
-    "uploadMultiple": "$uploadMultiple",
     "removeUpload": "$removeUpload",
-    "cancelUpload": "$cancelUpload"
+    "cancelUpload": "$cancelUpload",
+    "uploadMultiple": "$uploadMultiple"
   };
   function generateWireObject(component, state) {
     return new Proxy({}, {
@@ -4457,13 +5620,58 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$set", (component) => async (property, value, live = true) => {
     dataSet(component.reactive, property, value);
     if (live) {
+      if (requestBus_default.booted) {
+        component.queueUpdate(property, value);
+        return messageBroker_default.addAction(component, "$set");
+      }
       component.queueUpdate(property, value);
       return await requestCommit(component);
     }
     return Promise.resolve();
   });
+  wireProperty("$ref", (component) => {
+    let fn = (name) => findRef(component, name);
+    return new Proxy(fn, {
+      get(target, property) {
+        if (property in target) {
+          return target[property];
+        }
+        return fn(property);
+      }
+    });
+  });
+  wireProperty("$intercept", (component) => (action, callback = null) => {
+    if (callback === null) {
+      callback = action;
+      action = null;
+    }
+    interceptorRegistry_default.add(callback, component, action);
+  });
+  wireProperty("$errors", (component) => getErrorsObject(component));
+  wireProperty("$paginator", (component) => {
+    let fn = (name = "page") => getPaginatorObject(component, name);
+    let defaultPaginator = fn();
+    for (let key2 of Object.keys(defaultPaginator)) {
+      let value = defaultPaginator[key2];
+      if (typeof value === "function") {
+        fn[key2] = (...args) => defaultPaginator[key2](...args);
+      } else {
+        Object.defineProperty(fn, key2, {
+          get: () => defaultPaginator[key2],
+          set: (val) => {
+            defaultPaginator[key2] = val;
+          }
+        });
+      }
+    }
+    return fn;
+  });
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
+  });
+  wireProperty("$island", (component) => async (name) => {
+    messageBroker_default.addContext(component, "islands", name);
+    return await component.$wire.$refresh();
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
@@ -4478,8 +5686,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let unwatch = module_default.watch(getter, callback);
     component.addCleanup(unwatch);
   });
-  wireProperty("$refresh", (component) => component.$wire.$commit);
-  wireProperty("$commit", (component) => async () => await requestCommit(component));
+  wireProperty("$refresh", (component) => async () => {
+    if (requestBus_default.booted) {
+      return messageBroker_default.addAction(component, "$refresh");
+    }
+    return component.$wire.$commit();
+  });
+  wireProperty("$commit", (component) => async () => {
+    if (requestBus_default.booted) {
+      return messageBroker_default.addAction(component, "$sync");
+    }
+    return await requestCommit(component);
+  });
   wireProperty("$on", (component) => (...params) => listen2(component, ...params));
   wireProperty("$hook", (component) => (name, callback) => {
     let unhook = on2(name, ({ component: hookComponent, ...params }) => {
@@ -4494,6 +5712,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$dispatch", (component) => (...params) => dispatch3(component, ...params));
   wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
   wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
+  wireProperty("$dispatchRef", (component) => (...params) => dispatchRef(component, ...params));
   wireProperty("$upload", (component) => (...params) => upload(component, ...params));
   wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
   wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
@@ -4524,6 +5743,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       if (typeof overrides[property] === "function") {
         return overrides[property](params);
       }
+    }
+    if (requestBus_default.booted) {
+      return messageBroker_default.addAction(component, property, params);
     }
     return await requestCall(component, property, params);
   });
@@ -4565,8 +5787,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.effects = effects;
       this.canonical = extractData(deepClone(snapshot.data));
       let newData = extractData(deepClone(snapshot.data));
-      Object.entries(dirty).forEach(([key, value]) => {
-        let rootKey = key.split(".")[0];
+      Object.entries(dirty).forEach(([key2, value]) => {
+        let rootKey = key2.split(".")[0];
         this.reactive[rootKey] = newData[rootKey];
       });
       return dirty;
@@ -4586,9 +5808,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       this.queuedUpdates = [];
       return diff2;
     }
+    getUpdates() {
+      let propertiesDiff = diff(this.canonical, this.ephemeral);
+      return this.mergeQueuedUpdates(propertiesDiff);
+    }
     applyUpdates(object, updates) {
-      for (let key in updates) {
-        dataSet(object, key, updates[key]);
+      for (let key2 in updates) {
+        dataSet(object, key2, updates[key2]);
       }
       return object;
     }
@@ -4610,8 +5836,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let childIds = Object.values(meta.children).map((i) => i[1]);
       return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
     }
+    get islands() {
+      let islands = this.snapshot.memo.islands;
+      return islands;
+    }
     get parent() {
       return closestComponent(this.el.parentElement);
+    }
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+      let { snapshotEncoded, children, snapshot } = this;
+      let childIds = children.map((child) => child.id);
+      let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
+      return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
     }
     inscribeSnapshotAndEffectsOnElement() {
       let el = this.el;
@@ -4676,6 +5912,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return component;
   }
   function closestComponent(el, strict = true) {
+    let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
+    if (slotStartMarker) {
+      let { name, parentId } = extractSlotData(slotStartMarker);
+      if (parentId) {
+        return findComponent(parentId);
+      }
+    }
     let closestRoot2 = Alpine.findClosest(el, (i) => i.__livewire);
     if (!closestRoot2) {
       if (strict)
@@ -4718,6 +5961,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     targets.forEach((target) => {
       dispatchEvent(target.el, name, params, false);
     });
+  }
+  function dispatchRef(component, ref, name, params) {
+    let target = findRef(component, ref);
+    if (!target)
+      return;
+    dispatchEvent(target.__instance.el, name, params, false);
   }
   function listen2(component, name, callback) {
     component.el.addEventListener(name, (e) => {
@@ -4927,18 +6176,18 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       };
     }
   }
-  function modifierValue2(modifiers, key, fallback2) {
-    if (modifiers.indexOf(key) === -1)
+  function modifierValue2(modifiers, key2, fallback2) {
+    if (modifiers.indexOf(key2) === -1)
       return fallback2;
-    const rawValue = modifiers[modifiers.indexOf(key) + 1];
+    const rawValue = modifiers[modifiers.indexOf(key2) + 1];
     if (!rawValue)
       return fallback2;
-    if (key === "duration") {
+    if (key2 === "duration") {
       let match = rawValue.match(/([0-9]+)ms/);
       if (match)
         return match[1];
     }
-    if (key === "min") {
+    if (key2 === "min") {
       let match = rawValue.match(/([0-9]+)px/);
       if (match)
         return match[1];
@@ -5232,24 +6481,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function _objectSpread2(target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = null != arguments[i] ? arguments[i] : {};
-      i % 2 ? ownKeys2(Object(source), true).forEach(function(key) {
-        _defineProperty(target, key, source[key]);
-      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys2(Object(source)).forEach(function(key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      i % 2 ? ownKeys2(Object(source), true).forEach(function(key2) {
+        _defineProperty(target, key2, source[key2]);
+      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys2(Object(source)).forEach(function(key2) {
+        Object.defineProperty(target, key2, Object.getOwnPropertyDescriptor(source, key2));
       });
     }
     return target;
   }
-  function _defineProperty(obj, key, value) {
-    if (key in obj) {
-      Object.defineProperty(obj, key, {
+  function _defineProperty(obj, key2, value) {
+    if (key2 in obj) {
+      Object.defineProperty(obj, key2, {
         value,
         enumerable: true,
         configurable: true,
         writable: true
       });
     } else {
-      obj[key] = value;
+      obj[key2] = value;
     }
     return obj;
   }
@@ -5912,7 +7161,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           setItem: dummy.set.bind(dummy)
         };
       }
-      return Alpine3.interceptor((initialValue, getter, setter, path, key) => {
+      return Alpine3.interceptor((initialValue, getter, setter, path, key2) => {
         let lookup = alias || `_x_${path}`;
         let initial = storageHas(lookup, storage) ? storageGet(lookup, storage) : initialValue;
         setter(initial);
@@ -5923,8 +7172,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         });
         return initial;
       }, (func) => {
-        func.as = (key) => {
-          alias = key;
+        func.as = (key2) => {
+          alias = key2;
           return func;
         }, func.using = (target) => {
           storage = target;
@@ -5934,27 +7183,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     Object.defineProperty(Alpine3, "$persist", { get: () => persist() });
     Alpine3.magic("persist", persist);
-    Alpine3.persist = (key, { get: get3, set: set3 }, storage = localStorage) => {
-      let initial = storageHas(key, storage) ? storageGet(key, storage) : get3();
+    Alpine3.persist = (key2, { get: get3, set: set3 }, storage = localStorage) => {
+      let initial = storageHas(key2, storage) ? storageGet(key2, storage) : get3();
       set3(initial);
       Alpine3.effect(() => {
         let value = get3();
-        storageSet(key, value, storage);
+        storageSet(key2, value, storage);
         set3(value);
       });
     };
   }
-  function storageHas(key, storage) {
-    return storage.getItem(key) !== null;
+  function storageHas(key2, storage) {
+    return storage.getItem(key2) !== null;
   }
-  function storageGet(key, storage) {
-    let value = storage.getItem(key, storage);
+  function storageGet(key2, storage) {
+    let value = storage.getItem(key2, storage);
     if (value === void 0)
       return;
     return JSON.parse(value);
   }
-  function storageSet(key, value, storage) {
-    storage.setItem(key, JSON.stringify(value));
+  function storageSet(key2, value, storage) {
+    storage.setItem(key2, JSON.stringify(value));
   }
   var module_default4 = src_default4;
 
@@ -5999,9 +7248,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return match ? match[1] + (match[2] || "px") : void 0;
   }
   function getRootMargin(modifiers) {
-    const key = "margin";
+    const key2 = "margin";
     const fallback2 = "0px 0px 0px 0px";
-    const index = modifiers.indexOf(key);
+    const index = modifiers.indexOf(key2);
     if (index === -1)
       return fallback2;
     let values = [];
@@ -7314,24 +8563,24 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         throw "No back button cache found for current location: " + location;
       return snapshot;
     },
-    replace(key, snapshot) {
-      if (this.has(key)) {
-        this.lookup[key] = snapshot;
+    replace(key2, snapshot) {
+      if (this.has(key2)) {
+        this.lookup[key2] = snapshot;
       } else {
-        this.push(key, snapshot);
+        this.push(key2, snapshot);
       }
     },
-    push(key, snapshot) {
-      this.lookup[key] = snapshot;
-      let index = this.keys.indexOf(key);
+    push(key2, snapshot) {
+      this.lookup[key2] = snapshot;
+      let index = this.keys.indexOf(key2);
       if (index > -1)
         this.keys.splice(index, 1);
-      this.keys.unshift(key);
+      this.keys.unshift(key2);
       this.trim();
     },
     trim() {
-      for (let key of this.keys.splice(this.limit)) {
-        delete this.lookup[key];
+      for (let key2 of this.keys.splice(this.limit)) {
+        delete this.lookup[key2];
       }
     }
   };
@@ -7339,9 +8588,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let url = new URL(window.location.href, document.baseURI);
     replaceUrl(url, document.documentElement.outerHTML);
   }
-  function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key, url) {
+  function updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(key2, url) {
     let html = document.documentElement.outerHTML;
-    snapshotCache.replace(key, new Snapshot(url, html));
+    snapshotCache.replace(key2, new Snapshot(url, html));
   }
   function whenTheBackOrForwardButtonIsClicked(registerFallback, handleHtml) {
     let fallback2;
@@ -7371,16 +8620,16 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     updateUrl("replaceState", url, html);
   }
   function updateUrl(method, url, html) {
-    let key = url.toString() + "-" + Math.random();
-    method === "pushState" ? snapshotCache.push(key, new Snapshot(url, html)) : snapshotCache.replace(key = snapshotCache.currentKey ?? key, new Snapshot(url, html));
+    let key2 = url.toString() + "-" + Math.random();
+    method === "pushState" ? snapshotCache.push(key2, new Snapshot(url, html)) : snapshotCache.replace(key2 = snapshotCache.currentKey ?? key2, new Snapshot(url, html));
     let state = history.state || {};
     if (!state.alpine)
       state.alpine = {};
-    state.alpine.snapshotIdx = key;
+    state.alpine.snapshotIdx = key2;
     state.alpine.url = url.toString();
     try {
       history[method](state, JSON.stringify(document.title), url);
-      snapshotCache.currentKey = key;
+      snapshotCache.currentKey = key2;
       snapshotCache.currentUrl = url;
     } catch (error2) {
       if (error2 instanceof DOMException && error2.name === "SecurityError") {
@@ -7447,14 +8696,62 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     return urlObject.pathname + urlObject.search + urlObject.hash;
   }
 
+  // js/v4/requests/pageRequest.js
+  var PageRequest = class extends Request {
+    constructor(uri) {
+      super();
+      this.uri = uri;
+    }
+    shouldCancel() {
+      return (request) => {
+        return [
+          PageRequest.name,
+          MessageRequest.name
+        ].includes(request.constructor.name);
+      };
+    }
+    async send() {
+      let options = {
+        headers: {
+          "X-Livewire-Navigate": "1"
+        },
+        signal: this.controller.signal
+      };
+      trigger2("navigate.request", {
+        url: this.uri,
+        options
+      });
+      try {
+        let response = await fetch(this.uri, options);
+        let destination = this.getDestination(response);
+        let html = await response.text();
+        this.succeedCallbacks.forEach((callback) => callback(html, destination));
+      } catch (error2) {
+        this.errorCallbacks.forEach((callback) => callback(error2));
+        throw error2;
+      }
+    }
+    getDestination(response) {
+      let destination = createUrlObjectFromString(this.uri);
+      let finalDestination = createUrlObjectFromString(response.url);
+      if (destination.pathname + destination.search === finalDestination.pathname + finalDestination.search) {
+        finalDestination.hash = destination.hash;
+      }
+      return finalDestination;
+    }
+  };
+
   // js/plugins/navigate/fetch.js
-  function fetchHtml(destination, callback) {
+  function fetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
     performFetch(uri, (html, finalDestination) => {
       callback(html, finalDestination);
-    });
+    }, errorCallback);
   }
-  function performFetch(uri, callback) {
+  function performFetch(uri, callback, errorCallback) {
+    if (requestBus_default.booted) {
+      return performFetchV4(uri, callback, errorCallback);
+    }
     let options = {
       headers: {
         "X-Livewire-Navigate": ""
@@ -7474,19 +8771,31 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       return response.text();
     }).then((html) => {
       callback(html, finalDestination);
+    }).catch((error2) => {
+      errorCallback();
+      throw error2;
     });
+  }
+  function performFetchV4(uri, callback, errorCallback) {
+    let request = new PageRequest(uri);
+    request.addSucceedCallback(callback);
+    request.addErrorCallback(errorCallback);
+    requestBus_default.add(request);
   }
 
   // js/plugins/navigate/prefetch.js
   var prefetches = {};
   var cacheDuration = 3e4;
-  function prefetchHtml(destination, callback) {
+  function prefetchHtml(destination, callback, errorCallback) {
     let uri = getUriStringFromUrlObject(destination);
     if (prefetches[uri])
       return;
     prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration) };
     performFetch(uri, (html, routedUri) => {
       callback(html, routedUri);
+    }, () => {
+      delete prefetches[uri];
+      errorCallback();
     });
   }
   function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
@@ -7594,8 +8903,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         i.replaceWith(old);
       });
     });
-    Object.entries(els).forEach(([key, el]) => {
-      if (usedPersists.includes(key))
+    Object.entries(els).forEach(([key2, el]) => {
+      if (usedPersists.includes(key2))
         return;
       module_default.destroyTree(el);
     });
@@ -7939,6 +9248,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         prefetchHtml(destination, (html, finalDestination) => {
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+        }, () => {
+          showProgressBar && finishAndHideProgressBar();
         });
       });
       whenThisLinkIsPressed(el, (whenItIsReleased) => {
@@ -7947,6 +9258,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           return;
         prefetchHtml(destination, (html, finalDestination) => {
           storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination);
+        }, () => {
+          showProgressBar && finishAndHideProgressBar();
         });
         whenItIsReleased(() => {
           let prevented = fireEventForOtherLibrariesToHookInto("alpine:navigate", {
@@ -7996,6 +9309,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             });
           });
         });
+      }, () => {
+        showProgressBar && finishAndHideProgressBar();
       });
     }
     whenTheBackOrForwardButtonIsClicked((ifThePageBeingVisitedHasntBeenCached) => {
@@ -8047,9 +9362,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       fireEventForOtherLibrariesToHookInto("alpine:navigated");
     });
   }
-  function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback) {
+  function fetchHtmlOrUsePrefetchedHtml(fromDestination, callback, errorCallback) {
     getPretchedHtmlOr(fromDestination, callback, () => {
-      fetchHtml(fromDestination, callback);
+      fetchHtml(fromDestination, callback, errorCallback);
     });
   }
   function preventAlpineFromPickingUpDomChanges(Alpine3, callback) {
@@ -8099,7 +9414,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       let alias;
       let alwaysShow = false;
       let usePush = false;
-      return interceptor2((initialSeedValue, getter, setter, path, key) => {
+      return interceptor2((initialSeedValue, getter, setter, path, key2) => {
         let queryKey = alias || path;
         let { initial, replace: replace2, push: push2, pop } = track2(queryKey, initialSeedValue, alwaysShow);
         setter(initial);
@@ -8123,8 +9438,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           usePush = true;
           return func;
         };
-        func.as = (key) => {
-          alias = key;
+        func.as = (key2) => {
+          alias = key2;
           return func;
         };
       });
@@ -8188,22 +9503,22 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     };
   }
-  function replace(url, key, object) {
+  function replace(url, key2, object) {
     let state = window.history.state || {};
     if (!state.alpine)
       state.alpine = {};
-    state.alpine[key] = unwrap(object);
+    state.alpine[key2] = unwrap(object);
     try {
       window.history.replaceState(state, "", url.toString());
     } catch (e) {
       console.error(e);
     }
   }
-  function push(url, key, object) {
+  function push(url, key2, object) {
     let state = window.history.state || {};
     if (!state.alpine)
       state.alpine = {};
-    state = { alpine: { ...state.alpine, ...{ [key]: unwrap(object) } } };
+    state = { alpine: { ...state.alpine, ...{ [key2]: unwrap(object) } } };
     try {
       window.history.pushState(state, "", url.toString());
     } catch (e) {
@@ -8217,29 +9532,29 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
   function queryStringUtils() {
     return {
-      has(url, key) {
+      has(url, key2) {
         let search = url.search;
         if (!search)
           return false;
-        let data2 = fromQueryString(search, key);
-        return Object.keys(data2).includes(key);
+        let data2 = fromQueryString(search, key2);
+        return Object.keys(data2).includes(key2);
       },
-      get(url, key) {
+      get(url, key2) {
         let search = url.search;
         if (!search)
           return false;
-        let data2 = fromQueryString(search, key);
-        return data2[key];
+        let data2 = fromQueryString(search, key2);
+        return data2[key2];
       },
-      set(url, key, value) {
-        let data2 = fromQueryString(url.search, key);
-        data2[key] = stripNulls(unwrap(value));
+      set(url, key2, value) {
+        let data2 = fromQueryString(url.search, key2);
+        data2[key2] = stripNulls(unwrap(value));
         url.search = toQueryString(data2);
         return url;
       },
-      remove(url, key) {
-        let data2 = fromQueryString(url.search, key);
-        delete data2[key];
+      remove(url, key2) {
+        let data2 = fromQueryString(url.search, key2);
+        delete data2[key2];
         url.search = toQueryString(data2);
         return url;
       }
@@ -8248,11 +9563,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function stripNulls(value) {
     if (!isObjecty(value))
       return value;
-    for (let key in value) {
-      if (value[key] === null)
-        delete value[key];
+    for (let key2 in value) {
+      if (value[key2] === null)
+        delete value[key2];
       else
-        value[key] = stripNulls(value[key]);
+        value[key2] = stripNulls(value[key2]);
     }
     return value;
   }
@@ -8260,28 +9575,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let isObjecty2 = (subject) => typeof subject === "object" && subject !== null;
     let buildQueryStringEntries = (data3, entries2 = {}, baseKey = "") => {
       Object.entries(data3).forEach(([iKey, iValue]) => {
-        let key = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
+        let key2 = baseKey === "" ? iKey : `${baseKey}[${iKey}]`;
         if (iValue === null) {
-          entries2[key] = "";
+          entries2[key2] = "";
         } else if (!isObjecty2(iValue)) {
-          entries2[key] = encodeURIComponent(iValue).replaceAll("%20", "+").replaceAll("%2C", ",");
+          entries2[key2] = encodeURIComponent(iValue).replaceAll("%20", "+").replaceAll("%2C", ",");
         } else {
-          entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key) };
+          entries2 = { ...entries2, ...buildQueryStringEntries(iValue, entries2, key2) };
         }
       });
       return entries2;
     };
     let entries = buildQueryStringEntries(data2);
-    return Object.entries(entries).map(([key, value]) => `${key}=${value}`).join("&");
+    return Object.entries(entries).map(([key2, value]) => `${key2}=${value}`).join("&");
   }
   function fromQueryString(search, queryKey) {
     search = search.replace("?", "");
     if (search === "")
       return {};
-    let insertDotNotatedValueIntoData = (key, value, data3) => {
-      let [first2, second, ...rest] = key.split(".");
+    let insertDotNotatedValueIntoData = (key2, value, data3) => {
+      let [first2, second, ...rest] = key2.split(".");
       if (!second)
-        return data3[key] = value;
+        return data3[key2] = value;
       if (data3[first2] === void 0) {
         data3[first2] = isNaN(second) ? {} : [];
       }
@@ -8289,14 +9604,14 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
     let entries = search.split("&").map((i) => i.split("="));
     let data2 = /* @__PURE__ */ Object.create(null);
-    entries.forEach(([key, value]) => {
+    entries.forEach(([key2, value]) => {
       if (typeof value == "undefined")
         return;
       value = decodeURIComponent(value.replaceAll("+", "%20"));
-      let decodedKey = decodeURIComponent(key);
+      let decodedKey = decodeURIComponent(key2);
       let shouldBeHandledAsArray = decodedKey.includes("[") && decodedKey.startsWith(queryKey);
       if (!shouldBeHandledAsArray) {
-        data2[key] = value;
+        data2[key2] = value;
       } else {
         let dotNotatedKey = decodedKey.replaceAll("[", ".").replaceAll("]", "");
         insertDotNotatedValueIntoData(dotNotatedKey, value, data2);
@@ -8306,115 +9621,157 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // ../alpine/packages/morph/dist/module.esm.js
-  function morph(from, toHtml, options) {
+  function morph2(from, toHtml, options) {
     monkeyPatchDomSetAttributeToAllowAtSymbols();
-    let fromEl;
-    let toEl;
-    let key, lookahead, updating, updated, removing, removed, adding, added;
-    function assignOptions(options2 = {}) {
-      let defaultGetKey = (el) => el.getAttribute("key");
-      let noop = () => {
-      };
-      updating = options2.updating || noop;
-      updated = options2.updated || noop;
-      removing = options2.removing || noop;
-      removed = options2.removed || noop;
-      adding = options2.adding || noop;
-      added = options2.added || noop;
-      key = options2.key || defaultGetKey;
-      lookahead = options2.lookahead || false;
+    let context = createMorphContext(options);
+    let toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
+    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
+      toEl._x_dataStack = window.Alpine.closestDataStack(from);
+      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
     }
-    function patch(from2, to) {
-      if (differentElementNamesTypesOrKeys(from2, to)) {
-        return swapElements(from2, to);
+    context.patch(from, toEl);
+    return from;
+  }
+  function morphBetween(startMarker, endMarker, toHtml, options = {}) {
+    monkeyPatchDomSetAttributeToAllowAtSymbols();
+    let context = createMorphContext(options);
+    let fromContainer = startMarker.parentNode;
+    let fromBlock = new Block(startMarker, endMarker);
+    let toContainer = typeof toHtml === "string" ? (() => {
+      let container = document.createElement("div");
+      container.insertAdjacentHTML("beforeend", toHtml);
+      return container;
+    })() : toHtml;
+    let toStartMarker = document.createComment("[morph-start]");
+    let toEndMarker = document.createComment("[morph-end]");
+    toContainer.insertBefore(toStartMarker, toContainer.firstChild);
+    toContainer.appendChild(toEndMarker);
+    let toBlock = new Block(toStartMarker, toEndMarker);
+    if (window.Alpine && window.Alpine.closestDataStack) {
+      toContainer._x_dataStack = window.Alpine.closestDataStack(fromContainer);
+      toContainer._x_dataStack && window.Alpine.cloneNode(fromContainer, toContainer);
+    }
+    context.patchChildren(fromBlock, toBlock);
+  }
+  function createMorphContext(options = {}) {
+    let defaultGetKey = (el) => el.getAttribute("key");
+    let noop = () => {
+    };
+    let context = {
+      key: options.key || defaultGetKey,
+      lookahead: options.lookahead || false,
+      updating: options.updating || noop,
+      updated: options.updated || noop,
+      removing: options.removing || noop,
+      removed: options.removed || noop,
+      adding: options.adding || noop,
+      added: options.added || noop
+    };
+    context.patch = function(from, to) {
+      if (context.differentElementNamesTypesOrKeys(from, to)) {
+        return context.swapElements(from, to);
       }
       let updateChildrenOnly = false;
       let skipChildren = false;
-      if (shouldSkipChildren(updating, () => skipChildren = true, from2, to, () => updateChildrenOnly = true))
+      let skipUntil = (predicate) => context.skipUntilCondition = predicate;
+      if (shouldSkipChildren(context.updating, () => skipChildren = true, skipUntil, from, to, () => updateChildrenOnly = true))
         return;
-      if (from2.nodeType === 1 && window.Alpine) {
-        window.Alpine.cloneNode(from2, to);
-        if (from2._x_teleport && to._x_teleport) {
-          patch(from2._x_teleport, to._x_teleport);
+      if (from.nodeType === 1 && window.Alpine) {
+        window.Alpine.cloneNode(from, to);
+        if (from._x_teleport && to._x_teleport) {
+          context.patch(from._x_teleport, to._x_teleport);
         }
       }
       if (textOrComment(to)) {
-        patchNodeValue(from2, to);
-        updated(from2, to);
+        context.patchNodeValue(from, to);
+        context.updated(from, to);
         return;
       }
       if (!updateChildrenOnly) {
-        patchAttributes(from2, to);
+        context.patchAttributes(from, to);
       }
-      updated(from2, to);
+      context.updated(from, to);
       if (!skipChildren) {
-        patchChildren(from2, to);
+        context.patchChildren(from, to);
       }
-    }
-    function differentElementNamesTypesOrKeys(from2, to) {
-      return from2.nodeType != to.nodeType || from2.nodeName != to.nodeName || getKey(from2) != getKey(to);
-    }
-    function swapElements(from2, to) {
-      if (shouldSkip(removing, from2))
+    };
+    context.differentElementNamesTypesOrKeys = function(from, to) {
+      return from.nodeType != to.nodeType || from.nodeName != to.nodeName || context.getKey(from) != context.getKey(to);
+    };
+    context.swapElements = function(from, to) {
+      if (shouldSkip(context.removing, from))
         return;
       let toCloned = to.cloneNode(true);
-      if (shouldSkip(adding, toCloned))
+      if (shouldSkip(context.adding, toCloned))
         return;
-      from2.replaceWith(toCloned);
-      removed(from2);
-      added(toCloned);
-    }
-    function patchNodeValue(from2, to) {
+      from.replaceWith(toCloned);
+      context.removed(from);
+      context.added(toCloned);
+    };
+    context.patchNodeValue = function(from, to) {
       let value = to.nodeValue;
-      if (from2.nodeValue !== value) {
-        from2.nodeValue = value;
+      if (from.nodeValue !== value) {
+        from.nodeValue = value;
       }
-    }
-    function patchAttributes(from2, to) {
-      if (from2._x_transitioning)
+    };
+    context.patchAttributes = function(from, to) {
+      if (from._x_transitioning)
         return;
-      if (from2._x_isShown && !to._x_isShown) {
-        return;
-      }
-      if (!from2._x_isShown && to._x_isShown) {
+      if (from._x_isShown && !to._x_isShown) {
         return;
       }
-      let domAttributes = Array.from(from2.attributes);
+      if (!from._x_isShown && to._x_isShown) {
+        return;
+      }
+      let domAttributes = Array.from(from.attributes);
       let toAttributes = Array.from(to.attributes);
       for (let i = domAttributes.length - 1; i >= 0; i--) {
         let name = domAttributes[i].name;
         if (!to.hasAttribute(name)) {
-          from2.removeAttribute(name);
+          from.removeAttribute(name);
         }
       }
       for (let i = toAttributes.length - 1; i >= 0; i--) {
         let name = toAttributes[i].name;
         let value = toAttributes[i].value;
-        if (from2.getAttribute(name) !== value) {
-          from2.setAttribute(name, value);
+        if (from.getAttribute(name) !== value) {
+          from.setAttribute(name, value);
         }
       }
-    }
-    function patchChildren(from2, to) {
-      let fromKeys = keyToMap(from2.children);
+    };
+    context.patchChildren = function(from, to) {
+      let fromKeys = context.keyToMap(from.children);
       let fromKeyHoldovers = {};
       let currentTo = getFirstNode(to);
-      let currentFrom = getFirstNode(from2);
+      let currentFrom = getFirstNode(from);
       while (currentTo) {
         seedingMatchingId(currentTo, currentFrom);
-        let toKey = getKey(currentTo);
-        let fromKey = getKey(currentFrom);
+        let toKey = context.getKey(currentTo);
+        let fromKey = context.getKey(currentFrom);
+        if (context.skipUntilCondition) {
+          let fromDone = !currentFrom || context.skipUntilCondition(currentFrom);
+          let toDone = !currentTo || context.skipUntilCondition(currentTo);
+          if (fromDone && toDone) {
+            context.skipUntilCondition = null;
+          } else {
+            if (!fromDone)
+              currentFrom = currentFrom && getNextSibling(from, currentFrom);
+            if (!toDone)
+              currentTo = currentTo && getNextSibling(to, currentTo);
+            continue;
+          }
+        }
         if (!currentFrom) {
           if (toKey && fromKeyHoldovers[toKey]) {
             let holdover = fromKeyHoldovers[toKey];
-            from2.appendChild(holdover);
+            from.appendChild(holdover);
             currentFrom = holdover;
-            fromKey = getKey(currentFrom);
+            fromKey = context.getKey(currentFrom);
           } else {
-            if (!shouldSkip(adding, currentTo)) {
+            if (!shouldSkip(context.adding, currentTo)) {
               let clone2 = currentTo.cloneNode(true);
-              from2.appendChild(clone2);
-              added(clone2);
+              from.appendChild(clone2);
+              context.added(clone2);
             }
             currentTo = getNextSibling(to, currentTo);
             continue;
@@ -8426,7 +9783,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let nestedIfCount = 0;
           let fromBlockStart = currentFrom;
           while (currentFrom) {
-            let next = getNextSibling(from2, currentFrom);
+            let next = getNextSibling(from, currentFrom);
             if (isIf(next)) {
               nestedIfCount++;
             } else if (isEnd(next) && nestedIfCount > 0) {
@@ -8455,17 +9812,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           let toBlockEnd = currentTo;
           let fromBlock = new Block(fromBlockStart, fromBlockEnd);
           let toBlock = new Block(toBlockStart, toBlockEnd);
-          patchChildren(fromBlock, toBlock);
+          context.patchChildren(fromBlock, toBlock);
           continue;
         }
-        if (currentFrom.nodeType === 1 && lookahead && !currentFrom.isEqualNode(currentTo)) {
+        if (currentFrom.nodeType === 1 && context.lookahead && !currentFrom.isEqualNode(currentTo)) {
           let nextToElementSibling = getNextSibling(to, currentTo);
           let found = false;
           while (!found && nextToElementSibling) {
             if (nextToElementSibling.nodeType === 1 && currentFrom.isEqualNode(nextToElementSibling)) {
               found = true;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
-              fromKey = getKey(currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
+              fromKey = context.getKey(currentFrom);
             }
             nextToElementSibling = getNextSibling(to, nextToElementSibling);
           }
@@ -8473,9 +9830,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         if (toKey !== fromKey) {
           if (!toKey && fromKey) {
             fromKeyHoldovers[fromKey] = currentFrom;
-            currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+            currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
             fromKeyHoldovers[fromKey].remove();
-            currentFrom = getNextSibling(from2, currentFrom);
+            currentFrom = getNextSibling(from, currentFrom);
             currentTo = getNextSibling(to, currentTo);
             continue;
           }
@@ -8483,7 +9840,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             if (fromKeys[toKey]) {
               currentFrom.replaceWith(fromKeys[toKey]);
               currentFrom = fromKeys[toKey];
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             }
           }
           if (toKey && fromKey) {
@@ -8492,80 +9849,70 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
               fromKeyHoldovers[fromKey] = currentFrom;
               currentFrom.replaceWith(fromKeyNode);
               currentFrom = fromKeyNode;
-              fromKey = getKey(currentFrom);
+              fromKey = context.getKey(currentFrom);
             } else {
               fromKeyHoldovers[fromKey] = currentFrom;
-              currentFrom = addNodeBefore(from2, currentTo, currentFrom);
+              currentFrom = context.addNodeBefore(from, currentTo, currentFrom);
               fromKeyHoldovers[fromKey].remove();
-              currentFrom = getNextSibling(from2, currentFrom);
+              currentFrom = getNextSibling(from, currentFrom);
               currentTo = getNextSibling(to, currentTo);
               continue;
             }
           }
         }
-        let currentFromNext = currentFrom && getNextSibling(from2, currentFrom);
-        patch(currentFrom, currentTo);
+        let currentFromNext = currentFrom && getNextSibling(from, currentFrom);
+        context.patch(currentFrom, currentTo);
         currentTo = currentTo && getNextSibling(to, currentTo);
         currentFrom = currentFromNext;
       }
       let removals = [];
       while (currentFrom) {
-        if (!shouldSkip(removing, currentFrom))
+        if (!shouldSkip(context.removing, currentFrom))
           removals.push(currentFrom);
-        currentFrom = getNextSibling(from2, currentFrom);
+        currentFrom = getNextSibling(from, currentFrom);
       }
       while (removals.length) {
         let domForRemoval = removals.shift();
         domForRemoval.remove();
-        removed(domForRemoval);
+        context.removed(domForRemoval);
       }
-    }
-    function getKey(el) {
-      return el && el.nodeType === 1 && key(el);
-    }
-    function keyToMap(els2) {
+    };
+    context.getKey = function(el) {
+      return el && el.nodeType === 1 && context.key(el);
+    };
+    context.keyToMap = function(els2) {
       let map = {};
       for (let el of els2) {
-        let theKey = getKey(el);
+        let theKey = context.getKey(el);
         if (theKey) {
           map[theKey] = el;
         }
       }
       return map;
-    }
-    function addNodeBefore(parent, node, beforeMe) {
-      if (!shouldSkip(adding, node)) {
+    };
+    context.addNodeBefore = function(parent, node, beforeMe) {
+      if (!shouldSkip(context.adding, node)) {
         let clone2 = node.cloneNode(true);
         parent.insertBefore(clone2, beforeMe);
-        added(clone2);
+        context.added(clone2);
         return clone2;
       }
       return node;
-    }
-    assignOptions(options);
-    fromEl = from;
-    toEl = typeof toHtml === "string" ? createElement(toHtml) : toHtml;
-    if (window.Alpine && window.Alpine.closestDataStack && !from._x_dataStack) {
-      toEl._x_dataStack = window.Alpine.closestDataStack(from);
-      toEl._x_dataStack && window.Alpine.cloneNode(from, toEl);
-    }
-    patch(from, toEl);
-    fromEl = void 0;
-    toEl = void 0;
-    return from;
+    };
+    return context;
   }
-  morph.step = () => {
+  morph2.step = () => {
   };
-  morph.log = () => {
+  morph2.log = () => {
   };
   function shouldSkip(hook, ...args) {
     let skip = false;
     hook(...args, () => skip = true);
     return skip;
   }
-  function shouldSkipChildren(hook, skipChildren, ...args) {
+  function shouldSkipChildren(hook, skipChildren, skipUntil, ...args) {
     let skip = false;
-    hook(...args, () => skip = true, skipChildren);
+    hook(...args, () => skip = true, skipChildren, skipUntil);
     return skip;
   }
   var patched = false;
@@ -8649,7 +9996,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     to.id = fromId;
   }
   function src_default8(Alpine3) {
-    Alpine3.morph = morph;
+    Alpine3.morph = morph2;
+    Alpine3.morphBetween = morphBetween;
   }
   var module_default8 = src_default8;
 
@@ -8893,6 +10241,192 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   }
 
+  // js/v4/features/supportPropsAndModelablesV4.js
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        child.$wire.$commit();
+      });
+    });
+  });
+  on2("message.pooled", ({ requests }) => {
+    let messages = getRequestsMessages(requests);
+    messages.forEach((message) => {
+      let component = message.component;
+      getDeepChildrenWithBindings(component, (child) => {
+        colocateRequestsByComponent(requests, component, child);
+      });
+    });
+  });
+  function getRequestsMessages(requests) {
+    let messages = [];
+    requests.forEach((request) => {
+      request.messages.forEach((message) => {
+        messages.push(message);
+      });
+    });
+    return messages;
+  }
+  function colocateRequestsByComponent(requests, component, foreignComponent) {
+    let request = findRequestWithComponent(requests, component);
+    let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+    let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
+    foreignRequest.deleteMessage(foreignMessage);
+    request.addMessage(foreignMessage);
+    requests.forEach((request2) => {
+      if (request2.isEmpty())
+        requests.delete(request2);
+    });
+  }
+  function findRequestWithComponent(requests, component) {
+    return Array.from(requests).find((request) => request.hasMessageFor(component));
+  }
+  function getDeepChildrenWithBindings(component, callback) {
+    getDeepChildren(component, (child) => {
+      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+        callback(child);
+      }
+    });
+  }
+  function hasReactiveProps(component) {
+    let meta = component.snapshot.memo;
+    let props = meta.props;
+    return !!props;
+  }
+  function hasWireModelableBindings(component) {
+    let meta = component.snapshot.memo;
+    let bindings = meta.bindings;
+    return !!bindings;
+  }
+  function getDeepChildren(component, callback) {
+    component.children.forEach((child) => {
+      callback(child);
+      getDeepChildren(child, callback);
+    });
+  }
+
+  // js/v4/features/supportIsolatingV4.js
+  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  on2("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.isolate !== true)
+      return;
+    componentsThatAreIsolated.add(component);
+  });
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      if (!componentsThatAreIsolated.has(message.component))
+        return;
+      message.isolate = true;
+    });
+  });
+
+  // js/v4/features/supportLazyLoadingV4.js
+  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  on2("component.init", ({ component }) => {
+    let memo = component.snapshot.memo;
+    if (memo.lazyLoaded === void 0)
+      return;
+    componentsThatAreLazy.add(component);
+    if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+      componentsThatWantToBeBundled.add(component);
+    }
+  });
+  on2("message.pooling", ({ messages }) => {
+    messages.forEach((message) => {
+      if (!componentsThatAreLazy.has(message.component))
+        return;
+      if (componentsThatWantToBeBundled.has(message.component)) {
+        message.isolate = false;
+        componentsThatWantToBeBundled.delete(message.component);
+      } else {
+        message.isolate = true;
+      }
+      componentsThatAreLazy.delete(message.component);
+    });
+  });
+
+  // js/v4/requests/index.js
+  requestBus_default.boot();
+
+  // js/v4/features/supportDataLoading.js
+  interceptorRegistry_default.add(({ el, directive: directive3, component, request }) => {
+    el.setAttribute("data-loading", "true");
+    request.afterResponse(() => {
+      el.removeAttribute("data-loading");
+    });
+    request.onCancel(() => {
+      el.removeAttribute("data-loading");
+    });
+  });
+
+  // js/v4/features/supportPreserveScroll.js
+  interceptorRegistry_default.add(({ el, directive: directive3, component, request }) => {
+    if (!directive3 || !directive3.modifiers.includes("preserve-scroll"))
+      return;
+    let oldHeight;
+    let oldScroll;
+    request.beforeRender(() => {
+      oldHeight = document.body.scrollHeight;
+      oldScroll = window.scrollY;
+    });
+    request.afterRender(() => {
+      let heightDiff = document.body.scrollHeight - oldHeight;
+      window.scrollTo(0, oldScroll + heightDiff);
+      oldHeight = null;
+      oldScroll = null;
+    });
+  });
+
+  // js/v4/features/supportWireIntersect.js
+  module_default.interceptInit((el) => {
+    for (let i = 0; i < el.attributes.length; i++) {
+      if (el.attributes[i].name.startsWith("wire:intersect")) {
+        let { name, value } = el.attributes[i];
+        let directive3 = extractDirective(el, name);
+        let modifierString = name.split("wire:intersect")[1];
+        let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+        let evaluator = module_default.evaluateLater(el, expression);
+        module_default.bind(el, {
+          ["x-intersect" + modifierString]() {
+            let component = el.closest("[wire\\:id]")?.__livewire;
+            interceptorRegistry_default.fire(el, directive3, component);
+            evaluator();
+          }
+        });
+      }
+    }
+  });
+
+  // js/v4/features/supportWireIsland.js
+  var wireIslands = /* @__PURE__ */ new WeakMap();
+  interceptorRegistry_default.add(({ el, directive: directive3, component }) => {
+    let name = wireIslands.get(el)?.name ?? closestIslandName(component, el);
+    if (!name)
+      return;
+    messageBroker_default.addContext(component, "islands", name);
+  });
+  directive2("island", ({ el, directive: directive3 }) => {
+    let name = directive3.expression ?? "default";
+    let mode = directive3.modifiers.includes("append") ? "append" : directive3.modifiers.includes("prepend") ? "prepend" : "replace";
+    wireIslands.set(el, {
+      name,
+      mode
+    });
+  });
+
+  // js/v4/features/supportJsModules.js
+  on2("effect", ({ component, effects }) => {
+    let hasModule = effects.hasJsModule;
+    if (hasModule) {
+      import(`/livewire/js/${component.name.replace(".", "--")}.js`).then((module) => {
+        module.run.bind(component.$wire)();
+      });
+    }
+  });
+
   // js/features/supportListeners.js
   on2("effect", ({ component, effects }) => {
     registerListeners(component, effects.listeners || []);
@@ -8924,8 +10458,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on2("payload.intercept", async ({ assets }) => {
     if (!assets)
       return;
-    for (let [key, asset] of Object.entries(assets)) {
-      await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, async () => {
+    for (let [key2, asset] of Object.entries(assets)) {
+      await onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key2, async () => {
         await addAssetsToHeadTagOfPage(asset);
       });
     }
@@ -8933,37 +10467,43 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on2("component.init", ({ component }) => {
     let assets = component.snapshot.memo.assets;
     if (assets) {
-      assets.forEach((key) => {
-        if (executedAssets.has(key))
+      assets.forEach((key2) => {
+        if (executedAssets.has(key2))
           return;
-        executedAssets.add(key);
+        executedAssets.add(key2);
       });
     }
   });
   on2("effect", ({ component, effects }) => {
     let scripts = effects.scripts;
     if (scripts) {
-      Object.entries(scripts).forEach(([key, content]) => {
-        onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
+      Object.entries(scripts).forEach(([key2, content]) => {
+        onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key2, () => {
           let scriptContent = extractScriptTagContent(content);
           module_default.dontAutoEvaluateFunctions(() => {
-            module_default.evaluate(component.el, scriptContent, { "$wire": component.$wire, "$js": component.$wire.$js });
+            module_default.evaluate(component.el, scriptContent, {
+              context: component.$wire,
+              scope: {
+                "$wire": component.$wire,
+                "$js": component.$wire.$js
+              }
+            });
           });
         });
       });
     }
   });
-  function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
+  function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key2, callback) {
     if (executedScripts.has(component)) {
       let alreadyRunKeys2 = executedScripts.get(component);
-      if (alreadyRunKeys2.includes(key))
+      if (alreadyRunKeys2.includes(key2))
         return;
     }
     callback();
     if (!executedScripts.has(component))
       executedScripts.set(component, []);
     let alreadyRunKeys = executedScripts.get(component);
-    alreadyRunKeys.push(key);
+    alreadyRunKeys.push(key2);
     executedScripts.set(component, alreadyRunKeys);
   }
   function extractScriptTagContent(rawHtml) {
@@ -8972,11 +10512,11 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let innards = matches2 && matches2[1] ? matches2[1].trim() : "";
     return innards;
   }
-  async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key, callback) {
-    if (executedAssets.has(key))
+  async function onlyIfAssetsHaventBeenLoadedAlreadyOnThisPage(key2, callback) {
+    if (executedAssets.has(key2))
       return;
     await callback();
-    executedAssets.add(key);
+    executedAssets.add(key2);
   }
   async function addAssetsToHeadTagOfPage(rawHtml) {
     let newDocument = new DOMParser().parseFromString(rawHtml, "text/html");
@@ -9041,110 +10581,19 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
   });
 
-  // js/morph.js
-  function morph2(component, el, html) {
-    let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-    let wrapper = document.createElement(wrapperTag);
-    wrapper.innerHTML = html;
-    let parentComponent;
-    try {
-      parentComponent = closestComponent(el.parentElement);
-    } catch (e) {
-    }
-    parentComponent && (wrapper.__livewire = parentComponent);
-    let to = wrapper.firstElementChild;
-    to.setAttribute("wire:snapshot", component.snapshotEncoded);
-    let effects = { ...component.effects };
-    delete effects.html;
-    to.setAttribute("wire:effects", JSON.stringify(effects));
-    to.__livewire = component;
-    trigger2("morph", { el, toEl: to, component });
-    let existingComponentsMap = {};
-    el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-      existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-    });
-    to.querySelectorAll("[wire\\:id]").forEach((child) => {
-      if (child.hasAttribute("wire:snapshot"))
-        return;
-      let wireId = child.getAttribute("wire:id");
-      let existingComponent = existingComponentsMap[wireId];
-      if (existingComponent) {
-        child.replaceWith(existingComponent.cloneNode(true));
-      }
-    });
-    module_default.morph(el, to, {
-      updating: (el2, toEl, childrenOnly, skip, skipChildren) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.updating", { el: el2, toEl, component, skip, childrenOnly, skipChildren });
-        if (el2.__livewire_replace === true)
-          el2.innerHTML = toEl.innerHTML;
-        if (el2.__livewire_replace_self === true) {
-          el2.outerHTML = toEl.outerHTML;
-          return skip();
-        }
-        if (el2.__livewire_ignore === true)
-          return skip();
-        if (el2.__livewire_ignore_self === true)
-          childrenOnly();
-        if (el2.__livewire_ignore_children === true)
-          return skipChildren();
-        if (isComponentRootEl(el2) && el2.getAttribute("wire:id") !== component.id)
-          return skip();
-        if (isComponentRootEl(el2))
-          toEl.__livewire = component;
-      },
-      updated: (el2) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.updated", { el: el2, component });
-      },
-      removing: (el2, skip) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.removing", { el: el2, component, skip });
-      },
-      removed: (el2) => {
-        if (isntElement(el2))
-          return;
-        trigger2("morph.removed", { el: el2, component });
-      },
-      adding: (el2) => {
-        trigger2("morph.adding", { el: el2, component });
-      },
-      added: (el2) => {
-        if (isntElement(el2))
-          return;
-        const closestComponentId = closestComponent(el2).id;
-        trigger2("morph.added", { el: el2 });
-      },
-      key: (el2) => {
-        if (isntElement(el2))
-          return;
-        return el2.hasAttribute(`wire:key`) ? el2.getAttribute(`wire:key`) : el2.hasAttribute(`wire:id`) ? el2.getAttribute(`wire:id`) : el2.id;
-      },
-      lookahead: false
-    });
-    trigger2("morphed", { el, component });
-  }
-  function isntElement(el) {
-    return typeof el.hasAttribute !== "function";
-  }
-  function isComponentRootEl(el) {
-    return el.hasAttribute("wire:id");
-  }
-
   // js/features/supportMorphDom.js
-  on2("effect", ({ component, effects }) => {
-    let html = effects.html;
-    if (!html)
-      return;
-    queueMicrotask(() => {
+  if (!requestBus_default.booted) {
+    on2("effect", ({ component, effects }) => {
+      let html = effects.html;
+      if (!html)
+        return;
       queueMicrotask(() => {
-        morph2(component, component.el, html);
+        queueMicrotask(() => {
+          morph(component, component.el, html);
+        });
       });
     });
-  });
+  }
 
   // js/features/supportDispatches.js
   on2("effect", ({ component, effects }) => {
@@ -9157,11 +10606,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     });
   });
   function dispatchEvents(component, dispatches) {
-    dispatches.forEach(({ name, params = {}, self = false, to }) => {
+    dispatches.forEach(({ name, params = {}, self = false, to, ref }) => {
       if (self)
         dispatchSelf(component, name, params);
       else if (to)
         dispatchTo(to, name, params);
+      else if (ref)
+        dispatchRef(component, ref, name, params);
       else
         dispatch3(component, name, params);
     });
@@ -9232,7 +10683,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
       let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
+      getDeepChildrenWithBindings2(component, (child) => {
         child.$wire.$commit();
       });
     });
@@ -9241,7 +10692,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let commits = getPooledCommits(pools);
     commits.forEach((commit) => {
       let component = commit.component;
-      getDeepChildrenWithBindings(component, (child) => {
+      getDeepChildrenWithBindings2(component, (child) => {
         colocateCommitsByComponent(pools, component, child);
       });
     });
@@ -9272,27 +10723,27 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         return pool;
     }
   }
-  function getDeepChildrenWithBindings(component, callback) {
-    getDeepChildren(component, (child) => {
-      if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
+  function getDeepChildrenWithBindings2(component, callback) {
+    getDeepChildren2(component, (child) => {
+      if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
         callback(child);
       }
     });
   }
-  function hasReactiveProps(component) {
+  function hasReactiveProps2(component) {
     let meta = component.snapshot.memo;
     let props = meta.props;
     return !!props;
   }
-  function hasWireModelableBindings(component) {
+  function hasWireModelableBindings2(component) {
     let meta = component.snapshot.memo;
     let bindings = meta.bindings;
     return !!bindings;
   }
-  function getDeepChildren(component, callback) {
+  function getDeepChildren2(component, callback) {
     component.children.forEach((child) => {
       callback(child);
-      getDeepChildren(child, callback);
+      getDeepChildren2(child, callback);
     });
   }
 
@@ -9333,28 +10784,28 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 
   // js/features/supportLazyLoading.js
-  var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-  var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
+  var componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
   on2("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.lazyLoaded === void 0)
       return;
-    componentsThatAreLazy.add(component);
+    componentsThatAreLazy2.add(component);
     if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-      componentsThatWantToBeBundled.add(component);
+      componentsThatWantToBeBundled2.add(component);
     }
   });
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
-      if (!componentsThatAreLazy.has(commit.component))
+      if (!componentsThatAreLazy2.has(commit.component))
         return;
-      if (componentsThatWantToBeBundled.has(commit.component)) {
+      if (componentsThatWantToBeBundled2.has(commit.component)) {
         commit.isolate = false;
-        componentsThatWantToBeBundled.delete(commit.component);
+        componentsThatWantToBeBundled2.delete(commit.component);
       } else {
         commit.isolate = true;
       }
-      componentsThatAreLazy.delete(commit.component);
+      componentsThatAreLazy2.delete(commit.component);
     });
   });
 
@@ -9363,8 +10814,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     let queryString = effects["url"];
     if (!queryString)
       return;
-    Object.entries(queryString).forEach(([key, value]) => {
-      let { name, as, use, alwaysShow, except } = normalizeQueryStringEntry(key, value);
+    Object.entries(queryString).forEach(([key2, value]) => {
+      let { name, as, use, alwaysShow, except } = normalizeQueryStringEntry(key2, value);
       if (!as)
         as = name;
       let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
@@ -9399,12 +10850,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     });
   });
-  function normalizeQueryStringEntry(key, value) {
+  function normalizeQueryStringEntry(key2, value) {
     let defaults = { use: "replace", alwaysShow: false };
     if (typeof value === "string") {
       return { ...defaults, name: value, as: value };
     } else {
-      let fullerDefaults = { ...defaults, name: key, as: key };
+      let fullerDefaults = { ...defaults, name: key2, as: key2 };
       return { ...fullerDefaults, ...value };
     }
   }
@@ -9469,23 +10920,112 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   });
 
   // js/features/supportIsolating.js
-  var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
+  var componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
   on2("component.init", ({ component }) => {
     let memo = component.snapshot.memo;
     if (memo.isolate !== true)
       return;
-    componentsThatAreIsolated.add(component);
+    componentsThatAreIsolated2.add(component);
   });
   on2("commit.pooling", ({ commits }) => {
     commits.forEach((commit) => {
-      if (!componentsThatAreIsolated.has(commit.component))
+      if (!componentsThatAreIsolated2.has(commit.component))
         return;
       commit.isolate = true;
     });
   });
 
+  // js/features/supportStreaming.js
+  on2("stream", (payload) => {
+    if (payload.type !== "update")
+      return;
+    let { id, key: key2, value, mode } = payload;
+    if (!hasComponent(id))
+      return;
+    let component = findComponent(id);
+    if (mode === "append") {
+      component.$wire.set(key2, component.$wire.get(key2) + value, false);
+    } else {
+      component.$wire.set(key2, value, false);
+    }
+  });
+  directive2("stream", ({ el, directive: directive3, cleanup: cleanup2 }) => {
+    let { expression, modifiers } = directive3;
+    let off = on2("stream", (payload) => {
+      payload.type = payload.type || "html";
+      if (payload.type !== "html")
+        return;
+      let { name, content, mode } = payload;
+      if (name !== expression)
+        return;
+      if (modifiers.includes("replace") || mode === "replace") {
+        el.innerHTML = content;
+      } else {
+        el.insertAdjacentHTML("beforeend", content);
+      }
+    });
+    cleanup2(off);
+  });
+  on2("request", ({ respond }) => {
+    respond((mutableObject) => {
+      let response = mutableObject.response;
+      if (!response.headers.has("X-Livewire-Stream"))
+        return;
+      mutableObject.response = {
+        ok: true,
+        redirected: false,
+        status: 200,
+        async text() {
+          let finalResponse = "";
+          try {
+            finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
+              trigger2("stream", streamed);
+            });
+          } catch (e) {
+            this.aborted = true;
+            this.ok = false;
+          }
+          if (contentIsFromDump(finalResponse)) {
+            this.ok = false;
+          }
+          return finalResponse;
+        }
+      };
+    });
+  });
+  async function interceptStreamAndReturnFinalResponse(response, callback) {
+    let reader = response.body.getReader();
+    let remainingResponse = "";
+    while (true) {
+      let { done, value: chunk } = await reader.read();
+      let decoder = new TextDecoder();
+      let output = decoder.decode(chunk);
+      let [streams, remaining] = extractStreamObjects(remainingResponse + output);
+      streams.forEach((stream) => {
+        callback(stream);
+      });
+      remainingResponse = remaining;
+      if (done)
+        return remainingResponse;
+    }
+  }
+  function extractStreamObjects(raw2) {
+    let regex = /({"stream":true.*?"endStream":true})/g;
+    let matches2 = raw2.match(regex);
+    let parsed = [];
+    if (matches2) {
+      for (let i = 0; i < matches2.length; i++) {
+        parsed.push(JSON.parse(matches2[i]).body);
+      }
+    }
+    let remaining = raw2.replace(regex, "");
+    return [parsed, remaining];
+  }
+
   // js/features/supportNavigate.js
-  shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+  document.addEventListener("livewire:initialized", () => {
+    shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
+  });
   document.addEventListener("alpine:navigate", (e) => forwardEvent("livewire:navigate", e));
   document.addEventListener("alpine:navigating", (e) => forwardEvent("livewire:navigating", e));
   document.addEventListener("alpine:navigated", (e) => forwardEvent("livewire:navigated", e));
@@ -9507,7 +11047,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   function shouldHideProgressBar() {
     if (!!document.querySelector("[data-no-progress-bar]"))
       return true;
-    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === false)
+    if (window.livewireScriptConfig && window.livewireScriptConfig.progressBar === "data-no-progress-bar")
       return true;
     return false;
   }
@@ -9585,7 +11125,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       [attribute](e) {
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
-            module_default.evaluate(el, "$wire." + directive3.expression, { scope: { $event: e } });
+            interceptorRegistry_default.fire(el, directive3, component);
+            module_default.evaluate(el, "await $wire." + directive3.expression, { scope: { $event: e } });
           });
         };
         if (el.__livewire_confirm) {
@@ -9723,7 +11264,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     } else {
       let cache = cachedDisplay ?? window.getComputedStyle(el, null).getPropertyValue("display");
-      let display = ["inline", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
+      let display = ["inline", "list-item", "block", "table", "flex", "grid", "inline-flex"].filter((i) => directive3.modifiers.includes(i))[0] || "inline-block";
       display = directive3.modifiers.includes("remove") && !isTruthy ? cache : display;
       el.style.display = isTruthy ? display : "none";
     }
@@ -9775,9 +11316,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       "longer": 500,
       "longest": 1e3
     };
-    Object.keys(delayModifiers).some((key) => {
-      if (directive3.modifiers.includes(key)) {
-        duration = delayModifiers[key];
+    Object.keys(delayModifiers).some((key2) => {
+      if (directive3.modifiers.includes(key2)) {
+        duration = delayModifiers[key2];
         return true;
       }
     });
@@ -9883,77 +11424,13 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         targets.push({ target: raw2 });
       }
     } else {
-      let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "target", "loading", "poll", "ignore", "key", "id"];
+      let nonActionOrModelLivewireDirectives = ["init", "dirty", "offline", "navigate", "target", "loading", "poll", "ignore", "key", "id"];
       directives2.all().filter((i) => !nonActionOrModelLivewireDirectives.includes(i.value)).map((i) => i.expression.split("(")[0]).forEach((target) => targets.push({ target }));
     }
     return { targets, inverted };
   }
   function quickHash(subject) {
     return btoa(encodeURIComponent(subject));
-  }
-
-  // js/directives/wire-stream.js
-  directive2("stream", ({ el, directive: directive3, cleanup: cleanup2 }) => {
-    let { expression, modifiers } = directive3;
-    let off = on2("stream", ({ name, content, replace: replace2 }) => {
-      if (name !== expression)
-        return;
-      if (modifiers.includes("replace") || replace2) {
-        el.innerHTML = content;
-      } else {
-        el.insertAdjacentHTML("beforeend", content);
-      }
-    });
-    cleanup2(off);
-  });
-  on2("request", ({ respond }) => {
-    respond((mutableObject) => {
-      let response = mutableObject.response;
-      if (!response.headers.has("X-Livewire-Stream"))
-        return;
-      mutableObject.response = {
-        ok: true,
-        redirected: false,
-        status: 200,
-        async text() {
-          let finalResponse = await interceptStreamAndReturnFinalResponse(response, (streamed) => {
-            trigger2("stream", streamed);
-          });
-          if (contentIsFromDump(finalResponse)) {
-            this.ok = false;
-          }
-          return finalResponse;
-        }
-      };
-    });
-  });
-  async function interceptStreamAndReturnFinalResponse(response, callback) {
-    let reader = response.body.getReader();
-    let remainingResponse = "";
-    while (true) {
-      let { done, value: chunk } = await reader.read();
-      let decoder = new TextDecoder();
-      let output = decoder.decode(chunk);
-      let [streams, remaining] = extractStreamObjects(remainingResponse + output);
-      streams.forEach((stream) => {
-        callback(stream);
-      });
-      remainingResponse = remaining;
-      if (done)
-        return remainingResponse;
-    }
-  }
-  function extractStreamObjects(raw2) {
-    let regex = /({"stream":true.*?"endStream":true})/g;
-    let matches2 = raw2.match(regex);
-    let parsed = [];
-    if (matches2) {
-      for (let i = 0; i < matches2.length; i++) {
-        parsed.push(JSON.parse(matches2[i]).body);
-      }
-    }
-    let remaining = raw2.replace(regex, "");
-    return [parsed, remaining];
   }
 
   // js/directives/wire-replace.js
@@ -10248,6 +11725,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var Livewire2 = {
     directive: directive2,
     dispatchTo,
+    intercept: (callback) => interceptorRegistry_default.add(callback),
     start: start2,
     first,
     find,

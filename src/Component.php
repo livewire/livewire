@@ -2,21 +2,27 @@
 
 namespace Livewire;
 
-use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
-use Livewire\Features\SupportPageComponents\HandlesPageComponents;
-use Livewire\Features\SupportReleaseTokens\HandlesReleaseTokens;
-use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
-use Livewire\Features\SupportAttributes\HandlesAttributes;
+use Livewire\V4\Slots\HandlesSlots;
+use Livewire\V4\Refs\HandlesRefs;
+use Livewire\V4\Paginators\HandlesPaginators;
+use Livewire\V4\Islands\HandlesIslands;
+use Livewire\V4\HtmlAttributes\HandlesHtmlAttributes;
 use Livewire\Features\SupportValidation\HandlesValidation;
 use Livewire\Features\SupportStreaming\HandlesStreaming;
+use Livewire\Features\SupportReleaseTokens\HandlesReleaseTokens;
 use Livewire\Features\SupportRedirects\HandlesRedirects;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Features\SupportPageComponents\HandlesPageComponents;
+use Livewire\Features\SupportJsEvaluation\HandlesJsEvaluation;
+use Livewire\Features\SupportFormObjects\HandlesFormObjects;
 use Livewire\Features\SupportEvents\HandlesEvents;
+use Livewire\Features\SupportDisablingBackButtonCache\HandlesDisablingBackButtonCache;
+use Livewire\Features\SupportAttributes\HandlesAttributes;
 use Livewire\Exceptions\PropertyNotFoundException;
 use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use BadMethodCallException;
-use Livewire\Features\SupportFormObjects\HandlesFormObjects;
+use Livewire\V4\JsModules\HandleJsModules;
 
 abstract class Component
 {
@@ -25,6 +31,7 @@ abstract class Component
     use AuthorizesRequests;
     use InteractsWithProperties;
     use HandlesEvents;
+    use HandlesIslands;
     use HandlesRedirects;
     use HandlesStreaming;
     use HandlesAttributes;
@@ -34,6 +41,11 @@ abstract class Component
     use HandlesReleaseTokens;
     use HandlesPageComponents;
     use HandlesDisablingBackButtonCache;
+    use HandlesSlots;
+    use HandlesHtmlAttributes;
+    use HandlesRefs;
+    use HandlesPaginators;
+    use HandleJsModules;
 
     protected $__id;
     protected $__name;

@@ -55,14 +55,18 @@ class ComponentHookRegistry
             });
         }
 
+        on('context', function ($component, $context) {
+            return static::proxyCallToHooks($component, 'callContext')($context);
+        });
+
         on('update', function ($component, $fullPath, $newValue) {
             $propertyName = Utils::beforeFirstDot($fullPath);
 
             return static::proxyCallToHooks($component, 'callUpdate')($propertyName, $fullPath, $newValue);
         });
 
-        on('call', function ($component, $method, $params, $addEffect, $earlyReturn) {
-            return static::proxyCallToHooks($component, 'callCall')($method, $params, $earlyReturn);
+        on('call', function ($component, $method, $params, $context, $earlyReturn) {
+            return static::proxyCallToHooks($component, 'callCall')($method, $params, $earlyReturn, $context);
         });
 
         on('render', function ($component, $view, $data) {

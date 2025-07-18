@@ -107,6 +107,12 @@ export class Component {
         return diff
     }
 
+    getUpdates() {
+        let propertiesDiff = diff(this.canonical, this.ephemeral)
+
+        return this.mergeQueuedUpdates(propertiesDiff)
+    }
+
     applyUpdates(object, updates) {
         for (let key in updates) {
             dataSet(object, key, updates[key])
@@ -148,8 +154,29 @@ export class Component {
             .map(id => findComponent(id))
     }
 
+    get islands() {
+        let islands = this.snapshot.memo.islands
+
+        return islands
+    }
+
     get parent() {
         return closestComponent(this.el.parentElement)
+    }
+
+    getEncodedSnapshotWithLatestChildrenMergedIn() {
+        let { snapshotEncoded, children, snapshot } = this
+        let childIds = children.map(child => child.id)
+
+        let filteredChildren = Object.fromEntries(
+            Object.entries(snapshot.memo.children)
+                .filter(([key, value]) => childIds.includes(value[1]))
+        )
+
+        return snapshotEncoded.replace(
+            /"children":\{[^}]*\}/,
+            `"children":${JSON.stringify(filteredChildren)}`
+        )
     }
 
     inscribeSnapshotAndEffectsOnElement() {

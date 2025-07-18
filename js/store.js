@@ -1,5 +1,6 @@
 import { Component } from "@/component";
 import { trigger } from "@/hooks";
+import { checkPreviousSiblingForSlotStartMarker, extractSlotData } from "./features/supportSlots";
 
 let components = {}
 
@@ -40,6 +41,16 @@ export function findComponent(id) {
 }
 
 export function closestComponent(el, strict = true) {
+    let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el)
+
+    if (slotStartMarker) {
+        let { name, parentId } = extractSlotData(slotStartMarker)
+
+        if (parentId) {
+            return findComponent(parentId)
+        }
+    }
+
     let closestRoot = Alpine.findClosest(el, i => i.__livewire)
 
     if (! closestRoot) {

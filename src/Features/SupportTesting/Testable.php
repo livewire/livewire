@@ -247,13 +247,14 @@ class Testable
      *
      * @return $this
      */
-    function update($calls = [], $updates = [])
+    function update($calls = [], $updates = [], $context = [])
     {
         $newState = SubsequentRender::make(
             $this->requestBroker,
             $this->lastState,
             $calls,
             $updates,
+            $context,
             app('request')->cookies->all()
         );
 
@@ -300,23 +301,7 @@ class Testable
             return $this;
         }
 
-        // We are going to encode the original file size, mimeType and hashName in the filename
-        // so when we create a new TemporaryUploadedFile instance we can fake the
-        // same file size, mimeType and hashName set for the original file upload.
-        $newFileHashes = collect($files)->zip($fileHashes)->mapSpread(function ($file, $fileHash) {
-            // MimeTypes contain slashes, so we replace them with underscores to ensure the filename is valid.
-            $escapedMimeType = (string) str($file->getMimeType())->replace('/', '_');
-
-            return (string) str($fileHash)->replaceFirst('.', "-hash={$file->hashName()}-mimeType={$escapedMimeType}-size={$file->getSize()}.");
-        })->toArray();
-
-        collect($fileHashes)->zip($newFileHashes)->mapSpread(function ($fileHash, $newFileHash) use ($storage) {
-            $storage->move('/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($fileHash), '/'.\Livewire\Features\SupportFileUploads\FileUploadConfiguration::path($newFileHash));
-        });
-
-        // Now we finish the upload with a final call to the Livewire component
-        // with the temporarily uploaded file path.
-        $this->call('_finishUpload', $name, $newFileHashes, $isMultiple);
+        $this->call('_finishUpload', $name, $fileHashes, $isMultiple);
 
         return $this;
     }

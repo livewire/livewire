@@ -34,20 +34,31 @@ class HandleComponents extends Mechanism
         }
     }
 
-    public function mount($name, $params = [], $key = null)
+    public function mount($name, $params = [], $key = null, $slots = [])
     {
         $parent = app('livewire')->current();
 
-        if ($html = $this->shortCircuitMount($name, $params, $key, $parent)) return $html;
+        if ($html = $this->shortCircuitMount($name, $params, $key, $parent, $slots)) return $html;
 
         $component = app('livewire')->new($name);
+
+        // Separate params into component properties and HTML attributes
+        [$componentParams, $htmlAttributes] = $this->separateParamsAndAttributes($component, $params);
+
+        if (! empty($slots)) {
+            $component->withSlots($slots, $parent);
+        }
+
+        if (! empty($htmlAttributes)) {
+            $component->withHtmlAttributes($htmlAttributes);
+        }
 
         $this->pushOntoComponentStack($component);
 
         $context = new ComponentContext($component, mounting: true);
 
         if (config('app.debug')) $start = microtime(true);
-        $finish = trigger('mount', $component, $params, $key, $parent);
+        $finish = trigger('mount', $component, $componentParams, $key, $parent);
         if (config('app.debug')) trigger('profile', 'mount', $component->getId(), [$start, microtime(true)]);
 
         if (config('app.debug')) $start = microtime(true);
@@ -72,18 +83,86 @@ class HandleComponents extends Mechanism
         return $finish($html, $snapshot);
     }
 
-    protected function shortCircuitMount($name, $params, $key, $parent)
+    protected function separateParamsAndAttributes($component, $params)
+    {
+        $componentParams = [];
+        $htmlAttributes = [];
+
+        // Get component's properties and mount method parameters
+        $componentProperties = Utils::getPublicPropertiesDefinedOnSubclass($component);
+        $mountParams = $this->getMountMethodParameters($component);
+
+        foreach ($params as $key => $value) {
+            $camelKey = str($key)->camel()->toString();
+
+            // Check if this is a reserved param
+            if ($this->isReservedParam($key)) {
+                $componentParams[$key] = $value;
+            }
+            // Check if this maps to a component property or mount param
+            elseif (
+                array_key_exists($camelKey, $componentProperties)
+                || in_array($camelKey, $mountParams)
+                || is_numeric($key) // if the key is numeric, it's likely a mount parameter...
+            ) {
+                $componentParams[$camelKey] = $value;
+            } else {
+                // Keep as HTML attribute (preserve kebab-case)
+                $htmlAttributes[$key] = $value;
+            }
+        }
+
+        return [$componentParams, $htmlAttributes];
+    }
+
+    protected function isReservedParam($key)
+    {
+        $exact = ['lazy', 'wire:ref'];
+        $startsWith = ['@', 'wire:model'];
+
+        // Check exact matches
+        if (in_array($key, $exact)) {
+            return true;
+        }
+
+        // Check starts_with patterns
+        foreach ($startsWith as $prefix) {
+            if (str_starts_with($key, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function getMountMethodParameters($component)
+    {
+        if (! method_exists($component, 'mount')) {
+            return [];
+        }
+
+        $reflection = new \ReflectionMethod($component, 'mount');
+        $parameters = [];
+
+        foreach ($reflection->getParameters() as $parameter) {
+            $parameters[] = $parameter->getName();
+        }
+
+        return $parameters;
+    }
+
+    protected function shortCircuitMount($name, $params, $key, $parent, $slots)
     {
         $newHtml = null;
 
         trigger('pre-mount', $name, $params, $key, $parent, function ($html) use (&$newHtml) {
             $newHtml = $html;
-        });
+        }, $slots);
 
         return $newHtml;
     }
 
-    public function update($snapshot, $updates, $calls)
+    public function update($snapshot, $updates, $calls, $updateContext)
     {
         $data = $snapshot['data'];
         $memo = $snapshot['memo'];
@@ -94,6 +173,8 @@ class HandleComponents extends Mechanism
         $this->pushOntoComponentStack($component);
 
         trigger('hydrate', $component, $memo, $context);
+
+        trigger('context', $component, $updateContext);
 
         $this->updateProperties($component, $updates, $data, $context);
         if (config('app.debug')) trigger('profile', 'hydrate', $component->getId(), [$start, microtime(true)]);
@@ -213,6 +294,24 @@ class HandleComponents extends Mechanism
 
         return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path) {
             return $this->hydrate($child, $context, "{$path}.{$name}");
+        });
+    }
+
+    protected function hydratePropertyUpdate($valueOrTuple, $context, $path, $raw)
+    {
+        if (! Utils::isSyntheticTuple($value = $tuple = $valueOrTuple)) return $value;
+
+        [$value, $meta] = $tuple;
+
+        // Nested properties get set as `__rm__` when they are removed. We don't want to hydrate these.
+        if ($this->isRemoval($value) && str($path)->contains('.')) {
+            return $value;
+        }
+
+        $synth = $this->propertySynth($meta['s'], $context, $path);
+
+        return $synth->hydrate($value, $meta, function ($name, $child) use ($context, $path, $raw) {
+            return $this->hydrateForUpdate($raw, "{$path}.{$name}", $child, $context);
         });
     }
 
@@ -339,7 +438,7 @@ class HandleComponents extends Mechanism
 
         // If we have meta data already for this property, let's use that to get a synth...
         if ($meta) {
-            return $this->hydrate([$value, $meta], $context, $path);
+            return $this->hydratePropertyUpdate([$value, $meta], $context, $path, $raw);
         }
 
         // If we don't, let's check to see if it's a typed property and fetch the synth that way...
