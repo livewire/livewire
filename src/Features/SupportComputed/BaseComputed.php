@@ -135,7 +135,7 @@ class BaseComputed extends Attribute
 
     protected function evaluateComputed()
     {
-        return invade($this->component)->{parent::getName()}();
+        return invade($this->component)->withContainer()->{parent::getName()}();
     }
 
     public function getName()
