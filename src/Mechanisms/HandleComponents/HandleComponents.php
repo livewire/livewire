@@ -324,6 +324,7 @@ class HandleComponents extends Mechanism
 
             return Utils::insertAttributesIntoHtmlRoot($html, [
                 'wire:id' => $component->getId(),
+                'wire:name' => $component->getName(),
             ]);
         }
 
@@ -346,6 +347,7 @@ class HandleComponents extends Mechanism
 
             $html = Utils::insertAttributesIntoHtmlRoot($html, [
                 'wire:id' => $component->getId(),
+                'wire:name' => $component->getName(),
             ]);
 
             $replaceHtml = function ($newHtml) use (&$html) {
