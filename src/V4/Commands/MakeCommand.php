@@ -287,6 +287,11 @@ class MakeCommand extends GeneratorCommand
             $parsed->getViewSource()
         );
 
+        file_put_contents(
+            $testPath,
+            $this->buildMultiFileComponentTest()
+        );
+
         if ($parsed->hasScripts()) {
             file_put_contents(
                 $jsPath,
