@@ -4523,17 +4523,17 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   on2("effect", ({ component, effects }) => {
     let islands = effects.islands || [];
     islands.forEach((island) => {
-      let { key: key2, content } = island;
+      let { key: key2, content, mode } = island;
       queueMicrotask(() => {
         queueMicrotask(() => {
-          renderIsland(component, key2, content);
+          renderIsland(component, key2, content, mode);
         });
       });
     });
   });
-  function renderIsland(component, key2, content) {
+  function renderIsland(component, key2, content, mode = null) {
     let island = component.islands[key2];
-    let mode = island.mode;
+    mode ??= island.mode;
     let { startNode, endNode } = findIslandComments(component.el, key2);
     if (!startNode || !endNode)
       return;
@@ -4593,7 +4593,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       }
     }
   }
-  function closestIslandName(component, el) {
+  function closestIsland(component, el) {
     let current = el;
     while (current) {
       let sibling = current.previousSibling;
@@ -4607,7 +4607,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             foundEndMarker.pop();
           } else {
             let key2 = extractIslandKey(sibling);
-            return component.islands[key2].name;
+            return component.islands[key2];
           }
         }
         sibling = sibling.previousSibling;
@@ -5564,6 +5564,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     "watch": "$watch",
     "commit": "$commit",
     "errors": "$errors",
+    "island": "$island",
     "upload": "$upload",
     "entangle": "$entangle",
     "dispatch": "$dispatch",
@@ -5692,9 +5693,9 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   wireProperty("$call", (component) => async (method, ...params) => {
     return await component.$wire[method](...params);
   });
-  wireProperty("$island", (component) => async (name) => {
-    messageBroker_default.addContext(component, "islands", name);
-    return await component.$wire.$refresh();
+  wireProperty("$island", (component) => async (name, mode = null) => {
+    messageBroker_default.addContext(component, "islands", { name, mode });
+    return await component.$wire.$refresh(mode);
   });
   wireProperty("$entangle", (component) => (name, live = false) => {
     return generateEntangleFunction(component)(name, live);
@@ -10426,14 +10427,21 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   // js/v4/features/supportWireIsland.js
   var wireIslands = /* @__PURE__ */ new WeakMap();
   interceptorRegistry_default.add(({ el, directive: directive3, component }) => {
-    let name = wireIslands.get(el)?.name ?? closestIslandName(component, el);
-    if (!name)
+    let island = wireIslands.get(el) ?? closestIsland(component, el);
+    if (!island)
       return;
-    messageBroker_default.addContext(component, "islands", name);
+    messageBroker_default.addContext(component, "islands", { name: island.name, mode: island.mode });
   });
   directive2("island", ({ el, directive: directive3 }) => {
     let name = directive3.expression ?? "default";
-    let mode = directive3.modifiers.includes("append") ? "append" : directive3.modifiers.includes("prepend") ? "prepend" : "replace";
+    let mode = null;
+    if (directive3.modifiers.includes("append")) {
+      mode = "append";
+    } else if (directive3.modifiers.includes("prepend")) {
+      mode = "prepend";
+    } else if (directive3.modifiers.includes("replace")) {
+      mode = "replace";
+    }
     wireIslands.set(el, {
       name,
       mode

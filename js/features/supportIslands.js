@@ -22,22 +22,22 @@ on('effect', ({ component, effects }) => {
     let islands = effects.islands || []
 
     islands.forEach(island => {
-        let { key, content } = island
+        let { key, content, mode } = island
 
         // Wrapping this in a double queueMicrotask. The first one puts it after all
         // other "effect" hooks, and the second one puts it after all reactive
         // Alpine effects (that are processed via flushJobs in scheduler).
         queueMicrotask(() => {
             queueMicrotask(() => {
-                renderIsland(component, key, content)
+                renderIsland(component, key, content, mode)
             })
         })
     })
 })
 
-export function renderIsland(component, key, content) {
+export function renderIsland(component, key, content, mode = null) {
     let island = component.islands[key]
-    let mode = island.mode
+    mode ??= island.mode
 
     let { startNode, endNode } = findIslandComments(component.el, key)
 
@@ -124,7 +124,7 @@ export function skipIslandContents(component, el, toEl, skipUntil) {
     }
 }
 
-export function closestIslandName(component, el) {
+export function closestIsland(component, el) {
     let current = el;
 
     while (current) {
@@ -144,7 +144,7 @@ export function closestIslandName(component, el) {
                 } else {
                     let key = extractIslandKey(sibling)
 
-                    return component.islands[key].name
+                    return component.islands[key]
                 }
             }
 

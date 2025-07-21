@@ -19,7 +19,7 @@ class DeferredIsland
         }
 
         return "<!--[if ISLAND:{$this->key}]><![endif]-->"
-            . "<div wire:init=\"\$island('{$this->name}')\">{$placeholderContent}</div>"
+            . "<div wire:init=\"\$island('{$this->name}', 'replace')\">{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
 }

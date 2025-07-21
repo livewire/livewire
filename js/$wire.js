@@ -43,6 +43,7 @@ let aliases = {
     'watch': '$watch',
     'commit': '$commit',
     'errors': '$errors',
+    'island': '$island',
     'upload': '$upload',
     'entangle': '$entangle',
     'dispatch': '$dispatch',
@@ -212,10 +213,10 @@ wireProperty('$call', (component) => async (method, ...params) => {
     return await component.$wire[method](...params)
 })
 
-wireProperty('$island', (component) => async (name) => {
-    messageBroker.addContext(component, 'islands', name)
+wireProperty('$island', (component) => async (name, mode = null) => {
+    messageBroker.addContext(component, 'islands', {name, mode})
 
-    return await component.$wire.$refresh()
+    return await component.$wire.$refresh(mode)
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {

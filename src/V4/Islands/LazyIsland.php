@@ -19,7 +19,7 @@ class LazyIsland
         }
 
         return "<!--[if ISLAND:{$this->key}]><![endif]-->"
-            . "<div x-intersect=\"\$wire.\$island('{$this->name}')\">{$placeholderContent}</div>"
+            . "<div x-intersect=\"\$wire.\$island('{$this->name}', 'replace')\">{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
 }

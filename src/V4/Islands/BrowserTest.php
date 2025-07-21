@@ -859,6 +859,58 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_a_deferred_inline_island_with_mode_append_replaces_placeholder_but_still_appends_new_content()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', defer: true, mode: 'append')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <p>Island content {{ $count }}</p>
+                        @endisland
+                    </div>
+
+                    <button wire:click="incrementCount" wire:island="foo" dusk="increment-count-button">Increment count</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Directive based placeholder!')
+        ->assertDontSeeIn('@island', 'Island content')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertDontSeeIn('@island', 'Island content 1')
+
+        ->waitForLivewire()->click('@increment-count-button')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertSeeIn('@island', 'Island content 1')
+        ;
+    }
+
     public function test_a_lazy_inline_island_can_be_passed_a_placeholder_parameter()
     {
         Livewire::visit(
@@ -923,5 +975,99 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForText('Island content')
         ->assertSeeIn('@island', 'Island content')
         ;
+    }
+
+    public function test_a_lazy_inline_island_with_mode_append_replaces_placeholder_but_still_appends_new_content()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', lazy: true, mode: 'append')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <p>Island content {{ $count }}</p>
+                        @endisland
+                    </div>
+
+                    <button wire:click="incrementCount" wire:island="foo" dusk="increment-count-button">Increment count</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Directive based placeholder!')
+        ->assertDontSeeIn('@island', 'Island content')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertDontSeeIn('@island', 'Island content 1')
+
+        ->waitForLivewire()->click('@increment-count-button')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertSeeIn('@island', 'Island content 1')
+        ;
+    }
+
+    public function test_an_island_mode_can_be_temporarily_changed_using_the_wire_island_directive_modifiers()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', mode: 'append'){{ $count }}@endisland
+                    </div>
+
+                    <button wire:click="incrementCount" wire:island="foo" dusk="default-increment-button">Default</button>
+                    <button wire:click="incrementCount" wire:island.prepend="foo" dusk="prepend-increment-button">Prepend</button>
+                    <button wire:click="incrementCount" wire:island.append="foo" dusk="append-increment-button">Append</button>
+                    <button wire:click="incrementCount" wire:island.replace="foo" dusk="replace-increment-button">Replace</button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->assertSeeIn('@island', '0')
+
+            ->waitForLivewire()->click('@default-increment-button')
+            ->assertSeeIn('@island', '01')
+
+            ->waitForLivewire()->click('@prepend-increment-button')
+            ->assertSeeIn('@island', '201')
+
+            ->waitForLivewire()->click('@append-increment-button')
+            ->assertSeeIn('@island', '2013')
+
+            ->waitForLivewire()->click('@replace-increment-button')
+            ->assertSeeIn('@island', '4')
+            ;
     }
 }

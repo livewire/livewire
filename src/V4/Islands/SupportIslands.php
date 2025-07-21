@@ -57,13 +57,14 @@ class SupportIslands extends ComponentHook
 
             $this->component->skipRender();
 
-            $islandsToRender = static::$islands[$this->component->getId()];
+            $islandsToRender = collect(static::$islands[$this->component->getId()])->keyBy('name');
 
             $islandRenders = collect($islands)
-                ->filter(fn($island) => in_array($island->name, $islandsToRender))
+                ->filter(fn($island) => $islandsToRender->has($island->name))
                 ->map(fn($island) => [
                     'name' => $island->name,
                     'key' => $island->key,
+                    'mode' => $islandsToRender->get($island->name)['mode'] ?? null,
                     'content' => $island->toHtml(),
                 ])
                 ->values()
