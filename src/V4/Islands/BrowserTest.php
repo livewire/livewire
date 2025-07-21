@@ -1029,6 +1029,115 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_a_skipped_inline_island_can_be_passed_a_placeholder_parameter()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @island('foo', render: 'skip', placeholder: 'Custom placeholder!')
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
+
+                        <button wire:click="$refresh" wire:island="foo" dusk="refresh-foo">Refresh</button>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Custom placeholder!')
+
+        ->waitForLivewire()->click('@refresh-foo')
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_skipped_inline_island_can_have_a_placeholder_directive()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function render() { return <<<'HTML'
+                    <div>
+                        @island('foo', render: 'skip')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
+
+                        <button wire:click="$refresh" wire:island="foo" dusk="refresh-foo">Refresh</button>
+                    </div>
+                    HTML;
+                }
+            }
+        )
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Directive based placeholder!')
+
+        ->waitForLivewire()->click('@refresh-foo')
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_skipped_inline_island_with_mode_append_replaces_placeholder_but_still_appends_new_content()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public $count = 0;
+
+                public function incrementCount()
+                {
+                    $this->count++;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <div dusk="island">
+                        @island('foo', render: 'skip', mode: 'append')
+                            @placeholder
+                                <p>Directive based placeholder!</p>
+                            @endplaceholder
+
+                            <p>Island content {{ $count }}</p>
+                        @endisland
+                    </div>
+
+                    <button wire:click="$refresh" wire:island.replace="foo" dusk="refresh-foo">Refresh</button>
+                    <button wire:click="incrementCount" wire:island="foo" dusk="increment-count-button">Increment count</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertSeeIn('@island', 'Directive based placeholder!')
+        ->assertDontSeeIn('@island', 'Island content')
+
+        ->waitForLivewire()->click('@refresh-foo')
+
+        ->waitForText('Island content')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertDontSeeIn('@island', 'Island content 1')
+
+        ->waitForLivewire()->click('@increment-count-button')
+        ->assertDontSeeIn('@island', 'Directive based placeholder!')
+        ->assertSeeIn('@island', 'Island content 0')
+        ->assertSeeIn('@island', 'Island content 1')
+        ;
+    }
+
     public function test_an_island_mode_can_be_temporarily_changed_using_the_wire_island_directive_modifiers()
     {
         Livewire::visit(

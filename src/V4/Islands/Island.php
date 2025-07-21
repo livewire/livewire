@@ -27,7 +27,7 @@ class Island implements \Stringable, Htmlable, Jsonable
         }
 
         if ($this->render === 'skip') {
-            return (new SkippedIsland($this->key))->render();
+            return (new SkippedIsland($this->key, $this->name, $this->placeholder))->render();
         }
 
         if ($this->lazy) {
