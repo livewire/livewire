@@ -3208,7 +3208,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     function isListeningForASpecificKeyThatHasntBeenPressed(e, modifiers) {
       let keyModifiers = modifiers.filter((i) => {
-        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive"].includes(i);
+        return !["window", "document", "prevent", "stop", "once", "capture", "self", "away", "outside", "passive", "preserve-scroll"].includes(i);
       });
       if (keyModifiers.includes("debounce")) {
         let debounceIndex = keyModifiers.indexOf("debounce");
@@ -8807,6 +8807,7 @@ var Message = class {
       this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
       setTimeout(() => {
         this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
+        this.interceptors.forEach((i) => i.returned());
       });
     });
   }
@@ -9334,6 +9335,8 @@ var Interceptor = class {
   constructor(callback, action) {
     this.callback = callback;
     this.action = action;
+    this.returned = () => {
+    };
   }
   init(el, directive2, component) {
     let request = {
@@ -9350,7 +9353,10 @@ var Interceptor = class {
       onSuccess: (callback) => this.onSuccess = callback,
       onCancel: (callback) => this.onCancel = callback
     };
-    this.callback({ el, directive: directive2, component, request });
+    let returned = this.callback({ el, directive: directive2, component, request });
+    if (returned && typeof returned === "function") {
+      this.returned = returned;
+    }
   }
 };
 var interceptor_default = Interceptor;

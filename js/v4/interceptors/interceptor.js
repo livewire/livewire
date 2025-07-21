@@ -16,6 +16,7 @@ class Interceptor {
     constructor(callback, action) {
         this.callback = callback
         this.action = action
+        this.returned = () => {}
     }
 
     init(el, directive, component) {
@@ -35,7 +36,11 @@ class Interceptor {
             onCancel: (callback) => this.onCancel = callback,
         }
 
-        this.callback({el, directive, component, request})
+        let returned = this.callback({el, directive, component, request})
+
+        if (returned && typeof returned === 'function') {
+            this.returned = returned
+        }
     }
 }
 

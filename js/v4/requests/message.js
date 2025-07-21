@@ -212,6 +212,8 @@ export default class Message {
 
             setTimeout(() => {
                 this.interceptors.forEach(i => i.afterRender({ component: this.component }))
+
+                this.interceptors.forEach(i => i.returned())
             })
         })
     }

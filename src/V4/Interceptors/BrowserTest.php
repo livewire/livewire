@@ -198,6 +198,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                         request.onCancel(() => {
                             window.intercepts.push(`cancel-${directive.method}`)
                         })
+
+                        return () => {
+                            window.intercepts.push(`returned-${directive.method}`)
+                        }
                     })
                 </script>
                 @endscript
@@ -209,7 +213,7 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor should not be triggered when the component is refreshed...
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 10)
+        ->assertScript('window.intercepts.length', 11)
         ->assertScript('window.intercepts', [
             'init-$refresh',
             'beforeSend-$refresh',
@@ -220,7 +224,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             'beforeRender-$refresh',
             'beforeMorph-$refresh',
             'afterMorph-$refresh',
-            'afterRender-$refresh'
+            'afterRender-$refresh',
+            'returned-$refresh'
         ])
 
         // Reset...
@@ -234,7 +239,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Wait for a moment, then trigger another request which should cancel the slow request...
         ->pause(100)
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 14)
+        ->assertScript('window.intercepts.length', 15)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
             'init-slowRequest',
@@ -250,7 +255,8 @@ class BrowserTest extends \Tests\BrowserTestCase
             'beforeRender-$refresh',
             'beforeMorph-$refresh',
             'afterMorph-$refresh',
-            'afterRender-$refresh'
+            'afterRender-$refresh',
+            'returned-$refresh',
         ])
 
         // Reset...
