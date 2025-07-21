@@ -10,7 +10,7 @@ trait IsLazy {
             return false;
         }
 
-        return new \ReflectionClass($target)->isUninitializedLazyObject($target);
+        return (new \ReflectionClass($target))->isUninitializedLazyObject($target);
     }
 
     public function getLazyMeta($target) {
