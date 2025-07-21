@@ -717,16 +717,16 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A island action should only re-render that island and any nested islands, but not the component...
+        // A island action should only re-render that island, but not the component or any nested islands...
         ->waitForLivewire()->click('@outer-external-island-count-button')
-        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 1')
-        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 2')
+        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 2')
+        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
         // A component action should re-render the component but not the islands...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 1')
-        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 2')
+        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 2')
+        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 3')
         ;
     }

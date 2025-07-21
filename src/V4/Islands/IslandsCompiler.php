@@ -199,7 +199,7 @@ class IslandsCompiler extends ComponentHook
 
             $key = "{$name}_{$this->islandsNameCount[$name]}";
         } else {
-            $name = "anonymous_{$this->startIslandCount}";
+            $name = "{$this->viewName}_{$this->startIslandCount}";
             $key = "{$this->startIslandCount}";
 
         }
