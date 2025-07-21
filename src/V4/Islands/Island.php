@@ -17,6 +17,7 @@ class Island implements \Stringable, Htmlable, Jsonable
         public string $render = 'once',
         public bool $defer = false,
         public bool $lazy = false,
+        public ?string $placeholder = null,
     ) {}
 
     public function render($force = false)
@@ -28,13 +29,13 @@ class Island implements \Stringable, Htmlable, Jsonable
         if ($this->render === 'skip') {
             return (new SkippedIsland($this->key))->render();
         }
-        
+
         if ($this->lazy) {
-            return (new LazyIsland($this->key, $this->name))->render();
+            return (new LazyIsland($this->key, $this->name, $this->placeholder))->render();
         }
 
         if ($this->defer) {
-            return (new DeferredIsland($this->key, $this->name))->render();
+        return (new DeferredIsland($this->key, $this->name, $this->placeholder))->render();
         }
 
         return (new DefaultIsland($this->key, $this->view, $this->component))->render();

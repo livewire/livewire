@@ -7,12 +7,19 @@ class DeferredIsland
     public function __construct(
         public string $key,
         public string $name,
+        public ?string $placeholder = null,
     ) {}
 
     public function render()
     {
+        $placeholderContent = 'Loading...';
+
+        if (isset($this->placeholder)) {
+            $placeholderContent = view($this->placeholder)->render();
+        }
+
         return "<!--[if ISLAND:{$this->key}]><![endif]-->"
-            . "<div wire:init=\"\$island('{$this->name}')\">Loading...</div>"
+                . "<div wire:init=\"\$island('{$this->name}')\">{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
 }

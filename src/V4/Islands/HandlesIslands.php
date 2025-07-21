@@ -6,7 +6,7 @@ trait HandlesIslands
 {
     protected $islands = [];
 
-    public function island($name, $key, $mode = 'replace', $render = 'once', $defer = false, $lazy = false, $view = null)
+    public function island($name, $key, $mode = 'replace', $render = 'once', $defer = false, $lazy = false, $view = null, $placeholder = null)
     {
         if ($view === null && $key) {
             // @todo: See if there is a better way to do this...
@@ -31,7 +31,7 @@ trait HandlesIslands
             return $island;
         }
 
-        $island = new Island($name, $key, $view, $this, $mode, $render, $defer, $lazy);
+        $island = new Island($name, $key, $view, $this, $mode, $render, $defer, $lazy, $placeholder);
 
         $this->islands[$island->key] = $island;
 
