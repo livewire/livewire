@@ -6,7 +6,11 @@ trait IsLazy {
     protected static ?\WeakMap $lazyMetas = null;
 
     public function isLazy($target) {
-        return (new \ReflectionClass($target))->isUninitializedLazyObject($target);
+        if (PHP_VERSION_ID < 80400) {
+            return false;
+        }
+
+        return new \ReflectionClass($target)->isUninitializedLazyObject($target);
     }
 
     public function getLazyMeta($target) {
