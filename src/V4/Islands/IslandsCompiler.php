@@ -102,7 +102,7 @@ class IslandsCompiler extends ComponentHook
 
     function findDirective($content)
     {
-        $pattern = '/@island(?:\((.*?)\))?|@endisland/s';
+        $pattern = '/@island\s*(?:\((.*?)\))?|@endisland/s';
         preg_match($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
 
         if (! $matches) {
