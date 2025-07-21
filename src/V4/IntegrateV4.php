@@ -54,7 +54,7 @@ class IntegrateV4
     {
         // Register namespace for compiled Livewire components
         app('view')->addNamespace('livewire-compiled', storage_path('framework/views/livewire/views'));
-        
+
         app('view')->addNamespace('pages', resource_path('views/pages'));
         app('view')->addNamespace('layouts', resource_path('views/layouts'));
 
@@ -157,7 +157,7 @@ class IntegrateV4
     {
         try {
             $cacheDirectory = storage_path('framework/views/livewire');
-            
+
             if (is_dir($cacheDirectory)) {
                 // Count files before clearing for informative output
                 $totalFiles = 0;
@@ -170,16 +170,16 @@ class IntegrateV4
 
                 // Use the same cleanup approach as our clear command
                 \Illuminate\Support\Facades\File::deleteDirectory($cacheDirectory);
-                
+
                 // Recreate the directory structure
                 \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/classes', 0755, true);
                 \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/views', 0755, true);
                 \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
                 \Illuminate\Support\Facades\File::makeDirectory($cacheDirectory . '/metadata', 0755, true);
-                
+
                 // Recreate .gitignore
                 \Illuminate\Support\Facades\File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");
-                
+
                 // Output success message if we have access to output
                 if ($output && method_exists($output, 'writeln')) {
                     if ($totalFiles > 0) {

@@ -16,7 +16,7 @@ class SingleFileComponentCompiler extends Mechanism
     protected string $scriptsDirectory;
     protected string $metadataDirectory;
     protected array $supportedExtensions;
-    
+
     // In-memory cache for same-request optimizations
     private static array $compilationCache = [];
     private static array $metadataCache = [];
@@ -48,7 +48,7 @@ class SingleFileComponentCompiler extends Mechanism
         // Check in-memory cache first (same-request optimization)
         $sourceModTime = filemtime($viewPath);
         $memoryCacheKey = $viewPath . '_' . $sourceModTime;
-        
+
         if (isset(self::$compilationCache[$memoryCacheKey])) {
             return self::$compilationCache[$memoryCacheKey];
         }
@@ -64,7 +64,7 @@ class SingleFileComponentCompiler extends Mechanism
 
         // Need to compile - read content only now
         $content = File::get($viewPath);
-        
+
         // Parse the component...
         $parsed = $this->parseComponent($content);
         $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
@@ -108,7 +108,7 @@ class SingleFileComponentCompiler extends Mechanism
         // Collect source files and their modification times
         $sourceFiles = [$livewireFilePath, $bladeFilePath];
         $sourceModTimes = [filemtime($livewireFilePath), filemtime($bladeFilePath)];
-        
+
         if (file_exists($jsFilePath)) {
             $sourceFiles[] = $jsFilePath;
             $sourceModTimes[] = filemtime($jsFilePath);
@@ -117,7 +117,7 @@ class SingleFileComponentCompiler extends Mechanism
         // Check in-memory cache first
         $latestModTime = max($sourceModTimes);
         $memoryCacheKey = $directory . '_' . $latestModTime;
-        
+
         if (isset(self::$compilationCache[$memoryCacheKey])) {
             return self::$compilationCache[$memoryCacheKey];
         }
@@ -171,7 +171,7 @@ class SingleFileComponentCompiler extends Mechanism
         }
 
         $metadataPath = $this->getMetadataPath($viewPath, $hash);
-        
+
         // Check if metadata file exists
         if (! file_exists($metadataPath)) {
             return false;
@@ -188,10 +188,10 @@ class SingleFileComponentCompiler extends Mechanism
             if (! file_exists($sourceFile)) {
                 return false;
             }
-            
+
             $currentModTime = filemtime($sourceFile);
             $cachedModTime = $metadata['sourceModTimes'][$index];
-            
+
             if ($currentModTime > $cachedModTime) {
                 return false;
             }
@@ -689,6 +689,16 @@ namespace {$namespace};
         }
 
         File::put($result->viewPath, $processedViewContent);
+
+        // This is a fix for a gnarly issue: blade's compiler uses filemtimes to determine if a compiled view has become expired.
+        // AND it's comparison includes equals like this: $path >= $cachedPath
+        // AND file_put_contents won't update the filemtime if the contents are the same
+        // THEREFORE because we are creating a blade file at the same "second" that it is compiled
+        // both the source file and the cached file's filemtime's match, therefore it become's in a perpetual state
+        // of always being expired. So we mutate the source file to be one second behind so that the cached
+        // view file is one second ahead. Phew. this one took a minute to find lol.
+        $original = filemtime($result->viewPath);
+        touch($result->viewPath, $original - 1);
     }
 
     /**
@@ -949,7 +959,7 @@ namespace {$namespace};
     protected function isMultiFileCompiled(string $directory, string $hash, array $sourceFiles, array $sourceModTimes): bool
     {
         $metadataPath = $this->getMetadataPath($directory, $hash);
-        
+
         // Check if metadata file exists
         if (! file_exists($metadataPath)) {
             return false;
@@ -966,10 +976,10 @@ namespace {$namespace};
             if (! file_exists($sourceFile)) {
                 return false;
             }
-            
+
             $currentModTime = filemtime($sourceFile);
             $cachedModTime = $metadata['sourceModTimes'][$index];
-            
+
             if ($currentModTime > $cachedModTime) {
                 return false;
             }
@@ -1166,7 +1176,7 @@ namespace {$namespace};
     protected function storeCompilationMetadata(CompilationResult $result, ParsedComponent $parsed, array $sourceFiles, array $sourceModTimes): void
     {
         $metadataPath = $this->getMetadataPath($sourceFiles[0], $result->hash);
-        
+
         $metadata = [
             'version' => 'v3',
             'compiledAt' => time(),
@@ -1184,7 +1194,7 @@ namespace {$namespace};
         ];
 
         File::put($metadataPath, json_encode($metadata, JSON_PRETTY_PRINT));
-        
+
         // Cache in memory for this request
         self::$metadataCache[$metadataPath] = $metadata;
     }
@@ -1202,7 +1212,7 @@ namespace {$namespace};
 
         try {
             $metadata = json_decode(File::get($metadataPath), true);
-            
+
             if (! is_array($metadata) || ! isset($metadata['version']) || ! in_array($metadata['version'], ['v2', 'v3'])) {
                 // Invalid or old version metadata
                 return null;
@@ -1210,7 +1220,7 @@ namespace {$namespace};
 
             // Cache in memory for this request
             self::$metadataCache[$metadataPath] = $metadata;
-            
+
             return $metadata;
         } catch (\Exception $e) {
             // Corrupted metadata file
