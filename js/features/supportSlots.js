@@ -115,18 +115,44 @@ export function extractSlotData(el) {
 }
 
 export function checkPreviousSiblingForSlotStartMarker(el) {
-    let node = el.previousSibling
+    function searchInPreviousSiblings(node) {
+        let sibling = node.previousSibling
 
-    while (node) {
-        if (isEndMarker(node)) {
+        while (sibling) {
+            if (isEndMarker(sibling)) {
+                return null
+            }
+
+            if (isStartMarker(sibling)) {
+                return sibling
+            }
+            sibling = sibling.previousSibling
+        }
+
+        return null
+    }
+
+    function searchRecursively(currentEl) {
+        // First check previous siblings of current element
+        let found = searchInPreviousSiblings(currentEl)
+        if (found !== null) {
+            return found
+        }
+
+        // If nothing found and we have a parent, check if parent is another Livewire component
+        let parent = currentEl.parentElement
+        if (!parent) {
             return null
         }
 
-        if (isStartMarker(node)) {
-            return node
+        // Stop if we encounter another Livewire component
+        if (parent.hasAttribute && parent.hasAttribute('wire:id')) {
+            return null
         }
-        node = node.previousSibling
+
+        // Recursively search up the tree
+        return searchRecursively(parent)
     }
 
-    return null
+    return searchRecursively(el)
 }

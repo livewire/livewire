@@ -19,7 +19,7 @@ class SupportNestingComponents extends ComponentHook
 
                 $finish = trigger('mount.stub', $tag, $childId, $params, $parent, $key, $slots);
 
-                $html = "<{$tag} wire:id=\"{$childId}\"></{$tag}>";
+                $html = "<{$tag} wire:id=\"{$childId}\" wire:name=\"{$name}\"></{$tag}>";
 
                 static::setParentChild($parent, $key, $tag, $childId);
 

@@ -98,14 +98,31 @@ class ComponentViewPathResolver extends Mechanism
             if (file_exists($candidate)) {
                 return $candidate;
             }
+        }
 
-            // Convention 2: foo/foo.blade.php or foo/foo.livewire.php
+        // PRIORITY: Check for multi-file component directory BEFORE checking subdirectory files
+        // Convention 2: foo/ directory containing foo.livewire.php and foo.blade.php
+        $directoryCandidate = $basePath . '/' . $path;
+        if (is_dir($directoryCandidate)) {
+            $componentName = basename($path);
+            $livewireFile = $directoryCandidate . '/' . $componentName . '.livewire.php';
+            $bladeFile = $directoryCandidate . '/' . $componentName . '.blade.php';
+
+            // Check if both required multi-file component files exist
+            if (file_exists($livewireFile) && file_exists($bladeFile)) {
+                return $directoryCandidate; // Return directory path for multi-file components
+            }
+        }
+
+        // Continue with remaining single-file conventions
+        foreach ($this->supportedExtensions as $extension) {
+            // Convention 3: foo/foo.blade.php or foo/foo.livewire.php
             $candidate = $basePath . '/' . $path . '/' . basename($path) . $extension;
             if (file_exists($candidate)) {
                 return $candidate;
             }
 
-            // Convention 3: foo/index.blade.php or foo/index.livewire.php
+            // Convention 4: foo/index.blade.php or foo/index.livewire.php
             $candidate = $basePath . '/' . $path . '/index' . $extension;
             if (file_exists($candidate)) {
                 return $candidate;

@@ -13,6 +13,7 @@ class SingleFileComponentCompiler extends Mechanism
     protected string $cacheDirectory;
     protected string $classesDirectory;
     protected string $viewsDirectory;
+    protected string $scriptsDirectory;
     protected array $supportedExtensions;
 
     public function __construct(?string $cacheDirectory = null, ?array $supportedExtensions = null)
@@ -20,6 +21,7 @@ class SingleFileComponentCompiler extends Mechanism
         $this->cacheDirectory = $cacheDirectory ?: storage_path('framework/views/livewire');
         $this->classesDirectory = $this->cacheDirectory . '/classes';
         $this->viewsDirectory = $this->cacheDirectory . '/views';
+        $this->scriptsDirectory = $this->cacheDirectory . '/scripts';
         $this->supportedExtensions = $supportedExtensions ?: ['.livewire.php'];
 
         $this->ensureDirectoriesExist();
@@ -51,6 +53,71 @@ class SingleFileComponentCompiler extends Mechanism
 
         // Generate compilation result...
         $result = $this->generateCompilationResult($viewPath, $parsed, $hash);
+
+        // Generate files...
+        $this->generateFiles($result, $parsed);
+
+        return $result;
+    }
+
+    public function compileMultiFileComponent(string $directory): CompilationResult
+    {
+        if (! file_exists($directory) || ! is_dir($directory)) {
+            throw new CompilationException("Directory not found: [{$directory}]");
+        }
+
+        // Get the component name from the directory
+        $componentName = basename($directory);
+
+        // Define the expected file paths
+        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
+        $jsFilePath = $directory . '/' . $componentName . '.js';
+
+        // Check if both required files exist
+        if (! file_exists($livewireFilePath)) {
+            throw new CompilationException("Livewire file not found: [{$livewireFilePath}]");
+        }
+
+        if (! file_exists($bladeFilePath)) {
+            throw new CompilationException("Blade file not found: [{$bladeFilePath}]");
+        }
+
+        // Read the contents of the required files
+        $livewireContent = File::get($livewireFilePath);
+        $bladeContent = File::get($bladeFilePath);
+
+        // Read JS file content if it exists
+        $jsContent = '';
+        if (file_exists($jsFilePath)) {
+            $jsContent = File::get($jsFilePath);
+        }
+
+        // Remove PHP opening tags from livewire content if present
+        $livewireContent = preg_replace('/^<\?php\s*/', '', trim($livewireContent));
+
+        // Concatenate the contents to simulate a single file component
+        // Format: @php frontmatter @endphp blade_content
+        $content = "@php\n" . $livewireContent . "\n@endphp\n" . $bladeContent;
+
+        // Generate hash based on the directory path and combined content
+        $hash = $this->generateMultiFileHash($directory, $livewireContent, $bladeContent, $jsContent);
+
+        // Check if already compiled and up to date...
+        if ($this->isMultiFileCompiled($directory, $hash)) {
+            return $this->getExistingMultiFileCompilationResult($directory, $hash);
+        }
+
+        // Parse the component using the concatenated content...
+        $parsed = $this->parseComponent($content);
+
+        // Add dedicated JS file content to the parsed scripts if it exists
+        if (!empty($jsContent)) {
+            $parsed = $this->addDedicatedJsContent($parsed, $jsContent);
+        }
+
+        // Generate compilation result using the directory as the "view path"...
+        $result = $this->generateMultiFileCompilationResult($directory, $parsed, $hash);
 
         // Generate files...
         $this->generateFiles($result, $parsed);
@@ -94,7 +161,7 @@ class SingleFileComponentCompiler extends Mechanism
         return $this->getClassPath($className);
     }
 
-    protected function parseComponent(string $content): ParsedComponent
+    public function parseComponent(string $content): ParsedComponent
     {
         // Extract layout directive first if present
         $layoutTemplate = null;
@@ -115,13 +182,18 @@ class SingleFileComponentCompiler extends Mechanism
             $externalClass = $matches[1];
             $viewContent = preg_replace('/@php\s*\([^)]+\)/s', '', $content);
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 '',
-                trim($viewContent),
+                trim($cleanViewContent),
                 true,
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -136,13 +208,18 @@ class SingleFileComponentCompiler extends Mechanism
                 throw new ParseException("Invalid component: @php block must contain a class definition");
             }
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 $frontmatter,
-                trim($viewContent),
+                trim($cleanViewContent),
                 false,
                 null,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -151,13 +228,18 @@ class SingleFileComponentCompiler extends Mechanism
             $externalClass = $matches[1];
             $viewContent = preg_replace('/<\?php\s*\([^)]+\)\s*\?>/s', '', $content);
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 '',
-                trim($viewContent),
+                trim($cleanViewContent),
                 true,
                 $externalClass,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -172,13 +254,18 @@ class SingleFileComponentCompiler extends Mechanism
                 throw new ParseException("Invalid component: <"."?php block must contain a class definition");
             }
 
+            // Extract scripts from view content and clean it
+            $scripts = $this->extractScripts($viewContent);
+            $cleanViewContent = $this->removeScripts($viewContent);
+
             return new ParsedComponent(
                 $frontmatter,
-                trim($viewContent),
+                trim($cleanViewContent),
                 false,
                 null,
                 $layoutTemplate,
                 $layoutData,
+                $scripts,
             );
         }
 
@@ -235,6 +322,12 @@ class SingleFileComponentCompiler extends Mechanism
         $viewName = $this->generateViewName($viewPath, $hash);
         $compiledViewPath = $this->getViewPath($viewName);
 
+        // Generate script path if component has scripts
+        $scriptPath = null;
+        if ($parsed->hasScripts()) {
+            $scriptPath = $this->getScriptPath($this->generateScriptName($viewPath, $hash));
+        }
+
         return new CompilationResult(
             className: $className,
             classPath: $classPath,
@@ -242,8 +335,20 @@ class SingleFileComponentCompiler extends Mechanism
             viewPath: $compiledViewPath,
             isExternal: $parsed->isExternal,
             externalClass: $parsed->externalClass,
-            hash: $hash
+            hash: $hash,
+            scriptPath: $scriptPath,
         );
+    }
+
+    protected function generateScriptName(string $viewPath, string $hash): string
+    {
+        $name = $this->getComponentNameFromPath($viewPath);
+        return "{$name}_{$hash}";
+    }
+
+    protected function getScriptPath(string $scriptName): string
+    {
+        return $this->scriptsDirectory . '/' . $scriptName . '.js';
     }
 
     protected function generateFiles(CompilationResult $result, ParsedComponent $parsed): void
@@ -255,6 +360,137 @@ class SingleFileComponentCompiler extends Mechanism
         if ($result->shouldGenerateClass()) {
             $this->generateClass($result, $parsed);
         }
+
+        // Generate script file if component has scripts...
+        if ($parsed->hasScripts() && $result->hasScripts()) {
+            $this->generateScriptFile($result, $parsed);
+        }
+    }
+
+    protected function generateScriptFile(CompilationResult $result, ParsedComponent $parsed): void
+    {
+        $scriptContent = $this->compileScripts($parsed->scripts);
+        File::put($result->scriptPath, $scriptContent);
+    }
+
+    protected function compileScripts(array $scripts): string
+    {
+        $allContent = [];
+        $allImports = [];
+
+        foreach ($scripts as $script) {
+            $content = $script['content'];
+
+            // Extract imports and remaining code
+            $parsed = $this->parseJavaScriptImports($content);
+
+            $allImports = array_merge($allImports, $parsed['imports']);
+            $allContent[] = $parsed['code'];
+        }
+
+        // Deduplicate imports by their full statement
+        $uniqueImports = array_unique($allImports);
+
+        // Build the final module
+        $output = [];
+
+        // Add hoisted imports at the top
+        if (!empty($uniqueImports)) {
+            $output[] = "// Hoisted imports";
+            $output = array_merge($output, $uniqueImports);
+            $output[] = ""; // Empty line after imports
+        }
+
+        // Wrap remaining code in export default function
+        $output[] = "export function run() {";
+
+        if (!empty($allContent)) {
+            // Add each script content as a section
+            foreach ($allContent as $index => $content) {
+                if (!empty(trim($content))) {
+                    $output[] = "    // Script section " . ($index + 1);
+                    $output[] = $this->indentJavaScript($content, 1);
+                    $output[] = "";
+                }
+            }
+        } else {
+            $output[] = "    // No script content";
+        }
+
+        $output[] = "}";
+
+        return implode("\n", $output);
+    }
+
+    /**
+     * Parse JavaScript content to extract import statements and remaining code.
+     */
+    protected function parseJavaScriptImports(string $content): array
+    {
+        $imports = [];
+        $remainingLines = [];
+
+        $lines = explode("\n", $content);
+
+        foreach ($lines as $line) {
+            $trimmedLine = trim($line);
+
+            // Check for ES6 import statements
+            if ($this->isImportStatement($trimmedLine)) {
+                $imports[] = $trimmedLine;
+            } else {
+                $remainingLines[] = $line;
+            }
+        }
+
+        return [
+            'imports' => $imports,
+            'code' => implode("\n", $remainingLines)
+        ];
+    }
+
+    /**
+     * Check if a line is an ES6 import statement.
+     */
+    protected function isImportStatement(string $line): bool
+    {
+        // Match various import patterns:
+        // import foo from 'module'
+        // import { foo } from 'module'
+        // import * as foo from 'module'
+        // import 'module' (side-effect import)
+        // import foo, { bar } from 'module'
+
+        if (empty($line)) {
+            return false;
+        }
+
+        // Basic import statement pattern
+        if (preg_match('/^import\s+/', $line)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Indent JavaScript code by the specified number of levels (4 spaces per level).
+     */
+    protected function indentJavaScript(string $code, int $levels): string
+    {
+        $indent = str_repeat('    ', $levels);
+        $lines = explode("\n", $code);
+
+        $indentedLines = [];
+        foreach ($lines as $line) {
+            if (trim($line) === '') {
+                $indentedLines[] = ''; // Keep empty lines empty
+            } else {
+                $indentedLines[] = $indent . $line;
+            }
+        }
+
+        return implode("\n", $indentedLines);
     }
 
     /**
@@ -324,6 +560,12 @@ class SingleFileComponentCompiler extends Mechanism
             $classAttributesSection = implode("\n", $classLevelAttributes) . "\n";
         }
 
+        // Generate jsModuleSource method if component has scripts
+        $jsModuleSourceMethod = '';
+        if ($parsed->hasScripts() && $result->scriptPath) {
+            $jsModuleSourceMethod = $this->generateJsModuleSourceMethod($parsed->scripts, $result->scriptPath);
+        }
+
         $classContent = "<?php
 
 namespace {$namespace};
@@ -331,7 +573,7 @@ namespace {$namespace};
 {$preClassSection}{$layoutAttribute}{$classAttributesSection}class {$className} extends \\Livewire\\Component
 {
 {$classBody}
-
+{$jsModuleSourceMethod}
     public function render()
     {
         return view('{$viewName}');
@@ -376,7 +618,8 @@ namespace {$namespace};
 
     protected function generateView(CompilationResult $result, ParsedComponent $parsed): void
     {
-        $processedViewContent = $this->transformNakedScripts($parsed->viewContent);
+        // Scripts are already extracted during parsing, so view content is clean
+        $processedViewContent = $parsed->viewContent;
 
         // Transform computed property references if this is an inline component
         if ($parsed->hasInlineClass()) {
@@ -387,41 +630,87 @@ namespace {$namespace};
     }
 
     /**
-     * Transform naked <script> tags into @script wrapped scripts.
-     *
-     * This detects script tags that are not already wrapped in @script directives
-     * and automatically wraps them for proper Livewire integration.
+     * Extract script tags from view content and return structured script data.
      */
-    protected function transformNakedScripts(string $viewContent): string
+    protected function extractScripts(string $viewContent): array
+    {
+        $scripts = [];
+
+        // Don't process if there are no script tags
+        if (!str_contains($viewContent, '<script')) {
+            return $scripts;
+        }
+
+        // Match script tags with their content and closing tags
+        $pattern = '/<script\b([^>]*)>(.*?)<\/script>/s';
+
+        preg_match_all($pattern, $viewContent, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $fullScriptTag = $match[0];
+            $attributes = trim($match[1]);
+            $scriptContent = trim($match[2]);
+
+            // Skip empty scripts
+            if (empty($scriptContent)) {
+                continue;
+            }
+
+            $scripts[] = [
+                'content' => $scriptContent,
+                'attributes' => $this->parseScriptAttributes($attributes),
+                'fullTag' => $fullScriptTag,
+            ];
+        }
+
+        return $scripts;
+    }
+
+    /**
+     * Remove script tags from view content.
+     */
+    protected function removeScripts(string $viewContent): string
     {
         // Don't process if there are no script tags
         if (!str_contains($viewContent, '<script')) {
             return $viewContent;
         }
 
-        // Don't process if there are already @script directives present
-        if (str_contains($viewContent, '@script')) {
-            return $viewContent;
+        // Remove script tags but preserve whitespace structure
+        $pattern = '/<script\b[^>]*>.*?<\/script>/s';
+
+        return preg_replace($pattern, '', $viewContent);
+    }
+
+    /**
+     * Parse script tag attributes into structured format.
+     */
+    protected function parseScriptAttributes(string $attributesString): array
+    {
+        $attributes = [];
+
+        if (empty(trim($attributesString))) {
+            return $attributes;
         }
 
-        // Match script tags that are not already wrapped in @script directives
-        // This pattern matches <script> tags with their content and closing </script>
-        $pattern = '/<script\b[^>]*>(.*?)<\/script>/s';
+        // Simple attribute parsing - can be enhanced later for complex cases
+        if (preg_match('/type=["\']([^"\']*)["\']/', $attributesString, $matches)) {
+            $attributes['type'] = $matches[1];
+        }
 
-        $transformedContent = preg_replace_callback($pattern, function ($matches) {
-            $fullScriptTag = $matches[0];
-            $scriptContent = $matches[1];
+        if (preg_match('/src=["\']([^"\']*)["\']/', $attributesString, $matches)) {
+            $attributes['src'] = $matches[1];
+        }
 
-            // Skip empty scripts
-            if (empty(trim($scriptContent))) {
-                return $fullScriptTag;
-            }
+        if (preg_match('/defer/', $attributesString)) {
+            $attributes['defer'] = true;
+        }
 
-            // Wrap the script tag with @script directives
-            return "\n@script\n" . $fullScriptTag . "\n@endscript\n";
-        }, $viewContent);
+        if (preg_match('/async/', $attributesString)) {
+            $attributes['async'] = true;
+        }
 
-        return $transformedContent;
+        return $attributes;
     }
 
     /**
@@ -579,6 +868,54 @@ namespace {$namespace};
         return hash('xxh128', 'v1'.$viewPath);
     }
 
+    protected function generateMultiFileHash(string $directory, string $livewireContent, string $bladeContent, string $jsContent = ''): string
+    {
+        // Include directory path in hash like the original method, plus a version identifier
+        return hash('xxh128', 'v1'.$directory.$livewireContent.$bladeContent.$jsContent);
+    }
+
+    protected function isMultiFileCompiled(string $directory, string $hash): bool
+    {
+        $componentName = basename($directory);
+        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
+        $jsFilePath = $directory . '/' . $componentName . '.js';
+
+        if (! file_exists($livewireFilePath) || ! file_exists($bladeFilePath)) {
+            return false;
+        }
+
+        // Get the latest modification time from source files
+        $livewireLastModified = File::lastModified($livewireFilePath);
+        $bladeLastModified = File::lastModified($bladeFilePath);
+        $sourceLastModified = max($livewireLastModified, $bladeLastModified);
+
+        // Include JS file modification time if it exists
+        if (file_exists($jsFilePath)) {
+            $jsLastModified = File::lastModified($jsFilePath);
+            $sourceLastModified = max($sourceLastModified, $jsLastModified);
+        }
+
+        // Check if compiled files exist and are newer than source files
+        $className = $this->generateClassName($directory, $hash);
+        $classPath = $this->getClassPath($className);
+        $viewName = $this->generateViewName($directory, $hash);
+        $viewPath = $this->getViewPath($viewName);
+
+        try {
+            $classLastModified = File::lastModified($classPath);
+            $viewLastModified = File::lastModified($viewPath);
+
+            return $sourceLastModified <= $classLastModified && $sourceLastModified <= $viewLastModified;
+        } catch (\ErrorException $exception) {
+            if (! File::exists($classPath) || ! File::exists($viewPath)) {
+                return false;
+            }
+
+            throw $exception;
+        }
+    }
+
     protected function generateClassName(string $viewPath, string $hash): string
     {
         $name = $this->getComponentNameFromPath($viewPath);
@@ -590,6 +927,71 @@ namespace {$namespace};
     {
         $name = $this->getComponentNameFromPath($viewPath);
         return "livewire-compiled::{$name}_{$hash}";
+    }
+
+    protected function generateMultiFileCompilationResult(string $directory, ParsedComponent $parsed, string $hash): CompilationResult
+    {
+        $className = $this->generateClassName($directory, $hash);
+        $classPath = $this->getClassPath($className);
+        $viewName = $this->generateViewName($directory, $hash);
+        $compiledViewPath = $this->getViewPath($viewName);
+
+        // Generate script path if component has scripts
+        $scriptPath = null;
+        if ($parsed->hasScripts()) {
+            $scriptPath = $this->getScriptPath($this->generateScriptName($directory, $hash));
+        }
+
+        return new CompilationResult(
+            className: $className,
+            classPath: $classPath,
+            viewName: $viewName,
+            viewPath: $compiledViewPath,
+            isExternal: $parsed->isExternal,
+            externalClass: $parsed->externalClass,
+            hash: $hash,
+            scriptPath: $scriptPath,
+        );
+    }
+
+    protected function getExistingMultiFileCompilationResult(string $directory, string $hash): CompilationResult
+    {
+        $componentName = basename($directory);
+        $livewireFilePath = $directory . '/' . $componentName . '.livewire.php';
+        $bladeFilePath = $directory . '/' . $componentName . '.blade.php';
+        $jsFilePath = $directory . '/' . $componentName . '.js';
+
+        $livewireContent = File::get($livewireFilePath);
+        $bladeContent = File::get($bladeFilePath);
+
+        // Read JS file content if it exists
+        $jsContent = '';
+        if (file_exists($jsFilePath)) {
+            $jsContent = File::get($jsFilePath);
+        }
+
+        // Remove PHP opening tags from livewire content if present
+        $livewireContent = preg_replace('/^<\?php\s*/', '', trim($livewireContent));
+
+        $content = "@php\n" . $livewireContent . "\n@endphp\n" . $bladeContent;
+
+        $parsed = $this->parseComponent($content);
+
+        // Add dedicated JS file content to the parsed scripts if it exists
+        if (!empty($jsContent)) {
+            $parsed = $this->addDedicatedJsContent($parsed, $jsContent);
+        }
+
+        return $this->generateMultiFileCompilationResult($directory, $parsed, $hash);
+    }
+
+    protected function getExistingCompilationResult(string $viewPath, string $hash): CompilationResult
+    {
+        $content = File::get($viewPath);
+        $parsed = $this->parseComponent($content);
+        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
+
+        return $this->generateCompilationResult($viewPath, $parsed, $hash);
     }
 
     protected function getComponentNameFromPath(string $viewPath): string
@@ -620,19 +1022,11 @@ namespace {$namespace};
         return $this->viewsDirectory . '/' . $relativePath;
     }
 
-    protected function getExistingCompilationResult(string $viewPath, string $hash): CompilationResult
-    {
-        $content = File::get($viewPath);
-        $parsed = $this->parseComponent($content);
-        $parsed = $this->loadExternalViewAndScriptIfRequired($viewPath, $parsed);
-
-        return $this->generateCompilationResult($viewPath, $parsed, $hash);
-    }
-
     protected function ensureDirectoriesExist(): void
     {
         File::ensureDirectoryExists($this->classesDirectory);
         File::ensureDirectoryExists($this->viewsDirectory);
+        File::ensureDirectoryExists($this->scriptsDirectory);
     }
 
     protected function ensureCacheDirectoryIsGitIgnored(): void
@@ -665,5 +1059,32 @@ namespace {$namespace};
         }
 
         return $attributes;
+    }
+
+    protected function generateJsModuleSourceMethod(array $scripts, string $scriptPath): string
+    {
+        // Escape the script path for PHP string literal
+        $escapedScriptPath = addcslashes($scriptPath, "'\\");
+
+        return "\n    protected function hasJsModuleSource(): bool\n    {\n        return true;\n    }\n\n    protected function jsModuleSource(): string\n    {\n        \$scriptPath = '{$escapedScriptPath}';\n        if (! file_exists(\$scriptPath)) {\n            throw new \\RuntimeException(\"Script file not found: [{\$scriptPath}]\");\n        }\n        return file_get_contents(\$scriptPath);\n    }\n\n    protected function jsModuleModifiedTime(): int\n    {\n        \$scriptPath = '{$escapedScriptPath}';\n        return file_exists(\$scriptPath) ? filemtime(\$scriptPath) : filemtime(__FILE__);\n    }\n";
+    }
+
+    protected function addDedicatedJsContent(ParsedComponent $parsed, string $jsContent): ParsedComponent
+    {
+        $scripts = $parsed->scripts;
+        $scripts[] = [
+            'content' => $jsContent,
+            'attributes' => [],
+            'fullTag' => '', // No full tag for dedicated JS
+        ];
+        return new ParsedComponent(
+            $parsed->frontmatter,
+            $parsed->viewContent,
+            $parsed->isExternal,
+            $parsed->externalClass,
+            $parsed->layoutTemplate,
+            $parsed->layoutData,
+            $scripts,
+        );
     }
 }

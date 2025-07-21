@@ -11,36 +11,39 @@ on('stream', (payload) => {
 
     let component = findComponent(id)
 
-    streamIsland(component, name, content)
+    streamIsland(component, key, content)
 })
 
-export function streamIsland(component, name, content) {
-    renderIsland(component, name, content)
+export function streamIsland(component, key, content) {
+    renderIsland(component, key, content)
 }
 
 on('effect', ({ component, effects }) => {
     let islands = effects.islands || []
 
     islands.forEach(island => {
-        let { name, key, content } = island
+        let { key, content } = island
 
         // Wrapping this in a double queueMicrotask. The first one puts it after all
         // other "effect" hooks, and the second one puts it after all reactive
         // Alpine effects (that are processed via flushJobs in scheduler).
         queueMicrotask(() => {
             queueMicrotask(() => {
-                renderIsland(component, name, key, content)
+                renderIsland(component, key, content)
             })
         })
     })
 })
 
-export function renderIsland(component, name, key, content) {
-    let { startNode, endNode } = findIslandComments(component.el, name, key)
+export function renderIsland(component, key, content) {
+    let island = component.islands[key]
+    let mode = island.mode
+
+    let { startNode, endNode } = findIslandComments(component.el, key)
 
     if (!startNode || !endNode) return
 
-    let { content: strippedContent, mode } = stripIslandCommentsAndExtractMode(content, name, key)
+    let strippedContent = stripIslandComments(content, key)
 
     let parentElement = startNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
@@ -67,18 +70,19 @@ export function renderIsland(component, name, key, content) {
             .forEach(node => {
                 startNode.parentNode.insertBefore(node, startNode.nextSibling)
             })
-    } else if (mode === 'skip') {
-        // console.log('skipping island', name)
     } else {
         morphIsland(component, startNode, endNode, strippedContent)
     }
 }
 
-export function skipIslandContents(el, toEl, skipUntil) {
+export function skipIslandContents(component, el, toEl, skipUntil) {
     if (isStartMarker(el) && isStartMarker(toEl)) {
-        let mode = extractIslandMode(toEl)
+        let key = extractIslandKey(toEl)
+        let island = component.islands[key]
+        let mode = island.mode
+        let render = island.render
 
-        if (['skip', 'once'].includes(mode)) {
+        if (['skip', 'once'].includes(render)) {
             skipUntil(node => isEndMarker(node))
         } else if (mode === 'prepend') {
             // Collect all siblings until end marker
@@ -120,7 +124,7 @@ export function skipIslandContents(el, toEl, skipUntil) {
     }
 }
 
-export function closestIslandName(el) {
+export function closestIslandName(component, el) {
     let current = el;
 
     while (current) {
@@ -138,7 +142,9 @@ export function closestIslandName(el) {
                 if (foundEndMarker.length > 0) {
                     foundEndMarker.pop()
                 } else {
-                    return extractIslandName(sibling);
+                    let key = extractIslandKey(sibling)
+
+                    return component.islands[key].name
                 }
             }
 
@@ -165,48 +171,26 @@ function isEndMarker(el) {
     return el.nodeType === 8 && el.textContent.startsWith('[if ENDISLAND')
 }
 
-function extractIslandMode(el) {
-    let mode = el.textContent.match(/\[if ISLAND:.*?:.*?:(\w+)\]/)?.[1]
-
-    return mode || 'replace'
-}
-
-function extractIslandName(el) {
-    let name = el.textContent.match(/\[if ISLAND:(\w+):.*?:.*?\]/)?.[1]
-
-    return name || 'default'
-}
-
 function extractIslandKey(el) {
-    let key = el.textContent.match(/\[if ISLAND:.*?:(\w+):.*?\]/)?.[1]
+    let key = el.textContent.match(/\[if ISLAND:([\w-]+)\]/)?.[1]
 
-    return key || 'default'
+    return key
 }
 
-function stripIslandCommentsAndExtractMode(content, islandName, islandKey) {
-    // Extract mode from start comment if present
-    let mode = 'replace'
-    const modeMatch = content.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}:(\\w+)\\]><\\!\\[endif\\]`))
-    if (modeMatch) {
-        mode = modeMatch[1]
-    }
-
+function stripIslandComments(content, key) {
     // Remove the start and end comment markers
-    let startComment = new RegExp(`<!--\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
-    let endComment = new RegExp(`<!--\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]-->`)
+    let startComment = new RegExp(`<!--\\[if ISLAND:${key}\\]><\\!\\[endif\\]-->`)
+    let endComment = new RegExp(`<!--\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]-->`)
 
     // Strip out the comments from the content
     let stripped = content
         .replace(startComment, '')
         .replace(endComment, '')
 
-    return {
-        content: stripped.trim(),
-        mode
-    }
+    return stripped.trim()
 }
 
-function findIslandComments(rootEl, islandName, islandKey) {
+function findIslandComments(rootEl, key) {
     let startNode = null
     let endNode = null
 
@@ -219,11 +203,11 @@ function findIslandComments(rootEl, islandName, islandKey) {
         // Check all child nodes (including text and comment nodes)
         Array.from(el.childNodes).forEach(node => {
             if (node.nodeType === Node.COMMENT_NODE) {
-                if (node.textContent.match(new RegExp(`\\[if ISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+                if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}\\]><\\!\\[endif\\]`))) {
                     startNode = node
                 }
 
-                if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${islandName}:${islandKey}(?::\\w+)?\\]><\\!\\[endif\\]`))) {
+                if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]`))) {
                     endNode = node
                 }
             }

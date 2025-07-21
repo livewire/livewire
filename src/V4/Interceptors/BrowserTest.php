@@ -103,10 +103,10 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <script>
                     window.intercepts = []
 
-                    this.intercept(() => {
+                    this.intercept('doSomething', () => {
                         window.intercepts.push('intercept')
                         console.log('intercept', window.intercepts)
-                    }, 'doSomething')
+                    })
                 </script>
                 @endscript
                 HTML; }
@@ -149,46 +149,54 @@ class BrowserTest extends \Tests\BrowserTestCase
                     window.intercepts = []
 
                     this.intercept(({ request, directive }) => {
-                        window.intercepts.push(`intercept-${directive.method}`)
+                        window.intercepts.push(`init-${directive.method}`)
 
-                        request.onFire(() => {
-                            window.intercepts.push(`fire-${directive.method}`)
+                        request.beforeSend(() => {
+                            window.intercepts.push(`beforeSend-${directive.method}`)
                         })
 
-                        request.onRequest(() => {
-                            window.intercepts.push(`request-${directive.method}`)
+                        request.afterSend(() => {
+                            window.intercepts.push(`afterSend-${directive.method}`)
                         })
 
-                        request.onBeforeResponse(() => {
+                        request.beforeResponse(() => {
                             window.intercepts.push(`beforeResponse-${directive.method}`)
                         })
 
-                        request.onResponse(() => {
-                            window.intercepts.push(`response-${directive.method}`)
+                        request.afterResponse(() => {
+                            window.intercepts.push(`afterResponse-${directive.method}`)
                         })
 
-                        request.onSuccess(() => {
-                            window.intercepts.push(`success-${directive.method}`)
+                        request.beforeRender(() => {
+                            window.intercepts.push(`beforeRender-${directive.method}`)
+                        })
+
+                        request.afterRender(() => {
+                            window.intercepts.push(`afterRender-${directive.method}`)
+                        })
+
+                        request.beforeMorph(() => {
+                            window.intercepts.push(`beforeMorph-${directive.method}`)
+                        })
+
+                        request.afterMorph(() => {
+                            window.intercepts.push(`afterMorph-${directive.method}`)
                         })
 
                         request.onError(() => {
                             window.intercepts.push(`error-${directive.method}`)
                         })
 
+                        request.onFailure(() => {
+                            window.intercepts.push(`failure-${directive.method}`)
+                        })
+
+                        request.onSuccess(() => {
+                            window.intercepts.push(`success-${directive.method}`)
+                        })
+
                         request.onCancel(() => {
                             window.intercepts.push(`cancel-${directive.method}`)
-                        })
-
-                        request.onBeforeMorph(() => {
-                            window.intercepts.push(`beforeMorph-${directive.method}`)
-                        })
-
-                        request.onAfterMorph(() => {
-                            window.intercepts.push(`afterMorph-${directive.method}`)
-                        })
-
-                        request.onRendered(() => {
-                            window.intercepts.push(`rendered-${directive.method}`)
                         })
                     })
                 </script>
@@ -201,17 +209,18 @@ class BrowserTest extends \Tests\BrowserTestCase
 
         // The interceptor should not be triggered when the component is refreshed...
         ->waitForLivewire()->click('@refresh')
-        ->assertScript('window.intercepts.length', 9)
+        ->assertScript('window.intercepts.length', 10)
         ->assertScript('window.intercepts', [
-            'intercept-$refresh',
-            'fire-$refresh',
-            'request-$refresh',
+            'init-$refresh',
+            'beforeSend-$refresh',
+            'afterSend-$refresh',
             'beforeResponse-$refresh',
-            'response-$refresh',
+            'afterResponse-$refresh',
             'success-$refresh',
+            'beforeRender-$refresh',
             'beforeMorph-$refresh',
             'afterMorph-$refresh',
-            'rendered-$refresh'
+            'afterRender-$refresh'
         ])
 
         // Reset...
@@ -228,20 +237,20 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertScript('window.intercepts.length', 14)
         // The below results are the combination of the slow request and the refresh request...
         ->assertScript('window.intercepts', [
-            'intercept-slowRequest',
-            'fire-slowRequest',
-            'request-slowRequest',
-            'beforeResponse-slowRequest',
-            'intercept-$refresh',
-            'fire-$refresh',
+            'init-slowRequest',
+            'beforeSend-slowRequest',
+            'afterSend-slowRequest',
+            'init-$refresh',
+            'beforeSend-$refresh',
             'cancel-slowRequest',
-            'request-$refresh',
+            'afterSend-$refresh',
             'beforeResponse-$refresh',
-            'response-$refresh',
+            'afterResponse-$refresh',
             'success-$refresh',
+            'beforeRender-$refresh',
             'beforeMorph-$refresh',
             'afterMorph-$refresh',
-            'rendered-$refresh'
+            'afterRender-$refresh'
         ])
 
         // Reset...
@@ -252,13 +261,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         // Trigger the error request...
         ->waitForLivewire()->click('@throw-error')
 
-        ->assertScript('window.intercepts.length', 6)
+        ->assertScript('window.intercepts.length', 4)
         ->assertScript('window.intercepts', [
-            'intercept-throwAnError',
-            'fire-throwAnError',
-            'request-throwAnError',
-            'beforeResponse-throwAnError',
-            'response-throwAnError',
+            'init-throwAnError',
+            'beforeSend-throwAnError',
+            'afterSend-throwAnError',
             'error-throwAnError',
         ])
         ;

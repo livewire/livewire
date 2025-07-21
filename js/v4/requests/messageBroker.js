@@ -81,6 +81,8 @@ class MessageBroker {
         let requests = new Set()
 
         for (let message of messages) {
+            if (message.isCancelled()) continue
+
             let hasFoundRequest = false
 
             requests.forEach(request => {

@@ -68,6 +68,66 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@child-ref-output', 'Child');
     }
 
+    public function test_use_refs_plural_magic_as_a_function_as_an_alias_for_ref_magic()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child wire:ref="child" />
+                        <p wire:text="$refs('child').el.textContent" dusk="child-ref-output"></p>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        Child
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertConsoleLogHasNoErrors()
+            ->assertSeeIn('@child-ref-output', 'Child');
+    }
+
+    public function test_use_refs_plural_magic_as_a_property_as_an_alias_for_ref_magic()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <livewire:child wire:ref="child" />
+                        <p wire:text="$refs.child.el.textContent" dusk="child-ref-output"></p>
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        Child
+                    </div>
+                    HTML;
+                }
+            }
+        ])
+            ->waitForLivewireToLoad()
+            ->assertConsoleLogHasNoErrors()
+            ->assertSeeIn('@child-ref-output', 'Child');
+    }
+
     public function test_ref_magic_logs_an_error_in_the_console_if_the_ref_is_not_found()
     {
         Livewire::visit([

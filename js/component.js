@@ -154,6 +154,12 @@ export class Component {
             .map(id => findComponent(id))
     }
 
+    get islands() {
+        let islands = this.snapshot.memo.islands
+
+        return islands
+    }
+
     get parent() {
         return closestComponent(this.el.parentElement)
     }

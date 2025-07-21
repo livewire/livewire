@@ -5,6 +5,10 @@ import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 
 directive('model', ({ el, directive, component, cleanup }) => {
+    // @todo: will need to probaby do this further upstream i just don't want to bog down the entire lifecycle right now...
+    // this is to support slots properly...
+    component = closestComponent(el)
+
     let { expression, modifiers } = directive
 
     if (! expression) {

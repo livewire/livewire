@@ -22,6 +22,7 @@ use Livewire\Concerns\InteractsWithProperties;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use BadMethodCallException;
+use Livewire\V4\JsModules\HandleJsModules;
 
 abstract class Component
 {
@@ -44,6 +45,7 @@ abstract class Component
     use HandlesHtmlAttributes;
     use HandlesRefs;
     use HandlesPaginators;
+    use HandleJsModules;
 
     protected $__id;
     protected $__name;

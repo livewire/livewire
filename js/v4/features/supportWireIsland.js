@@ -1,12 +1,12 @@
 import { directive } from "@/directives"
-import interceptor from '@/v4/interceptors/interceptors.js'
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 import messageBroker from '@/v4/requests/messageBroker.js'
 import { closestIslandName } from '@/features/supportIslands.js'
 
 let wireIslands = new WeakMap
 
-interceptor.add(({el, directive, component}) => {
-    let name = wireIslands.get(el)?.name ?? closestIslandName(el)
+interceptorRegistry.add(({el, directive, component}) => {
+    let name = wireIslands.get(el)?.name ?? closestIslandName(component, el)
 
     if (! name) return
 

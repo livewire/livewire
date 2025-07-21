@@ -14,7 +14,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                 <div>
                     <button wire:click.preserve-scroll="$refresh" dusk="refresh">Refresh</button>
 
-                    @island(mode: 'prepend')
+                    @island(mode: 'prepend', render: 'always')
                         @foreach(range(1, 100) as $i)
                             <div>{{ $i }}</div>
                         @endforeach
