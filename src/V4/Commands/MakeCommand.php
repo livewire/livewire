@@ -2,13 +2,16 @@
 
 namespace Livewire\V4\Commands;
 
-use Illuminate\Console\Concerns\CreatesMatchingTest;
-use Illuminate\Console\GeneratorCommand;
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use Symfony\Component\Console\Attribute\AsCommand;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\confirm;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Livewire\V4\Compiler\SingleFileComponentCompiler;
+use Illuminate\Support\Str;
+
+use Illuminate\Support\Collection;
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Console\GeneratorCommand;
 
 #[AsCommand(name: 'make:livewire')]
 class MakeCommand extends GeneratorCommand
@@ -105,9 +108,17 @@ class MakeCommand extends GeneratorCommand
 
         // First check if the single file component version of this component already exists...
         if ($this->files->exists($sfcPath) && ! $this->option('force')) {
-            $this->components->error('Single file component already exists.');
+            $confirmed = confirm('Component already exists. Do you want to convert it to a multi-file component?');
 
-            return;
+            if ($confirmed) {
+                if (! $this->files->isDirectory(dirname($classPath))) {
+                    $this->files->makeDirectory(dirname($classPath), 0777, true, true);
+                }
+
+                $this->upgradeSingleFileComponentToMultiFileComponent($sfcPath, $classPath, $viewPath, $testPath, $jsPath);
+
+                return;
+            }
         }
 
         if (! $this->files->isDirectory(dirname($classPath))) {
@@ -258,6 +269,39 @@ class MakeCommand extends GeneratorCommand
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
             ? $customPath
             : __DIR__.$stub;
+    }
+
+    protected function upgradeSingleFileComponentToMultiFileComponent($sfcPath, $classPath, $viewPath, $testPath, $jsPath)
+    {
+        $sfcContents = file_get_contents($sfcPath);
+
+        $parsed = app(SingleFileComponentCompiler::class)->parseComponent($sfcContents);
+
+        file_put_contents(
+            $classPath,
+            $parsed->getClassSource()
+        );
+
+        file_put_contents(
+            $viewPath,
+            $parsed->getViewSource()
+        );
+
+        file_put_contents(
+            $testPath,
+            $this->buildMultiFileComponentTest()
+        );
+
+        if ($parsed->hasScripts()) {
+            file_put_contents(
+                $jsPath,
+                $parsed->getScriptSource()
+            );
+        }
+
+        $this->files->delete($sfcPath);
+
+        $this->components->info(sprintf('%s [%s] converted successfully.', 'Livewire', $classPath));
     }
 
     /**

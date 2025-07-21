@@ -717,17 +717,211 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
-        // A island action should only re-render that island and any nested islands, but not the component...
+        // A island action should only re-render that island, but not the component or any nested islands...
         ->waitForLivewire()->click('@outer-external-island-count-button')
-        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 1')
-        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 2')
+        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 2')
+        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 0')
 
         // A component action should re-render the component but not the islands...
         ->waitForLivewire()->click('@component-count-button')
-        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 1')
-        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 2')
+        ->assertSeeIn('@outer-external-island-count', 'Outer external island count: 2')
+        ->assertSeeIn('@inner-external-island-count', 'Inner external island count: 1')
         ->assertSeeIn('@component-count', 'Component count: 3')
+        ;
+    }
+
+    public function test_a_deferred_inline_island_can_be_passed_a_placeholder_parameter()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    @island(defer: true, placeholder: 'Custom placeholder!')
+                        <div dusk="island">
+                            <p>Island content</p>
+                        </div>
+                    @endisland
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Custom placeholder!')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_deferred_inline_island_can_have_a_placeholder_directive()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    @island(defer: true)
+                        @placeholder
+                            <p>Directive based placeholder!</p>
+                        @endplaceholder
+
+                        <div dusk="island">
+                            <p>Island content</p>
+                        </div>
+                    @endisland
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Directive based placeholder!')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_deferred_external_island_can_be_passed_a_placeholder_parameter()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function boot() {
+                    View::addNamespace('islands', __DIR__ . '/fixtures');
+                }
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    @island(defer: true, view: 'islands::external-basic-island', placeholder: 'Custom placeholder!')
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->assertMissing('@external-basic-island')
+        ->assertSee('Custom placeholder!')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('External island content')
+        ->assertSeeIn('@external-basic-island', 'External island content')
+        ;
+    }
+
+    public function test_a_deferred_external_island_can_have_a_placeholder_directive()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function boot() {
+                    View::addNamespace('islands', __DIR__ . '/fixtures');
+                }
+
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    @island(defer: true, view: 'islands::external-island-with-placeholder')
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->assertMissing('@external-island-with-placeholder')
+        ->assertSee('External island placeholder content')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('External island content')
+        ->assertSeeIn('@external-island-with-placeholder', 'External island content')
+        ;
+    }
+
+    public function test_a_lazy_inline_island_can_be_passed_a_placeholder_parameter()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    @island(lazy: true, placeholder: 'Custom placeholder!')
+                        <div dusk="island">
+                            <p>Island content</p>
+                        </div>
+                    @endisland
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Custom placeholder!')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
+        ;
+    }
+
+    public function test_a_lazy_inline_island_can_have_a_placeholder_directive()
+    {
+        Livewire::visit(
+            new class extends \Livewire\Component {
+                public function hydrate()
+                {
+                    usleep(500 * 1000); // 500ms
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    @island(lazy: true)
+                        @placeholder
+                            <p>Directive based placeholder!</p>
+                        @endplaceholder
+
+                        <div dusk="island">
+                            <p>Island content</p>
+                        </div>
+                    @endisland
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+        ->assertMissing('@island')
+        ->assertSee('Directive based placeholder!')
+
+        // Wait for the island to be hydrated...
+        ->pause(500)
+
+        ->waitForText('Island content')
+        ->assertSeeIn('@island', 'Island content')
         ;
     }
 }

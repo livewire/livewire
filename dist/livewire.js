@@ -4477,17 +4477,34 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     };
   }
   function checkPreviousSiblingForSlotStartMarker(el) {
-    let node = el.previousSibling;
-    while (node) {
-      if (isEndMarker(node)) {
+    function searchInPreviousSiblings(node) {
+      let sibling = node.previousSibling;
+      while (sibling) {
+        if (isEndMarker(sibling)) {
+          return null;
+        }
+        if (isStartMarker(sibling)) {
+          return sibling;
+        }
+        sibling = sibling.previousSibling;
+      }
+      return null;
+    }
+    function searchRecursively(currentEl) {
+      let found = searchInPreviousSiblings(currentEl);
+      if (found !== null) {
+        return found;
+      }
+      let parent = currentEl.parentElement;
+      if (!parent) {
         return null;
       }
-      if (isStartMarker(node)) {
-        return node;
+      if (parent.hasAttribute && parent.hasAttribute("wire:id")) {
+        return null;
       }
-      node = node.previousSibling;
+      return searchRecursively(parent);
     }
-    return null;
+    return searchRecursively(el);
   }
 
   // js/features/supportIslands.js
@@ -11510,6 +11527,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
 
   // js/directives/wire-model.js
   directive2("model", ({ el, directive: directive3, component, cleanup: cleanup2 }) => {
+    component = closestComponent(el);
     let { expression, modifiers } = directive3;
     if (!expression) {
       return console.warn("Livewire: [wire:model] is missing a value.", el);

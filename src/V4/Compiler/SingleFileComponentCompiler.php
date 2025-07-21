@@ -161,7 +161,7 @@ class SingleFileComponentCompiler extends Mechanism
         return $this->getClassPath($className);
     }
 
-    protected function parseComponent(string $content): ParsedComponent
+    public function parseComponent(string $content): ParsedComponent
     {
         // Extract layout directive first if present
         $layoutTemplate = null;

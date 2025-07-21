@@ -58,4 +58,31 @@ class ParsedComponent
     {
         return !empty($this->scripts);
     }
+
+    public function getClassSource(): string
+    {
+        return <<<PHP
+        <?php
+
+        {$this->frontmatter}
+        PHP;
+    }
+
+    public function getViewSource(): string
+    {
+        return <<<HTML
+        {$this->viewContent}
+        HTML;
+    }
+
+    public function getScriptSource(): string
+    {
+        if (empty($this->scripts)) throw new \Exception('No scripts found');
+
+        $script = $this->scripts[0];
+
+        $fullTag = $script['fullTag'];
+
+        return str($fullTag)->between('<script>', '</script>')->toString();
+    }
 }

@@ -21,6 +21,8 @@ trait HandlesIslands
             );
         }
 
+        $placeholder = "{$view}_placeholder";
+
         if ($defer && $lazy) {
             throw new \InvalidArgumentException(
                 "Cannot use both 'defer' and 'lazy' for island '{$name}'."
@@ -31,7 +33,7 @@ trait HandlesIslands
             return $island;
         }
 
-        $island = new Island($name, $key, $view, $this, $mode, $render, $defer, $lazy);
+        $island = new Island($name, $key, $view, $this, $mode, $render, $defer, $lazy, $placeholder);
 
         $this->islands[$island->key] = $island;
 
