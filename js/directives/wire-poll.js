@@ -1,11 +1,12 @@
+import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
 
-directive('poll', ({ el, directive }) => {
+directive('poll', ({ el, directive, component }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
     let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-        triggerComponentRequest(el, directive)
+        triggerComponentRequest(el, directive, component)
     }, interval)
 
     start()
@@ -17,7 +18,9 @@ directive('poll', ({ el, directive }) => {
     stopWhen(() => theElementIsDisconnected(el))
 })
 
-function triggerComponentRequest(el, directive) {
+function triggerComponentRequest(el, directive, component) {
+    interceptorRegistry.fire(el, directive, component)
+
     Alpine.evaluate(el,
         directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
     )

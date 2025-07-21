@@ -12516,10 +12516,10 @@ directive("init", ({ el, directive: directive2 }) => {
 
 // js/directives/wire-poll.js
 var import_alpinejs19 = __toESM(require_module_cjs());
-directive("poll", ({ el, directive: directive2 }) => {
+directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
-    triggerComponentRequest(el, directive2);
+    triggerComponentRequest(el, directive2, component);
   }, interval);
   start2();
   throttleWhile(() => theTabIsInTheBackground() && theDirectiveIsMissingKeepAlive(directive2));
@@ -12528,7 +12528,8 @@ directive("poll", ({ el, directive: directive2 }) => {
   pauseWhile(() => livewireIsOffline());
   stopWhen(() => theElementIsDisconnected(el));
 });
-function triggerComponentRequest(el, directive2) {
+function triggerComponentRequest(el, directive2, component) {
+  interceptorRegistry_default.fire(el, directive2, component);
   import_alpinejs19.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
