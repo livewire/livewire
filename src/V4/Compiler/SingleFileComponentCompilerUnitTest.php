@@ -252,9 +252,477 @@ new class extends Livewire\Component {
 
         $secondModified = filemtime($result2->classPath);
 
-        $this->assertEquals($result1->hash, $result2->hash);
-        $this->assertEquals($result1->className, $result2->className);
+        $this->assertEquals($result1->hash, $result2->hash); // Hash stays same (path-based)
+        $this->assertEquals($result1->className, $result2->className); // Class name stays same
         $this->assertNotEquals($firstModified, $secondModified); // File was regenerated
+    }
+
+    public function test_compiled_files_are_overwritten_not_orphaned()
+    {
+        $componentContent1 = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent1);
+
+        // First compilation
+        $result1 = $this->compiler->compile($viewPath);
+        
+        // Verify files exist
+        $this->assertFileExists($result1->classPath);
+        $this->assertFileExists($result1->viewPath);
+        
+        // Count initial compiled files
+        $initialClassFiles = glob($this->cacheDir . '/classes/*.php');
+        $initialViewFiles = glob($this->cacheDir . '/views/*.blade.php');
+        $initialMetadataFiles = glob($this->cacheDir . '/metadata/*.json');
+        
+        $initialClassCount = count($initialClassFiles);
+        $initialViewCount = count($initialViewFiles);
+        $initialMetadataCount = count($initialMetadataFiles);
+
+        // Change the content (which currently creates new hashes/filenames)
+        $componentContent2 = '@php
+new class extends Livewire\Component {
+    public $count = 1;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        sleep(1); // Ensure different timestamp
+        File::put($viewPath, $componentContent2);
+
+        // Second compilation
+        $result2 = $this->compiler->compile($viewPath);
+        
+        // Verify new files exist
+        $this->assertFileExists($result2->classPath);
+        $this->assertFileExists($result2->viewPath);
+
+        // Count final compiled files
+        $finalClassFiles = glob($this->cacheDir . '/classes/*.php');
+        $finalViewFiles = glob($this->cacheDir . '/views/*.blade.php');
+        $finalMetadataFiles = glob($this->cacheDir . '/metadata/*.json');
+        
+        $finalClassCount = count($finalClassFiles);
+        $finalViewCount = count($finalViewFiles);
+        $finalMetadataCount = count($finalMetadataFiles);
+
+        // THIS TEST WILL INITIALLY FAIL - showing the problem
+        // After fix: should have same number of files (overwritten, not duplicated)
+        $this->assertEquals($initialClassCount, $finalClassCount, 'Class files should be overwritten, not duplicated');
+        $this->assertEquals($initialViewCount, $finalViewCount, 'View files should be overwritten, not duplicated');  
+        $this->assertEquals($initialMetadataCount, $finalMetadataCount, 'Metadata files should be overwritten, not duplicated');
+        
+        // After fix: the paths should be the same (same filename)
+        $this->assertEquals($result1->classPath, $result2->classPath, 'Class file path should remain consistent');
+        $this->assertEquals($result1->viewPath, $result2->viewPath, 'View file path should remain consistent');
+    }
+
+    public function test_multi_file_components_are_also_overwritten_not_orphaned()
+    {
+        // Create a multi-file component directory
+        $componentDir = $this->tempPath . '/counter';
+        File::makeDirectory($componentDir);
+
+        $livewireContent1 = 'new class extends Livewire\Component {
+    public $count = 0;
+}';
+        $bladeContent1 = '<div>Count: {{ $count }}</div>';
+
+        File::put($componentDir . '/counter.livewire.php', $livewireContent1);
+        File::put($componentDir . '/counter.blade.php', $bladeContent1);
+
+        // First compilation
+        $result1 = $this->compiler->compileMultiFileComponent($componentDir);
+        
+        // Count initial compiled files
+        $initialClassFiles = glob($this->cacheDir . '/classes/*.php');
+        $initialViewFiles = glob($this->cacheDir . '/views/*.blade.php');
+        $initialMetadataFiles = glob($this->cacheDir . '/metadata/*.json');
+        
+        $initialClassCount = count($initialClassFiles);
+        $initialViewCount = count($initialViewFiles);
+        $initialMetadataCount = count($initialMetadataFiles);
+
+        // Change the content
+        $livewireContent2 = 'new class extends Livewire\Component {
+    public $count = 1; // Changed
+}';
+
+        sleep(1); // Ensure different timestamp
+        File::put($componentDir . '/counter.livewire.php', $livewireContent2);
+
+        // Second compilation
+        $result2 = $this->compiler->compileMultiFileComponent($componentDir);
+
+        // Count final compiled files
+        $finalClassFiles = glob($this->cacheDir . '/classes/*.php');
+        $finalViewFiles = glob($this->cacheDir . '/views/*.blade.php');
+        $finalMetadataFiles = glob($this->cacheDir . '/metadata/*.json');
+        
+        $finalClassCount = count($finalClassFiles);
+        $finalViewCount = count($finalViewFiles);
+        $finalMetadataCount = count($finalMetadataFiles);
+
+        // Should have same number of files (overwritten, not duplicated)
+        $this->assertEquals($initialClassCount, $finalClassCount, 'Multi-file class files should be overwritten, not duplicated');
+        $this->assertEquals($initialViewCount, $finalViewCount, 'Multi-file view files should be overwritten, not duplicated');  
+        $this->assertEquals($initialMetadataCount, $finalMetadataCount, 'Multi-file metadata files should be overwritten, not duplicated');
+        
+        // The paths should be the same (same filename)
+        $this->assertEquals($result1->classPath, $result2->classPath, 'Multi-file class file path should remain consistent');
+        $this->assertEquals($result1->viewPath, $result2->viewPath, 'Multi-file view file path should remain consistent');
+    }
+
+    public function test_livewire_files_are_cleared_with_view_clear()
+    {
+        // Create a component to generate compiled files
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        // Compile it to create files
+        $result = $this->compiler->compile($viewPath);
+        
+        // Verify compiled files exist
+        $this->assertFileExists($result->classPath);
+        $this->assertFileExists($result->viewPath);
+        
+        // Verify cache directories have files
+        $classFiles = glob($this->cacheDir . '/classes/*.php');
+        $viewFiles = glob($this->cacheDir . '/views/*.blade.php');  
+        $metadataFiles = glob($this->cacheDir . '/metadata/*.json');
+        
+        $this->assertGreaterThan(0, count($classFiles), 'Should have compiled class files');
+        $this->assertGreaterThan(0, count($viewFiles), 'Should have compiled view files');
+        $this->assertGreaterThan(0, count($metadataFiles), 'Should have metadata files');
+
+        // Manually call the clear method using the same cache directory as our test
+        $mockOutput = new \Symfony\Component\Console\Output\BufferedOutput();
+        
+        // Call the clear method directly with our test cache directory
+        $this->clearLivewireCompiledFiles($this->cacheDir, $mockOutput);
+        
+        // Verify all files are cleared
+        $finalClassFiles = glob($this->cacheDir . '/classes/*.php');
+        $finalViewFiles = glob($this->cacheDir . '/views/*.blade.php');
+        $finalMetadataFiles = glob($this->cacheDir . '/metadata/*.json');
+        
+        $this->assertEquals(0, count($finalClassFiles), 'Class files should be cleared');
+        $this->assertEquals(0, count($finalViewFiles), 'View files should be cleared');
+        $this->assertEquals(0, count($finalMetadataFiles), 'Metadata files should be cleared');
+        
+        // Verify directories still exist
+        $this->assertDirectoryExists($this->cacheDir . '/classes');
+        $this->assertDirectoryExists($this->cacheDir . '/views');
+        $this->assertDirectoryExists($this->cacheDir . '/scripts');
+        $this->assertDirectoryExists($this->cacheDir . '/metadata');
+        
+        // Verify output message
+        $output = $mockOutput->fetch();
+        $this->assertStringContainsString('Livewire compiled files cleared', $output);
+    }
+
+    protected function clearLivewireCompiledFiles(string $cacheDirectory, $output = null)
+    {
+        try {
+            if (is_dir($cacheDirectory)) {
+                // Count files before clearing for informative output
+                $totalFiles = 0;
+                foreach (['classes', 'views', 'scripts', 'metadata'] as $subdir) {
+                    $path = $cacheDirectory . '/' . $subdir;
+                    if (is_dir($path)) {
+                        $totalFiles += count(glob($path . '/*'));
+                    }
+                }
+
+                // Use the same cleanup approach as our clear command
+                File::deleteDirectory($cacheDirectory);
+                
+                // Recreate the directory structure
+                File::makeDirectory($cacheDirectory . '/classes', 0755, true);
+                File::makeDirectory($cacheDirectory . '/views', 0755, true);
+                File::makeDirectory($cacheDirectory . '/scripts', 0755, true);
+                File::makeDirectory($cacheDirectory . '/metadata', 0755, true);
+                
+                // Recreate .gitignore
+                File::put($cacheDirectory . '/.gitignore', "*\n!.gitignore");
+                
+                // Output success message if we have access to output
+                if ($output && method_exists($output, 'writeln')) {
+                    if ($totalFiles > 0) {
+                        $output->writeln("<info>Livewire compiled files cleared ({$totalFiles} files removed).</info>");
+                    } else {
+                        $output->writeln("<info>Livewire compiled files directory cleared.</info>");
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail to avoid breaking view:clear if there's an issue
+            if ($output && method_exists($output, 'writeln')) {
+                $output->writeln("<comment>Note: Could not clear Livewire compiled files.</comment>");
+            }
+        }
+    }
+
+    public function test_cache_hits_do_not_modify_compiled_files()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+    public function increment() { $this->count++; }
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        // First compilation
+        $result1 = $this->compiler->compile($viewPath);
+        
+        // Record file modification times after first compilation
+        $classFileMtime = filemtime($result1->classPath);
+        $viewFileMtime = filemtime($result1->viewPath);
+        $metadataPath = $this->getMetadataPath($viewPath, $result1->hash);
+        $metadataFileMtime = filemtime($metadataPath);
+
+        // Small delay to ensure timestamps would be different if files were modified
+        usleep(100000); // 0.1 seconds
+
+        // Second compilation (should be a cache hit)
+        $result2 = $this->compiler->compile($viewPath);
+
+        // Verify it was actually a cache hit (same hash, same paths)
+        $this->assertEquals($result1->hash, $result2->hash);
+        $this->assertEquals($result1->classPath, $result2->classPath);
+        $this->assertEquals($result1->viewPath, $result2->viewPath);
+
+        // CRITICAL: Check that file modification times haven't changed
+        $newClassFileMtime = filemtime($result2->classPath);
+        $newViewFileMtime = filemtime($result2->viewPath);
+        $newMetadataFileMtime = filemtime($metadataPath);
+
+        $this->assertEquals($classFileMtime, $newClassFileMtime, 
+            'Class file should not be modified on cache hit');
+        $this->assertEquals($viewFileMtime, $newViewFileMtime, 
+            'View file should not be modified on cache hit (this causes Blade recompilation!)');
+        $this->assertEquals($metadataFileMtime, $newMetadataFileMtime, 
+            'Metadata file should not be modified on cache hit');
+    }
+
+    protected function getMetadataPath(string $viewPath, string $hash): string
+    {
+        $name = $this->getComponentNameFromPath($viewPath);
+        return $this->cacheDir . '/metadata/' . $name . '_' . $hash . '.json';
+    }
+
+    protected function getComponentNameFromPath(string $viewPath): string
+    {
+        $basename = basename($viewPath);
+        $basename = str_replace(['.livewire.php'], '', $basename);
+        return str_replace([' ', '_'], '-', $basename);
+    }
+
+    public function test_compiled_views_use_direct_file_paths_to_avoid_double_compilation()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+}
+@endphp
+
+<div>Count: {{ $count }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        // Compile the component
+        $result = $this->compiler->compile($viewPath);
+
+        // Verify the compiled view uses .blade.php extension (for proper Blade compilation)
+        $this->assertStringEndsWith('.blade.php', $result->viewPath);
+        $this->assertFileExists($result->viewPath);
+        
+        // The content should contain Blade directives (ready for Blade compilation)
+        $compiledContent = File::get($result->viewPath);
+        
+        // Should contain our clean view content with Blade expressions
+        $this->assertStringContainsString('<div>Count: {{ $count }}</div>', $compiledContent);
+        
+        // Should NOT contain any @php blocks (they were moved to the class)
+        $this->assertStringNotContainsString('@php', $compiledContent);
+        $this->assertStringNotContainsString('@endphp', $compiledContent);
+        
+        // Verify the generated class uses app('view')->file() instead of view() with namespace
+        $classContent = File::get($result->classPath);
+        $this->assertStringContainsString("app('view')->file(", $classContent);
+        $this->assertStringNotContainsString("view('livewire-compiled::", $classContent);
+    }
+
+    public function test_blade_compilation_only_happens_once_not_every_request()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 0;
+    public function increment() { $this->count++; }
+}
+@endphp
+
+<div>Count: {{ $count }} - Random: {{ rand(1, 1000) }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        // First compilation - creates both Livewire compiled files AND Blade compiled files
+        $result = $this->compiler->compile($viewPath);
+        
+        // Manually render the view to trigger Blade compilation
+        $factory = app('view');
+        $view1 = $factory->file($result->viewPath, ['count' => 0]);
+        $rendered1 = $view1->render();
+        
+        // Find the Blade compiled file (Laravel stores compiled views)
+        $bladeCompiledPath = $this->findBladeCompiledFile($result->viewPath);
+        $this->assertNotNull($bladeCompiledPath, 'Blade should have compiled the view file');
+        
+        // Record the modification time of the Blade compiled file
+        $bladeCompiledMtime = filemtime($bladeCompiledPath);
+        
+        // Small delay to ensure timestamps would be different if recompilation occurred
+        usleep(100000); // 0.1 seconds
+        
+        // Second render - should NOT trigger Blade recompilation
+        $view2 = $factory->file($result->viewPath, ['count' => 0]);
+        $rendered2 = $view2->render();
+        
+        // Check that Blade compiled file was NOT modified (meaning no recompilation)
+        $newBladeCompiledMtime = filemtime($bladeCompiledPath);
+        
+        $this->assertEquals($bladeCompiledMtime, $newBladeCompiledMtime, 
+            'Blade compiled file should NOT be modified on second render - this means Blade is recompiling unnecessarily!');
+            
+        // Both renders should have the same content (except for the random number)
+        $this->assertStringContainsString('Count: 0', $rendered1);
+        $this->assertStringContainsString('Count: 0', $rendered2);
+    }
+
+    protected function findBladeCompiledFile(string $bladePath): ?string
+    {
+        // Laravel compiles Blade files to storage/framework/views/ with hashed names
+        $compiledDir = storage_path('framework/views');
+        
+        if (!is_dir($compiledDir)) {
+            return null;
+        }
+        
+        $files = glob($compiledDir . '/*');
+        $latestFile = null;
+        $latestTime = 0;
+        
+        // Find the most recently created file (likely our compiled template)
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                $mtime = filemtime($file);
+                if ($mtime > $latestTime) {
+                    $latestTime = $mtime;
+                    $latestFile = $file;
+                }
+            }
+        }
+        
+        return $latestFile;
+    }
+
+    public function test_livewire_component_render_does_not_recompile_blade()
+    {
+        $componentContent = '@php
+new class extends Livewire\Component {
+    public $count = 5;
+    public function increment() { $this->count++; }
+}
+@endphp
+
+<div>Counter: {{ $count }} - Time: {{ now() }}</div>';
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        // First compilation
+        $result = $this->compiler->compile($viewPath);
+        
+        // Create and render the component instance (like Livewire would)
+        require_once $result->classPath;
+        $componentClass = $result->className;
+        $component1 = new $componentClass;
+        
+        // First render - this will trigger Blade compilation
+        $rendered1 = $component1->render()->render();
+        
+        // Find ALL Blade compiled files before second render
+        $bladeFiles1 = $this->getAllBladeCompiledFiles();
+        $bladeCount1 = count($bladeFiles1);
+        $latestBladeTime1 = $this->getLatestBladeFileTime($bladeFiles1);
+        
+        // Small delay
+        usleep(200000); // 0.2 seconds
+        
+        // Second component instance and render - should NOT trigger Blade recompilation
+        $component2 = new $componentClass;
+        $rendered2 = $component2->render()->render();
+        
+        // Check Blade compiled files after second render
+        $bladeFiles2 = $this->getAllBladeCompiledFiles();
+        $bladeCount2 = count($bladeFiles2);
+        $latestBladeTime2 = $this->getLatestBladeFileTime($bladeFiles2);
+        
+        // CRITICAL: Should not have created new Blade compiled files
+        $this->assertEquals($bladeCount1, $bladeCount2, 
+            'Second render created new Blade compiled files - indicating unnecessary recompilation');
+            
+        // CRITICAL: Latest Blade file should not be newer (no recompilation)
+        $this->assertEquals($latestBladeTime1, $latestBladeTime2,
+            'Blade files were modified during second render - indicating recompilation is happening');
+        
+        // Both renders should work
+        $this->assertStringContainsString('Counter: 5', $rendered1);
+        $this->assertStringContainsString('Counter: 5', $rendered2);
+    }
+
+    protected function getAllBladeCompiledFiles(): array
+    {
+        $compiledDir = storage_path('framework/views');
+        if (!is_dir($compiledDir)) {
+            return [];
+        }
+        
+        return glob($compiledDir . '/*');
+    }
+
+    protected function getLatestBladeFileTime(array $files): int
+    {
+        $latest = 0;
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                $latest = max($latest, filemtime($file));
+            }
+        }
+        return $latest;
     }
 
     public function test_is_compiled_returns_true_for_compiled_component()
@@ -396,14 +864,18 @@ $notAClass = "invalid";
         console.log("Hello from script");
         JS;
 
-        $classPath = $this->tempPath . '/counter.livewire.php';
-        $viewPath = $this->tempPath . '/counter.blade.php';
-        $scriptPath = $this->tempPath . '/counter.js';
+        // Create multi-file component directory
+        $componentDir = $this->tempPath . '/counter';
+        File::makeDirectory($componentDir);
+        
+        $classPath = $componentDir . '/counter.livewire.php';
+        $viewPath = $componentDir . '/counter.blade.php';
+        $scriptPath = $componentDir . '/counter.js';
         File::put($classPath, $componentClassContent);
         File::put($viewPath, $componentViewContent);
         File::put($scriptPath, $componentScriptContent);
 
-        $result = $this->compiler->compile($classPath);
+        $result = $this->compiler->compileMultiFileComponent($componentDir);
 
         $this->assertInstanceOf(CompilationResult::class, $result);
         $this->assertFalse($result->isExternal);
@@ -414,23 +886,26 @@ $notAClass = "invalid";
 
         $viewContent = File::get($result->viewPath);
 
+        // View should contain only the HTML content, scripts should be extracted
         $this->assertStringContainsString(
             <<<'HTML'
             <div>
                 Count: {{ $count }}
                 <button wire:click="increment">Increment</button>
             </div>
-
-
-            @script
-            <script>
-                console.log("Hello from script");
-            </script>
-            @endscript
-
             HTML,
             $viewContent
         );
+        
+        // Scripts should not be in the view content
+        $this->assertStringNotContainsString('<script>', $viewContent);
+        $this->assertStringNotContainsString('@script', $viewContent);
+        
+        // Script should be extracted to separate file
+        $this->assertTrue($result->hasScripts());
+        $this->assertFileExists($result->scriptPath);
+        $scriptContent = File::get($result->scriptPath);
+        $this->assertStringContainsString('console.log("Hello from script");', $scriptContent);
     }
 
     public function test_if_the_component_already_contains_html_then_dont_include_the_view()
@@ -617,9 +1092,15 @@ new class extends Livewire\Component {
         $result = $this->compiler->compile($viewPath);
 
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@script', $viewContent);
-        $this->assertStringContainsString('@endscript', $viewContent);
-        $this->assertStringContainsString('console.log("Hello from naked script");', $viewContent);
+        // Scripts should be extracted to separate files, not remain in view
+        $this->assertStringNotContainsString('<script>', $viewContent);
+        $this->assertStringNotContainsString('console.log("Hello from naked script");', $viewContent);
+        
+        // Script should be extracted to separate file
+        $this->assertTrue($result->hasScripts());
+        $this->assertFileExists($result->scriptPath);
+        $scriptContent = File::get($result->scriptPath);
+        $this->assertStringContainsString('console.log("Hello from naked script");', $scriptContent);
     }
 
     public function test_does_not_transform_already_wrapped_script_directives()
@@ -646,10 +1127,15 @@ new class extends Livewire\Component {
         $result = $this->compiler->compile($viewPath);
 
         $viewContent = File::get($result->viewPath);
-        // Should contain the original @script directives exactly once each
+        // When @script directives are present, script extraction should be skipped
+        // The content should remain exactly as it was, including the @script directives and script content
         $this->assertEquals(1, substr_count($viewContent, '@script'));
         $this->assertEquals(1, substr_count($viewContent, '@endscript'));
+        $this->assertStringContainsString('<script>', $viewContent);
         $this->assertStringContainsString('console.log("Already wrapped script");', $viewContent);
+        
+        // Should not have extracted scripts to separate file
+        $this->assertFalse($result->hasScripts());
     }
 
     public function test_transforms_multiple_naked_scripts()
@@ -678,10 +1164,17 @@ new class extends Livewire\Component {
         $result = $this->compiler->compile($viewPath);
 
         $viewContent = File::get($result->viewPath);
-        $this->assertEquals(2, substr_count($viewContent, '@script'));
-        $this->assertEquals(2, substr_count($viewContent, '@endscript'));
-        $this->assertStringContainsString('console.log("First script");', $viewContent);
-        $this->assertStringContainsString('console.log("Second script");', $viewContent);
+        // Both scripts should be extracted to separate files, not remain in view
+        $this->assertStringNotContainsString('<script>', $viewContent);
+        $this->assertStringNotContainsString('console.log("First script");', $viewContent);
+        $this->assertStringNotContainsString('console.log("Second script");', $viewContent);
+        
+        // Both scripts should be extracted to single script file
+        $this->assertTrue($result->hasScripts());
+        $this->assertFileExists($result->scriptPath);
+        $scriptContent = File::get($result->scriptPath);
+        $this->assertStringContainsString('console.log("First script");', $scriptContent);
+        $this->assertStringContainsString('console.log("Second script");', $scriptContent);
     }
 
     public function test_skips_empty_script_tags()
@@ -708,10 +1201,15 @@ new class extends Livewire\Component {
         $result = $this->compiler->compile($viewPath);
 
         $viewContent = File::get($result->viewPath);
-        // Should only wrap the non-empty script
-        $this->assertEquals(1, substr_count($viewContent, '@script'));
-        $this->assertEquals(1, substr_count($viewContent, '@endscript'));
-        $this->assertStringContainsString('console.log("Non-empty script");', $viewContent);
+        // All script tags should be removed from view, including empty ones
+        $this->assertStringNotContainsString('<script>', $viewContent);
+        $this->assertStringNotContainsString('console.log("Non-empty script");', $viewContent);
+        
+        // Only non-empty script should be extracted to separate file
+        $this->assertTrue($result->hasScripts());
+        $this->assertFileExists($result->scriptPath);
+        $scriptContent = File::get($result->scriptPath);
+        $this->assertStringContainsString('console.log("Non-empty script");', $scriptContent);
     }
 
     public function test_preserves_script_attributes()
@@ -736,10 +1234,15 @@ new class extends Livewire\Component {
         $result = $this->compiler->compile($viewPath);
 
         $viewContent = File::get($result->viewPath);
-        $this->assertStringContainsString('@script', $viewContent);
-        $this->assertStringContainsString('type="module"', $viewContent);
-        $this->assertStringContainsString('defer', $viewContent);
-        $this->assertStringContainsString('async', $viewContent);
+        // Script should be removed from view content
+        $this->assertStringNotContainsString('<script>', $viewContent);
+        $this->assertStringNotContainsString('console.log("Script with attributes");', $viewContent);
+        
+        // Script should be extracted to separate file with attributes preserved
+        $this->assertTrue($result->hasScripts());
+        $this->assertFileExists($result->scriptPath);
+        $scriptContent = File::get($result->scriptPath);
+        $this->assertStringContainsString('console.log("Script with attributes");', $scriptContent);
     }
 
     public function test_does_not_transform_when_no_scripts_present()

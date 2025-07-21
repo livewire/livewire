@@ -430,15 +430,86 @@ class BlogPost_jkl012 extends \Livewire\Component
 </div>
 ```
 
-### Cache System
+### Cache System ✨ **OPTIMIZED**
 
-The compiler implements a sophisticated caching system:
+The compiler implements a hyper-efficient caching system:
 
 - **Cache Directory**: `storage/framework/views/livewire/`
   - `/classes/` - Compiled PHP class files
   - `/views/` - Cleaned Blade view files
-- **Hash-based invalidation** - Files are regenerated when source changes
+  - `/scripts/` - Extracted JavaScript files
+  - `/metadata/` - Compilation metadata for cache validation
+- **Filemtime-based invalidation** - Uses file modification times for efficient cache validation
+- **In-memory cache** - Same-request optimization prevents redundant filesystem operations
+- **Metadata-driven cache hits** - True cache hits avoid re-parsing components entirely
 - **Automatic directory creation** - Cache directories are created as needed
+
+#### **Cache Performance Improvements**
+- ✅ **No file reading for cache validation** - Uses filemtimes instead of content hashing
+- ✅ **True cache hits** - Metadata files store compilation results for instant reconstruction
+- ✅ **In-memory optimization** - Same-request cache prevents duplicate work
+- ✅ **Minimal filesystem operations** - Files read only once during compilation
+- ✅ **Path-based file naming** - Consistent filenames prevent orphaned compiled files
+- ✅ **File overwriting not duplication** - Source changes overwrite existing compiled files
+- ✅ **Blade-like caching strategy** - Uses path hashing for stable compiled file locations
+- ✅ **Integrated cache clearing** - Hooks into Laravel's `view:clear` command automatically
+- ✅ **Direct file path rendering** - Bypasses view namespace lookup to prevent double compilation
+
+#### **Integrated Cache Management**
+
+The V4 compiler automatically integrates with Laravel's cache clearing commands:
+
+```bash
+# This now clears both Laravel views AND Livewire compiled files
+php artisan view:clear
+
+# Output:
+# Compiled views cleared successfully.
+# Livewire compiled files cleared (15 files removed).
+```
+
+**What gets cleared:**
+- `/storage/framework/views/livewire/classes/` - Compiled PHP classes
+- `/storage/framework/views/livewire/views/` - Cleaned Blade views  
+- `/storage/framework/views/livewire/scripts/` - Extracted JavaScript files
+- `/storage/framework/views/livewire/metadata/` - Compilation metadata
+
+**Dedicated command still available:**
+```bash
+php artisan livewire:clear  # Clears only Livewire files + runs view:clear
+```
+
+#### **Critical Performance Fix: Direct File Path Rendering** ⚡
+
+**Problem:** Original V4 implementation used Laravel's view namespace system (`view('livewire-compiled::component')`), causing Laravel to look up and compile view files on every request, even with Livewire cache hits.
+
+**Solution:** Generated components now use direct file path rendering (`app('view')->file('/path/to/file.blade.php')`) which bypasses namespace lookup and only compiles the Blade template when the actual Blade cache is invalid.
+
+**Before (Double Compilation):**
+```php
+// Generated render method:
+return view('livewire-compiled::counter_abc123');
+// ↓ Laravel namespace lookup
+// ↓ Finds: storage/framework/views/livewire/views/counter_abc123.blade.php  
+// ↓ Blade compiler runs on every request!
+```
+
+**After (Single Compilation):**
+```php
+// Generated render method:
+return app('view')->file('/absolute/path/counter_abc123.blade.php');
+// ↓ Direct file reference
+// ↓ Laravel's normal Blade caching applies
+// ↓ Only compiles when Blade cache is actually invalid!
+```
+
+**Performance Impact:**
+- ✅ **Eliminates double compilation** - Leverages Laravel's native Blade caching
+- ✅ **Proper Blade compilation** - `{{ $count }}` expressions work correctly
+- ✅ **True cache efficiency** - Both Livewire AND Blade caching work together
+- ✅ **Best of both worlds** - Pre-processing + native Blade compilation
+
+This fix resolves the issue where profilers showed unnecessary Blade compilation activity even on cached components, while maintaining full Blade syntax support.
 
 ### Usage Examples
 
