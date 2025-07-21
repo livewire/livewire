@@ -1,4 +1,3 @@
-import interceptorRegistry from '@/v4/interceptors/interceptorRegistry.js'
 import { directive, getDirectives } from "@/directives"
 import Alpine from 'alpinejs'
 
@@ -19,8 +18,6 @@ directive('poll', ({ el, directive, component }) => {
 })
 
 function triggerComponentRequest(el, directive, component) {
-    interceptorRegistry.fire(el, directive, component)
-
     Alpine.evaluate(el,
         directive.expression ? '$wire.' + directive.expression : '$wire.$commit()'
     )
