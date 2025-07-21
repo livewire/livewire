@@ -60,7 +60,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
                 HTML,
                 <<< HTML
                 <div>
-                    @island('anonymous_0', key: 'basic_island_0', view: 'livewire-compiled::basic_island_0')
+                    @island('basic_0', key: 'basic_island_0', view: 'livewire-compiled::basic_island_0')
                 </div>
                 HTML,
                 [
@@ -118,7 +118,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
                 HTML,
                 <<< HTML
                 <div>
-                    @island('anonymous_0', key: 'basic_island_0', view: 'livewire-compiled::basic_island_0')
+                    @island('basic_0', key: 'basic_island_0', view: 'livewire-compiled::basic_island_0')
                 </div>
                 HTML,
                 [
@@ -338,7 +338,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
         $expectedCompiled = <<< HTML
         <div>
-            @island('anonymous_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
         </div>
         HTML;
 
@@ -385,7 +385,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
         $expectedCompiled = <<< HTML
         <div>
-            @island('anonymous_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
         </div>
         HTML;
 
@@ -426,7 +426,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
         $expectedCompiled = <<< HTML
         <div>
-            @island('anonymous_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
         </div>
         HTML;
 
