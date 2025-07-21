@@ -14,12 +14,12 @@ class DeferredIsland
     {
         $placeholderContent = 'Loading...';
 
-        if (isset($this->placeholder)) {
+        if (view()->exists($this->placeholder)) {
             $placeholderContent = view($this->placeholder)->render();
         }
 
         return "<!--[if ISLAND:{$this->key}]><![endif]-->"
-                . "<div wire:init=\"\$island('{$this->name}')\">{$placeholderContent}</div>"
+            . "<div wire:init=\"\$island('{$this->name}')\">{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
 }

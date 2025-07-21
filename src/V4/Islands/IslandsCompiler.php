@@ -4,6 +4,7 @@ namespace Livewire\V4\Islands;
 
 use Illuminate\Support\Facades\File;
 use Livewire\ComponentHook;
+use Livewire\V4\Placeholders\PlaceholderCompiler;
 
 class IslandsCompiler extends ComponentHook
 {
@@ -11,7 +12,6 @@ class IslandsCompiler extends ComponentHook
     protected string $viewDirectory;
     protected string $viewName;
     protected array $islandsStack = [];
-    protected array $placeholderStack = [];
     protected ?int $startIslandCount = null;
     protected array $islandsNameCount = [];
 
@@ -60,15 +60,7 @@ class IslandsCompiler extends ComponentHook
                 $island = $this->getIslandDetails($params);
 
                 if (isset($island['view'])) {
-                    if (isset($island['placeholder']) && is_null($island['placeholderViewName'])) {
-                        $placeholder = $this->getPlaceholderDetails("view: {$island['placeholder']}", $island);
-
-                        $placeholder['content'] = $island['placeholder'];
-
-                        $this->writePlaceholder($placeholder);
-
-                        $island['placeholderViewName'] = $placeholder['compiledViewName'];
-                    }
+                    $island = $this->compilePlaceholder($island);
 
                     $content .= $this->compiledIslandDirective($island);
 
@@ -83,15 +75,7 @@ class IslandsCompiler extends ComponentHook
 
                 $island = array_pop($this->islandsStack);
 
-                if (isset($island['placeholder']) && is_null($island['placeholderViewName'])) {
-                    $placeholder = $this->getPlaceholderDetails("view: {$island['placeholder']}", $island);
-
-                    $placeholder['content'] = $island['placeholder'];
-
-                    $this->writePlaceholder($placeholder);
-
-                    $island['placeholderViewName'] = $placeholder['compiledViewName'];
-                }
+                $island = $this->compilePlaceholder($island);
 
                 $content .= $this->compiledIslandDirective($island);
 
@@ -102,26 +86,6 @@ class IslandsCompiler extends ComponentHook
                 }
 
                 $this->islandsStack[count($this->islandsStack) - 1]['content'] = $content;
-
-                return $remainingContent;
-            } else if ($this->isPlaceholder($directiveContent)) {
-                $placeholder = $this->getPlaceholderDetails($params, count($this->islandsStack) ? $this->islandsStack[count($this->islandsStack) - 1] : null);
-
-                $this->placeholderStack[] = $placeholder;
-
-                $remainingContent = $this->compileIslands($remainingContent);
-
-                $placeholder = array_pop($this->placeholderStack);
-
-                $this->islandsStack[count($this->islandsStack) - 1]['placeholderViewName'] = $placeholder['compiledViewName'];
-
-                $this->writePlaceholder($placeholder);
-            } else if ($this->isEndPlaceholder($directiveContent)) {
-                if (empty($this->placeholderStack)) {
-                    throw new \Exception('End placeholder directive found without a matching start placeholder directive');
-                }
-
-                $this->placeholderStack[count($this->placeholderStack) - 1]['content'] = $content;
 
                 return $remainingContent;
             }
@@ -138,7 +102,7 @@ class IslandsCompiler extends ComponentHook
 
     function findDirective($content)
     {
-        $pattern = '/@island(?:\((.*?)\))?|@endisland|@placeholder(?:\((.*?)\))?|@endplaceholder/s';
+        $pattern = '/@island(?:\((.*?)\))?|@endisland/s';
         preg_match($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
 
         if (! $matches) {
@@ -175,16 +139,6 @@ class IslandsCompiler extends ComponentHook
         return str_starts_with($match, '@endisland');
     }
 
-    function isPlaceholder($match)
-    {
-        return str_starts_with($match, '@placeholder');
-    }
-
-    function isEndPlaceholder($match)
-    {
-        return str_starts_with($match, '@endplaceholder');
-    }
-
     function getIslandDetails($params)
     {
         $parsedParams = $this->parseParams($params);
@@ -212,10 +166,6 @@ class IslandsCompiler extends ComponentHook
 
         $content = null;
 
-        if (isset($view)) {
-            $content = "@include('{$view}')";
-        }
-
         return [
             'content' => $content,
             'name' => $name,
@@ -227,27 +177,6 @@ class IslandsCompiler extends ComponentHook
             'compiledViewName' => $compiledViewName,
             'compiledFileName' => $compiledFileName,
             'compiledPath' => $compiledPath,
-            'placeholderViewName' => null,
-        ];
-    }
-
-    function getPlaceholderDetails($params, $island)
-    {
-        $parsedParams = $this->parseParams($params);
-
-        $compiledViewKey = ($island['compiledViewKey'] ?? $this->viewName) . '_placeholder';
-        $compiledViewName = "livewire-compiled::{$compiledViewKey}";
-        $compiledFileName = "{$compiledViewKey}.blade.php";
-
-        $compiledPath = $this->viewDirectory . DIRECTORY_SEPARATOR . $compiledFileName;
-
-        return [
-            'view' => $parsedParams['view'],
-            'compiledViewKey' => $compiledViewKey,
-            'compiledViewName' => $compiledViewName,
-            'compiledFileName' => $compiledFileName,
-            'compiledPath' => $compiledPath,
-            'content' => null,
         ];
     }
 
@@ -306,7 +235,6 @@ class IslandsCompiler extends ComponentHook
         $key = $island['compiledViewKey'];
         $params = $island['params'];
         $compiledViewName = $island['compiledViewName'];
-        $placeholderViewName = $island['placeholderViewName'];
 
         $output = "@island('{$name}', key: '{$key}'";
 
@@ -314,15 +242,37 @@ class IslandsCompiler extends ComponentHook
             $output .= ", " . implode(', ', $params);
         }
 
-        $output .= ", view: '{$compiledViewName}'";
-        
-        if ($placeholderViewName) {
-            $output .= ", placeholder: '{$placeholderViewName}'";
-        }
-        
-        $output .= ")";
+        $output .= ", view: '{$compiledViewName}')";
 
         return $output;
+    }
+
+    function compilePlaceholder($island)
+    {
+        $placeholderCompiler = new PlaceholderCompiler($this->cacheDirectory);
+
+        if (isset($island['view']) && view()->exists($island['view'])) {
+            $view = view($island['view']);
+
+            $viewPath = $view->getPath();
+
+            $contents = file_get_contents($viewPath);
+
+            $island['content'] = $contents;
+        }
+
+        if (isset($island['placeholder'])) {
+            $island['content'] = <<< HTML
+            @placeholder
+                {$island['placeholder']}
+            @endplaceholder
+            {$island['content']}
+            HTML;
+        }
+
+        $island['content'] = $placeholderCompiler->compile($island['content'], $island['compiledPath']);
+
+        return $island;
     }
 
     function writeIsland($island)
@@ -330,12 +280,5 @@ class IslandsCompiler extends ComponentHook
         $content = $island['content'];
 
         File::put($island['compiledPath'], $content);
-    }
-
-    function writePlaceholder($placeholder)
-    {
-        $content = $placeholder['content'];
-
-        File::put($placeholder['compiledPath'], $content);
     }
 }

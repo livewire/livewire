@@ -6,7 +6,7 @@ trait IsLazy {
     protected static ?\WeakMap $lazyMetas = null;
 
     public function isLazy($target) {
-        return new \ReflectionClass($target)->isUninitializedLazyObject($target);
+        return (new \ReflectionClass($target))->isUninitializedLazyObject($target);
     }
 
     public function getLazyMeta($target) {

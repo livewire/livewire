@@ -14,7 +14,7 @@ class LazyIsland
     {
         $placeholderContent = 'Loading...';
 
-        if (isset($this->placeholder)) {
+        if (view()->exists($this->placeholder)) {
             $placeholderContent = view($this->placeholder)->render();
         }
 

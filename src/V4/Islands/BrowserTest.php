@@ -828,7 +828,6 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    // @todo: Fix this test...
     public function test_a_deferred_external_island_can_have_a_placeholder_directive()
     {
         Livewire::visit(
@@ -849,7 +848,6 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML; }
         })
         ->waitForLivewireToLoad()
-        ->tinker()
         ->assertMissing('@external-island-with-placeholder')
         ->assertSee('External island placeholder content')
 

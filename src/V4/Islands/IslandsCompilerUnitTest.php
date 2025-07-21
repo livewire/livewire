@@ -3,6 +3,7 @@
 namespace Livewire\V4\Islands;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class IslandsCompilerUnitTest extends \Tests\TestCase
@@ -29,6 +30,8 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
     #[DataProvider('contentProvider')]
     public function test_can_compile_islands($content, $expectedCompiled, $expectedFiles)
     {
+        View::addNamespace('islands', __DIR__ . '/fixtures');
+
         $currentPath = __DIR__ . '/fixtures/basic.livewire.php';
 
         $compiled = $this->compiler->compile($content, $currentPath);
@@ -91,7 +94,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
             [
                 <<< HTML
                 <div>
-                    @island('bob', view: 'test-view')
+                    @island('bob', view: 'islands::test-view')
                 </div>
                 HTML,
                 <<< HTML
@@ -101,7 +104,9 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
                 HTML,
                 [
                     'basic_island_bob_0.blade.php' => <<< HTML
-                    @include('test-view')
+                    <div>
+                        External island test view
+                    </div>
                     HTML,
                 ]
             ],
@@ -338,7 +343,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
         $expectedCompiled = <<< HTML
         <div>
-            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0')
         </div>
         HTML;
 
@@ -385,7 +390,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
         $expectedCompiled = <<< HTML
         <div>
-            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0')
         </div>
         HTML;
 
@@ -414,11 +419,13 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
     public function test_it_can_compile_an_external_island_with_a_placeholder_parameter()
     {
+        View::addNamespace('islands', __DIR__ . '/fixtures');
+
         $currentPath = __DIR__ . '/fixtures/basic.livewire.php';
 
         $content = <<< HTML
         <div>
-            @island(defer: true, view: 'external-island', placeholder: 'Custom inline placeholder!')
+            @island(defer: true, view: 'islands::test-view', placeholder: 'Custom inline placeholder!')
         </div>
         HTML;
 
@@ -426,7 +433,7 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
         $expectedCompiled = <<< HTML
         <div>
-            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0', placeholder: 'livewire-compiled::basic_island_0_placeholder')
+            @island('basic_0', key: 'basic_island_0', defer: true, view: 'livewire-compiled::basic_island_0')
         </div>
         HTML;
 
@@ -438,7 +445,9 @@ class IslandsCompilerUnitTest extends \Tests\TestCase
 
         $expectedFiles = [
             'basic_island_0.blade.php' => <<< HTML
-            @include('external-island')
+            <div>
+                External island test view
+            </div>
             HTML,
             'basic_island_0_placeholder.blade.php' => <<< HTML
             Custom inline placeholder!

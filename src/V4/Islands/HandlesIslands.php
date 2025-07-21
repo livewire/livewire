@@ -6,7 +6,7 @@ trait HandlesIslands
 {
     protected $islands = [];
 
-    public function island($name, $key, $mode = 'replace', $render = 'once', $defer = false, $lazy = false, $view = null, $placeholder = null)
+    public function island($name, $key, $mode = 'replace', $render = 'once', $defer = false, $lazy = false, $view = null)
     {
         if ($view === null && $key) {
             // @todo: See if there is a better way to do this...
@@ -20,6 +20,8 @@ trait HandlesIslands
                 "Either provide a view name or define the island inline in your component."
             );
         }
+
+        $placeholder = "{$view}_placeholder";
 
         if ($defer && $lazy) {
             throw new \InvalidArgumentException(
