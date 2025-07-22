@@ -145,11 +145,19 @@ class SupportLazyLoading extends ComponentHook
 
     protected function getPlaceholderView($component, $params)
     {
+        // @todo: This is a hack. Fix this so it uses a deterministically generated name...
+        $name = (string) str($this->component->getName())->afterLast('.');
+        $compiledPlaceholder = "livewire-compiled::{$name}_placeholder";
+
         $globalPlaceholder = config('livewire.lazy_placeholder');
 
-        $placeholderHtml = $globalPlaceholder
-            ? view($globalPlaceholder)->render()
-            : '<div></div>';
+        if (view()->exists($compiledPlaceholder)) {
+            $placeholderHtml = $compiledPlaceholder;
+        } else if ($globalPlaceholder) {
+            $placeholderHtml = view($globalPlaceholder)->render();
+        } else {
+            $placeholderHtml = '<div></div>';
+        }
 
         $viewOrString = wrap($component)->withFallback($placeholderHtml)->placeholder($params);
 

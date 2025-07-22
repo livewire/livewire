@@ -87,6 +87,123 @@ new class extends Livewire\Component {
         $this->assertTrue(file_exists($result->viewPath));
     }
 
+    public function test_can_compile_placeholder_directive()
+    {
+        $componentContent = <<< HTML
+        <?php
+
+        use Livewire\Component;
+
+        new class extends Component {
+            //
+        } ?>
+
+        @placeholder
+            <div>Placeholder</div>
+        @endplaceholder
+        <div>
+            Content
+        </div>
+        HTML;
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledPlaceholderPath = $this->cacheDir . '/views/counter_placeholder.blade.php';
+        $this->assertTrue(file_exists($compiledPlaceholderPath));
+        $this->assertStringContainsString('<div>Placeholder</div>', File::get($compiledPlaceholderPath));
+
+        $this->assertTrue(file_exists($result->viewPath));
+        $this->assertStringNotContainsString('<div>Placeholder</div>', File::get($result->viewPath));
+    }
+
+    public function test_can_compile_islands_directives()
+    {
+        $componentContent = <<< HTML
+        <?php
+
+        use Livewire\Component;
+
+        new class extends Component {
+            //
+        } ?>
+
+        <div>
+            Content
+
+            @island
+                <div>Island content</div>
+            @endisland
+        </div>
+        HTML;
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledIslandPath = $this->cacheDir . '/views/counter_island_0.blade.php';
+        $this->assertTrue(file_exists($compiledIslandPath));
+        $this->assertStringContainsString('<div>Island content</div>', File::get($compiledIslandPath));
+
+        $this->assertTrue(file_exists($result->viewPath));
+        $this->assertStringNotContainsString('<div>Island content</div>', File::get($result->viewPath));
+    }
+
+    public function test_can_compile_islands_and_component_placeholder_directives()
+    {
+        $componentContent = <<< HTML
+        <?php
+
+        use Livewire\Component;
+
+        new class extends Component {
+            //
+        } ?>
+
+        @placeholder
+            <div>Component placeholder</div>
+        @endplaceholder
+
+        <div>
+            Component content
+
+            @island
+                @placeholder
+                    <div>Island placeholder</div>
+                @endplaceholder
+
+                <div>Island content</div>
+            @endisland
+        </div>
+        HTML;
+
+        $viewPath = $this->tempPath . '/counter.livewire.php';
+        File::put($viewPath, $componentContent);
+
+        $result = $this->compiler->compile($viewPath);
+
+        $compiledComponentPlaceholderPath = $this->cacheDir . '/views/counter_placeholder.blade.php';
+        $this->assertTrue(file_exists($compiledComponentPlaceholderPath));
+        $this->assertStringContainsString('<div>Component placeholder</div>', File::get($compiledComponentPlaceholderPath));
+
+        $compiledIslandPath = $this->cacheDir . '/views/counter_island_0.blade.php';
+        $this->assertTrue(file_exists($compiledIslandPath));
+        $this->assertStringContainsString('<div>Island content</div>', File::get($compiledIslandPath));
+
+        $compiledIslandPlaceholderPath = $this->cacheDir . '/views/counter_island_0_placeholder.blade.php';
+        $this->assertTrue(file_exists($compiledIslandPlaceholderPath));
+        $this->assertStringContainsString('<div>Island placeholder</div>', File::get($compiledIslandPlaceholderPath));
+
+        $this->assertTrue(file_exists($result->viewPath));
+        $compiledViewPathContent = File::get($result->viewPath);
+        $this->assertStringNotContainsString('<div>Component placeholder</div>', $compiledViewPathContent);
+        $this->assertStringNotContainsString('<div>Island placeholder</div>', $compiledViewPathContent);
+        $this->assertStringNotContainsString('<div>Island content</div>', $compiledViewPathContent);
+    }
+
     public function test_throws_exception_for_missing_view_file()
     {
         $this->expectException(CompilationException::class);

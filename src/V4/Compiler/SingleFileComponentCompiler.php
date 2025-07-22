@@ -5,6 +5,8 @@ namespace Livewire\V4\Compiler;
 use Livewire\V4\Compiler\Exceptions\InvalidComponentException;
 use Livewire\V4\Compiler\Exceptions\CompilationException;
 use Livewire\V4\Compiler\Exceptions\ParseException;
+use Livewire\V4\Placeholders\PlaceholderCompiler;
+use Livewire\V4\Islands\IslandsCompiler;
 use Illuminate\Support\Facades\File;
 use Livewire\Mechanisms\Mechanism;
 
@@ -71,6 +73,14 @@ class SingleFileComponentCompiler extends Mechanism
 
         // Generate compilation result...
         $result = $this->generateCompilationResult($viewPath, $parsed, $hash);
+
+        // Compile islands...
+        $islandsCompiler = new IslandsCompiler($this->cacheDirectory);
+        $parsed->viewContent = $islandsCompiler->compile($parsed->viewContent, $viewPath);
+
+        // Compile placeholder...
+        $placeholderCompiler = new PlaceholderCompiler($this->cacheDirectory);
+        $parsed->viewContent = $placeholderCompiler->compile($parsed->viewContent, $viewPath);
 
         // Generate files and metadata...
         $this->generateFiles($result, $parsed);
@@ -152,6 +162,14 @@ class SingleFileComponentCompiler extends Mechanism
 
         // Generate compilation result using the directory as the "view path"...
         $result = $this->generateMultiFileCompilationResult($directory, $parsed, $hash);
+
+        // Compile islands...
+        $islandsCompiler = new IslandsCompiler($this->cacheDirectory);
+        $parsed->viewContent = $islandsCompiler->compile($parsed->viewContent, $directory);
+
+        // Compile placeholder...
+        $placeholderCompiler = new PlaceholderCompiler($this->cacheDirectory);
+        $parsed->viewContent = $placeholderCompiler->compile($parsed->viewContent, $directory);
 
         // Generate files and metadata...
         $this->generateFiles($result, $parsed);
