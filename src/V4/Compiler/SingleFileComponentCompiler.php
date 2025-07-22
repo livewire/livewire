@@ -621,6 +621,8 @@ class SingleFileComponentCompiler extends Mechanism
         $layoutAttribute = '';
         if ($parsed->hasLayout()) {
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
+        } else { // Provide a default layout attribute...
+            $layoutAttribute = $this->generateLayoutAttribute('layouts::app', []);
         }
 
         // Build the pre-class code section (imports, constants, etc.)
