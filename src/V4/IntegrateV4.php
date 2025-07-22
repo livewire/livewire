@@ -57,6 +57,7 @@ class IntegrateV4
 
         app('view')->addNamespace('pages', resource_path('views/pages'));
         app('view')->addNamespace('layouts', resource_path('views/layouts'));
+        app('blade.compiler')->anonymousComponentPath(resource_path('views/layouts'), 'layouts');
 
         app('livewire')->namespace('pages', resource_path('views/pages'));
 
