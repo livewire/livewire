@@ -8411,6 +8411,10 @@ function renderIsland(component, key2, content, mode = null) {
   let strippedContent = stripIslandComments(content, key2);
   let parentElement = startNode.parentElement;
   let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  if (isPlaceholderMarker(startNode)) {
+    mode = "replace";
+    startNode.textContent = startNode.textContent.replace(":placeholder", "");
+  }
   if (mode === "append") {
     let container = document.createElement(parentElementTag);
     container.innerHTML = strippedContent;
@@ -8497,11 +8501,14 @@ function isEndMarker2(el) {
   return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
 }
 function extractIslandKey(el) {
-  let key2 = el.textContent.match(/\[if ISLAND:([\w-]+)\]/)?.[1];
+  let key2 = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1];
   return key2;
 }
+function isPlaceholderMarker(el) {
+  return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/);
+}
 function stripIslandComments(content, key2) {
-  let startComment = new RegExp(`<!--\\[if ISLAND:${key2}\\]><\\!\\[endif\\]-->`);
+  let startComment = new RegExp(`<!--\\[if ISLAND:${key2}(:placeholder)?\\]><\\!\\[endif\\]-->`);
   let endComment = new RegExp(`<!--\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]-->`);
   let stripped = content.replace(startComment, "").replace(endComment, "");
   return stripped.trim();
@@ -8515,7 +8522,7 @@ function findIslandComments(rootEl, key2) {
     }
     Array.from(el.childNodes).forEach((node) => {
       if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent.match(new RegExp(`\\[if ISLAND:${key2}\\]><\\!\\[endif\\]`))) {
+        if (node.textContent.match(new RegExp(`\\[if ISLAND:${key2}(:placeholder)?\\]><\\!\\[endif\\]`))) {
           startNode = node;
         }
         if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]`))) {

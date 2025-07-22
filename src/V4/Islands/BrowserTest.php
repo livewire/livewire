@@ -236,17 +236,19 @@ class BrowserTest extends \Tests\BrowserTestCase
 
                 public function render() { return <<<'HTML'
                 <div>
-                    @island(defer: true)
-                        <div dusk="island">
-                            <p>Island content</p>
-                        </div>
-                    @endisland
+                    <div dusk="island-container">
+                        @island(defer: true)
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
+                    </div>
                 </div>
                 HTML; }
         })
         ->waitForLivewireToLoad()
         ->assertMissing('@island')
-        ->assertSee('Loading...')
+        ->assertSeeNothingIn('@island-container')
 
         // Wait for the island to be hydrated...
         ->pause(500)
@@ -270,18 +272,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div style="height: 100vh">Long content to push the island off the page...</div>
 
                     <div dusk="island-container">
-                    @island(lazy: true)
-                        <div dusk="island">
-                            <p>Island content</p>
-                        </div>
-                    @endisland
+                        @island(lazy: true)
+                            <div dusk="island">
+                                <p>Island content</p>
+                            </div>
+                        @endisland
                     </div>
                 </div>
                 HTML; }
         })
         ->waitForLivewireToLoad()
         ->assertMissing('@island')
-        ->assertSee('Loading...')
+        ->assertSeeNothingIn('@island-container')
         ->waitForNoLivewire()
 
         // Wait for the island to be hydrated if it was going to, but it shouldn't...
@@ -290,7 +292,7 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertDontSee('Island content')
 
         ->scrollIntoView('@island-container')
-        ->assertSeeIn('@island-container', 'Loading...')
+        ->assertSeeNothingIn('@island-container')
 
         ->pause(500)
 
@@ -1114,7 +1116,7 @@ class BrowserTest extends \Tests\BrowserTestCase
                         @endisland
                     </div>
 
-                    <button wire:click="$refresh" wire:island.replace="foo" dusk="refresh-foo">Refresh</button>
+                    <button wire:click="$refresh" wire:island="foo" dusk="refresh-foo">Refresh</button>
                     <button wire:click="incrementCount" wire:island="foo" dusk="increment-count-button">Increment count</button>
                 </div>
                 HTML;

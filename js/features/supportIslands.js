@@ -48,6 +48,14 @@ export function renderIsland(component, key, content, mode = null) {
     let parentElement = startNode.parentElement
     let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : 'div'
 
+    // If the start node is a placeholder marker, we need to replace the island regardless of the mode....
+    if (isPlaceholderMarker(startNode)) {
+        mode = 'replace'
+
+        // Remove the placeholder marker from the start node...
+        startNode.textContent = startNode.textContent.replace(':placeholder', '')
+    }
+
     if (mode === 'append') {
         let container = document.createElement(parentElementTag)
 
@@ -172,14 +180,18 @@ function isEndMarker(el) {
 }
 
 function extractIslandKey(el) {
-    let key = el.textContent.match(/\[if ISLAND:([\w-]+)\]/)?.[1]
+    let key = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1]
 
     return key
 }
 
+function isPlaceholderMarker(el) {
+    return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/)
+}
+
 function stripIslandComments(content, key) {
     // Remove the start and end comment markers
-    let startComment = new RegExp(`<!--\\[if ISLAND:${key}\\]><\\!\\[endif\\]-->`)
+    let startComment = new RegExp(`<!--\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]-->`)
     let endComment = new RegExp(`<!--\\[if ENDISLAND:${key}\\]><\\!\\[endif\\]-->`)
 
     // Strip out the comments from the content
@@ -203,7 +215,7 @@ function findIslandComments(rootEl, key) {
         // Check all child nodes (including text and comment nodes)
         Array.from(el.childNodes).forEach(node => {
             if (node.nodeType === Node.COMMENT_NODE) {
-                if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}\\]><\\!\\[endif\\]`))) {
+                if (node.textContent.match(new RegExp(`\\[if ISLAND:${key}(:placeholder)?\\]><\\!\\[endif\\]`))) {
                     startNode = node
                 }
 

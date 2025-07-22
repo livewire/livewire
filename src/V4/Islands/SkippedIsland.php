@@ -12,13 +12,13 @@ class SkippedIsland
 
     public function render()
     {
-        $placeholderContent = 'Loading...';
+        $placeholderContent = '';
 
         if (view()->exists($this->placeholder)) {
             $placeholderContent = view($this->placeholder)->render();
         }
 
-        return "<!--[if ISLAND:{$this->key}]><![endif]-->"
+        return "<!--[if ISLAND:{$this->key}:placeholder]><![endif]-->"
             . "<div>{$placeholderContent}</div>"
             . "<!--[if ENDISLAND:{$this->key}]><![endif]-->";
     }
