@@ -27,15 +27,15 @@ class BrowserTest extends BrowserTestCase
 
                         <span dusk="outer-count">{{ $count }}</span>
 
-                        <wire:modal>
+                        <livewire:modal>
                             <button dusk="outer-slot-button" wire:click="increment">Increment</button>
                             <span dusk="outer-slot-count">{{ $count }}</span>
 
-                            <wire:slot name="header">
+                            <livewire:slot name="header">
                                 <button dusk="outer-header-slot-button" wire:click="increment">Increment</button>
                                 <span dusk="outer-header-slot-count">{{ $count }}</span>
-                            </wire:slot>
-                        </wire:modal>
+                            </livewire:slot>
+                        </livewire:modal>
                     </div>
                     HTML;
                 }
