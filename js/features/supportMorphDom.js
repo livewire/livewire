@@ -1,8 +1,7 @@
 import { morph } from '@/morph'
 import { on } from '@/hooks'
-import requestBus from './../v4/requests/requestBus'
 
-if (! requestBus.booted) {
+if (! window.livewireV4) {
     on('effect', ({ component, effects }) => {
         let html = effects.html
         if (! html) return

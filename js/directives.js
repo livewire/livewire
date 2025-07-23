@@ -84,6 +84,7 @@ export class Directive {
         this.rawName = this.raw = rawName
         this.el = el
         this.eventContext
+        this.wire
 
         this.value = value
         this.modifiers = modifiers
@@ -123,14 +124,14 @@ export class Directive {
 
             // Use a function that returns it's arguments to parse and eval all params
             // This "$event" is for use inside the livewire event handler.
-            let func = new Function('$event', `return (function () {
+            let func = new Function('$event', '$wire', `return (function () {
                 for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
                     p[k] = arguments[k];
                 }
                 return [].concat(p);
             })(${methodAndParamString[2]})`)
 
-            params = func(this.eventContext)
+            params = func(this.eventContext, this.wire)
 
             methods.push({ method, params })
             slicedLength += methodAndParamString[0].length;

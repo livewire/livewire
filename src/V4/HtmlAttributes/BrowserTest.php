@@ -18,7 +18,7 @@ class BrowserTest extends BrowserTestCase
                     <div>
                         <h1>Parent Component</h1>
 
-                        <wire:alert
+                        <livewire:alert
                             type="error"
                             class="mb-4"
                             id="error-alert"
@@ -26,7 +26,7 @@ class BrowserTest extends BrowserTestCase
                             dusk="alert-component"
                         >
                             Something went wrong!
-                        </wire:alert>
+                        </livewire:alert>
                     </div>
                     HTML;
                 }

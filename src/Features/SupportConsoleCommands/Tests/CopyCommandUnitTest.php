@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Artisan;
 
 class CopyCommandUnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
     public function test_component_is_copied_by_copy_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob']);

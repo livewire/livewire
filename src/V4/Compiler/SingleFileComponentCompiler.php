@@ -621,7 +621,7 @@ class SingleFileComponentCompiler extends Mechanism
         $layoutAttribute = '';
         if ($parsed->hasLayout()) {
             $layoutAttribute = $this->generateLayoutAttribute($parsed->layoutTemplate, $parsed->layoutData);
-        } else { // Provide a default layout attribute...
+        } else if (view()->exists('layouts::app')) { // Provide a default layout attribute...
             $layoutAttribute = $this->generateLayoutAttribute('layouts::app', []);
         }
 
@@ -648,7 +648,7 @@ class SingleFileComponentCompiler extends Mechanism
 
         $renderMethod = "    public function render()
     {
-        return view('{$result->viewName}');
+        return app('view')->file('{$result->viewPath}');
     }";
 
         $classContent = "<?php

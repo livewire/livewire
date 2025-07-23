@@ -19,6 +19,8 @@ class LivewireManager
 {
     protected LivewireServiceProvider $provider;
 
+    public static $v4 = true;
+
     function setProvider(LivewireServiceProvider $provider)
     {
         $this->provider = $provider;
@@ -113,9 +115,9 @@ class LivewireManager
         return app(HandleComponents::class)->findSynth($keyOrTarget, $component);
     }
 
-    function update($snapshot, $diff, $calls, $updateContext)
+    function update($snapshot, $diff, $calls)
     {
-        return app(HandleComponents::class)->update($snapshot, $diff, $calls, $updateContext);
+        return app(HandleComponents::class)->update($snapshot, $diff, $calls);
     }
 
     function updateProperty($component, $path, $value)
@@ -221,7 +223,11 @@ class LivewireManager
 
     function visit($name, $args = [])
     {
-        return \Pest\Browser\Api\Livewire::test($name, $args);
+        if (class_exists(\Pest\Browser\Api\Livewire::class)) {
+            return \Pest\Browser\Api\Livewire::test($name, $args);
+        }
+
+        return DuskTestable::create($name, $params = [], $this->queryParamsForTesting);
     }
 
     function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)

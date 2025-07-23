@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Artisan;
 
 class MoveCommandUnitTest extends \Tests\TestCase
 {
+    public function setUp(): void
+    {
+        \Livewire\LivewireManager::$v4 = false;
+
+        parent::setUp();
+    }
+
     public function test_component_is_renamed_by_move_command()
     {
         Artisan::call('make:livewire', ['name' => 'bob']);

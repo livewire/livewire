@@ -200,8 +200,10 @@ class FrontendAssets extends Mechanism
             app(static::class)->scriptTagAttributes,
         );
 
+        $v4Script = \Livewire\LivewireManager::$v4 ? '<script>window.livewireV4 = true</script>' : '';
+
         return <<<HTML
-        {$assetWarning}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
+        {$assetWarning}{$v4Script}<script src="{$url}" {$nonce} {$progressBar} data-csrf="{$token}" data-update-uri="{$updateUri}" {$extraAttributes}></script>
         HTML;
     }
 

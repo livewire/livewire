@@ -27,16 +27,10 @@ export default class Message {
     }
 
     addContext(key, value) {
-        if (! this.context[key]) {
-            this.context[key] = []
-        }
-
-        if (this.context[key].includes(value)) return
-
-        this.context[key].push(value)
+        this.context[key] = value
     }
 
-    addAction(method, params, resolve) {
+    addAction(method, params, context, resolve) {
         // If the action isn't a magic action then it supersedes any magic actions.
         // Remove them so there aren't any unnecessary actions in the request...
         if (! this.isMagicAction(method)) {
@@ -46,13 +40,17 @@ export default class Message {
         if (this.isMagicAction(method)) {
             // If the action is a magic action and it already exists then remove the 
             // old action so there aren't any duplicate actions in the request...
+            // @todo: Should this happen now? What if the same action is called, but it has a different context?
             this.findAndRemoveAction(method)
 
             this.actions.push({
                 method: method,
                 params: params,
+                context: {...this.context, ...context},
                 handleReturn: () => {},
             })
+
+            this.context = {}
 
             // We need to store the resolver, so we can call all of the 
             // magic action resolvers when the message is finished...
@@ -64,8 +62,11 @@ export default class Message {
         this.actions.push({
             method: method,
             params: params,
+            context: {...this.context, ...context},
             handleReturn: resolve,
         })
+
+        this.context = {}
     }
 
     magicActions () {
@@ -114,8 +115,8 @@ export default class Message {
             calls: this.actions.map(i => ({
                 method: i.method,
                 params: i.params,
+                context: i.context,
             })),
-            context: this.context,
         }
 
         // Allow other areas of the codebase to hook into the lifecycle

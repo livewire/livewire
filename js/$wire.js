@@ -6,7 +6,6 @@ import { requestCommit, requestCall } from '@/request'
 import { dataGet, dataSet } from '@/utils'
 import Alpine from 'alpinejs'
 import { on as hook } from './hooks'
-import requestBus from './v4/requests/requestBus'
 import messageBroker from './v4/requests/messageBroker'
 import { getErrorsObject } from './v4/features/supportErrors'
 import { getPaginatorObject } from './v4/features/supportPaginators'
@@ -150,7 +149,7 @@ wireProperty('$set', (component) => async (property, value, live = true) => {
     // If "live", send a request, queueing the property update to happen first
     // on the server, then trickle back down to the client and get merged...
     if (live) {
-        if (requestBus.booted) {
+        if (window.livewireV4) {
             component.queueUpdate(property, value)
 
             return messageBroker.addAction(component, '$set')
@@ -214,9 +213,10 @@ wireProperty('$call', (component) => async (method, ...params) => {
 })
 
 wireProperty('$island', (component) => async (name, mode = null) => {
-    messageBroker.addContext(component, 'islands', {name, mode})
-
-    return await component.$wire.$refresh(mode)
+    return messageBroker.addAction(component, '$refresh', [], {
+        type: 'island',
+        island: { name, mode },
+    })
 })
 
 wireProperty('$entangle', (component) => (name, live = false) => {
@@ -238,14 +238,14 @@ wireProperty('$watch', (component) => (path, callback) => {
 })
 
 wireProperty('$refresh', (component) => async () => {
-    if (requestBus.booted) {
+    if (window.livewireV4) {
         return messageBroker.addAction(component, '$refresh')
     }
 
     return component.$wire.$commit()
 })
 wireProperty('$commit', (component) => async () => {
-    if (requestBus.booted) {
+    if (window.livewireV4) {
         return messageBroker.addAction(component, '$sync')
     }
 
@@ -320,7 +320,7 @@ wireFallback((component) => (property) => async (...params) => {
         }
     }
 
-    if (requestBus.booted) {
+    if (window.livewireV4) {
         return messageBroker.addAction(component, property, params)
     }
 

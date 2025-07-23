@@ -4,6 +4,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
@@ -16,6 +19,434 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+
+// js/utils.js
+function dispatch(target, name, detail = {}, bubbles = true) {
+  target.dispatchEvent(new CustomEvent(name, {
+    detail,
+    bubbles,
+    composed: true,
+    cancelable: true
+  }));
+}
+function listen(target, name, handler) {
+  target.addEventListener(name, handler);
+  return () => target.removeEventListener(name, handler);
+}
+function isObjecty(subject) {
+  return typeof subject === "object" && subject !== null;
+}
+function isObject(subject) {
+  return isObjecty(subject) && !isArray(subject);
+}
+function isArray(subject) {
+  return Array.isArray(subject);
+}
+function isFunction(subject) {
+  return typeof subject === "function";
+}
+function isPrimitive(subject) {
+  return typeof subject !== "object" || subject === null;
+}
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+function dataGet(object, key2) {
+  if (key2 === "")
+    return object;
+  return key2.split(".").reduce((carry, i) => {
+    return carry?.[i];
+  }, object);
+}
+function dataSet(object, key2, value) {
+  let segments = key2.split(".");
+  if (segments.length === 1) {
+    return object[key2] = value;
+  }
+  let firstSegment = segments.shift();
+  let restOfSegments = segments.join(".");
+  if (object[firstSegment] === void 0) {
+    object[firstSegment] = {};
+  }
+  dataSet(object[firstSegment], restOfSegments, value);
+}
+function diff(left, right, diffs = {}, path = "") {
+  if (left === right)
+    return diffs;
+  if (typeof left !== typeof right || isObject(left) && isArray(right) || isArray(left) && isObject(right)) {
+    diffs[path] = right;
+    return diffs;
+  }
+  if (isPrimitive(left) || isPrimitive(right)) {
+    diffs[path] = right;
+    return diffs;
+  }
+  let leftKeys = Object.keys(left);
+  Object.entries(right).forEach(([key2, value]) => {
+    diffs = { ...diffs, ...diff(left[key2], right[key2], diffs, path === "" ? key2 : `${path}.${key2}`) };
+    leftKeys = leftKeys.filter((i) => i !== key2);
+  });
+  leftKeys.forEach((key2) => {
+    diffs[`${path}.${key2}`] = "__rm__";
+  });
+  return diffs;
+}
+function extractData(payload) {
+  let value = isSynthetic(payload) ? payload[0] : payload;
+  let meta = isSynthetic(payload) ? payload[1] : void 0;
+  if (isObjecty(value)) {
+    Object.entries(value).forEach(([key2, iValue]) => {
+      value[key2] = extractData(iValue);
+    });
+  }
+  return value;
+}
+function isSynthetic(subject) {
+  return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
+}
+function getCsrfToken() {
+  if (document.querySelector('meta[name="csrf-token"]')) {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+  }
+  if (document.querySelector("[data-csrf]")) {
+    return document.querySelector("[data-csrf]").getAttribute("data-csrf");
+  }
+  if (window.livewireScriptConfig["csrf"] ?? false) {
+    return window.livewireScriptConfig["csrf"];
+  }
+  throw "Livewire: No CSRF token detected";
+}
+function getNonce() {
+  if (nonce)
+    return nonce;
+  if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
+    nonce = window.livewireScriptConfig["nonce"];
+    return nonce;
+  }
+  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
+  if (elWithNonce) {
+    nonce = elWithNonce.nonce;
+    return nonce;
+  }
+  return null;
+}
+function getUpdateUri() {
+  return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
+}
+function contentIsFromDump(content) {
+  return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
+}
+function splitDumpFromContent(content) {
+  let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
+  return [dump, content.replace(dump, "")];
+}
+var Bag, WeakBag, nonce;
+var init_utils = __esm({
+  "js/utils.js"() {
+    Bag = class {
+      constructor() {
+        this.arrays = {};
+      }
+      add(key2, value) {
+        if (!this.arrays[key2])
+          this.arrays[key2] = [];
+        this.arrays[key2].push(value);
+      }
+      remove(key2) {
+        if (this.arrays[key2])
+          delete this.arrays[key2];
+      }
+      get(key2) {
+        return this.arrays[key2] || [];
+      }
+      each(key2, callback) {
+        return this.get(key2).forEach(callback);
+      }
+    };
+    WeakBag = class {
+      constructor() {
+        this.arrays = /* @__PURE__ */ new WeakMap();
+      }
+      add(key2, value) {
+        if (!this.arrays.has(key2))
+          this.arrays.set(key2, []);
+        this.arrays.get(key2).push(value);
+      }
+      remove(key2) {
+        if (this.arrays.has(key2))
+          this.arrays.delete(key2, []);
+      }
+      get(key2) {
+        return this.arrays.has(key2) ? this.arrays.get(key2) : [];
+      }
+      each(key2, callback) {
+        return this.get(key2).forEach(callback);
+      }
+    };
+  }
+});
+
+// js/features/supportFileUploads.js
+function getUploadManager(component) {
+  if (!uploadManagers.has(component)) {
+    let manager = new UploadManager(component);
+    uploadManagers.set(component, manager);
+    manager.registerListeners();
+  }
+  return uploadManagers.get(component);
+}
+function handleFileUpload(el, property, component, cleanup) {
+  let manager = getUploadManager(component);
+  let start2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
+  let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
+  let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
+  let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
+  let progress = (progressEvent) => {
+    var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
+    el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
+      bubbles: true,
+      detail: { progress: percentCompleted }
+    }));
+  };
+  let eventHandler = (e) => {
+    if (e.target.files.length === 0)
+      return;
+    start2();
+    if (e.target.multiple) {
+      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
+    } else {
+      manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
+    }
+  };
+  el.addEventListener("change", eventHandler);
+  component.$wire.$watch(property, (value) => {
+    if (!el.isConnected)
+      return;
+    if (value === null || value === "") {
+      el.value = "";
+    }
+    if (el.multiple && Array.isArray(value) && value.length === 0) {
+      el.value = "";
+    }
+  });
+  let clearFileInputValue = () => {
+    el.value = null;
+  };
+  el.addEventListener("click", clearFileInputValue);
+  el.addEventListener("livewire-upload-cancel", clearFileInputValue);
+  cleanup(() => {
+    el.removeEventListener("change", eventHandler);
+    el.removeEventListener("click", clearFileInputValue);
+  });
+}
+function setUploadLoading() {
+}
+function unsetUploadLoading() {
+}
+function upload(component, name, file, finishCallback = () => {
+}, errorCallback = () => {
+}, progressCallback = () => {
+}, cancelledCallback = () => {
+}) {
+  let uploadManager = getUploadManager(component);
+  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
+}
+function uploadMultiple(component, name, files, finishCallback = () => {
+}, errorCallback = () => {
+}, progressCallback = () => {
+}, cancelledCallback = () => {
+}) {
+  let uploadManager = getUploadManager(component);
+  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
+}
+function removeUpload(component, name, tmpFilename, finishCallback = () => {
+}, errorCallback = () => {
+}) {
+  let uploadManager = getUploadManager(component);
+  uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
+}
+function cancelUpload(component, name, cancelledCallback = () => {
+}) {
+  let uploadManager = getUploadManager(component);
+  uploadManager.cancelUpload(name, cancelledCallback);
+}
+var uploadManagers, UploadManager, MessageBag;
+var init_supportFileUploads = __esm({
+  "js/features/supportFileUploads.js"() {
+    init_utils();
+    uploadManagers = /* @__PURE__ */ new WeakMap();
+    UploadManager = class {
+      constructor(component) {
+        this.component = component;
+        this.uploadBag = new MessageBag();
+        this.removeBag = new MessageBag();
+      }
+      registerListeners() {
+        this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
+          setUploadLoading(this.component, name);
+          this.handleSignedUrl(name, url);
+        });
+        this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
+          setUploadLoading(this.component, name);
+          this.handleS3PreSignedUrl(name, payload);
+        });
+        this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
+        this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
+        this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
+      }
+      upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+        this.setUpload(name, {
+          files: [file],
+          multiple: false,
+          finishCallback,
+          errorCallback,
+          progressCallback,
+          cancelledCallback
+        });
+      }
+      uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+        this.setUpload(name, {
+          files: Array.from(files),
+          multiple: true,
+          finishCallback,
+          errorCallback,
+          progressCallback,
+          cancelledCallback
+        });
+      }
+      removeUpload(name, tmpFilename, finishCallback) {
+        this.removeBag.push(name, {
+          tmpFilename,
+          finishCallback
+        });
+        this.component.$wire.call("_removeUpload", name, tmpFilename);
+      }
+      setUpload(name, uploadObject) {
+        this.uploadBag.add(name, uploadObject);
+        if (this.uploadBag.get(name).length === 1) {
+          this.startUpload(name, uploadObject);
+        }
+      }
+      handleSignedUrl(name, url) {
+        let formData = new FormData();
+        Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
+        let headers = {
+          "Accept": "application/json"
+        };
+        let csrfToken = getCsrfToken();
+        if (csrfToken)
+          headers["X-CSRF-TOKEN"] = csrfToken;
+        this.makeRequest(name, formData, "post", url, headers, (response) => {
+          return response.paths;
+        });
+      }
+      handleS3PreSignedUrl(name, payload) {
+        let formData = this.uploadBag.first(name).files[0];
+        let headers = payload.headers;
+        if ("Host" in headers)
+          delete headers.Host;
+        let url = payload.url;
+        this.makeRequest(name, formData, "put", url, headers, (response) => {
+          return [payload.path];
+        });
+      }
+      makeRequest(name, formData, method, url, headers, retrievePaths) {
+        let request = new XMLHttpRequest();
+        request.open(method, url);
+        Object.entries(headers).forEach(([key2, value]) => {
+          request.setRequestHeader(key2, value);
+        });
+        request.upload.addEventListener("progress", (e) => {
+          e.detail = {};
+          e.detail.progress = Math.floor(e.loaded * 100 / e.total);
+          this.uploadBag.first(name).progressCallback(e);
+        });
+        request.addEventListener("load", () => {
+          if ((request.status + "")[0] === "2") {
+            let paths = retrievePaths(request.response && JSON.parse(request.response));
+            this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
+            return;
+          }
+          let errors = null;
+          if (request.status === 422) {
+            errors = request.response;
+          }
+          this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
+        });
+        this.uploadBag.first(name).request = request;
+        request.send(formData);
+      }
+      startUpload(name, uploadObject) {
+        let fileInfos = uploadObject.files.map((file) => {
+          return { name: file.name, size: file.size, type: file.type };
+        });
+        this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
+        setUploadLoading(this.component, name);
+      }
+      markUploadFinished(name, tmpFilenames) {
+        unsetUploadLoading(this.component);
+        let uploadObject = this.uploadBag.shift(name);
+        uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
+        if (this.uploadBag.get(name).length > 0)
+          this.startUpload(name, this.uploadBag.last(name));
+      }
+      markUploadErrored(name) {
+        unsetUploadLoading(this.component);
+        this.uploadBag.shift(name).errorCallback();
+        if (this.uploadBag.get(name).length > 0)
+          this.startUpload(name, this.uploadBag.last(name));
+      }
+      cancelUpload(name, cancelledCallback = null) {
+        unsetUploadLoading(this.component);
+        let uploadItem = this.uploadBag.first(name);
+        if (uploadItem) {
+          if (uploadItem.request) {
+            uploadItem.request.abort();
+          }
+          this.uploadBag.shift(name).cancelledCallback();
+          if (cancelledCallback)
+            cancelledCallback();
+        }
+      }
+    };
+    MessageBag = class {
+      constructor() {
+        this.bag = {};
+      }
+      add(name, thing) {
+        if (!this.bag[name]) {
+          this.bag[name] = [];
+        }
+        this.bag[name].push(thing);
+      }
+      push(name, thing) {
+        this.add(name, thing);
+      }
+      first(name) {
+        if (!this.bag[name])
+          return null;
+        return this.bag[name][0];
+      }
+      last(name) {
+        return this.bag[name].slice(-1)[0];
+      }
+      get(name) {
+        return this.bag[name];
+      }
+      shift(name) {
+        return this.bag[name].shift();
+      }
+      call(name, ...params) {
+        (this.listeners[name] || []).forEach((callback) => {
+          callback(...params);
+        });
+      }
+      has(name) {
+        return Object.keys(this.listeners).includes(name);
+      }
+    };
+  }
+});
 
 // ../alpine/packages/alpinejs/dist/module.cjs.js
 var require_module_cjs = __commonJS({
@@ -3831,6 +4262,2424 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   }
 });
 
+// js/features/supportEntangle.js
+function generateEntangleFunction(component, cleanup) {
+  if (!cleanup)
+    cleanup = () => {
+    };
+  return (name, live = false) => {
+    let isLive = live;
+    let livewireProperty = name;
+    let livewireComponent = component.$wire;
+    let livewirePropertyValue = livewireComponent.get(livewireProperty);
+    let interceptor = import_alpinejs.default.interceptor((initialValue, getter, setter, path, key2) => {
+      if (typeof livewirePropertyValue === "undefined") {
+        console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
+        return;
+      }
+      let release = import_alpinejs.default.entangle({
+        get() {
+          return livewireComponent.get(name);
+        },
+        set(value) {
+          livewireComponent.set(name, value, isLive);
+        }
+      }, {
+        get() {
+          return getter();
+        },
+        set(value) {
+          setter(value);
+        }
+      });
+      cleanup(() => release());
+      return cloneIfObject(livewireComponent.get(name));
+    }, (obj) => {
+      Object.defineProperty(obj, "live", {
+        get() {
+          isLive = true;
+          return obj;
+        }
+      });
+    });
+    return interceptor(livewirePropertyValue);
+  };
+}
+function cloneIfObject(value) {
+  return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
+}
+var import_alpinejs;
+var init_supportEntangle = __esm({
+  "js/features/supportEntangle.js"() {
+    import_alpinejs = __toESM(require_module_cjs());
+  }
+});
+
+// js/hooks.js
+function on(name, callback) {
+  if (!listeners[name])
+    listeners[name] = [];
+  listeners[name].push(callback);
+  return () => {
+    listeners[name] = listeners[name].filter((i) => i !== callback);
+  };
+}
+function trigger(name, ...params) {
+  let callbacks = listeners[name] || [];
+  let finishers = [];
+  for (let i = 0; i < callbacks.length; i++) {
+    let finisher = callbacks[i](...params);
+    if (isFunction(finisher))
+      finishers.push(finisher);
+  }
+  return (result) => {
+    return runFinishers(finishers, result);
+  };
+}
+async function triggerAsync(name, ...params) {
+  let callbacks = listeners[name] || [];
+  let finishers = [];
+  for (let i = 0; i < callbacks.length; i++) {
+    let finisher = await callbacks[i](...params);
+    if (isFunction(finisher))
+      finishers.push(finisher);
+  }
+  return (result) => {
+    return runFinishers(finishers, result);
+  };
+}
+function runFinishers(finishers, result) {
+  let latest = result;
+  for (let i = 0; i < finishers.length; i++) {
+    let iResult = finishers[i](latest);
+    if (iResult !== void 0) {
+      latest = iResult;
+    }
+  }
+  return latest;
+}
+var listeners;
+var init_hooks = __esm({
+  "js/hooks.js"() {
+    init_utils();
+    listeners = [];
+  }
+});
+
+// js/request/modal.js
+function showHtmlModal(html) {
+  let page = document.createElement("html");
+  page.innerHTML = html;
+  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
+  let modal = document.getElementById("livewire-error");
+  if (typeof modal != "undefined" && modal != null) {
+    modal.innerHTML = "";
+  } else {
+    modal = document.createElement("dialog");
+    modal.id = "livewire-error";
+    modal.style.margin = "50px";
+    modal.style.width = "calc(100% - 100px)";
+    modal.style.height = "calc(100% - 100px)";
+    modal.style.borderRadius = "5px";
+    modal.style.padding = "0px";
+  }
+  let iframe = document.createElement("iframe");
+  iframe.style.backgroundColor = "#17161A";
+  iframe.style.borderRadius = "5px";
+  iframe.style.width = "100%";
+  iframe.style.height = "100%";
+  modal.appendChild(iframe);
+  document.body.prepend(modal);
+  document.body.style.overflow = "hidden";
+  iframe.contentWindow.document.open();
+  iframe.contentWindow.document.write(page.outerHTML);
+  iframe.contentWindow.document.close();
+  modal.addEventListener("click", () => hideHtmlModal(modal));
+  modal.addEventListener("close", () => cleanupModal(modal));
+  modal.showModal();
+  modal.focus();
+  modal.blur();
+}
+function hideHtmlModal(modal) {
+  modal.close();
+}
+function cleanupModal(modal) {
+  modal.outerHTML = "";
+  document.body.style.overflow = "visible";
+}
+var init_modal = __esm({
+  "js/request/modal.js"() {
+  }
+});
+
+// js/request/pool.js
+var RequestPool;
+var init_pool = __esm({
+  "js/request/pool.js"() {
+    init_request();
+    RequestPool = class {
+      constructor() {
+        this.commits = /* @__PURE__ */ new Set();
+      }
+      add(commit) {
+        this.commits.add(commit);
+      }
+      delete(commit) {
+        this.commits.delete(commit);
+      }
+      hasCommitFor(component) {
+        return !!this.findCommitByComponent(component);
+      }
+      findCommitByComponent(component) {
+        for (let [idx, commit] of this.commits.entries()) {
+          if (commit.component === component)
+            return commit;
+        }
+      }
+      shouldHoldCommit(commit) {
+        return !commit.isolate;
+      }
+      empty() {
+        return this.commits.size === 0;
+      }
+      async send() {
+        this.prepare();
+        await sendRequest(this);
+      }
+      prepare() {
+        this.commits.forEach((i) => i.prepare());
+      }
+      payload() {
+        let commitPayloads = [];
+        let successReceivers = [];
+        let failureReceivers = [];
+        this.commits.forEach((commit) => {
+          let [payload, succeed2, fail2] = commit.toRequestPayload();
+          commitPayloads.push(payload);
+          successReceivers.push(succeed2);
+          failureReceivers.push(fail2);
+        });
+        let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
+        let fail = () => failureReceivers.forEach((receiver) => receiver());
+        return [commitPayloads, succeed, fail];
+      }
+    };
+  }
+});
+
+// js/request/commit.js
+var Commit;
+var init_commit = __esm({
+  "js/request/commit.js"() {
+    init_utils();
+    init_hooks();
+    Commit = class {
+      constructor(component) {
+        this.component = component;
+        this.isolate = false;
+        this.calls = [];
+        this.receivers = [];
+        this.resolvers = [];
+      }
+      addResolver(resolver) {
+        this.resolvers.push(resolver);
+      }
+      addCall(method, params, receiver) {
+        this.calls.push({
+          path: "",
+          method,
+          params,
+          handleReturn(value) {
+            receiver(value);
+          }
+        });
+      }
+      prepare() {
+        trigger("commit.prepare", { component: this.component });
+      }
+      getEncodedSnapshotWithLatestChildrenMergedIn() {
+        let { snapshotEncoded, children, snapshot } = this.component;
+        let childIds = children.map((child) => child.id);
+        let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
+        return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
+      }
+      toRequestPayload() {
+        let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
+        let updates = this.component.mergeQueuedUpdates(propertiesDiff);
+        let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn();
+        let payload = {
+          snapshot: snapshotEncoded,
+          updates,
+          calls: this.calls.map((i) => ({
+            path: i.path,
+            method: i.method,
+            params: i.params
+          }))
+        };
+        let succeedCallbacks = [];
+        let failCallbacks = [];
+        let respondCallbacks = [];
+        let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+        let fail = () => failCallbacks.forEach((i) => i());
+        let respond = () => respondCallbacks.forEach((i) => i());
+        let finishTarget = trigger("commit", {
+          component: this.component,
+          commit: payload,
+          succeed: (callback) => {
+            succeedCallbacks.push(callback);
+          },
+          fail: (callback) => {
+            failCallbacks.push(callback);
+          },
+          respond: (callback) => {
+            respondCallbacks.push(callback);
+          }
+        });
+        let handleResponse = (response) => {
+          let { snapshot, effects } = response;
+          respond();
+          this.component.mergeNewSnapshot(snapshot, effects, updates);
+          this.component.processEffects(this.component.effects);
+          if (effects["returns"]) {
+            let returns = effects["returns"];
+            let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
+            returnHandlerStack.forEach((handleReturn, index) => {
+              handleReturn(returns[index]);
+            });
+          }
+          let parsedSnapshot = JSON.parse(snapshot);
+          finishTarget({ snapshot: parsedSnapshot, effects });
+          this.resolvers.forEach((i) => i());
+          succeed(response);
+        };
+        let handleFailure = () => {
+          respond();
+          fail();
+        };
+        return [payload, handleResponse, handleFailure];
+      }
+    };
+  }
+});
+
+// js/request/bus.js
+function bufferPoolingForFiveMs(commit, callback) {
+  if (buffersByCommit.has(commit))
+    return;
+  buffersByCommit.set(commit, setTimeout(() => {
+    callback();
+    buffersByCommit.delete(commit);
+  }, 5));
+}
+var CommitBus, buffersByCommit;
+var init_bus = __esm({
+  "js/request/bus.js"() {
+    init_hooks();
+    init_pool();
+    init_commit();
+    CommitBus = class {
+      constructor() {
+        this.commits = /* @__PURE__ */ new Set();
+        this.pools = /* @__PURE__ */ new Set();
+      }
+      add(component) {
+        let commit = this.findCommitOr(component, () => {
+          let newCommit = new Commit(component);
+          this.commits.add(newCommit);
+          return newCommit;
+        });
+        bufferPoolingForFiveMs(commit, () => {
+          let pool = this.findPoolWithComponent(commit.component);
+          if (!pool) {
+            this.createAndSendNewPool();
+          }
+        });
+        return commit;
+      }
+      findCommitOr(component, callback) {
+        for (let [idx, commit] of this.commits.entries()) {
+          if (commit.component === component) {
+            return commit;
+          }
+        }
+        return callback();
+      }
+      findPoolWithComponent(component) {
+        for (let [idx, pool] of this.pools.entries()) {
+          if (pool.hasCommitFor(component))
+            return pool;
+        }
+      }
+      createAndSendNewPool() {
+        trigger("commit.pooling", { commits: this.commits });
+        let pools = this.corraleCommitsIntoPools();
+        trigger("commit.pooled", { pools });
+        pools.forEach((pool) => {
+          if (pool.empty())
+            return;
+          this.pools.add(pool);
+          pool.send().then(() => {
+            this.pools.delete(pool);
+            queueMicrotask(() => {
+              this.sendAnyQueuedCommits();
+            });
+          });
+        });
+      }
+      corraleCommitsIntoPools() {
+        let pools = /* @__PURE__ */ new Set();
+        for (let [idx, commit] of this.commits.entries()) {
+          if (this.findPoolWithComponent(commit.component))
+            continue;
+          let hasFoundPool = false;
+          pools.forEach((pool) => {
+            if (pool.shouldHoldCommit(commit)) {
+              pool.add(commit);
+              hasFoundPool = true;
+            }
+          });
+          if (!hasFoundPool) {
+            let newPool = new RequestPool();
+            newPool.add(commit);
+            pools.add(newPool);
+          }
+          this.commits.delete(commit);
+        }
+        return pools;
+      }
+      sendAnyQueuedCommits() {
+        if (this.commits.size > 0) {
+          this.createAndSendNewPool();
+        }
+      }
+    };
+    buffersByCommit = /* @__PURE__ */ new WeakMap();
+  }
+});
+
+// js/request/index.js
+async function requestCommit(component) {
+  let commit = commitBus.add(component);
+  let promise = new Promise((resolve) => {
+    commit.addResolver(resolve);
+  });
+  promise.commit = commit;
+  return promise;
+}
+async function requestCall(component, method, params) {
+  let commit = commitBus.add(component);
+  let promise = new Promise((resolve) => {
+    commit.addCall(method, params, (value) => resolve(value));
+  });
+  promise.commit = commit;
+  return promise;
+}
+async function sendRequest(pool) {
+  let [payload, handleSuccess, handleFailure] = pool.payload();
+  window.controller = new AbortController();
+  let options = {
+    method: "POST",
+    body: JSON.stringify({
+      _token: getCsrfToken(),
+      components: payload
+    }),
+    headers: {
+      "Content-type": "application/json",
+      "X-Livewire": ""
+    },
+    signal: window.controller.signal
+  };
+  let succeedCallbacks = [];
+  let failCallbacks = [];
+  let respondCallbacks = [];
+  let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
+  let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
+  let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
+  let finishProfile = trigger("request.profile", options);
+  let updateUri = getUpdateUri();
+  trigger("request", {
+    url: updateUri,
+    options,
+    payload: options.body,
+    respond: (i) => respondCallbacks.push(i),
+    succeed: (i) => succeedCallbacks.push(i),
+    fail: (i) => failCallbacks.push(i)
+  });
+  let response;
+  try {
+    response = await fetch(updateUri, options);
+  } catch (e) {
+    finishProfile({ content: "{}", failed: true });
+    handleFailure();
+    fail({
+      status: 503,
+      content: null,
+      preventDefault: () => {
+      }
+    });
+    return;
+  }
+  let mutableObject = {
+    status: response.status,
+    response
+  };
+  respond(mutableObject);
+  response = mutableObject.response;
+  let content = await response.text();
+  if (!response.ok) {
+    finishProfile({ content: "{}", failed: true });
+    let preventDefault = false;
+    handleFailure();
+    fail({
+      status: response.status,
+      content,
+      preventDefault: () => preventDefault = true
+    });
+    if (preventDefault)
+      return;
+    if (response.status === 419) {
+      handlePageExpiry();
+    }
+    if (response.aborted) {
+      return;
+    } else {
+      return showFailureModal(content);
+    }
+  }
+  if (response.redirected) {
+    window.location.href = response.url;
+  }
+  if (contentIsFromDump(content)) {
+    let dump;
+    [dump, content] = splitDumpFromContent(content);
+    showHtmlModal(dump);
+    finishProfile({ content: "{}", failed: true });
+  } else {
+    finishProfile({ content, failed: false });
+  }
+  let { components: components2, assets } = JSON.parse(content);
+  await triggerAsync("payload.intercept", { components: components2, assets });
+  await handleSuccess(components2);
+  succeed({ status: response.status, json: JSON.parse(content) });
+}
+function handlePageExpiry() {
+  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+}
+function showFailureModal(content) {
+  let html = content;
+  showHtmlModal(html);
+}
+var commitBus;
+var init_request = __esm({
+  "js/request/index.js"() {
+    init_utils();
+    init_hooks();
+    init_modal();
+    init_bus();
+    commitBus = new CommitBus();
+  }
+});
+
+// js/features/supportSlots.js
+function stripSlotComments(content, slotName) {
+  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
+  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findSlotComments(rootEl, slotName) {
+  let startNode = null;
+  let endNode = null;
+  walkElements(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
+          startNode = node;
+        }
+        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements(child, callback);
+  });
+}
+function skipSlotContents(el, toEl, skipUntil) {
+  if (isStartMarker(el) && isStartMarker(toEl)) {
+    skipUntil((node) => isEndMarker(node));
+  }
+}
+function isStartMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
+}
+function isEndMarker(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
+}
+function extractSlotData(el) {
+  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
+  let match = el.textContent.match(regex);
+  if (!match)
+    return;
+  return {
+    name: match[1],
+    parentId: match[2] || null
+  };
+}
+function checkPreviousSiblingForSlotStartMarker(el) {
+  function searchInPreviousSiblings(node) {
+    let sibling = node.previousSibling;
+    while (sibling) {
+      if (isEndMarker(sibling)) {
+        return null;
+      }
+      if (isStartMarker(sibling)) {
+        return sibling;
+      }
+      sibling = sibling.previousSibling;
+    }
+    return null;
+  }
+  function searchRecursively(currentEl) {
+    let found = searchInPreviousSiblings(currentEl);
+    if (found !== null) {
+      return found;
+    }
+    let parent = currentEl.parentElement;
+    if (!parent) {
+      return null;
+    }
+    if (parent.hasAttribute && parent.hasAttribute("wire:id")) {
+      return null;
+    }
+    return searchRecursively(parent);
+  }
+  return searchRecursively(el);
+}
+var init_supportSlots = __esm({
+  "js/features/supportSlots.js"() {
+    init_store();
+    init_morph();
+    init_hooks();
+    on("effect", ({ component, effects }) => {
+      let slots = effects.slots;
+      if (!slots)
+        return;
+      let parentId = component.el.getAttribute("wire:id");
+      Object.entries(slots).forEach(([childId, childSlots]) => {
+        let childComponent = findComponent(childId);
+        if (!childComponent)
+          return;
+        Object.entries(childSlots).forEach(([name, content]) => {
+          queueMicrotask(() => {
+            queueMicrotask(() => {
+              queueMicrotask(() => {
+                let fullName = parentId ? `${name}:${parentId}` : name;
+                let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
+                if (!startNode || !endNode)
+                  return;
+                let strippedContent = stripSlotComments(content, fullName);
+                morphIsland(childComponent, startNode, endNode, strippedContent);
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+});
+
+// js/features/supportIslands.js
+function streamIsland(component, key2, content) {
+  renderIsland(component, key2, content);
+}
+function renderIsland(component, key2, content, mode = null) {
+  let island = component.islands[key2];
+  mode ??= island.mode;
+  let { startNode, endNode } = findIslandComments(component.el, key2);
+  if (!startNode || !endNode)
+    return;
+  let strippedContent = stripIslandComments(content, key2);
+  let parentElement = startNode.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  if (isPlaceholderMarker(startNode)) {
+    mode = "replace";
+    startNode.textContent = startNode.textContent.replace(":placeholder", "");
+  }
+  if (mode === "append") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).forEach((node) => {
+      endNode.parentNode.insertBefore(node, endNode);
+    });
+  } else if (mode === "prepend") {
+    let container = document.createElement(parentElementTag);
+    container.innerHTML = strippedContent;
+    Array.from(container.childNodes).reverse().forEach((node) => {
+      startNode.parentNode.insertBefore(node, startNode.nextSibling);
+    });
+  } else {
+    morphIsland(component, startNode, endNode, strippedContent);
+  }
+}
+function skipIslandContents(component, el, toEl, skipUntil) {
+  if (isStartMarker2(el) && isStartMarker2(toEl)) {
+    let key2 = extractIslandKey(toEl);
+    let island = component.islands[key2];
+    let mode = island.mode;
+    let render = island.render;
+    if (["skip", "once"].includes(render)) {
+      skipUntil((node) => isEndMarker2(node));
+    } else if (mode === "prepend") {
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker2(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
+      });
+      skipUntil((node) => isEndMarker2(node));
+    } else if (mode === "append") {
+      let endMarker = el.nextSibling;
+      while (endMarker && !isEndMarker2(endMarker)) {
+        endMarker = endMarker.nextSibling;
+      }
+      let sibling = toEl.nextSibling;
+      let siblings = [];
+      while (sibling && !isEndMarker2(sibling)) {
+        siblings.push(sibling);
+        sibling = sibling.nextSibling;
+      }
+      siblings.forEach((node) => {
+        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
+      });
+      skipUntil((node) => isEndMarker2(node));
+    }
+  }
+}
+function closestIsland(component, el) {
+  let current = el;
+  while (current) {
+    let sibling = current.previousSibling;
+    let foundEndMarker = [];
+    while (sibling) {
+      if (isEndMarker2(sibling)) {
+        foundEndMarker.push("a");
+      }
+      if (isStartMarker2(sibling)) {
+        if (foundEndMarker.length > 0) {
+          foundEndMarker.pop();
+        } else {
+          let key2 = extractIslandKey(sibling);
+          return component.islands[key2];
+        }
+      }
+      sibling = sibling.previousSibling;
+    }
+    current = current.parentElement;
+    if (current && current.hasAttribute("wire:id")) {
+      break;
+    }
+  }
+  return null;
+}
+function isStartMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
+}
+function isEndMarker2(el) {
+  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
+}
+function extractIslandKey(el) {
+  let key2 = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1];
+  return key2;
+}
+function isPlaceholderMarker(el) {
+  return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/);
+}
+function stripIslandComments(content, key2) {
+  let startComment = new RegExp(`<!--\\[if ISLAND:${key2}(:placeholder)?\\]><\\!\\[endif\\]-->`);
+  let endComment = new RegExp(`<!--\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]-->`);
+  let stripped = content.replace(startComment, "").replace(endComment, "");
+  return stripped.trim();
+}
+function findIslandComments(rootEl, key2) {
+  let startNode = null;
+  let endNode = null;
+  walkElements2(rootEl, (el, skip) => {
+    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
+      return skip();
+    }
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        if (node.textContent.match(new RegExp(`\\[if ISLAND:${key2}(:placeholder)?\\]><\\!\\[endif\\]`))) {
+          startNode = node;
+        }
+        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]`))) {
+          endNode = node;
+        }
+      }
+    });
+  });
+  return { startNode, endNode };
+}
+function walkElements2(el, callback) {
+  let skip = false;
+  callback(el, () => skip = true);
+  if (skip)
+    return;
+  Array.from(el.children).forEach((child) => {
+    walkElements2(child, callback);
+  });
+}
+var init_supportIslands = __esm({
+  "js/features/supportIslands.js"() {
+    init_store();
+    init_morph();
+    init_hooks();
+    on("stream", (payload) => {
+      if (payload.type !== "island")
+        return;
+      let { id, name, content } = payload;
+      if (!hasComponent(id))
+        return;
+      let component = findComponent(id);
+      streamIsland(component, key, content);
+    });
+    on("effect", ({ component, effects }) => {
+      let islands = effects.islands || [];
+      islands.forEach((island) => {
+        let { key: key2, content, mode } = island;
+        queueMicrotask(() => {
+          queueMicrotask(() => {
+            renderIsland(component, key2, content, mode);
+          });
+        });
+      });
+    });
+  }
+});
+
+// js/morph.js
+function morph(component, el, html) {
+  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
+  let wrapper = document.createElement(wrapperTag);
+  wrapper.innerHTML = html;
+  let parentComponent;
+  try {
+    parentComponent = closestComponent(el.parentElement);
+  } catch (e) {
+  }
+  parentComponent && (wrapper.__livewire = parentComponent);
+  let to = wrapper.firstElementChild;
+  to.setAttribute("wire:snapshot", component.snapshotEncoded);
+  let effects = { ...component.effects };
+  delete effects.html;
+  to.setAttribute("wire:effects", JSON.stringify(effects));
+  to.__livewire = component;
+  trigger("morph", { el, toEl: to, component });
+  let existingComponentsMap = {};
+  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
+    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
+  });
+  to.querySelectorAll("[wire\\:id]").forEach((child) => {
+    if (child.hasAttribute("wire:snapshot"))
+      return;
+    let wireId = child.getAttribute("wire:id");
+    let existingComponent = existingComponentsMap[wireId];
+    if (existingComponent) {
+      child.replaceWith(existingComponent.cloneNode(true));
+    }
+  });
+  import_alpinejs2.default.morph(el, to, getMorphConfig(component));
+  trigger("morphed", { el, component });
+}
+function morphIsland(component, startNode, endNode, toHTML) {
+  let fromContainer = startNode.parentElement;
+  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
+  let toContainer = document.createElement(fromContainerTag);
+  toContainer.innerHTML = toHTML;
+  toContainer.__livewire = component;
+  let parentElement = component.el.parentElement;
+  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
+  let parentComponent;
+  try {
+    parentComponent = parentElement ? closestComponent(parentElement) : null;
+  } catch (e) {
+  }
+  if (parentComponent) {
+    let parentProviderWrapper = document.createElement(parentElementTag);
+    parentProviderWrapper.appendChild(toContainer);
+    parentProviderWrapper.__livewire = parentComponent;
+  }
+  trigger("island.morph", { startNode, endNode, component });
+  import_alpinejs2.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
+  trigger("island.morphed", { startNode, endNode, component });
+}
+function getMorphConfig(component) {
+  return {
+    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
+      skipSlotContents(el, toEl, skipUntil);
+      skipIslandContents(component, el, toEl, skipUntil);
+      if (isntElement(el))
+        return;
+      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
+      if (el.__livewire_replace === true)
+        el.innerHTML = toEl.innerHTML;
+      if (el.__livewire_replace_self === true) {
+        el.outerHTML = toEl.outerHTML;
+        return skip();
+      }
+      if (el.__livewire_ignore === true)
+        return skip();
+      if (el.__livewire_ignore_self === true)
+        childrenOnly();
+      if (el.__livewire_ignore_children === true)
+        return skipChildren();
+      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
+        return skip();
+      if (isComponentRootEl(el))
+        toEl.__livewire = component;
+    },
+    updated: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.updated", { el, component });
+    },
+    removing: (el, skip) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removing", { el, component, skip });
+    },
+    removed: (el) => {
+      if (isntElement(el))
+        return;
+      trigger("morph.removed", { el, component });
+    },
+    adding: (el) => {
+      trigger("morph.adding", { el, component });
+    },
+    added: (el) => {
+      if (isntElement(el))
+        return;
+      const closestComponentId = closestComponent(el).id;
+      trigger("morph.added", { el });
+    },
+    key: (el) => {
+      if (isntElement(el))
+        return;
+      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
+    },
+    lookahead: false
+  };
+}
+function isntElement(el) {
+  return typeof el.hasAttribute !== "function";
+}
+function isComponentRootEl(el) {
+  return el.hasAttribute("wire:id");
+}
+var import_alpinejs2;
+var init_morph = __esm({
+  "js/morph.js"() {
+    init_hooks();
+    init_store();
+    import_alpinejs2 = __toESM(require_module_cjs());
+    init_supportSlots();
+    init_supportIslands();
+  }
+});
+
+// js/v4/requests/message.js
+var Message;
+var init_message = __esm({
+  "js/v4/requests/message.js"() {
+    init_hooks();
+    init_morph();
+    Message = class {
+      updates = {};
+      actions = [];
+      payload = {};
+      context = {};
+      interceptors = /* @__PURE__ */ new Set();
+      resolvers = [];
+      status = "waiting";
+      succeedCallbacks = [];
+      failCallbacks = [];
+      respondCallbacks = [];
+      finishTarget = null;
+      request = null;
+      isolate = false;
+      constructor(component) {
+        this.component = component;
+      }
+      addInterceptor(interceptor) {
+        interceptor.cancel = () => this.cancel();
+        this.interceptors.add(interceptor);
+      }
+      addContext(key2, value) {
+        this.context[key2] = value;
+      }
+      addAction(method, params, context, resolve) {
+        if (!this.isMagicAction(method)) {
+          this.removeAllMagicActions();
+        }
+        if (this.isMagicAction(method)) {
+          this.findAndRemoveAction(method);
+          this.actions.push({
+            method,
+            params,
+            context: { ...this.context, ...context },
+            handleReturn: () => {
+            }
+          });
+          this.context = {};
+          this.resolvers.push(resolve);
+          return;
+        }
+        this.actions.push({
+          method,
+          params,
+          context: { ...this.context, ...context },
+          handleReturn: resolve
+        });
+        this.context = {};
+      }
+      magicActions() {
+        return [
+          "$refresh",
+          "$set",
+          "$sync"
+        ];
+      }
+      isMagicAction(method) {
+        return this.magicActions().includes(method);
+      }
+      removeAllMagicActions() {
+        this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
+      }
+      findAndRemoveAction(method) {
+        this.actions = this.actions.filter((i) => i.method !== method);
+      }
+      cancelIfItShouldBeCancelled() {
+        if (this.isSucceeded())
+          return;
+        this.cancel();
+      }
+      buffer() {
+        this.status = "buffering";
+      }
+      prepare() {
+        trigger("message.prepare", { component: this.component });
+        this.status = "preparing";
+        this.updates = this.component.getUpdates();
+        let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
+        this.payload = {
+          snapshot,
+          updates: this.updates,
+          calls: this.actions.map((i) => ({
+            method: i.method,
+            params: i.params,
+            context: i.context
+          }))
+        };
+        this.finishTarget = trigger("commit", {
+          component: this.component,
+          commit: this.payload,
+          succeed: (callback) => {
+            this.succeedCallbacks.push(callback);
+          },
+          fail: (callback) => {
+            this.failCallbacks.push(callback);
+          },
+          respond: (callback) => {
+            this.respondCallbacks.push(callback);
+          }
+        });
+        this.beforeSend();
+      }
+      beforeSend() {
+        this.interceptors.forEach((i) => i.beforeSend({ component: this.component, payload: this.payload }));
+      }
+      afterSend() {
+        this.interceptors.forEach((i) => i.afterSend({ component: this.component, payload: this.payload }));
+      }
+      beforeResponse(response) {
+        this.interceptors.forEach((i) => i.beforeResponse({ component: this.component, response }));
+      }
+      afterResponse(response) {
+        this.interceptors.forEach((i) => i.afterResponse({ component: this.component, response }));
+      }
+      respond() {
+        this.respondCallbacks.forEach((i) => i());
+      }
+      succeed(response) {
+        if (this.isCancelled())
+          return;
+        this.status = "succeeded";
+        this.beforeResponse(response);
+        this.respond();
+        let { snapshot, effects } = response;
+        this.component.mergeNewSnapshot(snapshot, effects, this.updates);
+        this.afterResponse(response);
+        this.component.processEffects(this.component.effects);
+        this.resolvers.forEach((i) => i());
+        if (effects["returns"]) {
+          let returns = effects["returns"];
+          let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
+          returnHandlerStack.forEach((handleReturn, index) => {
+            handleReturn(returns[index]);
+          });
+        }
+        let parsedSnapshot = JSON.parse(snapshot);
+        this.finishTarget({ snapshot: parsedSnapshot, effects });
+        this.interceptors.forEach((i) => i.onSuccess(response));
+        this.succeedCallbacks.forEach((i) => i(response));
+        let html = effects["html"];
+        if (!html)
+          return;
+        this.interceptors.forEach((i) => i.beforeRender({ component: this.component }));
+        queueMicrotask(() => {
+          this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
+          morph(this.component, this.component.el, html);
+          this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
+          setTimeout(() => {
+            this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
+            this.interceptors.forEach((i) => i.returned());
+          });
+        });
+      }
+      error(e) {
+        if (this.isCancelled())
+          return;
+        this.status = "errored";
+        this.interceptors.forEach((i) => i.onError(e));
+      }
+      fail(response, content) {
+        if (this.isCancelled())
+          return;
+        this.status = "failed";
+        this.respond();
+        this.interceptors.forEach((i) => i.onError(response, content));
+        this.failCallbacks.forEach((i) => i());
+      }
+      cancel() {
+        this.status = "cancelled";
+        this.interceptors.forEach((i) => i.onCancel());
+      }
+      isBuffering() {
+        return this.status === "buffering";
+      }
+      isPreparing() {
+        return this.status === "preparing";
+      }
+      isSucceeded() {
+        return this.status === "succeeded";
+      }
+      isCancelled() {
+        return this.status === "cancelled";
+      }
+      isErrored() {
+        return this.status === "errored";
+      }
+      isFailed() {
+        return this.status === "failed";
+      }
+      isFinished() {
+        return this.isSucceeded() || this.isCancelled() || this.isFailed() || this.isErrored();
+      }
+    };
+  }
+});
+
+// js/v4/requests/requestBus.js
+var RequestBus, instance, requestBus_default;
+var init_requestBus = __esm({
+  "js/v4/requests/requestBus.js"() {
+    RequestBus = class {
+      booted = false;
+      requests = /* @__PURE__ */ new Set();
+      boot() {
+        this.booted = true;
+        console.log("v4 requests enabled");
+      }
+      add(request) {
+        this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
+        this.requests.add(request);
+        request.send();
+      }
+      remove(request) {
+        this.requests.delete(request);
+      }
+      cancelRequestsThatShouldBeCancelled(shouldCancel) {
+        this.requests.forEach((request) => {
+          if (shouldCancel(request)) {
+            request.cancel();
+          }
+        });
+      }
+    };
+    instance = new RequestBus();
+    requestBus_default = instance;
+  }
+});
+
+// js/v4/requests/request.js
+var Request;
+var init_request2 = __esm({
+  "js/v4/requests/request.js"() {
+    init_requestBus();
+    Request = class {
+      controller = new AbortController();
+      respondCallbacks = [];
+      succeedCallbacks = [];
+      errorCallbacks = [];
+      cancel() {
+        this.controller.abort("cancelled");
+      }
+      finish() {
+        requestBus_default.remove(this);
+      }
+      isCancelled() {
+        return this.controller.signal.aborted;
+      }
+      cancelIfItShouldBeCancelled() {
+        console.error("cancelIfItShouldBeCancelled must be implemented");
+      }
+      shouldCancel() {
+        console.error("shouldCancel must be implemented");
+      }
+      async send() {
+        console.error("send must be implemented");
+      }
+      addRespondCallback(callback) {
+        this.respondCallbacks.push(callback);
+      }
+      addSucceedCallback(callback) {
+        this.succeedCallbacks.push(callback);
+      }
+      addErrorCallback(callback) {
+        this.errorCallbacks.push(callback);
+      }
+    };
+  }
+});
+
+// js/v4/requests/messageRequest.js
+var MessageRequest;
+var init_messageRequest = __esm({
+  "js/v4/requests/messageRequest.js"() {
+    init_utils();
+    init_modal();
+    init_request2();
+    init_hooks();
+    MessageRequest = class extends Request {
+      messages = /* @__PURE__ */ new Set();
+      finishProfile = null;
+      addMessage(message) {
+        this.messages.add(message);
+        message.request = this;
+      }
+      deleteMessage(message) {
+        this.messages.delete(message);
+      }
+      hasMessageFor(component) {
+        return !!this.findMessageByComponent(component);
+      }
+      findMessageByComponent(component) {
+        return Array.from(this.messages).find((message) => message.component.id === component.id);
+      }
+      isEmpty() {
+        return this.messages.size === 0;
+      }
+      shouldCancel() {
+        return (request) => {
+          return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
+        };
+      }
+      async send() {
+        let payload = {
+          _token: getCsrfToken(),
+          components: Array.from(this.messages, (i) => i.payload)
+        };
+        let options = {
+          method: "POST",
+          body: JSON.stringify(payload),
+          headers: {
+            "Content-type": "application/json",
+            "X-Livewire": "1"
+          },
+          signal: this.controller.signal
+        };
+        this.finishProfile = trigger("request.profile", options);
+        let updateUri = getUpdateUri();
+        trigger("request", {
+          url: updateUri,
+          options,
+          payload: options.body,
+          respond: (i) => this.respondCallbacks.push(i),
+          succeed: (i) => this.succeedCallbacks.push(i),
+          fail: (i) => this.errorCallbacks.push(i)
+        });
+        let response;
+        try {
+          let fetchPromise = fetch(updateUri, options);
+          this.messages.forEach((message) => {
+            message.afterSend();
+          });
+          response = await fetchPromise;
+        } catch (e) {
+          this.finish();
+          this.error(e);
+          return;
+        }
+        this.finish();
+        let mutableObject = {
+          status: response.status,
+          response
+        };
+        this.respond(mutableObject);
+        response = mutableObject.response;
+        let content = await response.text();
+        if (!response.ok) {
+          this.fail(response, content);
+          return;
+        }
+        this.redirectIfNeeded(response);
+        await this.succeed(response, content);
+      }
+      redirectIfNeeded(response) {
+        if (response.redirected) {
+          window.location.href = response.url;
+        }
+      }
+      respond(mutableObject) {
+        this.respondCallbacks.forEach((i) => i(mutableObject));
+      }
+      async succeed(response, content) {
+        if (contentIsFromDump(content)) {
+          let dump;
+          [dump, content] = splitDumpFromContent(content);
+          showHtmlModal(dump);
+          this.finishProfile({ content: "{}", failed: true });
+        } else {
+          this.finishProfile({ content, failed: false });
+        }
+        let { components: components2, assets } = JSON.parse(content);
+        await triggerAsync("payload.intercept", { components: components2, assets });
+        this.messages.forEach((message) => {
+          components2.forEach((component) => {
+            let snapshot = JSON.parse(component.snapshot);
+            if (snapshot.memo.id === message.component.id) {
+              message.succeed(component);
+            }
+          });
+        });
+        this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
+      }
+      cancel() {
+        this.messages.forEach((message) => {
+          message.cancelIfItShouldBeCancelled();
+        });
+        super.cancel();
+      }
+      error(e) {
+        this.finishProfile({ content: "{}", failed: true });
+        let preventDefault = false;
+        this.messages.forEach((message) => {
+          message.error(e);
+        });
+        this.errorCallbacks.forEach((i) => i({
+          status: 503,
+          content: null,
+          preventDefault: () => preventDefault = true
+        }));
+      }
+      fail(response, content) {
+        this.finishProfile({ content: "{}", failed: true });
+        let preventDefault = false;
+        this.messages.forEach((message) => {
+          message.fail(response, content);
+        });
+        this.errorCallbacks.forEach((i) => i({
+          status: response.status,
+          content,
+          preventDefault: () => preventDefault = true
+        }));
+        if (preventDefault)
+          return;
+        if (response.status === 419) {
+          this.handlePageExpiry();
+        }
+        if (response.aborted) {
+          return;
+        } else {
+          return this.showFailureModal(content);
+        }
+      }
+      handlePageExpiry() {
+        confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
+      }
+      showFailureModal(content) {
+        let html = content;
+        showHtmlModal(html);
+      }
+    };
+  }
+});
+
+// js/v4/requests/messageBroker.js
+var MessageBroker, instance2, messageBroker_default;
+var init_messageBroker = __esm({
+  "js/v4/requests/messageBroker.js"() {
+    init_message();
+    init_messageRequest();
+    init_requestBus();
+    init_hooks();
+    MessageBroker = class {
+      messages = /* @__PURE__ */ new Map();
+      getMessage(component) {
+        let message = this.messages.get(component.id);
+        if (!message) {
+          message = new Message(component);
+          this.messages.set(component.id, message);
+        }
+        return message;
+      }
+      addInterceptor(interceptor, component) {
+        let message = this.getMessage(component);
+        message.addInterceptor(interceptor);
+      }
+      addContext(component, key2, value) {
+        let message = this.getMessage(component);
+        message.addContext(key2, value);
+      }
+      addAction(component, method, params = [], context = {}) {
+        let message = this.getMessage(component);
+        let promise = new Promise((resolve) => {
+          message.addAction(method, params, context, resolve);
+        });
+        this.send(message);
+        return promise;
+      }
+      send(message) {
+        this.bufferMessageForFiveMs(message);
+      }
+      bufferMessageForFiveMs(message) {
+        if (message.isBuffering())
+          return;
+        message.buffer();
+        setTimeout(() => {
+          this.prepareRequests();
+        }, 5);
+      }
+      prepareRequests() {
+        trigger("message.pooling", { messages: this.messages });
+        let messages = new Set(this.messages.values());
+        this.messages.clear();
+        if (messages.size === 0)
+          return;
+        messages.forEach((message) => {
+          message.prepare();
+        });
+        let requests = this.corraleMessagesIntoRequests(messages);
+        trigger("message.pooled", { requests });
+        this.sendRequests(requests);
+      }
+      corraleMessagesIntoRequests(messages) {
+        let requests = /* @__PURE__ */ new Set();
+        for (let message of messages) {
+          if (message.isCancelled())
+            continue;
+          let hasFoundRequest = false;
+          requests.forEach((request) => {
+            if (!hasFoundRequest && !message.isolate) {
+              request.addMessage(message);
+              hasFoundRequest = true;
+            }
+          });
+          if (!hasFoundRequest) {
+            let request = new MessageRequest();
+            request.addMessage(message);
+            requests.add(request);
+          }
+        }
+        return requests;
+      }
+      sendRequests(requests) {
+        requests.forEach((request) => {
+          requestBus_default.add(request);
+        });
+      }
+    };
+    instance2 = new MessageBroker();
+    messageBroker_default = instance2;
+  }
+});
+
+// js/v4/features/supportErrors.js
+function getErrorsObject(component) {
+  return {
+    messages() {
+      return component.snapshot.memo.errors;
+    },
+    keys() {
+      return Object.keys(this.messages());
+    },
+    has(...keys) {
+      if (this.isEmpty())
+        return false;
+      if (keys.length === 0 || keys.length === 1 && keys[0] == null)
+        return this.any();
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      for (let key2 of keys) {
+        if (this.first(key2) === "")
+          return false;
+      }
+      return true;
+    },
+    hasAny(keys) {
+      if (this.isEmpty())
+        return false;
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      for (let key2 of keys) {
+        if (this.has(key2))
+          return true;
+      }
+      return false;
+    },
+    missing(...keys) {
+      if (keys.length === 1 && Array.isArray(keys[0]))
+        keys = keys[0];
+      return !this.hasAny(keys);
+    },
+    first(key2 = null) {
+      let messages = key2 === null ? this.all() : this.get(key2);
+      let firstMessage = messages.length > 0 ? messages[0] : "";
+      return Array.isArray(firstMessage) ? firstMessage[0] : firstMessage;
+    },
+    get(key2) {
+      return component.snapshot.memo.errors[key2] || [];
+    },
+    all() {
+      return Object.values(this.messages()).flat();
+    },
+    isEmpty() {
+      return !this.any();
+    },
+    isNotEmpty() {
+      return this.any();
+    },
+    any() {
+      return Object.keys(this.messages()).length > 0;
+    },
+    count() {
+      return Object.values(this.messages()).reduce((total, array) => {
+        return total + array.length;
+      }, 0);
+    }
+  };
+}
+var init_supportErrors = __esm({
+  "js/v4/features/supportErrors.js"() {
+  }
+});
+
+// js/v4/features/supportPaginators.js
+function getPaginatorObject(component, paginatorName) {
+  let componentPaginatorObjects = paginatorObjects.get(component);
+  if (!componentPaginatorObjects) {
+    componentPaginatorObjects = /* @__PURE__ */ new Map();
+    paginatorObjects.set(component, componentPaginatorObjects);
+  }
+  let paginatorObject = componentPaginatorObjects.get(paginatorName);
+  if (!paginatorObject) {
+    paginatorObject = newPaginatorObject(component);
+    componentPaginatorObjects.set(paginatorName, paginatorObject);
+  }
+  return paginatorObject;
+}
+function newPaginatorObject(component) {
+  return Alpine.reactive({
+    renderedPages: [],
+    paginator: {},
+    firstItem() {
+      return this.paginator.from;
+    },
+    lastItem() {
+      return this.paginator.to;
+    },
+    perPage() {
+      return this.paginator.perPage;
+    },
+    onFirstPage() {
+      return this.paginator.onFirstPage;
+    },
+    onLastPage() {
+      return this.paginator.onLastPage;
+    },
+    getPageName() {
+      return this.paginator.pageName;
+    },
+    getCursorName() {
+      return this.paginator.cursorName;
+    },
+    currentPage() {
+      return this.paginator.currentPage;
+    },
+    currentCursor() {
+      return this.paginator.currentCursor;
+    },
+    count() {
+      return this.paginator.count;
+    },
+    total() {
+      return this.paginator.total;
+    },
+    hasPages() {
+      return this.paginator.hasPages;
+    },
+    hasMorePages() {
+      return this.paginator.hasMorePages;
+    },
+    hasPreviousPage() {
+      return this.hasPages() && !this.onFirstPage();
+    },
+    hasNextPage() {
+      return this.hasPages() && !this.onLastPage();
+    },
+    hasPreviousCursor() {
+      return !!this.paginator.previousCursor;
+    },
+    hasNextCursor() {
+      return !!this.paginator.nextCursor;
+    },
+    firstPage() {
+      return this.paginator.firstPage;
+    },
+    lastPage() {
+      return this.paginator.lastPage;
+    },
+    previousPage() {
+      if (this.hasPreviousCursor()) {
+        return this.setPage(this.previousCursor());
+      }
+      if (this.hasPreviousPage()) {
+        component.$wire.call("previousPage", this.getPageName());
+      }
+    },
+    nextPage() {
+      if (this.hasNextCursor()) {
+        return this.setPage(this.nextCursor());
+      }
+      if (this.hasNextPage()) {
+        component.$wire.call("nextPage", this.getPageName());
+      }
+    },
+    resetPage() {
+      component.$wire.call("resetPage", this.getPageName());
+    },
+    setPage(page) {
+      component.$wire.call("setPage", page, this.getCursorName() ?? this.getPageName());
+    },
+    previousCursor() {
+      return this.paginator.previousCursor;
+    },
+    nextCursor() {
+      return this.paginator.nextCursor;
+    }
+  });
+}
+var paginatorObjects;
+var init_supportPaginators = __esm({
+  "js/v4/features/supportPaginators.js"() {
+    init_hooks();
+    paginatorObjects = /* @__PURE__ */ new WeakMap();
+    on("effect", ({ component, effects, cleanup }) => {
+      let paginators = effects["paginators"];
+      if (!paginators)
+        return;
+      for (let paginatorName in paginators) {
+        let paginator = paginators[paginatorName];
+        let paginatorObject = getPaginatorObject(component, paginatorName);
+        paginatorObject.paginator = paginator;
+      }
+    });
+  }
+});
+
+// js/v4/interceptors/interceptor.js
+var Interceptor, interceptor_default;
+var init_interceptor = __esm({
+  "js/v4/interceptors/interceptor.js"() {
+    Interceptor = class {
+      beforeSend = () => {
+      };
+      afterSend = () => {
+      };
+      beforeResponse = () => {
+      };
+      afterResponse = () => {
+      };
+      beforeRender = () => {
+      };
+      afterRender = () => {
+      };
+      beforeMorph = () => {
+      };
+      afterMorph = () => {
+      };
+      onError = () => {
+      };
+      onFailure = () => {
+      };
+      onSuccess = () => {
+      };
+      onCancel = () => {
+      };
+      cancel = () => {
+      };
+      constructor(callback, action) {
+        this.callback = callback;
+        this.action = action;
+        this.returned = () => {
+        };
+      }
+      init(el, directive2, component) {
+        let request = {
+          beforeSend: (callback) => this.beforeSend = callback,
+          afterSend: (callback) => this.afterSend = callback,
+          beforeResponse: (callback) => this.beforeResponse = callback,
+          afterResponse: (callback) => this.afterResponse = callback,
+          beforeRender: (callback) => this.beforeRender = callback,
+          afterRender: (callback) => this.afterRender = callback,
+          beforeMorph: (callback) => this.beforeMorph = callback,
+          afterMorph: (callback) => this.afterMorph = callback,
+          onError: (callback) => this.onError = callback,
+          onFailure: (callback) => this.onFailure = callback,
+          onSuccess: (callback) => this.onSuccess = callback,
+          onCancel: (callback) => this.onCancel = callback
+        };
+        let returned = this.callback({ el, directive: directive2, component, request });
+        if (returned && typeof returned === "function") {
+          this.returned = returned;
+        }
+      }
+    };
+    interceptor_default = Interceptor;
+  }
+});
+
+// js/v4/interceptors/interceptorRegistry.js
+var InterceptorRegistry, instance3, interceptorRegistry_default;
+var init_interceptorRegistry = __esm({
+  "js/v4/interceptors/interceptorRegistry.js"() {
+    init_messageBroker();
+    init_interceptor();
+    InterceptorRegistry = class {
+      interceptors = /* @__PURE__ */ new Map();
+      constructor() {
+        this.globalInterceptors = /* @__PURE__ */ new Set();
+        this.componentInterceptors = /* @__PURE__ */ new Map();
+      }
+      add(callback, component = null, method = null) {
+        let interceptorData = { callback, method };
+        if (component === null) {
+          this.globalInterceptors.add(interceptorData);
+          return;
+        }
+        let interceptors = this.componentInterceptors.get(component);
+        if (!interceptors) {
+          interceptors = /* @__PURE__ */ new Set();
+          this.componentInterceptors.set(component, interceptors);
+        }
+        interceptors.add(interceptorData);
+      }
+      fire(el, directive2, component) {
+        let method = directive2.method;
+        for (let interceptorData of this.globalInterceptors) {
+          let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
+          interceptor.init(el, directive2, component);
+          messageBroker_default.addInterceptor(interceptor, component);
+        }
+        let componentInterceptors = this.componentInterceptors.get(component);
+        if (!componentInterceptors)
+          return;
+        for (let interceptorData of componentInterceptors) {
+          if (interceptorData.method === method || interceptorData.method === null) {
+            let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
+            interceptor.init(el, directive2, component);
+            messageBroker_default.addInterceptor(interceptor, component);
+          }
+        }
+      }
+    };
+    instance3 = new InterceptorRegistry();
+    interceptorRegistry_default = instance3;
+  }
+});
+
+// js/v4/features/supportRefs.js
+function findRef(component, ref) {
+  let refEl = component.el.querySelector(`[wire\\:ref="${ref}"]`);
+  if (!refEl)
+    return console.error(`Ref "${ref}" not found in component "${component.id}"`);
+  return refEl.__livewire?.$wire;
+}
+var init_supportRefs = __esm({
+  "js/v4/features/supportRefs.js"() {
+  }
+});
+
+// js/$wire.js
+function wireProperty(name, callback, component = null) {
+  properties[name] = callback;
+}
+function wireFallback(callback) {
+  fallback = callback;
+}
+function generateWireObject(component, state) {
+  return new Proxy({}, {
+    get(target, property) {
+      if (property === "__instance")
+        return component;
+      if (property in aliases) {
+        return getProperty(component, aliases[property]);
+      } else if (property in properties) {
+        return getProperty(component, property);
+      } else if (property in state) {
+        return state[property];
+      } else if (!["then"].includes(property)) {
+        return getFallback(component)(property);
+      }
+    },
+    set(target, property, value) {
+      if (property in state) {
+        state[property] = value;
+      }
+      return true;
+    }
+  });
+}
+function getProperty(component, name) {
+  return properties[name](component);
+}
+function getFallback(component) {
+  return fallback(component);
+}
+function overrideMethod(component, method, callback) {
+  if (!overriddenMethods.has(component)) {
+    overriddenMethods.set(component, {});
+  }
+  let obj = overriddenMethods.get(component);
+  obj[method] = callback;
+  overriddenMethods.set(component, obj);
+}
+var import_alpinejs3, properties, fallback, aliases, parentMemo, overriddenMethods;
+var init_wire = __esm({
+  "js/$wire.js"() {
+    init_supportFileUploads();
+    init_events();
+    init_supportEntangle();
+    init_store();
+    init_request();
+    init_utils();
+    import_alpinejs3 = __toESM(require_module_cjs());
+    init_hooks();
+    init_messageBroker();
+    init_supportErrors();
+    init_supportPaginators();
+    init_interceptorRegistry();
+    init_supportRefs();
+    properties = {};
+    aliases = {
+      "on": "$on",
+      "el": "$el",
+      "id": "$id",
+      "js": "$js",
+      "get": "$get",
+      "set": "$set",
+      "ref": "$ref",
+      "refs": "$ref",
+      "$refs": "$ref",
+      "call": "$call",
+      "hook": "$hook",
+      "watch": "$watch",
+      "commit": "$commit",
+      "errors": "$errors",
+      "island": "$island",
+      "upload": "$upload",
+      "entangle": "$entangle",
+      "dispatch": "$dispatch",
+      "intercept": "$intercept",
+      "paginator": "$paginator",
+      "dispatchTo": "$dispatchTo",
+      "dispatchRef": "$dispatchRef",
+      "dispatchSelf": "$dispatchSelf",
+      "removeUpload": "$removeUpload",
+      "cancelUpload": "$cancelUpload",
+      "uploadMultiple": "$uploadMultiple"
+    };
+    import_alpinejs3.default.magic("wire", (el, { cleanup }) => {
+      let component;
+      return new Proxy({}, {
+        get(target, property) {
+          if (!component)
+            component = closestComponent(el);
+          if (["$entangle", "entangle"].includes(property)) {
+            return generateEntangleFunction(component, cleanup);
+          }
+          return component.$wire[property];
+        },
+        set(target, property, value) {
+          if (!component)
+            component = closestComponent(el);
+          component.$wire[property] = value;
+          return true;
+        }
+      });
+    });
+    wireProperty("__instance", (component) => component);
+    wireProperty("$get", (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property));
+    wireProperty("$el", (component) => {
+      return component.el;
+    });
+    wireProperty("$id", (component) => {
+      return component.id;
+    });
+    wireProperty("$js", (component) => {
+      let fn = component.addJsAction.bind(component);
+      let jsActions = component.getJsActions();
+      Object.keys(jsActions).forEach((name) => {
+        fn[name] = component.getJsAction(name);
+      });
+      return fn;
+    });
+    wireProperty("$set", (component) => async (property, value, live = true) => {
+      dataSet(component.reactive, property, value);
+      if (live) {
+        if (window.livewireV4) {
+          component.queueUpdate(property, value);
+          return messageBroker_default.addAction(component, "$set");
+        }
+        component.queueUpdate(property, value);
+        return await requestCommit(component);
+      }
+      return Promise.resolve();
+    });
+    wireProperty("$ref", (component) => {
+      let fn = (name) => findRef(component, name);
+      return new Proxy(fn, {
+        get(target, property) {
+          if (property in target) {
+            return target[property];
+          }
+          return fn(property);
+        }
+      });
+    });
+    wireProperty("$intercept", (component) => (action, callback = null) => {
+      if (callback === null) {
+        callback = action;
+        action = null;
+      }
+      interceptorRegistry_default.add(callback, component, action);
+    });
+    wireProperty("$errors", (component) => getErrorsObject(component));
+    wireProperty("$paginator", (component) => {
+      let fn = (name = "page") => getPaginatorObject(component, name);
+      let defaultPaginator = fn();
+      for (let key2 of Object.keys(defaultPaginator)) {
+        let value = defaultPaginator[key2];
+        if (typeof value === "function") {
+          fn[key2] = (...args) => defaultPaginator[key2](...args);
+        } else {
+          Object.defineProperty(fn, key2, {
+            get: () => defaultPaginator[key2],
+            set: (val) => {
+              defaultPaginator[key2] = val;
+            }
+          });
+        }
+      }
+      return fn;
+    });
+    wireProperty("$call", (component) => async (method, ...params) => {
+      return await component.$wire[method](...params);
+    });
+    wireProperty("$island", (component) => async (name, mode = null) => {
+      return messageBroker_default.addAction(component, "$refresh", [], {
+        type: "island",
+        island: { name, mode }
+      });
+    });
+    wireProperty("$entangle", (component) => (name, live = false) => {
+      return generateEntangleFunction(component)(name, live);
+    });
+    wireProperty("$toggle", (component) => (name, live = true) => {
+      return component.$wire.set(name, !component.$wire.get(name), live);
+    });
+    wireProperty("$watch", (component) => (path, callback) => {
+      let getter = () => {
+        return dataGet(component.reactive, path);
+      };
+      let unwatch = import_alpinejs3.default.watch(getter, callback);
+      component.addCleanup(unwatch);
+    });
+    wireProperty("$refresh", (component) => async () => {
+      if (window.livewireV4) {
+        return messageBroker_default.addAction(component, "$refresh");
+      }
+      return component.$wire.$commit();
+    });
+    wireProperty("$commit", (component) => async () => {
+      if (window.livewireV4) {
+        return messageBroker_default.addAction(component, "$sync");
+      }
+      return await requestCommit(component);
+    });
+    wireProperty("$on", (component) => (...params) => listen2(component, ...params));
+    wireProperty("$hook", (component) => (name, callback) => {
+      let unhook = on(name, ({ component: hookComponent, ...params }) => {
+        if (hookComponent === void 0)
+          return callback(params);
+        if (hookComponent.id === component.id)
+          return callback({ component: hookComponent, ...params });
+      });
+      component.addCleanup(unhook);
+      return unhook;
+    });
+    wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
+    wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
+    wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
+    wireProperty("$dispatchRef", (component) => (...params) => dispatchRef(component, ...params));
+    wireProperty("$upload", (component) => (...params) => upload(component, ...params));
+    wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
+    wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
+    wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
+    parentMemo = /* @__PURE__ */ new WeakMap();
+    wireProperty("$parent", (component) => {
+      if (parentMemo.has(component))
+        return parentMemo.get(component).$wire;
+      let parent = component.parent;
+      parentMemo.set(component, parent);
+      return parent.$wire;
+    });
+    overriddenMethods = /* @__PURE__ */ new WeakMap();
+    wireFallback((component) => (property) => async (...params) => {
+      if (params.length === 1 && params[0] instanceof Event) {
+        params = [];
+      }
+      if (overriddenMethods.has(component)) {
+        let overrides = overriddenMethods.get(component);
+        if (typeof overrides[property] === "function") {
+          return overrides[property](params);
+        }
+      }
+      if (window.livewireV4) {
+        return messageBroker_default.addAction(component, property, params);
+      }
+      return await requestCall(component, property, params);
+    });
+  }
+});
+
+// js/component.js
+var Component;
+var init_component = __esm({
+  "js/component.js"() {
+    init_utils();
+    init_wire();
+    init_store();
+    init_hooks();
+    Component = class {
+      constructor(el) {
+        if (el.__livewire)
+          throw "Component already initialized";
+        el.__livewire = this;
+        this.el = el;
+        this.id = el.getAttribute("wire:id");
+        this.__livewireId = this.id;
+        this.snapshotEncoded = el.getAttribute("wire:snapshot");
+        this.snapshot = JSON.parse(this.snapshotEncoded);
+        if (!this.snapshot) {
+          throw `Snapshot missing on Livewire component with id: ` + this.id;
+        }
+        this.name = this.snapshot.memo.name;
+        this.effects = JSON.parse(el.getAttribute("wire:effects"));
+        this.originalEffects = deepClone(this.effects);
+        this.canonical = extractData(deepClone(this.snapshot.data));
+        this.ephemeral = extractData(deepClone(this.snapshot.data));
+        this.reactive = Alpine.reactive(this.ephemeral);
+        this.queuedUpdates = {};
+        this.jsActions = {};
+        this.$wire = generateWireObject(this, this.reactive);
+        this.cleanups = [];
+        this.processEffects(this.effects);
+      }
+      mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
+        let snapshot = JSON.parse(snapshotEncoded);
+        let oldCanonical = deepClone(this.canonical);
+        let updatedOldCanonical = this.applyUpdates(oldCanonical, updates);
+        let newCanonical = extractData(deepClone(snapshot.data));
+        let dirty = diff(updatedOldCanonical, newCanonical);
+        this.snapshotEncoded = snapshotEncoded;
+        this.snapshot = snapshot;
+        this.effects = effects;
+        this.canonical = extractData(deepClone(snapshot.data));
+        let newData = extractData(deepClone(snapshot.data));
+        Object.entries(dirty).forEach(([key2, value]) => {
+          let rootKey = key2.split(".")[0];
+          this.reactive[rootKey] = newData[rootKey];
+        });
+        return dirty;
+      }
+      queueUpdate(propertyName, value) {
+        this.queuedUpdates[propertyName] = value;
+      }
+      mergeQueuedUpdates(diff2) {
+        Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
+          Object.entries(diff2).forEach(([diffKey, diffValue]) => {
+            if (diffKey.startsWith(updateValue)) {
+              delete diff2[diffKey];
+            }
+          });
+          diff2[updateKey] = updateValue;
+        });
+        this.queuedUpdates = [];
+        return diff2;
+      }
+      getUpdates() {
+        let propertiesDiff = diff(this.canonical, this.ephemeral);
+        return this.mergeQueuedUpdates(propertiesDiff);
+      }
+      applyUpdates(object, updates) {
+        for (let key2 in updates) {
+          dataSet(object, key2, updates[key2]);
+        }
+        return object;
+      }
+      replayUpdate(snapshot, html) {
+        let effects = { ...this.effects, html };
+        this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
+        this.processEffects({ html });
+      }
+      processEffects(effects) {
+        trigger("effects", this, effects);
+        trigger("effect", {
+          component: this,
+          effects,
+          cleanup: (i) => this.addCleanup(i)
+        });
+      }
+      get children() {
+        let meta = this.snapshot.memo;
+        let childIds = Object.values(meta.children).map((i) => i[1]);
+        return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
+      }
+      get islands() {
+        let islands = this.snapshot.memo.islands;
+        return islands;
+      }
+      get parent() {
+        return closestComponent(this.el.parentElement);
+      }
+      getEncodedSnapshotWithLatestChildrenMergedIn() {
+        let { snapshotEncoded, children, snapshot } = this;
+        let childIds = children.map((child) => child.id);
+        let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
+        return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
+      }
+      inscribeSnapshotAndEffectsOnElement() {
+        let el = this.el;
+        el.setAttribute("wire:snapshot", this.snapshotEncoded);
+        let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
+        if (this.originalEffects.url) {
+          effects.url = this.originalEffects.url;
+        }
+        if (this.originalEffects.scripts) {
+          effects.scripts = this.originalEffects.scripts;
+        }
+        el.setAttribute("wire:effects", JSON.stringify(effects));
+      }
+      addJsAction(name, action) {
+        this.jsActions[name] = action;
+      }
+      hasJsAction(name) {
+        return this.jsActions[name] !== void 0;
+      }
+      getJsAction(name) {
+        return this.jsActions[name].bind(this.$wire);
+      }
+      getJsActions() {
+        return this.jsActions;
+      }
+      addCleanup(cleanup) {
+        this.cleanups.push(cleanup);
+      }
+      cleanup() {
+        delete this.el.__livewire;
+        while (this.cleanups.length > 0) {
+          this.cleanups.pop()();
+        }
+      }
+    };
+  }
+});
+
+// js/store.js
+function initComponent(el) {
+  let component = new Component(el);
+  if (components[component.id])
+    throw "Component already registered";
+  let cleanup = (i) => component.addCleanup(i);
+  trigger("component.init", { component, cleanup });
+  components[component.id] = component;
+  return component;
+}
+function destroyComponent(id) {
+  let component = components[id];
+  if (!component)
+    return;
+  component.cleanup();
+  delete components[id];
+}
+function hasComponent(id) {
+  return !!components[id];
+}
+function findComponent(id) {
+  let component = components[id];
+  if (!component)
+    throw "Component not found: " + id;
+  return component;
+}
+function closestComponent(el, strict = true) {
+  let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
+  if (slotStartMarker) {
+    let { name, parentId } = extractSlotData(slotStartMarker);
+    if (parentId) {
+      return findComponent(parentId);
+    }
+  }
+  let closestRoot = Alpine.findClosest(el, (i) => i.__livewire);
+  if (!closestRoot) {
+    if (strict)
+      throw "Could not find Livewire component in DOM tree";
+    return;
+  }
+  return closestRoot.__livewire;
+}
+function componentsByName(name) {
+  return Object.values(components).filter((component) => {
+    return name == component.name;
+  });
+}
+function getByName(name) {
+  return componentsByName(name).map((i) => i.$wire);
+}
+function find(id) {
+  let component = components[id];
+  return component && component.$wire;
+}
+function first() {
+  return Object.values(components)[0].$wire;
+}
+function all() {
+  return Object.values(components);
+}
+var components;
+var init_store = __esm({
+  "js/store.js"() {
+    init_component();
+    init_hooks();
+    init_supportSlots();
+    components = {};
+  }
+});
+
+// js/events.js
+function dispatch2(component, name, params) {
+  dispatchEvent(component.el, name, params);
+}
+function dispatchGlobal(name, params) {
+  dispatchEvent(window, name, params);
+}
+function dispatchSelf(component, name, params) {
+  dispatchEvent(component.el, name, params, false);
+}
+function dispatchTo(componentName, name, params) {
+  let targets = componentsByName(componentName);
+  targets.forEach((target) => {
+    dispatchEvent(target.el, name, params, false);
+  });
+}
+function dispatchRef(component, ref, name, params) {
+  let target = findRef(component, ref);
+  if (!target)
+    return;
+  dispatchEvent(target.__instance.el, name, params, false);
+}
+function listen2(component, name, callback) {
+  component.el.addEventListener(name, (e) => {
+    callback(e.detail);
+  });
+}
+function on2(eventName, callback) {
+  let handler = (e) => {
+    if (!e.__livewire)
+      return;
+    callback(e.detail);
+  };
+  window.addEventListener(eventName, handler);
+  return () => {
+    window.removeEventListener(eventName, handler);
+  };
+}
+function dispatchEvent(target, name, params, bubbles = true) {
+  if (typeof params === "string") {
+    params = [params];
+  }
+  let e = new CustomEvent(name, { bubbles, detail: params });
+  e.__livewire = { name, params, receivedBy: [] };
+  target.dispatchEvent(e);
+}
+var init_events = __esm({
+  "js/events.js"() {
+    init_store();
+    init_supportRefs();
+  }
+});
+
+// js/directives.js
+function matchesForLivewireDirective(attributeName) {
+  return attributeName.match(new RegExp("wire:"));
+}
+function extractDirective(el, name) {
+  let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
+  return new Directive(value, modifiers, name, el);
+}
+function directive(name, callback) {
+  if (customDirectiveNames.has(name))
+    return;
+  customDirectiveNames.add(name);
+  on("directive.init", ({ el, component, directive: directive2, cleanup }) => {
+    if (directive2.value === name) {
+      callback({
+        el,
+        directive: directive2,
+        component,
+        $wire: component.$wire,
+        cleanup
+      });
+    }
+  });
+}
+function globalDirective(name, callback) {
+  if (customDirectiveNames.has(name))
+    return;
+  customDirectiveNames.add(name);
+  on("directive.global.init", ({ el, directive: directive2, cleanup }) => {
+    if (directive2.value === name) {
+      callback({ el, directive: directive2, cleanup });
+    }
+  });
+}
+function getDirectives(el) {
+  return new DirectiveManager(el);
+}
+function customDirectiveHasBeenRegistered(name) {
+  return customDirectiveNames.has(name);
+}
+var customDirectiveNames, DirectiveManager, Directive;
+var init_directives = __esm({
+  "js/directives.js"() {
+    init_hooks();
+    customDirectiveNames = /* @__PURE__ */ new Set();
+    DirectiveManager = class {
+      constructor(el) {
+        this.el = el;
+        this.directives = this.extractTypeModifiersAndValue();
+      }
+      all() {
+        return this.directives;
+      }
+      has(value) {
+        return this.directives.map((directive2) => directive2.value).includes(value);
+      }
+      missing(value) {
+        return !this.has(value);
+      }
+      get(value) {
+        return this.directives.find((directive2) => directive2.value === value);
+      }
+      extractTypeModifiersAndValue() {
+        return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
+      }
+    };
+    Directive = class {
+      constructor(value, modifiers, rawName, el) {
+        this.rawName = this.raw = rawName;
+        this.el = el;
+        this.eventContext;
+        this.wire;
+        this.value = value;
+        this.modifiers = modifiers;
+        this.expression = this.el.getAttribute(this.rawName);
+      }
+      get method() {
+        const methods = this.parseOutMethodsAndParams(this.expression);
+        return methods[0].method;
+      }
+      get methods() {
+        return this.parseOutMethodsAndParams(this.expression);
+      }
+      get params() {
+        const methods = this.parseOutMethodsAndParams(this.expression);
+        return methods[0].params;
+      }
+      parseOutMethodsAndParams(rawMethod) {
+        let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
+        let method = rawMethod;
+        let params = [];
+        let methodAndParamString = method.match(methodRegex);
+        let methods = [];
+        let slicedLength = 0;
+        while (methodAndParamString) {
+          method = methodAndParamString[1];
+          let func = new Function("$event", "$wire", `return (function () {
+                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
+                    p[k] = arguments[k];
+                }
+                return [].concat(p);
+            })(${methodAndParamString[2]})`);
+          params = func(this.eventContext, this.wire);
+          methods.push({ method, params });
+          slicedLength += methodAndParamString[0].length;
+          methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
+        }
+        if (methods.length === 0) {
+          methods.push({ method, params });
+        }
+        return methods;
+      }
+    };
+  }
+});
+
 // ../alpine/packages/collapse/dist/module.cjs.js
 var require_module_cjs2 = __commonJS({
   "../alpine/packages/collapse/dist/module.cjs.js"(exports, module) {
@@ -7341,2670 +10190,287 @@ var require_module_cjs9 = __commonJS({
   }
 });
 
-// js/utils.js
-var Bag = class {
-  constructor() {
-    this.arrays = {};
-  }
-  add(key2, value) {
-    if (!this.arrays[key2])
-      this.arrays[key2] = [];
-    this.arrays[key2].push(value);
-  }
-  remove(key2) {
-    if (this.arrays[key2])
-      delete this.arrays[key2];
-  }
-  get(key2) {
-    return this.arrays[key2] || [];
-  }
-  each(key2, callback) {
-    return this.get(key2).forEach(callback);
-  }
-};
-var WeakBag = class {
-  constructor() {
-    this.arrays = /* @__PURE__ */ new WeakMap();
-  }
-  add(key2, value) {
-    if (!this.arrays.has(key2))
-      this.arrays.set(key2, []);
-    this.arrays.get(key2).push(value);
-  }
-  remove(key2) {
-    if (this.arrays.has(key2))
-      this.arrays.delete(key2, []);
-  }
-  get(key2) {
-    return this.arrays.has(key2) ? this.arrays.get(key2) : [];
-  }
-  each(key2, callback) {
-    return this.get(key2).forEach(callback);
-  }
-};
-function dispatch(target, name, detail = {}, bubbles = true) {
-  target.dispatchEvent(new CustomEvent(name, {
-    detail,
-    bubbles,
-    composed: true,
-    cancelable: true
-  }));
-}
-function listen(target, name, handler) {
-  target.addEventListener(name, handler);
-  return () => target.removeEventListener(name, handler);
-}
-function isObjecty(subject) {
-  return typeof subject === "object" && subject !== null;
-}
-function isObject(subject) {
-  return isObjecty(subject) && !isArray(subject);
-}
-function isArray(subject) {
-  return Array.isArray(subject);
-}
-function isFunction(subject) {
-  return typeof subject === "function";
-}
-function isPrimitive(subject) {
-  return typeof subject !== "object" || subject === null;
-}
-function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
-function dataGet(object, key2) {
-  if (key2 === "")
-    return object;
-  return key2.split(".").reduce((carry, i) => {
-    return carry?.[i];
-  }, object);
-}
-function dataSet(object, key2, value) {
-  let segments = key2.split(".");
-  if (segments.length === 1) {
-    return object[key2] = value;
-  }
-  let firstSegment = segments.shift();
-  let restOfSegments = segments.join(".");
-  if (object[firstSegment] === void 0) {
-    object[firstSegment] = {};
-  }
-  dataSet(object[firstSegment], restOfSegments, value);
-}
-function diff(left, right, diffs = {}, path = "") {
-  if (left === right)
-    return diffs;
-  if (typeof left !== typeof right || isObject(left) && isArray(right) || isArray(left) && isObject(right)) {
-    diffs[path] = right;
-    return diffs;
-  }
-  if (isPrimitive(left) || isPrimitive(right)) {
-    diffs[path] = right;
-    return diffs;
-  }
-  let leftKeys = Object.keys(left);
-  Object.entries(right).forEach(([key2, value]) => {
-    diffs = { ...diffs, ...diff(left[key2], right[key2], diffs, path === "" ? key2 : `${path}.${key2}`) };
-    leftKeys = leftKeys.filter((i) => i !== key2);
-  });
-  leftKeys.forEach((key2) => {
-    diffs[`${path}.${key2}`] = "__rm__";
-  });
-  return diffs;
-}
-function extractData(payload) {
-  let value = isSynthetic(payload) ? payload[0] : payload;
-  let meta = isSynthetic(payload) ? payload[1] : void 0;
-  if (isObjecty(value)) {
-    Object.entries(value).forEach(([key2, iValue]) => {
-      value[key2] = extractData(iValue);
+// js/v4/features/supportPropsAndModelablesV4.js
+function getRequestsMessages(requests) {
+  let messages = [];
+  requests.forEach((request) => {
+    request.messages.forEach((message) => {
+      messages.push(message);
     });
-  }
-  return value;
-}
-function isSynthetic(subject) {
-  return Array.isArray(subject) && subject.length === 2 && typeof subject[1] === "object" && Object.keys(subject[1]).includes("s");
-}
-function getCsrfToken() {
-  if (document.querySelector('meta[name="csrf-token"]')) {
-    return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-  }
-  if (document.querySelector("[data-csrf]")) {
-    return document.querySelector("[data-csrf]").getAttribute("data-csrf");
-  }
-  if (window.livewireScriptConfig["csrf"] ?? false) {
-    return window.livewireScriptConfig["csrf"];
-  }
-  throw "Livewire: No CSRF token detected";
-}
-var nonce;
-function getNonce() {
-  if (nonce)
-    return nonce;
-  if (window.livewireScriptConfig && (window.livewireScriptConfig["nonce"] ?? false)) {
-    nonce = window.livewireScriptConfig["nonce"];
-    return nonce;
-  }
-  const elWithNonce = document.querySelector("style[data-livewire-style][nonce]");
-  if (elWithNonce) {
-    nonce = elWithNonce.nonce;
-    return nonce;
-  }
-  return null;
-}
-function getUpdateUri() {
-  return document.querySelector("[data-update-uri]")?.getAttribute("data-update-uri") ?? window.livewireScriptConfig["uri"] ?? null;
-}
-function contentIsFromDump(content) {
-  return !!content.match(/<script>Sfdump\(".+"\)<\/script>/);
-}
-function splitDumpFromContent(content) {
-  let dump = content.match(/.*<script>Sfdump\(".+"\)<\/script>/s);
-  return [dump, content.replace(dump, "")];
-}
-
-// js/features/supportFileUploads.js
-var uploadManagers = /* @__PURE__ */ new WeakMap();
-function getUploadManager(component) {
-  if (!uploadManagers.has(component)) {
-    let manager = new UploadManager(component);
-    uploadManagers.set(component, manager);
-    manager.registerListeners();
-  }
-  return uploadManagers.get(component);
-}
-function handleFileUpload(el, property, component, cleanup) {
-  let manager = getUploadManager(component);
-  let start2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-start", { bubbles: true, detail: { id: component.id, property } }));
-  let finish = () => el.dispatchEvent(new CustomEvent("livewire-upload-finish", { bubbles: true, detail: { id: component.id, property } }));
-  let error2 = () => el.dispatchEvent(new CustomEvent("livewire-upload-error", { bubbles: true, detail: { id: component.id, property } }));
-  let cancel = () => el.dispatchEvent(new CustomEvent("livewire-upload-cancel", { bubbles: true, detail: { id: component.id, property } }));
-  let progress = (progressEvent) => {
-    var percentCompleted = Math.round(progressEvent.loaded * 100 / progressEvent.total);
-    el.dispatchEvent(new CustomEvent("livewire-upload-progress", {
-      bubbles: true,
-      detail: { progress: percentCompleted }
-    }));
-  };
-  let eventHandler = (e) => {
-    if (e.target.files.length === 0)
-      return;
-    start2();
-    if (e.target.multiple) {
-      manager.uploadMultiple(property, e.target.files, finish, error2, progress, cancel);
-    } else {
-      manager.upload(property, e.target.files[0], finish, error2, progress, cancel);
-    }
-  };
-  el.addEventListener("change", eventHandler);
-  component.$wire.$watch(property, (value) => {
-    if (!el.isConnected)
-      return;
-    if (value === null || value === "") {
-      el.value = "";
-    }
-    if (el.multiple && Array.isArray(value) && value.length === 0) {
-      el.value = "";
-    }
   });
-  let clearFileInputValue = () => {
-    el.value = null;
-  };
-  el.addEventListener("click", clearFileInputValue);
-  el.addEventListener("livewire-upload-cancel", clearFileInputValue);
-  cleanup(() => {
-    el.removeEventListener("change", eventHandler);
-    el.removeEventListener("click", clearFileInputValue);
+  return messages;
+}
+function colocateRequestsByComponent(requests, component, foreignComponent) {
+  let request = findRequestWithComponent(requests, component);
+  let foreignRequest = findRequestWithComponent(requests, foreignComponent);
+  let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
+  foreignRequest.deleteMessage(foreignMessage);
+  request.addMessage(foreignMessage);
+  requests.forEach((request2) => {
+    if (request2.isEmpty())
+      requests.delete(request2);
   });
 }
-var UploadManager = class {
-  constructor(component) {
-    this.component = component;
-    this.uploadBag = new MessageBag();
-    this.removeBag = new MessageBag();
-  }
-  registerListeners() {
-    this.component.$wire.$on("upload:generatedSignedUrl", ({ name, url }) => {
-      setUploadLoading(this.component, name);
-      this.handleSignedUrl(name, url);
-    });
-    this.component.$wire.$on("upload:generatedSignedUrlForS3", ({ name, payload }) => {
-      setUploadLoading(this.component, name);
-      this.handleS3PreSignedUrl(name, payload);
-    });
-    this.component.$wire.$on("upload:finished", ({ name, tmpFilenames }) => this.markUploadFinished(name, tmpFilenames));
-    this.component.$wire.$on("upload:errored", ({ name }) => this.markUploadErrored(name));
-    this.component.$wire.$on("upload:removed", ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename));
-  }
-  upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
-    this.setUpload(name, {
-      files: [file],
-      multiple: false,
-      finishCallback,
-      errorCallback,
-      progressCallback,
-      cancelledCallback
-    });
-  }
-  uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback) {
-    this.setUpload(name, {
-      files: Array.from(files),
-      multiple: true,
-      finishCallback,
-      errorCallback,
-      progressCallback,
-      cancelledCallback
-    });
-  }
-  removeUpload(name, tmpFilename, finishCallback) {
-    this.removeBag.push(name, {
-      tmpFilename,
-      finishCallback
-    });
-    this.component.$wire.call("_removeUpload", name, tmpFilename);
-  }
-  setUpload(name, uploadObject) {
-    this.uploadBag.add(name, uploadObject);
-    if (this.uploadBag.get(name).length === 1) {
-      this.startUpload(name, uploadObject);
+function findRequestWithComponent(requests, component) {
+  return Array.from(requests).find((request) => request.hasMessageFor(component));
+}
+function getDeepChildrenWithBindings2(component, callback) {
+  getDeepChildren2(component, (child) => {
+    if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
+      callback(child);
     }
-  }
-  handleSignedUrl(name, url) {
-    let formData = new FormData();
-    Array.from(this.uploadBag.first(name).files).forEach((file) => formData.append("files[]", file, file.name));
-    let headers = {
-      "Accept": "application/json"
-    };
-    let csrfToken = getCsrfToken();
-    if (csrfToken)
-      headers["X-CSRF-TOKEN"] = csrfToken;
-    this.makeRequest(name, formData, "post", url, headers, (response) => {
-      return response.paths;
-    });
-  }
-  handleS3PreSignedUrl(name, payload) {
-    let formData = this.uploadBag.first(name).files[0];
-    let headers = payload.headers;
-    if ("Host" in headers)
-      delete headers.Host;
-    let url = payload.url;
-    this.makeRequest(name, formData, "put", url, headers, (response) => {
-      return [payload.path];
-    });
-  }
-  makeRequest(name, formData, method, url, headers, retrievePaths) {
-    let request = new XMLHttpRequest();
-    request.open(method, url);
-    Object.entries(headers).forEach(([key2, value]) => {
-      request.setRequestHeader(key2, value);
-    });
-    request.upload.addEventListener("progress", (e) => {
-      e.detail = {};
-      e.detail.progress = Math.floor(e.loaded * 100 / e.total);
-      this.uploadBag.first(name).progressCallback(e);
-    });
-    request.addEventListener("load", () => {
-      if ((request.status + "")[0] === "2") {
-        let paths = retrievePaths(request.response && JSON.parse(request.response));
-        this.component.$wire.call("_finishUpload", name, paths, this.uploadBag.first(name).multiple);
-        return;
-      }
-      let errors = null;
-      if (request.status === 422) {
-        errors = request.response;
-      }
-      this.component.$wire.call("_uploadErrored", name, errors, this.uploadBag.first(name).multiple);
-    });
-    this.uploadBag.first(name).request = request;
-    request.send(formData);
-  }
-  startUpload(name, uploadObject) {
-    let fileInfos = uploadObject.files.map((file) => {
-      return { name: file.name, size: file.size, type: file.type };
-    });
-    this.component.$wire.call("_startUpload", name, fileInfos, uploadObject.multiple);
-    setUploadLoading(this.component, name);
-  }
-  markUploadFinished(name, tmpFilenames) {
-    unsetUploadLoading(this.component);
-    let uploadObject = this.uploadBag.shift(name);
-    uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0]);
-    if (this.uploadBag.get(name).length > 0)
-      this.startUpload(name, this.uploadBag.last(name));
-  }
-  markUploadErrored(name) {
-    unsetUploadLoading(this.component);
-    this.uploadBag.shift(name).errorCallback();
-    if (this.uploadBag.get(name).length > 0)
-      this.startUpload(name, this.uploadBag.last(name));
-  }
-  cancelUpload(name, cancelledCallback = null) {
-    unsetUploadLoading(this.component);
-    let uploadItem = this.uploadBag.first(name);
-    if (uploadItem) {
-      if (uploadItem.request) {
-        uploadItem.request.abort();
-      }
-      this.uploadBag.shift(name).cancelledCallback();
-      if (cancelledCallback)
-        cancelledCallback();
-    }
-  }
-};
-var MessageBag = class {
-  constructor() {
-    this.bag = {};
-  }
-  add(name, thing) {
-    if (!this.bag[name]) {
-      this.bag[name] = [];
-    }
-    this.bag[name].push(thing);
-  }
-  push(name, thing) {
-    this.add(name, thing);
-  }
-  first(name) {
-    if (!this.bag[name])
-      return null;
-    return this.bag[name][0];
-  }
-  last(name) {
-    return this.bag[name].slice(-1)[0];
-  }
-  get(name) {
-    return this.bag[name];
-  }
-  shift(name) {
-    return this.bag[name].shift();
-  }
-  call(name, ...params) {
-    (this.listeners[name] || []).forEach((callback) => {
-      callback(...params);
-    });
-  }
-  has(name) {
-    return Object.keys(this.listeners).includes(name);
-  }
-};
-function setUploadLoading() {
+  });
 }
-function unsetUploadLoading() {
+function hasReactiveProps2(component) {
+  let meta = component.snapshot.memo;
+  let props = meta.props;
+  return !!props;
 }
-function upload(component, name, file, finishCallback = () => {
-}, errorCallback = () => {
-}, progressCallback = () => {
-}, cancelledCallback = () => {
-}) {
-  let uploadManager = getUploadManager(component);
-  uploadManager.upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback);
+function hasWireModelableBindings2(component) {
+  let meta = component.snapshot.memo;
+  let bindings = meta.bindings;
+  return !!bindings;
 }
-function uploadMultiple(component, name, files, finishCallback = () => {
-}, errorCallback = () => {
-}, progressCallback = () => {
-}, cancelledCallback = () => {
-}) {
-  let uploadManager = getUploadManager(component);
-  uploadManager.uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback);
+function getDeepChildren2(component, callback) {
+  component.children.forEach((child) => {
+    callback(child);
+    getDeepChildren2(child, callback);
+  });
 }
-function removeUpload(component, name, tmpFilename, finishCallback = () => {
-}, errorCallback = () => {
-}) {
-  let uploadManager = getUploadManager(component);
-  uploadManager.removeUpload(name, tmpFilename, finishCallback, errorCallback);
-}
-function cancelUpload(component, name, cancelledCallback = () => {
-}) {
-  let uploadManager = getUploadManager(component);
-  uploadManager.cancelUpload(name, cancelledCallback);
-}
-
-// js/features/supportEntangle.js
-var import_alpinejs = __toESM(require_module_cjs());
-function generateEntangleFunction(component, cleanup) {
-  if (!cleanup)
-    cleanup = () => {
-    };
-  return (name, live = false) => {
-    let isLive = live;
-    let livewireProperty = name;
-    let livewireComponent = component.$wire;
-    let livewirePropertyValue = livewireComponent.get(livewireProperty);
-    let interceptor = import_alpinejs.default.interceptor((initialValue, getter, setter, path, key2) => {
-      if (typeof livewirePropertyValue === "undefined") {
-        console.error(`Livewire Entangle Error: Livewire property ['${livewireProperty}'] cannot be found on component: ['${component.name}']`);
-        return;
-      }
-      let release = import_alpinejs.default.entangle({
-        get() {
-          return livewireComponent.get(name);
-        },
-        set(value) {
-          livewireComponent.set(name, value, isLive);
-        }
-      }, {
-        get() {
-          return getter();
-        },
-        set(value) {
-          setter(value);
-        }
-      });
-      cleanup(() => release());
-      return cloneIfObject(livewireComponent.get(name));
-    }, (obj) => {
-      Object.defineProperty(obj, "live", {
-        get() {
-          isLive = true;
-          return obj;
-        }
-      });
-    });
-    return interceptor(livewirePropertyValue);
-  };
-}
-function cloneIfObject(value) {
-  return typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
-}
-
-// js/hooks.js
-var listeners = [];
-function on(name, callback) {
-  if (!listeners[name])
-    listeners[name] = [];
-  listeners[name].push(callback);
-  return () => {
-    listeners[name] = listeners[name].filter((i) => i !== callback);
-  };
-}
-function trigger(name, ...params) {
-  let callbacks = listeners[name] || [];
-  let finishers = [];
-  for (let i = 0; i < callbacks.length; i++) {
-    let finisher = callbacks[i](...params);
-    if (isFunction(finisher))
-      finishers.push(finisher);
-  }
-  return (result) => {
-    return runFinishers(finishers, result);
-  };
-}
-async function triggerAsync(name, ...params) {
-  let callbacks = listeners[name] || [];
-  let finishers = [];
-  for (let i = 0; i < callbacks.length; i++) {
-    let finisher = await callbacks[i](...params);
-    if (isFunction(finisher))
-      finishers.push(finisher);
-  }
-  return (result) => {
-    return runFinishers(finishers, result);
-  };
-}
-function runFinishers(finishers, result) {
-  let latest = result;
-  for (let i = 0; i < finishers.length; i++) {
-    let iResult = finishers[i](latest);
-    if (iResult !== void 0) {
-      latest = iResult;
-    }
-  }
-  return latest;
-}
-
-// js/request/modal.js
-function showHtmlModal(html) {
-  let page = document.createElement("html");
-  page.innerHTML = html;
-  page.querySelectorAll("a").forEach((a) => a.setAttribute("target", "_top"));
-  let modal = document.getElementById("livewire-error");
-  if (typeof modal != "undefined" && modal != null) {
-    modal.innerHTML = "";
-  } else {
-    modal = document.createElement("dialog");
-    modal.id = "livewire-error";
-    modal.style.margin = "50px";
-    modal.style.width = "calc(100% - 100px)";
-    modal.style.height = "calc(100% - 100px)";
-    modal.style.borderRadius = "5px";
-    modal.style.padding = "0px";
-  }
-  let iframe = document.createElement("iframe");
-  iframe.style.backgroundColor = "#17161A";
-  iframe.style.borderRadius = "5px";
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  modal.appendChild(iframe);
-  document.body.prepend(modal);
-  document.body.style.overflow = "hidden";
-  iframe.contentWindow.document.open();
-  iframe.contentWindow.document.write(page.outerHTML);
-  iframe.contentWindow.document.close();
-  modal.addEventListener("click", () => hideHtmlModal(modal));
-  modal.addEventListener("close", () => cleanupModal(modal));
-  modal.showModal();
-  modal.focus();
-  modal.blur();
-}
-function hideHtmlModal(modal) {
-  modal.close();
-}
-function cleanupModal(modal) {
-  modal.outerHTML = "";
-  document.body.style.overflow = "visible";
-}
-
-// js/request/pool.js
-var RequestPool = class {
-  constructor() {
-    this.commits = /* @__PURE__ */ new Set();
-  }
-  add(commit) {
-    this.commits.add(commit);
-  }
-  delete(commit) {
-    this.commits.delete(commit);
-  }
-  hasCommitFor(component) {
-    return !!this.findCommitByComponent(component);
-  }
-  findCommitByComponent(component) {
-    for (let [idx, commit] of this.commits.entries()) {
-      if (commit.component === component)
-        return commit;
-    }
-  }
-  shouldHoldCommit(commit) {
-    return !commit.isolate;
-  }
-  empty() {
-    return this.commits.size === 0;
-  }
-  async send() {
-    this.prepare();
-    await sendRequest(this);
-  }
-  prepare() {
-    this.commits.forEach((i) => i.prepare());
-  }
-  payload() {
-    let commitPayloads = [];
-    let successReceivers = [];
-    let failureReceivers = [];
-    this.commits.forEach((commit) => {
-      let [payload, succeed2, fail2] = commit.toRequestPayload();
-      commitPayloads.push(payload);
-      successReceivers.push(succeed2);
-      failureReceivers.push(fail2);
-    });
-    let succeed = (components2) => successReceivers.forEach((receiver) => receiver(components2.shift()));
-    let fail = () => failureReceivers.forEach((receiver) => receiver());
-    return [commitPayloads, succeed, fail];
-  }
-};
-
-// js/request/commit.js
-var Commit = class {
-  constructor(component) {
-    this.component = component;
-    this.isolate = false;
-    this.calls = [];
-    this.receivers = [];
-    this.resolvers = [];
-  }
-  addResolver(resolver) {
-    this.resolvers.push(resolver);
-  }
-  addCall(method, params, receiver) {
-    this.calls.push({
-      path: "",
-      method,
-      params,
-      handleReturn(value) {
-        receiver(value);
-      }
-    });
-  }
-  prepare() {
-    trigger("commit.prepare", { component: this.component });
-  }
-  getEncodedSnapshotWithLatestChildrenMergedIn() {
-    let { snapshotEncoded, children, snapshot } = this.component;
-    let childIds = children.map((child) => child.id);
-    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
-    return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
-  }
-  toRequestPayload() {
-    let propertiesDiff = diff(this.component.canonical, this.component.ephemeral);
-    let updates = this.component.mergeQueuedUpdates(propertiesDiff);
-    let snapshotEncoded = this.getEncodedSnapshotWithLatestChildrenMergedIn();
-    let payload = {
-      snapshot: snapshotEncoded,
-      updates,
-      calls: this.calls.map((i) => ({
-        path: i.path,
-        method: i.method,
-        params: i.params
-      }))
-    };
-    let succeedCallbacks = [];
-    let failCallbacks = [];
-    let respondCallbacks = [];
-    let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-    let fail = () => failCallbacks.forEach((i) => i());
-    let respond = () => respondCallbacks.forEach((i) => i());
-    let finishTarget = trigger("commit", {
-      component: this.component,
-      commit: payload,
-      succeed: (callback) => {
-        succeedCallbacks.push(callback);
-      },
-      fail: (callback) => {
-        failCallbacks.push(callback);
-      },
-      respond: (callback) => {
-        respondCallbacks.push(callback);
-      }
-    });
-    let handleResponse = (response) => {
-      let { snapshot, effects } = response;
-      respond();
-      this.component.mergeNewSnapshot(snapshot, effects, updates);
-      this.component.processEffects(this.component.effects);
-      if (effects["returns"]) {
-        let returns = effects["returns"];
-        let returnHandlerStack = this.calls.map(({ handleReturn }) => handleReturn);
-        returnHandlerStack.forEach((handleReturn, index) => {
-          handleReturn(returns[index]);
+var init_supportPropsAndModelablesV4 = __esm({
+  "js/v4/features/supportPropsAndModelablesV4.js"() {
+    init_hooks();
+    on("message.pooling", ({ messages }) => {
+      messages.forEach((message) => {
+        let component = message.component;
+        getDeepChildrenWithBindings2(component, (child) => {
+          child.$wire.$commit();
         });
-      }
-      let parsedSnapshot = JSON.parse(snapshot);
-      finishTarget({ snapshot: parsedSnapshot, effects });
-      this.resolvers.forEach((i) => i());
-      succeed(response);
-    };
-    let handleFailure = () => {
-      respond();
-      fail();
-    };
-    return [payload, handleResponse, handleFailure];
-  }
-};
-
-// js/request/bus.js
-var CommitBus = class {
-  constructor() {
-    this.commits = /* @__PURE__ */ new Set();
-    this.pools = /* @__PURE__ */ new Set();
-  }
-  add(component) {
-    let commit = this.findCommitOr(component, () => {
-      let newCommit = new Commit(component);
-      this.commits.add(newCommit);
-      return newCommit;
+      });
     });
-    bufferPoolingForFiveMs(commit, () => {
-      let pool = this.findPoolWithComponent(commit.component);
-      if (!pool) {
-        this.createAndSendNewPool();
-      }
-    });
-    return commit;
-  }
-  findCommitOr(component, callback) {
-    for (let [idx, commit] of this.commits.entries()) {
-      if (commit.component === component) {
-        return commit;
-      }
-    }
-    return callback();
-  }
-  findPoolWithComponent(component) {
-    for (let [idx, pool] of this.pools.entries()) {
-      if (pool.hasCommitFor(component))
-        return pool;
-    }
-  }
-  createAndSendNewPool() {
-    trigger("commit.pooling", { commits: this.commits });
-    let pools = this.corraleCommitsIntoPools();
-    trigger("commit.pooled", { pools });
-    pools.forEach((pool) => {
-      if (pool.empty())
-        return;
-      this.pools.add(pool);
-      pool.send().then(() => {
-        this.pools.delete(pool);
-        queueMicrotask(() => {
-          this.sendAnyQueuedCommits();
+    on("message.pooled", ({ requests }) => {
+      let messages = getRequestsMessages(requests);
+      messages.forEach((message) => {
+        let component = message.component;
+        getDeepChildrenWithBindings2(component, (child) => {
+          colocateRequestsByComponent(requests, component, child);
         });
       });
     });
   }
-  corraleCommitsIntoPools() {
-    let pools = /* @__PURE__ */ new Set();
-    for (let [idx, commit] of this.commits.entries()) {
-      if (this.findPoolWithComponent(commit.component))
-        continue;
-      let hasFoundPool = false;
-      pools.forEach((pool) => {
-        if (pool.shouldHoldCommit(commit)) {
-          pool.add(commit);
-          hasFoundPool = true;
-        }
-      });
-      if (!hasFoundPool) {
-        let newPool = new RequestPool();
-        newPool.add(commit);
-        pools.add(newPool);
-      }
-      this.commits.delete(commit);
-    }
-    return pools;
-  }
-  sendAnyQueuedCommits() {
-    if (this.commits.size > 0) {
-      this.createAndSendNewPool();
-    }
-  }
-};
-var buffersByCommit = /* @__PURE__ */ new WeakMap();
-function bufferPoolingForFiveMs(commit, callback) {
-  if (buffersByCommit.has(commit))
-    return;
-  buffersByCommit.set(commit, setTimeout(() => {
-    callback();
-    buffersByCommit.delete(commit);
-  }, 5));
-}
-
-// js/request/index.js
-var commitBus = new CommitBus();
-async function requestCommit(component) {
-  let commit = commitBus.add(component);
-  let promise = new Promise((resolve) => {
-    commit.addResolver(resolve);
-  });
-  promise.commit = commit;
-  return promise;
-}
-async function requestCall(component, method, params) {
-  let commit = commitBus.add(component);
-  let promise = new Promise((resolve) => {
-    commit.addCall(method, params, (value) => resolve(value));
-  });
-  promise.commit = commit;
-  return promise;
-}
-async function sendRequest(pool) {
-  let [payload, handleSuccess, handleFailure] = pool.payload();
-  window.controller = new AbortController();
-  let options = {
-    method: "POST",
-    body: JSON.stringify({
-      _token: getCsrfToken(),
-      components: payload
-    }),
-    headers: {
-      "Content-type": "application/json",
-      "X-Livewire": ""
-    },
-    signal: window.controller.signal
-  };
-  let succeedCallbacks = [];
-  let failCallbacks = [];
-  let respondCallbacks = [];
-  let succeed = (fwd) => succeedCallbacks.forEach((i) => i(fwd));
-  let fail = (fwd) => failCallbacks.forEach((i) => i(fwd));
-  let respond = (fwd) => respondCallbacks.forEach((i) => i(fwd));
-  let finishProfile = trigger("request.profile", options);
-  let updateUri = getUpdateUri();
-  trigger("request", {
-    url: updateUri,
-    options,
-    payload: options.body,
-    respond: (i) => respondCallbacks.push(i),
-    succeed: (i) => succeedCallbacks.push(i),
-    fail: (i) => failCallbacks.push(i)
-  });
-  let response;
-  try {
-    response = await fetch(updateUri, options);
-  } catch (e) {
-    finishProfile({ content: "{}", failed: true });
-    handleFailure();
-    fail({
-      status: 503,
-      content: null,
-      preventDefault: () => {
-      }
-    });
-    return;
-  }
-  let mutableObject = {
-    status: response.status,
-    response
-  };
-  respond(mutableObject);
-  response = mutableObject.response;
-  let content = await response.text();
-  if (!response.ok) {
-    finishProfile({ content: "{}", failed: true });
-    let preventDefault = false;
-    handleFailure();
-    fail({
-      status: response.status,
-      content,
-      preventDefault: () => preventDefault = true
-    });
-    if (preventDefault)
-      return;
-    if (response.status === 419) {
-      handlePageExpiry();
-    }
-    if (response.aborted) {
-      return;
-    } else {
-      return showFailureModal(content);
-    }
-  }
-  if (response.redirected) {
-    window.location.href = response.url;
-  }
-  if (contentIsFromDump(content)) {
-    let dump;
-    [dump, content] = splitDumpFromContent(content);
-    showHtmlModal(dump);
-    finishProfile({ content: "{}", failed: true });
-  } else {
-    finishProfile({ content, failed: false });
-  }
-  let { components: components2, assets } = JSON.parse(content);
-  await triggerAsync("payload.intercept", { components: components2, assets });
-  await handleSuccess(components2);
-  succeed({ status: response.status, json: JSON.parse(content) });
-}
-function handlePageExpiry() {
-  confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-}
-function showFailureModal(content) {
-  let html = content;
-  showHtmlModal(html);
-}
-
-// js/$wire.js
-var import_alpinejs3 = __toESM(require_module_cjs());
-
-// js/v4/requests/requestBus.js
-var RequestBus = class {
-  booted = false;
-  requests = /* @__PURE__ */ new Set();
-  boot() {
-    this.booted = true;
-    console.log("v4 requests enabled");
-  }
-  add(request) {
-    this.cancelRequestsThatShouldBeCancelled(request.shouldCancel());
-    this.requests.add(request);
-    request.send();
-  }
-  remove(request) {
-    this.requests.delete(request);
-  }
-  cancelRequestsThatShouldBeCancelled(shouldCancel) {
-    this.requests.forEach((request) => {
-      if (shouldCancel(request)) {
-        request.cancel();
-      }
-    });
-  }
-};
-var instance = new RequestBus();
-var requestBus_default = instance;
-
-// js/morph.js
-var import_alpinejs2 = __toESM(require_module_cjs());
-
-// js/features/supportSlots.js
-on("effect", ({ component, effects }) => {
-  let slots = effects.slots;
-  if (!slots)
-    return;
-  let parentId = component.el.getAttribute("wire:id");
-  Object.entries(slots).forEach(([childId, childSlots]) => {
-    let childComponent = findComponent(childId);
-    if (!childComponent)
-      return;
-    Object.entries(childSlots).forEach(([name, content]) => {
-      queueMicrotask(() => {
-        queueMicrotask(() => {
-          queueMicrotask(() => {
-            let fullName = parentId ? `${name}:${parentId}` : name;
-            let { startNode, endNode } = findSlotComments(childComponent.el, fullName);
-            if (!startNode || !endNode)
-              return;
-            let strippedContent = stripSlotComments(content, fullName);
-            morphIsland(childComponent, startNode, endNode, strippedContent);
-          });
-        });
-      });
-    });
-  });
 });
-function stripSlotComments(content, slotName) {
-  let startComment = `<!--[if SLOT:${slotName}]><![endif]-->`;
-  let endComment = `<!--[if ENDSLOT:${slotName}]><![endif]-->`;
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return stripped.trim();
-}
-function findSlotComments(rootEl, slotName) {
-  let startNode = null;
-  let endNode = null;
-  walkElements(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent === `[if SLOT:${slotName}]><![endif]`) {
-          startNode = node;
-        }
-        if (node.textContent === `[if ENDSLOT:${slotName}]><![endif]`) {
-          endNode = node;
-        }
-      }
-    });
-  });
-  return { startNode, endNode };
-}
-function walkElements(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements(child, callback);
-  });
-}
-function skipSlotContents(el, toEl, skipUntil) {
-  if (isStartMarker(el) && isStartMarker(toEl)) {
-    skipUntil((node) => isEndMarker(node));
-  }
-}
-function isStartMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if SLOT");
-}
-function isEndMarker(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDSLOT");
-}
-function extractSlotData(el) {
-  let regex = /\[if SLOT:(\w+)(?::(\w+))?\]/;
-  let match = el.textContent.match(regex);
-  if (!match)
-    return;
-  return {
-    name: match[1],
-    parentId: match[2] || null
-  };
-}
-function checkPreviousSiblingForSlotStartMarker(el) {
-  function searchInPreviousSiblings(node) {
-    let sibling = node.previousSibling;
-    while (sibling) {
-      if (isEndMarker(sibling)) {
-        return null;
-      }
-      if (isStartMarker(sibling)) {
-        return sibling;
-      }
-      sibling = sibling.previousSibling;
-    }
-    return null;
-  }
-  function searchRecursively(currentEl) {
-    let found = searchInPreviousSiblings(currentEl);
-    if (found !== null) {
-      return found;
-    }
-    let parent = currentEl.parentElement;
-    if (!parent) {
-      return null;
-    }
-    if (parent.hasAttribute && parent.hasAttribute("wire:id")) {
-      return null;
-    }
-    return searchRecursively(parent);
-  }
-  return searchRecursively(el);
-}
 
-// js/features/supportIslands.js
-on("stream", (payload) => {
-  if (payload.type !== "island")
-    return;
-  let { id, name, content } = payload;
-  if (!hasComponent(id))
-    return;
-  let component = findComponent(id);
-  streamIsland(component, key, content);
+// js/v4/features/supportIsolatingV4.js
+var componentsThatAreIsolated2;
+var init_supportIsolatingV4 = __esm({
+  "js/v4/features/supportIsolatingV4.js"() {
+    init_hooks();
+    componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
+    on("component.init", ({ component }) => {
+      let memo = component.snapshot.memo;
+      if (memo.isolate !== true)
+        return;
+      componentsThatAreIsolated2.add(component);
+    });
+    on("message.pooling", ({ messages }) => {
+      messages.forEach((message) => {
+        if (!componentsThatAreIsolated2.has(message.component))
+          return;
+        message.isolate = true;
+      });
+    });
+  }
 });
-function streamIsland(component, key2, content) {
-  renderIsland(component, key2, content);
-}
-on("effect", ({ component, effects }) => {
-  let islands = effects.islands || [];
-  islands.forEach((island) => {
-    let { key: key2, content, mode } = island;
-    queueMicrotask(() => {
-      queueMicrotask(() => {
-        renderIsland(component, key2, content, mode);
-      });
+
+// js/v4/features/supportLazyLoadingV4.js
+var componentsThatWantToBeBundled2, componentsThatAreLazy2;
+var init_supportLazyLoadingV4 = __esm({
+  "js/v4/features/supportLazyLoadingV4.js"() {
+    init_hooks();
+    componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
+    componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
+    on("component.init", ({ component }) => {
+      let memo = component.snapshot.memo;
+      if (memo.lazyLoaded === void 0)
+        return;
+      componentsThatAreLazy2.add(component);
+      if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
+        componentsThatWantToBeBundled2.add(component);
+      }
     });
-  });
-});
-function renderIsland(component, key2, content, mode = null) {
-  let island = component.islands[key2];
-  mode ??= island.mode;
-  let { startNode, endNode } = findIslandComments(component.el, key2);
-  if (!startNode || !endNode)
-    return;
-  let strippedContent = stripIslandComments(content, key2);
-  let parentElement = startNode.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  if (isPlaceholderMarker(startNode)) {
-    mode = "replace";
-    startNode.textContent = startNode.textContent.replace(":placeholder", "");
-  }
-  if (mode === "append") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).forEach((node) => {
-      endNode.parentNode.insertBefore(node, endNode);
-    });
-  } else if (mode === "prepend") {
-    let container = document.createElement(parentElementTag);
-    container.innerHTML = strippedContent;
-    Array.from(container.childNodes).reverse().forEach((node) => {
-      startNode.parentNode.insertBefore(node, startNode.nextSibling);
-    });
-  } else {
-    morphIsland(component, startNode, endNode, strippedContent);
-  }
-}
-function skipIslandContents(component, el, toEl, skipUntil) {
-  if (isStartMarker2(el) && isStartMarker2(toEl)) {
-    let key2 = extractIslandKey(toEl);
-    let island = component.islands[key2];
-    let mode = island.mode;
-    let render = island.render;
-    if (["skip", "once"].includes(render)) {
-      skipUntil((node) => isEndMarker2(node));
-    } else if (mode === "prepend") {
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker2(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        el.parentNode.insertBefore(node.cloneNode(true), el.nextSibling);
-      });
-      skipUntil((node) => isEndMarker2(node));
-    } else if (mode === "append") {
-      let endMarker = el.nextSibling;
-      while (endMarker && !isEndMarker2(endMarker)) {
-        endMarker = endMarker.nextSibling;
-      }
-      let sibling = toEl.nextSibling;
-      let siblings = [];
-      while (sibling && !isEndMarker2(sibling)) {
-        siblings.push(sibling);
-        sibling = sibling.nextSibling;
-      }
-      siblings.forEach((node) => {
-        endMarker.parentNode.insertBefore(node.cloneNode(true), endMarker);
-      });
-      skipUntil((node) => isEndMarker2(node));
-    }
-  }
-}
-function closestIsland(component, el) {
-  let current = el;
-  while (current) {
-    let sibling = current.previousSibling;
-    let foundEndMarker = [];
-    while (sibling) {
-      if (isEndMarker2(sibling)) {
-        foundEndMarker.push("a");
-      }
-      if (isStartMarker2(sibling)) {
-        if (foundEndMarker.length > 0) {
-          foundEndMarker.pop();
+    on("message.pooling", ({ messages }) => {
+      messages.forEach((message) => {
+        if (!componentsThatAreLazy2.has(message.component))
+          return;
+        if (componentsThatWantToBeBundled2.has(message.component)) {
+          message.isolate = false;
+          componentsThatWantToBeBundled2.delete(message.component);
         } else {
-          let key2 = extractIslandKey(sibling);
-          return component.islands[key2];
+          message.isolate = true;
         }
-      }
-      sibling = sibling.previousSibling;
-    }
-    current = current.parentElement;
-    if (current && current.hasAttribute("wire:id")) {
-      break;
-    }
-  }
-  return null;
-}
-function isStartMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ISLAND");
-}
-function isEndMarker2(el) {
-  return el.nodeType === 8 && el.textContent.startsWith("[if ENDISLAND");
-}
-function extractIslandKey(el) {
-  let key2 = el.textContent.match(/\[if ISLAND:([\w-]+)(?::placeholder)?\]/)?.[1];
-  return key2;
-}
-function isPlaceholderMarker(el) {
-  return el.nodeType === 8 && el.textContent.match(/\[if ISLAND:[\w-]+:placeholder\]/);
-}
-function stripIslandComments(content, key2) {
-  let startComment = new RegExp(`<!--\\[if ISLAND:${key2}(:placeholder)?\\]><\\!\\[endif\\]-->`);
-  let endComment = new RegExp(`<!--\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]-->`);
-  let stripped = content.replace(startComment, "").replace(endComment, "");
-  return stripped.trim();
-}
-function findIslandComments(rootEl, key2) {
-  let startNode = null;
-  let endNode = null;
-  walkElements2(rootEl, (el, skip) => {
-    if (el.hasAttribute && el.hasAttribute("wire:id") && el !== rootEl) {
-      return skip();
-    }
-    Array.from(el.childNodes).forEach((node) => {
-      if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.textContent.match(new RegExp(`\\[if ISLAND:${key2}(:placeholder)?\\]><\\!\\[endif\\]`))) {
-          startNode = node;
-        }
-        if (node.textContent.match(new RegExp(`\\[if ENDISLAND:${key2}\\]><\\!\\[endif\\]`))) {
-          endNode = node;
-        }
-      }
+        componentsThatAreLazy2.delete(message.component);
+      });
     });
-  });
-  return { startNode, endNode };
-}
-function walkElements2(el, callback) {
-  let skip = false;
-  callback(el, () => skip = true);
-  if (skip)
-    return;
-  Array.from(el.children).forEach((child) => {
-    walkElements2(child, callback);
-  });
-}
+  }
+});
 
-// js/morph.js
-function morph(component, el, html) {
-  let wrapperTag = el.parentElement ? el.parentElement.tagName.toLowerCase() : "div";
-  let wrapper = document.createElement(wrapperTag);
-  wrapper.innerHTML = html;
-  let parentComponent;
-  try {
-    parentComponent = closestComponent(el.parentElement);
-  } catch (e) {
+// js/v4/requests/index.js
+var init_requests = __esm({
+  "js/v4/requests/index.js"() {
+    init_requestBus();
+    init_supportPropsAndModelablesV4();
+    init_supportIsolatingV4();
+    init_supportLazyLoadingV4();
+    requestBus_default.boot();
   }
-  parentComponent && (wrapper.__livewire = parentComponent);
-  let to = wrapper.firstElementChild;
-  to.setAttribute("wire:snapshot", component.snapshotEncoded);
-  let effects = { ...component.effects };
-  delete effects.html;
-  to.setAttribute("wire:effects", JSON.stringify(effects));
-  to.__livewire = component;
-  trigger("morph", { el, toEl: to, component });
-  let existingComponentsMap = {};
-  el.querySelectorAll("[wire\\:id]").forEach((component2) => {
-    existingComponentsMap[component2.getAttribute("wire:id")] = component2;
-  });
-  to.querySelectorAll("[wire\\:id]").forEach((child) => {
-    if (child.hasAttribute("wire:snapshot"))
-      return;
-    let wireId = child.getAttribute("wire:id");
-    let existingComponent = existingComponentsMap[wireId];
-    if (existingComponent) {
-      child.replaceWith(existingComponent.cloneNode(true));
-    }
-  });
-  import_alpinejs2.default.morph(el, to, getMorphConfig(component));
-  trigger("morphed", { el, component });
-}
-function morphIsland(component, startNode, endNode, toHTML) {
-  let fromContainer = startNode.parentElement;
-  let fromContainerTag = fromContainer ? fromContainer.tagName.toLowerCase() : "div";
-  let toContainer = document.createElement(fromContainerTag);
-  toContainer.innerHTML = toHTML;
-  toContainer.__livewire = component;
-  let parentElement = component.el.parentElement;
-  let parentElementTag = parentElement ? parentElement.tagName.toLowerCase() : "div";
-  let parentComponent;
-  try {
-    parentComponent = parentElement ? closestComponent(parentElement) : null;
-  } catch (e) {
+});
+
+// js/v4/features/supportDataLoading.js
+var init_supportDataLoading = __esm({
+  "js/v4/features/supportDataLoading.js"() {
+    init_interceptorRegistry();
+    interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
+      el.setAttribute("data-loading", "true");
+      request.afterResponse(() => {
+        el.removeAttribute("data-loading");
+      });
+      request.onCancel(() => {
+        el.removeAttribute("data-loading");
+      });
+    });
   }
-  if (parentComponent) {
-    let parentProviderWrapper = document.createElement(parentElementTag);
-    parentProviderWrapper.appendChild(toContainer);
-    parentProviderWrapper.__livewire = parentComponent;
-  }
-  trigger("island.morph", { startNode, endNode, component });
-  import_alpinejs2.default.morphBetween(startNode, endNode, toContainer, getMorphConfig(component));
-  trigger("island.morphed", { startNode, endNode, component });
-}
-function getMorphConfig(component) {
-  return {
-    updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
-      skipSlotContents(el, toEl, skipUntil);
-      skipIslandContents(component, el, toEl, skipUntil);
-      if (isntElement(el))
+});
+
+// js/v4/features/supportPreserveScroll.js
+var init_supportPreserveScroll = __esm({
+  "js/v4/features/supportPreserveScroll.js"() {
+    init_interceptorRegistry();
+    interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
+      if (!directive2 || !directive2.modifiers.includes("preserve-scroll"))
         return;
-      trigger("morph.updating", { el, toEl, component, skip, childrenOnly, skipChildren, skipUntil });
-      if (el.__livewire_replace === true)
-        el.innerHTML = toEl.innerHTML;
-      if (el.__livewire_replace_self === true) {
-        el.outerHTML = toEl.outerHTML;
-        return skip();
-      }
-      if (el.__livewire_ignore === true)
-        return skip();
-      if (el.__livewire_ignore_self === true)
-        childrenOnly();
-      if (el.__livewire_ignore_children === true)
-        return skipChildren();
-      if (isComponentRootEl(el) && el.getAttribute("wire:id") !== component.id)
-        return skip();
-      if (isComponentRootEl(el))
-        toEl.__livewire = component;
-    },
-    updated: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.updated", { el, component });
-    },
-    removing: (el, skip) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removing", { el, component, skip });
-    },
-    removed: (el) => {
-      if (isntElement(el))
-        return;
-      trigger("morph.removed", { el, component });
-    },
-    adding: (el) => {
-      trigger("morph.adding", { el, component });
-    },
-    added: (el) => {
-      if (isntElement(el))
-        return;
-      const closestComponentId = closestComponent(el).id;
-      trigger("morph.added", { el });
-    },
-    key: (el) => {
-      if (isntElement(el))
-        return;
-      return el.hasAttribute(`wire:key`) ? el.getAttribute(`wire:key`) : el.hasAttribute(`wire:id`) ? el.getAttribute(`wire:id`) : el.id;
-    },
-    lookahead: false
-  };
-}
-function isntElement(el) {
-  return typeof el.hasAttribute !== "function";
-}
-function isComponentRootEl(el) {
-  return el.hasAttribute("wire:id");
-}
+      let oldHeight;
+      let oldScroll;
+      request.beforeRender(() => {
+        oldHeight = document.body.scrollHeight;
+        oldScroll = window.scrollY;
+      });
+      request.afterRender(() => {
+        let heightDiff = document.body.scrollHeight - oldHeight;
+        window.scrollTo(0, oldScroll + heightDiff);
+        oldHeight = null;
+        oldScroll = null;
+      });
+    });
+  }
+});
 
-// js/v4/requests/message.js
-var Message = class {
-  updates = {};
-  actions = [];
-  payload = {};
-  context = {};
-  interceptors = /* @__PURE__ */ new Set();
-  resolvers = [];
-  status = "waiting";
-  succeedCallbacks = [];
-  failCallbacks = [];
-  respondCallbacks = [];
-  finishTarget = null;
-  request = null;
-  isolate = false;
-  constructor(component) {
-    this.component = component;
-  }
-  addInterceptor(interceptor) {
-    interceptor.cancel = () => this.cancel();
-    this.interceptors.add(interceptor);
-  }
-  addContext(key2, value) {
-    if (!this.context[key2]) {
-      this.context[key2] = [];
-    }
-    if (this.context[key2].includes(value))
-      return;
-    this.context[key2].push(value);
-  }
-  addAction(method, params, resolve) {
-    if (!this.isMagicAction(method)) {
-      this.removeAllMagicActions();
-    }
-    if (this.isMagicAction(method)) {
-      this.findAndRemoveAction(method);
-      this.actions.push({
-        method,
-        params,
-        handleReturn: () => {
+// js/v4/features/supportWireIntersect.js
+var import_alpinejs21;
+var init_supportWireIntersect = __esm({
+  "js/v4/features/supportWireIntersect.js"() {
+    import_alpinejs21 = __toESM(require_module_cjs());
+    init_interceptorRegistry();
+    init_directives();
+    import_alpinejs21.default.interceptInit((el) => {
+      for (let i = 0; i < el.attributes.length; i++) {
+        if (el.attributes[i].name.startsWith("wire:intersect")) {
+          let { name, value } = el.attributes[i];
+          let directive2 = extractDirective(el, name);
+          let modifierString = name.split("wire:intersect")[1];
+          let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
+          let evaluator = import_alpinejs21.default.evaluateLater(el, expression);
+          import_alpinejs21.default.bind(el, {
+            ["x-intersect" + modifierString](e) {
+              directive2.eventContext = e;
+              let component = el.closest("[wire\\:id]")?.__livewire;
+              interceptorRegistry_default.fire(el, directive2, component);
+              evaluator();
+            }
+          });
         }
-      });
-      this.resolvers.push(resolve);
-      return;
-    }
-    this.actions.push({
-      method,
-      params,
-      handleReturn: resolve
-    });
-  }
-  magicActions() {
-    return [
-      "$refresh",
-      "$set",
-      "$sync"
-    ];
-  }
-  isMagicAction(method) {
-    return this.magicActions().includes(method);
-  }
-  removeAllMagicActions() {
-    this.actions = this.actions.filter((i) => !this.isMagicAction(i.method));
-  }
-  findAndRemoveAction(method) {
-    this.actions = this.actions.filter((i) => i.method !== method);
-  }
-  cancelIfItShouldBeCancelled() {
-    if (this.isSucceeded())
-      return;
-    this.cancel();
-  }
-  buffer() {
-    this.status = "buffering";
-  }
-  prepare() {
-    trigger("message.prepare", { component: this.component });
-    this.status = "preparing";
-    this.updates = this.component.getUpdates();
-    let snapshot = this.component.getEncodedSnapshotWithLatestChildrenMergedIn();
-    this.payload = {
-      snapshot,
-      updates: this.updates,
-      calls: this.actions.map((i) => ({
-        method: i.method,
-        params: i.params
-      })),
-      context: this.context
-    };
-    this.finishTarget = trigger("commit", {
-      component: this.component,
-      commit: this.payload,
-      succeed: (callback) => {
-        this.succeedCallbacks.push(callback);
-      },
-      fail: (callback) => {
-        this.failCallbacks.push(callback);
-      },
-      respond: (callback) => {
-        this.respondCallbacks.push(callback);
       }
     });
-    this.beforeSend();
   }
-  beforeSend() {
-    this.interceptors.forEach((i) => i.beforeSend({ component: this.component, payload: this.payload }));
-  }
-  afterSend() {
-    this.interceptors.forEach((i) => i.afterSend({ component: this.component, payload: this.payload }));
-  }
-  beforeResponse(response) {
-    this.interceptors.forEach((i) => i.beforeResponse({ component: this.component, response }));
-  }
-  afterResponse(response) {
-    this.interceptors.forEach((i) => i.afterResponse({ component: this.component, response }));
-  }
-  respond() {
-    this.respondCallbacks.forEach((i) => i());
-  }
-  succeed(response) {
-    if (this.isCancelled())
-      return;
-    this.status = "succeeded";
-    this.beforeResponse(response);
-    this.respond();
-    let { snapshot, effects } = response;
-    this.component.mergeNewSnapshot(snapshot, effects, this.updates);
-    this.afterResponse(response);
-    this.component.processEffects(this.component.effects);
-    this.resolvers.forEach((i) => i());
-    if (effects["returns"]) {
-      let returns = effects["returns"];
-      let returnHandlerStack = this.actions.map(({ handleReturn }) => handleReturn);
-      returnHandlerStack.forEach((handleReturn, index) => {
-        handleReturn(returns[index]);
-      });
-    }
-    let parsedSnapshot = JSON.parse(snapshot);
-    this.finishTarget({ snapshot: parsedSnapshot, effects });
-    this.interceptors.forEach((i) => i.onSuccess(response));
-    this.succeedCallbacks.forEach((i) => i(response));
-    let html = effects["html"];
-    if (!html)
-      return;
-    this.interceptors.forEach((i) => i.beforeRender({ component: this.component }));
-    queueMicrotask(() => {
-      this.interceptors.forEach((i) => i.beforeMorph({ component: this.component, el: this.component.el, html }));
-      morph(this.component, this.component.el, html);
-      this.interceptors.forEach((i) => i.afterMorph({ component: this.component, el: this.component.el, html }));
-      setTimeout(() => {
-        this.interceptors.forEach((i) => i.afterRender({ component: this.component }));
-        this.interceptors.forEach((i) => i.returned());
+});
+
+// js/v4/features/supportWireIsland.js
+var wireIslands;
+var init_supportWireIsland = __esm({
+  "js/v4/features/supportWireIsland.js"() {
+    init_directives();
+    init_interceptorRegistry();
+    init_messageBroker();
+    init_supportIslands();
+    wireIslands = /* @__PURE__ */ new WeakMap();
+    interceptorRegistry_default.add(({ el, directive: directive2, component }) => {
+      let island = wireIslands.get(el) ?? closestIsland(component, el);
+      if (!island)
+        return;
+      messageBroker_default.addContext(component, "island", { name: island.name, mode: island.mode });
+    });
+    directive("island", ({ el, directive: directive2 }) => {
+      let name = directive2.expression ?? "default";
+      let mode = null;
+      if (directive2.modifiers.includes("append")) {
+        mode = "append";
+      } else if (directive2.modifiers.includes("prepend")) {
+        mode = "prepend";
+      } else if (directive2.modifiers.includes("replace")) {
+        mode = "replace";
+      }
+      wireIslands.set(el, {
+        name,
+        mode
       });
     });
   }
-  error(e) {
-    if (this.isCancelled())
-      return;
-    this.status = "errored";
-    this.interceptors.forEach((i) => i.onError(e));
-  }
-  fail(response, content) {
-    if (this.isCancelled())
-      return;
-    this.status = "failed";
-    this.respond();
-    this.interceptors.forEach((i) => i.onError(response, content));
-    this.failCallbacks.forEach((i) => i());
-  }
-  cancel() {
-    this.status = "cancelled";
-    this.interceptors.forEach((i) => i.onCancel());
-  }
-  isBuffering() {
-    return this.status === "buffering";
-  }
-  isPreparing() {
-    return this.status === "preparing";
-  }
-  isSucceeded() {
-    return this.status === "succeeded";
-  }
-  isCancelled() {
-    return this.status === "cancelled";
-  }
-  isErrored() {
-    return this.status === "errored";
-  }
-  isFailed() {
-    return this.status === "failed";
-  }
-  isFinished() {
-    return this.isSucceeded() || this.isCancelled() || this.isFailed() || this.isErrored();
-  }
-};
+});
 
-// js/v4/requests/request.js
-var Request = class {
-  controller = new AbortController();
-  respondCallbacks = [];
-  succeedCallbacks = [];
-  errorCallbacks = [];
-  cancel() {
-    this.controller.abort("cancelled");
-  }
-  finish() {
-    requestBus_default.remove(this);
-  }
-  isCancelled() {
-    return this.controller.signal.aborted;
-  }
-  cancelIfItShouldBeCancelled() {
-    console.error("cancelIfItShouldBeCancelled must be implemented");
-  }
-  shouldCancel() {
-    console.error("shouldCancel must be implemented");
-  }
-  async send() {
-    console.error("send must be implemented");
-  }
-  addRespondCallback(callback) {
-    this.respondCallbacks.push(callback);
-  }
-  addSucceedCallback(callback) {
-    this.succeedCallbacks.push(callback);
-  }
-  addErrorCallback(callback) {
-    this.errorCallbacks.push(callback);
-  }
-};
-
-// js/v4/requests/messageRequest.js
-var MessageRequest = class extends Request {
-  messages = /* @__PURE__ */ new Set();
-  finishProfile = null;
-  addMessage(message) {
-    this.messages.add(message);
-    message.request = this;
-  }
-  deleteMessage(message) {
-    this.messages.delete(message);
-  }
-  hasMessageFor(component) {
-    return !!this.findMessageByComponent(component);
-  }
-  findMessageByComponent(component) {
-    return Array.from(this.messages).find((message) => message.component.id === component.id);
-  }
-  isEmpty() {
-    return this.messages.size === 0;
-  }
-  shouldCancel() {
-    return (request) => {
-      return request.constructor.name === MessageRequest.name && Array.from(request.messages).some((message) => this.hasMessageFor(message.component));
-    };
-  }
-  async send() {
-    let payload = {
-      _token: getCsrfToken(),
-      components: Array.from(this.messages, (i) => i.payload)
-    };
-    let options = {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-type": "application/json",
-        "X-Livewire": "1"
-      },
-      signal: this.controller.signal
-    };
-    this.finishProfile = trigger("request.profile", options);
-    let updateUri = getUpdateUri();
-    trigger("request", {
-      url: updateUri,
-      options,
-      payload: options.body,
-      respond: (i) => this.respondCallbacks.push(i),
-      succeed: (i) => this.succeedCallbacks.push(i),
-      fail: (i) => this.errorCallbacks.push(i)
-    });
-    let response;
-    try {
-      let fetchPromise = fetch(updateUri, options);
-      this.messages.forEach((message) => {
-        message.afterSend();
-      });
-      response = await fetchPromise;
-    } catch (e) {
-      this.finish();
-      this.error(e);
-      return;
-    }
-    this.finish();
-    let mutableObject = {
-      status: response.status,
-      response
-    };
-    this.respond(mutableObject);
-    response = mutableObject.response;
-    let content = await response.text();
-    if (!response.ok) {
-      this.fail(response, content);
-      return;
-    }
-    this.redirectIfNeeded(response);
-    await this.succeed(response, content);
-  }
-  redirectIfNeeded(response) {
-    if (response.redirected) {
-      window.location.href = response.url;
-    }
-  }
-  respond(mutableObject) {
-    this.respondCallbacks.forEach((i) => i(mutableObject));
-  }
-  async succeed(response, content) {
-    if (contentIsFromDump(content)) {
-      let dump;
-      [dump, content] = splitDumpFromContent(content);
-      showHtmlModal(dump);
-      this.finishProfile({ content: "{}", failed: true });
-    } else {
-      this.finishProfile({ content, failed: false });
-    }
-    let { components: components2, assets } = JSON.parse(content);
-    await triggerAsync("payload.intercept", { components: components2, assets });
-    this.messages.forEach((message) => {
-      components2.forEach((component) => {
-        let snapshot = JSON.parse(component.snapshot);
-        if (snapshot.memo.id === message.component.id) {
-          message.succeed(component);
-        }
-      });
-    });
-    this.succeedCallbacks.forEach((i) => i({ status: response.status, json: JSON.parse(content) }));
-  }
-  cancel() {
-    this.messages.forEach((message) => {
-      message.cancelIfItShouldBeCancelled();
-    });
-    super.cancel();
-  }
-  error(e) {
-    this.finishProfile({ content: "{}", failed: true });
-    let preventDefault = false;
-    this.messages.forEach((message) => {
-      message.error(e);
-    });
-    this.errorCallbacks.forEach((i) => i({
-      status: 503,
-      content: null,
-      preventDefault: () => preventDefault = true
-    }));
-  }
-  fail(response, content) {
-    this.finishProfile({ content: "{}", failed: true });
-    let preventDefault = false;
-    this.messages.forEach((message) => {
-      message.fail(response, content);
-    });
-    this.errorCallbacks.forEach((i) => i({
-      status: response.status,
-      content,
-      preventDefault: () => preventDefault = true
-    }));
-    if (preventDefault)
-      return;
-    if (response.status === 419) {
-      this.handlePageExpiry();
-    }
-    if (response.aborted) {
-      return;
-    } else {
-      return this.showFailureModal(content);
-    }
-  }
-  handlePageExpiry() {
-    confirm("This page has expired.\nWould you like to refresh the page?") && window.location.reload();
-  }
-  showFailureModal(content) {
-    let html = content;
-    showHtmlModal(html);
-  }
-};
-
-// js/v4/requests/messageBroker.js
-var MessageBroker = class {
-  messages = /* @__PURE__ */ new Map();
-  getMessage(component) {
-    let message = this.messages.get(component.id);
-    if (!message) {
-      message = new Message(component);
-      this.messages.set(component.id, message);
-    }
-    return message;
-  }
-  addInterceptor(interceptor, component) {
-    let message = this.getMessage(component);
-    message.addInterceptor(interceptor);
-  }
-  addContext(component, key2, value) {
-    let message = this.getMessage(component);
-    message.addContext(key2, value);
-  }
-  addAction(component, method, params = []) {
-    let message = this.getMessage(component);
-    let promise = new Promise((resolve) => {
-      message.addAction(method, params, resolve);
-    });
-    this.send(message);
-    return promise;
-  }
-  send(message) {
-    this.bufferMessageForFiveMs(message);
-  }
-  bufferMessageForFiveMs(message) {
-    if (message.isBuffering())
-      return;
-    message.buffer();
-    setTimeout(() => {
-      this.prepareRequests();
-    }, 5);
-  }
-  prepareRequests() {
-    trigger("message.pooling", { messages: this.messages });
-    let messages = new Set(this.messages.values());
-    this.messages.clear();
-    if (messages.size === 0)
-      return;
-    messages.forEach((message) => {
-      message.prepare();
-    });
-    let requests = this.corraleMessagesIntoRequests(messages);
-    trigger("message.pooled", { requests });
-    this.sendRequests(requests);
-  }
-  corraleMessagesIntoRequests(messages) {
-    let requests = /* @__PURE__ */ new Set();
-    for (let message of messages) {
-      if (message.isCancelled())
-        continue;
-      let hasFoundRequest = false;
-      requests.forEach((request) => {
-        if (!hasFoundRequest && !message.isolate) {
-          request.addMessage(message);
-          hasFoundRequest = true;
-        }
-      });
-      if (!hasFoundRequest) {
-        let request = new MessageRequest();
-        request.addMessage(message);
-        requests.add(request);
+// js/v4/features/supportJsModules.js
+var init_supportJsModules = __esm({
+  "js/v4/features/supportJsModules.js"() {
+    init_hooks();
+    on("effect", ({ component, effects }) => {
+      let hasModule = effects.hasJsModule;
+      if (hasModule) {
+        import(`/livewire/js/${component.name.replace(".", "--")}.js`).then((module) => {
+          module.run.bind(component.$wire)();
+        });
       }
-    }
-    return requests;
-  }
-  sendRequests(requests) {
-    requests.forEach((request) => {
-      requestBus_default.add(request);
     });
   }
-};
-var instance2 = new MessageBroker();
-var messageBroker_default = instance2;
-
-// js/v4/features/supportErrors.js
-function getErrorsObject(component) {
-  return {
-    messages() {
-      return component.snapshot.memo.errors;
-    },
-    keys() {
-      return Object.keys(this.messages());
-    },
-    has(...keys) {
-      if (this.isEmpty())
-        return false;
-      if (keys.length === 0 || keys.length === 1 && keys[0] == null)
-        return this.any();
-      if (keys.length === 1 && Array.isArray(keys[0]))
-        keys = keys[0];
-      for (let key2 of keys) {
-        if (this.first(key2) === "")
-          return false;
-      }
-      return true;
-    },
-    hasAny(keys) {
-      if (this.isEmpty())
-        return false;
-      if (keys.length === 1 && Array.isArray(keys[0]))
-        keys = keys[0];
-      for (let key2 of keys) {
-        if (this.has(key2))
-          return true;
-      }
-      return false;
-    },
-    missing(...keys) {
-      if (keys.length === 1 && Array.isArray(keys[0]))
-        keys = keys[0];
-      return !this.hasAny(keys);
-    },
-    first(key2 = null) {
-      let messages = key2 === null ? this.all() : this.get(key2);
-      let firstMessage = messages.length > 0 ? messages[0] : "";
-      return Array.isArray(firstMessage) ? firstMessage[0] : firstMessage;
-    },
-    get(key2) {
-      return component.snapshot.memo.errors[key2] || [];
-    },
-    all() {
-      return Object.values(this.messages()).flat();
-    },
-    isEmpty() {
-      return !this.any();
-    },
-    isNotEmpty() {
-      return this.any();
-    },
-    any() {
-      return Object.keys(this.messages()).length > 0;
-    },
-    count() {
-      return Object.values(this.messages()).reduce((total, array) => {
-        return total + array.length;
-      }, 0);
-    }
-  };
-}
-
-// js/v4/features/supportPaginators.js
-var paginatorObjects = /* @__PURE__ */ new WeakMap();
-function getPaginatorObject(component, paginatorName) {
-  let componentPaginatorObjects = paginatorObjects.get(component);
-  if (!componentPaginatorObjects) {
-    componentPaginatorObjects = /* @__PURE__ */ new Map();
-    paginatorObjects.set(component, componentPaginatorObjects);
-  }
-  let paginatorObject = componentPaginatorObjects.get(paginatorName);
-  if (!paginatorObject) {
-    paginatorObject = newPaginatorObject(component);
-    componentPaginatorObjects.set(paginatorName, paginatorObject);
-  }
-  return paginatorObject;
-}
-on("effect", ({ component, effects, cleanup }) => {
-  let paginators = effects["paginators"];
-  if (!paginators)
-    return;
-  for (let paginatorName in paginators) {
-    let paginator = paginators[paginatorName];
-    let paginatorObject = getPaginatorObject(component, paginatorName);
-    paginatorObject.paginator = paginator;
-  }
-});
-function newPaginatorObject(component) {
-  return Alpine.reactive({
-    renderedPages: [],
-    paginator: {},
-    firstItem() {
-      return this.paginator.from;
-    },
-    lastItem() {
-      return this.paginator.to;
-    },
-    perPage() {
-      return this.paginator.perPage;
-    },
-    onFirstPage() {
-      return this.paginator.onFirstPage;
-    },
-    onLastPage() {
-      return this.paginator.onLastPage;
-    },
-    getPageName() {
-      return this.paginator.pageName;
-    },
-    getCursorName() {
-      return this.paginator.cursorName;
-    },
-    currentPage() {
-      return this.paginator.currentPage;
-    },
-    currentCursor() {
-      return this.paginator.currentCursor;
-    },
-    count() {
-      return this.paginator.count;
-    },
-    total() {
-      return this.paginator.total;
-    },
-    hasPages() {
-      return this.paginator.hasPages;
-    },
-    hasMorePages() {
-      return this.paginator.hasMorePages;
-    },
-    hasPreviousPage() {
-      return this.hasPages() && !this.onFirstPage();
-    },
-    hasNextPage() {
-      return this.hasPages() && !this.onLastPage();
-    },
-    hasPreviousCursor() {
-      return !!this.paginator.previousCursor;
-    },
-    hasNextCursor() {
-      return !!this.paginator.nextCursor;
-    },
-    firstPage() {
-      return this.paginator.firstPage;
-    },
-    lastPage() {
-      return this.paginator.lastPage;
-    },
-    previousPage() {
-      if (this.hasPreviousCursor()) {
-        return this.setPage(this.previousCursor());
-      }
-      if (this.hasPreviousPage()) {
-        component.$wire.call("previousPage", this.getPageName());
-      }
-    },
-    nextPage() {
-      if (this.hasNextCursor()) {
-        return this.setPage(this.nextCursor());
-      }
-      if (this.hasNextPage()) {
-        component.$wire.call("nextPage", this.getPageName());
-      }
-    },
-    resetPage() {
-      component.$wire.call("resetPage", this.getPageName());
-    },
-    setPage(page) {
-      component.$wire.call("setPage", page, this.getCursorName() ?? this.getPageName());
-    },
-    previousCursor() {
-      return this.paginator.previousCursor;
-    },
-    nextCursor() {
-      return this.paginator.nextCursor;
-    }
-  });
-}
-
-// js/v4/interceptors/interceptor.js
-var Interceptor = class {
-  beforeSend = () => {
-  };
-  afterSend = () => {
-  };
-  beforeResponse = () => {
-  };
-  afterResponse = () => {
-  };
-  beforeRender = () => {
-  };
-  afterRender = () => {
-  };
-  beforeMorph = () => {
-  };
-  afterMorph = () => {
-  };
-  onError = () => {
-  };
-  onFailure = () => {
-  };
-  onSuccess = () => {
-  };
-  onCancel = () => {
-  };
-  cancel = () => {
-  };
-  constructor(callback, action) {
-    this.callback = callback;
-    this.action = action;
-    this.returned = () => {
-    };
-  }
-  init(el, directive2, component) {
-    let request = {
-      beforeSend: (callback) => this.beforeSend = callback,
-      afterSend: (callback) => this.afterSend = callback,
-      beforeResponse: (callback) => this.beforeResponse = callback,
-      afterResponse: (callback) => this.afterResponse = callback,
-      beforeRender: (callback) => this.beforeRender = callback,
-      afterRender: (callback) => this.afterRender = callback,
-      beforeMorph: (callback) => this.beforeMorph = callback,
-      afterMorph: (callback) => this.afterMorph = callback,
-      onError: (callback) => this.onError = callback,
-      onFailure: (callback) => this.onFailure = callback,
-      onSuccess: (callback) => this.onSuccess = callback,
-      onCancel: (callback) => this.onCancel = callback
-    };
-    let returned = this.callback({ el, directive: directive2, component, request });
-    if (returned && typeof returned === "function") {
-      this.returned = returned;
-    }
-  }
-};
-var interceptor_default = Interceptor;
-
-// js/v4/interceptors/interceptorRegistry.js
-var InterceptorRegistry = class {
-  interceptors = /* @__PURE__ */ new Map();
-  constructor() {
-    this.globalInterceptors = /* @__PURE__ */ new Set();
-    this.componentInterceptors = /* @__PURE__ */ new Map();
-  }
-  add(callback, component = null, method = null) {
-    let interceptorData = { callback, method };
-    if (component === null) {
-      this.globalInterceptors.add(interceptorData);
-      return;
-    }
-    let interceptors = this.componentInterceptors.get(component);
-    if (!interceptors) {
-      interceptors = /* @__PURE__ */ new Set();
-      this.componentInterceptors.set(component, interceptors);
-    }
-    interceptors.add(interceptorData);
-  }
-  fire(el, directive2, component) {
-    let method = directive2.method;
-    for (let interceptorData of this.globalInterceptors) {
-      let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
-      interceptor.init(el, directive2, component);
-      messageBroker_default.addInterceptor(interceptor, component);
-    }
-    let componentInterceptors = this.componentInterceptors.get(component);
-    if (!componentInterceptors)
-      return;
-    for (let interceptorData of componentInterceptors) {
-      if (interceptorData.method === method || interceptorData.method === null) {
-        let interceptor = new interceptor_default(interceptorData.callback, interceptorData.method);
-        interceptor.init(el, directive2, component);
-        messageBroker_default.addInterceptor(interceptor, component);
-      }
-    }
-  }
-};
-var instance3 = new InterceptorRegistry();
-var interceptorRegistry_default = instance3;
-
-// js/v4/features/supportRefs.js
-function findRef(component, ref) {
-  let refEl = component.el.querySelector(`[wire\\:ref="${ref}"]`);
-  if (!refEl)
-    return console.error(`Ref "${ref}" not found in component "${component.id}"`);
-  return refEl.__livewire?.$wire;
-}
-
-// js/$wire.js
-var properties = {};
-var fallback;
-function wireProperty(name, callback, component = null) {
-  properties[name] = callback;
-}
-function wireFallback(callback) {
-  fallback = callback;
-}
-var aliases = {
-  "on": "$on",
-  "el": "$el",
-  "id": "$id",
-  "js": "$js",
-  "get": "$get",
-  "set": "$set",
-  "ref": "$ref",
-  "refs": "$ref",
-  "$refs": "$ref",
-  "call": "$call",
-  "hook": "$hook",
-  "watch": "$watch",
-  "commit": "$commit",
-  "errors": "$errors",
-  "island": "$island",
-  "upload": "$upload",
-  "entangle": "$entangle",
-  "dispatch": "$dispatch",
-  "intercept": "$intercept",
-  "paginator": "$paginator",
-  "dispatchTo": "$dispatchTo",
-  "dispatchRef": "$dispatchRef",
-  "dispatchSelf": "$dispatchSelf",
-  "removeUpload": "$removeUpload",
-  "cancelUpload": "$cancelUpload",
-  "uploadMultiple": "$uploadMultiple"
-};
-function generateWireObject(component, state) {
-  return new Proxy({}, {
-    get(target, property) {
-      if (property === "__instance")
-        return component;
-      if (property in aliases) {
-        return getProperty(component, aliases[property]);
-      } else if (property in properties) {
-        return getProperty(component, property);
-      } else if (property in state) {
-        return state[property];
-      } else if (!["then"].includes(property)) {
-        return getFallback(component)(property);
-      }
-    },
-    set(target, property, value) {
-      if (property in state) {
-        state[property] = value;
-      }
-      return true;
-    }
-  });
-}
-function getProperty(component, name) {
-  return properties[name](component);
-}
-function getFallback(component) {
-  return fallback(component);
-}
-import_alpinejs3.default.magic("wire", (el, { cleanup }) => {
-  let component;
-  return new Proxy({}, {
-    get(target, property) {
-      if (!component)
-        component = closestComponent(el);
-      if (["$entangle", "entangle"].includes(property)) {
-        return generateEntangleFunction(component, cleanup);
-      }
-      return component.$wire[property];
-    },
-    set(target, property, value) {
-      if (!component)
-        component = closestComponent(el);
-      component.$wire[property] = value;
-      return true;
-    }
-  });
-});
-wireProperty("__instance", (component) => component);
-wireProperty("$get", (component) => (property, reactive = true) => dataGet(reactive ? component.reactive : component.ephemeral, property));
-wireProperty("$el", (component) => {
-  return component.el;
-});
-wireProperty("$id", (component) => {
-  return component.id;
-});
-wireProperty("$js", (component) => {
-  let fn = component.addJsAction.bind(component);
-  let jsActions = component.getJsActions();
-  Object.keys(jsActions).forEach((name) => {
-    fn[name] = component.getJsAction(name);
-  });
-  return fn;
-});
-wireProperty("$set", (component) => async (property, value, live = true) => {
-  dataSet(component.reactive, property, value);
-  if (live) {
-    if (requestBus_default.booted) {
-      component.queueUpdate(property, value);
-      return messageBroker_default.addAction(component, "$set");
-    }
-    component.queueUpdate(property, value);
-    return await requestCommit(component);
-  }
-  return Promise.resolve();
-});
-wireProperty("$ref", (component) => {
-  let fn = (name) => findRef(component, name);
-  return new Proxy(fn, {
-    get(target, property) {
-      if (property in target) {
-        return target[property];
-      }
-      return fn(property);
-    }
-  });
-});
-wireProperty("$intercept", (component) => (action, callback = null) => {
-  if (callback === null) {
-    callback = action;
-    action = null;
-  }
-  interceptorRegistry_default.add(callback, component, action);
-});
-wireProperty("$errors", (component) => getErrorsObject(component));
-wireProperty("$paginator", (component) => {
-  let fn = (name = "page") => getPaginatorObject(component, name);
-  let defaultPaginator = fn();
-  for (let key2 of Object.keys(defaultPaginator)) {
-    let value = defaultPaginator[key2];
-    if (typeof value === "function") {
-      fn[key2] = (...args) => defaultPaginator[key2](...args);
-    } else {
-      Object.defineProperty(fn, key2, {
-        get: () => defaultPaginator[key2],
-        set: (val) => {
-          defaultPaginator[key2] = val;
-        }
-      });
-    }
-  }
-  return fn;
-});
-wireProperty("$call", (component) => async (method, ...params) => {
-  return await component.$wire[method](...params);
-});
-wireProperty("$island", (component) => async (name, mode = null) => {
-  messageBroker_default.addContext(component, "islands", { name, mode });
-  return await component.$wire.$refresh(mode);
-});
-wireProperty("$entangle", (component) => (name, live = false) => {
-  return generateEntangleFunction(component)(name, live);
-});
-wireProperty("$toggle", (component) => (name, live = true) => {
-  return component.$wire.set(name, !component.$wire.get(name), live);
-});
-wireProperty("$watch", (component) => (path, callback) => {
-  let getter = () => {
-    return dataGet(component.reactive, path);
-  };
-  let unwatch = import_alpinejs3.default.watch(getter, callback);
-  component.addCleanup(unwatch);
-});
-wireProperty("$refresh", (component) => async () => {
-  if (requestBus_default.booted) {
-    return messageBroker_default.addAction(component, "$refresh");
-  }
-  return component.$wire.$commit();
-});
-wireProperty("$commit", (component) => async () => {
-  if (requestBus_default.booted) {
-    return messageBroker_default.addAction(component, "$sync");
-  }
-  return await requestCommit(component);
-});
-wireProperty("$on", (component) => (...params) => listen2(component, ...params));
-wireProperty("$hook", (component) => (name, callback) => {
-  let unhook = on(name, ({ component: hookComponent, ...params }) => {
-    if (hookComponent === void 0)
-      return callback(params);
-    if (hookComponent.id === component.id)
-      return callback({ component: hookComponent, ...params });
-  });
-  component.addCleanup(unhook);
-  return unhook;
-});
-wireProperty("$dispatch", (component) => (...params) => dispatch2(component, ...params));
-wireProperty("$dispatchSelf", (component) => (...params) => dispatchSelf(component, ...params));
-wireProperty("$dispatchTo", () => (...params) => dispatchTo(...params));
-wireProperty("$dispatchRef", (component) => (...params) => dispatchRef(component, ...params));
-wireProperty("$upload", (component) => (...params) => upload(component, ...params));
-wireProperty("$uploadMultiple", (component) => (...params) => uploadMultiple(component, ...params));
-wireProperty("$removeUpload", (component) => (...params) => removeUpload(component, ...params));
-wireProperty("$cancelUpload", (component) => (...params) => cancelUpload(component, ...params));
-var parentMemo = /* @__PURE__ */ new WeakMap();
-wireProperty("$parent", (component) => {
-  if (parentMemo.has(component))
-    return parentMemo.get(component).$wire;
-  let parent = component.parent;
-  parentMemo.set(component, parent);
-  return parent.$wire;
-});
-var overriddenMethods = /* @__PURE__ */ new WeakMap();
-function overrideMethod(component, method, callback) {
-  if (!overriddenMethods.has(component)) {
-    overriddenMethods.set(component, {});
-  }
-  let obj = overriddenMethods.get(component);
-  obj[method] = callback;
-  overriddenMethods.set(component, obj);
-}
-wireFallback((component) => (property) => async (...params) => {
-  if (params.length === 1 && params[0] instanceof Event) {
-    params = [];
-  }
-  if (overriddenMethods.has(component)) {
-    let overrides = overriddenMethods.get(component);
-    if (typeof overrides[property] === "function") {
-      return overrides[property](params);
-    }
-  }
-  if (requestBus_default.booted) {
-    return messageBroker_default.addAction(component, property, params);
-  }
-  return await requestCall(component, property, params);
 });
 
-// js/component.js
-var Component = class {
-  constructor(el) {
-    if (el.__livewire)
-      throw "Component already initialized";
-    el.__livewire = this;
-    this.el = el;
-    this.id = el.getAttribute("wire:id");
-    this.__livewireId = this.id;
-    this.snapshotEncoded = el.getAttribute("wire:snapshot");
-    this.snapshot = JSON.parse(this.snapshotEncoded);
-    if (!this.snapshot) {
-      throw `Snapshot missing on Livewire component with id: ` + this.id;
-    }
-    this.name = this.snapshot.memo.name;
-    this.effects = JSON.parse(el.getAttribute("wire:effects"));
-    this.originalEffects = deepClone(this.effects);
-    this.canonical = extractData(deepClone(this.snapshot.data));
-    this.ephemeral = extractData(deepClone(this.snapshot.data));
-    this.reactive = Alpine.reactive(this.ephemeral);
-    this.queuedUpdates = {};
-    this.jsActions = {};
-    this.$wire = generateWireObject(this, this.reactive);
-    this.cleanups = [];
-    this.processEffects(this.effects);
+// js/v4/interceptors/index.js
+var init_interceptors = __esm({
+  "js/v4/interceptors/index.js"() {
+    init_interceptorRegistry();
   }
-  mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
-    let snapshot = JSON.parse(snapshotEncoded);
-    let oldCanonical = deepClone(this.canonical);
-    let updatedOldCanonical = this.applyUpdates(oldCanonical, updates);
-    let newCanonical = extractData(deepClone(snapshot.data));
-    let dirty = diff(updatedOldCanonical, newCanonical);
-    this.snapshotEncoded = snapshotEncoded;
-    this.snapshot = snapshot;
-    this.effects = effects;
-    this.canonical = extractData(deepClone(snapshot.data));
-    let newData = extractData(deepClone(snapshot.data));
-    Object.entries(dirty).forEach(([key2, value]) => {
-      let rootKey = key2.split(".")[0];
-      this.reactive[rootKey] = newData[rootKey];
-    });
-    return dirty;
-  }
-  queueUpdate(propertyName, value) {
-    this.queuedUpdates[propertyName] = value;
-  }
-  mergeQueuedUpdates(diff2) {
-    Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
-      Object.entries(diff2).forEach(([diffKey, diffValue]) => {
-        if (diffKey.startsWith(updateValue)) {
-          delete diff2[diffKey];
-        }
-      });
-      diff2[updateKey] = updateValue;
-    });
-    this.queuedUpdates = [];
-    return diff2;
-  }
-  getUpdates() {
-    let propertiesDiff = diff(this.canonical, this.ephemeral);
-    return this.mergeQueuedUpdates(propertiesDiff);
-  }
-  applyUpdates(object, updates) {
-    for (let key2 in updates) {
-      dataSet(object, key2, updates[key2]);
-    }
-    return object;
-  }
-  replayUpdate(snapshot, html) {
-    let effects = { ...this.effects, html };
-    this.mergeNewSnapshot(JSON.stringify(snapshot), effects);
-    this.processEffects({ html });
-  }
-  processEffects(effects) {
-    trigger("effects", this, effects);
-    trigger("effect", {
-      component: this,
-      effects,
-      cleanup: (i) => this.addCleanup(i)
-    });
-  }
-  get children() {
-    let meta = this.snapshot.memo;
-    let childIds = Object.values(meta.children).map((i) => i[1]);
-    return childIds.filter((id) => hasComponent(id)).map((id) => findComponent(id));
-  }
-  get islands() {
-    let islands = this.snapshot.memo.islands;
-    return islands;
-  }
-  get parent() {
-    return closestComponent(this.el.parentElement);
-  }
-  getEncodedSnapshotWithLatestChildrenMergedIn() {
-    let { snapshotEncoded, children, snapshot } = this;
-    let childIds = children.map((child) => child.id);
-    let filteredChildren = Object.fromEntries(Object.entries(snapshot.memo.children).filter(([key2, value]) => childIds.includes(value[1])));
-    return snapshotEncoded.replace(/"children":\{[^}]*\}/, `"children":${JSON.stringify(filteredChildren)}`);
-  }
-  inscribeSnapshotAndEffectsOnElement() {
-    let el = this.el;
-    el.setAttribute("wire:snapshot", this.snapshotEncoded);
-    let effects = this.originalEffects.listeners ? { listeners: this.originalEffects.listeners } : {};
-    if (this.originalEffects.url) {
-      effects.url = this.originalEffects.url;
-    }
-    if (this.originalEffects.scripts) {
-      effects.scripts = this.originalEffects.scripts;
-    }
-    el.setAttribute("wire:effects", JSON.stringify(effects));
-  }
-  addJsAction(name, action) {
-    this.jsActions[name] = action;
-  }
-  hasJsAction(name) {
-    return this.jsActions[name] !== void 0;
-  }
-  getJsAction(name) {
-    return this.jsActions[name].bind(this.$wire);
-  }
-  getJsActions() {
-    return this.jsActions;
-  }
-  addCleanup(cleanup) {
-    this.cleanups.push(cleanup);
-  }
-  cleanup() {
-    delete this.el.__livewire;
-    while (this.cleanups.length > 0) {
-      this.cleanups.pop()();
-    }
-  }
-};
+});
 
-// js/store.js
-var components = {};
-function initComponent(el) {
-  let component = new Component(el);
-  if (components[component.id])
-    throw "Component already registered";
-  let cleanup = (i) => component.addCleanup(i);
-  trigger("component.init", { component, cleanup });
-  components[component.id] = component;
-  return component;
-}
-function destroyComponent(id) {
-  let component = components[id];
-  if (!component)
-    return;
-  component.cleanup();
-  delete components[id];
-}
-function hasComponent(id) {
-  return !!components[id];
-}
-function findComponent(id) {
-  let component = components[id];
-  if (!component)
-    throw "Component not found: " + id;
-  return component;
-}
-function closestComponent(el, strict = true) {
-  let slotStartMarker = checkPreviousSiblingForSlotStartMarker(el);
-  if (slotStartMarker) {
-    let { name, parentId } = extractSlotData(slotStartMarker);
-    if (parentId) {
-      return findComponent(parentId);
-    }
+// js/v4/index.js
+var v4_exports = {};
+var init_v4 = __esm({
+  "js/v4/index.js"() {
+    init_requests();
+    init_supportDataLoading();
+    init_supportPaginators();
+    init_supportPreserveScroll();
+    init_supportWireIntersect();
+    init_supportWireIsland();
+    init_supportJsModules();
+    init_interceptors();
   }
-  let closestRoot = Alpine.findClosest(el, (i) => i.__livewire);
-  if (!closestRoot) {
-    if (strict)
-      throw "Could not find Livewire component in DOM tree";
-    return;
-  }
-  return closestRoot.__livewire;
-}
-function componentsByName(name) {
-  return Object.values(components).filter((component) => {
-    return name == component.name;
-  });
-}
-function getByName(name) {
-  return componentsByName(name).map((i) => i.$wire);
-}
-function find(id) {
-  let component = components[id];
-  return component && component.$wire;
-}
-function first() {
-  return Object.values(components)[0].$wire;
-}
-function all() {
-  return Object.values(components);
-}
+});
 
-// js/events.js
-function dispatch2(component, name, params) {
-  dispatchEvent(component.el, name, params);
-}
-function dispatchGlobal(name, params) {
-  dispatchEvent(window, name, params);
-}
-function dispatchSelf(component, name, params) {
-  dispatchEvent(component.el, name, params, false);
-}
-function dispatchTo(componentName, name, params) {
-  let targets = componentsByName(componentName);
-  targets.forEach((target) => {
-    dispatchEvent(target.el, name, params, false);
-  });
-}
-function dispatchRef(component, ref, name, params) {
-  let target = findRef(component, ref);
-  if (!target)
-    return;
-  dispatchEvent(target.__instance.el, name, params, false);
-}
-function listen2(component, name, callback) {
-  component.el.addEventListener(name, (e) => {
-    callback(e.detail);
-  });
-}
-function on2(eventName, callback) {
-  let handler = (e) => {
-    if (!e.__livewire)
-      return;
-    callback(e.detail);
-  };
-  window.addEventListener(eventName, handler);
-  return () => {
-    window.removeEventListener(eventName, handler);
-  };
-}
-function dispatchEvent(target, name, params, bubbles = true) {
-  if (typeof params === "string") {
-    params = [params];
-  }
-  let e = new CustomEvent(name, { bubbles, detail: params });
-  e.__livewire = { name, params, receivedBy: [] };
-  target.dispatchEvent(e);
-}
-
-// js/directives.js
-var customDirectiveNames = /* @__PURE__ */ new Set();
-function matchesForLivewireDirective(attributeName) {
-  return attributeName.match(new RegExp("wire:"));
-}
-function extractDirective(el, name) {
-  let [value, ...modifiers] = name.replace(new RegExp("wire:"), "").split(".");
-  return new Directive(value, modifiers, name, el);
-}
-function directive(name, callback) {
-  if (customDirectiveNames.has(name))
-    return;
-  customDirectiveNames.add(name);
-  on("directive.init", ({ el, component, directive: directive2, cleanup }) => {
-    if (directive2.value === name) {
-      callback({
-        el,
-        directive: directive2,
-        component,
-        $wire: component.$wire,
-        cleanup
-      });
-    }
-  });
-}
-function globalDirective(name, callback) {
-  if (customDirectiveNames.has(name))
-    return;
-  customDirectiveNames.add(name);
-  on("directive.global.init", ({ el, directive: directive2, cleanup }) => {
-    if (directive2.value === name) {
-      callback({ el, directive: directive2, cleanup });
-    }
-  });
-}
-function getDirectives(el) {
-  return new DirectiveManager(el);
-}
-function customDirectiveHasBeenRegistered(name) {
-  return customDirectiveNames.has(name);
-}
-var DirectiveManager = class {
-  constructor(el) {
-    this.el = el;
-    this.directives = this.extractTypeModifiersAndValue();
-  }
-  all() {
-    return this.directives;
-  }
-  has(value) {
-    return this.directives.map((directive2) => directive2.value).includes(value);
-  }
-  missing(value) {
-    return !this.has(value);
-  }
-  get(value) {
-    return this.directives.find((directive2) => directive2.value === value);
-  }
-  extractTypeModifiersAndValue() {
-    return Array.from(this.el.getAttributeNames().filter((name) => matchesForLivewireDirective(name)).map((name) => extractDirective(this.el, name)));
-  }
-};
-var Directive = class {
-  constructor(value, modifiers, rawName, el) {
-    this.rawName = this.raw = rawName;
-    this.el = el;
-    this.eventContext;
-    this.value = value;
-    this.modifiers = modifiers;
-    this.expression = this.el.getAttribute(this.rawName);
-  }
-  get method() {
-    const methods = this.parseOutMethodsAndParams(this.expression);
-    return methods[0].method;
-  }
-  get methods() {
-    return this.parseOutMethodsAndParams(this.expression);
-  }
-  get params() {
-    const methods = this.parseOutMethodsAndParams(this.expression);
-    return methods[0].params;
-  }
-  parseOutMethodsAndParams(rawMethod) {
-    let methodRegex = /(.*?)\((.*?\)?)\) *(,*) */s;
-    let method = rawMethod;
-    let params = [];
-    let methodAndParamString = method.match(methodRegex);
-    let methods = [];
-    let slicedLength = 0;
-    while (methodAndParamString) {
-      method = methodAndParamString[1];
-      let func = new Function("$event", `return (function () {
-                for (var l=arguments.length, p=new Array(l), k=0; k<l; k++) {
-                    p[k] = arguments[k];
-                }
-                return [].concat(p);
-            })(${methodAndParamString[2]})`);
-      params = func(this.eventContext);
-      methods.push({ method, params });
-      slicedLength += methodAndParamString[0].length;
-      methodAndParamString = rawMethod.slice(slicedLength).match(methodRegex);
-    }
-    if (methods.length === 0) {
-      methods.push({ method, params });
-    }
-    return methods;
-  }
-};
+// js/index.js
+init_events();
+init_store();
 
 // js/lifecycle.js
+init_store();
+init_directives();
+init_hooks();
 var import_collapse = __toESM(require_module_cjs2());
 var import_focus = __toESM(require_module_cjs3());
 var import_persist2 = __toESM(require_module_cjs4());
@@ -10110,6 +10576,9 @@ function updateUrl(method, url, html) {
   }
 }
 
+// js/plugins/navigate/fetch.js
+init_hooks();
+
 // js/plugins/navigate/links.js
 function whenThisLinkIsPressed(el, callback) {
   let isProgrammaticClick = (e) => !e.isTrusted;
@@ -10167,7 +10636,13 @@ function getUriStringFromUrlObject(urlObject) {
   return urlObject.pathname + urlObject.search + urlObject.hash;
 }
 
+// js/plugins/navigate/fetch.js
+init_requestBus();
+
 // js/v4/requests/pageRequest.js
+init_request2();
+init_messageRequest();
+init_hooks();
 var PageRequest = class extends Request {
   constructor(uri) {
     super();
@@ -10220,7 +10695,7 @@ function fetchHtml(destination, callback, errorCallback) {
   }, errorCallback);
 }
 function performFetch(uri, callback, errorCallback) {
-  if (requestBus_default.booted) {
+  if (window.livewireV4) {
     return performFetchV4(uri, callback, errorCallback);
   }
   let options = {
@@ -10389,6 +10864,7 @@ function isPersistedElement(el) {
 
 // js/plugins/navigate/bar.js
 var import_nprogress = __toESM(require_nprogress());
+init_utils();
 import_nprogress.default.configure({
   minimum: 0.1,
   trickleSpeed: 200,
@@ -10882,6 +11358,7 @@ function cleanupAlpineElementsOnThePageThatArentInsideAPersistedElement() {
 }
 
 // js/plugins/history/index.js
+init_utils();
 function history2(Alpine24) {
   Alpine24.magic("queryString", (el, { interceptor }) => {
     let alias;
@@ -11097,6 +11574,7 @@ function fromQueryString(search, queryKey) {
 var import_morph4 = __toESM(require_module_cjs8());
 var import_mask = __toESM(require_module_cjs9());
 var import_alpinejs6 = __toESM(require_module_cjs());
+init_utils();
 function start() {
   setTimeout(() => ensureLivewireScriptIsntMisplaced());
   dispatch(document, "livewire:init");
@@ -11167,203 +11645,13 @@ function ensureLivewireScriptIsntMisplaced() {
 }
 
 // js/index.js
+init_hooks();
+init_directives();
 var import_alpinejs22 = __toESM(require_module_cjs());
-
-// js/v4/features/supportPropsAndModelablesV4.js
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    let component = message.component;
-    getDeepChildrenWithBindings(component, (child) => {
-      child.$wire.$commit();
-    });
-  });
-});
-on("message.pooled", ({ requests }) => {
-  let messages = getRequestsMessages(requests);
-  messages.forEach((message) => {
-    let component = message.component;
-    getDeepChildrenWithBindings(component, (child) => {
-      colocateRequestsByComponent(requests, component, child);
-    });
-  });
-});
-function getRequestsMessages(requests) {
-  let messages = [];
-  requests.forEach((request) => {
-    request.messages.forEach((message) => {
-      messages.push(message);
-    });
-  });
-  return messages;
-}
-function colocateRequestsByComponent(requests, component, foreignComponent) {
-  let request = findRequestWithComponent(requests, component);
-  let foreignRequest = findRequestWithComponent(requests, foreignComponent);
-  let foreignMessage = foreignRequest.findMessageByComponent(foreignComponent);
-  foreignRequest.deleteMessage(foreignMessage);
-  request.addMessage(foreignMessage);
-  requests.forEach((request2) => {
-    if (request2.isEmpty())
-      requests.delete(request2);
-  });
-}
-function findRequestWithComponent(requests, component) {
-  return Array.from(requests).find((request) => request.hasMessageFor(component));
-}
-function getDeepChildrenWithBindings(component, callback) {
-  getDeepChildren(component, (child) => {
-    if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
-      callback(child);
-    }
-  });
-}
-function hasReactiveProps(component) {
-  let meta = component.snapshot.memo;
-  let props = meta.props;
-  return !!props;
-}
-function hasWireModelableBindings(component) {
-  let meta = component.snapshot.memo;
-  let bindings = meta.bindings;
-  return !!bindings;
-}
-function getDeepChildren(component, callback) {
-  component.children.forEach((child) => {
-    callback(child);
-    getDeepChildren(child, callback);
-  });
-}
-
-// js/v4/features/supportIsolatingV4.js
-var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.isolate !== true)
-    return;
-  componentsThatAreIsolated.add(component);
-});
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    if (!componentsThatAreIsolated.has(message.component))
-      return;
-    message.isolate = true;
-  });
-});
-
-// js/v4/features/supportLazyLoadingV4.js
-var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
-var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
-on("component.init", ({ component }) => {
-  let memo = component.snapshot.memo;
-  if (memo.lazyLoaded === void 0)
-    return;
-  componentsThatAreLazy.add(component);
-  if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-    componentsThatWantToBeBundled.add(component);
-  }
-});
-on("message.pooling", ({ messages }) => {
-  messages.forEach((message) => {
-    if (!componentsThatAreLazy.has(message.component))
-      return;
-    if (componentsThatWantToBeBundled.has(message.component)) {
-      message.isolate = false;
-      componentsThatWantToBeBundled.delete(message.component);
-    } else {
-      message.isolate = true;
-    }
-    componentsThatAreLazy.delete(message.component);
-  });
-});
-
-// js/v4/requests/index.js
-requestBus_default.boot();
-
-// js/v4/features/supportDataLoading.js
-interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
-  el.setAttribute("data-loading", "true");
-  request.afterResponse(() => {
-    el.removeAttribute("data-loading");
-  });
-  request.onCancel(() => {
-    el.removeAttribute("data-loading");
-  });
-});
-
-// js/v4/features/supportPreserveScroll.js
-interceptorRegistry_default.add(({ el, directive: directive2, component, request }) => {
-  if (!directive2 || !directive2.modifiers.includes("preserve-scroll"))
-    return;
-  let oldHeight;
-  let oldScroll;
-  request.beforeRender(() => {
-    oldHeight = document.body.scrollHeight;
-    oldScroll = window.scrollY;
-  });
-  request.afterRender(() => {
-    let heightDiff = document.body.scrollHeight - oldHeight;
-    window.scrollTo(0, oldScroll + heightDiff);
-    oldHeight = null;
-    oldScroll = null;
-  });
-});
-
-// js/v4/features/supportWireIntersect.js
-var import_alpinejs7 = __toESM(require_module_cjs());
-import_alpinejs7.default.interceptInit((el) => {
-  for (let i = 0; i < el.attributes.length; i++) {
-    if (el.attributes[i].name.startsWith("wire:intersect")) {
-      let { name, value } = el.attributes[i];
-      let directive2 = extractDirective(el, name);
-      let modifierString = name.split("wire:intersect")[1];
-      let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-      let evaluator = import_alpinejs7.default.evaluateLater(el, expression);
-      import_alpinejs7.default.bind(el, {
-        ["x-intersect" + modifierString]() {
-          let component = el.closest("[wire\\:id]")?.__livewire;
-          interceptorRegistry_default.fire(el, directive2, component);
-          evaluator();
-        }
-      });
-    }
-  }
-});
-
-// js/v4/features/supportWireIsland.js
-var wireIslands = /* @__PURE__ */ new WeakMap();
-interceptorRegistry_default.add(({ el, directive: directive2, component }) => {
-  let island = wireIslands.get(el) ?? closestIsland(component, el);
-  if (!island)
-    return;
-  messageBroker_default.addContext(component, "islands", { name: island.name, mode: island.mode });
-});
-directive("island", ({ el, directive: directive2 }) => {
-  let name = directive2.expression ?? "default";
-  let mode = null;
-  if (directive2.modifiers.includes("append")) {
-    mode = "append";
-  } else if (directive2.modifiers.includes("prepend")) {
-    mode = "prepend";
-  } else if (directive2.modifiers.includes("replace")) {
-    mode = "replace";
-  }
-  wireIslands.set(el, {
-    name,
-    mode
-  });
-});
-
-// js/v4/features/supportJsModules.js
-on("effect", ({ component, effects }) => {
-  let hasModule = effects.hasJsModule;
-  if (hasModule) {
-    import(`/livewire/js/${component.name.replace(".", "--")}.js`).then((module) => {
-      module.run.bind(component.$wire)();
-    });
-  }
-});
+init_interceptorRegistry();
 
 // js/features/supportListeners.js
+init_hooks();
 on("effect", ({ component, effects }) => {
   registerListeners(component, effects.listeners || []);
 });
@@ -11389,7 +11677,8 @@ function registerListeners(component, listeners2) {
 }
 
 // js/features/supportScriptsAndAssets.js
-var import_alpinejs8 = __toESM(require_module_cjs());
+init_hooks();
+var import_alpinejs7 = __toESM(require_module_cjs());
 var executedScripts = /* @__PURE__ */ new WeakMap();
 var executedAssets = /* @__PURE__ */ new Set();
 on("payload.intercept", async ({ assets }) => {
@@ -11417,8 +11706,8 @@ on("effect", ({ component, effects }) => {
     Object.entries(scripts).forEach(([key2, content]) => {
       onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key2, () => {
         let scriptContent = extractScriptTagContent(content);
-        import_alpinejs8.default.dontAutoEvaluateFunctions(() => {
-          import_alpinejs8.default.evaluate(component.el, scriptContent, {
+        import_alpinejs7.default.dontAutoEvaluateFunctions(() => {
+          import_alpinejs7.default.evaluate(component.el, scriptContent, {
             context: component.$wire,
             scope: {
               "$wire": component.$wire,
@@ -11496,8 +11785,11 @@ function cloneScriptTag2(el) {
 }
 
 // js/features/supportJsEvaluation.js
-var import_alpinejs9 = __toESM(require_module_cjs());
-import_alpinejs9.default.magic("js", (el) => {
+init_store();
+init_wire();
+init_hooks();
+var import_alpinejs8 = __toESM(require_module_cjs());
+import_alpinejs8.default.magic("js", (el) => {
   let component = closestComponent(el);
   return component.$wire.js;
 });
@@ -11507,20 +11799,22 @@ on("effect", ({ component, effects }) => {
   if (js) {
     Object.entries(js).forEach(([method, body]) => {
       overrideMethod(component, method, () => {
-        import_alpinejs9.default.evaluate(component.el, body);
+        import_alpinejs8.default.evaluate(component.el, body);
       });
     });
   }
   if (xjs) {
     xjs.forEach(({ expression, params }) => {
       params = Object.values(params);
-      import_alpinejs9.default.evaluate(component.el, expression, { scope: component.jsActions, params });
+      import_alpinejs8.default.evaluate(component.el, expression, { scope: component.jsActions, params });
     });
   }
 });
 
 // js/features/supportMorphDom.js
-if (!requestBus_default.booted) {
+init_morph();
+init_hooks();
+if (!window.livewireV4) {
   on("effect", ({ component, effects }) => {
     let html = effects.html;
     if (!html)
@@ -11534,6 +11828,8 @@ if (!requestBus_default.booted) {
 }
 
 // js/features/supportDispatches.js
+init_events();
+init_hooks();
 on("effect", ({ component, effects }) => {
   queueMicrotask(() => {
     queueMicrotask(() => {
@@ -11557,7 +11853,10 @@ function dispatchEvents(component, dispatches) {
 }
 
 // js/features/supportDisablingFormsDuringRequest.js
-var import_alpinejs10 = __toESM(require_module_cjs());
+init_directives();
+init_hooks();
+init_utils();
+var import_alpinejs9 = __toESM(require_module_cjs());
 var cleanups = new Bag();
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => setTimeout(() => {
   if (directive2.value !== "submit")
@@ -11576,7 +11875,7 @@ on("commit", ({ component, respond }) => {
 });
 function disableForm(formEl) {
   let undos = [];
-  import_alpinejs10.default.walk(formEl, (el, skip) => {
+  import_alpinejs9.default.walk(formEl, (el, skip) => {
     if (!formEl.contains(el))
       return;
     if (el.hasAttribute("wire:ignore"))
@@ -11619,10 +11918,11 @@ function markReadOnly(el) {
 }
 
 // js/features/supportPropsAndModelables.js
+init_hooks();
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {
     let component = commit.component;
-    getDeepChildrenWithBindings2(component, (child) => {
+    getDeepChildrenWithBindings(component, (child) => {
       child.$wire.$commit();
     });
   });
@@ -11631,7 +11931,7 @@ on("commit.pooled", ({ pools }) => {
   let commits = getPooledCommits(pools);
   commits.forEach((commit) => {
     let component = commit.component;
-    getDeepChildrenWithBindings2(component, (child) => {
+    getDeepChildrenWithBindings(component, (child) => {
       colocateCommitsByComponent(pools, component, child);
     });
   });
@@ -11662,31 +11962,32 @@ function findPoolWithComponent(pools, component) {
       return pool;
   }
 }
-function getDeepChildrenWithBindings2(component, callback) {
-  getDeepChildren2(component, (child) => {
-    if (hasReactiveProps2(child) || hasWireModelableBindings2(child)) {
+function getDeepChildrenWithBindings(component, callback) {
+  getDeepChildren(component, (child) => {
+    if (hasReactiveProps(child) || hasWireModelableBindings(child)) {
       callback(child);
     }
   });
 }
-function hasReactiveProps2(component) {
+function hasReactiveProps(component) {
   let meta = component.snapshot.memo;
   let props = meta.props;
   return !!props;
 }
-function hasWireModelableBindings2(component) {
+function hasWireModelableBindings(component) {
   let meta = component.snapshot.memo;
   let bindings = meta.bindings;
   return !!bindings;
 }
-function getDeepChildren2(component, callback) {
+function getDeepChildren(component, callback) {
   component.children.forEach((child) => {
     callback(child);
-    getDeepChildren2(child, callback);
+    getDeepChildren(child, callback);
   });
 }
 
 // js/features/supportFileDownloads.js
+init_hooks();
 on("commit", ({ succeed }) => {
   succeed(({ effects }) => {
     let download = effects.download;
@@ -11723,33 +12024,39 @@ function base64toBlob(b64Data, contentType = "", sliceSize = 512) {
 }
 
 // js/features/supportLazyLoading.js
-var componentsThatWantToBeBundled2 = /* @__PURE__ */ new WeakSet();
-var componentsThatAreLazy2 = /* @__PURE__ */ new WeakSet();
+init_hooks();
+var componentsThatWantToBeBundled = /* @__PURE__ */ new WeakSet();
+var componentsThatAreLazy = /* @__PURE__ */ new WeakSet();
 on("component.init", ({ component }) => {
   let memo = component.snapshot.memo;
   if (memo.lazyLoaded === void 0)
     return;
-  componentsThatAreLazy2.add(component);
+  componentsThatAreLazy.add(component);
   if (memo.lazyIsolated !== void 0 && memo.lazyIsolated === false) {
-    componentsThatWantToBeBundled2.add(component);
+    componentsThatWantToBeBundled.add(component);
   }
 });
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {
-    if (!componentsThatAreLazy2.has(commit.component))
+    if (!componentsThatAreLazy.has(commit.component))
       return;
-    if (componentsThatWantToBeBundled2.has(commit.component)) {
+    if (componentsThatWantToBeBundled.has(commit.component)) {
       commit.isolate = false;
-      componentsThatWantToBeBundled2.delete(commit.component);
+      componentsThatWantToBeBundled.delete(commit.component);
     } else {
       commit.isolate = true;
     }
-    componentsThatAreLazy2.delete(commit.component);
+    componentsThatAreLazy.delete(commit.component);
   });
 });
 
+// js/features/index.js
+init_supportFileUploads();
+
 // js/features/supportQueryString.js
-var import_alpinejs11 = __toESM(require_module_cjs());
+init_hooks();
+init_utils();
+var import_alpinejs10 = __toESM(require_module_cjs());
 on("effect", ({ component, effects, cleanup }) => {
   let queryString = effects["url"];
   if (!queryString)
@@ -11761,10 +12068,10 @@ on("effect", ({ component, effects, cleanup }) => {
     let initialValue = [false, null, void 0].includes(except) ? dataGet(component.ephemeral, name) : except;
     let { replace: replace2, push: push2, pop } = track(as, initialValue, alwaysShow, except);
     if (use === "replace") {
-      let effectReference = import_alpinejs11.default.effect(() => {
+      let effectReference = import_alpinejs10.default.effect(() => {
         replace2(dataGet(component.reactive, name));
       });
-      cleanup(() => import_alpinejs11.default.release(effectReference));
+      cleanup(() => import_alpinejs10.default.release(effectReference));
     } else if (use === "push") {
       let forgetCommitHandler = on("commit", ({ component: commitComponent, succeed }) => {
         if (component !== commitComponent)
@@ -11801,6 +12108,8 @@ function normalizeQueryStringEntry(key2, value) {
 }
 
 // js/features/supportLaravelEcho.js
+init_hooks();
+init_events();
 on("request", ({ options }) => {
   if (window.Echo) {
     options.headers["X-Socket-ID"] = window.Echo.socketId();
@@ -11860,22 +12169,27 @@ on("effect", ({ component, effects }) => {
 });
 
 // js/features/supportIsolating.js
-var componentsThatAreIsolated2 = /* @__PURE__ */ new WeakSet();
+init_hooks();
+var componentsThatAreIsolated = /* @__PURE__ */ new WeakSet();
 on("component.init", ({ component }) => {
   let memo = component.snapshot.memo;
   if (memo.isolate !== true)
     return;
-  componentsThatAreIsolated2.add(component);
+  componentsThatAreIsolated.add(component);
 });
 on("commit.pooling", ({ commits }) => {
   commits.forEach((commit) => {
-    if (!componentsThatAreIsolated2.has(commit.component))
+    if (!componentsThatAreIsolated.has(commit.component))
       return;
     commit.isolate = true;
   });
 });
 
 // js/features/supportStreaming.js
+init_store();
+init_utils();
+init_directives();
+init_hooks();
 on("stream", (payload) => {
   if (payload.type !== "update")
     return;
@@ -11962,6 +12276,9 @@ function extractStreamObjects(raw) {
   return [parsed, remaining];
 }
 
+// js/features/supportRedirects.js
+init_hooks();
+
 // js/features/supportNavigate.js
 document.addEventListener("livewire:initialized", () => {
   shouldHideProgressBar() && Alpine.navigate.disableProgressBar();
@@ -12002,22 +12319,29 @@ on("effect", ({ effects }) => {
   });
 });
 
+// js/features/index.js
+init_supportIslands();
+init_supportEntangle();
+init_supportSlots();
+
 // js/directives/wire-transition.js
-var import_alpinejs12 = __toESM(require_module_cjs());
+init_directives();
+init_hooks();
+var import_alpinejs11 = __toESM(require_module_cjs());
 on("morph.added", ({ el }) => {
   el.__addedByMorph = true;
 });
 directive("transition", ({ el, directive: directive2, component, cleanup }) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:show")) {
-      import_alpinejs12.default.bind(el, {
+      import_alpinejs11.default.bind(el, {
         [directive2.rawName.replace("wire:transition", "x-transition")]: directive2.expression
       });
       return;
     }
   }
-  let visibility = import_alpinejs12.default.reactive({ state: el.__addedByMorph ? false : true });
-  import_alpinejs12.default.bind(el, {
+  let visibility = import_alpinejs11.default.reactive({ state: el.__addedByMorph ? false : true });
+  import_alpinejs11.default.bind(el, {
     [directive2.rawName.replace("wire:", "x-")]: "",
     "x-show"() {
       return visibility.state;
@@ -12042,6 +12366,7 @@ directive("transition", ({ el, directive: directive2, component, cleanup }) => {
 });
 
 // js/debounce.js
+init_utils();
 var callbacksByComponent = new WeakBag();
 function callAndClearComponentDebounces(component, callback) {
   callbacksByComponent.each(component, (callbackRegister) => {
@@ -12053,7 +12378,10 @@ function callAndClearComponentDebounces(component, callback) {
 }
 
 // js/directives/wire-wildcard.js
-var import_alpinejs13 = __toESM(require_module_cjs());
+init_directives();
+init_hooks();
+var import_alpinejs12 = __toESM(require_module_cjs());
+init_interceptorRegistry();
 on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (["snapshot", "effects", "model", "init", "loading", "poll", "ignore", "id", "data", "key", "target", "dirty"].includes(directive2.value))
     return;
@@ -12063,12 +12391,14 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   if (directive2.value === "submit" && !directive2.modifiers.includes("prevent")) {
     attribute = attribute + ".prevent";
   }
-  let cleanupBinding = import_alpinejs13.default.bind(el, {
+  let cleanupBinding = import_alpinejs12.default.bind(el, {
     [attribute](e) {
+      directive2.eventContext = e;
+      directive2.wire = component.$wire;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
           interceptorRegistry_default.fire(el, directive2, component);
-          import_alpinejs13.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
+          import_alpinejs12.default.evaluate(el, "await $wire." + directive2.expression, { scope: { $event: e } });
         });
       };
       if (el.__livewire_confirm) {
@@ -12086,23 +12416,23 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
 });
 
 // js/directives/wire-navigate.js
-var import_alpinejs14 = __toESM(require_module_cjs());
-import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate]`);
-import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
-import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
-import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
-import_alpinejs14.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
-import_alpinejs14.default.interceptInit(import_alpinejs14.default.skipDuringClone((el) => {
+var import_alpinejs13 = __toESM(require_module_cjs());
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.preserve-scroll\\.hover]`);
+import_alpinejs13.default.addInitSelector(() => `[wire\\:navigate\\.hover\\.preserve-scroll]`);
+import_alpinejs13.default.interceptInit(import_alpinejs13.default.skipDuringClone((el) => {
   if (el.hasAttribute("wire:navigate")) {
-    import_alpinejs14.default.bind(el, { ["x-navigate"]: true });
+    import_alpinejs13.default.bind(el, { ["x-navigate"]: true });
   } else if (el.hasAttribute("wire:navigate.hover")) {
-    import_alpinejs14.default.bind(el, { ["x-navigate.hover"]: true });
+    import_alpinejs13.default.bind(el, { ["x-navigate.hover"]: true });
   } else if (el.hasAttribute("wire:navigate.preserve-scroll")) {
-    import_alpinejs14.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
+    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll"]: true });
   } else if (el.hasAttribute("wire:navigate.preserve-scroll.hover")) {
-    import_alpinejs14.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
+    import_alpinejs13.default.bind(el, { ["x-navigate.preserve-scroll.hover"]: true });
   } else if (el.hasAttribute("wire:navigate.hover.preserve-scroll")) {
-    import_alpinejs14.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
+    import_alpinejs13.default.bind(el, { ["x-navigate.hover.preserve-scroll"]: true });
   }
 }));
 document.addEventListener("alpine:navigating", () => {
@@ -12112,6 +12442,7 @@ document.addEventListener("alpine:navigating", () => {
 });
 
 // js/directives/wire-confirm.js
+init_directives();
 directive("confirm", ({ el, directive: directive2 }) => {
   let message = directive2.expression;
   let shouldPrompt = directive2.modifiers.includes("prompt");
@@ -12141,8 +12472,9 @@ directive("confirm", ({ el, directive: directive2 }) => {
 });
 
 // js/directives/wire-current.js
-var import_alpinejs15 = __toESM(require_module_cjs());
-import_alpinejs15.default.addInitSelector(() => `[wire\\:current]`);
+init_directives();
+var import_alpinejs14 = __toESM(require_module_cjs());
+import_alpinejs14.default.addInitSelector(() => `[wire\\:current]`);
 var onPageChanges = /* @__PURE__ */ new Map();
 document.addEventListener("livewire:navigated", () => {
   onPageChanges.forEach((i) => i(new URL(window.location.href)));
@@ -12215,6 +12547,7 @@ function toggleBooleanStateDirective(el, directive2, isTruthy, cachedDisplay = n
 }
 
 // js/directives/wire-offline.js
+init_directives();
 var offlineHandlers = /* @__PURE__ */ new Set();
 var onlineHandlers = /* @__PURE__ */ new Set();
 window.addEventListener("offline", () => offlineHandlers.forEach((i) => i()));
@@ -12231,6 +12564,9 @@ directive("offline", ({ el, directive: directive2, cleanup }) => {
 });
 
 // js/directives/wire-loading.js
+init_directives();
+init_hooks();
+init_utils();
 directive("loading", ({ el, directive: directive2, component, cleanup }) => {
   let { targets, inverted } = getTargets(el);
   let [delay, abortDelay] = applyDelay(directive2);
@@ -12378,6 +12714,7 @@ function quickHash(subject) {
 }
 
 // js/directives/wire-replace.js
+init_directives();
 directive("replace", ({ el, directive: directive2 }) => {
   if (directive2.modifiers.includes("self")) {
     el.__livewire_replace_self = true;
@@ -12387,6 +12724,7 @@ directive("replace", ({ el, directive: directive2 }) => {
 });
 
 // js/directives/wire-ignore.js
+init_directives();
 directive("ignore", ({ el, directive: directive2 }) => {
   if (directive2.modifiers.includes("self")) {
     el.__livewire_ignore_self = true;
@@ -12398,14 +12736,17 @@ directive("ignore", ({ el, directive: directive2 }) => {
 });
 
 // js/directives/wire-cloak.js
-var import_alpinejs16 = __toESM(require_module_cjs());
-import_alpinejs16.default.interceptInit((el) => {
+var import_alpinejs15 = __toESM(require_module_cjs());
+import_alpinejs15.default.interceptInit((el) => {
   if (el.hasAttribute("wire:cloak")) {
-    import_alpinejs16.default.mutateDom(() => el.removeAttribute("wire:cloak"));
+    import_alpinejs15.default.mutateDom(() => el.removeAttribute("wire:cloak"));
   }
 });
 
 // js/directives/wire-dirty.js
+init_directives();
+init_utils();
+init_hooks();
 var refreshDirtyStatesByComponent = new WeakBag();
 on("commit", ({ component, respond }) => {
   respond(() => {
@@ -12454,7 +12795,11 @@ function dirtyTargets(el) {
 }
 
 // js/directives/wire-model.js
-var import_alpinejs17 = __toESM(require_module_cjs());
+init_directives();
+init_supportFileUploads();
+init_store();
+init_utils();
+var import_alpinejs16 = __toESM(require_module_cjs());
 directive("model", ({ el, directive: directive2, component, cleanup }) => {
   component = closestComponent(el);
   let { expression, modifiers } = directive2;
@@ -12473,7 +12818,7 @@ directive("model", ({ el, directive: directive2, component, cleanup }) => {
   let isDebounced = modifiers.includes("debounce");
   let update = expression.startsWith("$parent") ? () => component.$wire.$parent.$commit() : () => component.$wire.$commit();
   let debouncedUpdate = isTextInput(el) && !isDebounced && isLive ? debounce(update, 150) : update;
-  import_alpinejs17.default.bind(el, {
+  import_alpinejs16.default.bind(el, {
     ["@change"]() {
       isLazy && update();
     },
@@ -12529,14 +12874,16 @@ function debounce(func, wait) {
 }
 
 // js/directives/wire-init.js
-var import_alpinejs18 = __toESM(require_module_cjs());
+init_directives();
+var import_alpinejs17 = __toESM(require_module_cjs());
 directive("init", ({ el, directive: directive2 }) => {
   let fullMethod = directive2.expression ?? "$refresh";
-  import_alpinejs18.default.evaluate(el, `$wire.${fullMethod}`);
+  import_alpinejs17.default.evaluate(el, `$wire.${fullMethod}`);
 });
 
 // js/directives/wire-poll.js
-var import_alpinejs19 = __toESM(require_module_cjs());
+init_directives();
+var import_alpinejs18 = __toESM(require_module_cjs());
 directive("poll", ({ el, directive: directive2, component }) => {
   let interval = extractDurationFrom(directive2.modifiers, 2e3);
   let { start: start2, pauseWhile, throttleWhile, stopWhen } = poll(() => {
@@ -12550,7 +12897,7 @@ directive("poll", ({ el, directive: directive2, component }) => {
   stopWhen(() => theElementIsDisconnected(el));
 });
 function triggerComponentRequest(el, directive2, component) {
-  import_alpinejs19.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
+  import_alpinejs18.default.evaluate(el, directive2.expression ? "$wire." + directive2.expression : "$wire.$commit()");
 }
 function poll(callback, interval = 2e3) {
   let pauseConditions = [];
@@ -12639,16 +12986,16 @@ function extractDurationFrom(modifiers, defaultDuration) {
 }
 
 // js/directives/wire-show.js
-var import_alpinejs20 = __toESM(require_module_cjs());
-import_alpinejs20.default.interceptInit((el) => {
+var import_alpinejs19 = __toESM(require_module_cjs());
+import_alpinejs19.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:show")) {
       let { name, value } = el.attributes[i];
       let modifierString = name.split("wire:show")[1];
       let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-      import_alpinejs20.default.bind(el, {
+      import_alpinejs19.default.bind(el, {
         ["x-show" + modifierString]() {
-          return import_alpinejs20.default.evaluate(el, expression);
+          return import_alpinejs19.default.evaluate(el, expression);
         }
       });
     }
@@ -12656,16 +13003,16 @@ import_alpinejs20.default.interceptInit((el) => {
 });
 
 // js/directives/wire-text.js
-var import_alpinejs21 = __toESM(require_module_cjs());
-import_alpinejs21.default.interceptInit((el) => {
+var import_alpinejs20 = __toESM(require_module_cjs());
+import_alpinejs20.default.interceptInit((el) => {
   for (let i = 0; i < el.attributes.length; i++) {
     if (el.attributes[i].name.startsWith("wire:text")) {
       let { name, value } = el.attributes[i];
       let modifierString = name.split("wire:text")[1];
       let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
-      import_alpinejs21.default.bind(el, {
+      import_alpinejs20.default.bind(el, {
         ["x-text" + modifierString]() {
-          return import_alpinejs21.default.evaluate(el, expression);
+          return import_alpinejs20.default.evaluate(el, expression);
         }
       });
     }
@@ -12696,6 +13043,9 @@ if (window.Livewire)
   warnAboutMultipleInstancesOf("Livewire");
 if (window.Alpine)
   warnAboutMultipleInstancesOf("Alpine");
+if (window.livewireV4) {
+  Promise.resolve().then(() => init_v4());
+}
 window.Livewire = Livewire2;
 window.Alpine = import_alpinejs22.default;
 if (window.livewireScriptConfig === void 0) {
