@@ -17,6 +17,8 @@ on('directive.init', ({ el, directive, cleanup, component }) => {
 
     let cleanupBinding = Alpine.bind(el, {
         [attribute](e) {
+            directive.eventContext = e
+
             let execute = () => {
                 callAndClearComponentDebounces(component, () => {
                     interceptorRegistry.fire(el, directive, component)

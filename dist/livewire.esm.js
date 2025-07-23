@@ -10379,7 +10379,8 @@ var init_supportWireIntersect = __esm({
           let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
           let evaluator = import_alpinejs21.default.evaluateLater(el, expression);
           import_alpinejs21.default.bind(el, {
-            ["x-intersect" + modifierString]() {
+            ["x-intersect" + modifierString](e) {
+              directive2.eventContext = e;
               let component = el.closest("[wire\\:id]")?.__livewire;
               interceptorRegistry_default.fire(el, directive2, component);
               evaluator();
@@ -12391,6 +12392,7 @@ on("directive.init", ({ el, directive: directive2, cleanup, component }) => {
   }
   let cleanupBinding = import_alpinejs12.default.bind(el, {
     [attribute](e) {
+      directive2.eventContext = e;
       let execute = () => {
         callAndClearComponentDebounces(component, () => {
           interceptorRegistry_default.fire(el, directive2, component);

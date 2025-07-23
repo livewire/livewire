@@ -18,7 +18,9 @@ Alpine.interceptInit(el => {
             let evaluator = Alpine.evaluateLater(el, expression)
 
             Alpine.bind(el, {
-                ['x-intersect' + modifierString]() {
+                ['x-intersect' + modifierString](e) {
+                    directive.eventContext = e
+
                     // @todo: review if there is a better way to get the component...
                     let component = el.closest('[wire\\:id]')?.__livewire
 

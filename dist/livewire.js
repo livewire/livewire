@@ -6512,7 +6512,8 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
             let expression = value.startsWith("!") ? "!$wire." + value.slice(1).trim() : "$wire." + value.trim();
             let evaluator = module_default.evaluateLater(el, expression);
             module_default.bind(el, {
-              ["x-intersect" + modifierString]() {
+              ["x-intersect" + modifierString](e) {
+                directive3.eventContext = e;
                 let component = el.closest("[wire\\:id]")?.__livewire;
                 interceptorRegistry_default.fire(el, directive3, component);
                 evaluator();
@@ -11506,6 +11507,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
     }
     let cleanupBinding = module_default.bind(el, {
       [attribute](e) {
+        directive3.eventContext = e;
         let execute = () => {
           callAndClearComponentDebounces(component, () => {
             interceptorRegistry_default.fire(el, directive3, component);
